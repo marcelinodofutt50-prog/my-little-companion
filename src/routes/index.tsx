@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SocialProofStrip } from "@/components/SocialProof";
 import { LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { Testimonials } from "@/components/Testimonials";
-import { VideoDemo } from "@/components/VideoDemo";
+import { ProofWall } from "@/components/ProofWall";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
 import shadowMark from "@/assets/shadow-mask.png";
@@ -421,8 +421,8 @@ function LandingPage() {
             </div>
           </section>
 
-          {/* Video Demo */}
-          <VideoDemo />
+          {/* Proof Wall — prints reais */}
+          <ProofWall />
 
           {/* Testimonials */}
           <Testimonials />
