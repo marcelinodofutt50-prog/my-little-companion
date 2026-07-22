@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      apk_jobs: {
+        Row: {
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          expires_at: string
+          id: string
+          is_free_trial: boolean
+          order_id: string | null
+          queued_at: string
+          result_filename: string | null
+          result_path: string | null
+          result_size_bytes: number | null
+          source_filename: string
+          source_path: string
+          source_size_bytes: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["apk_job_status"]
+          updated_at: string
+          user_id: string
+          worker_id: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          is_free_trial?: boolean
+          order_id?: string | null
+          queued_at?: string
+          result_filename?: string | null
+          result_path?: string | null
+          result_size_bytes?: number | null
+          source_filename: string
+          source_path: string
+          source_size_bytes: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["apk_job_status"]
+          updated_at?: string
+          user_id: string
+          worker_id?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          is_free_trial?: boolean
+          order_id?: string | null
+          queued_at?: string
+          result_filename?: string | null
+          result_path?: string | null
+          result_size_bytes?: number | null
+          source_filename?: string
+          source_path?: string
+          source_size_bytes?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["apk_job_status"]
+          updated_at?: string
+          user_id?: string
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apk_jobs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cashback_ledger: {
         Row: {
           amount: number
@@ -79,6 +156,89 @@ export type Database = {
         }
         Relationships: []
       }
+      crypto_payments: {
+        Row: {
+          admin_note: string | null
+          amount_brl: number | null
+          amount_brl_verified: number | null
+          amount_crypto: number | null
+          coin: string
+          confirmations: number
+          created_at: string
+          expected_address: string
+          failure_reason: string | null
+          fulfilled_at: string | null
+          fx_rate_brl: number | null
+          id: string
+          last_checked_at: string | null
+          network: string
+          order_id: string | null
+          plan_slug: string
+          proof_path: string | null
+          required_confirmations: number
+          status: string
+          tx_hash: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_brl?: number | null
+          amount_brl_verified?: number | null
+          amount_crypto?: number | null
+          coin: string
+          confirmations?: number
+          created_at?: string
+          expected_address: string
+          failure_reason?: string | null
+          fulfilled_at?: string | null
+          fx_rate_brl?: number | null
+          id?: string
+          last_checked_at?: string | null
+          network: string
+          order_id?: string | null
+          plan_slug: string
+          proof_path?: string | null
+          required_confirmations?: number
+          status?: string
+          tx_hash: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          amount_brl?: number | null
+          amount_brl_verified?: number | null
+          amount_crypto?: number | null
+          coin?: string
+          confirmations?: number
+          created_at?: string
+          expected_address?: string
+          failure_reason?: string | null
+          fulfilled_at?: string | null
+          fx_rate_brl?: number | null
+          id?: string
+          last_checked_at?: string | null
+          network?: string
+          order_id?: string | null
+          plan_slug?: string
+          proof_path?: string | null
+          required_confirmations?: number
+          status?: string
+          tx_hash?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_logs: {
         Row: {
           action: string | null
@@ -141,6 +301,12 @@ export type Database = {
           is_trial: boolean
           legacy_server_fee_brl: number | null
           order_id: string | null
+          paid_externally: boolean
+          paid_externally_last_check_at: string | null
+          paid_externally_last_check_status: string | null
+          paid_externally_marked_at: string | null
+          paid_externally_until: string | null
+          panel: string
           plan_slug: string
           revoked: boolean
           server_ip: string
@@ -149,6 +315,7 @@ export type Database = {
           suspended_at: string | null
           suspended_by: string | null
           updated_at: string
+          upgraded_from_license_id: string | null
           user_id: string
           version_tier: string | null
           yaarsa_email: string
@@ -165,6 +332,12 @@ export type Database = {
           is_trial?: boolean
           legacy_server_fee_brl?: number | null
           order_id?: string | null
+          paid_externally?: boolean
+          paid_externally_last_check_at?: string | null
+          paid_externally_last_check_status?: string | null
+          paid_externally_marked_at?: string | null
+          paid_externally_until?: string | null
+          panel?: string
           plan_slug: string
           revoked?: boolean
           server_ip?: string
@@ -173,6 +346,7 @@ export type Database = {
           suspended_at?: string | null
           suspended_by?: string | null
           updated_at?: string
+          upgraded_from_license_id?: string | null
           user_id: string
           version_tier?: string | null
           yaarsa_email: string
@@ -189,6 +363,12 @@ export type Database = {
           is_trial?: boolean
           legacy_server_fee_brl?: number | null
           order_id?: string | null
+          paid_externally?: boolean
+          paid_externally_last_check_at?: string | null
+          paid_externally_last_check_status?: string | null
+          paid_externally_marked_at?: string | null
+          paid_externally_until?: string | null
+          panel?: string
           plan_slug?: string
           revoked?: boolean
           server_ip?: string
@@ -197,6 +377,7 @@ export type Database = {
           suspended_at?: string | null
           suspended_by?: string | null
           updated_at?: string
+          upgraded_from_license_id?: string | null
           user_id?: string
           version_tier?: string | null
           yaarsa_email?: string
@@ -211,6 +392,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "licenses_upgraded_from_license_id_fkey"
+            columns: ["upgraded_from_license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
         ]
       }
       orders: {
@@ -221,10 +409,12 @@ export type Database = {
           coupon_code: string | null
           created_at: string
           id: string
+          metadata: Json | null
           mp_payment_id: string | null
           mp_preference_id: string | null
           paid_at: string | null
           plan_slug: string
+          referrer_id: string | null
           status: string
           user_id: string
         }
@@ -235,10 +425,12 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           id?: string
+          metadata?: Json | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           paid_at?: string | null
           plan_slug: string
+          referrer_id?: string | null
           status?: string
           user_id: string
         }
@@ -249,10 +441,12 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           id?: string
+          metadata?: Json | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           paid_at?: string | null
           plan_slug?: string
+          referrer_id?: string | null
           status?: string
           user_id?: string
         }
@@ -266,6 +460,57 @@ export type Database = {
           },
         ]
       }
+      payout_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          confirmed_at: string | null
+          created_at: string
+          id: string
+          method: string
+          pix_key: string | null
+          processed_at: string | null
+          processed_by: string | null
+          receipt_reference: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          user_notes: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          confirmed_at?: string | null
+          created_at?: string
+          id?: string
+          method: string
+          pix_key?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          receipt_reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          user_notes?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          confirmed_at?: string | null
+          created_at?: string
+          id?: string
+          method?: string
+          pix_key?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          receipt_reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          user_notes?: string | null
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           active: boolean
@@ -273,6 +518,7 @@ export type Database = {
           created_at: string
           days: number | null
           description: string | null
+          image_url: string | null
           name: string
           price_brl: number
           slug: string
@@ -284,6 +530,7 @@ export type Database = {
           created_at?: string
           days?: number | null
           description?: string | null
+          image_url?: string | null
           name: string
           price_brl: number
           slug: string
@@ -295,6 +542,7 @@ export type Database = {
           created_at?: string
           days?: number | null
           description?: string | null
+          image_url?: string | null
           name?: string
           price_brl?: number
           slug?: string
@@ -309,6 +557,12 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          legacy_checked_at: string | null
+          legacy_panel_hits: Json | null
+          legacy_status: string
+          pix_key: string | null
+          referral_code: string | null
+          referral_reward_pref: string
           updated_at: string
         }
         Insert: {
@@ -317,6 +571,12 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          legacy_checked_at?: string | null
+          legacy_panel_hits?: Json | null
+          legacy_status?: string
+          pix_key?: string | null
+          referral_code?: string | null
+          referral_reward_pref?: string
           updated_at?: string
         }
         Update: {
@@ -325,9 +585,68 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          legacy_checked_at?: string | null
+          legacy_panel_hits?: Json | null
+          legacy_status?: string
+          pix_key?: string | null
+          referral_code?: string | null
+          referral_reward_pref?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string | null
+          paid_at: string | null
+          pix_key: string | null
+          referred_id: string
+          referrer_id: string
+          reward_amount: number
+          reward_status: string
+          reward_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          paid_at?: string | null
+          pix_key?: string | null
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number
+          reward_status?: string
+          reward_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          paid_at?: string | null
+          pix_key?: string | null
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number
+          reward_status?: string
+          reward_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_messages: {
         Row: {
@@ -423,6 +742,51 @@ export type Database = {
           },
         ]
       }
+      updates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          filename: string
+          id: string
+          is_active: boolean
+          min_tier: string
+          notes: string | null
+          size_bytes: number | null
+          storage_path: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          filename: string
+          id?: string
+          is_active?: boolean
+          min_tier?: string
+          notes?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          title: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          filename?: string
+          id?: string
+          is_active?: boolean
+          min_tier?: string
+          notes?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -476,6 +840,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_stale_apk_jobs: { Args: never; Returns: number }
+      gen_referral_code: { Args: never; Returns: string }
+      has_active_play_protect: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -487,13 +854,23 @@ export type Database = {
         Args: never
         Returns: {
           id: string
+          panel: string
           user_id: string
           yaarsa_email: string
         }[]
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      apk_job_status:
+        | "queued"
+        | "claimed"
+        | "sending"
+        | "processing"
+        | "done"
+        | "failed"
+        | "expired"
+        | "cancelled"
+      app_role: "admin" | "user" | "moderator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -621,7 +998,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      apk_job_status: [
+        "queued",
+        "claimed",
+        "sending",
+        "processing",
+        "done",
+        "failed",
+        "expired",
+        "cancelled",
+      ],
+      app_role: ["admin", "user", "moderator"],
     },
   },
 } as const
