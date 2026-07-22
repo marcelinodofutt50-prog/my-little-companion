@@ -3,7 +3,6 @@
   "framework": null,
   "installCommand": "bun install",
   "buildCommand": "vite build",
-  "outputDirectory": ".output/public",
   "regions": ["gru1"],
   "build": {
     "env": {
