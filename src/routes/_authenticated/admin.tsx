@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet,
+  Wallet, Copy,
 } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
@@ -17,6 +17,8 @@ import { AdminApkPanel } from "@/components/AdminApkPanel";
 import { AdminMarketPanel } from "@/components/AdminMarketPanel";
 import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
 import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
+import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
+import { RevenueSparkline } from "@/components/RevenueSparkline";
 
 
 
