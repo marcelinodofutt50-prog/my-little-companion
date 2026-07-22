@@ -1138,8 +1138,23 @@ function AdminChatPanel() {
         ) : (
           <>
             <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
-              <div>
-                <div className="font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</span>
+                  {activeThread.profile?.email && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(activeThread.profile?.email ?? "");
+                        toast.success("Email copiado");
+                      }}
+                      title="Copiar email"
+                      className="rounded p-1 text-muted-foreground hover:bg-background/40 hover:text-neon"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
                 <div className="font-mono text-[10px] uppercase text-muted-foreground">
                   {activeThread.subject}
                   {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
