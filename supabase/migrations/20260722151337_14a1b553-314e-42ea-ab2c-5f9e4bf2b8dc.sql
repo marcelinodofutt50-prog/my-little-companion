@@ -1,0 +1,1 @@
+-- See /tmp/all_migrations.sql - applying full schema from prior project
