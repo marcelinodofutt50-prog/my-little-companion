@@ -380,6 +380,11 @@ function AdminPage() {
                   <MiniStat label="Trials ativos" value={String(trialsActive)} accent="cyan" />
                 </div>
 
+                {/* Tendência de receita */}
+                <RevenueSparkline orders={orders} />
+
+
+
                 <div className="grid gap-4 md:grid-cols-3">
                   {/* Pedidos recentes */}
                   <div className="terminal-card scanlines relative p-5 md:col-span-2">
