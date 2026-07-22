@@ -42,7 +42,7 @@ export function SocialProofStrip() {
         .from("public_recent_sales" as any)
         .select("*")
         .limit(10);
-      if (!cancelled && data) setSales(data as Sale[]);
+      if (!cancelled && data) setSales(data as unknown as Sale[]);
       const { count: total } = await supabase
         .from("orders" as any)
         .select("*", { count: "exact", head: true })
