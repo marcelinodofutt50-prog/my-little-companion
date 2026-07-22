@@ -31,6 +31,7 @@ import {
   adminRevokeLicense, adminExtendLicense,
   adminSetRole, adminListRoles, adminRenewClientServer, adminRecreateLicense,
   adminListThreads, adminListThreadMessages, adminSendMessage, adminListLogs,
+  adminAssumeThread, adminCloseThread,
   adminCreateLicenseForClient, adminRegisterLegacyLicense,
   adminListReferrals, adminMarkReferralPaid,
 } from "@/lib/admin.functions";
@@ -933,8 +934,8 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
 
 
 // ============= LIVE CHAT PANEL =============
-type Thread = { id: string; user_id: string; subject: string; status: string; updated_at: string; profile: { email: string; full_name: string | null } | null };
-type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; created_at: string; sender_id: string };
+type Thread = { id: string; user_id: string; subject: string; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null } | null };
+type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
 function AdminChatPanel() {
   const [threads, setThreads] = useState<Thread[]>([]);
