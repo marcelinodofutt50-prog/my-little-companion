@@ -8,6 +8,7 @@ import { SocialProofStrip } from "@/components/SocialProof";
 import { LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { Testimonials } from "@/components/Testimonials";
 import { ProofWall } from "@/components/ProofWall";
+import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
 import shadowMark from "@/assets/shadow-mask.png";
@@ -423,6 +424,9 @@ function LandingPage() {
 
           {/* Proof Wall — prints reais */}
           <ProofWall />
+
+          {/* Antes vs Depois */}
+          <BeforeAfter />
 
           {/* Testimonials */}
           <Testimonials />
