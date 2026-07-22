@@ -9,38 +9,404 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TutorialRouteImport } from './routes/tutorial'
+import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
+import { Route as PlanosRouteImport } from './routes/planos'
+import { Route as MercadoRouteImport } from './routes/mercado'
+import { Route as CryptoRouteImport } from './routes/crypto'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso'
+import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
+import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
+import { Route as MercadoSucessoRouteImport } from './routes/mercado.sucesso'
+import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
+import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
+import { Route as AuthenticatedIndicacoesRouteImport } from './routes/_authenticated/indicacoes'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
+import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
+import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
+import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
+import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
+import { Route as ApiPublicHooksCryptoPollRouteImport } from './routes/api/public/hooks/crypto-poll'
+import { Route as ApiPublicHooksApkWorkerRouteImport } from './routes/api/public/hooks/apk-worker'
 
+const TutorialRoute = TutorialRouteImport.update({
+  id: '/tutorial',
+  path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RenovarServidorRoute = RenovarServidorRouteImport.update({
+  id: '/renovar-servidor',
+  path: '/renovar-servidor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanosRoute = PlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MercadoRoute = MercadoRouteImport.update({
+  id: '/mercado',
+  path: '/mercado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CryptoRoute = CryptoRouteImport.update({
+  id: '/crypto',
+  path: '/crypto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagamentoSucessoRoute = PagamentoSucessoRouteImport.update({
+  id: '/pagamento/sucesso',
+  path: '/pagamento/sucesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoPendenteRoute = PagamentoPendenteRouteImport.update({
+  id: '/pagamento/pendente',
+  path: '/pagamento/pendente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoErroRoute = PagamentoErroRouteImport.update({
+  id: '/pagamento/erro',
+  path: '/pagamento/erro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MercadoSucessoRoute = MercadoSucessoRouteImport.update({
+  id: '/sucesso',
+  path: '/sucesso',
+  getParentRoute: () => MercadoRoute,
+} as any)
+const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPlayProtectRoute =
+  AuthenticatedPlayProtectRouteImport.update({
+    id: '/play-protect',
+    path: '/play-protect',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIndicacoesRoute = AuthenticatedIndicacoesRouteImport.update({
+  id: '/indicacoes',
+  path: '/indicacoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
+  id: '/api/public/mp-webhook',
+  path: '/api/public/mp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatLicenseAiRoute = ApiChatLicenseAiRouteImport.update({
+  id: '/api/chat/license-ai',
+  path: '/api/chat/license-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksVerifyExternalPayersRoute =
+  ApiPublicHooksVerifyExternalPayersRouteImport.update({
+    id: '/api/public/hooks/verify-external-payers',
+    path: '/api/public/hooks/verify-external-payers',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksExpireLicensesRoute =
+  ApiPublicHooksExpireLicensesRouteImport.update({
+    id: '/api/public/hooks/expire-licenses',
+    path: '/api/public/hooks/expire-licenses',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDailyLicenseCheckRoute =
+  ApiPublicHooksDailyLicenseCheckRouteImport.update({
+    id: '/api/public/hooks/daily-license-check',
+    path: '/api/public/hooks/daily-license-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksCryptoPollRoute =
+  ApiPublicHooksCryptoPollRouteImport.update({
+    id: '/api/public/hooks/crypto-poll',
+    path: '/api/public/hooks/crypto-poll',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksApkWorkerRoute = ApiPublicHooksApkWorkerRouteImport.update({
+  id: '/api/public/hooks/apk-worker',
+  path: '/api/public/hooks/apk-worker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/contato': typeof ContatoRoute
+  '/crypto': typeof CryptoRoute
+  '/mercado': typeof MercadoRouteWithChildren
+  '/planos': typeof PlanosRoute
+  '/renovar-servidor': typeof RenovarServidorRoute
+  '/tutorial': typeof TutorialRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/indicacoes': typeof AuthenticatedIndicacoesRoute
+  '/play-protect': typeof AuthenticatedPlayProtectRoute
+  '/suporte': typeof AuthenticatedSuporteRoute
+  '/mercado/sucesso': typeof MercadoSucessoRoute
+  '/pagamento/erro': typeof PagamentoErroRoute
+  '/pagamento/pendente': typeof PagamentoPendenteRoute
+  '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
+  '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
+  '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/contato': typeof ContatoRoute
+  '/crypto': typeof CryptoRoute
+  '/mercado': typeof MercadoRouteWithChildren
+  '/planos': typeof PlanosRoute
+  '/renovar-servidor': typeof RenovarServidorRoute
+  '/tutorial': typeof TutorialRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/indicacoes': typeof AuthenticatedIndicacoesRoute
+  '/play-protect': typeof AuthenticatedPlayProtectRoute
+  '/suporte': typeof AuthenticatedSuporteRoute
+  '/mercado/sucesso': typeof MercadoSucessoRoute
+  '/pagamento/erro': typeof PagamentoErroRoute
+  '/pagamento/pendente': typeof PagamentoPendenteRoute
+  '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
+  '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
+  '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/contato': typeof ContatoRoute
+  '/crypto': typeof CryptoRoute
+  '/mercado': typeof MercadoRouteWithChildren
+  '/planos': typeof PlanosRoute
+  '/renovar-servidor': typeof RenovarServidorRoute
+  '/tutorial': typeof TutorialRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/indicacoes': typeof AuthenticatedIndicacoesRoute
+  '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
+  '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
+  '/mercado/sucesso': typeof MercadoSucessoRoute
+  '/pagamento/erro': typeof PagamentoErroRoute
+  '/pagamento/pendente': typeof PagamentoPendenteRoute
+  '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
+  '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
+  '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/contato'
+    | '/crypto'
+    | '/mercado'
+    | '/planos'
+    | '/renovar-servidor'
+    | '/tutorial'
+    | '/admin'
+    | '/dashboard'
+    | '/indicacoes'
+    | '/play-protect'
+    | '/suporte'
+    | '/mercado/sucesso'
+    | '/pagamento/erro'
+    | '/pagamento/pendente'
+    | '/pagamento/sucesso'
+    | '/api/chat/license-ai'
+    | '/api/public/mp-webhook'
+    | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/crypto-poll'
+    | '/api/public/hooks/daily-license-check'
+    | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/verify-external-payers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/contato'
+    | '/crypto'
+    | '/mercado'
+    | '/planos'
+    | '/renovar-servidor'
+    | '/tutorial'
+    | '/admin'
+    | '/dashboard'
+    | '/indicacoes'
+    | '/play-protect'
+    | '/suporte'
+    | '/mercado/sucesso'
+    | '/pagamento/erro'
+    | '/pagamento/pendente'
+    | '/pagamento/sucesso'
+    | '/api/chat/license-ai'
+    | '/api/public/mp-webhook'
+    | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/crypto-poll'
+    | '/api/public/hooks/daily-license-check'
+    | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/verify-external-payers'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/contato'
+    | '/crypto'
+    | '/mercado'
+    | '/planos'
+    | '/renovar-servidor'
+    | '/tutorial'
+    | '/_authenticated/admin'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/indicacoes'
+    | '/_authenticated/play-protect'
+    | '/_authenticated/suporte'
+    | '/mercado/sucesso'
+    | '/pagamento/erro'
+    | '/pagamento/pendente'
+    | '/pagamento/sucesso'
+    | '/api/chat/license-ai'
+    | '/api/public/mp-webhook'
+    | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/crypto-poll'
+    | '/api/public/hooks/daily-license-check'
+    | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/verify-external-payers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ContatoRoute: typeof ContatoRoute
+  CryptoRoute: typeof CryptoRoute
+  MercadoRoute: typeof MercadoRouteWithChildren
+  PlanosRoute: typeof PlanosRoute
+  RenovarServidorRoute: typeof RenovarServidorRoute
+  TutorialRoute: typeof TutorialRoute
+  PagamentoErroRoute: typeof PagamentoErroRoute
+  PagamentoPendenteRoute: typeof PagamentoPendenteRoute
+  PagamentoSucessoRoute: typeof PagamentoSucessoRoute
+  ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
+  ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
+  ApiPublicHooksApkWorkerRoute: typeof ApiPublicHooksApkWorkerRoute
+  ApiPublicHooksCryptoPollRoute: typeof ApiPublicHooksCryptoPollRoute
+  ApiPublicHooksDailyLicenseCheckRoute: typeof ApiPublicHooksDailyLicenseCheckRoute
+  ApiPublicHooksExpireLicensesRoute: typeof ApiPublicHooksExpireLicensesRoute
+  ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tutorial': {
+      id: '/tutorial'
+      path: '/tutorial'
+      fullPath: '/tutorial'
+      preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/renovar-servidor': {
+      id: '/renovar-servidor'
+      path: '/renovar-servidor'
+      fullPath: '/renovar-servidor'
+      preLoaderRoute: typeof RenovarServidorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planos': {
+      id: '/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof PlanosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mercado': {
+      id: '/mercado'
+      path: '/mercado'
+      fullPath: '/mercado'
+      preLoaderRoute: typeof MercadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crypto': {
+      id: '/crypto'
+      path: '/crypto'
+      fullPath: '/crypto'
+      preLoaderRoute: typeof CryptoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +414,173 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pagamento/sucesso': {
+      id: '/pagamento/sucesso'
+      path: '/pagamento/sucesso'
+      fullPath: '/pagamento/sucesso'
+      preLoaderRoute: typeof PagamentoSucessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/pendente': {
+      id: '/pagamento/pendente'
+      path: '/pagamento/pendente'
+      fullPath: '/pagamento/pendente'
+      preLoaderRoute: typeof PagamentoPendenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/erro': {
+      id: '/pagamento/erro'
+      path: '/pagamento/erro'
+      fullPath: '/pagamento/erro'
+      preLoaderRoute: typeof PagamentoErroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mercado/sucesso': {
+      id: '/mercado/sucesso'
+      path: '/sucesso'
+      fullPath: '/mercado/sucesso'
+      preLoaderRoute: typeof MercadoSucessoRouteImport
+      parentRoute: typeof MercadoRoute
+    }
+    '/_authenticated/suporte': {
+      id: '/_authenticated/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof AuthenticatedSuporteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/play-protect': {
+      id: '/_authenticated/play-protect'
+      path: '/play-protect'
+      fullPath: '/play-protect'
+      preLoaderRoute: typeof AuthenticatedPlayProtectRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/indicacoes': {
+      id: '/_authenticated/indicacoes'
+      path: '/indicacoes'
+      fullPath: '/indicacoes'
+      preLoaderRoute: typeof AuthenticatedIndicacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/mp-webhook': {
+      id: '/api/public/mp-webhook'
+      path: '/api/public/mp-webhook'
+      fullPath: '/api/public/mp-webhook'
+      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat/license-ai': {
+      id: '/api/chat/license-ai'
+      path: '/api/chat/license-ai'
+      fullPath: '/api/chat/license-ai'
+      preLoaderRoute: typeof ApiChatLicenseAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/verify-external-payers': {
+      id: '/api/public/hooks/verify-external-payers'
+      path: '/api/public/hooks/verify-external-payers'
+      fullPath: '/api/public/hooks/verify-external-payers'
+      preLoaderRoute: typeof ApiPublicHooksVerifyExternalPayersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/expire-licenses': {
+      id: '/api/public/hooks/expire-licenses'
+      path: '/api/public/hooks/expire-licenses'
+      fullPath: '/api/public/hooks/expire-licenses'
+      preLoaderRoute: typeof ApiPublicHooksExpireLicensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/daily-license-check': {
+      id: '/api/public/hooks/daily-license-check'
+      path: '/api/public/hooks/daily-license-check'
+      fullPath: '/api/public/hooks/daily-license-check'
+      preLoaderRoute: typeof ApiPublicHooksDailyLicenseCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/crypto-poll': {
+      id: '/api/public/hooks/crypto-poll'
+      path: '/api/public/hooks/crypto-poll'
+      fullPath: '/api/public/hooks/crypto-poll'
+      preLoaderRoute: typeof ApiPublicHooksCryptoPollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/apk-worker': {
+      id: '/api/public/hooks/apk-worker'
+      path: '/api/public/hooks/apk-worker'
+      fullPath: '/api/public/hooks/apk-worker'
+      preLoaderRoute: typeof ApiPublicHooksApkWorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedIndicacoesRoute: typeof AuthenticatedIndicacoesRoute
+  AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
+  AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedIndicacoesRoute: AuthenticatedIndicacoesRoute,
+  AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
+  AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface MercadoRouteChildren {
+  MercadoSucessoRoute: typeof MercadoSucessoRoute
+}
+
+const MercadoRouteChildren: MercadoRouteChildren = {
+  MercadoSucessoRoute: MercadoSucessoRoute,
+}
+
+const MercadoRouteWithChildren =
+  MercadoRoute._addFileChildren(MercadoRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ContatoRoute: ContatoRoute,
+  CryptoRoute: CryptoRoute,
+  MercadoRoute: MercadoRouteWithChildren,
+  PlanosRoute: PlanosRoute,
+  RenovarServidorRoute: RenovarServidorRoute,
+  TutorialRoute: TutorialRoute,
+  PagamentoErroRoute: PagamentoErroRoute,
+  PagamentoPendenteRoute: PagamentoPendenteRoute,
+  PagamentoSucessoRoute: PagamentoSucessoRoute,
+  ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
+  ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
+  ApiPublicHooksApkWorkerRoute: ApiPublicHooksApkWorkerRoute,
+  ApiPublicHooksCryptoPollRoute: ApiPublicHooksCryptoPollRoute,
+  ApiPublicHooksDailyLicenseCheckRoute: ApiPublicHooksDailyLicenseCheckRoute,
+  ApiPublicHooksExpireLicensesRoute: ApiPublicHooksExpireLicensesRoute,
+  ApiPublicHooksVerifyExternalPayersRoute:
+    ApiPublicHooksVerifyExternalPayersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
