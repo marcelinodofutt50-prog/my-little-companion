@@ -513,6 +513,8 @@ function LandingPage() {
             </div>
           </footer>
         </main>
+        <MobileStickyCTA label="Ver planos" to="/planos" />
+
       </div>
     </div>
   );
