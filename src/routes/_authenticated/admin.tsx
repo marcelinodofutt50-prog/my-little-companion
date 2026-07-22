@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet,
+  Wallet, Copy,
 } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
@@ -17,6 +17,8 @@ import { AdminApkPanel } from "@/components/AdminApkPanel";
 import { AdminMarketPanel } from "@/components/AdminMarketPanel";
 import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
 import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
+import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
+import { RevenueSparkline } from "@/components/RevenueSparkline";
 
 
 
@@ -377,6 +379,11 @@ function AdminPage() {
                   <MiniStat label="Receita hoje" value={formatBrl(revenueToday)} accent="violet" />
                   <MiniStat label="Trials ativos" value={String(trialsActive)} accent="cyan" />
                 </div>
+
+                {/* Tendência de receita */}
+                <RevenueSparkline orders={orders} />
+
+
 
                 <div className="grid gap-4 md:grid-cols-3">
                   {/* Pedidos recentes */}
@@ -1131,8 +1138,23 @@ function AdminChatPanel() {
         ) : (
           <>
             <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
-              <div>
-                <div className="font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</span>
+                  {activeThread.profile?.email && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(activeThread.profile?.email ?? "");
+                        toast.success("Email copiado");
+                      }}
+                      title="Copiar email"
+                      className="rounded p-1 text-muted-foreground hover:bg-background/40 hover:text-neon"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
                 <div className="font-mono text-[10px] uppercase text-muted-foreground">
                   {activeThread.subject}
                   {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
@@ -1200,12 +1222,37 @@ function AdminChatPanel() {
                 </div>
               ))}
             </div>
-            <form className="flex items-center gap-2 border-t border-border/40 p-3" onSubmit={(e) => { e.preventDefault(); send(); }}>
-              <Input ref={inputRef} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Responder cliente..." className="font-mono text-sm" />
-              <Button type="submit" disabled={sending || !body.trim()} className="glow-neon font-mono uppercase tracking-wider">
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="mr-2 h-3.5 w-3.5" />Enviar</>}
-              </Button>
-            </form>
+            <div className="border-t border-border/40 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                  ctrl+enter para enviar
+                </span>
+                <QuickRepliesDropdown
+                  onPick={(text) => {
+                    setBody((prev) => (prev.trim() ? `${prev}\n${text}` : text));
+                    inputRef.current?.focus();
+                  }}
+                />
+              </div>
+              <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
+                <Input
+                  ref={inputRef}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                      e.preventDefault();
+                      send();
+                    }
+                  }}
+                  placeholder="Responder cliente..."
+                  className="font-mono text-sm"
+                />
+                <Button type="submit" disabled={sending || !body.trim()} className="glow-neon font-mono uppercase tracking-wider">
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="mr-2 h-3.5 w-3.5" />Enviar</>}
+                </Button>
+              </form>
+            </div>
           </>
         )}
       </section>
