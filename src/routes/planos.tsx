@@ -399,6 +399,8 @@ function PlansPage() {
           </div>
         )}
 
+        <PreCheckoutFaq />
+
         {/* PLAN GROUPS ====================================== */}
         <PlanGroup
           title="Licenças de acesso"
