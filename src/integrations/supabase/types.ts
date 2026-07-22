@@ -850,6 +850,46 @@ export type Database = {
         }
         Returns: boolean
       }
+      reactivate_server_licenses_for_user: {
+        Args: { _paid_until: string; _user_id: string }
+        Returns: {
+          created_at: string
+          disabled_at: string | null
+          expires_at: string | null
+          expires_at_before_suspend: string | null
+          id: string
+          is_legacy: boolean
+          is_trial: boolean
+          legacy_server_fee_brl: number | null
+          order_id: string | null
+          paid_externally: boolean
+          paid_externally_last_check_at: string | null
+          paid_externally_last_check_status: string | null
+          paid_externally_marked_at: string | null
+          paid_externally_until: string | null
+          panel: string
+          plan_slug: string
+          revoked: boolean
+          server_ip: string
+          server_overdue_at: string | null
+          server_paid_until: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          updated_at: string
+          upgraded_from_license_id: string | null
+          user_id: string
+          version_tier: string | null
+          yaarsa_email: string
+          yaarsa_password_enc: string
+          yaarsa_username: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "licenses"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       revoke_unpaid_server_licenses: {
         Args: never
         Returns: {
