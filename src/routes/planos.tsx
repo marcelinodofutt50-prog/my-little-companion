@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConversionBoosters, LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
+import { VersionCompare } from "@/components/VersionCompare";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -398,6 +399,8 @@ function PlansPage() {
           </div>
         )}
 
+        <PreCheckoutFaq />
+
         {/* PLAN GROUPS ====================================== */}
         <PlanGroup
           title="Licenças de acesso"
@@ -444,6 +447,7 @@ function PlansPage() {
         />
 
         <TierComparison />
+        <VersionCompare />
 
         {/* METRICS BAR ================================= */}
         <section className="mt-14 grid gap-4 rounded-2xl border border-border/50 bg-card/40 p-6 md:grid-cols-4">
@@ -518,6 +522,39 @@ function TierComparison() {
             <div className="px-2 py-3 text-center font-mono md:px-4">{r.weekly}</div>
             <div className="px-2 py-3 text-center font-mono md:px-4">{r.monthly}</div>
             <div className="px-2 py-3 text-center font-mono text-foreground md:px-4">{r.lifetime}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PreCheckoutFaq() {
+  const quick = [
+    { q: "Ativação demora quanto?", a: "Menos de 60 segundos após o PIX cair. Automático." },
+    { q: "E se der erro?", a: "Reembolso integral e botão 'Tentar novamente' no painel." },
+    { q: "Posso testar antes?", a: "Sim, trial de 1 dia grátis para toda conta nova." },
+    { q: "Preciso de nota fiscal?", a: "Sim, o comprovante do Mercado Pago é emitido no ato." },
+  ];
+  return (
+    <section className="mt-10 mb-6">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="h-px flex-1 bg-border/50" />
+        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          // antes de escolher · dúvidas rápidas
+        </div>
+        <div className="h-px flex-1 bg-border/50" />
+      </div>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        {quick.map((it) => (
+          <div key={it.q} className="rounded-lg border border-border/50 bg-card/40 p-4">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              <div>
+                <div className="text-sm font-semibold">{it.q}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{it.a}</div>
+              </div>
+            </div>
           </div>
         ))}
       </div>
