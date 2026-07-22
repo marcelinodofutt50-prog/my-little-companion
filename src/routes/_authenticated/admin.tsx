@@ -983,19 +983,17 @@ function AdminChatPanel() {
 
   useEffect(() => {
     requestNotifyPermission();
-    threadsFn().then((t) => {
+    threadsFn({ data: { filter } }).then((t) => {
       setThreads(t as Thread[]);
       setLoading(false);
       if ((t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
     }).catch(() => setLoading(false));
-    // Realtime: refresh threads on any new message, and ding on new *client* messages.
-    const ch = supabase.channel("admin-threads").on("postgres_changes",
+    const ch = supabase.channel(`admin-threads-${filter}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages" },
       (payload) => {
         const msg = payload.new as Msg;
-        threadsFn().then((t) => {
+        threadsFn({ data: { filter } }).then((t) => {
           setThreads(t as Thread[]);
-          // Only alert on inbound client messages that arrived after mount.
           if (!msg.is_admin && soundOnRef.current && new Date(msg.created_at).getTime() >= bootAtRef.current) {
             playNotifyDing();
             const th = (t as Thread[]).find((x) => x.id === msg.thread_id);
@@ -1011,7 +1009,7 @@ function AdminChatPanel() {
     ).subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filter]);
 
   useEffect(() => {
     if (!activeId) return;
