@@ -1069,6 +1069,18 @@ function AdminChatPanel() {
               <span className="font-mono text-[10px] text-muted-foreground">{threads.length}</span>
             </div>
           </div>
+          <div className="mb-2 flex gap-1">
+            {(["open", "mine", "closed"] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className={`flex-1 rounded px-2 py-1 font-mono text-[9px] uppercase tracking-wider ${filter === f ? "border border-neon/50 bg-neon/10 text-neon" : "border border-border/30 text-muted-foreground hover:text-foreground"}`}
+              >
+                {f === "open" ? "abertas" : f === "mine" ? "minhas" : "encerradas"}
+              </button>
+            ))}
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="buscar cliente..." className="h-8 pl-8 font-mono text-xs" />
