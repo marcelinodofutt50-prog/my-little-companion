@@ -8,6 +8,7 @@ import {
   ChevronRight, Check, Minus,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ConversionBoosters, LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -285,7 +286,10 @@ function PlansPage() {
         </div>
       </section>
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 py-12">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 py-12 pb-28 md:pb-12">
+        <LiveSalesToasts />
+        <ConversionBoosters />
+
         {/* BENEFITS PANEL ==================================== */}
         {loggedIn && (
           <div className="mx-auto mb-14 max-w-3xl overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur">
@@ -472,6 +476,7 @@ function PlansPage() {
           </div>
         )}
       </main>
+      <MobileStickyCTA label="Escolher plano" to="/planos" />
     </div>
   );
 }

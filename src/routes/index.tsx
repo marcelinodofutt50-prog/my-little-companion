@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SocialProofStrip } from "@/components/SocialProof";
+import { LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
 import shadowMark from "@/assets/shadow-mask.png";
@@ -95,8 +96,10 @@ function LandingPage() {
 
       <div className="relative z-10">
         <SiteHeader />
+        <LiveSalesToasts />
 
-        <main className="mx-auto max-w-7xl px-6 md:px-10">
+        <main className="mx-auto max-w-7xl px-6 pb-24 md:px-10 md:pb-0">
+
           {/* HERO — clean, brand-first */}
           <section className="relative flex min-h-[calc(100vh-80px)] flex-col items-center justify-center py-16 text-center">
             {/* Brand mark */}
@@ -510,6 +513,8 @@ function LandingPage() {
             </div>
           </footer>
         </main>
+        <MobileStickyCTA label="Ver planos" to="/planos" />
+
       </div>
     </div>
   );
