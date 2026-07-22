@@ -1222,12 +1222,37 @@ function AdminChatPanel() {
                 </div>
               ))}
             </div>
-            <form className="flex items-center gap-2 border-t border-border/40 p-3" onSubmit={(e) => { e.preventDefault(); send(); }}>
-              <Input ref={inputRef} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Responder cliente..." className="font-mono text-sm" />
-              <Button type="submit" disabled={sending || !body.trim()} className="glow-neon font-mono uppercase tracking-wider">
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="mr-2 h-3.5 w-3.5" />Enviar</>}
-              </Button>
-            </form>
+            <div className="border-t border-border/40 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                  ctrl+enter para enviar
+                </span>
+                <QuickRepliesDropdown
+                  onPick={(text) => {
+                    setBody((prev) => (prev.trim() ? `${prev}\n${text}` : text));
+                    inputRef.current?.focus();
+                  }}
+                />
+              </div>
+              <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
+                <Input
+                  ref={inputRef}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                      e.preventDefault();
+                      send();
+                    }
+                  }}
+                  placeholder="Responder cliente..."
+                  className="font-mono text-sm"
+                />
+                <Button type="submit" disabled={sending || !body.trim()} className="glow-neon font-mono uppercase tracking-wider">
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="mr-2 h-3.5 w-3.5" />Enviar</>}
+                </Button>
+              </form>
+            </div>
           </>
         )}
       </section>
