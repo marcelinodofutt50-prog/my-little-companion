@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SocialProofStrip } from "@/components/SocialProof";
 import { LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
+import { Testimonials } from "@/components/Testimonials";
+import { VideoDemo } from "@/components/VideoDemo";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
 import shadowMark from "@/assets/shadow-mask.png";
@@ -418,6 +420,12 @@ function LandingPage() {
               </div>
             </div>
           </section>
+
+          {/* Video Demo */}
+          <VideoDemo />
+
+          {/* Testimonials */}
+          <Testimonials />
 
           {/* FAQ */}
           <section className="border-t border-border py-20">

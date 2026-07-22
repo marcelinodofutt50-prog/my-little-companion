@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConversionBoosters, LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
+import { VersionCompare } from "@/components/VersionCompare";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -444,6 +445,7 @@ function PlansPage() {
         />
 
         <TierComparison />
+        <VersionCompare />
 
         {/* METRICS BAR ================================= */}
         <section className="mt-14 grid gap-4 rounded-2xl border border-border/50 bg-card/40 p-6 md:grid-cols-4">
