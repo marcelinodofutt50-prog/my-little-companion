@@ -89,6 +89,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "apk_jobs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
+            referencedColumns: ["id"]
+          },
         ]
       }
       cashback_ledger: {
@@ -122,6 +129,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashback_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
             referencedColumns: ["id"]
           },
         ]
@@ -235,6 +249,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crypto_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
             referencedColumns: ["id"]
           },
         ]
@@ -390,6 +411,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licenses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
             referencedColumns: ["id"]
           },
           {
@@ -646,6 +674,13 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
+            referencedColumns: ["id"]
+          },
         ]
       }
       support_messages: {
@@ -656,6 +691,7 @@ export type Database = {
           created_at: string
           id: string
           is_admin: boolean
+          is_system: boolean
           sender_id: string
           thread_id: string
         }
@@ -666,6 +702,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_admin?: boolean
+          is_system?: boolean
           sender_id: string
           thread_id: string
         }
@@ -676,6 +713,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_admin?: boolean
+          is_system?: boolean
           sender_id?: string
           thread_id?: string
         }
@@ -691,26 +729,56 @@ export type Database = {
       }
       support_threads: {
         Row: {
+          assigned_at: string | null
+          assigned_name: string | null
+          assigned_to: string | null
+          closed_at: string | null
+          closed_by: string | null
+          closed_by_name: string | null
           created_at: string
           id: string
+          last_customer_message_at: string | null
+          last_staff_message_at: string | null
           status: string
           subject: string
+          unread_by_customer: number
+          unread_by_staff: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          assigned_at?: string | null
+          assigned_name?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_by_name?: string | null
           created_at?: string
           id?: string
+          last_customer_message_at?: string | null
+          last_staff_message_at?: string | null
           status?: string
           subject?: string
+          unread_by_customer?: number
+          unread_by_staff?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          assigned_at?: string | null
+          assigned_name?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_by_name?: string | null
           created_at?: string
           id?: string
+          last_customer_message_at?: string | null
+          last_staff_message_at?: string | null
           status?: string
           subject?: string
+          unread_by_customer?: number
+          unread_by_staff?: number
           updated_at?: string
           user_id?: string
         }
@@ -837,7 +905,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_recent_sales: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          first_name: string | null
+          id: string | null
+          last_initial: string | null
+          plan_slug: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_plan_slug_fkey"
+            columns: ["plan_slug"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
     }
     Functions: {
       expire_stale_apk_jobs: { Args: never; Returns: number }

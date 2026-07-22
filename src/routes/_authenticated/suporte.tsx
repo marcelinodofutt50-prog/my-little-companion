@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/suporte")({
   component: SupportPage,
 });
 
-type Msg = { id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; created_at: string; sender_id: string };
+type Msg = { id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 type PendingMsg = {
   clientId: string;
   body: string | null;
@@ -72,8 +72,14 @@ function SupportPage() {
     if (!thread) return;
     setPending((prev) => prev.map((p) => p.clientId === clientId ? { ...p, status: "sending", error: undefined } : p));
     try {
-      await sendFn({ data: { threadId: thread.id, ...payload } });
-      // Success — realtime INSERT will bring the confirmed message; drop the pending entry.
+      const res: any = await sendFn({ data: { threadId: thread.id, ...payload } });
+      if (res?.thread_id && res.thread_id !== thread.id) {
+        // Server auto-opened a new thread (previous one was closed). Reload.
+        const t = await openFn();
+        setThread(t);
+        const m = await listFn({ data: { threadId: t.id } });
+        setMsgs(m as Msg[]);
+      }
       setPending((prev) => prev.filter((p) => p.clientId !== clientId));
     } catch (e: any) {
       const message = e?.message ?? "Falha ao enviar";
@@ -157,6 +163,15 @@ function SupportPage() {
           <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
             {msgs.length === 0 && pending.length === 0 && <div className="pt-16 text-center text-sm text-muted-foreground">Nenhuma mensagem. Envie a primeira.</div>}
             {msgs.map((m) => {
+              if (m.is_system) {
+                return (
+                  <div key={m.id} className="flex justify-center">
+                    <div className="max-w-[85%] rounded-lg border border-cyan/30 bg-cyan/5 px-4 py-2 font-mono text-xs text-cyan whitespace-pre-wrap text-center">
+                      {m.body}
+                    </div>
+                  </div>
+                );
+              }
               const mine = m.sender_id === uid && !m.is_admin;
               const fromAdmin = m.is_admin && m.sender_id !== uid;
               const label = mine ? "você" : fromAdmin ? "admin" : "suporte";

@@ -31,6 +31,7 @@ import {
   adminRevokeLicense, adminExtendLicense,
   adminSetRole, adminListRoles, adminRenewClientServer, adminRecreateLicense,
   adminListThreads, adminListThreadMessages, adminSendMessage, adminListLogs,
+  adminAssumeThread, adminCloseThread,
   adminCreateLicenseForClient, adminRegisterLegacyLicense,
   adminListReferrals, adminMarkReferralPaid,
 } from "@/lib/admin.functions";
@@ -933,8 +934,8 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
 
 
 // ============= LIVE CHAT PANEL =============
-type Thread = { id: string; user_id: string; subject: string; status: string; updated_at: string; profile: { email: string; full_name: string | null } | null };
-type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; created_at: string; sender_id: string };
+type Thread = { id: string; user_id: string; subject: string; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null } | null };
+type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
 function AdminChatPanel() {
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -944,6 +945,7 @@ function AdminChatPanel() {
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"open" | "mine" | "closed">("open");
   // Default sound preference when nothing is stored yet.
   const SOUND_DEFAULT_ON = true;
   const [soundOn, setSoundOn] = useState<boolean>(SOUND_DEFAULT_ON);
@@ -973,22 +975,25 @@ function AdminChatPanel() {
   const threadsFn = useServerFn(adminListThreads);
   const msgsFn = useServerFn(adminListThreadMessages);
   const sendFn = useServerFn(adminSendMessage);
+  const assumeFn = useServerFn(adminAssumeThread);
+  const closeFn = useServerFn(adminCloseThread);
+
+  const refreshThreads = () => threadsFn({ data: { filter } }).then((t) => setThreads(t as Thread[])).catch(() => {});
+
 
   useEffect(() => {
     requestNotifyPermission();
-    threadsFn().then((t) => {
+    threadsFn({ data: { filter } }).then((t) => {
       setThreads(t as Thread[]);
       setLoading(false);
       if ((t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
     }).catch(() => setLoading(false));
-    // Realtime: refresh threads on any new message, and ding on new *client* messages.
-    const ch = supabase.channel("admin-threads").on("postgres_changes",
+    const ch = supabase.channel(`admin-threads-${filter}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages" },
       (payload) => {
         const msg = payload.new as Msg;
-        threadsFn().then((t) => {
+        threadsFn({ data: { filter } }).then((t) => {
           setThreads(t as Thread[]);
-          // Only alert on inbound client messages that arrived after mount.
           if (!msg.is_admin && soundOnRef.current && new Date(msg.created_at).getTime() >= bootAtRef.current) {
             playNotifyDing();
             const th = (t as Thread[]).find((x) => x.id === msg.thread_id);
@@ -1004,7 +1009,7 @@ function AdminChatPanel() {
     ).subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filter]);
 
   useEffect(() => {
     if (!activeId) return;
@@ -1064,6 +1069,18 @@ function AdminChatPanel() {
               <span className="font-mono text-[10px] text-muted-foreground">{threads.length}</span>
             </div>
           </div>
+          <div className="mb-2 flex gap-1">
+            {(["open", "mine", "closed"] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className={`flex-1 rounded px-2 py-1 font-mono text-[9px] uppercase tracking-wider ${filter === f ? "border border-neon/50 bg-neon/10 text-neon" : "border border-border/30 text-muted-foreground hover:text-foreground"}`}
+              >
+                {f === "open" ? "abertas" : f === "mine" ? "minhas" : "encerradas"}
+              </button>
+            ))}
+          </div>
           <div className="relative">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="buscar cliente..." className="h-8 pl-8 font-mono text-xs" />
@@ -1084,11 +1101,18 @@ function AdminChatPanel() {
                   {(t.profile?.email ?? "?").slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-mono text-xs text-foreground">{t.profile?.email ?? "cliente"}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="truncate font-mono text-xs text-foreground">{t.profile?.email ?? "cliente"}</div>
+                    {(t.unread_by_staff ?? 0) > 0 && !active && (
+                      <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                    )}
+                  </div>
                   <div className="mt-0.5 flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${t.status === "open" ? "bg-neon" : "bg-muted-foreground"}`} />
-                    <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">{t.status}</span>
-                    <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.updated_at).toLocaleDateString("pt-BR")}</span>
+                    <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
+                    <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
+                      {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
                   </div>
                 </div>
               </button>
@@ -1109,9 +1133,40 @@ function AdminChatPanel() {
             <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
               <div>
                 <div className="font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</div>
-                <div className="font-mono text-[10px] uppercase text-muted-foreground">{activeThread.subject} · thread {activeThread.id.slice(0, 8)}</div>
+                <div className="font-mono text-[10px] uppercase text-muted-foreground">
+                  {activeThread.subject}
+                  {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
+                  {activeThread.status === "closed" && " · ENCERRADO"}
+                </div>
               </div>
               <div className="flex items-center gap-2">
+                {activeThread.status !== "closed" && !activeThread.assigned_to && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try { await assumeFn({ data: { threadId: activeThread.id } }); await refreshThreads(); toast.success("Conversa assumida"); }
+                      catch (e: any) { toast.error(e.message); }
+                    }}
+                    className="h-7 font-mono text-[10px] uppercase"
+                  >
+                    Assumir
+                  </Button>
+                )}
+                {activeThread.status !== "closed" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      if (!confirm("Encerrar esta conversa? O cliente vê o histórico e uma nova mensagem abre outro ticket.")) return;
+                      try { await closeFn({ data: { threadId: activeThread.id } }); await refreshThreads(); toast.success("Conversa encerrada"); }
+                      catch (e: any) { toast.error(e.message); }
+                    }}
+                    className="h-7 font-mono text-[10px] uppercase text-destructive"
+                  >
+                    Encerrar
+                  </Button>
+                )}
                 <IssueInThreadButton
                   threadId={activeThread.id}
                   defaultEmail={activeThread.profile?.email ?? ""}
@@ -1123,7 +1178,13 @@ function AdminChatPanel() {
             </div>
             <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-background/30 p-4">
               {msgs.length === 0 && <div className="pt-16 text-center text-xs text-muted-foreground">Sem mensagens ainda — inicie a conversa.</div>}
-              {msgs.map((m) => (
+              {msgs.map((m) => m.is_system ? (
+                <div key={m.id} className="flex justify-center">
+                  <div className="max-w-[80%] rounded-full border border-cyan/30 bg-cyan/5 px-3 py-1 font-mono text-[10px] text-cyan whitespace-pre-wrap text-center">
+                    {m.body}
+                  </div>
+                </div>
+              ) : (
                 <div key={m.id} className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${m.is_admin ? "border border-violet/40 bg-violet/10" : "border border-border bg-card"}`}>
                     <div className="mb-1 font-mono text-[9px] uppercase text-muted-foreground">

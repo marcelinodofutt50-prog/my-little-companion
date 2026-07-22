@@ -289,7 +289,52 @@ async function fulfillOrder(orderId: string) {
     server_ip: serverIpForPanel,
   } as any);
 
+  // Auto-deliver credentials in the customer's support chat as a system message.
+  try {
+    const { data: openThread } = await supabaseAdmin
+      .from("support_threads")
+      .select("id")
+      .eq("user_id", order.user_id)
+      .neq("status", "closed")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    let threadId = openThread?.id as string | undefined;
+    if (!threadId) {
+      const { data: nt } = await supabaseAdmin
+        .from("support_threads")
+        .insert({ user_id: order.user_id, subject: "Entrega automática", status: "open" })
+        .select("id").single();
+      threadId = nt?.id;
+    }
+    if (threadId) {
+      const serverLabel = targetPanel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7";
+      const body =
+`✅ *Pagamento confirmado — obrigado pela preferência!*
 
+Aqui estão suas credenciais de acesso:
+
+• Servidor: *${serverLabel}* (${serverIpForPanel})
+• Usuário: \`${creds.username}\`
+• Email: \`${creds.email}\`
+• Senha: \`${creds.password}\`
+• Validade: ${expiresAt.toLocaleDateString("pt-BR")}
+
+Guarde essas informações. Você também pode consultá-las a qualquer momento no seu painel em /dashboard.`;
+      await supabaseAdmin.from("support_messages").insert({
+        thread_id: threadId,
+        sender_id: order.user_id,
+        is_admin: true,
+        is_system: true,
+        body,
+      });
+    }
+  } catch (e: any) {
+    await supabaseAdmin.from("integration_logs").insert({
+      source: "support", action: "auto_deliver_credentials", outcome: "error",
+      error: e?.message ?? "unknown", context: { order_id: order.id } as any,
+    } as any);
+  }
 
   await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
 
