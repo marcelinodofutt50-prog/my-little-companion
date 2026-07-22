@@ -1101,11 +1101,18 @@ function AdminChatPanel() {
                   {(t.profile?.email ?? "?").slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-mono text-xs text-foreground">{t.profile?.email ?? "cliente"}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="truncate font-mono text-xs text-foreground">{t.profile?.email ?? "cliente"}</div>
+                    {(t.unread_by_staff ?? 0) > 0 && !active && (
+                      <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                    )}
+                  </div>
                   <div className="mt-0.5 flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${t.status === "open" ? "bg-neon" : "bg-muted-foreground"}`} />
-                    <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">{t.status}</span>
-                    <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.updated_at).toLocaleDateString("pt-BR")}</span>
+                    <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
+                    <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
+                      {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
                   </div>
                 </div>
               </button>
@@ -1126,9 +1133,40 @@ function AdminChatPanel() {
             <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
               <div>
                 <div className="font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</div>
-                <div className="font-mono text-[10px] uppercase text-muted-foreground">{activeThread.subject} · thread {activeThread.id.slice(0, 8)}</div>
+                <div className="font-mono text-[10px] uppercase text-muted-foreground">
+                  {activeThread.subject}
+                  {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
+                  {activeThread.status === "closed" && " · ENCERRADO"}
+                </div>
               </div>
               <div className="flex items-center gap-2">
+                {activeThread.status !== "closed" && !activeThread.assigned_to && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try { await assumeFn({ data: { threadId: activeThread.id } }); await refreshThreads(); toast.success("Conversa assumida"); }
+                      catch (e: any) { toast.error(e.message); }
+                    }}
+                    className="h-7 font-mono text-[10px] uppercase"
+                  >
+                    Assumir
+                  </Button>
+                )}
+                {activeThread.status !== "closed" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      if (!confirm("Encerrar esta conversa? O cliente vê o histórico e uma nova mensagem abre outro ticket.")) return;
+                      try { await closeFn({ data: { threadId: activeThread.id } }); await refreshThreads(); toast.success("Conversa encerrada"); }
+                      catch (e: any) { toast.error(e.message); }
+                    }}
+                    className="h-7 font-mono text-[10px] uppercase text-destructive"
+                  >
+                    Encerrar
+                  </Button>
+                )}
                 <IssueInThreadButton
                   threadId={activeThread.id}
                   defaultEmail={activeThread.profile?.email ?? ""}
@@ -1140,7 +1178,13 @@ function AdminChatPanel() {
             </div>
             <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-background/30 p-4">
               {msgs.length === 0 && <div className="pt-16 text-center text-xs text-muted-foreground">Sem mensagens ainda — inicie a conversa.</div>}
-              {msgs.map((m) => (
+              {msgs.map((m) => m.is_system ? (
+                <div key={m.id} className="flex justify-center">
+                  <div className="max-w-[80%] rounded-full border border-cyan/30 bg-cyan/5 px-3 py-1 font-mono text-[10px] text-cyan whitespace-pre-wrap text-center">
+                    {m.body}
+                  </div>
+                </div>
+              ) : (
                 <div key={m.id} className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${m.is_admin ? "border border-violet/40 bg-violet/10" : "border border-border bg-card"}`}>
                     <div className="mb-1 font-mono text-[9px] uppercase text-muted-foreground">
