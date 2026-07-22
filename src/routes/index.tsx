@@ -96,8 +96,10 @@ function LandingPage() {
 
       <div className="relative z-10">
         <SiteHeader />
+        <LiveSalesToasts />
 
-        <main className="mx-auto max-w-7xl px-6 md:px-10">
+        <main className="mx-auto max-w-7xl px-6 pb-24 md:px-10 md:pb-0">
+
           {/* HERO — clean, brand-first */}
           <section className="relative flex min-h-[calc(100vh-80px)] flex-col items-center justify-center py-16 text-center">
             {/* Brand mark */}
