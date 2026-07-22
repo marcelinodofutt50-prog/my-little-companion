@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SocialProofStrip } from "@/components/SocialProof";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
 import shadowMark from "@/assets/shadow-mask.png";
@@ -209,6 +210,8 @@ function LandingPage() {
             </motion.div>
           </section>
 
+          {/* SOCIAL PROOF */}
+          <SocialProofStrip />
 
           {/* FEATURES */}
           <section className="border-t border-border py-20">
