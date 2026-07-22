@@ -529,6 +529,39 @@ function TierComparison() {
   );
 }
 
+function PreCheckoutFaq() {
+  const quick = [
+    { q: "Ativação demora quanto?", a: "Menos de 60 segundos após o PIX cair. Automático." },
+    { q: "E se der erro?", a: "Reembolso integral e botão 'Tentar novamente' no painel." },
+    { q: "Posso testar antes?", a: "Sim, trial de 1 dia grátis para toda conta nova." },
+    { q: "Preciso de nota fiscal?", a: "Sim, o comprovante do Mercado Pago é emitido no ato." },
+  ];
+  return (
+    <section className="mt-10 mb-6">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="h-px flex-1 bg-border/50" />
+        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          // antes de escolher · dúvidas rápidas
+        </div>
+        <div className="h-px flex-1 bg-border/50" />
+      </div>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        {quick.map((it) => (
+          <div key={it.q} className="rounded-lg border border-border/50 bg-card/40 p-4">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              <div>
+                <div className="text-sm font-semibold">{it.q}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{it.a}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function FaqSection() {
   const faq = [
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
