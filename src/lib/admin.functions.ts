@@ -95,14 +95,19 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
 
 export const adminListThreads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((i: unknown) => z.object({
+    filter: z.enum(["open", "mine", "closed", "all"]).default("open"),
+  }).parse(i ?? {}))
+  .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: threads } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("support_threads")
-      .select("id, user_id, subject, status, created_at, updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(200);
+      .select("id, user_id, subject, status, created_at, updated_at, assigned_to, assigned_name, assigned_at, closed_at, closed_by_name, last_customer_message_at, last_staff_message_at, unread_by_staff, unread_by_customer");
+    if (data.filter === "open") q = q.neq("status", "closed");
+    else if (data.filter === "mine") q = q.eq("assigned_to", context.userId).neq("status", "closed");
+    else if (data.filter === "closed") q = q.eq("status", "closed");
+    const { data: threads } = await q.order("last_customer_message_at", { ascending: false }).limit(300);
     const list = threads ?? [];
     const userIds = Array.from(new Set(list.map((t: any) => t.user_id)));
     const { data: profs } = userIds.length
@@ -111,6 +116,70 @@ export const adminListThreads = createServerFn({ method: "GET" })
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return list.map((t: any) => ({ ...t, profile: map.get(t.user_id) ?? null }));
   });
+
+/**
+ * Admin/moderador assume a conversa. Grava assigned_to + snapshot do nome,
+ * insere uma mensagem de sistema visível ao cliente ("Ana do suporte
+ * assumiu a conversa a partir daqui").
+ */
+export const adminAssumeThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: me } = await supabaseAdmin
+      .from("profiles").select("full_name,email").eq("id", context.userId).maybeSingle();
+    const name = (me?.full_name?.trim() || me?.email?.split("@")[0] || "Suporte");
+    await supabaseAdmin.from("support_threads").update({
+      status: "assigned",
+      assigned_to: context.userId,
+      assigned_name: name,
+      assigned_at: new Date().toISOString(),
+    }).eq("id", data.threadId);
+    await context.supabase.from("support_messages").insert({
+      thread_id: data.threadId,
+      sender_id: context.userId,
+      is_admin: true,
+      is_system: true,
+      body: `🎧 ${name} assumiu a conversa a partir daqui.`,
+    });
+    return { ok: true, name };
+  });
+
+/**
+ * Admin/moderador encerra a conversa. Insere mensagem de sistema e marca
+ * status=closed. O cliente ainda vê o histórico e uma nova mensagem dele
+ * abre uma nova thread automaticamente.
+ */
+export const adminCloseThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({
+    threadId: z.string().uuid(),
+    reason: z.string().trim().max(200).optional(),
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: me } = await supabaseAdmin
+      .from("profiles").select("full_name,email").eq("id", context.userId).maybeSingle();
+    const name = (me?.full_name?.trim() || me?.email?.split("@")[0] || "Suporte");
+    await supabaseAdmin.from("support_threads").update({
+      status: "closed",
+      closed_at: new Date().toISOString(),
+      closed_by: context.userId,
+      closed_by_name: name,
+    }).eq("id", data.threadId);
+    await context.supabase.from("support_messages").insert({
+      thread_id: data.threadId,
+      sender_id: context.userId,
+      is_admin: true,
+      is_system: true,
+      body: `✅ Atendimento encerrado por ${name}${data.reason ? ` — ${data.reason}` : ""}. Envie uma nova mensagem para abrir outro atendimento.`,
+    });
+    return { ok: true };
+  });
+
 
 export const adminListThreadMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
