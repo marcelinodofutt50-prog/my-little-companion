@@ -945,6 +945,7 @@ function AdminChatPanel() {
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"open" | "mine" | "closed">("open");
   // Default sound preference when nothing is stored yet.
   const SOUND_DEFAULT_ON = true;
   const [soundOn, setSoundOn] = useState<boolean>(SOUND_DEFAULT_ON);
@@ -974,6 +975,11 @@ function AdminChatPanel() {
   const threadsFn = useServerFn(adminListThreads);
   const msgsFn = useServerFn(adminListThreadMessages);
   const sendFn = useServerFn(adminSendMessage);
+  const assumeFn = useServerFn(adminAssumeThread);
+  const closeFn = useServerFn(adminCloseThread);
+
+  const refreshThreads = () => threadsFn({ data: { filter } }).then((t) => setThreads(t as Thread[])).catch(() => {});
+
 
   useEffect(() => {
     requestNotifyPermission();
