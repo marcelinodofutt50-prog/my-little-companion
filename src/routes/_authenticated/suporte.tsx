@@ -72,8 +72,14 @@ function SupportPage() {
     if (!thread) return;
     setPending((prev) => prev.map((p) => p.clientId === clientId ? { ...p, status: "sending", error: undefined } : p));
     try {
-      await sendFn({ data: { threadId: thread.id, ...payload } });
-      // Success — realtime INSERT will bring the confirmed message; drop the pending entry.
+      const res: any = await sendFn({ data: { threadId: thread.id, ...payload } });
+      if (res?.thread_id && res.thread_id !== thread.id) {
+        // Server auto-opened a new thread (previous one was closed). Reload.
+        const t = await openFn();
+        setThread(t);
+        const m = await listFn({ data: { threadId: t.id } });
+        setMsgs(m as Msg[]);
+      }
       setPending((prev) => prev.filter((p) => p.clientId !== clientId));
     } catch (e: any) {
       const message = e?.message ?? "Falha ao enviar";
