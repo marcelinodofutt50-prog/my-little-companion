@@ -1,16 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import shadowMark from "@/assets/shadow-mask.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { lovable } from "@/integrations/lovable/index";
 import { siteUrl } from "@/lib/site-url";
-
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -18,8 +16,6 @@ export const Route = createFileRoute("/auth")({
     code: typeof s.code === "string" ? s.code : undefined,
     type: typeof s.type === "string" ? s.type : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
-    error_code: typeof s.error_code === "string" ? s.error_code : undefined,
-    error_description: typeof s.error_description === "string" ? s.error_description : undefined,
   }),
   head: () => ({ meta: [{ title: "Login — Shadow" }] }),
   component: AuthPage,
@@ -31,15 +27,14 @@ const schema = z.object({
 });
 
 function AuthPage() {
-  const { next, code, type, error: searchError, error_description } = Route.useSearch();
+  const { next, code, type } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState<string | null>(null);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
+  const [signupMessage, setSignupMessage] = useState<string | null>(null);
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
@@ -61,13 +56,6 @@ function AuthPage() {
     exchange();
   }, [code, type, navigate, next]);
 
-  // Erros de OAuth/redirect que o Supabase pode enviar por query params.
-  useEffect(() => {
-    if (searchError || error_description) {
-      toast.error(error_description || searchError || "Erro na autenticação");
-    }
-  }, [searchError, error_description]);
-
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: (next as any) || "/dashboard" });
@@ -85,76 +73,23 @@ function AuthPage() {
           email, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
-        toast.success("Conta criada");
+        toast.success("Conta criada! Confirme seu e-mail.");
+        setSignupMessage(
+          "Enviamos um e-mail de confirmação para você.\n\n" +
+          "1. Abra o Gmail (ou app de e-mail).\n" +
+          "2. Procure por uma mensagem da Shadow.\n" +
+          "3. Clique no botão laranja "Confirmar e-mail".\n" +
+          "4. Você será logado automaticamente.\n\n" +
+          "Se não achar, olhe na pasta Spam ou Promoções."
+        );
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate({ to: (next as any) || "/dashboard" });
       }
-      navigate({ to: (next as any) || "/dashboard" });
     } catch (e: any) {
       toast.error(e.message);
     } finally { setLoading(false); }
-  }
-
-  async function google() {
-    setGoogleError(null);
-    setGoogleLoading(true);
-
-    try {
-      // O broker de OAuth da Lovable só existe em domínios hospedados pela Lovable.
-      // Em produção (Vercel / domínio próprio) usamos o OAuth nativo do Supabase.
-      const host = typeof window !== "undefined" ? window.location.hostname : "";
-      const onLovableHost = /(^|\.)(lovable\.app|lovableproject\.com|lovable\.dev)$/.test(host);
-
-      if (onLovableHost) {
-        const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: siteUrl() });
-        if (result.error) {
-          const msg = normalizeAuthError(result.error.message ?? "Falha no login com Google.");
-          setGoogleError(msg);
-          toast.error(msg);
-          return;
-        }
-        if (result.redirected) return;
-        navigate({ to: (next as any) || "/dashboard" });
-        return;
-      }
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: siteUrl(next ? `/auth?next=${encodeURIComponent(next)}` : "/"),
-        },
-      });
-
-      if (error) {
-        const msg = normalizeAuthError(error.message);
-        setGoogleError(msg);
-        toast.error(msg);
-      }
-    } catch (e: any) {
-      const msg = normalizeAuthError(e?.message ?? "Erro inesperado ao tentar login com Google.");
-      setGoogleError(msg);
-      toast.error(msg);
-    } finally {
-      setGoogleLoading(false);
-    }
-  }
-
-  function normalizeAuthError(message: string): string {
-    const lower = message.toLowerCase();
-    if (lower.includes("provider is not enabled") || lower.includes("unsupported provider")) {
-      return "Login com Google não está ativado no backend. Configure o provedor Google no Supabase.";
-    }
-    if (lower.includes("redirect")) {
-      return "URL de retorno inválida. Verifique a configuração de Redirect URLs no Supabase.";
-    }
-    if (lower.includes("network") || lower.includes("fetch")) {
-      return "Erro de conexão. Verifique sua internet e tente novamente.";
-    }
-    if (lower.includes("popup") || lower.includes("blocked") || lower.includes("closed")) {
-      return "O pop-up de login foi bloqueado ou fechado. Permita pop-ups e tente novamente.";
-    }
-    return message;
   }
 
   return (
@@ -175,6 +110,13 @@ function AuthPage() {
           </div>
         )}
 
+        {signupMessage && (
+          <div className="mt-4 flex w-full items-start gap-3 rounded border border-neon/40 bg-neon/10 px-4 py-4 text-xs text-neon whitespace-pre-line">
+            <Mail className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{signupMessage}</span>
+          </div>
+        )}
+
         <form onSubmit={submit} className="mt-8 w-full terminal-card scanlines relative space-y-4 p-6">
           <div>
             <label className="mb-1 block font-mono text-xs uppercase text-muted-foreground">Email</label>
@@ -188,23 +130,6 @@ function AuthPage() {
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {mode === "in" ? "Entrar" : "Criar conta"}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full font-mono uppercase"
-            onClick={google}
-            disabled={googleLoading}
-          >
-            {googleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Continuar com Google
-          </Button>
-
-          {googleError && (
-            <div className="flex items-start gap-2 rounded border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span className="leading-relaxed">{googleError}</span>
-            </div>
-          )}
         </form>
         <button className="mt-6 font-mono text-xs uppercase text-muted-foreground hover:text-neon" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "Não tem conta? Registre-se" : "Já tem conta? Entrar"}
