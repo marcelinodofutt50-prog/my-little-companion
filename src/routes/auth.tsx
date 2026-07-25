@@ -78,7 +78,7 @@ function AuthPage() {
           "Enviamos um e-mail de confirmação para você.\n\n" +
           "1. Abra o Gmail (ou app de e-mail).\n" +
           "2. Procure por uma mensagem da Shadow.\n" +
-          "3. Clique no botão laranja "Confirmar e-mail".\n" +
+          "3. Clique no botão laranja \"Confirmar e-mail\".\n" +
           "4. Você será logado automaticamente.\n\n" +
           "Se não achar, olhe na pasta Spam ou Promoções."
         );
