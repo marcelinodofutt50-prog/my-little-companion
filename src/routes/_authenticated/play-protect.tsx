@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/play-protect")({
   component: PlayProtectPage,
 });
 
-const MAX_MB = 200;
+const MAX_MB = 50;
 
 type Job = {
   id: string;
