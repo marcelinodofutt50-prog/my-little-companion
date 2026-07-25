@@ -168,6 +168,13 @@ function AuthPage() {
         <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight">{mode === "in" ? "Entrar" : "Criar conta"}</h1>
         <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.3em] text-neon/80">your shadow, everywhere</p>
 
+        {confirmMessage && (
+          <div className="mt-4 flex w-full items-center gap-2 rounded border border-neon/40 bg-neon/10 px-4 py-3 text-xs text-neon">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>{confirmMessage}</span>
+          </div>
+        )}
+
         <form onSubmit={submit} className="mt-8 w-full terminal-card scanlines relative space-y-4 p-6">
           <div>
             <label className="mb-1 block font-mono text-xs uppercase text-muted-foreground">Email</label>
