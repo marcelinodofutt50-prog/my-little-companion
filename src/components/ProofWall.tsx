@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ShieldCheck } from "lucide-react";
-import p1 from "@/assets/proof/proof-1.jpg.asset.json";
-import p2 from "@/assets/proof/proof-2.jpg.asset.json";
-import p3 from "@/assets/proof/proof-3.jpg.asset.json";
-import p4 from "@/assets/proof/proof-4.jpg.asset.json";
-import pPhones from "@/assets/proof/proof-phones.jpg.asset.json";
-import pPix300 from "@/assets/proof/proof-pix-300.jpg.asset.json";
-import pDouglas from "@/assets/proof/proof-telegram-douglas.jpg.asset.json";
+const p1 = { url: "/img/proof-1.jpg" };
+const p2 = { url: "/img/proof-2.jpg" };
+const p3 = { url: "/img/proof-3.jpg" };
+const p4 = { url: "/img/proof-4.jpg" };
+const pPhones = { url: "/img/proof-phones.jpg" };
+const pPix300 = { url: "/img/proof-pix-300.jpg" };
+const pDouglas = { url: "/img/proof-telegram-douglas.jpg" };
 
 type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet" };
 
