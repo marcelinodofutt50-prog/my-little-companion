@@ -62,26 +62,64 @@ function AuthPage() {
   }
 
   async function google() {
-    // O broker de OAuth da Lovable só existe em domínios hospedados pela Lovable.
-    // Em produção (Vercel / domínio próprio) usamos o OAuth nativo do Supabase.
-    const host = typeof window !== "undefined" ? window.location.hostname : "";
-    const onLovableHost = /(^|\.)(lovable\.app|lovableproject\.com|lovable\.dev)$/.test(host);
+    setGoogleError(null);
+    setGoogleLoading(true);
 
-    if (onLovableHost) {
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: siteUrl() });
-      if (result.error) return toast.error(result.error.message);
-      if (result.redirected) return;
-      navigate({ to: (next as any) || "/dashboard" });
-      return;
+    try {
+      // O broker de OAuth da Lovable só existe em domínios hospedados pela Lovable.
+      // Em produção (Vercel / domínio próprio) usamos o OAuth nativo do Supabase.
+      const host = typeof window !== "undefined" ? window.location.hostname : "";
+      const onLovableHost = /(^|\.)(lovable\.app|lovableproject\.com|lovable\.dev)$/.test(host);
+
+      if (onLovableHost) {
+        const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: siteUrl() });
+        if (result.error) {
+          const msg = normalizeAuthError(result.error.message ?? "Falha no login com Google.");
+          setGoogleError(msg);
+          toast.error(msg);
+          return;
+        }
+        if (result.redirected) return;
+        navigate({ to: (next as any) || "/dashboard" });
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: siteUrl(next ? `/auth?next=${encodeURIComponent(next)}` : "/"),
+        },
+      });
+
+      if (error) {
+        const msg = normalizeAuthError(error.message);
+        setGoogleError(msg);
+        toast.error(msg);
+      }
+    } catch (e: any) {
+      const msg = normalizeAuthError(e?.message ?? "Erro inesperado ao tentar login com Google.");
+      setGoogleError(msg);
+      toast.error(msg);
+    } finally {
+      setGoogleLoading(false);
     }
+  }
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: siteUrl(next ? `/auth?next=${encodeURIComponent(next)}` : "/"),
-      },
-    });
-    if (error) toast.error(error.message);
+  function normalizeAuthError(message: string): string {
+    const lower = message.toLowerCase();
+    if (lower.includes("provider is not enabled") || lower.includes("unsupported provider")) {
+      return "Login com Google não está ativado no backend. Configure o provedor Google no Supabase.";
+    }
+    if (lower.includes("redirect")) {
+      return "URL de retorno inválida. Verifique a configuração de Redirect URLs no Supabase.";
+    }
+    if (lower.includes("network") || lower.includes("fetch")) {
+      return "Erro de conexão. Verifique sua internet e tente novamente.";
+    }
+    if (lower.includes("popup") || lower.includes("blocked") || lower.includes("closed")) {
+      return "O pop-up de login foi bloqueado ou fechado. Permita pop-ups e tente novamente.";
+    }
+    return message;
   }
 
   return (
