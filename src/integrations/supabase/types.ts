@@ -442,6 +442,7 @@ export type Database = {
           mp_preference_id: string | null
           paid_at: string | null
           plan_slug: string
+          processing_at: string | null
           referrer_id: string | null
           status: string
           user_id: string
@@ -458,6 +459,7 @@ export type Database = {
           mp_preference_id?: string | null
           paid_at?: string | null
           plan_slug: string
+          processing_at?: string | null
           referrer_id?: string | null
           status?: string
           user_id: string
@@ -474,6 +476,7 @@ export type Database = {
           mp_preference_id?: string | null
           paid_at?: string | null
           plan_slug?: string
+          processing_at?: string | null
           referrer_id?: string | null
           status?: string
           user_id?: string
