@@ -45,7 +45,7 @@ function AuthPage() {
     try {
       if (mode === "up") {
         const { error } = await supabase.auth.signUp({
-          email, password, options: { emailRedirectTo: window.location.origin },
+          email, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
         toast.success("Conta criada");
