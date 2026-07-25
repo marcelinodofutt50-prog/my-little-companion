@@ -31,7 +31,7 @@ const schema = z.object({
 });
 
 function AuthPage() {
-  const { next } = Route.useSearch();
+  const { next, code, type, error: searchError, error_description } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
@@ -39,6 +39,34 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
+
+  // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
+  useEffect(() => {
+    if (!code || !type) return;
+
+    async function exchange() {
+      setConfirmMessage("Confirmando seu e-mail, aguarde...");
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        setConfirmMessage(null);
+        toast.error(`Falha ao confirmar e-mail: ${error.message}`);
+        return;
+      }
+      if (data.user) {
+        toast.success("E-mail confirmado! Redirecionando...");
+        navigate({ to: (next as any) || "/dashboard" });
+      }
+    }
+    exchange();
+  }, [code, type, navigate, next]);
+
+  // Erros de OAuth/redirect que o Supabase pode enviar por query params.
+  useEffect(() => {
+    if (searchError || error_description) {
+      toast.error(error_description || searchError || "Erro na autenticação");
+    }
+  }, [searchError, error_description]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
