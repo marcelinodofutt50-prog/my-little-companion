@@ -555,7 +555,12 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
 
           // Only fulfill for approved payments — pending/rejected/refunded never grants license.
           if (payment.status === "approved") {
-            await fulfillOrder(orderId);
+            const result = await fulfillOrder(orderId);
+            await supabaseAdmin.from("webhook_logs").insert({
+              source: "fulfillment",
+              note: `order ${orderId} → ${result.ok ? "ok" : "fail"}${(result as any).reason ? ` (${(result as any).reason})` : ""}`,
+              processed: result.ok,
+            });
           } else {
             await supabaseAdmin.from("webhook_logs").insert({
               source: "mercadopago",
