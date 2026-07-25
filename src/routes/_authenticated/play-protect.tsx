@@ -7,7 +7,7 @@ import { Upload, ShieldCheck, Clock, Loader2, CheckCircle2, XCircle, Download, X
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TutorialHintDialog } from "@/components/TutorialHintDialog";
-import ppConfigAsset from "@/assets/play-protect-config.png.asset.json";
+const ppConfigAsset = { url: "/img/play-protect-config.png" };
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
