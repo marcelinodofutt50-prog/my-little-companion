@@ -13,7 +13,14 @@ import { siteUrl } from "@/lib/site-url";
 
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({ next: typeof s.next === "string" ? s.next : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+    code: typeof s.code === "string" ? s.code : undefined,
+    type: typeof s.type === "string" ? s.type : undefined,
+    error: typeof s.error === "string" ? s.error : undefined,
+    error_code: typeof s.error_code === "string" ? s.error_code : undefined,
+    error_description: typeof s.error_description === "string" ? s.error_description : undefined,
+  }),
   head: () => ({ meta: [{ title: "Login — Shadow" }] }),
   component: AuthPage,
 });
@@ -24,7 +31,7 @@ const schema = z.object({
 });
 
 function AuthPage() {
-  const { next } = Route.useSearch();
+  const { next, code, type, error: searchError, error_description } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
@@ -32,6 +39,34 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
+
+  // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
+  useEffect(() => {
+    if (!code || !type) return;
+
+    async function exchange() {
+      setConfirmMessage("Confirmando seu e-mail, aguarde...");
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        setConfirmMessage(null);
+        toast.error(`Falha ao confirmar e-mail: ${error.message}`);
+        return;
+      }
+      if (data.user) {
+        toast.success("E-mail confirmado! Redirecionando...");
+        navigate({ to: (next as any) || "/dashboard" });
+      }
+    }
+    exchange();
+  }, [code, type, navigate, next]);
+
+  // Erros de OAuth/redirect que o Supabase pode enviar por query params.
+  useEffect(() => {
+    if (searchError || error_description) {
+      toast.error(error_description || searchError || "Erro na autenticação");
+    }
+  }, [searchError, error_description]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -132,6 +167,13 @@ function AuthPage() {
         </div>
         <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight">{mode === "in" ? "Entrar" : "Criar conta"}</h1>
         <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.3em] text-neon/80">your shadow, everywhere</p>
+
+        {confirmMessage && (
+          <div className="mt-4 flex w-full items-center gap-2 rounded border border-neon/40 bg-neon/10 px-4 py-3 text-xs text-neon">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>{confirmMessage}</span>
+          </div>
+        )}
 
         <form onSubmit={submit} className="mt-8 w-full terminal-card scanlines relative space-y-4 p-6">
           <div>
