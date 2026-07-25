@@ -13,7 +13,14 @@ import { siteUrl } from "@/lib/site-url";
 
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({ next: typeof s.next === "string" ? s.next : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+    code: typeof s.code === "string" ? s.code : undefined,
+    type: typeof s.type === "string" ? s.type : undefined,
+    error: typeof s.error === "string" ? s.error : undefined,
+    error_code: typeof s.error_code === "string" ? s.error_code : undefined,
+    error_description: typeof s.error_description === "string" ? s.error_description : undefined,
+  }),
   head: () => ({ meta: [{ title: "Login — Shadow" }] }),
   component: AuthPage,
 });
