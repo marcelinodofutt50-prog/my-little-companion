@@ -60,10 +60,26 @@ function AuthPage() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: siteUrl() });
-    if (result.error) return toast.error(result.error.message);
-    if (result.redirected) return;
-    navigate({ to: (next as any) || "/dashboard" });
+    // O broker de OAuth da Lovable só existe em domínios hospedados pela Lovable.
+    // Em produção (Vercel / domínio próprio) usamos o OAuth nativo do Supabase.
+    const host = typeof window !== "undefined" ? window.location.hostname : "";
+    const onLovableHost = /(^|\.)(lovable\.app|lovableproject\.com|lovable\.dev)$/.test(host);
+
+    if (onLovableHost) {
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: siteUrl() });
+      if (result.error) return toast.error(result.error.message);
+      if (result.redirected) return;
+      navigate({ to: (next as any) || "/dashboard" });
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: siteUrl(next ? `/auth?next=${encodeURIComponent(next)}` : "/"),
+      },
+    });
+    if (error) toast.error(error.message);
   }
 
   return (
