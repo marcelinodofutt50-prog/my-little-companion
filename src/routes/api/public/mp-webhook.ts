@@ -41,7 +41,7 @@ async function fulfillOrderInner(orderId: string) {
     .from("orders")
     .update({ status: "processing", processing_at: new Date().toISOString() } as any)
     .eq("id", orderId)
-    .in("status", ["pending", "created"])
+    .in("status", ["pending", "created", "yaarsa_failed"])
     .select("*")
     .maybeSingle();
 
