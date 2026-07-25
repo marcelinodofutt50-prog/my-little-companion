@@ -146,7 +146,23 @@ function AuthPage() {
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {mode === "in" ? "Entrar" : "Criar conta"}
           </Button>
-          <Button type="button" variant="outline" className="w-full font-mono uppercase" onClick={google}>Continuar com Google</Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full font-mono uppercase"
+            onClick={google}
+            disabled={googleLoading}
+          >
+            {googleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Continuar com Google
+          </Button>
+
+          {googleError && (
+            <div className="flex items-start gap-2 rounded border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span className="leading-relaxed">{googleError}</span>
+            </div>
+          )}
         </form>
         <button className="mt-6 font-mono text-xs uppercase text-muted-foreground hover:text-neon" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "Não tem conta? Registre-se" : "Já tem conta? Entrar"}
