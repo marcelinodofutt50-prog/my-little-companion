@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { lovable } from "@/integrations/lovable/index";
+import { siteUrl } from "@/lib/site-url";
+
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({ next: typeof s.next === "string" ? s.next : undefined }),
@@ -43,7 +45,7 @@ function AuthPage() {
     try {
       if (mode === "up") {
         const { error } = await supabase.auth.signUp({
-          email, password, options: { emailRedirectTo: window.location.origin },
+          email, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
         toast.success("Conta criada");
@@ -58,7 +60,7 @@ function AuthPage() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: siteUrl() });
     if (result.error) return toast.error(result.error.message);
     if (result.redirected) return;
     navigate({ to: (next as any) || "/dashboard" });
