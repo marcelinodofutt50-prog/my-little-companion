@@ -105,6 +105,8 @@ export const Route = createFileRoute("/crypto")({
       { name: "description", content: "Pay Shadow licenses with Bitcoin, Ethereum or USDT (ERC-20, TRC-20, BEP-20). International customers welcome." },
       { property: "og:title", content: "Shadow — Crypto Payment" },
       { property: "og:description", content: "BTC, ETH and USDT (ERC-20 / TRC-20 / BEP-20). International customers welcome." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: CryptoPage,
