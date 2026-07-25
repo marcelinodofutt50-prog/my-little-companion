@@ -33,3 +33,8 @@ dist-ssr
 
 # Vercel
 .vercel/
+
+# Secrets / env files (sempre local)
+.env
+.env.*
+!.env.example
