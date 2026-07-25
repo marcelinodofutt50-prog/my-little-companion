@@ -1,20 +1,52 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
 
+// Wrapper: guarantees an order never stays stuck in "processing" when an
+// unexpected error (Yaarsa timeout, network failure) aborts fulfillment.
 async function fulfillOrder(orderId: string) {
+  try {
+    return await fulfillOrderInner(orderId);
+  } catch (e: any) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("orders")
+      .update({ status: "pending", processing_at: null } as any)
+      .eq("id", orderId)
+      .eq("status", "processing");
+    await supabaseAdmin.from("webhook_logs").insert({
+      source: "fulfillment",
+      note: `order ${orderId} error, released for retry: ${e?.message ?? String(e)}`,
+      processed: false,
+    });
+    return { ok: false, reason: `error: ${e?.message ?? String(e)}` };
+  }
+}
+
+async function fulfillOrderInner(orderId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { yaarsaCreateAccount, generateCredentials, encrypt } = await import("@/lib/yaarsa.server");
+
+  // Release orders stuck in "processing" for more than 10 minutes so a webhook
+  // retry can safely pick them up again.
+  const staleCutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  await supabaseAdmin
+    .from("orders")
+    .update({ status: "pending" } as any)
+    .eq("id", orderId)
+    .eq("status", "processing")
+    .lt("processing_at", staleCutoff);
 
   // Atomic claim: only proceed if not already paid. Prevents duplicate fulfillment on concurrent webhooks.
   const { data: claimed, error: claimErr } = await supabaseAdmin
     .from("orders")
-    .update({ status: "processing" })
+    .update({ status: "processing", processing_at: new Date().toISOString() } as any)
     .eq("id", orderId)
     .in("status", ["pending", "created"])
     .select("*")
     .maybeSingle();
 
   if (claimErr) return { ok: false, reason: `claim-error: ${claimErr.message}` };
+
 
   if (!claimed) {
     // Already paid/processing — verify a license/renewal actually landed; if yes, idempotent success.
