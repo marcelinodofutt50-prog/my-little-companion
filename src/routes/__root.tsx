@@ -108,6 +108,20 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const [authRedirectChecked, setAuthRedirectChecked] = useState(false);
+
+  // Fallback: se o usuário abriu um link de confirmação de e-mail que ainda
+  // aponta para localhost (Supabase Site URL desatualizado), redireciona para
+  // o domínio oficial preservando code/type/next.
+  useEffect(() => {
+    const canonicalUrl = redirectLocalhostAuthToCanonical();
+    if (canonicalUrl) {
+      window.location.replace(canonicalUrl);
+      return;
+    }
+    setAuthRedirectChecked(true);
+  }, []);
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
@@ -116,6 +130,9 @@ function RootComponent() {
     });
     return () => sub.subscription.unsubscribe();
   }, [queryClient, router]);
+
+  if (!authRedirectChecked) return null;
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
@@ -123,6 +140,5 @@ function RootComponent() {
         <Toaster theme="dark" richColors position="top-right" />
       </I18nProvider>
     </QueryClientProvider>
-
   );
 }
