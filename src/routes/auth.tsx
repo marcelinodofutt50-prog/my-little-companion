@@ -60,7 +60,7 @@ function AuthPage() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: siteUrl() });
     if (result.error) return toast.error(result.error.message);
     if (result.redirected) return;
     navigate({ to: (next as any) || "/dashboard" });
