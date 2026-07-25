@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const MAX_APK_BYTES = 200 * 1024 * 1024; // 200 MB
+const MAX_APK_BYTES = 50 * 1024 * 1024; // 50 MB (limite do storage)
 
 // Statuses that "consume" the trial (only real successful/in-flight attempts).
 const CONSUMED_STATUSES = ["queued", "claimed", "sending", "processing", "done"] as const;
