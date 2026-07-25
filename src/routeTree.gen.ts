@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
+import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as MercadoRouteImport } from './routes/mercado'
 import { Route as CryptoRouteImport } from './routes/crypto'
@@ -43,6 +44,11 @@ const TutorialRoute = TutorialRouteImport.update({
 const RenovarServidorRoute = RenovarServidorRouteImport.update({
   id: '/renovar-servidor',
   path: '/renovar-servidor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrimeirosPassosRoute = PrimeirosPassosRouteImport.update({
+  id: '/primeiros-passos',
+  path: '/primeiros-passos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlanosRoute = PlanosRouteImport.update({
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/crypto': typeof CryptoRoute
   '/mercado': typeof MercadoRouteWithChildren
   '/planos': typeof PlanosRoute
+  '/primeiros-passos': typeof PrimeirosPassosRoute
   '/renovar-servidor': typeof RenovarServidorRoute
   '/tutorial': typeof TutorialRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/crypto': typeof CryptoRoute
   '/mercado': typeof MercadoRouteWithChildren
   '/planos': typeof PlanosRoute
+  '/primeiros-passos': typeof PrimeirosPassosRoute
   '/renovar-servidor': typeof RenovarServidorRoute
   '/tutorial': typeof TutorialRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -226,6 +234,7 @@ export interface FileRoutesById {
   '/crypto': typeof CryptoRoute
   '/mercado': typeof MercadoRouteWithChildren
   '/planos': typeof PlanosRoute
+  '/primeiros-passos': typeof PrimeirosPassosRoute
   '/renovar-servidor': typeof RenovarServidorRoute
   '/tutorial': typeof TutorialRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/crypto'
     | '/mercado'
     | '/planos'
+    | '/primeiros-passos'
     | '/renovar-servidor'
     | '/tutorial'
     | '/admin'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/crypto'
     | '/mercado'
     | '/planos'
+    | '/primeiros-passos'
     | '/renovar-servidor'
     | '/tutorial'
     | '/admin'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/crypto'
     | '/mercado'
     | '/planos'
+    | '/primeiros-passos'
     | '/renovar-servidor'
     | '/tutorial'
     | '/_authenticated/admin'
@@ -335,6 +347,7 @@ export interface RootRouteChildren {
   CryptoRoute: typeof CryptoRoute
   MercadoRoute: typeof MercadoRouteWithChildren
   PlanosRoute: typeof PlanosRoute
+  PrimeirosPassosRoute: typeof PrimeirosPassosRoute
   RenovarServidorRoute: typeof RenovarServidorRoute
   TutorialRoute: typeof TutorialRoute
   PagamentoErroRoute: typeof PagamentoErroRoute
@@ -363,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/renovar-servidor'
       fullPath: '/renovar-servidor'
       preLoaderRoute: typeof RenovarServidorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/primeiros-passos': {
+      id: '/primeiros-passos'
+      path: '/primeiros-passos'
+      fullPath: '/primeiros-passos'
+      preLoaderRoute: typeof PrimeirosPassosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/planos': {
@@ -567,6 +587,7 @@ const rootRouteChildren: RootRouteChildren = {
   CryptoRoute: CryptoRoute,
   MercadoRoute: MercadoRouteWithChildren,
   PlanosRoute: PlanosRoute,
+  PrimeirosPassosRoute: PrimeirosPassosRoute,
   RenovarServidorRoute: RenovarServidorRoute,
   TutorialRoute: TutorialRoute,
   PagamentoErroRoute: PagamentoErroRoute,
