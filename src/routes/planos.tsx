@@ -490,7 +490,9 @@ function PlansPage() {
         )}
       </main>
       <MobileStickyCTA label="Escolher plano" to="/planos" />
+      <CheckoutFaqFloat />
     </div>
+
   );
 }
 
