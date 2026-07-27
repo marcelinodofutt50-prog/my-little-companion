@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle } from "lucide-react";
+import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,22 @@ type AiResult = {
   analysis: string;
   checks: { label: string; ok: boolean; detail: string }[];
   failedCount: number;
+  gateway?: any;
+  evidence?: {
+    refund: Record<string, any>;
+    order: Record<string, any>;
+    windowDays: number;
+    reviewDays: number;
+    links: { mercadoPago: string | null; userSupport: string | null };
+    model: string;
+    verifiedAt: string;
+  };
 };
+
+function fmtDate(v: any) {
+  return v ? new Date(v).toLocaleString("pt-BR") : "—";
+}
+
 
 export function AdminRefundsPanel() {
   const listFn = useServerFn(adminListRefunds);
