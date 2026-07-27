@@ -226,6 +226,13 @@ export const adminUpdateRefund = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: before } = await supabaseAdmin
+      .from("refund_requests")
+      .select("status")
+      .eq("id", data.id)
+      .maybeSingle();
+
     const patch: any = { status: data.status };
     if (data.adminNotes !== undefined) patch.admin_notes = data.adminNotes;
     if (data.status !== "requested") {
@@ -239,6 +246,17 @@ export const adminUpdateRefund = createServerFn({ method: "POST" })
       .select("user_id,amount,status")
       .single();
     if (error) throw new Error(error.message);
+
+    await logRefundAudit({
+      refundId: data.id,
+      actorId: context.userId,
+      action: "status_change",
+      fromStatus: (before as any)?.status ?? null,
+      toStatus: data.status,
+      notes: data.adminNotes ?? null,
+    });
+
+
 
     if (updated) {
       const { notifyRefundStatus } = await import("@/lib/refund-notify.server");
