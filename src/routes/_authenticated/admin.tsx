@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet, Copy, RotateCcw,
+  Wallet, Copy, RotateCcw, ChevronLeft,
 } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
@@ -266,7 +266,7 @@ function AdminPage() {
         </div>
 
         {/* STATS */}
-        <div className="mt-5 grid gap-4 md:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           <ExecStat icon={Users} label="Clientes cadastrados" value={stats ? String(stats.users) : "—"} sub="conta total" accent="cyan" />
           <ExecStat icon={KeyRound} label="Licenças ativas" value={stats ? String(stats.licenses) : "—"} sub="em operação" accent="neon" />
           <ExecStat icon={DollarSign} label="Receita bruta" value={stats ? formatBrl(stats.revenue) : "—"} sub="pedidos pagos" accent="violet" />
@@ -278,7 +278,7 @@ function AdminPage() {
           {/* SIDEBAR NAV */}
           <aside className="lg:sticky lg:top-4 lg:self-start">
             {/* Mobile: horizontal scroller */}
-            <div className="lg:hidden -mx-4 overflow-x-auto px-4 pb-2">
+            <div className="lg:hidden sticky top-0 z-20 -mx-4 overflow-x-auto border-b border-border/30 bg-background/85 px-4 py-2 backdrop-blur">
               <div className="flex gap-1.5 whitespace-nowrap">
                 {allTabs.map((t) => {
                   const active = tab === t.id;
@@ -1000,7 +1000,9 @@ function AdminChatPanel() {
     threadsFn({ data: { filter } }).then((t) => {
       setThreads(t as Thread[]);
       setLoading(false);
-      if ((t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
+      // Em telas pequenas mostramos a lista primeiro (master-detail)
+      const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
+      if (isDesktop && (t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
     }).catch(() => setLoading(false));
     const ch = supabase.channel(`admin-threads-${filter}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages" },
@@ -1062,9 +1064,9 @@ function AdminChatPanel() {
   const activeThread = threads.find((t) => t.id === activeId);
 
   return (
-    <div className="terminal-card scanlines relative grid h-[70vh] grid-cols-1 overflow-hidden md:grid-cols-[320px_1fr]">
+    <div className="terminal-card scanlines relative grid h-[calc(100dvh-8rem)] grid-cols-1 overflow-hidden md:h-[70vh] md:grid-cols-[320px_1fr]">
       {/* Thread list */}
-      <aside className="flex flex-col border-b border-border/40 md:border-b-0 md:border-r">
+      <aside className={`${activeId ? "hidden md:flex" : "flex"} min-h-0 flex-col border-b border-border/40 md:border-b-0 md:border-r`}>
         <div className="border-b border-border/40 p-3">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-neon">
@@ -1136,7 +1138,7 @@ function AdminChatPanel() {
       </aside>
 
       {/* Chat area */}
-      <section className="flex min-h-0 flex-col">
+      <section className={`${activeId ? "flex" : "hidden md:flex"} min-h-0 flex-col`}>
         {!activeThread ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
             <MessageSquare className="h-10 w-10 text-neon/50" />
@@ -1144,8 +1146,17 @@ function AdminChatPanel() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
-              <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 px-3 py-2 md:px-4 md:py-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveId(null)}
+                  aria-label="Voltar para a lista de conversas"
+                  className="-ml-1 grid h-9 w-9 shrink-0 place-items-center rounded text-muted-foreground hover:bg-background/40 hover:text-foreground md:hidden"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</span>
                   {activeThread.profile?.email && (
@@ -1167,8 +1178,10 @@ function AdminChatPanel() {
                   {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
                   {activeThread.status === "closed" && " · ENCERRADO"}
                 </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+
                 {activeThread.status !== "closed" && !activeThread.assigned_to && (
                   <Button
                     size="sm"
@@ -1255,8 +1268,8 @@ function AdminChatPanel() {
                   placeholder="Responder cliente..."
                   className="font-mono text-sm"
                 />
-                <Button type="submit" disabled={sending || !body.trim()} className="glow-neon font-mono uppercase tracking-wider">
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="mr-2 h-3.5 w-3.5" />Enviar</>}
+                <Button type="submit" disabled={sending || !body.trim()} aria-label="Enviar mensagem" className="glow-neon min-h-11 shrink-0 px-3 font-mono uppercase tracking-wider sm:px-4">
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 sm:mr-2" /><span className="hidden sm:inline">Enviar</span></>}
                 </Button>
               </form>
             </div>
