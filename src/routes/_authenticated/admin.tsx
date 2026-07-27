@@ -278,7 +278,7 @@ function AdminPage() {
           {/* SIDEBAR NAV */}
           <aside className="lg:sticky lg:top-4 lg:self-start">
             {/* Mobile: horizontal scroller */}
-            <div className="lg:hidden -mx-4 overflow-x-auto px-4 pb-2">
+            <div className="lg:hidden sticky top-0 z-20 -mx-4 overflow-x-auto border-b border-border/30 bg-background/85 px-4 py-2 backdrop-blur">
               <div className="flex gap-1.5 whitespace-nowrap">
                 {allTabs.map((t) => {
                   const active = tab === t.id;
