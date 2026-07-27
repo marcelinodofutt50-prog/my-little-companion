@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet, Copy, RotateCcw,
+  Wallet, Copy, RotateCcw, ChevronLeft,
 } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
