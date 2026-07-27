@@ -8,6 +8,8 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/AppSidebar";
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { LegacyConnectPanel } from "@/components/LegacyConnectPanel";
+import { RefundSection } from "@/components/RefundSection";
+
 import { TutorialHintDialog } from "@/components/TutorialHintDialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -510,7 +512,9 @@ function DashboardPage() {
         {/* BRIEFING EXECUTIVO + INDICAÇÕES + LEGACY — extras ao final */}
         <div className="mt-8">
           <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
+          <RefundSection />
           <ReferralsWidget />
+
           {!licenses.some((l) => l.is_legacy) && (
             <LegacyConnectPanel defaultOpen={licenses.length === 0 && legacyStatus !== "unchecked" && legacyStatus !== "not_legacy"} />
           )}

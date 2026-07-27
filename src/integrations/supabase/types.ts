@@ -686,6 +686,57 @@ export type Database = {
           },
         ]
       }
+      refund_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          deadline_at: string
+          id: string
+          license_id: string | null
+          order_id: string | null
+          pix_key: string | null
+          processed_at: string | null
+          processed_by: string | null
+          reason: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          deadline_at?: string
+          id?: string
+          license_id?: string | null
+          order_id?: string | null
+          pix_key?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          deadline_at?: string
+          id?: string
+          license_id?: string | null
+          order_id?: string | null
+          pix_key?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           attachment_type: string | null
