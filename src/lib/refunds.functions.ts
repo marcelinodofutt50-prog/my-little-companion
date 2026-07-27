@@ -328,5 +328,39 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
       checks,
       failedCount: failed.length,
       gateway,
+      // Evidências exatas que alimentaram a análise (para conferência manual).
+      evidence: {
+        refund: {
+          id: r.id,
+          amount: Number(r.amount),
+          status: r.status,
+          reason: r.reason,
+          pix_key: r.pix_key ?? null,
+          created_at: r.created_at,
+          deadline_at: r.deadline_at,
+        },
+        order: {
+          id: o.id ?? null,
+          plan_slug: o.plan_slug ?? null,
+          amount: o.amount != null ? Number(o.amount) : null,
+          status: o.status ?? null,
+          paid_at: o.paid_at ?? null,
+          created_at: o.created_at ?? null,
+          mp_payment_id: paymentId ? String(paymentId) : null,
+          days_since_payment: paidAt
+            ? Math.floor((Date.now() - new Date(paidAt).getTime()) / 86400000)
+            : null,
+        },
+        windowDays: REFUND_WINDOW_DAYS,
+        reviewDays: REFUND_REVIEW_DAYS,
+        links: {
+          mercadoPago: paymentId
+            ? `https://www.mercadopago.com.br/activities/detail/${paymentId}`
+            : null,
+          userSupport: r.user_id ? `/admin?user=${r.user_id}` : null,
+        },
+        model: "google/gemini-3.6-flash",
+        verifiedAt: new Date().toISOString(),
+      },
     };
   });
