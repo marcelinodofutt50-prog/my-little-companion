@@ -1176,8 +1176,10 @@ function AdminChatPanel() {
                   {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
                   {activeThread.status === "closed" && " · ENCERRADO"}
                 </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+
                 {activeThread.status !== "closed" && !activeThread.assigned_to && (
                   <Button
                     size="sm"
