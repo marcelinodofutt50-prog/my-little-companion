@@ -288,6 +288,7 @@ function PlayProtectPage() {
                   className="group relative block overflow-hidden rounded-lg border border-border/70 bg-black/40"
                 >
                   <img
+                    loading="lazy"
                     src={ppConfigAsset.url}
                     alt="Configuração do build: desative DEX-Protetor e Criptografar APK"
                     className="w-full transition-transform duration-500 group-hover:scale-[1.02]"

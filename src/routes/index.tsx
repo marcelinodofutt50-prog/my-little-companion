@@ -120,6 +120,7 @@ function LandingPage() {
             >
               <div className="absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-20 blur-3xl" />
               <img
+                loading="lazy"
                 src={shadowMark}
                 alt="Shadow"
                 width={160}
