@@ -121,7 +121,6 @@ export function ProofWall() {
               loading="lazy"
               src={s.src}
               alt={s.caption}
-              loading="lazy"
               className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-x-0 top-0 flex justify-start p-2">
