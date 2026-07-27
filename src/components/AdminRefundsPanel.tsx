@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle } from "lucide-react";
+import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,22 @@ type AiResult = {
   analysis: string;
   checks: { label: string; ok: boolean; detail: string }[];
   failedCount: number;
+  gateway?: any;
+  evidence?: {
+    refund: Record<string, any>;
+    order: Record<string, any>;
+    windowDays: number;
+    reviewDays: number;
+    links: { mercadoPago: string | null; userSupport: string | null };
+    model: string;
+    verifiedAt: string;
+  };
 };
+
+function fmtDate(v: any) {
+  return v ? new Date(v).toLocaleString("pt-BR") : "—";
+}
+
 
 export function AdminRefundsPanel() {
   const listFn = useServerFn(adminListRefunds);
@@ -136,8 +151,56 @@ export function AdminRefundsPanel() {
                         <pre className="mt-2 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-muted-foreground">
                           {ai[r.id].analysis}
                         </pre>
+
+                        {ai[r.id].evidence && (() => {
+                          const ev = ai[r.id].evidence!;
+                          const gw = ai[r.id].gateway;
+                          return (
+                            <div className="mt-3 border-t border-border/40 pt-2">
+                              <div className="font-mono text-[10px] uppercase text-muted-foreground">
+                                Evidências usadas pela IA
+                              </div>
+                              <dl className="mt-1 grid gap-x-4 gap-y-0.5 font-mono text-[10px] text-muted-foreground sm:grid-cols-2">
+                                <div>Pedido: <span className="text-foreground">{ev.order.id ?? "não encontrado"}</span></div>
+                                <div>Plano: <span className="text-foreground">{ev.order.plan_slug ?? "—"}</span></div>
+                                <div>Status do pedido: <span className="text-foreground">{ev.order.status ?? "—"}</span></div>
+                                <div>Pago em: <span className="text-foreground">{fmtDate(ev.order.paid_at ?? ev.order.created_at)}</span></div>
+                                <div>Valor do pedido: <span className="text-foreground">{ev.order.amount != null ? formatBrl(ev.order.amount) : "—"}</span></div>
+                                <div>Valor do reembolso: <span className="text-foreground">{formatBrl(ev.refund.amount)}</span></div>
+                                <div>Dias desde o pagamento: <span className="text-foreground">{ev.order.days_since_payment ?? "—"} / {ev.windowDays}</span></div>
+                                <div>Prazo de análise: <span className="text-foreground">{fmtDate(ev.refund.deadline_at)} ({ev.reviewDays}d)</span></div>
+                                <div>Gateway status: <span className="text-foreground">{gw?.status ?? gw?.error ?? "sem pagamento vinculado"}</span></div>
+                                <div>Gateway valor: <span className="text-foreground">{gw?.amount != null ? formatBrl(Number(gw.amount)) : "—"}</span></div>
+                                <div>Gateway aprovado em: <span className="text-foreground">{fmtDate(gw?.date_approved)}</span></div>
+                                <div>Estorno anterior: <span className="text-foreground">{gw ? (gw.refunded ? "sim" : "não") : "—"}</span></div>
+                                <div>E-mail do pagador: <span className="text-foreground">{gw?.payer_email ?? "—"}</span></div>
+                                <div>PIX informado: <span className="text-foreground">{ev.refund.pix_key ?? "—"}</span></div>
+                              </dl>
+                              <div className="mt-2 flex flex-wrap items-center gap-3">
+                                {ev.links.mercadoPago && (
+                                  <a href={ev.links.mercadoPago} target="_blank" rel="noreferrer"
+                                    className="inline-flex items-center gap-1 font-mono text-[10px] text-neon hover:underline">
+                                    <ExternalLink className="h-3 w-3" /> ver pagamento no Mercado Pago ({ev.order.mp_payment_id})
+                                  </a>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(JSON.stringify({ ...ev, gateway: gw }, null, 2));
+                                    toast.success("Evidências copiadas.");
+                                  }}
+                                  className="font-mono text-[10px] text-muted-foreground hover:text-foreground">
+                                  copiar dados brutos
+                                </button>
+                                <span className="font-mono text-[10px] text-muted-foreground">
+                                  modelo: {ev.model} · {fmtDate(ev.verifiedAt)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
+
                   </div>
                   {r.status !== "refunded" && r.status !== "rejected" && (
                     <div className="flex w-full max-w-sm flex-col gap-2">
