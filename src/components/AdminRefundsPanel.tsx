@@ -75,6 +75,7 @@ export function AdminRefundsPanel() {
       const res = (await verifyFn({ data: { id } })) as AiResult;
       setAi((a) => ({ ...a, [id]: res }));
       toast.success(`IA: ${res.verdict} (${res.confidence}% de confiança)`);
+      await load();
     } catch (e: any) { toast.error(e.message); }
     finally { setAiBusy(null); }
   }
