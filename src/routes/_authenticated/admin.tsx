@@ -1268,8 +1268,8 @@ function AdminChatPanel() {
                   placeholder="Responder cliente..."
                   className="font-mono text-sm"
                 />
-                <Button type="submit" disabled={sending || !body.trim()} className="glow-neon font-mono uppercase tracking-wider">
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="mr-2 h-3.5 w-3.5" />Enviar</>}
+                <Button type="submit" disabled={sending || !body.trim()} aria-label="Enviar mensagem" className="glow-neon min-h-11 shrink-0 px-3 font-mono uppercase tracking-wider sm:px-4">
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 sm:mr-2" /><span className="hidden sm:inline">Enviar</span></>}
                 </Button>
               </form>
             </div>
