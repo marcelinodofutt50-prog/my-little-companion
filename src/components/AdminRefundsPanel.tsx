@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle, ExternalLink, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
