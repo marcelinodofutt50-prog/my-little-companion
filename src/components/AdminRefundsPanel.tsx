@@ -1,21 +1,32 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, RotateCcw, Check, X, Clock } from "lucide-react";
+import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { adminListRefunds, adminUpdateRefund } from "@/lib/refunds.functions";
+import { adminListRefunds, adminUpdateRefund, adminVerifyRefundAi } from "@/lib/refunds.functions";
 import { formatBrl } from "@/lib/plans";
+
+type AiResult = {
+  verdict: string;
+  confidence: number;
+  analysis: string;
+  checks: { label: string; ok: boolean; detail: string }[];
+  failedCount: number;
+};
 
 export function AdminRefundsPanel() {
   const listFn = useServerFn(adminListRefunds);
   const updateFn = useServerFn(adminUpdateRefund);
+  const verifyFn = useServerFn(adminVerifyRefundAi);
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [filter, setFilter] = useState<"pending" | "all">("pending");
+  const [aiBusy, setAiBusy] = useState<string | null>(null);
+  const [ai, setAi] = useState<Record<string, AiResult>>({});
 
   async function load() {
     setLoading(true);
@@ -34,6 +45,17 @@ export function AdminRefundsPanel() {
     } catch (e: any) { toast.error(e.message); }
     finally { setBusy(null); }
   }
+
+  async function verify(id: string) {
+    setAiBusy(id);
+    try {
+      const res = (await verifyFn({ data: { id } })) as AiResult;
+      setAi((a) => ({ ...a, [id]: res }));
+      toast.success(`IA: ${res.verdict} (${res.confidence}% de confiança)`);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setAiBusy(null); }
+  }
+
 
   const visible = filter === "pending" ? rows.filter((r) => r.status === "requested" || r.status === "approved") : rows;
 
