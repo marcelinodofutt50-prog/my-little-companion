@@ -1062,9 +1062,9 @@ function AdminChatPanel() {
   const activeThread = threads.find((t) => t.id === activeId);
 
   return (
-    <div className="terminal-card scanlines relative grid h-[70vh] grid-cols-1 overflow-hidden md:grid-cols-[320px_1fr]">
+    <div className="terminal-card scanlines relative grid h-[calc(100dvh-8rem)] grid-cols-1 overflow-hidden md:h-[70vh] md:grid-cols-[320px_1fr]">
       {/* Thread list */}
-      <aside className="flex flex-col border-b border-border/40 md:border-b-0 md:border-r">
+      <aside className={`${activeId ? "hidden md:flex" : "flex"} min-h-0 flex-col border-b border-border/40 md:border-b-0 md:border-r`}>
         <div className="border-b border-border/40 p-3">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-neon">
