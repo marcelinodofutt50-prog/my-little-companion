@@ -519,6 +519,9 @@ function LandingPage() {
                 <Link to="/planos" className="hover:text-neon">Planos</Link>
                 <Link to="/tutorial" className="hover:text-neon">Tutorial</Link>
                 <Link to="/contato" className="hover:text-neon">Contato</Link>
+                <Link to="/termos" className="hover:text-neon">Termos</Link>
+                <Link to="/privacidade" className="hover:text-neon">Privacidade</Link>
+
                 <a
                   href="mailto:suportekremlin@gmail.com"
                   className="hover:text-neon"
