@@ -203,7 +203,7 @@ export function AdminMarketPanel() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="grid h-28 w-28 place-items-center overflow-hidden rounded border border-dashed border-border/60 bg-background/40">
                 {draft.preview ? (
-                  <img src={draft.preview} alt="preview" className="h-full w-full object-cover" />
+                  <img loading="lazy" src={draft.preview} alt="preview" className="h-full w-full object-cover" />
                 ) : (
                   <ImagePlus className="h-6 w-6 text-muted-foreground" />
                 )}
@@ -263,7 +263,7 @@ export function AdminMarketPanel() {
               <div key={r.slug} className={`flex gap-3 rounded border p-3 ${r.active ? "border-border/60" : "border-border/30 opacity-60"}`}>
                 <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-muted/20">
                   {r.image_signed_url
-                    ? <img src={r.image_signed_url} alt={r.name} className="h-full w-full object-cover" />
+                    ? <img loading="lazy" src={r.image_signed_url} alt={r.name} className="h-full w-full object-cover" />
                     : <div className="grid h-full place-items-center text-muted-foreground"><ImagePlus className="h-5 w-5" /></div>}
                 </div>
                 <div className="min-w-0 flex-1">

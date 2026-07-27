@@ -102,10 +102,10 @@ function MarketPage() {
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/20">
                   {p.image_url ? (
                     <img
+                      loading="lazy"
                       src={p.image_url}
                       alt={p.name}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
                     />
                   ) : (
                     <div className="grid h-full place-items-center text-muted-foreground">

@@ -8,4 +8,6 @@
   <url><loc>https://www.shadowstore.com/contato</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://www.shadowstore.com/renovar-servidor</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://www.shadowstore.com/primeiros-passos</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.shadowstore.com/termos</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.shadowstore.com/privacidade</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

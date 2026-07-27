@@ -22,7 +22,13 @@ export const Route = createFileRoute("/")({
         content:
           "Shadow BTMOB: infraestrutura de OSINT e cybersegurança de alto nível. Licenças instantâneas via PIX, painel completo e código-fonte disponível.",
       },
+      { property: "og:title", content: "Shadow — Your Shadow Everywhere" },
+      { property: "og:description", content: "Licenças BTMOB com ativação automática via PIX, painel completo e suporte 24/7." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.shadowstore.com/" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.shadowstore.com/" }],
   }),
   component: LandingPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,
@@ -114,6 +120,7 @@ function LandingPage() {
             >
               <div className="absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-20 blur-3xl" />
               <img
+                loading="lazy"
                 src={shadowMark}
                 alt="Shadow"
                 width={160}
@@ -512,6 +519,9 @@ function LandingPage() {
                 <Link to="/planos" className="hover:text-neon">Planos</Link>
                 <Link to="/tutorial" className="hover:text-neon">Tutorial</Link>
                 <Link to="/contato" className="hover:text-neon">Contato</Link>
+                <Link to="/termos" className="hover:text-neon">Termos</Link>
+                <Link to="/privacidade" className="hover:text-neon">Privacidade</Link>
+
                 <a
                   href="mailto:suportekremlin@gmail.com"
                   className="hover:text-neon"

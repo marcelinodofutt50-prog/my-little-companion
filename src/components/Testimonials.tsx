@@ -1,4 +1,6 @@
 import { Star, Quote, ShieldCheck } from "lucide-react";
+import { VerifiedReviewsBadge } from "@/components/TrustBadges";
+
 
 type Testimonial = {
   name: string;
@@ -82,7 +84,9 @@ export function Testimonials() {
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
             +2.400 licenças ativas · nota média 4,9/5 baseada em avaliações reais no painel após 30 dias de uso.
           </p>
+          <div className="mt-3"><VerifiedReviewsBadge /></div>
         </div>
+
         <div className="flex items-center gap-3 rounded-md border border-border bg-card/40 px-4 py-3">
           <div className="flex">
             {[0, 1, 2, 3, 4].map((i) => (

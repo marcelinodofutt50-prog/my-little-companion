@@ -20,6 +20,7 @@ import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
 import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { RevenueSparkline } from "@/components/RevenueSparkline";
+import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
 
 
 
@@ -381,6 +382,9 @@ function AdminPage() {
                   <MiniStat label="Receita hoje" value={formatBrl(revenueToday)} accent="violet" />
                   <MiniStat label="Trials ativos" value={String(trialsActive)} accent="cyan" />
                 </div>
+
+                {/* Métricas 30 dias */}
+                <AdminMetricsPanel />
 
                 {/* Tendência de receita */}
                 <RevenueSparkline orders={orders} />

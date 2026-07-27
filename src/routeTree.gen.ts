@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialRouteImport } from './routes/tutorial'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as MercadoRouteImport } from './routes/mercado'
@@ -41,9 +43,19 @@ const TutorialRoute = TutorialRouteImport.update({
   path: '/tutorial',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RenovarServidorRoute = RenovarServidorRouteImport.update({
   id: '/renovar-servidor',
   path: '/renovar-servidor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrimeirosPassosRoute = PrimeirosPassosRouteImport.update({
@@ -179,7 +191,9 @@ export interface FileRoutesByFullPath {
   '/mercado': typeof MercadoRouteWithChildren
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -206,7 +220,9 @@ export interface FileRoutesByTo {
   '/mercado': typeof MercadoRouteWithChildren
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -235,7 +251,9 @@ export interface FileRoutesById {
   '/mercado': typeof MercadoRouteWithChildren
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -264,7 +282,9 @@ export interface FileRouteTypes {
     | '/mercado'
     | '/planos'
     | '/primeiros-passos'
+    | '/privacidade'
     | '/renovar-servidor'
+    | '/termos'
     | '/tutorial'
     | '/admin'
     | '/dashboard'
@@ -291,7 +311,9 @@ export interface FileRouteTypes {
     | '/mercado'
     | '/planos'
     | '/primeiros-passos'
+    | '/privacidade'
     | '/renovar-servidor'
+    | '/termos'
     | '/tutorial'
     | '/admin'
     | '/dashboard'
@@ -319,7 +341,9 @@ export interface FileRouteTypes {
     | '/mercado'
     | '/planos'
     | '/primeiros-passos'
+    | '/privacidade'
     | '/renovar-servidor'
+    | '/termos'
     | '/tutorial'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
@@ -348,7 +372,9 @@ export interface RootRouteChildren {
   MercadoRoute: typeof MercadoRouteWithChildren
   PlanosRoute: typeof PlanosRoute
   PrimeirosPassosRoute: typeof PrimeirosPassosRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RenovarServidorRoute: typeof RenovarServidorRoute
+  TermosRoute: typeof TermosRoute
   TutorialRoute: typeof TutorialRoute
   PagamentoErroRoute: typeof PagamentoErroRoute
   PagamentoPendenteRoute: typeof PagamentoPendenteRoute
@@ -371,11 +397,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TutorialRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/renovar-servidor': {
       id: '/renovar-servidor'
       path: '/renovar-servidor'
       fullPath: '/renovar-servidor'
       preLoaderRoute: typeof RenovarServidorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/primeiros-passos': {
@@ -588,7 +628,9 @@ const rootRouteChildren: RootRouteChildren = {
   MercadoRoute: MercadoRouteWithChildren,
   PlanosRoute: PlanosRoute,
   PrimeirosPassosRoute: PrimeirosPassosRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RenovarServidorRoute: RenovarServidorRoute,
+  TermosRoute: TermosRoute,
   TutorialRoute: TutorialRoute,
   PagamentoErroRoute: PagamentoErroRoute,
   PagamentoPendenteRoute: PagamentoPendenteRoute,

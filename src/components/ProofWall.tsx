@@ -118,9 +118,9 @@ export function ProofWall() {
             className="group relative aspect-[9/16] overflow-hidden rounded-lg border border-border bg-card/40 transition-all hover:border-neon/40 hover:shadow-lg hover:shadow-neon/10"
           >
             <img
+              loading="lazy"
               src={s.src}
               alt={s.caption}
-              loading="lazy"
               className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-x-0 top-0 flex justify-start p-2">
@@ -183,6 +183,7 @@ export function ProofWall() {
             onClick={(e) => e.stopPropagation()}
           >
             <img
+              loading="lazy"
               src={shots[open].src}
               alt={shots[open].caption}
               className="max-h-[75vh] w-auto rounded-lg border border-border object-contain shadow-2xl"
