@@ -1,4 +1,6 @@
 import { Star, Quote, ShieldCheck } from "lucide-react";
+import { VerifiedReviewsBadge } from "@/components/TrustBadges";
+
 
 type Testimonial = {
   name: string;
