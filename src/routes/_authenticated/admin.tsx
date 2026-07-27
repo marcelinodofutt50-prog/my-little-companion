@@ -266,7 +266,7 @@ function AdminPage() {
         </div>
 
         {/* STATS */}
-        <div className="mt-5 grid gap-4 md:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           <ExecStat icon={Users} label="Clientes cadastrados" value={stats ? String(stats.users) : "—"} sub="conta total" accent="cyan" />
           <ExecStat icon={KeyRound} label="Licenças ativas" value={stats ? String(stats.licenses) : "—"} sub="em operação" accent="neon" />
           <ExecStat icon={DollarSign} label="Receita bruta" value={stats ? formatBrl(stats.revenue) : "—"} sub="pedidos pagos" accent="violet" />
