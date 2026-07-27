@@ -864,3 +864,62 @@ export const adminListLegacyCandidates = createServerFn({ method: "GET" })
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return list.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
   });
+
+// ---- Business metrics (receita, reembolsos, tempo de resposta) ----
+export const adminMetrics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - 30 * 86400000).toISOString();
+    const prevSince = new Date(Date.now() - 60 * 86400000).toISOString();
+
+    const [{ data: orders30 }, { data: refunds30 }, { data: msgs }] = await Promise.all([
+      supabaseAdmin.from("orders").select("amount,status,created_at").gte("created_at", prevSince),
+      (supabaseAdmin.from("refund_requests") as any).select("id,status,amount,created_at").gte("created_at", since),
+      supabaseAdmin.from("support_messages").select("thread_id,is_admin,is_system,created_at").gte("created_at", since).order("created_at", { ascending: true }),
+    ]);
+
+    const all = (orders30 ?? []) as any[];
+    const paid = all.filter((o) => o.status === "paid");
+    const cur = paid.filter((o) => o.created_at >= since);
+    const prev = paid.filter((o) => o.created_at < since);
+    const revenue30 = cur.reduce((s, o) => s + Number(o.amount || 0), 0);
+    const revenuePrev30 = prev.reduce((s, o) => s + Number(o.amount || 0), 0);
+    const growth = revenuePrev30 > 0 ? ((revenue30 - revenuePrev30) / revenuePrev30) * 100 : null;
+    const attempts30 = all.filter((o) => o.created_at >= since);
+    const conversion = attempts30.length ? (cur.length / attempts30.length) * 100 : null;
+    const ticket = cur.length ? revenue30 / cur.length : 0;
+
+    const refunds = (refunds30 ?? []) as any[];
+    const refunded = refunds.filter((r) => ["approved", "refunded"].includes(String(r.status)));
+    const refundRate = cur.length ? (refunded.length / cur.length) * 100 : 0;
+    const refundAmount = refunded.reduce((s, r) => s + Number(r.amount || 0), 0);
+    const refundsPending = refunds.filter((r) => String(r.status) === "requested").length;
+
+    // Average first-response time (customer message -> next staff reply)
+    const byThread = new Map<string, any[]>();
+    for (const m of (msgs ?? []) as any[]) {
+      if (m.is_system) continue;
+      const arr = byThread.get(m.thread_id) ?? [];
+      arr.push(m);
+      byThread.set(m.thread_id, arr);
+    }
+    const deltas: number[] = [];
+    for (const arr of byThread.values()) {
+      let openedAt: number | null = null;
+      for (const m of arr) {
+        const t = new Date(m.created_at).getTime();
+        if (!m.is_admin) { if (openedAt === null) openedAt = t; }
+        else if (openedAt !== null) { deltas.push(t - openedAt); openedAt = null; }
+      }
+    }
+    const avgResponseMin = deltas.length ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length / 60000) : null;
+
+    return {
+      revenue30, revenuePrev30, growth, conversion, ticket,
+      paidCount: cur.length, attempts: attempts30.length,
+      refundRate, refundAmount, refundsPending, refundCount: refunded.length,
+      avgResponseMin, threadsAnswered: deltas.length,
+    };
+  });
