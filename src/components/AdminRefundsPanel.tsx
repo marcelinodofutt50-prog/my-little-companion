@@ -30,6 +30,13 @@ function fmtDate(v: any) {
   return v ? new Date(v).toLocaleString("pt-BR") : "—";
 }
 
+function auditLabel(action: string) {
+  if (action === "ai_verify") return "verificação IA";
+  if (action === "status_change") return "mudança de status";
+  if (action === "created") return "pedido criado";
+  return action;
+}
+
 
 export function AdminRefundsPanel() {
   const listFn = useServerFn(adminListRefunds);
