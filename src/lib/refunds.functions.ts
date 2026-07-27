@@ -401,6 +401,18 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
     const verdict = /VEREDITO:\s*(LEGITIMO|SUSPEITO|INVALIDO)/i.exec(analysis)?.[1]?.toUpperCase() ?? "SUSPEITO";
     const confidence = Number(/CONFIANCA:\s*(\d+)/i.exec(analysis)?.[1] ?? 0);
 
+    await logRefundAudit({
+      refundId: data.id,
+      actorId: context.userId,
+      action: "ai_verify",
+      fromStatus: r.status ?? null,
+      toStatus: r.status ?? null,
+      aiVerdict: verdict,
+      aiConfidence: Number.isFinite(confidence) ? confidence : null,
+      notes: `Checagens reprovadas: ${checks.filter((c) => !c.ok).length}/${checks.length} · modelo google/gemini-3.6-flash`,
+    });
+
+
     return {
       verdict,
       confidence,
