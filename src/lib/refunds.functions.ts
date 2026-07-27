@@ -118,11 +118,58 @@ export const requestRefund = createServerFn({ method: "POST" })
 
     if (error) throw new Error(error.message);
 
+    await logRefundAudit({
+      refundId: (inserted as any).id,
+      actorId: userId,
+      action: "created",
+      toStatus: "requested",
+      notes: "Pedido criado pelo cliente",
+    });
+
     const { notifyRefundStatus } = await import("@/lib/refund-notify.server");
     await notifyRefundStatus({ userId, status: "requested", amount: Number((order as any).amount) });
 
     return inserted;
   });
+
+// -------- Auditoria --------
+/** Registra uma entrada no log de auditoria do reembolso (nunca derruba a operação principal). */
+async function logRefundAudit(entry: {
+  refundId: string;
+  actorId?: string | null;
+  action: "created" | "status_change" | "ai_verify";
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  aiVerdict?: string | null;
+  aiConfidence?: number | null;
+  notes?: string | null;
+}) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let actorEmail: string | null = null;
+    if (entry.actorId) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("id", entry.actorId)
+        .maybeSingle();
+      actorEmail = (prof as any)?.email ?? null;
+    }
+    await (supabaseAdmin.from("refund_audit_log") as any).insert({
+      refund_id: entry.refundId,
+      actor_id: entry.actorId ?? null,
+      actor_email: actorEmail,
+      action: entry.action,
+      from_status: entry.fromStatus ?? null,
+      to_status: entry.toStatus ?? null,
+      ai_verdict: entry.aiVerdict ?? null,
+      ai_confidence: entry.aiConfidence ?? null,
+      notes: entry.notes ?? null,
+    });
+  } catch {
+    // auditoria é best-effort
+  }
+}
 
 // -------- Admin --------
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
@@ -147,8 +194,23 @@ export const adminListRefunds = createServerFn({ method: "GET" })
       const { data: profs } = await supabaseAdmin.from("profiles").select("id,email").in("id", ids);
       emails = Object.fromEntries(((profs ?? []) as any[]).map((p) => [p.id, p.email]));
     }
-    return list.map((r) => ({ ...r, user_email: emails[r.user_id] ?? null }));
+
+    // Log de auditoria de cada pedido de reembolso.
+    const audit: Record<string, any[]> = {};
+    if (list.length) {
+      const { data: logs } = await (supabaseAdmin.from("refund_audit_log") as any)
+        .select("*")
+        .in("refund_id", list.map((r) => r.id))
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      for (const l of ((logs ?? []) as any[])) {
+        (audit[l.refund_id] ??= []).push(l);
+      }
+    }
+
+    return list.map((r) => ({ ...r, user_email: emails[r.user_id] ?? null, audit: audit[r.id] ?? [] }));
   });
+
 
 export const adminUpdateRefund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
