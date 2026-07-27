@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { getRefundOverview, requestRefund } from "@/lib/refunds.functions";
 import { formatBrl } from "@/lib/plans";
+import { supabase } from "@/integrations/supabase/client";
+import { playNotifyDing } from "@/lib/notify-sound";
 
 type Overview = Awaited<ReturnType<typeof getRefundOverview>>;
 type RefundStatus = "requested" | "approved" | "refunded" | "rejected" | "cancelled";
@@ -20,6 +22,14 @@ const STEPS: { key: RefundStatus; label: string }[] = [
   { key: "approved", label: "Aprovado" },
   { key: "refunded", label: "Estornado" },
 ];
+
+const STATUS_LABEL: Record<RefundStatus, string> = {
+  requested: "Solicitado",
+  approved: "Aprovado",
+  refunded: "Estornado",
+  rejected: "Recusado",
+  cancelled: "Cancelado",
+};
 
 export function RefundSection() {
   const overviewFn = useServerFn(getRefundOverview);
@@ -43,6 +53,46 @@ export function RefundSection() {
     finally { setLoading(false); }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+
+  // Notificação em tempo real quando o status do reembolso muda.
+  useEffect(() => {
+    let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid || !active) return;
+
+      if (typeof Notification !== "undefined" && Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+
+      channel = supabase
+        .channel(`refunds-${uid}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "refund_requests", filter: `user_id=eq.${uid}` },
+          (payload: any) => {
+            const prev = payload.old?.status;
+            const next = payload.new?.status;
+            if (!next || prev === next) return;
+            const label = STATUS_LABEL[next as RefundStatus] ?? next;
+            const msg = `Seu reembolso de ${formatBrl(Number(payload.new.amount))} agora está: ${label}`;
+            toast.info(msg);
+            playNotifyDing();
+            if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+              try { new Notification("Shadow · Reembolso", { body: msg }); } catch { /* ignore */ }
+            }
+            load();
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => { active = false; if (channel) supabase.removeChannel(channel); };
+    /* eslint-disable-next-line */
+  }, []);
 
   async function submit() {
     if (!orderId) { toast.error("Selecione a compra."); return; }

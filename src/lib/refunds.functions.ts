@@ -117,6 +117,10 @@ export const requestRefund = createServerFn({ method: "POST" })
       .single();
 
     if (error) throw new Error(error.message);
+
+    const { notifyRefundStatus } = await import("@/lib/refund-notify.server");
+    await notifyRefundStatus({ userId, status: "requested", amount: Number((order as any).amount) });
+
     return inserted;
   });
 
@@ -166,7 +170,23 @@ export const adminUpdateRefund = createServerFn({ method: "POST" })
       patch.processed_at = new Date().toISOString();
       patch.processed_by = context.userId;
     }
-    const { error } = await supabaseAdmin.from("refund_requests").update(patch).eq("id", data.id);
+    const { data: updated, error } = await supabaseAdmin
+      .from("refund_requests")
+      .update(patch)
+      .eq("id", data.id)
+      .select("user_id,amount,status")
+      .single();
     if (error) throw new Error(error.message);
+
+    if (updated) {
+      const { notifyRefundStatus } = await import("@/lib/refund-notify.server");
+      await notifyRefundStatus({
+        userId: (updated as any).user_id,
+        status: data.status,
+        amount: Number((updated as any).amount),
+        adminNotes: data.adminNotes ?? null,
+      });
+    }
+
     return { ok: true };
   });
