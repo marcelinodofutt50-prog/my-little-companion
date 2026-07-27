@@ -49,6 +49,7 @@ export function AdminRefundsPanel() {
   const [filter, setFilter] = useState<"pending" | "all">("pending");
   const [aiBusy, setAiBusy] = useState<string | null>(null);
   const [ai, setAi] = useState<Record<string, AiResult>>({});
+  const [openAudit, setOpenAudit] = useState<Record<string, boolean>>({});
 
   async function load() {
     setLoading(true);
