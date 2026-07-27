@@ -22,7 +22,13 @@ export const Route = createFileRoute("/")({
         content:
           "Shadow BTMOB: infraestrutura de OSINT e cybersegurança de alto nível. Licenças instantâneas via PIX, painel completo e código-fonte disponível.",
       },
+      { property: "og:title", content: "Shadow — Your Shadow Everywhere" },
+      { property: "og:description", content: "Licenças BTMOB com ativação automática via PIX, painel completo e suporte 24/7." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.shadowstore.com/" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://www.shadowstore.com/" }],
   }),
   component: LandingPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,

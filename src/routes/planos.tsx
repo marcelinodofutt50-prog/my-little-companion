@@ -10,6 +10,8 @@ import {
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConversionBoosters, LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { VersionCompare } from "@/components/VersionCompare";
+import { TrustBadges } from "@/components/TrustBadges";
+import { CheckoutFaqFloat } from "@/components/CheckoutFaqFloat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +25,12 @@ export const Route = createFileRoute("/planos")({
   head: () => ({ meta: [
     { title: "Planos Shadow — Licenças, servidor e código-fonte" },
     { name: "description", content: "Pagamento oficial via PIX Mercado Pago. Ativação automática em menos de 1 minuto. Cupom BTMOB40 entrega 40% de cashback no primeiro depósito." },
-  ] }),
+    { property: "og:title", content: "Planos Shadow — Licenças, servidor e código-fonte" },
+    { property: "og:description", content: "PIX oficial Mercado Pago, ativação automática em menos de 1 minuto e garantia de 7 dias." },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://www.shadowstore.com/planos" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ], links: [{ rel: "canonical", href: "https://www.shadowstore.com/planos" }] }),
   component: PlansPage,
 });
 
