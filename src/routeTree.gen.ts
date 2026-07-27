@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialRouteImport } from './routes/tutorial'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
 import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as PlanosRouteImport } from './routes/planos'
@@ -39,6 +40,11 @@ import { Route as ApiPublicHooksApkWorkerRouteImport } from './routes/api/public
 const TutorialRoute = TutorialRouteImport.update({
   id: '/tutorial',
   path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RenovarServidorRoute = RenovarServidorRouteImport.update({
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/primeiros-passos'
     | '/renovar-servidor'
+    | '/termos'
     | '/tutorial'
     | '/admin'
     | '/dashboard'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/primeiros-passos'
     | '/renovar-servidor'
+    | '/termos'
     | '/tutorial'
     | '/admin'
     | '/dashboard'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/primeiros-passos'
     | '/renovar-servidor'
+    | '/termos'
     | '/tutorial'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   PlanosRoute: typeof PlanosRoute
   PrimeirosPassosRoute: typeof PrimeirosPassosRoute
   RenovarServidorRoute: typeof RenovarServidorRoute
+  TermosRoute: typeof TermosRoute
   TutorialRoute: typeof TutorialRoute
   PagamentoErroRoute: typeof PagamentoErroRoute
   PagamentoPendenteRoute: typeof PagamentoPendenteRoute
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/tutorial'
       fullPath: '/tutorial'
       preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/renovar-servidor': {
@@ -589,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlanosRoute: PlanosRoute,
   PrimeirosPassosRoute: PrimeirosPassosRoute,
   RenovarServidorRoute: RenovarServidorRoute,
+  TermosRoute: TermosRoute,
   TutorialRoute: TutorialRoute,
   PagamentoErroRoute: PagamentoErroRoute,
   PagamentoPendenteRoute: PagamentoPendenteRoute,
