@@ -107,12 +107,47 @@ export function AdminRefundsPanel() {
                     </div>
                     <div className="mt-1 text-[11px] text-muted-foreground">Motivo: <span className="text-foreground">{r.reason}</span></div>
                     {r.pix_key && <div className="mt-1 font-mono text-[11px] text-muted-foreground">PIX: <span className="text-foreground">{r.pix_key}</span></div>}
+
+                    {ai[r.id] && (
+                      <div className="mt-3 rounded-md border border-border/40 bg-background/40 p-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {ai[r.id].verdict === "LEGITIMO" ? (
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                          ) : (
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                          )}
+                          <span className="font-mono text-[10px] uppercase text-foreground">
+                            IA: {ai[r.id].verdict} · {ai[r.id].confidence}% confiança
+                          </span>
+                          {ai[r.id].failedCount > 0 && (
+                            <Badge variant="outline" className="font-mono text-[10px]">
+                              {ai[r.id].failedCount} checagem(ns) falharam
+                            </Badge>
+                          )}
+                        </div>
+                        <ul className="mt-2 space-y-0.5">
+                          {ai[r.id].checks.map((c, i) => (
+                            <li key={i} className="font-mono text-[10px] text-muted-foreground">
+                              <span className={c.ok ? "text-emerald-400" : "text-red-400"}>{c.ok ? "✔" : "✘"}</span>{" "}
+                              {c.label} — {c.detail}
+                            </li>
+                          ))}
+                        </ul>
+                        <pre className="mt-2 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-muted-foreground">
+                          {ai[r.id].analysis}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                   {r.status !== "refunded" && r.status !== "rejected" && (
                     <div className="flex w-full max-w-sm flex-col gap-2">
                       <Input value={notes[r.id] ?? ""} onChange={(e) => setNotes((n) => ({ ...n, [r.id]: e.target.value }))}
                         placeholder="Nota para o cliente (opcional)" maxLength={500} />
                       <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="secondary" disabled={aiBusy === r.id} onClick={() => verify(r.id)}>
+                          {aiBusy === r.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                          Verificar com IA
+                        </Button>
                         {r.status === "requested" && (
                           <Button size="sm" disabled={busy === r.id} onClick={() => update(r.id, "approved")}>
                             <Check className="mr-1 h-3 w-3" /> Aprovar
@@ -128,6 +163,7 @@ export function AdminRefundsPanel() {
                     </div>
                   )}
                 </div>
+
               </li>
             );
           })}
