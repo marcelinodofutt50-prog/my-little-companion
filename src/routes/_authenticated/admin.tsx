@@ -14,6 +14,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { LicenseAiPanel } from "@/components/LicenseAiPanel";
 import { AdminAlertsBanner } from "@/components/AdminAlertsBanner";
 import { AdminApkPanel } from "@/components/AdminApkPanel";
+import { AdminRefundsPanel } from "@/components/AdminRefundsPanel";
 import { AdminMarketPanel } from "@/components/AdminMarketPanel";
 import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
 import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "audit" | "apk" | "market" | "updates";
+type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "audit" | "apk" | "market" | "updates" | "refunds";
 
 
 function AdminPage() {
@@ -218,6 +219,7 @@ function AdminPage() {
         { id: "orders", label: "Pedidos", icon: DollarSign },
         { id: "market", label: "Mercado", icon: Store, hint: "produtos & catálogo" },
         { id: "referrals", label: "Indicações", icon: Gift, hint: "cashback / pix" },
+        { id: "refunds", label: "Reembolsos", icon: RotateCcw, hint: "prazo 2 dias" },
       ],
     },
     {
@@ -740,6 +742,7 @@ function AdminPage() {
           {tab === "apk" && <AdminApkPanel />}
           {tab === "market" && <AdminMarketPanel />}
           {tab === "updates" && <AdminUpdatesPanel />}
+          {tab === "refunds" && <AdminRefundsPanel />}
 
 
 
