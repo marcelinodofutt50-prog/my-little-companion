@@ -1136,7 +1136,7 @@ function AdminChatPanel() {
       </aside>
 
       {/* Chat area */}
-      <section className="flex min-h-0 flex-col">
+      <section className={`${activeId ? "flex" : "hidden md:flex"} min-h-0 flex-col`}>
         {!activeThread ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
             <MessageSquare className="h-10 w-10 text-neon/50" />
