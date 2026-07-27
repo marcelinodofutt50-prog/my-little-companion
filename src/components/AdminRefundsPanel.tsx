@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, RotateCcw, Check, X, Clock, ShieldCheck, Sparkles, AlertTriangle, ExternalLink, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,13 @@ function fmtDate(v: any) {
   return v ? new Date(v).toLocaleString("pt-BR") : "—";
 }
 
+function auditLabel(action: string) {
+  if (action === "ai_verify") return "verificação IA";
+  if (action === "status_change") return "mudança de status";
+  if (action === "created") return "pedido criado";
+  return action;
+}
+
 
 export function AdminRefundsPanel() {
   const listFn = useServerFn(adminListRefunds);
@@ -42,6 +49,7 @@ export function AdminRefundsPanel() {
   const [filter, setFilter] = useState<"pending" | "all">("pending");
   const [aiBusy, setAiBusy] = useState<string | null>(null);
   const [ai, setAi] = useState<Record<string, AiResult>>({});
+  const [openAudit, setOpenAudit] = useState<Record<string, boolean>>({});
 
   async function load() {
     setLoading(true);
@@ -67,6 +75,7 @@ export function AdminRefundsPanel() {
       const res = (await verifyFn({ data: { id } })) as AiResult;
       setAi((a) => ({ ...a, [id]: res }));
       toast.success(`IA: ${res.verdict} (${res.confidence}% de confiança)`);
+      await load();
     } catch (e: any) { toast.error(e.message); }
     finally { setAiBusy(null); }
   }
@@ -200,6 +209,43 @@ export function AdminRefundsPanel() {
                         })()}
                       </div>
                     )}
+
+                    {/* Log de auditoria */}
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setOpenAudit((o) => ({ ...o, [r.id]: !o[r.id] }))}
+                        className="inline-flex items-center gap-1 font-mono text-[10px] uppercase text-muted-foreground hover:text-foreground"
+                      >
+                        <History className="h-3 w-3" />
+                        Log de auditoria ({(r.audit ?? []).length})
+                      </button>
+                      {openAudit[r.id] && (
+                        <ul className="mt-2 space-y-1 border-l border-border/40 pl-3">
+                          {(r.audit ?? []).length === 0 && (
+                            <li className="font-mono text-[10px] text-muted-foreground">sem registros</li>
+                          )}
+                          {(r.audit ?? []).map((a: any) => (
+                            <li key={a.id} className="font-mono text-[10px] text-muted-foreground">
+                              <span className="text-foreground">{fmtDate(a.created_at)}</span>
+                              {" · "}
+                              <span className="uppercase text-neon">{auditLabel(a.action)}</span>
+                              {" · "}
+                              por <span className="text-foreground">{a.actor_email ?? a.actor_id ?? "sistema"}</span>
+                              {a.action === "status_change" && (
+                                <> {" · "}{a.from_status ?? "—"} → <span className="text-foreground">{a.to_status}</span></>
+                              )}
+                              {a.action === "ai_verify" && (
+                                <> {" · "}veredito <span className="text-foreground">{a.ai_verdict}</span>
+                                  {a.ai_confidence != null && <> ({a.ai_confidence}%)</>}
+                                </>
+                              )}
+                              {a.notes && <div className="pl-2 opacity-80">↳ {a.notes}</div>}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
 
                   </div>
                   {r.status !== "refunded" && r.status !== "rejected" && (

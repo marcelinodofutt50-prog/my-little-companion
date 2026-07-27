@@ -686,6 +686,56 @@ export type Database = {
           },
         ]
       }
+      refund_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          ai_confidence: number | null
+          ai_verdict: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          notes: string | null
+          refund_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          ai_confidence?: number | null
+          ai_verdict?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          refund_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          ai_confidence?: number | null
+          ai_verdict?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          refund_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_audit_log_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "refund_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       refund_requests: {
         Row: {
           admin_notes: string | null
