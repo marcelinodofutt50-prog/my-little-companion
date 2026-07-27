@@ -8,6 +8,8 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/AppSidebar";
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { LegacyConnectPanel } from "@/components/LegacyConnectPanel";
+import { RefundSection } from "@/components/RefundSection";
+
 import { TutorialHintDialog } from "@/components/TutorialHintDialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
