@@ -115,3 +115,78 @@ export const getMigrationProofUrls = createServerFn({ method: "POST" })
     }
     return out;
   });
+
+const MAX_TOTAL_PROOFS = 12;
+
+/** Adiciona comprovantes extras a uma solicitação já enviada (sem abrir novo chamado). */
+export const addMigrationProofs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        requestId: z.string().uuid(),
+        proofPaths: z.array(z.string().trim().min(1).max(400)).min(1).max(6),
+        note: z.string().trim().max(500).optional().or(z.literal("")),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const bad = data.proofPaths.find((p) => !p.startsWith(`${context.userId}/`));
+    if (bad) throw new Error("Anexo inválido. Reenvie os arquivos e tente de novo.");
+
+    const { data: current, error: readErr } = await context.supabase
+      .from("migration_requests")
+      .select("id, user_id, status, proof_paths, notes, current_panel")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (readErr || !current) throw new Error("Solicitação não encontrada.");
+    if (current.user_id !== context.userId) throw new Error("Solicitação não encontrada.");
+    if (current.status !== "pending") {
+      throw new Error("Esta solicitação já foi analisada. Fale com o suporte no seu ticket.");
+    }
+
+    const existingPaths: string[] = Array.isArray(current.proof_paths) ? current.proof_paths : [];
+    const merged = Array.from(new Set([...existingPaths, ...data.proofPaths]));
+    if (merged.length > MAX_TOTAL_PROOFS) {
+      throw new Error(`Limite de ${MAX_TOTAL_PROOFS} anexos por solicitação.`);
+    }
+
+    const notes = data.note
+      ? `${current.notes ? `${current.notes}\n` : ""}[+anexos] ${data.note}`
+      : current.notes;
+
+    const { data: row, error } = await context.supabase
+      .from("migration_requests")
+      .update({ proof_paths: merged, notes })
+      .eq("id", data.requestId)
+      .select("*")
+      .single();
+    if (error) throw new Error(`Não foi possível anexar os arquivos: ${error.message}`);
+
+    // Avisa no ticket existente (sem criar um novo chamado).
+    try {
+      const { data: thread } = await context.supabase
+        .from("support_threads")
+        .select("id")
+        .eq("user_id", context.userId)
+        .neq("status", "closed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const threadId = (thread as any)?.id as string | undefined;
+      if (threadId) {
+        await context.supabase.from("support_messages").insert({
+          thread_id: threadId,
+          sender_id: context.userId,
+          body:
+            `📎 ${data.proofPaths.length} anexo(s) adicionado(s) à solicitação de migração ` +
+            `(${current.current_panel}). Total agora: ${merged.length}.` +
+            (data.note ? `\n• Observação: ${data.note}` : ""),
+        });
+      }
+    } catch {
+      // extra: falha aqui não invalida o upload
+    }
+
+    return row;
+  });
