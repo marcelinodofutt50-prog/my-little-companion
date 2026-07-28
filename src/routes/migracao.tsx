@@ -8,8 +8,11 @@ import {
   FileDown,
   LifeBuoy,
   ListChecks,
+  Send,
   ShieldCheck,
 } from "lucide-react";
+import { MigrationRequestForm } from "@/components/MigrationRequestForm";
+
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import {
@@ -255,6 +258,22 @@ function MigrationPage() {
             </p>
           </div>
         </section>
+
+        {/* Formulário */}
+        <section className="mt-14" id="formulario">
+          <div className="flex items-center gap-2">
+            <Send className="h-5 w-5 text-neon" />
+            <h2 className="font-display text-2xl tracking-tight">Enviar meu checklist</h2>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Preencha aqui e anexe o comprovante de que você já usa outro servidor — sem copiar e colar em lugar
+            nenhum. A equipe recebe tudo junto e já abre o seu chamado de migração.
+          </p>
+          <div className="mt-5">
+            <MigrationRequestForm />
+          </div>
+        </section>
+
 
         {/* SLA */}
         <section className="mt-14">
