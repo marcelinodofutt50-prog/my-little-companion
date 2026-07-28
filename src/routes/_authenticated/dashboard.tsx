@@ -20,6 +20,8 @@ import { createCheckout } from "@/lib/checkout.functions";
 import { listMyUpdates, getUpdateDownloadUrl } from "@/lib/updates.functions";
 import { daysUntil, severityFromDays, severityColor, type ExpirySeverity } from "@/lib/expiry";
 import { NicknameDialog } from "@/components/NicknameDialog";
+import { RgbModeToggle } from "@/components/RgbModeToggle";
+
 import { getMyProfile } from "@/lib/profile.functions";
 import { displayIdentity } from "@/lib/identity";
 import shadowMark from "@/assets/shadow-mask.png";
