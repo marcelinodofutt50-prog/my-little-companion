@@ -62,6 +62,9 @@ function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(null);
   const [users, setUsers] = useState<any[]>([]);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [userFilter, setUserFilter] = useState("");
+
   const [orders, setOrders] = useState<any[]>([]);
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
@@ -105,10 +108,14 @@ function AdminPage() {
   }, [ordersFn]);
   const loadUsers = useCallback(() => {
     if (inflightRef.current.users) return inflightRef.current.users;
-    const p = usersFn().then((r) => { setUsers(r); loadedRef.current.users = true; return r; }).catch(() => {}).finally(() => { inflightRef.current.users = undefined; });
+    const p = usersFn()
+      .then((r) => { setUsers(r); setUsersError(null); loadedRef.current.users = true; return r; })
+      .catch((e: any) => { setUsersError(e?.message ?? "Falha ao carregar usuários"); })
+      .finally(() => { inflightRef.current.users = undefined; });
     inflightRef.current.users = p;
     return p;
   }, [usersFn]);
+
   const loadLicenses = useCallback(() => {
     if (inflightRef.current.licenses) return inflightRef.current.licenses;
     const p = licensesFn().then((r) => { setLicenses(r); loadedRef.current.licenses = true; return r; }).catch(() => {}).finally(() => { inflightRef.current.licenses = undefined; });
