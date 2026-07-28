@@ -8,6 +8,7 @@ import { SocialProofStrip } from "@/components/SocialProof";
 import { LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { Testimonials } from "@/components/Testimonials";
 import { ProofWall } from "@/components/ProofWall";
+import { ImpossibleProof } from "@/components/ImpossibleProof";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";

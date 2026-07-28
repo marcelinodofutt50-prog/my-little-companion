@@ -7,8 +7,6 @@ const p4 = { url: "/img/proof-4.jpg" };
 const pPhones = { url: "/img/proof-phones.jpg" };
 const pPix300 = { url: "/img/proof-pix-300.jpg" };
 const pDouglas = { url: "/img/proof-telegram-douglas.jpg" };
-const pItau10k = { url: "/img/proof-itau-10k.png" };
-const pCaixa990 = { url: "/img/proof-caixa-990.png" };
 
 type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet" };
 
