@@ -7,6 +7,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { recoverAccountWithCode } from "@/lib/recovery.functions";
+import { Lost2faHelp } from "@/components/Lost2faHelp";
+
 
 export const Route = createFileRoute("/recuperar")({
   head: () => ({
@@ -90,7 +92,11 @@ function RecoverPage() {
         <p className="mt-4 text-[11px] text-muted-foreground">
           Cada código só pode ser usado uma vez. Depois de recuperar o acesso, gere novos códigos no painel.
         </p>
+
+        <Lost2faHelp className="mt-6" />
+
         <Link to="/auth" className="mt-3 text-xs text-muted-foreground hover:text-foreground">← Voltar ao login</Link>
+
       </main>
     </div>
   );
