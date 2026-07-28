@@ -134,6 +134,9 @@ function AuthPage() {
         <button className="mt-6 font-mono text-xs uppercase text-muted-foreground hover:text-neon" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "Não tem conta? Registre-se" : "Já tem conta? Entrar"}
         </button>
+        <Link to="/recuperar" className="mt-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-neon">
+          Perdi o acesso ao meu e-mail → recuperar conta
+        </Link>
         <Link to="/" className="mt-3 text-xs text-muted-foreground hover:text-foreground">← Voltar ao início</Link>
       </main>
     </div>
