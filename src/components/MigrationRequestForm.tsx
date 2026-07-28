@@ -110,6 +110,83 @@ export function MigrationRequestForm() {
     setFiles((f) => f.filter((x) => x.path !== path));
   }
 
+  async function uploadMany(list: FileList | null, remainingSlots: number) {
+    const { data: auth } = await supabase.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) {
+      toast.error("Faça login para anexar comprovantes");
+      return [] as Uploaded[];
+    }
+    const picked = Array.from(list ?? []).slice(0, Math.max(0, remainingSlots));
+    if (!picked.length) {
+      toast.error("Limite de anexos atingido");
+      return [] as Uploaded[];
+    }
+    const added: Uploaded[] = [];
+    for (const file of picked) {
+      if (!ACCEPTED.includes(file.type)) {
+        toast.error(`${file.name}: envie imagem (PNG/JPG/WEBP) ou PDF`);
+        continue;
+      }
+      if (file.size > MAX_SIZE) {
+        toast.error(`${file.name}: máximo de 8MB por arquivo`);
+        continue;
+      }
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60);
+      const path = `${uid}/${Date.now()}-${safe}`;
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (error) {
+        toast.error(`${file.name}: falha no envio (${error.message})`);
+        continue;
+      }
+      added.push({ path, name: file.name, size: file.size });
+    }
+    return added;
+  }
+
+  async function handleExtra(list: FileList | null, alreadySaved: number) {
+    if (!list?.length) return;
+    const remaining = MAX_TOTAL - alreadySaved - extraFiles.length;
+    setUploading(true);
+    const added = await uploadMany(list, Math.min(remaining, MAX_FILES));
+    setUploading(false);
+    if (added.length) {
+      setExtraFiles((f) => [...f, ...added]);
+      toast.success(`${added.length} arquivo(s) pronto(s) para anexar`);
+    }
+    if (extraRef.current) extraRef.current.value = "";
+  }
+
+  async function removeExtra(path: string) {
+    await supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+    setExtraFiles((f) => f.filter((x) => x.path !== path));
+  }
+
+  async function saveExtra() {
+    if (savingExtra || !existing?.id || extraFiles.length === 0) return;
+    setSavingExtra(true);
+    try {
+      const row = await addProofs({
+        data: {
+          requestId: existing.id,
+          proofPaths: extraFiles.map((f) => f.path),
+          note: extraNote,
+        },
+      });
+      setExisting(row);
+      setExtraFiles([]);
+      setExtraNote("");
+      toast.success("Anexos adicionados ao seu pedido — sem abrir novo chamado.");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Não foi possível anexar os arquivos");
+    } finally {
+      setSavingExtra(false);
+    }
+  }
+
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
