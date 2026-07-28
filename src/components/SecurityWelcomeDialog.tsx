@@ -130,25 +130,45 @@ export function SecurityWelcomeDialog() {
             <div className="flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-3">
               <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
               <div>
-                <div className="text-xs font-semibold">Recuperação de conta</div>
+                <div className="text-xs font-semibold">
+                  {exhausted
+                    ? "Seus códigos acabaram"
+                    : hadCodes
+                      ? "Gerar novos códigos"
+                      : "Recuperação de conta"}
+                </div>
                 <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                  Vamos gerar 8 códigos de uso único. Se você perder o acesso ao e-mail, use um deles em{" "}
-                  <span className="font-mono">/recuperar</span> para criar uma senha nova.
+                  {exhausted
+                    ? "Você já usou todos os códigos anteriores. Gere um novo conjunto de 8 códigos para não perder o acesso."
+                    : hadCodes
+                      ? "Ao gerar um novo conjunto, todos os códigos antigos deixam de funcionar imediatamente."
+                      : "Vamos gerar 8 códigos de uso único. Se você perder o acesso ao e-mail, use um deles em /recuperar para criar uma senha nova."}
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button onClick={handleGenerate} disabled={loading} className="w-full font-mono uppercase">
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Gerar meus códigos
+                {loading ? "Gerando..." : hadCodes ? "Gerar novos códigos" : "Gerar meus códigos"}
               </Button>
-              <Button variant="ghost" onClick={close} className="w-full font-mono uppercase sm:w-auto">
+              <Button variant="ghost" onClick={close} disabled={loading} className="w-full font-mono uppercase sm:w-auto">
                 Depois
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
+            <div className="flex items-start gap-2 rounded-md border border-neon/40 bg-neon/5 p-3">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
+              <p className="text-[11px] leading-snug">
+                <span className="font-semibold">
+                  {codes?.length} códigos gerados com sucesso.
+                </span>{" "}
+                {hadCodes
+                  ? "Os códigos anteriores foram invalidados — use apenas os desta lista."
+                  : "Salve agora: esta é a única vez que eles aparecem."}
+              </p>
+            </div>
             <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-black/40 p-3 font-mono text-xs">
               {codes?.map((c) => (
                 <div key={c} className="tracking-wider text-neon">{c}</div>
