@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2, Search, RefreshCcw, Copy, ShieldAlert, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminFindUsers, adminReplaceUserTrial } from "@/lib/admin.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type FoundUser = {
   id: string;
@@ -29,6 +39,8 @@ export function AdminTrialResetPanel() {
   const [users, setUsers] = useState<FoundUser[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [result, setResult] = useState<Record<string, NewCreds & { expires_at: string }>>({});
+  const [confirmUser, setConfirmUser] = useState<FoundUser | null>(null);
+  const inFlight = useRef(false);
 
   const findFn = useServerFn(adminFindUsers);
   const replaceFn = useServerFn(adminReplaceUserTrial);
@@ -48,18 +60,33 @@ export function AdminTrialResetPanel() {
   }
 
   async function replaceTrial(u: FoundUser) {
-    const label = u.display_name || u.email || u.id;
-    if (!confirm(`Gerar um trial NOVO para ${label}? O trial atual (se existir) será removido do painel.`)) return;
+    // proteção contra clique duplo / requisições concorrentes
+    if (inFlight.current || busyId) return;
+    inFlight.current = true;
     setBusyId(u.id);
+    setConfirmUser(null);
+    const label = u.display_name || u.email || "cliente";
+    const toastId = toast.loading(`Recriando trial de ${label}...`);
     try {
       const res: any = await replaceFn({ data: { userId: u.id } });
       setResult((prev) => ({ ...prev, [u.id]: { ...res.credentials, expires_at: res.expires_at } }));
-      toast.success("Trial recriado com sucesso", { description: `user: ${res.credentials.username}` });
+      toast.success("Trial recriado com sucesso", {
+        id: toastId,
+        description: `${label} · user: ${res.credentials.username} · expira ${new Date(res.expires_at).toLocaleString("pt-BR")}`,
+      });
       await search();
     } catch (err: any) {
-      toast.error(err?.message ?? "Falha ao recriar o trial");
+      const raw = String(err?.message ?? "");
+      const msg = /painel|yaarsa/i.test(raw)
+        ? "O painel recusou a criação. Verifique se o usuário antigo foi removido e tente de novo."
+        : /rede|fetch|network|timeout/i.test(raw)
+          ? "Falha de conexão com o painel. Nenhuma alteração foi aplicada — tente novamente."
+          : raw || "Falha ao recriar o trial";
+      toast.error("Não foi possível recriar o trial", { id: toastId, description: msg });
+    } finally {
+      setBusyId(null);
+      inFlight.current = false;
     }
-    setBusyId(null);
   }
 
   function copy(text: string, label: string) {
@@ -118,8 +145,8 @@ export function AdminTrialResetPanel() {
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={busyId === u.id}
-                  onClick={() => replaceTrial(u)}
+                  disabled={!!busyId}
+                  onClick={() => setConfirmUser(u)}
                   className="shrink-0 font-mono text-[11px] uppercase"
                 >
                   {busyId === u.id ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />}
@@ -155,6 +182,40 @@ export function AdminTrialResetPanel() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!confirmUser} onOpenChange={(open) => { if (!open && !busyId) setConfirmUser(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gerar um trial novo?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Cliente: <span className="font-mono text-foreground">{confirmUser?.display_name || confirmUser?.email || confirmUser?.id}</span>
+                </p>
+                {confirmUser?.trial ? (
+                  <p className="text-amber-400">
+                    O trial atual (<span className="font-mono">{confirmUser.trial.yaarsa_username}</span>) será removido do painel e não poderá ser recuperado.
+                  </p>
+                ) : (
+                  <p>Este cliente não tem trial registrado — um novo será criado.</p>
+                )}
+                <p>Novas credenciais de 24h serão geradas e exibidas aqui.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!busyId} className="font-mono text-xs uppercase">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!!busyId}
+              onClick={(e) => { e.preventDefault(); if (confirmUser) void replaceTrial(confirmUser); }}
+              className="font-mono text-xs uppercase"
+            >
+              {busyId ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+              Confirmar e gerar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
