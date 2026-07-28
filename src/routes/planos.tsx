@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
@@ -150,6 +150,7 @@ function PlansPage() {
   const [referralPending, setReferralPending] = useState(false);
 
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const autoCouponTried = useRef(false);
   const navigate = useNavigate();
 
   const checkoutFn = useServerFn(createCheckout);
@@ -165,8 +166,34 @@ function PlansPage() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
       if (ref) setReferral(ref.toUpperCase());
+      const promo = params.get("cupom") || localStorage.getItem("shadow_coupon");
+      if (promo && CODE_RE.test(promo.trim().toUpperCase())) setCoupon(promo.trim().toUpperCase());
     }
   }, []);
+
+  useEffect(() => {
+    if (!loggedIn || !coupon || couponValid || couponPending || autoCouponTried.current) return;
+    const code = coupon.trim().toUpperCase();
+    if (!CODE_RE.test(code)) return;
+
+    autoCouponTried.current = true;
+    setCouponPending(true);
+    setCouponError(null);
+    validateFn({ data: { code } })
+      .then((r) => {
+        if (r.coupon) {
+          setCouponValid(r.coupon);
+          setCoupon(r.coupon.code);
+          localStorage.setItem("shadow_coupon", r.coupon.code);
+          toast.success(`Cupom ${r.coupon.code} aplicado automaticamente`);
+        } else {
+          setCouponValid(null);
+          setCouponError("Cupom inválido ou expirado");
+        }
+      })
+      .catch(() => setCouponError("Não foi possível validar o cupom agora. Tente aplicar manualmente."))
+      .finally(() => setCouponPending(false));
+  }, [loggedIn, coupon, couponValid, couponPending, validateFn]);
 
   useEffect(() => {
     if (loggedIn) {

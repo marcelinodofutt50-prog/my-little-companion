@@ -4,7 +4,6 @@ import { ShieldCheck, Lock, EyeOff, AlertTriangle, KeyRound, Copy, Download, Loa
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { generatePlainCode, hashCode, RECOVERY_CODE_COUNT } from "@/lib/recovery.shared";
 
 const bullets = [
   {
@@ -88,52 +87,30 @@ export function SecurityWelcomeDialog() {
     setErrorText(null);
     setLoading(true);
     try {
-      const user = await getCurrentUser();
-      const nextCodes: string[] = [];
-      while (nextCodes.length < RECOVERY_CODE_COUNT) {
-        const code = generatePlainCode();
-        if (!nextCodes.includes(code)) nextCodes.push(code);
-      }
-
-      const rows = await Promise.all(
-        nextCodes.map(async (code) => ({ user_id: user.id, code_hash: await hashCode(code) })),
-      );
-
-      // PGRST205 = cache de schema desatualizado no backend. Tentamos de novo em silêncio.
       const isSchemaCache = (err: any) =>
-        err?.code === "PGRST205" || /schema cache/i.test(err?.message ?? "");
+        err?.code === "PGRST202" ||
+        err?.code === "PGRST205" ||
+        /schema cache|function .* not found|could not find/i.test(err?.message ?? "");
 
-      let deleteError: any = (await supabase.from("recovery_codes").delete().eq("user_id", user.id)).error;
-      if (deleteError && isSchemaCache(deleteError)) {
-        await new Promise((r) => setTimeout(r, 1200));
-        deleteError = (await supabase.from("recovery_codes").delete().eq("user_id", user.id)).error;
+      // Gera e salva no backend em uma única chamada. Isso evita o erro antigo
+      // de tabela ausente no cache do navegador/PostgREST durante delete/insert direto.
+      let result = await supabase.rpc("generate_my_recovery_codes");
+      if (result.error && isSchemaCache(result.error)) {
+        await new Promise((r) => setTimeout(r, 1500));
+        result = await supabase.rpc("generate_my_recovery_codes");
       }
-      if (deleteError) {
+      if (result.error) {
         throw new Error(
-          isSchemaCache(deleteError)
-            ? "O backend ainda está atualizando o cache de tabelas. Aguarde alguns segundos e toque em gerar novamente."
-            : `Falha ao limpar códigos antigos: ${deleteError.message}`,
+          isSchemaCache(result.error)
+            ? "O backend ainda está atualizando. Aguarde alguns segundos e toque em gerar novamente."
+            : `Falha ao gerar os códigos: ${result.error.message}`,
         );
       }
 
-      let insertError: any = (await supabase.from("recovery_codes").insert(rows)).error;
-      if (insertError && isSchemaCache(insertError)) {
-        await new Promise((r) => setTimeout(r, 1200));
-        insertError = (await supabase.from("recovery_codes").insert(rows)).error;
+      const nextCodes = ((result.data ?? []) as Array<{ code: string }>).map((row) => row.code).filter(Boolean);
+      if (nextCodes.length === 0) {
+        throw new Error("O backend respondeu, mas não retornou os códigos. Tente novamente em instantes.");
       }
-      if (insertError) {
-        throw new Error(
-          isSchemaCache(insertError)
-            ? "O backend ainda está atualizando o cache de tabelas. Aguarde alguns segundos e toque em gerar novamente."
-            : `Falha ao salvar os códigos: ${insertError.message}`,
-        );
-      }
-
-
-      await supabase
-        .from("profiles")
-        .update({ recovery_codes_generated_at: new Date().toISOString(), security_ack_at: new Date().toISOString() })
-        .eq("id", user.id);
 
       setCodes(nextCodes);
       setSaved(false);

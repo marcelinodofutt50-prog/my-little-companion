@@ -1119,6 +1119,12 @@ export type Database = {
     Functions: {
       expire_stale_apk_jobs: { Args: never; Returns: number }
       gen_referral_code: { Args: never; Returns: string }
+      generate_my_recovery_codes: {
+        Args: never
+        Returns: {
+          code: string
+        }[]
+      }
       has_active_play_protect: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
