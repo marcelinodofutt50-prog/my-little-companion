@@ -99,11 +99,36 @@ export function SecurityWelcomeDialog() {
         nextCodes.map(async (code) => ({ user_id: user.id, code_hash: await hashCode(code) })),
       );
 
-      const { error: deleteError } = await supabase.from("recovery_codes").delete().eq("user_id", user.id);
-      if (deleteError) throw new Error(`Falha ao limpar códigos antigos: ${deleteError.message}`);
+      // PGRST205 = cache de schema desatualizado no backend. Tentamos de novo em silêncio.
+      const isSchemaCache = (err: any) =>
+        err?.code === "PGRST205" || /schema cache/i.test(err?.message ?? "");
 
-      const { error: insertError } = await supabase.from("recovery_codes").insert(rows);
-      if (insertError) throw new Error(`Falha ao salvar os códigos: ${insertError.message}`);
+      let deleteError: any = (await supabase.from("recovery_codes").delete().eq("user_id", user.id)).error;
+      if (deleteError && isSchemaCache(deleteError)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        deleteError = (await supabase.from("recovery_codes").delete().eq("user_id", user.id)).error;
+      }
+      if (deleteError) {
+        throw new Error(
+          isSchemaCache(deleteError)
+            ? "O backend ainda está atualizando o cache de tabelas. Aguarde alguns segundos e toque em gerar novamente."
+            : `Falha ao limpar códigos antigos: ${deleteError.message}`,
+        );
+      }
+
+      let insertError: any = (await supabase.from("recovery_codes").insert(rows)).error;
+      if (insertError && isSchemaCache(insertError)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        insertError = (await supabase.from("recovery_codes").insert(rows)).error;
+      }
+      if (insertError) {
+        throw new Error(
+          isSchemaCache(insertError)
+            ? "O backend ainda está atualizando o cache de tabelas. Aguarde alguns segundos e toque em gerar novamente."
+            : `Falha ao salvar os códigos: ${insertError.message}`,
+        );
+      }
+
 
       await supabase
         .from("profiles")

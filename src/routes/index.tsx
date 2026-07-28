@@ -8,6 +8,7 @@ import { SocialProofStrip } from "@/components/SocialProof";
 import { LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { Testimonials } from "@/components/Testimonials";
 import { ProofWall } from "@/components/ProofWall";
+import { ImpossibleProof } from "@/components/ImpossibleProof";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
@@ -429,11 +430,17 @@ function LandingPage() {
             </div>
           </section>
 
+          {/* Comprovantes Itaú e Caixa em destaque */}
+          <section className="border-t border-border py-16">
+            <ImpossibleProof />
+          </section>
+
           {/* Proof Wall — prints reais */}
           <ProofWall />
 
           {/* Antes vs Depois */}
           <BeforeAfter />
+
 
           {/* Testimonials */}
           <Testimonials />
