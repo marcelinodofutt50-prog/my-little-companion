@@ -192,7 +192,7 @@ export function MigrationStatusTracker() {
       }
       const { error: mErr } = await supabase
         .from("support_messages")
-        .insert({ thread_id: tid, sender_id: uid, body });
+        .insert({ thread_id: tid as string, sender_id: uid, body });
       if (mErr) throw mErr;
       setReply("");
     } catch (err: any) {
