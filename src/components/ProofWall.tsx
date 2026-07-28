@@ -13,18 +13,7 @@ const pCaixa990 = { url: "/img/proof-caixa-990.png" };
 type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet" };
 
 const shots: Shot[] = [
-  {
-    src: pItau10k.url,
-    caption: 'Itaú · R$ 10.000,00 pagos e confirmados — "Pagamento concluído" direto no app do banco.',
-    tag: "Itaú · R$ 10.000",
-    accent: "neon",
-  },
-  {
-    src: pCaixa990.url,
-    caption: 'Caixa · PIX de R$ 990,00 enviado com sucesso — operação rodando ao vivo na mesma tela.',
-    tag: "Caixa · R$ 990",
-    accent: "cyan",
-  },
+
   {
     src: pPhones.url,
     caption: '"Deu bom" · "finalmente 🔥🔥" — 3 dispositivos espelhados no PC operando em tempo real.',

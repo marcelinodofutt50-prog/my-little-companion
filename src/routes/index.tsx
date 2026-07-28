@@ -429,11 +429,17 @@ function LandingPage() {
             </div>
           </section>
 
+          {/* Comprovantes Itaú e Caixa em destaque */}
+          <section className="border-t border-border py-16">
+            <ImpossibleProof />
+          </section>
+
           {/* Proof Wall — prints reais */}
           <ProofWall />
 
           {/* Antes vs Depois */}
           <BeforeAfter />
+
 
           {/* Testimonials */}
           <Testimonials />
