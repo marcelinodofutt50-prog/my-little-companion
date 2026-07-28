@@ -7,10 +7,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { getMyMigrationRequest, submitMigrationRequest } from "@/lib/migration.functions";
+import {
+  addMigrationProofs,
+  getMyMigrationRequest,
+  submitMigrationRequest,
+} from "@/lib/migration.functions";
 
 const BUCKET = "migration-proofs";
 const MAX_FILES = 6;
+const MAX_TOTAL = 12;
 const MAX_SIZE = 8 * 1024 * 1024; // 8MB por arquivo
 const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
 
@@ -19,6 +24,7 @@ type Uploaded = { path: string; name: string; size: number };
 export function MigrationRequestForm() {
   const submitFn = useServerFn(submitMigrationRequest);
   const getMine = useServerFn(getMyMigrationRequest);
+  const addProofs = useServerFn(addMigrationProofs);
 
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [existing, setExisting] = useState<any>(null);
@@ -26,6 +32,12 @@ export function MigrationRequestForm() {
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState<Uploaded[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [extraFiles, setExtraFiles] = useState<Uploaded[]>([]);
+  const [extraNote, setExtraNote] = useState("");
+  const [savingExtra, setSavingExtra] = useState(false);
+  const extraRef = useRef<HTMLInputElement>(null);
+
 
   const [form, setForm] = useState({
     currentPanel: "",
