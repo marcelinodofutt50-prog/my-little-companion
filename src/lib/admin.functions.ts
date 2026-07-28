@@ -412,11 +412,13 @@ export const adminFindUsers = createServerFn({ method: "POST" })
     const q = data.query.trim();
     const like = `%${q}%`;
 
-    const { data: profs } = await supabaseAdmin
+    const { data: profs, error: profErr } = await supabaseAdmin
       .from("profiles")
       .select("id,email,full_name,display_name,created_at")
       .or(`email.ilike.${like},display_name.ilike.${like},full_name.ilike.${like}`)
       .limit(20);
+    if (profErr) throw new Error(profErr.message);
+
 
     const found = new Map<string, any>((profs ?? []).map((p: any) => [p.id, p]));
 
