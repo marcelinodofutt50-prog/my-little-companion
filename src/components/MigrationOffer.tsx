@@ -15,6 +15,7 @@ const pains = [
 export function MigrationOffer() {
   function copy() {
     navigator.clipboard.writeText(COUPON);
+    localStorage.setItem("shadow_coupon", COUPON);
     toast.success(`Cupom ${COUPON} copiado`);
   }
 
@@ -56,7 +57,7 @@ export function MigrationOffer() {
               <Copy className="mr-2 h-3.5 w-3.5" /> Copiar cupom
             </Button>
             <Button asChild size="sm" className="font-mono uppercase">
-              <Link to="/planos">
+              <Link to="/planos" search={{ cupom: COUPON } as any}>
                 Migrar agora <ArrowRight className="ml-2 h-3.5 w-3.5" />
               </Link>
             </Button>
