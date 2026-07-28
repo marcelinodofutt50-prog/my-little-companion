@@ -322,7 +322,7 @@ function DashboardPage() {
         )}
 
         {/* TRIAL CREDENTIALS — highlight (persisted server-side, reopenable) */}
-        {trialCreds && trialHidden && (
+        {trialLive && trialHidden && (
           <div className="mt-5 flex items-center justify-between gap-3 rounded border border-neon/30 bg-neon/5 px-4 py-3 font-mono text-xs">
             <span className="text-neon">// credenciais do trial salvas no cofre</span>
             <Button size="sm" variant="outline" onClick={() => setTrialHidden(false)} className="font-mono text-xs uppercase">
@@ -330,7 +330,7 @@ function DashboardPage() {
             </Button>
           </div>
         )}
-        {trialCreds && !trialHidden && (
+        {trialLive && !trialHidden && (
 
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -341,7 +341,7 @@ function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-neon">
                   <Sparkles className="h-4 w-4" />
-                  {trialCreds.retried ? "trial recuperado" : "trial criado com sucesso"}
+                  {trialLive.retried ? "trial recuperado" : "trial criado com sucesso"}
                 </div>
                 <h3 className="mt-1 text-lg font-semibold">Suas credenciais de acesso</h3>
                 <p className="text-xs text-muted-foreground">
@@ -349,7 +349,7 @@ function DashboardPage() {
                 </p>
               </div>
               <div className="flex items-start gap-2">
-                <TrialCountdown expiresAt={trialCreds.expires_at} />
+                <TrialCountdown expiresAt={trialLive.expires_at} />
                 <Button size="sm" variant="ghost" onClick={() => setTrialHidden(true)} className="font-mono text-xs uppercase self-start">Fechar</Button>
               </div>
             </div>
@@ -359,19 +359,19 @@ function DashboardPage() {
               <div className="font-mono text-xs">
                 <div className="uppercase tracking-wider text-emerald-300">✓ conta ativa</div>
                 <div className="mt-0.5 text-emerald-200/80">
-                  Login liberado para <span className="text-emerald-100">{trialCreds.username}</span> — use as credenciais abaixo no cliente Shadow.
+                  Login liberado para <span className="text-emerald-100">{trialLive.username}</span> — use as credenciais abaixo no cliente Shadow.
                 </div>
               </div>
             </div>
 
             <div className="mt-4 grid gap-2.5 font-mono text-xs sm:grid-cols-2 sm:gap-2">
 
-              <Field label="Usuário" value={trialCreds.username} onCopy={() => copyText(trialCreds.username, "Usuário")} />
-              <Field label="E-mail" value={trialCreds.email} onCopy={() => copyText(trialCreds.email, "Email")} />
+              <Field label="Usuário" value={trialLive.username} onCopy={() => copyText(trialLive.username, "Usuário")} />
+              <Field label="E-mail" value={trialLive.email} onCopy={() => copyText(trialLive.email, "Email")} />
               <Field
                 label="Senha"
-                value={trialShowPw ? trialCreds.password : "•".repeat(Math.min(trialCreds.password.length, 12))}
-                onCopy={() => copyText(trialCreds.password, "Senha")}
+                value={trialShowPw ? trialLive.password : "•".repeat(Math.min(trialLive.password.length, 12))}
+                onCopy={() => copyText(trialLive.password, "Senha")}
                 right={
                   <button onClick={() => setTrialShowPw(!trialShowPw)} className="text-muted-foreground hover:text-neon">
                     {trialShowPw ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -380,8 +380,8 @@ function DashboardPage() {
               />
               <Field
                 label="Servidor"
-                value={trialShowIp ? trialCreds.server_ip : "•••.•••.•••.•••"}
-                onCopy={() => { if (!trialShowIp) { toast.info("Revele o IP primeiro"); return; } copyText(trialCreds.server_ip, "IP"); }}
+                value={trialShowIp ? trialLive.server_ip : "•••.•••.•••.•••"}
+                onCopy={() => { if (!trialShowIp) { toast.info("Revele o IP primeiro"); return; } copyText(trialLive.server_ip, "IP"); }}
                 right={
                   <button onClick={() => setTrialShowIp(!trialShowIp)} className="text-muted-foreground hover:text-neon">
                     {trialShowIp ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -394,7 +394,7 @@ function DashboardPage() {
               <Button
                 size="sm" variant="outline" className="font-mono text-xs uppercase"
                 onClick={() => copyText(
-                  `user: ${trialCreds.username}\nemail: ${trialCreds.email}\npass: ${trialCreds.password}\nserver: ${trialCreds.server_ip}`,
+                  `user: ${trialLive.username}\nemail: ${trialLive.email}\npass: ${trialLive.password}\nserver: ${trialLive.server_ip}`,
                   "Credenciais"
                 )}
               >
@@ -405,6 +405,25 @@ function DashboardPage() {
               </span>
             </div>
           </motion.div>
+        )}
+
+        {trialEnded && (
+          <div className="mt-5 overflow-hidden rounded-xl border border-border/50 bg-card/40 p-5">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <Sparkles className="h-3.5 w-3.5" /> trial encerrado
+                </div>
+                <h3 className="mt-1 truncate text-base font-semibold">Seu teste grátis terminou</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  As credenciais do trial foram arquivadas. Escolha um plano para continuar com acesso completo.
+                </p>
+              </div>
+              <Link to="/planos" className="shrink-0">
+                <Button size="sm" className="glow-neon font-mono uppercase tracking-wider">Ver planos</Button>
+              </Link>
+            </div>
+          </div>
         )}
 
         {/* LICENSES */}
