@@ -62,6 +62,9 @@ function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(null);
   const [users, setUsers] = useState<any[]>([]);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [userFilter, setUserFilter] = useState("");
+
   const [orders, setOrders] = useState<any[]>([]);
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
@@ -105,10 +108,14 @@ function AdminPage() {
   }, [ordersFn]);
   const loadUsers = useCallback(() => {
     if (inflightRef.current.users) return inflightRef.current.users;
-    const p = usersFn().then((r) => { setUsers(r); loadedRef.current.users = true; return r; }).catch(() => {}).finally(() => { inflightRef.current.users = undefined; });
+    const p = usersFn()
+      .then((r) => { setUsers(r); setUsersError(null); loadedRef.current.users = true; return r; })
+      .catch((e: any) => { setUsersError(e?.message ?? "Falha ao carregar usuários"); })
+      .finally(() => { inflightRef.current.users = undefined; });
     inflightRef.current.users = p;
     return p;
   }, [usersFn]);
+
   const loadLicenses = useCallback(() => {
     if (inflightRef.current.licenses) return inflightRef.current.licenses;
     const p = licensesFn().then((r) => { setLicenses(r); loadedRef.current.licenses = true; return r; }).catch(() => {}).finally(() => { inflightRef.current.licenses = undefined; });
@@ -509,12 +516,39 @@ function AdminPage() {
             <div className="space-y-4">
             <AdminTrialResetPanel />
             <div className="terminal-card scanlines relative overflow-hidden">
+              <div className="flex flex-wrap items-center gap-2 border-b border-border/30 p-3">
+                <Input
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value)}
+                  placeholder="Filtrar por e-mail, apelido ou nome..."
+                  className="h-9 max-w-xs"
+                />
+                <Button size="sm" variant="outline" onClick={() => { loadedRef.current.users = false; loadUsers(); }}>
+                  Recarregar
+                </Button>
+                <span className="font-mono text-xs text-muted-foreground">{users.length} cadastrados</span>
+              </div>
+              {usersError && (
+                <div className="border-b border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+                  Erro ao carregar a lista: {usersError}
+                </div>
+              )}
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-sm">
                   <thead className="border-b border-border/40 font-mono text-xs uppercase text-muted-foreground"><tr><th className="p-3 text-left">Email</th><th className="p-3 text-left">Apelido / Nome</th><th className="p-3 text-left whitespace-nowrap">Criado</th></tr></thead>
-                  <tbody>{users.map((u) => <tr key={u.id} className="border-b border-border/20 hover:bg-neon/5"><td className="p-3 break-all">{u.email}</td><td className="p-3 text-muted-foreground">{u.display_name || u.full_name || "—"}</td><td className="p-3 font-mono text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleString("pt-BR")}</td></tr>)}</tbody>
+                  <tbody>{users
+                    .filter((u) => {
+                      const q = userFilter.trim().toLowerCase();
+                      if (!q) return true;
+                      return [u.email, u.display_name, u.full_name].some((v: any) => String(v ?? "").toLowerCase().includes(q));
+                    })
+                    .map((u) => <tr key={u.id} className="border-b border-border/20 hover:bg-neon/5"><td className="p-3 break-all">{u.email}</td><td className="p-3 text-muted-foreground">{u.display_name || u.full_name || "—"}</td><td className="p-3 font-mono text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleString("pt-BR")}</td></tr>)}</tbody>
                 </table>
+                {!usersError && users.length === 0 && (
+                  <p className="p-4 text-sm text-muted-foreground">Nenhum usuário carregado ainda.</p>
+                )}
               </div>
+
             </div>
             </div>
           )}
