@@ -186,9 +186,11 @@ function DashboardPage() {
               <div className="truncate font-display text-sm text-foreground">{displayIdentity(displayName, email)}</div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
+              <RgbModeToggle />
               <NicknameDialog displayName={displayName} email={email} onChange={setDisplayName} compact />
               <Link to="/planos"><Button size="sm" variant="ghost" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"><Sparkles className="mr-1.5 h-3.5 w-3.5" />Planos</Button></Link>
             </div>
+
           </header>
           <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             {(() => {
