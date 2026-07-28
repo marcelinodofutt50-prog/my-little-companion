@@ -429,6 +429,60 @@ export type Database = {
           },
         ]
       }
+      migration_requests: {
+        Row: {
+          admin_notes: string | null
+          clients_count: number
+          created_at: string
+          current_panel: string
+          id: string
+          notes: string | null
+          old_expires_on: string | null
+          old_username: string
+          panel_version: string | null
+          proof_paths: string[]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          clients_count?: number
+          created_at?: string
+          current_panel: string
+          id?: string
+          notes?: string | null
+          old_expires_on?: string | null
+          old_username: string
+          panel_version?: string | null
+          proof_paths?: string[]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          clients_count?: number
+          created_at?: string
+          current_panel?: string
+          id?: string
+          notes?: string | null
+          old_expires_on?: string | null
+          old_username?: string
+          panel_version?: string | null
+          proof_paths?: string[]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
