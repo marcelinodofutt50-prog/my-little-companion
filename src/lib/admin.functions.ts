@@ -30,7 +30,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { data } = await context.supabase
       .from("profiles")
-      .select("id,email,full_name,created_at")
+      .select("id,email,full_name,display_name,created_at")
       .order("created_at", { ascending: false })
       .limit(500);
     return data ?? [];
@@ -45,7 +45,7 @@ export const adminListOrders = createServerFn({ method: "GET" })
     const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
     if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name").in("id", ids);
+    const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
   });
@@ -60,7 +60,7 @@ export const adminListLicenses = createServerFn({ method: "GET" })
     const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
     if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name").in("id", ids);
+    const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
   });
@@ -111,7 +111,7 @@ export const adminListThreads = createServerFn({ method: "GET" })
     const list = threads ?? [];
     const userIds = Array.from(new Set(list.map((t: any) => t.user_id)));
     const { data: profs } = userIds.length
-      ? await supabaseAdmin.from("profiles").select("id,email,full_name").in("id", userIds)
+      ? await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", userIds)
       : { data: [] as any[] };
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return list.map((t: any) => ({ ...t, profile: map.get(t.user_id) ?? null }));
@@ -399,6 +399,49 @@ export const adminReplaceUserTrial = createServerFn({ method: "POST" })
   });
 
 
+
+// Busca usuários por e-mail, apelido, nome ou credenciais de painel.
+export const adminFindUsers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ query: z.string().trim().min(2).max(120) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const q = data.query.trim();
+    const like = `%${q}%`;
+
+    const { data: profs } = await supabaseAdmin
+      .from("profiles")
+      .select("id,email,full_name,display_name,created_at")
+      .or(`email.ilike.${like},display_name.ilike.${like},full_name.ilike.${like}`)
+      .limit(20);
+
+    const found = new Map<string, any>((profs ?? []).map((p: any) => [p.id, p]));
+
+    // também aceita busca pelas credenciais do painel
+    const { data: licsByCred } = await supabaseAdmin
+      .from("licenses")
+      .select("user_id")
+      .or(`yaarsa_username.ilike.${like},yaarsa_email.ilike.${like}`)
+      .limit(20);
+    const extraIds = Array.from(new Set((licsByCred ?? []).map((l: any) => l.user_id))).filter((id) => !found.has(id));
+    if (extraIds.length) {
+      const { data: extra } = await supabaseAdmin
+        .from("profiles").select("id,email,full_name,display_name,created_at").in("id", extraIds);
+      for (const p of extra ?? []) found.set((p as any).id, p);
+    }
+
+    const ids = Array.from(found.keys());
+    if (!ids.length) return [];
+    const { data: trials } = await supabaseAdmin
+      .from("licenses")
+      .select("user_id,yaarsa_username,yaarsa_email,expires_at,revoked,disabled_at,created_at")
+      .eq("is_trial", true)
+      .in("user_id", ids);
+    const trialMap = new Map((trials ?? []).map((t: any) => [t.user_id, t]));
+
+    return ids.map((id) => ({ ...found.get(id), trial: trialMap.get(id) ?? null }));
+  });
 
 export const adminListLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -834,7 +877,7 @@ export const adminListExternalPayers = createServerFn({ method: "GET" })
     const list = rows ?? [];
     const ids = Array.from(new Set(list.map((r: any) => r.user_id)));
     const { data: profs } = ids.length
-      ? await supabaseAdmin.from("profiles").select("id,email,full_name").in("id", ids)
+      ? await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids)
       : { data: [] as any[] };
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return list.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
@@ -859,7 +902,7 @@ export const adminListLegacyCandidates = createServerFn({ method: "GET" })
     const list = rows ?? [];
     const ids = Array.from(new Set(list.map((r: any) => r.user_id)));
     const { data: profs } = ids.length
-      ? await supabaseAdmin.from("profiles").select("id,email,full_name").in("id", ids)
+      ? await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids)
       : { data: [] as any[] };
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return list.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
