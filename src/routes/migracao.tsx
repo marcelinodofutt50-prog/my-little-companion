@@ -147,6 +147,7 @@ const faq = [
 function MigrationPage() {
   function copyCoupon() {
     navigator.clipboard.writeText(COUPON);
+    localStorage.setItem("shadow_coupon", COUPON);
     toast.success(`Cupom ${COUPON} copiado`);
   }
 
@@ -197,7 +198,7 @@ function MigrationPage() {
               <Copy className="mr-2 h-3.5 w-3.5" /> Copiar cupom
             </Button>
             <Button asChild size="sm" className="font-mono uppercase">
-              <Link to="/planos">
+              <Link to="/planos" search={{ cupom: COUPON } as any}>
                 Ver planos <ArrowRight className="ml-2 h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -345,7 +346,7 @@ function MigrationPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild size="sm" className="font-mono uppercase">
-              <Link to="/planos">
+              <Link to="/planos" search={{ cupom: COUPON } as any}>
                 Ver planos <ArrowRight className="ml-2 h-3.5 w-3.5" />
               </Link>
             </Button>
