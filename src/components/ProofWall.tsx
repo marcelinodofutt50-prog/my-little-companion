@@ -112,7 +112,6 @@ export function ProofWall() {
             // provas reais
           </div>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">
-          <h2 className="mt-3 font-display text-4xl md:text-5xl">
             Aqui na Shadow, <span className="italic text-cyan">o impossível acontece.</span>
           </h2>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
