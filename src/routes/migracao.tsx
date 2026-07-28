@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { MigrationRequestForm } from "@/components/MigrationRequestForm";
+import { ImpossibleProof } from "@/components/ImpossibleProof";
 import { MigrationStatusTracker } from "@/components/MigrationStatusTracker";
 
 
