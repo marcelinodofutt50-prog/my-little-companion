@@ -28,13 +28,15 @@ export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data } = await context.supabase
+    const { data, error } = await context.supabase
       .from("profiles")
       .select("id,email,full_name,display_name,created_at")
       .order("created_at", { ascending: false })
       .limit(500);
+    if (error) throw new Error(error.message);
     return data ?? [];
   });
+
 
 export const adminListOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
