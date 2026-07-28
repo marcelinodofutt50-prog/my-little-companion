@@ -7,16 +7,31 @@ const p4 = { url: "/img/proof-4.jpg" };
 const pPhones = { url: "/img/proof-phones.jpg" };
 const pPix300 = { url: "/img/proof-pix-300.jpg" };
 const pDouglas = { url: "/img/proof-telegram-douglas.jpg" };
+const pItau10k = { url: "/img/proof-itau-10k.png" };
+const pCaixa990 = { url: "/img/proof-caixa-990.png" };
 
 type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet" };
 
 const shots: Shot[] = [
+  {
+    src: pItau10k.url,
+    caption: 'Itaú · R$ 10.000,00 pagos e confirmados — "Pagamento concluído" direto no app do banco.',
+    tag: "Itaú · R$ 10.000",
+    accent: "neon",
+  },
+  {
+    src: pCaixa990.url,
+    caption: 'Caixa · PIX de R$ 990,00 enviado com sucesso — operação rodando ao vivo na mesma tela.',
+    tag: "Caixa · R$ 990",
+    accent: "cyan",
+  },
   {
     src: pPhones.url,
     caption: '"Deu bom" · "finalmente 🔥🔥" — 3 dispositivos espelhados no PC operando em tempo real.',
     tag: "Operação real",
     accent: "neon",
   },
+
   {
     src: p2.url,
     caption: 'PIX de R$ 1.800 recebido · cliente confirma "meu login ai · ta rodando ag ainda"',
@@ -97,11 +112,12 @@ export function ProofWall() {
             // provas reais
           </div>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">
-            A ferramenta funciona. <span className="italic text-cyan">Aqui está a prova.</span>
+            Aqui na Shadow, <span className="italic text-cyan">o impossível acontece.</span>
           </h2>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Prints reais de conversas, pagamentos aprovados e ativações confirmadas por clientes ao longo dos últimos meses. Sem edição, sem ator.
+            <span className="font-semibold text-foreground">Itaú e Caixa operando</span> — pagamentos altos entrando e confirmando na hora. Melhor qualidade do mercado, prints reais de conversas, PIX aprovados e ativações confirmadas. Sem edição, sem ator.
           </p>
+
         </div>
         <div className="flex items-center gap-2 rounded-md border border-border bg-card/40 px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-neon" />
