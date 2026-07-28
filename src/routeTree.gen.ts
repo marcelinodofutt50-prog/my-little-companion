@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
+import { Route as RecuperarRouteImport } from './routes/recuperar'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as PlanosRouteImport } from './routes/planos'
@@ -51,6 +52,11 @@ const TermosRoute = TermosRouteImport.update({
 const RenovarServidorRoute = RenovarServidorRouteImport.update({
   id: '/renovar-servidor',
   path: '/renovar-servidor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarRoute = RecuperarRouteImport.update({
+  id: '/recuperar',
+  path: '/recuperar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/recuperar': typeof RecuperarRoute
   '/renovar-servidor': typeof RenovarServidorRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/recuperar': typeof RecuperarRoute
   '/renovar-servidor': typeof RenovarServidorRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/recuperar': typeof RecuperarRoute
   '/renovar-servidor': typeof RenovarServidorRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRoute
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/primeiros-passos'
     | '/privacidade'
+    | '/recuperar'
     | '/renovar-servidor'
     | '/termos'
     | '/tutorial'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/primeiros-passos'
     | '/privacidade'
+    | '/recuperar'
     | '/renovar-servidor'
     | '/termos'
     | '/tutorial'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/primeiros-passos'
     | '/privacidade'
+    | '/recuperar'
     | '/renovar-servidor'
     | '/termos'
     | '/tutorial'
@@ -373,6 +385,7 @@ export interface RootRouteChildren {
   PlanosRoute: typeof PlanosRoute
   PrimeirosPassosRoute: typeof PrimeirosPassosRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
+  RecuperarRoute: typeof RecuperarRoute
   RenovarServidorRoute: typeof RenovarServidorRoute
   TermosRoute: typeof TermosRoute
   TutorialRoute: typeof TutorialRoute
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       path: '/renovar-servidor'
       fullPath: '/renovar-servidor'
       preLoaderRoute: typeof RenovarServidorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperar': {
+      id: '/recuperar'
+      path: '/recuperar'
+      fullPath: '/recuperar'
+      preLoaderRoute: typeof RecuperarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -629,6 +649,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlanosRoute: PlanosRoute,
   PrimeirosPassosRoute: PrimeirosPassosRoute,
   PrivacidadeRoute: PrivacidadeRoute,
+  RecuperarRoute: RecuperarRoute,
   RenovarServidorRoute: RenovarServidorRoute,
   TermosRoute: TermosRoute,
   TutorialRoute: TutorialRoute,
