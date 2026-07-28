@@ -20,6 +20,8 @@ import { createCheckout } from "@/lib/checkout.functions";
 import { listMyUpdates, getUpdateDownloadUrl } from "@/lib/updates.functions";
 import { daysUntil, severityFromDays, severityColor, type ExpirySeverity } from "@/lib/expiry";
 import { NicknameDialog } from "@/components/NicknameDialog";
+import { RgbModeToggle } from "@/components/RgbModeToggle";
+
 import { getMyProfile } from "@/lib/profile.functions";
 import { displayIdentity } from "@/lib/identity";
 import shadowMark from "@/assets/shadow-mask.png";
@@ -58,6 +60,7 @@ function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [licFilter, setLicFilter] = useState<"all" | "active" | "trial" | "archived">("active");
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
+  const [extraTab, setExtraTab] = useState<"downloads" | "resumo" | "beneficios">("downloads");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   // Tick para o trial sumir sozinho do painel assim que expirar
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -186,9 +189,11 @@ function DashboardPage() {
               <div className="truncate font-display text-sm text-foreground">{displayIdentity(displayName, email)}</div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
+              <RgbModeToggle />
               <NicknameDialog displayName={displayName} email={email} onChange={setDisplayName} compact />
               <Link to="/planos"><Button size="sm" variant="ghost" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"><Sparkles className="mr-1.5 h-3.5 w-3.5" />Planos</Button></Link>
             </div>
+
           </header>
           <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             {(() => {
@@ -209,7 +214,7 @@ function DashboardPage() {
               const statusColor = statusTone === "danger" ? "text-danger" : statusTone === "amber" ? "text-amber-400" : statusTone === "neon" ? "text-neon" : "text-muted-foreground";
               const statusRing = statusTone === "danger" ? "border-danger/50 bg-danger/5" : statusTone === "amber" ? "border-amber-400/40 bg-amber-400/5" : statusTone === "neon" ? "border-neon/40 bg-neon/5" : "border-border/50 bg-background/40";
               return (
-                <div className="relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-br from-background via-background to-neon/[0.04] p-5 sm:p-6">
+                <div className="rainbow-ring relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-br from-background via-background to-neon/[0.04] p-5 sm:p-6">
                   <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[var(--neon)] opacity-[0.08] blur-3xl" />
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
@@ -219,7 +224,7 @@ function DashboardPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-neon/80">// operator</div>
-                        <h1 className="mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{displayIdentity(displayName, email)}</h1>
+                        <h1 className="rainbow-text mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{displayIdentity(displayName, email)}</h1>
                         <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                           sessão · {new Date().toLocaleDateString("pt-BR")} · {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         </p>
@@ -266,22 +271,12 @@ function DashboardPage() {
 
         <ExpiryAlerts licenses={licenses} />
 
-        {/* STATS — faixa compacta */}
-        {(() => {
-          const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
-          const nextExp = active
-            .map((l) => (l.expires_at ? new Date(l.expires_at).getTime() : Infinity))
-            .sort((a, b) => a - b)[0];
-          const daysLeft = nextExp && isFinite(nextExp) ? Math.max(0, Math.ceil((nextExp - Date.now()) / 86400000)) : null;
-          return (
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-              <StatCard icon={Server} accent="neon" label="Licenças ativas" value={String(active.length)} />
-              <StatCard icon={Clock} accent={daysLeft !== null && daysLeft <= 3 ? "violet" : "cyan"} label="Próxima expiração" value={daysLeft === null ? "—" : `${daysLeft}d`} />
-              <StatCard icon={Ticket} accent="cyan" label="Cashback" value={formatBrl(balance)} />
-              <StatCard icon={Zap} accent="neon" label="Servidor" value="ONLINE" pulse />
-            </div>
-          );
-        })()}
+        {/* STATS — só o que o hero não mostra */}
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <StatCard icon={Ticket} accent="cyan" label="Cashback" value={formatBrl(balance)} />
+          <StatCard icon={Zap} accent="neon" label="Servidor" value="ONLINE" pulse />
+        </div>
+
 
         {/* UPGRADE v4.5.7 → v4.6 — só aparece para clientes antigos v457 que ainda não estão na v46 */}
         {(legacyStatus === "v457") && !licenses.some((l) => l.plan_slug === "login-lifetime" && !l.disabled_at) && (
@@ -550,19 +545,41 @@ function DashboardPage() {
           );
         })()}
 
-        {/* DOWNLOADS — depois das licenças */}
-        <DownloadsSection licenses={licenses} isAdmin={isAdmin} />
+        {/* SEÇÕES SECUNDÁRIAS — em abas para não poluir */}
+        <section className="mt-10">
+          <div className="rainbow-bar mb-4 rounded-full opacity-70" />
+          <div className="mb-4 flex w-full overflow-x-auto rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
+            {([
+              { k: "downloads", label: "downloads" },
+              { k: "resumo", label: "resumo" },
+              { k: "beneficios", label: "benefícios" },
+            ] as const).map((t) => (
+              <button
+                key={t.k}
+                onClick={() => setExtraTab(t.k)}
+                className={`px-3 py-1.5 transition-colors ${extraTab === t.k ? "bg-neon/15 text-neon" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-        {/* BRIEFING EXECUTIVO + INDICAÇÕES + LEGACY — extras ao final */}
-        <div className="mt-8">
-          <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
-          <RefundSection />
-          <ReferralsWidget />
+          {extraTab === "downloads" && <DownloadsSection licenses={licenses} isAdmin={isAdmin} />}
 
-          {!licenses.some((l) => l.is_legacy) && (
-            <LegacyConnectPanel defaultOpen={licenses.length === 0 && legacyStatus !== "unchecked" && legacyStatus !== "not_legacy"} />
+          {extraTab === "resumo" && (
+            <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
           )}
-        </div>
+
+          {extraTab === "beneficios" && (
+            <div>
+              <RefundSection />
+              <ReferralsWidget />
+              {!licenses.some((l) => l.is_legacy) && (
+                <LegacyConnectPanel defaultOpen={licenses.length === 0 && legacyStatus !== "unchecked" && legacyStatus !== "not_legacy"} />
+              )}
+            </div>
+          )}
+        </section>
 
           </main>
         </SidebarInset>

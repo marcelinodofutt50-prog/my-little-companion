@@ -235,3 +235,49 @@
 }
 
 #lovable-badge { display: none !important; }
+
+/* ===== Rainbow / RGB mode ===== */
+@layer utilities {
+  .rainbow-text {
+    background-image: linear-gradient(90deg, var(--neon), var(--cyan), var(--violet), #ff5ec4, var(--neon));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow-slide 8s linear infinite;
+  }
+  .rainbow-ring {
+    position: relative;
+  }
+  .rainbow-ring::before {
+    content: "";
+    position: absolute; inset: -1px; border-radius: inherit; padding: 1px;
+    background: linear-gradient(120deg, var(--neon), var(--cyan), var(--violet), #ff5ec4, var(--neon));
+    background-size: 300% 100%;
+    animation: rainbow-slide 8s linear infinite;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+  .rainbow-bar {
+    height: 2px;
+    background: linear-gradient(90deg, var(--neon), var(--cyan), var(--violet), #ff5ec4, var(--neon));
+    background-size: 300% 100%;
+    animation: rainbow-slide 6s linear infinite;
+  }
+  @keyframes rainbow-slide {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+}
+
+/* Global RGB mode: cycles the whole palette */
+html.rgb-mode body { animation: hue-cycle 18s linear infinite; }
+@keyframes hue-cycle {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.rgb-mode body { animation: none; }
+  .rainbow-text, .rainbow-ring::before, .rainbow-bar { animation: none; }
+}
