@@ -456,12 +456,13 @@ function DashboardPage() {
           const filtered = licenses.filter((l) => licFilter === "all" ? true : categoryOf(l) === licFilter);
           const sorted = [...filtered].sort(sortFn);
 
-          const tabs = [
+          // A aba de trials só aparece enquanto existir um trial válido
+          const tabs = ([
             { k: "active", label: `ativas · ${activeCount}` },
-            { k: "trial", label: `trials · ${trialCount}` },
+            ...(trialCount > 0 ? [{ k: "trial", label: `trials · ${trialCount}` }] : []),
             { k: "archived", label: `arquivadas · ${archivedCount}` },
             { k: "all", label: `todas · ${licenses.length}` },
-          ] as const;
+          ] as const) as readonly { k: "all" | "active" | "trial" | "archived"; label: string }[];
 
           const sortOptions = [
             { k: "expires_asc", label: "expira ↑" },
