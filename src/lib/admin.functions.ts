@@ -923,3 +923,126 @@ export const adminMetrics = createServerFn({ method: "GET" })
       avgResponseMin, threadsAnswered: deltas.length,
     };
   });
+
+// ============ Monitoramento de erros / regressões ============
+export const adminHealthMonitor = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ hours: z.number().int().min(1).max(72).optional() }).parse(i ?? {}))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const hours = data.hours ?? 24;
+    const now = Date.now();
+    const windowMs = hours * 3600_000;
+    const sinceIso = new Date(now - windowMs).toISOString();
+    const prevIso = new Date(now - windowMs * 2).toISOString();
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("integration_logs")
+      .select("source,action,outcome,http_status,latency_ms,error,created_at,endpoint_kind")
+      .gte("created_at", prevIso)
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (error) throw new Error(error.message);
+
+    const all = rows ?? [];
+    const inCur = (t: string) => new Date(t).getTime() >= now - windowMs;
+    const cur = all.filter((r) => inCur(r.created_at));
+    const prev = all.filter((r) => !inCur(r.created_at));
+    const isFail = (r: any) => r.outcome !== "success";
+
+    const curFail = cur.filter(isFail);
+    const prevFail = prev.filter(isFail);
+    const errorRate = cur.length ? curFail.length / cur.length : 0;
+    const prevErrorRate = prev.length ? prevFail.length / prev.length : 0;
+
+    // Latência p95 (somente eventos com latência medida)
+    const lats = cur.map((r) => r.latency_ms).filter((n): n is number => typeof n === "number" && n > 0).sort((a, b) => a - b);
+    const p95 = lats.length ? lats[Math.min(lats.length - 1, Math.floor(lats.length * 0.95))] : null;
+    const prevLats = prev.map((r) => r.latency_ms).filter((n): n is number => typeof n === "number" && n > 0).sort((a, b) => a - b);
+    const prevP95 = prevLats.length ? prevLats[Math.min(prevLats.length - 1, Math.floor(prevLats.length * 0.95))] : null;
+
+    // Séries por hora (para o mini-gráfico)
+    const buckets = Array.from({ length: hours }, (_, i) => {
+      const start = now - (hours - i) * 3600_000;
+      const end = start + 3600_000;
+      const slice = cur.filter((r) => {
+        const t = new Date(r.created_at).getTime();
+        return t >= start && t < end;
+      });
+      return { hour: new Date(start).toISOString(), total: slice.length, failures: slice.filter(isFail).length };
+    });
+
+    // Agrupamento de falhas por assinatura (source + action + outcome)
+    const groups = new Map<string, any>();
+    for (const r of curFail) {
+      const key = `${r.source}::${r.action ?? "-"}::${r.outcome ?? "-"}`;
+      const g = groups.get(key) ?? {
+        key, source: r.source, action: r.action, outcome: r.outcome,
+        count: 0, prevCount: 0, firstAt: r.created_at, lastAt: r.created_at,
+        lastError: null as string | null, statuses: new Set<number>(),
+      };
+      g.count += 1;
+      if (new Date(r.created_at) > new Date(g.lastAt)) g.lastAt = r.created_at;
+      if (new Date(r.created_at) < new Date(g.firstAt)) g.firstAt = r.created_at;
+      if (!g.lastError && r.error) g.lastError = String(r.error).slice(0, 300);
+      if (r.http_status) g.statuses.add(r.http_status);
+      groups.set(key, g);
+    }
+    for (const r of prevFail) {
+      const key = `${r.source}::${r.action ?? "-"}::${r.outcome ?? "-"}`;
+      const g = groups.get(key);
+      if (g) g.prevCount += 1;
+    }
+
+    const issues = Array.from(groups.values())
+      .map((g) => {
+        const delta = g.prevCount === 0 ? (g.count >= 3 ? 100 : 0) : Math.round(((g.count - g.prevCount) / g.prevCount) * 100);
+        const isNew = g.prevCount === 0 && g.count > 0;
+        const isRegression = isNew ? g.count >= 3 : delta >= 50 && g.count >= 3;
+        const severity = g.count >= 10 || (isRegression && g.count >= 5) ? "critical" : g.count >= 3 ? "warn" : "info";
+        return {
+          key: g.key, source: g.source, action: g.action, outcome: g.outcome,
+          count: g.count, prevCount: g.prevCount, delta, isNew, isRegression, severity,
+          firstAt: g.firstAt, lastAt: g.lastAt, lastError: g.lastError,
+          statuses: Array.from(g.statuses as Set<number>).sort((a, b) => a - b),
+        };
+      })
+      .sort((a, b) => (b.isRegression ? 1 : 0) - (a.isRegression ? 1 : 0) || b.count - a.count)
+      .slice(0, 25);
+
+    // Sinais de negócio que indicam falha silenciosa
+    const [{ count: stuckOrders }, { count: overdueRefunds }, { count: failedJobs }] = await Promise.all([
+      supabaseAdmin.from("orders").select("id", { count: "exact", head: true })
+        .eq("status", "processing").lt("created_at", new Date(now - 30 * 60_000).toISOString()),
+      supabaseAdmin.from("refund_requests").select("id", { count: "exact", head: true })
+        .eq("status", "pending").lt("deadline_at", new Date().toISOString()),
+      supabaseAdmin.from("apk_jobs").select("id", { count: "exact", head: true })
+        .eq("status", "failed").gte("created_at", sinceIso),
+    ] as any);
+
+    const regressions = issues.filter((i) => i.isRegression).length;
+    const status = issues.some((i) => i.severity === "critical") || (stuckOrders ?? 0) > 0
+      ? "critical"
+      : issues.some((i) => i.severity === "warn") || regressions > 0 || (overdueRefunds ?? 0) > 0
+        ? "degraded"
+        : "healthy";
+
+    return {
+      generated_at: new Date().toISOString(),
+      hours,
+      status,
+      totals: { events: cur.length, failures: curFail.length, prevFailures: prevFail.length },
+      errorRate, prevErrorRate,
+      p95, prevP95,
+      buckets,
+      issues,
+      regressions,
+      signals: {
+        stuckOrders: stuckOrders ?? 0,
+        overdueRefunds: overdueRefunds ?? 0,
+        failedApkJobs: failedJobs ?? 0,
+      },
+    };
+  });
