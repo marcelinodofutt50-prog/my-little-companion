@@ -19,6 +19,9 @@ import { detectLegacyForCurrentUser, getMyLegacyStatus } from "@/lib/legacy-dete
 import { createCheckout } from "@/lib/checkout.functions";
 import { listMyUpdates, getUpdateDownloadUrl } from "@/lib/updates.functions";
 import { daysUntil, severityFromDays, severityColor, type ExpirySeverity } from "@/lib/expiry";
+import { NicknameDialog } from "@/components/NicknameDialog";
+import { getMyProfile } from "@/lib/profile.functions";
+import { displayIdentity } from "@/lib/identity";
 import shadowMark from "@/assets/shadow-mask.png";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -44,6 +47,7 @@ function DashboardPage() {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [balance, setBalance] = useState(0);
   const [email, setEmail] = useState<string>("");
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [trialLoading, setTrialLoading] = useState(false);
   const [trialError, setTrialError] = useState<string | null>(null);
@@ -67,6 +71,7 @@ function DashboardPage() {
       : null;
   const trialEnded = !!trialCreds && !trialLive;
 
+  const profileFn = useServerFn(getMyProfile);
   const listFn = useServerFn(listMyLicenses);
   const trialFn = useServerFn(generateTrial);
   const cashFn = useServerFn(getMyCashbackBalance);
@@ -111,6 +116,7 @@ function DashboardPage() {
     supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         setEmail(data.user.email ?? "");
+        profileFn().then((p) => setDisplayName(p.display_name ?? null)).catch(() => {});
         const { data: role } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
         setIsAdmin(!!role);
         // Scope realtime to just this user so unrelated license mutations
@@ -177,9 +183,10 @@ function DashboardPage() {
             <div className="h-6 w-px bg-border/60" />
             <div className="min-w-0 flex-1">
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// dashboard</div>
-              <div className="truncate font-display text-sm text-foreground">{email || "operator"}</div>
+              <div className="truncate font-display text-sm text-foreground">{displayIdentity(displayName, email)}</div>
             </div>
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <NicknameDialog displayName={displayName} email={email} onChange={setDisplayName} compact />
               <Link to="/planos"><Button size="sm" variant="ghost" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"><Sparkles className="mr-1.5 h-3.5 w-3.5" />Planos</Button></Link>
             </div>
           </header>
@@ -212,7 +219,7 @@ function DashboardPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-neon/80">// operator</div>
-                        <h1 className="mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{email || "—"}</h1>
+                        <h1 className="mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{displayIdentity(displayName, email)}</h1>
                         <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                           sessão · {new Date().toLocaleDateString("pt-BR")} · {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         </p>
