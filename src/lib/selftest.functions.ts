@@ -6,7 +6,7 @@ export type SelfTestStep = {
   step: string;
   ok: boolean;
   detail: string;
-  data?: Record<string, unknown>;
+  data?: Record<string, string>;
 };
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
@@ -39,7 +39,7 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const steps: SelfTestStep[] = [];
-    const push = (step: string, ok: boolean, detail: string, extra?: Record<string, unknown>) =>
+    const push = (step: string, ok: boolean, detail: string, extra?: Record<string, string>) =>
       steps.push({ step, ok, detail, data: extra });
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
