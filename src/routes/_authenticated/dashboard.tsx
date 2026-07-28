@@ -55,6 +55,17 @@ function DashboardPage() {
   const [licFilter, setLicFilter] = useState<"all" | "active" | "trial" | "archived">("active");
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  // Tick para o trial sumir sozinho do painel assim que expirar
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const trialLive =
+    trialCreds && (!trialCreds.expires_at || new Date(trialCreds.expires_at).getTime() > nowTick)
+      ? trialCreds
+      : null;
+  const trialEnded = !!trialCreds && !trialLive;
 
   const listFn = useServerFn(listMyLicenses);
   const trialFn = useServerFn(generateTrial);
