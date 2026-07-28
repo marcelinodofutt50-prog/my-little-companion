@@ -6,7 +6,10 @@ import { validateServerEnv } from "./lib/env-validation";
 
 // Run once at server startup so missing secrets surface in the logs
 // immediately, not on the first failing request.
-if (typeof process !== "undefined" && process.env) {
+// Guard with import.meta.env.SSR: without it the check also runs in the browser
+// bundle (Vite shims process.env) and prints the server secret names in the
+// user's console.
+if (import.meta.env.SSR && typeof process !== "undefined" && process.env) {
   validateServerEnv();
 }
 
