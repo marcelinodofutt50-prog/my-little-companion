@@ -480,16 +480,31 @@ function verifyMpSignature(request: Request, dataId: string | null, secret: stri
   const tsMs = tsNum > 1e12 ? tsNum : tsNum * 1000;
   if (Math.abs(nowMs - tsMs) > 10 * 60 * 1000) return false;
 
-  const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
-  const expected = createHmac("sha256", secret).update(manifest).digest("hex");
+  // MP lowercases alphanumeric ids in the manifest, and omits parts whose
+  // header is absent. Accept every documented variant instead of one shape.
+  const ids = Array.from(new Set([dataId, dataId.toLowerCase()]));
+  const manifests: string[] = [];
+  for (const id of ids) {
+    if (requestId) manifests.push(`id:${id};request-id:${requestId};ts:${ts};`);
+    manifests.push(`id:${id};ts:${ts};`);
+    manifests.push(`id:${id};request-id:;ts:${ts};`);
+  }
+
+  let given: Buffer;
   try {
-    const a = Buffer.from(expected, "hex");
-    const b = Buffer.from(v1, "hex");
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
+    given = Buffer.from(v1, "hex");
   } catch {
     return false;
   }
+  return manifests.some((manifest) => {
+    const expected = Buffer.from(createHmac("sha256", secret).update(manifest).digest("hex"), "hex");
+    if (expected.length !== given.length) return false;
+    try {
+      return timingSafeEqual(expected, given);
+    } catch {
+      return false;
+    }
+  });
 }
 
 export const Route = createFileRoute("/api/public/mp-webhook")({
