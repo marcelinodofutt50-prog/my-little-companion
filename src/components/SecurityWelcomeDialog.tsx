@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ShieldCheck, Lock, EyeOff, AlertTriangle, KeyRound, Copy, Download, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { getSecurityStatus, ackSecurityNotice, generateRecoveryCodes } from "@/lib/recovery.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { generatePlainCode, hashCode, RECOVERY_CODE_COUNT } from "@/lib/recovery.shared";
 
 const bullets = [
   {
@@ -25,49 +25,105 @@ const bullets = [
 ];
 
 export function SecurityWelcomeDialog() {
-  const statusFn = useServerFn(getSecurityStatus);
-  const ackFn = useServerFn(ackSecurityNotice);
-  const genFn = useServerFn(generateRecoveryCodes);
-
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"notice" | "codes">("notice");
   const [codes, setCodes] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   /** null = ainda carregando; true = já existiram códigos antes (regeneração) */
   const [hadCodes, setHadCodes] = useState(false);
   const [exhausted, setExhausted] = useState(false);
   const checked = useRef(false);
 
+  async function getCurrentUser() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw new Error("Sua sessão expirou. Saia e entre novamente para gerar os códigos.");
+    return data.user;
+  }
+
+  async function ackSecurityNoticeDirect() {
+    try {
+      const user = await getCurrentUser();
+      await supabase
+        .from("profiles")
+        .update({ security_ack_at: new Date().toISOString() })
+        .eq("id", user.id);
+    } catch {
+      // Não bloqueia o usuário: esse campo só controla se o aviso aparece de novo.
+    }
+  }
+
   useEffect(() => {
     if (checked.current) return;
     checked.current = true;
-    statusFn()
-      .then((s) => {
-        setHadCodes(Boolean(s.generatedAt));
-        setExhausted(Boolean(s.generatedAt) && s.codesRemaining === 0);
-        if (!s.ackAt || s.codesRemaining === 0) setOpen(true);
+    getCurrentUser()
+      .then(async (user) => {
+        const [{ data: profile }, { count }] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("security_ack_at,recovery_codes_generated_at")
+            .eq("id", user.id)
+            .maybeSingle(),
+          supabase
+            .from("recovery_codes")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .is("used_at", null),
+        ]);
+
+        const generatedAt = (profile as any)?.recovery_codes_generated_at ?? null;
+        const ackAt = (profile as any)?.security_ack_at ?? null;
+        const remaining = count ?? 0;
+
+        setHadCodes(Boolean(generatedAt));
+        setExhausted(Boolean(generatedAt) && remaining === 0);
+        if (!ackAt || remaining === 0) setOpen(true);
       })
       .catch(() => {});
-  }, [statusFn]);
+  }, []);
 
   async function handleGenerate() {
     if (loading) return;
+    setErrorText(null);
     setLoading(true);
     try {
-      const r = await genFn();
-      if (!r?.codes?.length) throw new Error("O servidor não retornou nenhum código. Tente novamente.");
-      setCodes(r.codes);
+      const user = await getCurrentUser();
+      const nextCodes: string[] = [];
+      while (nextCodes.length < RECOVERY_CODE_COUNT) {
+        const code = generatePlainCode();
+        if (!nextCodes.includes(code)) nextCodes.push(code);
+      }
+
+      const rows = await Promise.all(
+        nextCodes.map(async (code) => ({ user_id: user.id, code_hash: await hashCode(code) })),
+      );
+
+      const { error: deleteError } = await supabase.from("recovery_codes").delete().eq("user_id", user.id);
+      if (deleteError) throw new Error(`Falha ao limpar códigos antigos: ${deleteError.message}`);
+
+      const { error: insertError } = await supabase.from("recovery_codes").insert(rows);
+      if (insertError) throw new Error(`Falha ao salvar os códigos: ${insertError.message}`);
+
+      await supabase
+        .from("profiles")
+        .update({ recovery_codes_generated_at: new Date().toISOString(), security_ack_at: new Date().toISOString() })
+        .eq("id", user.id);
+
+      setCodes(nextCodes);
       setSaved(false);
       setStep("codes");
       toast.success(
         hadCodes
-          ? `${r.codes.length} novos códigos gerados — os antigos foram invalidados`
-          : `${r.codes.length} códigos de recuperação gerados com sucesso`,
+          ? `${nextCodes.length} novos códigos gerados — os antigos foram invalidados`
+          : `${nextCodes.length} códigos de recuperação gerados com sucesso`,
       );
-      await ackFn().catch(() => {});
+      setHadCodes(true);
+      setExhausted(false);
     } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao gerar os códigos. Tente novamente em instantes.");
+      const msg = e?.message ?? "Falha ao gerar os códigos. Tente novamente em instantes.";
+      setErrorText(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -98,7 +154,7 @@ export function SecurityWelcomeDialog() {
 
   async function close() {
     if (codes && saved) toast.success("Tudo certo — seus códigos de recuperação estão ativos");
-    await ackFn().catch(() => {});
+    await ackSecurityNoticeDirect();
     setOpen(false);
   }
 
@@ -156,6 +212,11 @@ export function SecurityWelcomeDialog() {
                 Depois
               </Button>
             </div>
+            {errorText && (
+              <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-[11px] leading-snug text-destructive">
+                <span className="font-semibold">Não consegui gerar ainda.</span> Motivo: {errorText}
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
