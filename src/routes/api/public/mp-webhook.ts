@@ -480,16 +480,31 @@ function verifyMpSignature(request: Request, dataId: string | null, secret: stri
   const tsMs = tsNum > 1e12 ? tsNum : tsNum * 1000;
   if (Math.abs(nowMs - tsMs) > 10 * 60 * 1000) return false;
 
-  const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
-  const expected = createHmac("sha256", secret).update(manifest).digest("hex");
+  // MP lowercases alphanumeric ids in the manifest, and omits parts whose
+  // header is absent. Accept every documented variant instead of one shape.
+  const ids = Array.from(new Set([dataId, dataId.toLowerCase()]));
+  const manifests: string[] = [];
+  for (const id of ids) {
+    if (requestId) manifests.push(`id:${id};request-id:${requestId};ts:${ts};`);
+    manifests.push(`id:${id};ts:${ts};`);
+    manifests.push(`id:${id};request-id:;ts:${ts};`);
+  }
+
+  let given: Buffer;
   try {
-    const a = Buffer.from(expected, "hex");
-    const b = Buffer.from(v1, "hex");
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
+    given = Buffer.from(v1, "hex");
   } catch {
     return false;
   }
+  return manifests.some((manifest) => {
+    const expected = Buffer.from(createHmac("sha256", secret).update(manifest).digest("hex"), "hex");
+    if (expected.length !== given.length) return false;
+    try {
+      return timingSafeEqual(expected, given);
+    } catch {
+      return false;
+    }
+  });
 }
 
 export const Route = createFileRoute("/api/public/mp-webhook")({
@@ -508,20 +523,22 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
         const nested = (payload.data as { id?: string } | undefined)?.id;
         const dataId = nested || url.searchParams.get("data.id") || url.searchParams.get("id");
 
-        // Signature validation — reject unsigned/invalid requests when secret is configured
+        // Signature validation. When it fails we do NOT trust the request body:
+        // we only continue by asking Mercado Pago's API (with our own access
+        // token) whether that payment id exists and is approved. That is
+        // authoritative, so a wrong/rotated webhook secret can never again
+        // block a real delivery, and a forged request still can't grant a
+        // license because MP would not confirm it.
         const secret = process.env.MP_WEBHOOK_SECRET;
-        if (!secret) {
-          await supabaseAdmin.from("webhook_logs").insert({
-            source: "mercadopago", note: "MP_WEBHOOK_SECRET missing — rejecting", processed: false,
-          });
-          return new Response("webhook secret not configured", { status: 500 });
-        }
-        const valid = verifyMpSignature(request, dataId ? String(dataId) : null, secret);
+        const valid = secret
+          ? verifyMpSignature(request, dataId ? String(dataId) : null, secret)
+          : false;
         if (!valid) {
           await supabaseAdmin.from("webhook_logs").insert({
-            source: "mercadopago", note: `invalid signature (dataId=${dataId ?? "?"})`, processed: false,
+            source: "mercadopago",
+            note: `unverified signature (dataId=${dataId ?? "?"}) — validating via MP API`,
+            processed: false,
           });
-          return new Response("invalid signature", { status: 401 });
         }
 
         await supabaseAdmin.from("webhook_logs").insert({

@@ -144,7 +144,26 @@ export const getOrderState = createServerFn({ method: "GET" })
     const { data: order } = await context.supabase
       .from("orders").select("*").eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();
     if (!order) return { order: null, license: null };
+
+    // Safety net: if the order is still unpaid, ask Mercado Pago directly.
+    // If MP confirms an approved payment, fulfill right here — so a missed or
+    // unverifiable webhook can never leave a paying customer without access.
+    if (["pending", "created", "yaarsa_failed"].includes(String(order.status))) {
+      try {
+        const { findApprovedPaymentForOrder } = await import("./mercadopago.server");
+        const approved = await findApprovedPaymentForOrder(data.orderId);
+        if (approved) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", data.orderId);
+          const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+          await fulfillOrder(data.orderId);
+        }
+      } catch { /* reconciliation is best-effort; polling continues */ }
+    }
+
+    const { data: freshOrder } = await context.supabase
+      .from("orders").select("*").eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();
     const { data: license } = await context.supabase
       .from("licenses").select("*").eq("order_id", data.orderId).maybeSingle();
-    return { order, license };
+    return { order: freshOrder ?? order, license };
   });
