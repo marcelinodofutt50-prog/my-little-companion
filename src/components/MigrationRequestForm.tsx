@@ -141,6 +141,7 @@ export function MigrationRequestForm() {
 
   if (existing) {
     const pending = existing.status === "pending";
+    const total = existing.proof_paths?.length ?? 0;
     return (
       <div className="rounded-md border border-neon/40 bg-neon/5 p-6">
         <div className="flex items-center gap-2">
@@ -151,7 +152,7 @@ export function MigrationRequestForm() {
         </div>
         <p className="mt-2 text-[12px] text-muted-foreground">
           Recebemos seus dados do painel <span className="text-foreground">{existing.current_panel}</span> com{" "}
-          {existing.proof_paths?.length ?? 0} comprovante(s). Primeira resposta em até 2 horas úteis — o acompanhamento
+          {total} comprovante(s). Primeira resposta em até 2 horas úteis — o acompanhamento
           acontece no seu ticket de suporte.
         </p>
         {existing.admin_notes && (
@@ -159,12 +160,94 @@ export function MigrationRequestForm() {
             <span className="font-semibold">Resposta da equipe:</span> {existing.admin_notes}
           </p>
         )}
-        <Button asChild size="sm" className="mt-4 font-mono uppercase">
-          <Link to="/suporte">Acompanhar no suporte</Link>
-        </Button>
+
+        {pending && (
+          <div className="mt-4 rounded-md border border-border/60 bg-card/50 p-4">
+            <div className="flex items-center gap-2">
+              <Paperclip className="h-4 w-4 text-neon" />
+              <span className="font-mono text-xs uppercase tracking-wider">Adicionar anexos extras</span>
+            </div>
+            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+              Esqueceu um comprovante? Anexe aqui e ele entra no mesmo pedido — sem abrir novo chamado.
+              Máximo de {MAX_TOTAL} anexos no total ({total} enviados).
+            </p>
+
+            <input
+              ref={extraRef}
+              type="file"
+              multiple
+              accept={ACCEPTED.join(",")}
+              className="hidden"
+              onChange={(e) => handleExtra(e.target.files, total)}
+            />
+            <Textarea
+              value={extraNote}
+              onChange={(e) => setExtraNote(e.target.value)}
+              maxLength={500}
+              rows={2}
+              className="mt-3"
+              placeholder="Observação sobre os novos anexos (opcional)"
+            />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="font-mono uppercase"
+                disabled={uploading || total >= MAX_TOTAL}
+                onClick={() => extraRef.current?.click()}
+              >
+                {uploading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-2 h-3.5 w-3.5" />}
+                {uploading ? "Enviando..." : "Escolher arquivos"}
+              </Button>
+              <Button asChild size="sm" variant="ghost" className="font-mono uppercase">
+                <Link to="/suporte">Acompanhar no suporte</Link>
+              </Button>
+            </div>
+
+            {extraFiles.length > 0 && (
+              <>
+                <ul className="mt-3 space-y-2">
+                  {extraFiles.map((f) => (
+                    <li key={f.path} className="flex items-center justify-between gap-3 rounded border border-border/60 bg-black/30 p-2">
+                      <span className="truncate font-mono text-[11px]">{f.name}</span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="font-mono text-[10px] text-muted-foreground">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
+                        <button
+                          type="button"
+                          onClick={() => removeExtra(f.path)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="mt-3 w-full font-mono uppercase"
+                  disabled={savingExtra || uploading}
+                  onClick={saveExtra}
+                >
+                  {savingExtra ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  Anexar ao pedido
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
+        {!pending && (
+          <Button asChild size="sm" className="mt-4 font-mono uppercase">
+            <Link to="/suporte">Acompanhar no suporte</Link>
+          </Button>
+        )}
       </div>
     );
   }
+
 
   return (
     <form onSubmit={submit} className="terminal-card scanlines relative space-y-4 p-6">
