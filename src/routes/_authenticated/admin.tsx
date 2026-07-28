@@ -22,6 +22,7 @@ import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { RevenueSparkline } from "@/components/RevenueSparkline";
 import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
 import { AdminHealthPanel } from "@/components/AdminHealthPanel";
+import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 
 
 
@@ -505,13 +506,16 @@ function AdminPage() {
           {tab === "external" && <AdminExternalPayersPanel />}
 
           {tab === "users" && (
+            <div className="space-y-4">
+            <AdminTrialResetPanel />
             <div className="terminal-card scanlines relative overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-sm">
-                  <thead className="border-b border-border/40 font-mono text-xs uppercase text-muted-foreground"><tr><th className="p-3 text-left">Email</th><th className="p-3 text-left">Nome</th><th className="p-3 text-left whitespace-nowrap">Criado</th></tr></thead>
-                  <tbody>{users.map((u) => <tr key={u.id} className="border-b border-border/20 hover:bg-neon/5"><td className="p-3 break-all">{u.email}</td><td className="p-3 text-muted-foreground">{u.full_name || "—"}</td><td className="p-3 font-mono text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleString("pt-BR")}</td></tr>)}</tbody>
+                  <thead className="border-b border-border/40 font-mono text-xs uppercase text-muted-foreground"><tr><th className="p-3 text-left">Email</th><th className="p-3 text-left">Apelido / Nome</th><th className="p-3 text-left whitespace-nowrap">Criado</th></tr></thead>
+                  <tbody>{users.map((u) => <tr key={u.id} className="border-b border-border/20 hover:bg-neon/5"><td className="p-3 break-all">{u.email}</td><td className="p-3 text-muted-foreground">{u.display_name || u.full_name || "—"}</td><td className="p-3 font-mono text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleString("pt-BR")}</td></tr>)}</tbody>
                 </table>
               </div>
+            </div>
             </div>
           )}
           {tab === "orders" && (
