@@ -270,22 +270,12 @@ function DashboardPage() {
 
         <ExpiryAlerts licenses={licenses} />
 
-        {/* STATS — faixa compacta */}
-        {(() => {
-          const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
-          const nextExp = active
-            .map((l) => (l.expires_at ? new Date(l.expires_at).getTime() : Infinity))
-            .sort((a, b) => a - b)[0];
-          const daysLeft = nextExp && isFinite(nextExp) ? Math.max(0, Math.ceil((nextExp - Date.now()) / 86400000)) : null;
-          return (
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-              <StatCard icon={Server} accent="neon" label="Licenças ativas" value={String(active.length)} />
-              <StatCard icon={Clock} accent={daysLeft !== null && daysLeft <= 3 ? "violet" : "cyan"} label="Próxima expiração" value={daysLeft === null ? "—" : `${daysLeft}d`} />
-              <StatCard icon={Ticket} accent="cyan" label="Cashback" value={formatBrl(balance)} />
-              <StatCard icon={Zap} accent="neon" label="Servidor" value="ONLINE" pulse />
-            </div>
-          );
-        })()}
+        {/* STATS — só o que o hero não mostra */}
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <StatCard icon={Ticket} accent="cyan" label="Cashback" value={formatBrl(balance)} />
+          <StatCard icon={Zap} accent="neon" label="Servidor" value="ONLINE" pulse />
+        </div>
+
 
         {/* UPGRADE v4.5.7 → v4.6 — só aparece para clientes antigos v457 que ainda não estão na v46 */}
         {(legacyStatus === "v457") && !licenses.some((l) => l.plan_slug === "login-lifetime" && !l.disabled_at) && (
