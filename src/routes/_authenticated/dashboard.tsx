@@ -21,6 +21,7 @@ import { listMyUpdates, getUpdateDownloadUrl } from "@/lib/updates.functions";
 import { daysUntil, severityFromDays, severityColor, type ExpirySeverity } from "@/lib/expiry";
 import { NicknameDialog } from "@/components/NicknameDialog";
 import { SecurityWelcomeDialog } from "@/components/SecurityWelcomeDialog";
+import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
 
 import { getMyProfile } from "@/lib/profile.functions";
@@ -198,6 +199,8 @@ function DashboardPage() {
           </header>
           <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             <SecurityWelcomeDialog />
+            <ExpiryReminder />
+
             {(() => {
               const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
               const nextExp = active
