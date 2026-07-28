@@ -12,6 +12,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { MigrationRequestForm } from "@/components/MigrationRequestForm";
+import { MigrationStatusTracker } from "@/components/MigrationStatusTracker";
+
 
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
