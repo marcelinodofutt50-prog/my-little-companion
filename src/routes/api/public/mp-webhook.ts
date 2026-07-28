@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 
 // Wrapper: guarantees an order never stays stuck in "processing" when an
 // unexpected error (Yaarsa timeout, network failure) aborts fulfillment.
-async function fulfillOrder(orderId: string) {
+export async function fulfillOrder(orderId: string) {
   try {
     return await fulfillOrderInner(orderId);
   } catch (e: any) {

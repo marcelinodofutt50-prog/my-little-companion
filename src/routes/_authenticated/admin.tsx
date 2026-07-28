@@ -23,6 +23,7 @@ import { RevenueSparkline } from "@/components/RevenueSparkline";
 import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
 import { AdminHealthPanel } from "@/components/AdminHealthPanel";
 import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
+import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 
 
 
@@ -55,7 +56,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "health" | "audit" | "apk" | "market" | "updates" | "refunds";
+type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "health" | "audit" | "apk" | "market" | "updates" | "refunds" | "selftest";
 
 
 function AdminPage() {
@@ -238,6 +239,7 @@ function AdminPage() {
         { id: "health", label: "Monitoramento", icon: Activity, hint: "erros & regressões" },
         { id: "logs", label: "Logs do servidor", icon: ScrollText },
         { id: "audit", label: "Auditoria", icon: ShieldAlert },
+        { id: "selftest", label: "Autoteste de Compra", icon: Activity, hint: "fluxo PIX ponta a ponta" },
       ],
     },
   ];
@@ -788,6 +790,7 @@ function AdminPage() {
           {tab === "market" && <AdminMarketPanel />}
           {tab === "updates" && <AdminUpdatesPanel />}
           {tab === "refunds" && <AdminRefundsPanel />}
+          {tab === "selftest" && <AdminSelfTestPanel />}
 
 
 
