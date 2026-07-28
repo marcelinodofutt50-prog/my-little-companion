@@ -63,3 +63,24 @@ export async function getMpPayment(paymentId: string) {
     payer?: { email?: string };
   };
 }
+
+/**
+ * Authoritative reconciliation: asks Mercado Pago directly whether an order
+ * (external_reference) has an approved payment. Used as a safety net when the
+ * webhook never arrives or its signature can't be validated.
+ */
+export async function findApprovedPaymentForOrder(orderId: string) {
+  const res = await fetch(
+    `${MP_API}/v1/payments/search?sort=date_created&criteria=desc&external_reference=${encodeURIComponent(orderId)}`,
+    { headers: { Authorization: `Bearer ${token()}` } },
+  );
+  const text = await res.text();
+  if (!res.ok) throw new Error(`MP search [${res.status}]: ${text}`);
+  const json = JSON.parse(text) as {
+    results?: Array<{ id: number; status: string; transaction_amount: number; external_reference: string }>;
+  };
+  const approved = (json.results ?? []).find(
+    (p) => p.status === "approved" && p.external_reference === orderId,
+  );
+  return approved ?? null;
+}
