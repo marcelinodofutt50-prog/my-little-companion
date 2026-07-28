@@ -21,6 +21,7 @@ import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel"
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { RevenueSparkline } from "@/components/RevenueSparkline";
 import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
+import { AdminHealthPanel } from "@/components/AdminHealthPanel";
 
 
 
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "audit" | "apk" | "market" | "updates" | "refunds";
+type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "health" | "audit" | "apk" | "market" | "updates" | "refunds";
 
 
 function AdminPage() {
@@ -226,6 +227,7 @@ function AdminPage() {
     {
       title: "Sistema", accent: "cyan", items: [
         { id: "staff", label: "Equipe", icon: ShieldCheck },
+        { id: "health", label: "Monitoramento", icon: Activity, hint: "erros & regressões" },
         { id: "logs", label: "Logs do servidor", icon: ScrollText },
         { id: "audit", label: "Auditoria", icon: ShieldAlert },
       ],
@@ -348,7 +350,7 @@ function AdminPage() {
 
           {/* CONTENT */}
           <div className="min-w-0">
-            <AdminAlertsBanner onOpenLogs={() => setTab("logs")} onOpenIA={() => setTab("ia")} />
+            <AdminAlertsBanner onOpenLogs={() => setTab("health")} onOpenIA={() => setTab("ia")} />
 
             {/* Section title bar */}
             {activeMeta && (
@@ -740,6 +742,7 @@ function AdminPage() {
             </div>
           )}
           {tab === "referrals" && <ReferralsAdminPanel />}
+          {tab === "health" && <AdminHealthPanel onOpenLogs={() => setTab("logs")} />}
           {tab === "logs" && <AdminLogsPanel />}
           {tab === "audit" && <AutoRevocationsPanel users={users} licenses={licenses} />}
           {tab === "ia" && <LicenseAiPanel />}
