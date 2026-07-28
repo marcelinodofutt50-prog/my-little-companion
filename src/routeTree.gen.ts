@@ -16,6 +16,7 @@ import { Route as RecuperarRouteImport } from './routes/recuperar'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as PlanosRouteImport } from './routes/planos'
+import { Route as MigracaoRouteImport } from './routes/migracao'
 import { Route as MercadoRouteImport } from './routes/mercado'
 import { Route as CryptoRouteImport } from './routes/crypto'
 import { Route as ContatoRouteImport } from './routes/contato'
@@ -72,6 +73,11 @@ const PrimeirosPassosRoute = PrimeirosPassosRouteImport.update({
 const PlanosRoute = PlanosRouteImport.update({
   id: '/planos',
   path: '/planos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigracaoRoute = MigracaoRouteImport.update({
+  id: '/migracao',
+  path: '/migracao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MercadoRoute = MercadoRouteImport.update({
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
   '/mercado': typeof MercadoRouteWithChildren
+  '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
   '/mercado': typeof MercadoRouteWithChildren
+  '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
   '/mercado': typeof MercadoRouteWithChildren
+  '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/crypto'
     | '/mercado'
+    | '/migracao'
     | '/planos'
     | '/primeiros-passos'
     | '/privacidade'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/crypto'
     | '/mercado'
+    | '/migracao'
     | '/planos'
     | '/primeiros-passos'
     | '/privacidade'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/crypto'
     | '/mercado'
+    | '/migracao'
     | '/planos'
     | '/primeiros-passos'
     | '/privacidade'
@@ -382,6 +394,7 @@ export interface RootRouteChildren {
   ContatoRoute: typeof ContatoRoute
   CryptoRoute: typeof CryptoRoute
   MercadoRoute: typeof MercadoRouteWithChildren
+  MigracaoRoute: typeof MigracaoRoute
   PlanosRoute: typeof PlanosRoute
   PrimeirosPassosRoute: typeof PrimeirosPassosRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -450,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/planos'
       fullPath: '/planos'
       preLoaderRoute: typeof PlanosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migracao': {
+      id: '/migracao'
+      path: '/migracao'
+      fullPath: '/migracao'
+      preLoaderRoute: typeof MigracaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mercado': {
@@ -646,6 +666,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContatoRoute: ContatoRoute,
   CryptoRoute: CryptoRoute,
   MercadoRoute: MercadoRouteWithChildren,
+  MigracaoRoute: MigracaoRoute,
   PlanosRoute: PlanosRoute,
   PrimeirosPassosRoute: PrimeirosPassosRoute,
   PrivacidadeRoute: PrivacidadeRoute,

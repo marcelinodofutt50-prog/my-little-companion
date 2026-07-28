@@ -64,10 +64,12 @@ export function MigrationOffer() {
         </div>
 
         <p className="mt-3 text-[11px] text-muted-foreground">
-          Precisa transferir seus clientes do painel antigo? Abra um chamado em{" "}
-          <Link to="/suporte" className="text-primary hover:underline">/suporte</Link> que a equipe acompanha a
-          migração com você, passo a passo.
+          Quer ver o checklist do que enviar, os prazos do suporte e as dúvidas mais comuns?{" "}
+          <Link to="/migracao" className="text-primary hover:underline">Detalhes do programa de migração</Link>. Ou abra
+          um chamado direto em <Link to="/suporte" className="text-primary hover:underline">/suporte</Link> que a
+          equipe acompanha a migração com você, passo a passo.
         </p>
+
       </div>
     </section>
   );
