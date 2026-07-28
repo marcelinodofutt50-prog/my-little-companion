@@ -97,6 +97,8 @@ export function SecurityWelcomeDialog() {
   }
 
   async function close() {
+  async function close() {
+    if (codes && saved) toast.success("Tudo certo — seus códigos de recuperação estão ativos");
     await ackFn().catch(() => {});
     setOpen(false);
   }
