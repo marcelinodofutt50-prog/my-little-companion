@@ -593,8 +593,10 @@ export type Database = {
           legacy_panel_hits: Json | null
           legacy_status: string
           pix_key: string | null
+          recovery_codes_generated_at: string | null
           referral_code: string | null
           referral_reward_pref: string
+          security_ack_at: string | null
           updated_at: string
         }
         Insert: {
@@ -608,8 +610,10 @@ export type Database = {
           legacy_panel_hits?: Json | null
           legacy_status?: string
           pix_key?: string | null
+          recovery_codes_generated_at?: string | null
           referral_code?: string | null
           referral_reward_pref?: string
+          security_ack_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -623,9 +627,35 @@ export type Database = {
           legacy_panel_hits?: Json | null
           legacy_status?: string
           pix_key?: string | null
+          recovery_codes_generated_at?: string | null
           referral_code?: string | null
           referral_reward_pref?: string
+          security_ack_at?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      recovery_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
