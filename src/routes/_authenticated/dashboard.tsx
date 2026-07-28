@@ -72,9 +72,15 @@ function DashboardPage() {
       const list = l as License[];
       setLicenses(list); setBalance(c.balance);
       // Hydrate trial credentials card from server-stored (encrypted) license
-      // so it survives reloads / device switches.
+      // so it survives reloads / device switches. Trials expirados somem do topo.
       const trial = list.find((x) => x.is_trial);
-      if (trial) {
+      const trialExpired = !!trial && (
+        !!trial.revoked || !!trial.disabled_at ||
+        (!!trial.expires_at && new Date(trial.expires_at).getTime() <= Date.now())
+      );
+      if (trialExpired) {
+        setTrialCreds(null);
+      } else if (trial) {
         setTrialCreds((prev) => prev ?? {
           username: trial.yaarsa_username,
           email: trial.yaarsa_email,
