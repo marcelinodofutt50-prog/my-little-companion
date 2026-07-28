@@ -955,7 +955,7 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
 
 
 // ============= LIVE CHAT PANEL =============
-type Thread = { id: string; user_id: string; subject: string; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null } | null };
+type Thread = { id: string; user_id: string; subject: string; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null; display_name?: string | null } | null };
 type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
 function AdminChatPanel() {
@@ -1065,7 +1065,7 @@ function AdminChatPanel() {
   const filtered = threads.filter((t) => {
     if (!query) return true;
     const q = query.toLowerCase();
-    return (t.profile?.email ?? "").toLowerCase().includes(q) || (t.profile?.full_name ?? "").toLowerCase().includes(q) || t.subject.toLowerCase().includes(q);
+    return (t.profile?.email ?? "").toLowerCase().includes(q) || (t.profile?.display_name ?? "").toLowerCase().includes(q) || (t.profile?.full_name ?? "").toLowerCase().includes(q) || t.subject.toLowerCase().includes(q);
   });
 
   const activeThread = threads.find((t) => t.id === activeId);
@@ -1121,11 +1121,11 @@ function AdminChatPanel() {
                 className={`flex w-full items-center gap-3 border-b border-border/20 p-3 text-left transition-colors ${active ? "bg-neon/10" : "hover:bg-neon/5"}`}
               >
                 <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${active ? "bg-neon text-primary-foreground" : "bg-muted text-foreground"}`}>
-                  {(t.profile?.email ?? "?").slice(0, 2).toUpperCase()}
+                  {(t.profile?.display_name || t.profile?.email || "?").slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="truncate font-mono text-xs text-foreground">{t.profile?.email ?? "cliente"}</div>
+                    <div className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</div>
                     {(t.unread_by_staff ?? 0) > 0 && !active && (
                       <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
                     )}
@@ -1165,7 +1165,7 @@ function AdminChatPanel() {
                 </button>
                 <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate font-mono text-sm">{activeThread.profile?.email ?? "cliente"}</span>
+                  <span className="truncate font-mono text-sm">{activeThread.profile?.display_name || activeThread.profile?.email || "cliente"}</span>
                   {activeThread.profile?.email && (
                     <button
                       type="button"
