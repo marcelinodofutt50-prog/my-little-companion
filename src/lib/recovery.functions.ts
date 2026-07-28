@@ -41,7 +41,6 @@ export const generateRecoveryCodes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { generatePlainCode, hashCode, RECOVERY_CODE_COUNT } = await import("@/lib/recovery.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const codes: string[] = [];
     while (codes.length < RECOVERY_CODE_COUNT) {
@@ -52,17 +51,23 @@ export const generateRecoveryCodes = createServerFn({ method: "POST" })
       codes.map(async (c) => ({ user_id: context.userId, code_hash: await hashCode(c) })),
     );
 
-    await supabaseAdmin.from("recovery_codes").delete().eq("user_id", context.userId);
-    const { error } = await supabaseAdmin.from("recovery_codes").insert(rows);
-    if (error) throw new Error("Não foi possível gerar os códigos agora. Tente novamente.");
+    // Usa o client do próprio usuário (RLS: só mexe nas próprias linhas).
+    const db = context.supabase;
 
-    await supabaseAdmin
+    const { error: delErr } = await db.from("recovery_codes").delete().eq("user_id", context.userId);
+    if (delErr) throw new Error(`Não foi possível limpar os códigos antigos: ${delErr.message}`);
+
+    const { error } = await db.from("recovery_codes").insert(rows);
+    if (error) throw new Error(`Não foi possível gerar os códigos: ${error.message}`);
+
+    await db
       .from("profiles")
       .update({ recovery_codes_generated_at: new Date().toISOString() })
       .eq("id", context.userId);
 
     return { codes };
   });
+
 
 /**
  * Recuperação de conta sem acesso ao e-mail: exige um código de backup válido.

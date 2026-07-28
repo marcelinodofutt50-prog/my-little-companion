@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { siteUrl } from "@/lib/site-url";
+import { Lost2faHelp } from "@/components/Lost2faHelp";
+
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -137,7 +139,9 @@ function AuthPage() {
         <Link to="/recuperar" className="mt-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-neon">
           Perdi o acesso ao meu e-mail → recuperar conta
         </Link>
+        <Lost2faHelp className="mt-6 w-full" />
         <Link to="/" className="mt-3 text-xs text-muted-foreground hover:text-foreground">← Voltar ao início</Link>
+
       </main>
     </div>
   );
