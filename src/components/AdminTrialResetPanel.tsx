@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Search, RefreshCcw, Copy, ShieldAlert, User } from "lucide-react";
+import { Loader2, Search, RefreshCcw, Copy, Check, ClipboardList, ShieldAlert, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminFindUsers, adminReplaceUserTrial } from "@/lib/admin.functions";
@@ -41,6 +41,7 @@ export function AdminTrialResetPanel() {
   const [result, setResult] = useState<Record<string, NewCreds & { expires_at: string }>>({});
   const [confirmUser, setConfirmUser] = useState<FoundUser | null>(null);
   const inFlight = useRef(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const findFn = useServerFn(adminFindUsers);
   const replaceFn = useServerFn(adminReplaceUserTrial);
@@ -89,9 +90,32 @@ export function AdminTrialResetPanel() {
     }
   }
 
-  function copy(text: string, label: string) {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copiado`);
+  async function copy(text: string, label: string, key?: string) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // fallback para navegadores/contextos sem Clipboard API
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        if (!ok) throw new Error("execCommand falhou");
+      }
+      if (key) {
+        setCopied(key);
+        window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500);
+      }
+      toast.success(`${label} copiado`);
+    } catch {
+      toast.error(`Não foi possível copiar ${label.toLowerCase()}`, {
+        description: "Selecione o texto manualmente e use Ctrl+C.",
+      });
+    }
   }
 
   return (
@@ -157,22 +181,67 @@ export function AdminTrialResetPanel() {
               {creds && (
                 <div className="mt-3 rounded border border-neon/30 bg-neon/5 p-3 font-mono text-[11px]">
                   <div className="uppercase tracking-wider text-neon">// novas credenciais</div>
-                  <div className="mt-1 grid gap-0.5">
-                    <div>user: <span className="text-foreground">{creds.username}</span></div>
-                    <div>email: <span className="text-foreground">{creds.email}</span></div>
-                    <div>senha: <span className="text-foreground">{creds.password}</span></div>
+                  <div className="mt-2 grid gap-1.5">
+                    {([
+                      ["user", creds.username, "Usuário"],
+                      ["email", creds.email, "E-mail"],
+                      ["senha", creds.password, "Senha"],
+                    ] as const).map(([field, value, label]) => {
+                      const key = `${u.id}:${field}`;
+                      return (
+                        <div key={field} className="flex items-center gap-2">
+                          <span className="w-12 shrink-0 text-muted-foreground">{field}:</span>
+                          <input
+                            readOnly
+                            value={value}
+                            onFocus={(e) => e.currentTarget.select()}
+                            aria-label={`${label} gerado`}
+                            className="min-w-0 flex-1 rounded border border-border/50 bg-background/60 px-2 py-1 font-mono text-[11px] text-foreground outline-none focus:border-neon/60"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            aria-label={`Copiar ${label.toLowerCase()}`}
+                            className="h-7 w-7 shrink-0 p-0"
+                            onClick={() => copy(value, label, key)}
+                          >
+                            {copied === key ? <Check className="h-3.5 w-3.5 text-neon" /> : <Copy className="h-3.5 w-3.5" />}
+                          </Button>
+                        </div>
+                      );
+                    })}
                     <div className="text-muted-foreground">expira: {new Date(creds.expires_at).toLocaleString("pt-BR")}</div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 font-mono text-[10px] uppercase"
-                    onClick={() => copy(`user: ${creds.username}\nemail: ${creds.email}\npass: ${creds.password}`, "Credenciais")}
-                  >
-                    <Copy className="mr-1 h-3 w-3" /> Copiar
-                  </Button>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="font-mono text-[10px] uppercase"
+                      onClick={() => copy(`user: ${creds.username}\nemail: ${creds.email}\npass: ${creds.password}`, "Credenciais", `${u.id}:all`)}
+                    >
+                      {copied === `${u.id}:all` ? <Check className="mr-1 h-3 w-3 text-neon" /> : <Copy className="mr-1 h-3 w-3" />} Copiar tudo
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="font-mono text-[10px] uppercase"
+                      onClick={() =>
+                        copy(
+                          `Prontinho! Aqui está o seu novo teste grátis 👇\n\nUsuário: ${creds.username}\nE-mail: ${creds.email}\nSenha: ${creds.password}\nVálido até: ${new Date(creds.expires_at).toLocaleString("pt-BR")}\n\nQualquer dúvida é só responder por aqui.`,
+                          "Mensagem para o cliente",
+                          `${u.id}:msg`,
+                        )
+                      }
+                    >
+                      {copied === `${u.id}:msg` ? <Check className="mr-1 h-3 w-3 text-neon" /> : <ClipboardList className="mr-1 h-3 w-3" />} Mensagem pronta
+                    </Button>
+                  </div>
                 </div>
               )}
+
             </div>
           );
         })}
