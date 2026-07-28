@@ -261,7 +261,13 @@ function MigrationPage() {
           </div>
         </section>
 
+        {/* Prova social — Itaú e Caixa */}
+        <section className="mt-14">
+          <ImpossibleProof />
+        </section>
+
         {/* Formulário */}
+
         <section className="mt-14" id="formulario">
           <div className="flex items-center gap-2">
             <Send className="h-5 w-5 text-neon" />
