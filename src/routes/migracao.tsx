@@ -272,7 +272,11 @@ function MigrationPage() {
           <div className="mt-5">
             <MigrationRequestForm />
           </div>
+          <div className="mt-6">
+            <MigrationStatusTracker />
+          </div>
         </section>
+
 
 
         {/* SLA */}
