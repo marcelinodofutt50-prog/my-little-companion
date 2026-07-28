@@ -82,35 +82,102 @@ export function SecurityWelcomeDialog() {
       .catch(() => {});
   }, []);
 
+  /** Plano B: gera no navegador e grava direto na tabela (RLS: só as próprias linhas). */
+  async function generateViaTableFallback(userId: string): Promise<string[]> {
+    const { generatePlainCode, hashCode, RECOVERY_CODE_COUNT } = await import("@/lib/recovery.shared");
+
+    const plain: string[] = [];
+    while (plain.length < RECOVERY_CODE_COUNT) {
+      const c = generatePlainCode();
+      if (!plain.includes(c)) plain.push(c);
+    }
+    const rows = await Promise.all(
+      plain.map(async (c) => ({ user_id: userId, code_hash: await hashCode(c) })),
+    );
+
+    const del = await supabase.from("recovery_codes").delete().eq("user_id", userId);
+    if (del.error) {
+      console.error("[recovery] fallback delete falhou", del.error);
+      throw new Error(`Falha ao limpar códigos antigos: ${del.error.message}`);
+    }
+
+    const ins = await supabase.from("recovery_codes").insert(rows);
+    if (ins.error) {
+      console.error("[recovery] fallback insert falhou", ins.error);
+      throw new Error(`Falha ao salvar os novos códigos: ${ins.error.message}`);
+    }
+
+    const upd = await supabase
+      .from("profiles")
+      .update({ recovery_codes_generated_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (upd.error) console.warn("[recovery] não deu para marcar a data de geração", upd.error);
+
+    return plain;
+  }
+
   async function handleGenerate() {
     if (loading) return;
     setErrorText(null);
     setLoading(true);
+    const started = Date.now();
     try {
+      const user = await getCurrentUser();
+      console.info("[recovery] iniciando geração", { userId: user.id, hadCodes, exhausted });
+
       const isSchemaCache = (err: any) =>
         err?.code === "PGRST202" ||
         err?.code === "PGRST205" ||
         /schema cache|function .* not found|could not find/i.test(err?.message ?? "");
 
-      // Gera e salva no backend em uma única chamada. Isso evita o erro antigo
-      // de tabela ausente no cache do navegador/PostgREST durante delete/insert direto.
+      let nextCodes: string[] = [];
+      let via = "rpc";
+
+      // Caminho principal: uma única chamada no backend.
       let result = await supabase.rpc("generate_my_recovery_codes");
-      if (result.error && isSchemaCache(result.error)) {
-        await new Promise((r) => setTimeout(r, 1500));
-        result = await supabase.rpc("generate_my_recovery_codes");
-      }
       if (result.error) {
-        throw new Error(
-          isSchemaCache(result.error)
-            ? "O backend ainda está atualizando. Aguarde alguns segundos e toque em gerar novamente."
-            : `Falha ao gerar os códigos: ${result.error.message}`,
-        );
+        console.warn("[recovery] RPC tentativa 1 falhou", {
+          code: (result.error as any)?.code,
+          message: result.error.message,
+          details: (result.error as any)?.details,
+          hint: (result.error as any)?.hint,
+        });
+        if (isSchemaCache(result.error)) {
+          await new Promise((r) => setTimeout(r, 1500));
+          result = await supabase.rpc("generate_my_recovery_codes");
+          if (result.error) {
+            console.warn("[recovery] RPC tentativa 2 falhou", {
+              code: (result.error as any)?.code,
+              message: result.error.message,
+            });
+          }
+        }
       }
 
-      const nextCodes = ((result.data ?? []) as Array<{ code: string }>).map((row) => row.code).filter(Boolean);
-      if (nextCodes.length === 0) {
-        throw new Error("O backend respondeu, mas não retornou os códigos. Tente novamente em instantes.");
+      if (!result.error) {
+        nextCodes = ((result.data ?? []) as Array<{ code: string }>).map((row) => row.code).filter(Boolean);
       }
+
+      // Fallback: grava direto na tabela quando o RPC não está disponível/retornou vazio.
+      if (nextCodes.length === 0) {
+        via = "tabela (fallback)";
+        console.warn("[recovery] usando fallback direto na tabela", {
+          rpcError: result.error
+            ? { code: (result.error as any)?.code, message: result.error.message }
+            : null,
+        });
+        nextCodes = await generateViaTableFallback(user.id);
+      }
+
+      if (nextCodes.length === 0) {
+        throw new Error("Nenhum código foi gerado. Tente novamente em instantes.");
+      }
+
+      console.info("[recovery] códigos gerados com sucesso", {
+        via,
+        quantidade: nextCodes.length,
+        ms: Date.now() - started,
+      });
 
       setCodes(nextCodes);
       setSaved(false);
@@ -123,6 +190,14 @@ export function SecurityWelcomeDialog() {
       setHadCodes(true);
       setExhausted(false);
     } catch (e: any) {
+      console.error("[recovery] falha final ao gerar códigos", {
+        message: e?.message,
+        code: e?.code,
+        details: e?.details,
+        hint: e?.hint,
+        ms: Date.now() - started,
+        error: e,
+      });
       const msg = e?.message ?? "Falha ao gerar os códigos. Tente novamente em instantes.";
       setErrorText(msg);
       toast.error(msg);
@@ -130,6 +205,7 @@ export function SecurityWelcomeDialog() {
       setLoading(false);
     }
   }
+
 
   function copyAll() {
     if (!codes) return;
