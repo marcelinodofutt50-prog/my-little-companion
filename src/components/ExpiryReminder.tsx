@@ -4,7 +4,7 @@ import { AlertTriangle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { daysUntil, severityFromDays, severityColor } from "@/lib/expiry";
 
-type Item = { label: string; days: number; sev: "critical" | "warning" };
+type Item = { label: string; days: number; sev: "critical" | "warning"; trial: boolean };
 
 const DISMISS_KEY = "shadow:expiry-reminder-dismissed";
 
@@ -28,10 +28,13 @@ export function ExpiryReminder() {
       for (const l of data as any[]) {
         const dLic = daysUntil(l.expires_at);
         const sLic = severityFromDays(dLic);
-        if (sLic && dLic !== null) list.push({ label: `${l.is_trial ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim(), days: dLic, sev: sLic });
+        // Trial já expirado não gera aviso — ele some do painel por conta própria.
+        if (l.is_trial && dLic !== null && dLic <= 0) continue;
+        if (sLic && dLic !== null)
+          list.push({ label: `${l.is_trial ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim(), days: dLic, sev: sLic, trial: !!l.is_trial });
         const dSrv = daysUntil(l.server_paid_until ? `${l.server_paid_until}T23:59:59` : null);
         const sSrv = severityFromDays(dSrv);
-        if (sSrv && dSrv !== null) list.push({ label: "Mensalidade do servidor", days: dSrv, sev: sSrv });
+        if (sSrv && dSrv !== null) list.push({ label: "Mensalidade do servidor", days: dSrv, sev: sSrv, trial: false });
       }
       list.sort((a, b) => a.days - b.days);
       setItems(list.slice(0, 3));
@@ -55,10 +58,10 @@ export function ExpiryReminder() {
           {items.length > 1 ? <span className="text-muted-foreground"> · +{items.length - 1} outro(s) item(ns) próximo(s) do vencimento</span> : null}
         </div>
         <Link
-          to="/renovar-servidor"
+          to={worst.trial ? "/planos" : "/renovar-servidor"}
           className="rounded-lg border border-primary/50 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
         >
-          Renovar agora
+          {worst.trial ? "Ver planos" : "Renovar agora"}
         </Link>
         <button
           aria-label="Dispensar aviso"
