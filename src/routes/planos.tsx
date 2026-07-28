@@ -10,6 +10,8 @@ import {
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConversionBoosters, LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { VersionCompare } from "@/components/VersionCompare";
+import { MigrationOffer } from "@/components/MigrationOffer";
+
 import { TrustBadges } from "@/components/TrustBadges";
 import { CheckoutFaqFloat } from "@/components/CheckoutFaqFloat";
 import { Button } from "@/components/ui/button";
@@ -456,7 +458,9 @@ function PlansPage() {
         />
 
         <TierComparison />
+        <MigrationOffer />
         <VersionCompare />
+
 
         {/* METRICS BAR ================================= */}
         <section className="mt-14 grid gap-4 rounded-2xl border border-border/50 bg-card/40 p-6 md:grid-cols-4">
