@@ -34,6 +34,9 @@ export function SecurityWelcomeDialog() {
   const [codes, setCodes] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  /** null = ainda carregando; true = já existiram códigos antes (regeneração) */
+  const [hadCodes, setHadCodes] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
   const checked = useRef(false);
 
   useEffect(() => {
@@ -41,20 +44,30 @@ export function SecurityWelcomeDialog() {
     checked.current = true;
     statusFn()
       .then((s) => {
+        setHadCodes(Boolean(s.generatedAt));
+        setExhausted(Boolean(s.generatedAt) && s.codesRemaining === 0);
         if (!s.ackAt || s.codesRemaining === 0) setOpen(true);
       })
       .catch(() => {});
   }, [statusFn]);
 
   async function handleGenerate() {
+    if (loading) return;
     setLoading(true);
     try {
       const r = await genFn();
+      if (!r?.codes?.length) throw new Error("O servidor não retornou nenhum código. Tente novamente.");
       setCodes(r.codes);
+      setSaved(false);
       setStep("codes");
+      toast.success(
+        hadCodes
+          ? `${r.codes.length} novos códigos gerados — os antigos foram invalidados`
+          : `${r.codes.length} códigos de recuperação gerados com sucesso`,
+      );
       await ackFn().catch(() => {});
     } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao gerar os códigos");
+      toast.error(e?.message ?? "Falha ao gerar os códigos. Tente novamente em instantes.");
     } finally {
       setLoading(false);
     }
