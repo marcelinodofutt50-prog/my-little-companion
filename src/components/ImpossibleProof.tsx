@@ -36,12 +36,15 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
       <div className={`mt-4 grid gap-3 ${compact ? "grid-cols-2" : "sm:grid-cols-2"}`}>
         {shots.map((s) => (
           <figure key={s.src} className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
-            <img
-              src={s.src}
-              alt={s.tag}
-              loading="lazy"
-              className="h-40 w-full object-cover sm:h-52"
-            />
+            <div className="flex aspect-video w-full items-center justify-center bg-background/60">
+              <img
+                src={s.src}
+                alt={s.tag}
+                loading="lazy"
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+
             <figcaption className="space-y-1 p-3">
               <span className="inline-flex items-center gap-1 rounded border border-neon/40 bg-neon/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-neon">
                 <Zap className="h-3 w-3" />
