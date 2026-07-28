@@ -60,6 +60,7 @@ function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [licFilter, setLicFilter] = useState<"all" | "active" | "trial" | "archived">("active");
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
+  const [extraTab, setExtraTab] = useState<"downloads" | "resumo" | "beneficios">("downloads");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   // Tick para o trial sumir sozinho do painel assim que expirar
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -544,19 +545,41 @@ function DashboardPage() {
           );
         })()}
 
-        {/* DOWNLOADS — depois das licenças */}
-        <DownloadsSection licenses={licenses} isAdmin={isAdmin} />
+        {/* SEÇÕES SECUNDÁRIAS — em abas para não poluir */}
+        <section className="mt-10">
+          <div className="rainbow-bar mb-4 rounded-full opacity-70" />
+          <div className="mb-4 flex w-full overflow-x-auto rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
+            {([
+              { k: "downloads", label: "downloads" },
+              { k: "resumo", label: "resumo" },
+              { k: "beneficios", label: "benefícios" },
+            ] as const).map((t) => (
+              <button
+                key={t.k}
+                onClick={() => setExtraTab(t.k)}
+                className={`px-3 py-1.5 transition-colors ${extraTab === t.k ? "bg-neon/15 text-neon" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-        {/* BRIEFING EXECUTIVO + INDICAÇÕES + LEGACY — extras ao final */}
-        <div className="mt-8">
-          <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
-          <RefundSection />
-          <ReferralsWidget />
+          {extraTab === "downloads" && <DownloadsSection licenses={licenses} isAdmin={isAdmin} />}
 
-          {!licenses.some((l) => l.is_legacy) && (
-            <LegacyConnectPanel defaultOpen={licenses.length === 0 && legacyStatus !== "unchecked" && legacyStatus !== "not_legacy"} />
+          {extraTab === "resumo" && (
+            <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
           )}
-        </div>
+
+          {extraTab === "beneficios" && (
+            <div>
+              <RefundSection />
+              <ReferralsWidget />
+              {!licenses.some((l) => l.is_legacy) && (
+                <LegacyConnectPanel defaultOpen={licenses.length === 0 && legacyStatus !== "unchecked" && legacyStatus !== "not_legacy"} />
+              )}
+            </div>
+          )}
+        </section>
 
           </main>
         </SidebarInset>
