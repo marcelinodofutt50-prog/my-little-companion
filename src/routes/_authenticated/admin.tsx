@@ -1235,6 +1235,7 @@ function AdminChatPanel() {
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"open" | "mine" | "closed">("open");
   // Default sound preference when nothing is stored yet.
   const SOUND_DEFAULT_ON = true;
@@ -1268,18 +1269,24 @@ function AdminChatPanel() {
   const assumeFn = useServerFn(adminAssumeThread);
   const closeFn = useServerFn(adminCloseThread);
 
-  const refreshThreads = () => threadsFn({ data: { filter } }).then((t) => setThreads(t as Thread[])).catch(() => {});
+  const refreshThreads = () => threadsFn({ data: { filter } })
+    .then((t) => { setThreads(t as Thread[]); setLoadError(null); })
+    .catch((e) => setLoadError(e instanceof Error ? e.message : String(e)));
 
 
   useEffect(() => {
     requestNotifyPermission();
     threadsFn({ data: { filter } }).then((t) => {
       setThreads(t as Thread[]);
+      setLoadError(null);
       setLoading(false);
       // Em telas pequenas mostramos a lista primeiro (master-detail)
       const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
       if (isDesktop && (t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
-    }).catch(() => setLoading(false));
+    }).catch((e) => {
+      setLoadError(e instanceof Error ? e.message : String(e));
+      setLoading(false);
+    });
     const ch = supabase.channel(`admin-threads-${filter}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages" },
       (payload) => {
@@ -1418,7 +1425,14 @@ function AdminChatPanel() {
         </div>
         <div className="flex-1 overflow-y-auto">
           {loading && <div className="p-6 text-center text-xs text-muted-foreground"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></div>}
-          {!loading && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
+          {!loading && loadError && (
+            <div className="m-3 rounded border border-destructive/40 bg-destructive/10 p-3 text-xs">
+              <div className="font-mono font-bold text-destructive">falha ao carregar conversas</div>
+              <div className="mt-1 break-words text-muted-foreground">{loadError}</div>
+              <Button size="sm" variant="outline" className="mt-2 h-7 text-[11px]" onClick={() => { setLoading(true); refreshThreads().finally(() => setLoading(false)); }}>tentar novamente</Button>
+            </div>
+          )}
+          {!loading && !loadError && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
           {filtered.map((t) => {
             const active = t.id === activeId;
             const lastCustomerAt = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
