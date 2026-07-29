@@ -196,15 +196,32 @@ export function InAppNotifications() {
                 <div className="min-w-0">
                   <div className="text-xs font-medium text-foreground">{n.title}</div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">{n.description}</div>
+                  {n.actionLabel && (
+                    <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-primary">
+                      <RefreshCcw className="h-3 w-3" /> {n.actionLabel}
+                    </span>
+                  )}
                   <div className="mt-1 font-mono text-[9px] text-muted-foreground/70">{timeAgo(n.createdAt)}</div>
+
                 </div>
               </div>
             );
+            const [hrefPath, hrefQuery] = (n.href ?? "").split("?");
+            const search = hrefQuery
+              ? Object.fromEntries(new URLSearchParams(hrefQuery).entries())
+              : undefined;
             return n.href ? (
-              <Link key={n.id} to={n.href as string} onClick={markAllRead} className="block">
+              <Link
+                key={n.id}
+                to={hrefPath as string}
+                search={search as never}
+                onClick={markAllRead}
+                className="block"
+              >
                 {content}
               </Link>
             ) : (
+
               <div key={n.id}>{content}</div>
             );
           })}

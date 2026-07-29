@@ -14,8 +14,12 @@ import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unloc
 
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : undefined,
+  }),
   component: SupportPage,
 });
+
 
 type Thread = { id: string; category?: string | null; status?: string | null; assigned_name?: string | null };
 type Msg = { id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
@@ -32,7 +36,9 @@ type PendingMsg = {
 const PAGE_SIZE = 30;
 
 function SupportPage() {
+  const { reabrir } = Route.useSearch();
   const [thread, setThread] = useState<Thread | null>(null);
+
   const [savingCat, setSavingCat] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -44,6 +50,7 @@ function SupportPage() {
   const [uid, setUid] = useState<string>("");
   const [lastSeenAdminAt, setLastSeenAdminAt] = useState<number>(() => Date.now());
   const fileRef = useRef<HTMLInputElement>(null);
+  const composerRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const mountedAtRef = useRef<number>(Date.now());
   const isAdminRef = useRef(false);
@@ -71,6 +78,18 @@ function SupportPage() {
       .catch((e: any) => toast.error(e?.message ?? "Não foi possível abrir o atendimento"));
     return () => { cancelled = true; };
   }, [openFn]);
+
+  // Reabertura vinda da notificação de encerramento por inatividade.
+  const reopenNotifiedRef = useRef(false);
+  useEffect(() => {
+    if (!reabrir || !thread?.id || reopenNotifiedRef.current) return;
+    reopenNotifiedRef.current = true;
+    toast.success("Atendimento reaberto", {
+      description: "Envie sua mensagem que a equipe retoma daqui. Seu histórico anterior continua salvo.",
+    });
+    composerRef.current?.focus();
+  }, [reabrir, thread?.id]);
+
 
   // Mensagens + realtime da thread ativa (re-assina quando a thread muda).
   const threadId = thread?.id;
@@ -430,7 +449,7 @@ function SupportPage() {
             <Button type="button" size="icon" variant="outline" onClick={() => { unlockNotifySound(); fileRef.current?.click(); }} disabled={uploading}>
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
             </Button>
-            <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem..." />
+            <Input ref={composerRef} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem..." />
             <Button type="submit" size="icon" disabled={sending || uploading || !body.trim()}>
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
