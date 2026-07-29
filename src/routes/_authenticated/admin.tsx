@@ -1311,7 +1311,61 @@ function priorityMeta(p?: string | null): { label: string; cls: string } | null 
 type Thread = { id: string; user_id: string; subject: string; category?: string | null; priority?: string | null; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null; display_name?: string | null } | null };
 type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
+/** Cache em memória por filtro: evita tela branca ao alternar abas/voltar pro chat. */
+const threadsCache: Record<string, Thread[]> = {};
+
+function isWaitingLong(t: Thread): boolean {
+  const at = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
+  return t.status !== "closed" && at !== null && Date.now() - at > 30 * 60000;
+}
+
+/** Cards de pendências do suporte — clicáveis para filtrar a lista. */
+function SupportOverviewCards({
+  threads, loading, filter, onFilter, quick, onQuick,
+}: {
+  threads: Thread[];
+  loading: boolean;
+  filter: "open" | "mine" | "closed";
+  onFilter: (f: "open" | "mine" | "closed") => void;
+  quick: "all" | "unread" | "waiting" | "unassigned";
+  onQuick: (q: "all" | "unread" | "waiting" | "unassigned") => void;
+}) {
+  const unread = threads.filter((t) => Number(t.unread_by_staff ?? 0) > 0).length;
+  const waiting = threads.filter(isWaitingLong).length;
+  const unassigned = threads.filter((t) => t.status !== "closed" && !t.assigned_to).length;
+
+  const cards = [
+    { key: "all" as const, label: "conversas", hint: filter === "closed" ? "encerradas" : filter === "mine" ? "minhas" : "abertas", value: threads.length, tone: "text-foreground", ring: "border-border/40" },
+    { key: "unread" as const, label: "não lidas", hint: "aguardando leitura", value: unread, tone: "text-neon", ring: unread ? "border-neon/50 bg-neon/5" : "border-border/40" },
+    { key: "waiting" as const, label: "sem resposta", hint: "cliente esperando +30 min", value: waiting, tone: "text-danger", ring: waiting ? "border-danger/50 bg-danger/5" : "border-border/40" },
+    { key: "unassigned" as const, label: "sem responsável", hint: "ninguém assumiu", value: unassigned, tone: "text-cyan", ring: unassigned ? "border-cyan/50 bg-cyan/5" : "border-border/40" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      {cards.map((c) => {
+        const active = quick === c.key;
+        return (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => { if (c.key !== "all" && filter === "closed") onFilter("open"); onQuick(active ? "all" : c.key); }}
+            className={`terminal-card rounded-lg border p-3 text-left transition-colors ${c.ring} ${active ? "ring-1 ring-neon/60" : "hover:border-neon/40"}`}
+          >
+            <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{c.label}</div>
+            <div className={`mt-1 font-mono text-2xl font-bold leading-none ${c.tone}`}>
+              {loading ? <span className="inline-block h-6 w-8 animate-pulse rounded bg-muted/50" /> : c.value}
+            </div>
+            <div className="mt-1 truncate font-mono text-[9px] text-muted-foreground/70">{c.hint}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function AdminChatPanel() {
+
   const [threads, setThreads] = useState<Thread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
