@@ -25,6 +25,17 @@ const accentText = (a: AdminNavGroup["accent"]) =>
 export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const activeRef = useRef<HTMLButtonElement | null>(null);
+
+  // ao abrir a lista completa, rola até a seção atual
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      activeRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 120);
+    return () => clearTimeout(t);
+  }, [open]);
+
   const all = groups.flatMap((g) => g.items);
   const quick = primary
     .map((id) => all.find((i) => i.id === id))
