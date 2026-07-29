@@ -135,9 +135,9 @@ function AdminPage() {
   const [licStatus, setLicStatus] = useState<"all" | "active" | "expiring" | "expired" | "revoked">("all");
   const [licView, setLicView] = useState<"table" | "grouped">("table");
   const [licSearch, setLicSearch] = useState("");
-  // Licenças vencidas/revogadas há mais de 2 dias somem do painel (arquivadas)
+  // Licenças vencidas/revogadas há mais de 3 dias somem do painel (arquivadas)
   // para não poluir. Se o cliente reativar, ela volta sozinha para a lista.
-  const [licShowArchived, setLicShowArchived] = useState(false);
+  const [licScope, setLicScope] = useState<"active" | "archived">("active");
 
 
   const statsFn = useServerFn(adminStats);
