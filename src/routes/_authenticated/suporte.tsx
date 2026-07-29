@@ -49,40 +49,54 @@ function SupportPage() {
   const markReadFn = useServerFn(markThreadReadByCustomer);
   const setCatFn = useServerFn(setThreadCategory);
 
+  // Bootstrap: usuário + thread aberta (sem assinar realtime aqui).
   useEffect(() => {
+    let cancelled = false;
     requestNotifyPermission();
+    markOnboardingStep(ONBOARDING_STEP.SUPPORT);
     supabase.auth.getUser().then(async ({ data }) => {
       const id = data.user?.id;
-      if (!id) return;
+      if (cancelled || !id) return;
+      setUid(id);
       const { data: adminFlag } = await supabase.rpc("has_role", { _user_id: id, _role: "admin" });
-      isAdminRef.current = !!adminFlag;
+      if (!cancelled) isAdminRef.current = !!adminFlag;
     });
-    markOnboardingStep(ONBOARDING_STEP.SUPPORT);
-    supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? ""));
-    openFn().then(async (t) => {
-      setThread(t);
-      const m = await listFn({ data: { threadId: t.id } });
-      setMsgs(m as Msg[]);
-      markReadFn({ data: { threadId: t.id } }).catch(() => {});
-      const ch = supabase.channel(`t-${t.id}`).on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${t.id}` },
-        (payload) => setMsgs((prev) => {
-          const next = payload.new as Msg;
-          if (prev.some((x) => x.id === next.id)) return prev;
-          if (next.is_admin && !next.is_system) {
-            // Alertas de chat (som/desktop) são restritos a admins.
-            if (isAdminRef.current) {
-              playNotifyDing();
-              if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
-            }
-            markReadFn({ data: { threadId: t.id } }).catch(() => {});
+    openFn()
+      .then((t) => { if (!cancelled) setThread(t); })
+      .catch((e: any) => toast.error(e?.message ?? "Não foi possível abrir o atendimento"));
+    return () => { cancelled = true; };
+  }, [openFn]);
+
+  // Mensagens + realtime da thread ativa (re-assina quando a thread muda).
+  const threadId = thread?.id;
+  useEffect(() => {
+    if (!threadId) return;
+    let cancelled = false;
+    listFn({ data: { threadId } })
+      .then((m) => { if (!cancelled) setMsgs(m as Msg[]); })
+      .catch(() => {});
+    markReadFn({ data: { threadId } }).catch(() => {});
+
+    const ch = supabase.channel(`t-${threadId}`).on("postgres_changes",
+      { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
+      (payload) => setMsgs((prev) => {
+        const next = payload.new as Msg;
+        if (prev.some((x) => x.id === next.id)) return prev;
+        if (next.is_admin && !next.is_system) {
+          // Alertas de chat (som/desktop) são restritos a admins.
+          if (isAdminRef.current) {
+            playNotifyDing();
+            if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
           }
-          return [...prev, next];
-        })
-      ).subscribe();
-      return () => { supabase.removeChannel(ch); };
-    });
-  }, [openFn, listFn, markReadFn]);
+          markReadFn({ data: { threadId } }).catch(() => {});
+        }
+        return [...prev, next];
+      })
+    ).subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [threadId, listFn, markReadFn]);
+
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length, pending.length]);
 
