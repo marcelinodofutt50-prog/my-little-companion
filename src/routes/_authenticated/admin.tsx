@@ -1235,6 +1235,7 @@ function AdminChatPanel() {
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"open" | "mine" | "closed">("open");
   // Default sound preference when nothing is stored yet.
   const SOUND_DEFAULT_ON = true;
