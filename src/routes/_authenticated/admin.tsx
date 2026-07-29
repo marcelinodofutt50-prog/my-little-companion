@@ -28,6 +28,7 @@ import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
+import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 
 
 
