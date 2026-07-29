@@ -552,8 +552,8 @@ function AdminPage() {
                   conversionRate={conversionRate}
                 />
 
-                <AdminDailyReport />
-                <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />
+                {isAdminUser && <AdminDailyReport />}
+                {isAdminUser && <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />}
 
 
 
