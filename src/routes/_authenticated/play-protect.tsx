@@ -225,18 +225,20 @@ function PlayProtectPage() {
   }
 
   async function onDownload(id: string) {
+    if (downloadingId) return;
+    setDownloadingId(id);
+    const toastId = toast.loading("Preparando download...");
     try {
-      const { url, filename } = await dlFn({ data: { id } });
-      const a = document.createElement("a");
-      a.href = url;
-      if (filename) a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const { url, filename } = await withRetry(() => dlFn({ data: { id } }));
+      triggerDownload(url, filename ?? undefined);
+      toast.success("Download iniciado. Se não começar, toque novamente.", { id: toastId });
     } catch (e: any) {
-      toast.error(e?.message || "Falha ao gerar download");
+      toast.error(friendlyDownloadError(e), { id: toastId, duration: 7000 });
+    } finally {
+      setDownloadingId(null);
     }
   }
+
 
   async function onCancel(id: string) {
     try {
