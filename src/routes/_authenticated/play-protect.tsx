@@ -75,6 +75,7 @@ function PlayProtectPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const statusFn = useServerFn(getPlayProtectStatus);
