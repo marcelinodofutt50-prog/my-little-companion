@@ -370,7 +370,9 @@ function AdminPage() {
                 onSelectUser={(id) => setCustomer360(id)}
                 onOpenThread={() => setTab("chat")}
               />
+              <AdminTeamGuide onOpenSection={(id) => setTab(id as Tab)} />
               <Link to="/dashboard"><Button size="sm" variant="ghost" className="font-mono text-[10px] uppercase tracking-wider">Meu Painel</Button></Link>
+
               <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono text-[10px] uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
               </Button>
