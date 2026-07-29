@@ -252,10 +252,6 @@ function AuthPage() {
       handleAuthError(err, mode === "up" ? "signup" : "signin");
     } finally { setLoading(false); }
   }
-    } catch (err: any) {
-      handleAuthError(err, mode === "up" ? "signup" : "signin");
-    } finally { setLoading(false); }
-  }
 
 
 
