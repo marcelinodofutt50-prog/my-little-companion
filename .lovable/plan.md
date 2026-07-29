@@ -1,39 +1,69 @@
-# Plano de melhorias
+# Plano: Aautomações de alta prioridade
 
-## 1. Conversão e página de planos
+## Objetivo
+Reduzir chamados manuais, evitar pedidos pagos sem entrega e dar visibilidade de problemas no admin.
 
-- Adicionar contador de promoção relâmpago na hero (ex: "Oferta termina em 09:59:59"), persistindo deadline por sessão.
-- Destacar depoimentos acima da dobra da página de planos com notas e fotos reais.
-- Criar sticky bar de garantia no topo: "7 dias de garantia · ativação automática · suporte 24/7".
-- Simplificar o comparativo de planos: badge "Mais popular" no mensal, destacar economia do vitalício.
-- Adicionar FAQ flutuante com busca por palavra-chave.
+## Fase 1 — A automações que evitam cliente sem acesso
 
-## 2. Experiência pós-compra
+1. **Conciliação automática de pedidos pendentes**
+   - Criar server route `/api/public/hooks/reconcile-pending`.
+   - Varre pedidos `status = 'pending' && created_at > now() - interval '24 hours'`.
+   - Consulta Mercado Pago via `mp_payment_id` (fallback por `preference_id`) e detecta status `approved`.
+   - Chama função de entrega de licença já existente, salvando `paid_at` e ativando a licença.
+   - Segurança: verifica `CRON_TRIGGER_TOKEN` no header `authorization`; sem token, 401.
 
-- Criar checklist de primeiros passos no dashboard com progresso salvo.
-- Adicionar widget de "status do meu pedido" com timeline (PIX pendente → pago → licença gerada → entregue).
-- Notificações push in-app para renovação, suspensão e aprovação de reembolso.
-- Criar central de ajuda com busca por tópicos (instalação, login, servidor, APK, presentes).
-- Melhorar o empty-state do dashboard quando o usuário ainda não tem licença.
+2. **Alerta de pedido com pagamento falho/aprovado e não entregue**
+   - Novo card no admin `AdminActiveProblems.tsx`: "Pedidos pagos sem entrega", "Pagamentos rejeitados", "Jobs travados".
+   - Dados de 1 consulta agregada no servidor (`admin-problems.functions.ts`).
+   - Atualiza a cada 60s via polling para o admin.
 
-## 3. Painel administrativo
+3. **Dashboard de "problemas ativos" no admin mobile/desktop**
+   - Seção fixa no topo do admin, com contadores e badges de cor.
+   - Cada item leva direto à ação (pedido, chat, job).
 
-- Adicionar busca global e filtros por status na lista de pedidos.
-- Permitir ações em lote: aprovar reembolsos, reativar licenças, marcar como atendido.
-- Adicionar cards de KPI no topo (receita do dia, pedidos pendentes, tickets abertos, taxa de conversão).
-- Criar log de auditoria visível com ações de admin, IPs e timestamps.
-- Adicionar atalho de "assumir ticket" e indicador de ticket em espera há mais tempo.
+## Fase 2 — Manutenção automática
 
-## Escopo técnico
+4. **Limpeza automática de jobs travados do Play Protect**
+   - Reutilizar `expire_stale_apk_jobs()` já existente.
+   - Cron chama `/api/public/hooks/cleanup-apk-jobs` a cada 10 minutos.
 
-- Novos componentes em `src/components/`.
-- Novos server functions quando necessário (busca, KPIs, ações em lote).
-- Sem alterações de schema complexas: aproveita tabelas existentes (`orders`, `licenses`, `refunds`, `support_threads`).
+## Fase 3 — Conversão e UX
+
+5. **Renovação em 1 clique no dashboard**
+   - Card "Renovar agora" quando licença ativa expira em ≤ 7 dias.
+   - Reutiliza função de checkout, criando novo pedido com o mesmo `plan_slug`.
+
+6. **Auto-preenchimento de credenciais formatadas**
+   - Botão "Copiar tudo" na licença ativa, com texto já formatado para colar no app.
+
+## Fase 4 — Relatório
+
+7. **Relatório diário compacto no admin**
+   - Card com: faturamento 24h, novos clientes, licenças ativas, reembolsos pendentes, jobs pendentes.
 
 ## Ordem de implementação
 
-1. Página de planos (conversão — impacto rápido).
-2. Dashboard pós-compra (retenção).
-3. Admin (operacional).
+1. Reconcile pending ( maior impacto financeiro ).
+2. Admin problems + active problems dashboard.
+3. Cleanup cron + renewal 1-click.
+4. Daily report.
 
-Aprova pra eu começar?
+## O que será alterado
+
+- Novos arquivos:
+  - `src/routes/api/public/hooks/reconcile-pending.ts`
+  - `src/routes/api/public/hooks/cleanup-apk-jobs.ts`
+  - `src/lib/admin-problems.functions.ts`
+  - `src/components/AdminActiveProblems.tsx`
+  - `src/components/LicenseRenewCard.tsx`
+  - `src/components/AdminDailyReport.tsx`
+- Edições:
+  - `src/routes/_authenticated/admin.tsx` para adicionar as novas seções.
+  - `src/routes/_authenticated/dashboard.tsx` para card de renovação.
+  - SQL via `supabase--insert` para configurar os cron jobs.
+
+## Testes
+
+- Criar pedido de teste `pending`, simular webhook atrasado e rodar o reconcile via cron para validar entrega.
+- Verificar que jobs travados são expirados automaticamente.
+- Confirmar que problemas aparecem no admin com contadores corretos.
