@@ -498,7 +498,7 @@ function PlansPage() {
             </div>
 
             <LegacyLookup />
-          </div>
+          </details>
         )}
 
         <PreCheckoutFaq />
