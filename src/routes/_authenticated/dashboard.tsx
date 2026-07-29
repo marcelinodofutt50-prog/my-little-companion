@@ -288,6 +288,10 @@ function DashboardPage() {
           return <OnboardingChecklist />;
         })()}
 
+        <HowItWorksSteps variant="dashboard" className="mt-5" />
+
+
+
         {(() => {
           const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
           if (active.length === 0) return null;
