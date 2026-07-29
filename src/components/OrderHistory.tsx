@@ -93,7 +93,7 @@ export function OrderHistory() {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Pedidos concluídos" value={String(done.length)} />
+        <Stat label="Total de pedidos" value={String(orders.length)} />
         <Stat label="Total investido" value={`R$ ${totalPago.toFixed(2).replace(".", ",")}`} />
         <Stat label="Entregas automáticas" value={`${done.filter((o) => o.stage === "delivered").length}`} />
       </div>
