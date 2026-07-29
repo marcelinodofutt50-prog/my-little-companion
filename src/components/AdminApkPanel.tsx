@@ -54,6 +54,7 @@ export function AdminApkPanel() {
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
   const [q, setQ] = useState("");
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [uploadPct, setUploadPct] = useState(0);
@@ -64,6 +65,22 @@ export function AdminApkPanel() {
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const knownIdsRef = useRef<Set<string>>(new Set());
   const bootedRef = useRef(false);
+
+  const clearAllFn = useServerFn(adminClearApkJobs);
+
+  async function handleClearAll() {
+    if (!confirm("Limpar todos os jobs finalizados (prontos, falhos, expirados e cancelados)? Os arquivos serão apagados do storage. Jobs em andamento e testes grátis são preservados.")) return;
+    setClearing(true);
+    try {
+      const r = await clearAllFn({ data: {} });
+      toast.success(r.removed ? `${r.removed} job(s) removido(s)` : "Nada para limpar");
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao limpar a lista");
+    } finally {
+      setClearing(false);
+    }
+  }
 
   async function refresh() {
     setLoading(true);
