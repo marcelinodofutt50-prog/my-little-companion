@@ -328,18 +328,23 @@ function AdminPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-[1400px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-4 sm:py-6 lg:pb-6">
         {/* HEADER BAR */}
-        <div className="terminal-card relative overflow-hidden rounded-xl border-border/60 p-4 sm:p-5">
-          <div className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-neon/50 to-transparent" />
+        <div className="osint-panel osint-corners osint-sweep relative overflow-hidden p-4 sm:p-5" style={{ ["--osint-sweep-h" as any]: "150px" }}>
           <div className="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-violet/[0.07] blur-3xl" />
+          <div className="pointer-events-none absolute -left-24 bottom--10 h-48 w-48 rounded-full bg-neon/[0.05] blur-3xl" />
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.35em] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.35em] text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5 text-violet" /> admin control center
+                <span className="hidden h-3 w-px bg-border sm:inline-block" />
+                <span className="hidden text-neon/70 sm:inline">node//shadow-01</span>
+                <span className="hidden text-cyan/60 sm:inline">sec::lvl-4</span>
               </div>
-              <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">Painel Administrativo</h1>
+              <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
+                Painel Administrativo
+              </h1>
               <div className="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/[0.07] px-2.5 py-1 text-neon">
-                  <Circle className="h-1.5 w-1.5 fill-neon text-neon" /> operacional
+                  <Circle className="h-1.5 w-1.5 fill-neon text-neon pulse-dot" /> operacional
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-muted-foreground">
                   <ShieldCheck className="h-3 w-3 text-cyan" />
@@ -359,15 +364,17 @@ function AdminPage() {
               </Button>
             </div>
           </div>
+          <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
         </div>
 
         {/* STATS */}
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ExecStat icon={Users} label="Clientes cadastrados" value={stats ? String(stats.users) : "—"} sub="conta total" accent="cyan" />
-          <ExecStat icon={KeyRound} label="Licenças ativas" value={stats ? String(stats.licenses) : "—"} sub="em operação" accent="neon" />
-          <ExecStat icon={DollarSign} label="Receita bruta" value={stats ? formatBrl(stats.revenue) : "—"} sub="pedidos pagos" accent="violet" />
-          <ExecStat icon={Activity} label="Servidor" value="ONLINE" sub="uptime 99.9%" accent="neon" pulse />
+          <ExecStat icon={Users} label="Clientes cadastrados" value={stats ? String(stats.users) : "—"} sub="conta total" accent="cyan" code="TGT-001" />
+          <ExecStat icon={KeyRound} label="Licenças ativas" value={stats ? String(stats.licenses) : "—"} sub="em operação" accent="neon" code="LIC-002" />
+          <ExecStat icon={DollarSign} label="Receita bruta" value={stats ? formatBrl(stats.revenue) : "—"} sub="pedidos pagos" accent="violet" code="FIN-003" />
+          <ExecStat icon={Activity} label="Servidor" value="ONLINE" sub="uptime 99.9%" accent="neon" pulse code="OPS-004" />
         </div>
+
 
 
         {/* GROUPED LAYOUT: sidebar (desktop) + content */}
@@ -375,7 +382,12 @@ function AdminPage() {
           {/* SIDEBAR NAV */}
           <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
             {/* Desktop: grouped vertical nav */}
-            <nav className="hidden lg:block terminal-card relative rounded-xl border-border/60 p-2.5">
+            <nav className="hidden lg:block osint-panel osint-corners relative p-2.5">
+              <div className="mb-2 flex items-center justify-between px-2 pt-1 osint-label">
+                <span>recon // seções</span>
+                <span className="text-neon/60">{allTabs.length}</span>
+              </div>
+
               <div className="mb-2.5">
                 <input
                   value={navQuery}
@@ -1236,24 +1248,27 @@ function AdminLogsPanel() {
   );
 }
 
-function ExecStat({ icon: Icon, label, value, sub, accent, pulse }: { icon: any; label: string; value: string; sub: string; accent: "neon" | "cyan" | "violet"; pulse?: boolean }) {
+function ExecStat({ icon: Icon, label, value, sub, accent, pulse, code }: { icon: any; label: string; value: string; sub: string; accent: "neon" | "cyan" | "violet"; pulse?: boolean; code?: string }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
-    <div className="terminal-card group relative overflow-hidden rounded-xl border-border/60 p-4 transition-colors hover:border-foreground/20">
+    <div className="osint-panel osint-corners group relative overflow-hidden p-4 transition-colors hover:border-foreground/25">
       <div className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50 ${color}`} />
       <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-        <span className="truncate">{label}</span>
+        <span className="truncate pl-2.5">{label}</span>
         <Icon className={`h-3.5 w-3.5 shrink-0 opacity-80 ${color}`} />
       </div>
-      <div className={`mt-2.5 flex items-center gap-2 font-mono text-[26px] leading-none font-bold tabular-nums ${color}`}>
+      <div className={`mt-2.5 flex items-center gap-2 pl-2.5 font-mono text-[26px] leading-none font-bold tabular-nums ${color}`}>
         {pulse && <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-current" />}
         {value}
       </div>
-      <div className="mt-2 font-mono text-[10px] uppercase text-muted-foreground/60">{sub}</div>
+      <div className="mt-2 flex items-center justify-between gap-2 pl-2.5 font-mono text-[10px] uppercase text-muted-foreground/60">
+        <span className="truncate">{sub}</span>
+        {code && <span className={`shrink-0 tracking-[0.18em] opacity-40 ${color}`}>{code}</span>}
+      </div>
     </div>
-
   );
 }
+
 
 function demoAuditEntries(adminEmail: string): AuditLogEntry[] {
   const now = Date.now();
