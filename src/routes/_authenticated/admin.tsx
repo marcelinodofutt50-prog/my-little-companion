@@ -290,10 +290,16 @@ function AdminPage() {
       setLicenses(await licensesFn());
     } catch (e: any) { toast.error(e.message); }
   }
-  /** Corrige o bug de login no BMob: +1 dia, reaplica a mesma senha, volta a data. */
-  async function fixLoginBug(id: string) {
+  /** Abre o modal explicativo antes de corrigir o bug de login no BMob. */
+  function openFixLoginBug(id: string) {
     if (fixingLic) return;
-    if (!confirm("Corrigir bug de login deste cliente?\n\nVamos empurrar a validade 1 dia, reaplicar a mesma senha no painel e voltar a data original.")) return;
+    setFixBugDialog({ open: true, licenseId: id });
+  }
+  /** Executa a correção: +1 dia, reaplica a mesma senha, volta a data. */
+  async function confirmFixLoginBug() {
+    const id = fixBugDialog.licenseId;
+    if (!id || fixingLic) return;
+    setFixBugDialog({ open: false, licenseId: null });
     setFixingLic(id);
     try {
       const r: any = await fixBugFn({ data: { licenseId: id } });
