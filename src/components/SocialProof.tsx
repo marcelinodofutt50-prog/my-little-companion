@@ -74,22 +74,6 @@ export function SocialProofStrip() {
           ))}
         </div>
 
-        {sales.length > 0 && (
-          <div className="mt-6">
-            <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-neon">// vendas recentes</div>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {sales.map((s) => (
-                <div key={s.id} className="flex-shrink-0 rounded border border-neon/20 bg-neon/5 px-3 py-2 font-mono text-[11px]">
-                  <span className="text-neon">✓</span>{" "}
-                  <span className="font-bold">{s.first_name}{s.last_initial ? ` ${s.last_initial}.` : ""}</span>
-                  {" ativou "}
-                  <span className="text-cyan">{planLabel(s.plan_slug)}</span>
-                  <span className="ml-2 text-muted-foreground">{timeAgo(s.created_at)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );
