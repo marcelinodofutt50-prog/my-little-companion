@@ -28,7 +28,10 @@ import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
+import { AdminActiveProblems } from "@/components/AdminActiveProblems";
+import { AdminDailyReport } from "@/components/AdminDailyReport";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
+
 
 
 
@@ -477,8 +480,14 @@ function AdminPage() {
                   conversionRate={conversionRate}
                 />
 
+                <AdminDailyReport />
+                <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />
+
+
+
                 {/* Mini strip: HOJE */}
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
                   <MiniStat label="Pedidos hoje" value={String(ordersToday.length)} accent="cyan" />
                   <MiniStat label="Pagos hoje" value={String(paidToday.length)} accent="neon" />
                   <MiniStat label="Receita hoje" value={formatBrl(revenueToday)} accent="violet" />

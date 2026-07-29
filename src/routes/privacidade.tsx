@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
+import { siteUrl } from "@/lib/site-url";
 
-const SITE = "https://www.shadowstore.com";
 
 export const Route = createFileRoute("/privacidade")({
   head: () => ({
@@ -11,10 +11,11 @@ export const Route = createFileRoute("/privacidade")({
       { property: "og:title", content: "Política de Privacidade — Shadow" },
       { property: "og:description", content: "Dados coletados, finalidade, retenção e direitos do titular." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: `${SITE}/privacidade` },
+      { property: "og:url", content: siteUrl("/privacidade") },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: `${SITE}/privacidade` }],
+    links: [{ rel: "canonical", href: siteUrl("/privacidade") }],
+
   }),
   component: PrivacyPage,
 });

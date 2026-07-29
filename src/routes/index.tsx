@@ -12,7 +12,9 @@ import { ImpossibleProof } from "@/components/ImpossibleProof";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
+import { siteUrl } from "@/lib/site-url";
 import shadowMark from "@/assets/shadow-mask.png";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,10 +28,11 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Shadow — Your Shadow Everywhere" },
       { property: "og:description", content: "Licenças BTMOB com ativação automática via PIX, painel completo e suporte 24/7." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://www.shadowstore.com/" },
+      { property: "og:url", content: siteUrl("/") },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://www.shadowstore.com/" }],
+    links: [{ rel: "canonical", href: siteUrl("/") }],
+
   }),
   component: LandingPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,

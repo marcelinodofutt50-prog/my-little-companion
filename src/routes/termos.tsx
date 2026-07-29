@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
+import { siteUrl } from "@/lib/site-url";
 
-const SITE = "https://www.shadowstore.com";
 
 export const Route = createFileRoute("/termos")({
   head: () => ({
@@ -11,10 +11,11 @@ export const Route = createFileRoute("/termos")({
       { property: "og:title", content: "Termos de Uso — Shadow" },
       { property: "og:description", content: "Regras de licenciamento, entrega, reembolso e suporte da Shadow." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: `${SITE}/termos` },
+      { property: "og:url", content: siteUrl("/termos") },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: `${SITE}/termos` }],
+    links: [{ rel: "canonical", href: siteUrl("/termos") }],
+
   }),
   component: TermsPage,
 });
