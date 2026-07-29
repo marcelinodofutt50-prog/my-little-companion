@@ -12,27 +12,56 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: active }, consumedRes, pendingRes, totalRes] = await Promise.all([
+    const [{ data: active }, consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", CONSUMED_STATUSES as any),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).is("cleared_at", null),
+      supabase
+        .from("apk_jobs")
+        .select("id,created_at,status")
+        .eq("user_id", userId)
+        .in("status", PENDING_STATUSES as any)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).in("status", PENDING_STATUSES as any),
     ]);
     const consumed = consumedRes.count ?? 0;
     const pending = pendingRes.count ?? 0;
     const total = totalRes.count ?? 0;
     const hasActive = Boolean(active);
+
+    // Posição na fila global = quantos jobs pendentes entraram antes do meu.
+    let queuePosition: number | null = null;
+    if (myOldest?.data?.created_at) {
+      const { count } = await supabase
+        .from("apk_jobs")
+        .select("id", { count: "exact", head: true })
+        .in("status", PENDING_STATUSES as any)
+        .lt("created_at", myOldest.data.created_at);
+      queuePosition = (count ?? 0) + 1;
+    }
+    const queueTotal = globalQueue.count ?? 0;
+    // Estimativa simples: ~8 min por APK à frente na fila.
+    const etaMinutes = queuePosition ? Math.max(5, queuePosition * 8) : null;
+
     return {
       hasActivePlan: hasActive,
       freeTrialUsed: consumed > 0,
       totalJobs: total,
       pendingJobs: pending,
+      queuePosition,
+      queueTotal,
+      etaMinutes,
+      currentStatus: (myOldest?.data?.status as string | undefined) ?? null,
       canSubmit: (hasActive || consumed === 0) && pending === 0,
       blockReason: pending > 0
         ? "Você já tem um APK sendo processado. Aguarde ele finalizar para enviar o próximo."
         : (!hasActive && consumed > 0)
           ? "Teste grátis já utilizado. Ative o plano Play Protect Mensal para continuar."
           : null,
+
     };
   });
 
