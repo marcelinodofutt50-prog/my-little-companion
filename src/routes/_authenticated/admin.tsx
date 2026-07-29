@@ -1072,7 +1072,9 @@ function AdminPage() {
                 </table>
               </div>
             </div>
+            </div>
           )}
+
           {tab === "referrals" && <ReferralsAdminPanel />}
           {tab === "health" && <AdminHealthPanel onOpenLogs={() => setTab("logs")} />}
           {tab === "logs" && <AdminLogsPanel />}
