@@ -21,6 +21,7 @@ import { PlanAdvisor } from "@/components/PlanAdvisor";
 import { CheckoutFaqFloat } from "@/components/CheckoutFaqFloat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrl } from "@/lib/plans";
 import { createCheckout } from "@/lib/checkout.functions";
