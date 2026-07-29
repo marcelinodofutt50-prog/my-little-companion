@@ -147,7 +147,7 @@ export function OrderHistory() {
         <div className="rounded-lg border border-dashed border-border/50 p-8 text-center">
           <Receipt className="mx-auto h-6 w-6 text-muted-foreground/60" />
           <p className="mt-2 font-mono text-xs text-muted-foreground">
-            Nenhum pedido concluído por aqui ainda. Assim que uma compra for entregue, ela aparece neste histórico.
+            Nenhum pedido encontrado neste filtro. Assim que uma compra for iniciada, ela aparece aqui.
           </p>
         </div>
       ) : (
