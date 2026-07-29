@@ -5,11 +5,33 @@
  */
 import { getRequestHeader } from "@tanstack/react-start/server";
 
-/** Máximo de contas criadas a partir do mesmo IP em 24h. */
-export const MAX_ACCOUNTS_PER_IP_24H = 3;
-/** Acima disso marcamos como suspeito para revisão do admin (sem bloquear). */
-export const SUSPICIOUS_THRESHOLD = 2;
-const WINDOW_MS = 24 * 60 * 60 * 1000;
+/**
+ * Configuração por variável de ambiente (lida a cada request, sem recompilar):
+ * - ANTIFRAUD_MAX_ACCOUNTS_PER_IP: máximo de contas por IP na janela (default 3)
+ * - ANTIFRAUD_SUSPICIOUS_THRESHOLD: acima disso marca como suspeito (default 2)
+ * - ANTIFRAUD_WINDOW_HOURS: tamanho da janela em horas (default 24)
+ */
+function envInt(name: string, fallback: number, min: number, max: number): number {
+  const raw = process.env[name];
+  if (raw == null || raw === "") return fallback;
+  const n = Number.parseInt(String(raw).trim(), 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+export function antifraudConfig() {
+  const maxAccounts = envInt("ANTIFRAUD_MAX_ACCOUNTS_PER_IP", 3, 1, 1000);
+  const suspicious = envInt("ANTIFRAUD_SUSPICIOUS_THRESHOLD", 2, 1, 1000);
+  const windowHours = envInt("ANTIFRAUD_WINDOW_HOURS", 24, 1, 24 * 30);
+  return {
+    maxAccounts,
+    // limiar de suspeito nunca acima do bloqueio: seria inútil
+    suspiciousThreshold: Math.min(suspicious, maxAccounts),
+    windowMs: windowHours * 60 * 60 * 1000,
+    windowHours,
+  };
+}
+
 
 /** IP real do cliente, lido apenas de headers do servidor. */
 export function clientIp(): string | null {
@@ -46,7 +68,7 @@ export function maskEmail(email?: string | null): string | null {
 
 export async function countRecentSignups(ipHash: string): Promise<number> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const since = new Date(Date.now() - WINDOW_MS).toISOString();
+  const since = new Date(Date.now() - antifraudConfig().windowMs).toISOString();
   const { count } = await supabaseAdmin
     .from("signup_ip_log")
     .select("id", { count: "exact", head: true })
@@ -63,15 +85,15 @@ export type SignupGuardResult = {
 
 export async function evaluateSignup(): Promise<SignupGuardResult> {
   try {
+    const cfg = antifraudConfig();
     const ip = clientIp();
     if (!ip) return { allowed: true, accountsInWindow: 0 };
     const used = await countRecentSignups(await hashIp(ip));
-    if (used >= MAX_ACCOUNTS_PER_IP_24H) {
+    if (used >= cfg.maxAccounts) {
       return {
         allowed: false,
         accountsInWindow: used,
-        reason:
-          "Detectamos várias contas criadas nesta conexão nas últimas 24 horas. Se você é um cliente real, fale com o suporte que liberamos manualmente.",
+        reason: `Detectamos várias contas criadas nesta conexão nas últimas ${cfg.windowHours} horas. Se você é um cliente real, fale com o suporte que liberamos manualmente.`,
       };
     }
     return { allowed: true, accountsInWindow: used };
@@ -94,8 +116,9 @@ export async function persistSignup(input: { email?: string; userId?: string | n
       user_id: input.userId ?? null,
       user_agent: clientUserAgent(),
       accounts_in_window: used + 1,
-      suspicious: used + 1 > SUSPICIOUS_THRESHOLD,
+      suspicious: used + 1 > antifraudConfig().suspiciousThreshold,
     });
+
   } catch {
     // registro nunca quebra o cadastro
   }
