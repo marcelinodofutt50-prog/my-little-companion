@@ -126,13 +126,15 @@ function SupportPage() {
     try {
       const res: any = await sendFn({ data: { threadId: thread.id, ...payload } });
       if (res?.thread_id && res.thread_id !== thread.id) {
-        // Server auto-opened a new thread (previous one was closed). Reload.
-        const t = await openFn();
-        setThread(t);
-        const m = await listFn({ data: { threadId: t.id } });
-        setMsgs(m as Msg[]);
+        // Servidor abriu um ticket novo (o anterior estava encerrado).
+        // Trocar a thread já dispara o carregamento das mensagens + realtime.
+        setThread((prev) => (prev ? { ...prev, id: res.thread_id, status: "open" } : prev));
+      } else if (res?.id) {
+        // Não depende só do realtime: mostra a mensagem imediatamente.
+        setMsgs((prev) => (prev.some((x) => x.id === res.id) ? prev : [...prev, res as Msg]));
       }
       setPending((prev) => prev.filter((p) => p.clientId !== clientId));
+
     } catch (e: any) {
       const message = e?.message ?? "Falha ao enviar";
       setPending((prev) => prev.map((p) => p.clientId === clientId ? { ...p, status: "failed", error: message } : p));
