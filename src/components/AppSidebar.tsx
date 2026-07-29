@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store } from "lucide-react";
+import { LayoutDashboard,
+  Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +25,7 @@ const primary: Item[] = [
   { title: "Planos", url: "/planos", icon: Sparkles },
   { title: "Mercado", url: "/mercado", icon: Store },
   { title: "Indicações", url: "/indicacoes", icon: Users },
+  { title: "Presentes", url: "/presentes", icon: Gift },
   { title: "Suporte", url: "/suporte", icon: LifeBuoy },
 ];
 
