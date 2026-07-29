@@ -91,6 +91,8 @@ const TAB_DESC: Record<Tab, string> = {
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
+  // Ficha 360º do cliente (aberta pela busca global Ctrl+K)
+  const [customer360, setCustomer360] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(null);
   const [users, setUsers] = useState<any[]>([]);
