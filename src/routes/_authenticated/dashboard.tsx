@@ -269,7 +269,7 @@ function DashboardPage() {
                         <img src={shadowMark} alt="Shadow" className="h-12 w-12 object-contain drop-shadow-[0_0_18px_rgba(201,168,76,0.55)] md:h-14 md:w-14" />
                       </div>
                       <div className="min-w-0">
-                        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-neon/80">// operator</div>
+                        <div className="osint-label text-neon/80">// operator</div>
                         <h1 className="rainbow-text mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{displayIdentity(displayName, email)}</h1>
                         <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                           sessão · {new Date().toLocaleDateString("pt-BR")} · {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
