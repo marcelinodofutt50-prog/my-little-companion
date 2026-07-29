@@ -291,11 +291,16 @@ function AuthPage() {
           );
           return;
         }
-        // 2) Antifraude: limite de contas por conexão (IP em hash) numa janela de 24h.
-        const guard = await checkSignupAllowed().catch(() => ({ allowed: true }) as any);
+        // 2) Antifraude: rate limit de tentativas + limite de contas por conexão (IP em hash).
+        const guard = await checkSignupAllowed({ data: { email: cleanEmail } })
+          .catch(() => ({ allowed: true }) as any);
         if (!guard.allowed) {
+          if (guard.retryAfter) {
+            setSignupBlockUntil(Date.now() + guard.retryAfter * 1000);
+          }
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
+        setSignupBlockUntil(null);
         const { data: signUpData, error } = await supabase.auth.signUp({
           email: cleanEmail, password, options: { emailRedirectTo: siteUrl() },
         });
