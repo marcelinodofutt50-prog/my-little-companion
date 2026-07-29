@@ -60,9 +60,32 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "health" | "audit" | "apk" | "market" | "updates" | "refunds" | "selftest";
 
+// Explicação em linguagem simples de cada seção do painel.
+const TAB_DESC: Record<Tab, string> = {
+  overview: "Resumo do dia: quanto entrou, o que está pendente e atalhos rápidos.",
+  ia: "Diagnóstico automático: a IA aponta erros e o que precisa de atenção.",
+  chat: "Conversas ao vivo com os clientes. Assuma o ticket e responda por aqui.",
+  issue: "Criar um login manualmente para um cliente, sem passar pelo pagamento.",
+  legacy: "Clientes antigos (v4.5.7) que pagam a mensalidade de servidor de R$ 250.",
+  external: "Quem pagou por fora (PIX direto). Aqui você estende o acesso na mão.",
+  users: "Todas as contas cadastradas no site, com e-mail e data de criação.",
+  licenses: "Todos os logins criados: ativos, vencendo, expirados e revogados.",
+  orders: "Todas as compras: quem pagou, quanto, quando e se foi entregue.",
+  market: "Produtos do Mercado: cadastrar, editar preço, imagem e ativar/desativar.",
+  referrals: "Indicações e cashback: quem indicou quem e quanto tem a receber.",
+  refunds: "Pedidos de reembolso. Você tem 2 dias para aprovar ou recusar cada um.",
+  staff: "Quem é admin ou moderador. Cuidado: admin vê e altera tudo.",
+  health: "Saúde do sistema: erros recentes, falhas de entrega e alertas.",
+  logs: "Registro técnico do servidor, útil para investigar um problema específico.",
+  audit: "Histórico de ações dos administradores, com data e responsável.",
+  apk: "Fila do Play Protect: APKs enviados pelos clientes aguardando processamento.",
+  updates: "Publicar uma nova versão do app para os clientes baixarem.",
+  selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
+};
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
+  const [navQuery, setNavQuery] = useState("");
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
