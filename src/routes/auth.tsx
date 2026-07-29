@@ -287,6 +287,9 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
+    if (mode === "up" && signupBlockSecs > 0) {
+      return toast.error(`Muitas tentativas. Aguarde ${signupBlockSecs}s para tentar de novo.`);
+    }
     const cleanEmail = normalizeEmail(email);
     const parsed = schema.safeParse({ email: cleanEmail, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
