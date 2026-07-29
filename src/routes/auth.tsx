@@ -238,6 +238,12 @@ function AuthPage() {
         if (error) throw error;
         // await: o fire-and-forget podia perder o registro se a página navegasse logo após o cadastro.
         await recordSignupIp({ data: { email, userId: signUpData.user?.id ?? null } }).catch(() => {});
+        // Se o projeto estiver com confirmação desligada, o Supabase já devolve sessão: entra direto.
+        if (signUpData.session) {
+          clearLocalLimits();
+          navigate({ to: (next as any) || "/dashboard" });
+          return;
+        }
         toast.success("Conta criada! Confirme seu e-mail.");
         setEmailBlocked(false);
         track("signup", "sent");
