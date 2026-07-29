@@ -102,10 +102,12 @@ function AdminPage() {
   const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">("todos");
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [threadsOpenCount, setThreadsOpenCount] = useState(0);
+  // Badge do chat = SÓ mensagens não lidas (estilo WhatsApp), não tickets abertos.
+  const [threadsUnreadCount, setThreadsUnreadCount] = useState(0);
   // Badges "precisa de ação" por seção, em tempo real (Realtime + poll 30s).
   const { counts: sectionCounts, updatedAt: countsUpdatedAt } = useAdminSectionCounts(true);
   const navBadges: Record<string, number> = {
-    chat: Math.max(threadsOpenCount, sectionCounts.chat),
+    chat: Math.max(threadsUnreadCount, sectionCounts.chat),
     orders: sectionCounts.orders,
     refunds: sectionCounts.refunds,
     apk: sectionCounts.apk,
@@ -144,7 +146,13 @@ function AdminPage() {
   const inflightRef = useRef<{ [K in "stats" | "users" | "orders" | "licenses" | "roles"]?: Promise<any> }>({});
 
   const loadThreadsCount = useCallback(() => {
-    threadsCountFn({ data: { filter: "open" } }).then((t: any) => setThreadsOpenCount((t as any[]).length)).catch(() => {});
+    threadsCountFn({ data: { filter: "open" } })
+      .then((t: any) => {
+        const list = (t as any[]) ?? [];
+        setThreadsOpenCount(list.length);
+        setThreadsUnreadCount(list.filter((x) => Number(x?.unread_by_staff ?? 0) > 0).length);
+      })
+      .catch(() => {});
   }, [threadsCountFn]);
 
   const loadStats = useCallback(() => {
@@ -456,9 +464,12 @@ function AdminPage() {
                   {activeMeta.hint && <span className="ml-1 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
                   {(navBadges[tab] ?? 0) > 0 && (
                     <span className="rounded-full bg-neon/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-neon">
-                      {navBadges[tab]} pendente{navBadges[tab] > 1 ? "s" : ""}
+                      {tab === "chat"
+                        ? `${navBadges[tab]} não lida${navBadges[tab] > 1 ? "s" : ""}`
+                        : `${navBadges[tab]} pendente${navBadges[tab] > 1 ? "s" : ""}`}
                     </span>
                   )}
+
                   <span
                     title={countsUpdatedAt ? `Atualizado ${new Date(countsUpdatedAt).toLocaleTimeString("pt-BR")}` : "Sincronizando..."}
                     className="ml-auto flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground"
@@ -1479,7 +1490,22 @@ function AdminChatPanel() {
               >
                 {soundOn ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
               </button>
-              <span className="font-mono text-[10px] text-muted-foreground">{threads.length}</span>
+              {(() => {
+                const unread = threads.reduce((n, t) => n + (Number(t.unread_by_staff ?? 0) > 0 ? 1 : 0), 0);
+                return (
+                  <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+                    {unread > 0 && (
+                      <span
+                        title={`${unread} conversa(s) com mensagem não lida`}
+                        className="rounded-full bg-neon px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground"
+                      >
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
+                    {threads.length}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <div className="mb-2 flex gap-1">

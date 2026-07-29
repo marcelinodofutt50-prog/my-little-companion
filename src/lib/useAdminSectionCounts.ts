@@ -26,7 +26,7 @@ export function useAdminSectionCounts(enabled = true) {
     try {
       const head = { count: "exact" as const, head: true };
       const [chat, orders, refunds, migrations, apk] = await Promise.all([
-        supabase.from("support_threads").select("id", head).neq("status", "closed"),
+        supabase.from("support_threads").select("id", head).neq("status", "closed").gt("unread_by_staff", 0),
         supabase.from("orders").select("id", head).in("status", ["pending", "processing", "in_process"]),
         supabase.from("refund_requests").select("id", head).in("status", ["requested", "approved"]),
         supabase.from("migration_requests").select("id", head).eq("status", "pending"),
