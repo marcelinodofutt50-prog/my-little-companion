@@ -382,7 +382,12 @@ function AdminPage() {
           {/* SIDEBAR NAV */}
           <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
             {/* Desktop: grouped vertical nav */}
-            <nav className="hidden lg:block terminal-card relative rounded-xl border-border/60 p-2.5">
+            <nav className="hidden lg:block osint-panel osint-corners relative p-2.5">
+              <div className="mb-2 flex items-center justify-between px-2 pt-1 osint-label">
+                <span>recon // seções</span>
+                <span className="text-neon/60">{allTabs.length}</span>
+              </div>
+
               <div className="mb-2.5">
                 <input
                   value={navQuery}
