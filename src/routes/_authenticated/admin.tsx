@@ -1222,6 +1222,38 @@ function AdminPage() {
               <br />
               Isso costuma resolver travamentos de sincronização entre o pagamento e o painel da BMob. O cliente deve fechar o app e tentar entrar novamente.
             </AlertDialogDescription>
+
+            {/* Diagnóstico de IA */}
+            <div className="mt-4 rounded border border-border/40 bg-[#0a0f18] p-3">
+              <div className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-neon">
+                <Bot className="h-3.5 w-3.5" />
+                Diagnóstico automático
+              </div>
+              {bugAnalysis.loading ? (
+                <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Analisando fatores da licença e histórico de integração...
+                </div>
+              ) : bugAnalysis.diagnosis ? (
+                <div className="space-y-3">
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                    {bugAnalysis.diagnosis}
+                  </div>
+                  {bugAnalysis.factors && bugAnalysis.factors.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {bugAnalysis.factors.map((f, idx) => (
+                        <div key={idx} className={`rounded border p-2 ${f.alert ? "border-amber-400/40 bg-amber-400/10" : "border-border/30 bg-muted/20"}`}>
+                          <div className="text-[10px] uppercase text-muted-foreground">{f.label}</div>
+                          <div className={`text-xs font-semibold ${f.alert ? "text-amber-400" : "text-foreground"}`}>{f.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">Clique para abrir o caso e aguarde a análise.</div>
+              )}
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setFixBugDialog({ open: false, licenseId: null })} className="border-border/40 text-muted-foreground hover:bg-muted">
