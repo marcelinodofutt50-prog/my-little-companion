@@ -307,50 +307,105 @@ function AuthPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto flex max-w-md flex-col items-center px-4 py-16">
+      <main className="mx-auto flex max-w-md flex-col items-center px-4 py-14">
         <div className="relative">
           <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-25 blur-2xl" />
-          <img src={shadowMark} alt="Shadow" className="h-20 w-20 object-contain drop-shadow-[0_0_24px_rgba(201,168,76,0.55)]" />
+          <img src={shadowMark} alt="Shadow" className="h-16 w-16 object-contain drop-shadow-[0_0_24px_rgba(201,168,76,0.55)]" />
         </div>
-        <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight">{mode === "in" ? "Entrar" : "Criar conta"}</h1>
+        <h1 className="mt-5 font-display text-2xl font-semibold tracking-tight">
+          {mode === "in" ? "Acesse sua conta" : "Crie sua conta"}
+        </h1>
         <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.3em] text-neon/80">your shadow, everywhere</p>
 
         {confirmMessage && (
-          <div className="mt-4 flex w-full items-center gap-2 rounded border border-neon/40 bg-neon/10 px-4 py-3 text-xs text-neon">
+          <div className="mt-4 flex w-full items-center gap-2 rounded-md border border-neon/40 bg-neon/10 px-4 py-3 text-xs text-neon">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>{confirmMessage}</span>
           </div>
         )}
 
         {signupMessage && (
-          <div className="mt-4 flex w-full items-start gap-3 rounded border border-neon/40 bg-neon/10 px-4 py-4 text-xs text-neon whitespace-pre-line">
+          <div className="mt-4 flex w-full items-start gap-3 rounded-md border border-neon/40 bg-neon/10 px-4 py-4 text-xs whitespace-pre-line text-neon">
             <Mail className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{signupMessage}</span>
           </div>
         )}
 
-        <form onSubmit={submit} className="mt-8 w-full terminal-card scanlines relative space-y-4 p-6">
-          <div>
-            <label className="mb-1 block font-mono text-xs uppercase text-muted-foreground">Email</label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+        <div className="mt-7 w-full terminal-card scanlines relative overflow-hidden">
+          {/* Alternância clara entre entrar e criar conta */}
+          <div className="grid grid-cols-2 border-b border-border/60">
+            {(["in", "up"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`px-4 py-3 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors ${
+                  mode === m
+                    ? "bg-neon/10 text-neon"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {m === "in" ? "Entrar" : "Criar conta"}
+              </button>
+            ))}
           </div>
-          <div>
-            <label className="mb-1 block font-mono text-xs uppercase text-muted-foreground">Senha</label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === "in" ? "current-password" : "new-password"} />
-          </div>
-          <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {mode === "in" ? "Entrar" : "Criar conta"}
-          </Button>
-          {mode === "up" && (
-            <p className="text-center font-mono text-[11px] text-muted-foreground">
-              Você entra no painel na hora. A confirmação do e-mail pode ser feita depois, lá dentro.
+
+          <form onSubmit={submit} className="space-y-5 p-6">
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                E-mail
+              </label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="voce@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                Senha
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete={mode === "in" ? "current-password" : "new-password"}
+                  placeholder={mode === "up" ? "mínimo 6 caracteres" : "••••••••"}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-neon"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {mode === "in" ? "Entrar" : "Criar conta"}
+            </Button>
+
+            <p className="flex items-start gap-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+              <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon/70" />
+              {mode === "up"
+                ? "Acesso imediato ao painel. A confirmação do e-mail pode ser feita depois, lá dentro."
+                : "Conexão criptografada. Nunca pedimos sua senha por chat ou e-mail."}
             </p>
-          )}
-        </form>
+          </form>
+        </div>
 
         {(emailBlocked || signupMessage) && (
-          <div className="mt-4 w-full rounded border border-amber-400/40 bg-amber-400/5 p-4 text-xs">
+          <div className="mt-4 w-full rounded-md border border-amber-400/40 bg-amber-400/5 p-4 text-xs">
             <p className="font-mono uppercase tracking-wider text-amber-400">Não recebeu o e-mail?</p>
             <ul className="mt-2 space-y-1 text-muted-foreground">
               <li>1. Verifique as pastas <strong>Spam</strong> e <strong>Promoções</strong>.</li>
@@ -373,12 +428,11 @@ function AuthPage() {
 
             {cooldown > 0 && (
               <p className="mt-3 font-mono text-[10px] text-amber-400">
-                Aguarde {cooldown}s antes de reenviar — o e-mail anterior ainda pode chegar. Reenviar antes disso não acelera a entrega.
+                Aguarde {cooldown}s antes de reenviar — o e-mail anterior ainda pode chegar.
               </p>
             )}
 
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-
               <Button
                 type="button"
                 variant="outline"
@@ -395,21 +449,32 @@ function AuthPage() {
                 </Link>
               </Button>
             </div>
-            <p className="mt-2 font-mono text-[10px] text-muted-foreground">
-              Se o envio estiver instável, o suporte confirma sua conta manualmente — informe o e-mail cadastrado.
-            </p>
           </div>
         )}
 
-        <button className="mt-6 font-mono text-xs uppercase text-muted-foreground hover:text-neon" onClick={() => setMode(mode === "in" ? "up" : "in")}>
-          {mode === "in" ? "Não tem conta? Registre-se" : "Já tem conta? Entrar"}
-        </button>
-        <Link to="/recuperar" className="mt-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-neon">
-          Perdi o acesso ao meu e-mail → recuperar conta
-        </Link>
-        <Lost2faHelp className="mt-6 w-full" />
-        <Link to="/" className="mt-3 text-xs text-muted-foreground hover:text-foreground">← Voltar ao início</Link>
+        {/* Ajuda fica recolhida para manter o fluxo principal limpo */}
+        <details className="mt-6 w-full rounded-md border border-border/60 bg-card/40">
+          <summary className="cursor-pointer list-none px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-neon">
+            Problemas para entrar?
+          </summary>
+          <div className="space-y-3 border-t border-border/60 p-4">
+            <Link
+              to="/recuperar"
+              className="block font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-neon"
+            >
+              Perdi o acesso ao meu e-mail → recuperar conta
+            </Link>
+            <Link
+              to="/contato"
+              className="block font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-neon"
+            >
+              Falar com o suporte
+            </Link>
+            <Lost2faHelp className="w-full" />
+          </div>
+        </details>
 
+        <Link to="/" className="mt-5 text-xs text-muted-foreground hover:text-foreground">← Voltar ao início</Link>
       </main>
     </div>
   );
