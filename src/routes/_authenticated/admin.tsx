@@ -354,9 +354,12 @@ function AdminPage() {
                 <span className="hidden h-3 w-px bg-border sm:inline-block" />
                 <span className="hidden text-neon/70 sm:inline">node//shadow-01</span>
                 <span className="hidden text-cyan/60 sm:inline">sec::lvl-4</span>
+                <span className={`rounded-full border px-2 py-px tracking-[0.2em] ${isAdminUser ? "border-neon/40 text-neon" : "border-cyan/40 text-cyan"}`}>
+                  {ROLE_LABEL[role]}
+                </span>
               </div>
               <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
-                Painel Administrativo
+                {isAdminUser ? "Painel Administrativo" : "Painel de Suporte"}
               </h1>
               <AdminTagline className="mt-1" />
 
@@ -1108,7 +1111,7 @@ function AdminPage() {
       </main>
 
       <AdminMobileNav
-        groups={tabGroups}
+        groups={visibleGroups}
         primary={["overview", "chat", "orders", "licenses"]}
         tab={tab}
         onChange={(id) => setTab(id as Tab)}
