@@ -402,6 +402,21 @@ Guarde essas informações. Você também pode consultá-las a qualquer momento 
 
   await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
 
+  // ============ Débito do cashback usado ============
+  // Sem esta baixa o saldo nunca é consumido e o mesmo cashback vira desconto infinito.
+  const usedCashback = Number(order.cashback_used ?? 0);
+  if (usedCashback > 0) {
+    const { data: alreadyDebited } = await supabaseAdmin
+      .from("cashback_ledger").select("id")
+      .eq("order_id", order.id).lt("amount", 0).maybeSingle();
+    if (!alreadyDebited) {
+      await supabaseAdmin.from("cashback_ledger").insert({
+        user_id: order.user_id, order_id: order.id, amount: -usedCashback,
+        reason: `Cashback utilizado no pedido ${order.id.slice(0, 8)}`,
+      });
+    }
+  }
+
   if (order.coupon_code) {
     const { data: coupon } = await supabaseAdmin.from("coupons").select("*").eq("code", order.coupon_code).maybeSingle();
     const { count: paidBefore } = await supabaseAdmin.from("orders")
@@ -415,7 +430,15 @@ Guarde essas informações. Você também pode consultá-las a qualquer momento 
       });
       await supabaseAdmin.from("orders").update({ cashback_credited: credit }).eq("id", order.id);
     }
+    // Consome uma unidade do cupom limitado (e desativa quando zerar).
+    if (coupon && coupon.uses_left !== null && coupon.uses_left !== undefined) {
+      const left = Math.max(0, Number(coupon.uses_left) - 1);
+      await supabaseAdmin.from("coupons")
+        .update({ uses_left: left, ...(left === 0 ? { active: false } : {}) })
+        .eq("code", coupon.code);
+    }
   }
+
 
   // ============ Referral reward ============
   // Grant reward to the referrer if this is the referred user's FIRST paid order.

@@ -53,7 +53,7 @@ export const createCheckout = createServerFn({ method: "POST" })
     let couponRow: { code: string; discount_pct: number; cashback_pct: number } | null = null;
     if (data.couponCode) {
       const { data: c } = await supabase.from("coupons").select("*").eq("code", data.couponCode.toUpperCase()).eq("active", true).maybeSingle();
-      if (c) {
+      if (c && (c.uses_left === null || c.uses_left === undefined || Number(c.uses_left) > 0)) {
         couponRow = c;
         amount = amount * (1 - (c.discount_pct ?? 0) / 100);
       }
@@ -73,9 +73,16 @@ export const createCheckout = createServerFn({ method: "POST" })
     if (data.useCashback) {
       const { data: ledger } = await supabase.from("cashback_ledger").select("amount").eq("user_id", userId);
       const balance = (ledger ?? []).reduce((s, r) => s + Number(r.amount), 0);
-      cashbackUsed = Math.min(balance, amount * 0.5); // max 50% desconto por cashback
+      // Saldo já "reservado" por pedidos pendentes ainda não pagos não pode ser
+      // reutilizado — senão o mesmo cashback vira desconto infinito.
+      const { data: pendingOrders } = await supabase
+        .from("orders").select("cashback_used").eq("user_id", userId).eq("status", "pending");
+      const reserved = (pendingOrders ?? []).reduce((s, o) => s + Number(o.cashback_used ?? 0), 0);
+      const available = Math.max(0, balance - reserved);
+      cashbackUsed = Math.max(0, Math.min(available, amount * 0.5)); // max 50% desconto por cashback
       amount = Math.max(1, amount - cashbackUsed);
     }
+
 
     // Validate + encrypt legacy claim (server renewal for old client) before persisting.
     let legacyMeta: { email: string; password_enc: string; ip: string; panel: "v457" | "v46" } | null = null;
@@ -163,7 +170,12 @@ export const createCheckout = createServerFn({ method: "POST" })
       notificationUrl,
     });
 
-    await supabase.from("orders").update({ mp_preference_id: pref.id }).eq("id", order.id);
+    {
+      // orders é somente-leitura para o usuário (RLS): a gravação do preference_id
+      // precisa do client privilegiado, senão a conciliação com o MP nunca acha o pedido.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("orders").update({ mp_preference_id: pref.id }).eq("id", order.id);
+    }
 
     return { orderId: order.id, initPoint: pref.init_point, sandboxInitPoint: pref.sandbox_init_point };
   });
