@@ -2103,7 +2103,8 @@ function AutoRevocationsPanel({ users, licenses }: { users: any[]; licenses: any
       </div>
 
       <div className="terminal-card scanlines relative overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[820px] text-sm">
           <thead className="border-b border-border/40 bg-background/40 font-mono text-[10px] uppercase text-muted-foreground">
             <tr>
               <th className="p-3 text-left">Quando</th>
