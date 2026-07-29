@@ -23,6 +23,7 @@ import { listMyUpdates, getUpdateDownloadUrl } from "@/lib/updates.functions";
 import { daysUntil, severityFromDays, severityColor, type ExpirySeverity } from "@/lib/expiry";
 import { NicknameDialog } from "@/components/NicknameDialog";
 import { SecurityWelcomeDialog } from "@/components/SecurityWelcomeDialog";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { EmailConfirmBanner } from "@/components/EmailConfirmBanner";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
@@ -65,6 +66,7 @@ function DashboardPage() {
   const [email, setEmail] = useState<string>("");
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [trialLoading, setTrialLoading] = useState(false);
   const [trialError, setTrialError] = useState<string | null>(null);
   const [trialCreds, setTrialCreds] = useState<null | { username: string; email: string; password: string; server_ip: string; expires_at: string | null; retried?: boolean }>(null);
@@ -242,7 +244,8 @@ function DashboardPage() {
 
           </header>
           <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-            <SecurityWelcomeDialog />
+            <OnboardingWizard onDone={() => setOnboardingDone(true)} onDisplayName={setDisplayName} />
+            {onboardingDone && <SecurityWelcomeDialog />}
             <EmailConfirmBanner />
             <ExpiryReminder />
 
