@@ -378,6 +378,28 @@ Guarde essas informações. Você também pode consultá-las a qualquer momento 
     } as any);
   }
 
+  // Confirma pro comprador que o presente foi entregue.
+  if (giftMeta) {
+    try {
+      const { data: buyerThread } = await supabaseAdmin
+        .from("support_threads").select("id").eq("user_id", order.user_id)
+        .neq("status", "closed").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      let bt = buyerThread?.id as string | undefined;
+      if (!bt) {
+        const { data: nt } = await supabaseAdmin.from("support_threads")
+          .insert({ user_id: order.user_id, subject: "Presente enviado 🎁", status: "open" })
+          .select("id").single();
+        bt = nt?.id;
+      }
+      if (bt) {
+        await supabaseAdmin.from("support_messages").insert({
+          thread_id: bt, sender_id: order.user_id, is_admin: true, is_system: true,
+          body: `🎁 *Presente entregue!*\n\nO acesso que você comprou já foi liberado na conta de *${giftMeta.email}*. Por segurança, as credenciais aparecem só no painel de quem recebeu.`,
+        });
+      }
+    } catch { /* best-effort */ }
+  }
+
   await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
 
   if (order.coupon_code) {
