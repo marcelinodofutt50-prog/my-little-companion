@@ -66,6 +66,13 @@ async function fulfillOrderInner(orderId: string) {
 
   const order = claimed;
 
+  // Presente: quando o pedido tem gift, a licença/renovação vai para a conta
+  // do presenteado; cashback e indicação continuam com quem pagou.
+  const giftMeta = (order as any).metadata?.gift as
+    | { recipient_id: string; email: string; message: string | null; from: string | null }
+    | undefined;
+  const beneficiaryId: string = giftMeta?.recipient_id ?? order.user_id;
+
   // Look up plan category — server-renewal orders don't create a new license.
   const { data: planRow } = await supabaseAdmin.from("plans").select("category, slug").eq("slug", order.plan_slug).maybeSingle();
 
@@ -229,11 +236,11 @@ async function fulfillOrderInner(orderId: string) {
     // then also extend any active license belonging to the user so the whole
     // account stays paid until next day 20.
     const { data: reactivated } = await supabaseAdmin
-      .rpc("reactivate_server_licenses_for_user", { _user_id: order.user_id, _paid_until: nextDay20.toISOString() });
+      .rpc("reactivate_server_licenses_for_user", { _user_id: beneficiaryId, _paid_until: nextDay20.toISOString() });
 
     const { data: activeLics } = await supabaseAdmin
       .from("licenses").select("*")
-      .eq("user_id", order.user_id).eq("is_trial", false).is("disabled_at", null);
+      .eq("user_id", beneficiaryId).eq("is_trial", false).is("disabled_at", null);
 
     const touched = [
       ...(reactivated ?? []),
@@ -306,7 +313,7 @@ async function fulfillOrderInner(orderId: string) {
   const versionTier = tierFromPlanSlug(order.plan_slug);
   const serverIpForPanel = targetPanel === "v46" ? "200.9.154.103" : "191.96.78.81";
   await supabaseAdmin.from("licenses").insert({
-    user_id: order.user_id,
+    user_id: beneficiaryId,
     order_id: order.id,
     plan_slug: order.plan_slug,
     yaarsa_username: creds.username,
@@ -326,7 +333,7 @@ async function fulfillOrderInner(orderId: string) {
     const { data: openThread } = await supabaseAdmin
       .from("support_threads")
       .select("id")
-      .eq("user_id", order.user_id)
+      .eq("user_id", beneficiaryId)
       .neq("status", "closed")
       .order("created_at", { ascending: false })
       .limit(1)
@@ -335,13 +342,16 @@ async function fulfillOrderInner(orderId: string) {
     if (!threadId) {
       const { data: nt } = await supabaseAdmin
         .from("support_threads")
-        .insert({ user_id: order.user_id, subject: "Entrega automática", status: "open" })
+        .insert({ user_id: beneficiaryId, subject: giftMeta ? "Você recebeu um presente 🎁" : "Entrega automática", status: "open" })
         .select("id").single();
       threadId = nt?.id;
     }
     if (threadId) {
       const serverLabel = targetPanel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7";
-      const body =
+      const giftHeader = giftMeta
+        ? `🎁 *Você recebeu um presente${giftMeta.from ? ` de ${giftMeta.from}` : ""}!*${giftMeta.message ? `\n\n_"${giftMeta.message}"_` : ""}\n`
+        : "";
+      const body = giftHeader +
 `✅ *Pagamento confirmado — obrigado pela preferência!*
 
 Aqui estão suas credenciais de acesso:
@@ -355,7 +365,7 @@ Aqui estão suas credenciais de acesso:
 Guarde essas informações. Você também pode consultá-las a qualquer momento no seu painel em /dashboard.`;
       await supabaseAdmin.from("support_messages").insert({
         thread_id: threadId,
-        sender_id: order.user_id,
+        sender_id: beneficiaryId,
         is_admin: true,
         is_system: true,
         body,
