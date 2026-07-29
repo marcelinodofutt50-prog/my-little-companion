@@ -574,6 +574,11 @@ function AdminPage() {
                 {/* Saúde de envio de e-mails (rate limits / falhas) */}
                 {isAdminUser && <AdminEmailMetrics />}
 
+                {/* Antifraude: cadastros por conexão (hash de IP) */}
+                {isAdminUser && <AdminAntifraudPanel />}
+
+
+
                 {/* Tendência de receita */}
                 {isAdminUser && <RevenueSparkline orders={orders} />}
 
