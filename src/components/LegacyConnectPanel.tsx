@@ -464,41 +464,75 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
                 >
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                    <div className="flex-1 space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-destructive/80">
-                          {err.category === "network" ? "Conexão"
-                            : err.category === "credential" ? "Credencial"
-                            : err.category === "not_found" ? "Não encontrado"
-                            : err.category === "server" ? "Servidor" : "Erro"}
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-destructive/90">
+                          {CATEGORY_LABEL[err.category]}
                         </span>
                         {attempts > 1 && (
                           <span className="font-mono text-[10px] text-destructive/60">tentativa {attempts}</span>
                         )}
                       </div>
-                      <div className="text-xs text-destructive">{err.message}</div>
-                      {err.category === "server" && attempts >= 2 && (
-                        <div className="text-[11px] text-destructive/80">
-                          Persistindo? Abra um chamado em <a href="/suporte" className="underline">/suporte</a> com o email <span className="font-mono">{email}</span>.
+
+                      <div className="text-sm font-semibold text-destructive">{err.title}</div>
+                      <div className="text-xs text-destructive/90">{err.message}</div>
+
+                      {err.fixes.length > 0 && (
+                        <div className="rounded-md border border-destructive/25 bg-background/40 p-2.5">
+                          <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Como resolver
+                          </div>
+                          <ol className="space-y-1">
+                            {err.fixes.map((f, i) => (
+                              <li key={i} className="flex gap-2 text-[11px] leading-relaxed text-foreground/80">
+                                <span className="font-mono text-destructive/70">{i + 1}.</span>
+                                <span>{f}</span>
+                              </li>
+                            ))}
+                          </ol>
                         </div>
                       )}
-                      {err.retryable && (
-                        <Button
-                          size="sm" variant="outline" onClick={retryAction}
-                          disabled={busy || claiming}
-                          className="mt-1 border-destructive/40 font-mono text-xs uppercase text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          {(busy || claiming) ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-2 h-3 w-3" />}
-                          Tentar novamente
-                        </Button>
-                      )}
-                      {err.category === "not_found" && (
-                        <a href="/planos" className="mt-1 inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline">
-                          Ver planos novos <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
+
+                      <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                        {err.retryable && (
+                          <Button
+                            size="sm" variant="outline" onClick={retryAction}
+                            disabled={busy || claiming}
+                            className="border-destructive/40 font-mono text-xs uppercase text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            {(busy || claiming) ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-2 h-3 w-3" />}
+                            Tentar novamente
+                          </Button>
+                        )}
+                        {err.category === "not_found" ? (
+                          <a href="/planos" className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline">
+                            Ver planos novos <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <a href="/suporte" className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline">
+                            <LifeBuoy className="h-3 w-3" /> Falar com o suporte
+                          </a>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => copy(
+                          `Erro sincronização legacy\ncódigo: ${err.code}\ncategoria: ${err.category}\nemail: ${email || "—"}\npainel: ${selectedPanel || "—"}\npasso: ${step}\ndetalhe: ${err.raw || err.message}\nhora: ${new Date().toISOString()}`,
+                          "Diagnóstico",
+                        )}
+                        className="flex w-full items-center justify-between gap-2 rounded border border-border/40 bg-muted/20 px-2 py-1.5 text-left font-mono text-[10px] text-muted-foreground hover:border-primary/40 hover:text-primary"
+                      >
+                        <span className="truncate">
+                          cód. {err.code} · painel {selectedPanel || "—"} · passo {step}
+                        </span>
+                        <span className="inline-flex shrink-0 items-center gap-1 uppercase">
+                          <Copy className="h-3 w-3" /> copiar p/ suporte
+                        </span>
+                      </button>
                     </div>
                   </div>
+
                 </motion.div>
               )}
             </div>
