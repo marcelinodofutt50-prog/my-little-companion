@@ -37,7 +37,10 @@ const schema = z.object({
 
 const COOLDOWN_KEY = "shadow.auth.emailCooldownUntil";
 const ATTEMPTS_KEY = "shadow.auth.emailAttempts";
+const LAST_EMAIL_KEY = "shadow.auth.lastEmail";
 const MAX_ATTEMPTS_PER_HOUR = 8;
+/** Trava local nunca passa de 60s: o limite real do servidor já foi ampliado. */
+const MAX_COOLDOWN_SECS = 60;
 
 function readCooldown(): number {
   if (typeof window === "undefined") return 0;
@@ -100,8 +103,9 @@ function AuthPage() {
   }, [cooldown]);
 
   function startCooldown(secs: number) {
-    writeCooldown(secs);
-    setCooldown(secs);
+    const capped = Math.min(Math.max(1, secs), MAX_COOLDOWN_SECS);
+    writeCooldown(capped);
+    setCooldown(capped);
   }
 
   /** Limpa travas locais após sucesso (evita cliente preso em "Aguarde Xs"). */
@@ -110,7 +114,21 @@ function AuthPage() {
     window.localStorage.removeItem(COOLDOWN_KEY);
     window.localStorage.removeItem(ATTEMPTS_KEY);
     setCooldown(0);
+    setEmailBlocked(false);
   }
+
+  // Outro e-mail = outra pessoa/tentativa: não herda a trava local do e-mail anterior.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return;
+    const last = window.localStorage.getItem(LAST_EMAIL_KEY);
+    if (last && last !== normalized) {
+      window.localStorage.removeItem(LAST_EMAIL_KEY);
+      clearLocalLimits();
+    }
+  }, [email]);
+
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
@@ -232,6 +250,7 @@ function AuthPage() {
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
         bumpAttempts();
+        window.localStorage.setItem(LAST_EMAIL_KEY, email.trim().toLowerCase());
         const { data: signUpData, error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
