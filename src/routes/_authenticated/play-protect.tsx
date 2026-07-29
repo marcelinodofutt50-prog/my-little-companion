@@ -310,6 +310,11 @@ function PlayProtectPage() {
                       />
                     </div>
                   ) : null}
+                  {lastSync ? (
+                    <div className="text-[11px] text-sky-300/70">
+                      Atualizado automaticamente às {lastSync.toLocaleTimeString("pt-BR")} · a cada 15s
+                    </div>
+                  ) : null}
                 </div>
               )}
 
