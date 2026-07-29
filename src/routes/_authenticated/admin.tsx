@@ -99,6 +99,15 @@ function AdminPage() {
   const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">("todos");
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [threadsOpenCount, setThreadsOpenCount] = useState(0);
+  // Badges "precisa de ação" por seção, em tempo real (Realtime + poll 30s).
+  const { counts: sectionCounts, updatedAt: countsUpdatedAt } = useAdminSectionCounts(true);
+  const navBadges: Record<string, number> = {
+    chat: Math.max(threadsOpenCount, sectionCounts.chat),
+    orders: sectionCounts.orders,
+    refunds: sectionCounts.refunds,
+    migrations: sectionCounts.migrations,
+    apk: sectionCounts.apk,
+  };
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
   const [email, setEmail] = useState("");
