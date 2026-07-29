@@ -1322,7 +1322,12 @@ function AdminChatPanel() {
     if (!activeId || !body.trim()) return;
     unlockNotifySound();
     setSending(true);
-    try { await sendFn({ data: { threadId: activeId, body: body.trim() } }); setBody(""); }
+    try {
+      const res: any = await sendFn({ data: { threadId: activeId, body: body.trim() } });
+      setBody("");
+      if (res?.id) setMsgs((prev) => (prev.some((x) => x.id === res.id) ? prev : [...prev, res as Msg]));
+    }
+
     catch (e: any) { toast.error(e.message); }
     setSending(false);
     inputRef.current?.focus();

@@ -49,40 +49,54 @@ function SupportPage() {
   const markReadFn = useServerFn(markThreadReadByCustomer);
   const setCatFn = useServerFn(setThreadCategory);
 
+  // Bootstrap: usuário + thread aberta (sem assinar realtime aqui).
   useEffect(() => {
+    let cancelled = false;
     requestNotifyPermission();
+    markOnboardingStep(ONBOARDING_STEP.SUPPORT);
     supabase.auth.getUser().then(async ({ data }) => {
       const id = data.user?.id;
-      if (!id) return;
+      if (cancelled || !id) return;
+      setUid(id);
       const { data: adminFlag } = await supabase.rpc("has_role", { _user_id: id, _role: "admin" });
-      isAdminRef.current = !!adminFlag;
+      if (!cancelled) isAdminRef.current = !!adminFlag;
     });
-    markOnboardingStep(ONBOARDING_STEP.SUPPORT);
-    supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? ""));
-    openFn().then(async (t) => {
-      setThread(t);
-      const m = await listFn({ data: { threadId: t.id } });
-      setMsgs(m as Msg[]);
-      markReadFn({ data: { threadId: t.id } }).catch(() => {});
-      const ch = supabase.channel(`t-${t.id}`).on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${t.id}` },
-        (payload) => setMsgs((prev) => {
-          const next = payload.new as Msg;
-          if (prev.some((x) => x.id === next.id)) return prev;
-          if (next.is_admin && !next.is_system) {
-            // Alertas de chat (som/desktop) são restritos a admins.
-            if (isAdminRef.current) {
-              playNotifyDing();
-              if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
-            }
-            markReadFn({ data: { threadId: t.id } }).catch(() => {});
+    openFn()
+      .then((t) => { if (!cancelled) setThread(t); })
+      .catch((e: any) => toast.error(e?.message ?? "Não foi possível abrir o atendimento"));
+    return () => { cancelled = true; };
+  }, [openFn]);
+
+  // Mensagens + realtime da thread ativa (re-assina quando a thread muda).
+  const threadId = thread?.id;
+  useEffect(() => {
+    if (!threadId) return;
+    let cancelled = false;
+    listFn({ data: { threadId } })
+      .then((m) => { if (!cancelled) setMsgs(m as Msg[]); })
+      .catch(() => {});
+    markReadFn({ data: { threadId } }).catch(() => {});
+
+    const ch = supabase.channel(`t-${threadId}`).on("postgres_changes",
+      { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
+      (payload) => setMsgs((prev) => {
+        const next = payload.new as Msg;
+        if (prev.some((x) => x.id === next.id)) return prev;
+        if (next.is_admin && !next.is_system) {
+          // Alertas de chat (som/desktop) são restritos a admins.
+          if (isAdminRef.current) {
+            playNotifyDing();
+            if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
           }
-          return [...prev, next];
-        })
-      ).subscribe();
-      return () => { supabase.removeChannel(ch); };
-    });
-  }, [openFn, listFn, markReadFn]);
+          markReadFn({ data: { threadId } }).catch(() => {});
+        }
+        return [...prev, next];
+      })
+    ).subscribe();
+
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [threadId, listFn, markReadFn]);
+
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length, pending.length]);
 
@@ -112,13 +126,15 @@ function SupportPage() {
     try {
       const res: any = await sendFn({ data: { threadId: thread.id, ...payload } });
       if (res?.thread_id && res.thread_id !== thread.id) {
-        // Server auto-opened a new thread (previous one was closed). Reload.
-        const t = await openFn();
-        setThread(t);
-        const m = await listFn({ data: { threadId: t.id } });
-        setMsgs(m as Msg[]);
+        // Servidor abriu um ticket novo (o anterior estava encerrado).
+        // Trocar a thread já dispara o carregamento das mensagens + realtime.
+        setThread((prev) => (prev ? { ...prev, id: res.thread_id, status: "open" } : prev));
+      } else if (res?.id) {
+        // Não depende só do realtime: mostra a mensagem imediatamente.
+        setMsgs((prev) => (prev.some((x) => x.id === res.id) ? prev : [...prev, res as Msg]));
       }
       setPending((prev) => prev.filter((p) => p.clientId !== clientId));
+
     } catch (e: any) {
       const message = e?.message ?? "Falha ao enviar";
       setPending((prev) => prev.map((p) => p.clientId === clientId ? { ...p, status: "failed", error: message } : p));
@@ -348,7 +364,7 @@ function SupportPage() {
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
             </Button>
             <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem..." />
-            <Button type="submit" size="icon" disabled={sending && !body.trim()}>
+            <Button type="submit" size="icon" disabled={sending || uploading || !body.trim()}>
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
