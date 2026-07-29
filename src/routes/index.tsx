@@ -49,6 +49,7 @@ const plans = [
     accent: "cyan",
     descKey: "plan.7d.desc",
     featureKeys: ["plan.f.panel", "plan.f.aes", "plan.f.support"],
+    highlight: false,
   },
   {
     slug: "login-30d",
