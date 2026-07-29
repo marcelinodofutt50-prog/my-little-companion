@@ -237,7 +237,6 @@ Instrução final: Dê um diagnóstico com 3 fatores numerados (ex: 1. Venciment
       model: gateway("google/gemini-3.6-flash"),
       prompt,
       temperature: 0.2,
-      maxTokens: 400,
     });
 
     return {
