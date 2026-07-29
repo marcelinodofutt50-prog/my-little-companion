@@ -1269,18 +1269,24 @@ function AdminChatPanel() {
   const assumeFn = useServerFn(adminAssumeThread);
   const closeFn = useServerFn(adminCloseThread);
 
-  const refreshThreads = () => threadsFn({ data: { filter } }).then((t) => setThreads(t as Thread[])).catch(() => {});
+  const refreshThreads = () => threadsFn({ data: { filter } })
+    .then((t) => { setThreads(t as Thread[]); setLoadError(null); })
+    .catch((e) => setLoadError(e instanceof Error ? e.message : String(e)));
 
 
   useEffect(() => {
     requestNotifyPermission();
     threadsFn({ data: { filter } }).then((t) => {
       setThreads(t as Thread[]);
+      setLoadError(null);
       setLoading(false);
       // Em telas pequenas mostramos a lista primeiro (master-detail)
       const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
       if (isDesktop && (t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
-    }).catch(() => setLoading(false));
+    }).catch((e) => {
+      setLoadError(e instanceof Error ? e.message : String(e));
+      setLoading(false);
+    });
     const ch = supabase.channel(`admin-threads-${filter}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages" },
       (payload) => {
