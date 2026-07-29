@@ -344,8 +344,9 @@ async function removeJobFiles(admin: any, rows: any[]) {
   try { if (results.length) await admin.storage.from("apk-results").remove(results); } catch { /* ignore */ }
 }
 
-// Client: clear own finished jobs (keeps the free-trial record so the trial
-// can't be reused, and never touches jobs still in the queue).
+// Client: clear own finished jobs. Os registros continuam no banco (marcados
+// como limpos) para preservar o controle do teste grátis, mas somem da lista
+// e os arquivos são apagados do storage.
 export const clearMyApkJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -354,21 +355,21 @@ export const clearMyApkJobs = createServerFn({ method: "POST" })
       .from("apk_jobs")
       .select("id,source_path,result_path")
       .eq("user_id", context.userId)
-      .eq("is_free_trial", false)
+      .is("cleared_at", null)
       .in("status", TERMINAL_STATUSES as any);
     const list = (rows ?? []) as any[];
     if (!list.length) return { removed: 0 };
     await removeJobFiles(supabaseAdmin, list);
     const { error } = await supabaseAdmin
       .from("apk_jobs")
-      .delete()
+      .update({ cleared_at: new Date().toISOString(), source_path: "", result_path: null } as any)
       .in("id", list.map((r) => r.id));
     if (error) throw new Error(error.message);
     return { removed: list.length };
   });
 
-// Admin: clear finished jobs from the whole queue (free-trial rows are kept
-// to preserve trial control). Optionally scoped to a single user.
+// Admin: clear finished jobs from the whole queue. Optionally scoped to a
+// single user. Também marca como limpo em vez de apagar o histórico.
 export const adminClearApkJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ userId: z.string().uuid().optional() }).parse(i ?? {}))
@@ -378,7 +379,7 @@ export const adminClearApkJobs = createServerFn({ method: "POST" })
     let q = supabaseAdmin
       .from("apk_jobs")
       .select("id,source_path,result_path")
-      .eq("is_free_trial", false)
+      .is("cleared_at", null)
       .in("status", TERMINAL_STATUSES as any);
     if (data.userId) q = q.eq("user_id", data.userId);
     const { data: rows } = await q;
@@ -387,8 +388,9 @@ export const adminClearApkJobs = createServerFn({ method: "POST" })
     await removeJobFiles(supabaseAdmin, list);
     const { error } = await supabaseAdmin
       .from("apk_jobs")
-      .delete()
+      .update({ cleared_at: new Date().toISOString(), source_path: "", result_path: null } as any)
       .in("id", list.map((r) => r.id));
     if (error) throw new Error(error.message);
     return { removed: list.length };
   });
+
