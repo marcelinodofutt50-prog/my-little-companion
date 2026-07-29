@@ -153,17 +153,28 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                     return (
                       <button
                         key={item.id}
+                        ref={active ? activeRef : undefined}
                         onClick={() => pick(item.id)}
+                        aria-current={active ? "page" : undefined}
                         className={`relative flex min-h-[62px] flex-col justify-center gap-1 rounded border px-3 py-2 text-left transition-colors ${
                           active
-                            ? "border-neon/50 bg-neon/10 text-neon"
+                            ? "border-neon bg-neon/15 text-neon shadow-[0_0_12px_-4px_var(--neon)]"
                             : "border-border/50 bg-background/40 text-foreground active:border-foreground/40"
                         }`}
                       >
+                        {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-neon" />}
                         <div className="flex items-center gap-1.5">
                           <item.icon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate font-mono text-[10px] uppercase tracking-wider">{item.label}</span>
+                          <span className={`truncate font-mono text-[10px] uppercase tracking-wider ${active ? "font-bold" : ""}`}>
+                            {item.label}
+                          </span>
+                          {active && (
+                            <span className="ml-auto rounded bg-neon/20 px-1 font-mono text-[8px] uppercase tracking-wider text-neon">
+                              atual
+                            </span>
+                          )}
                         </div>
+
                         {item.hint && (
                           <span className="truncate text-[9px] text-muted-foreground">{item.hint}</span>
                         )}
