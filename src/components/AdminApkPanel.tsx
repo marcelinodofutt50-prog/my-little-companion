@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  FileArchive, Download, Upload, Loader2, RefreshCw, ShieldAlert, CheckCircle2, XCircle, Clock, Search, Bell, BellOff,
+  FileArchive, Download, Upload, Loader2, RefreshCw, ShieldAlert, CheckCircle2, XCircle, Clock, Search, Bell, BellOff, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   adminCreateApkResultUpload,
   adminCompleteApkJob,
   adminFailApkJob,
+  adminClearApkJobs,
 } from "@/lib/apk-jobs.functions";
 
 type Job = {
@@ -53,6 +54,7 @@ export function AdminApkPanel() {
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
   const [q, setQ] = useState("");
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [uploadPct, setUploadPct] = useState(0);
@@ -63,6 +65,22 @@ export function AdminApkPanel() {
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const knownIdsRef = useRef<Set<string>>(new Set());
   const bootedRef = useRef(false);
+
+  const clearAllFn = useServerFn(adminClearApkJobs);
+
+  async function handleClearAll() {
+    if (!confirm("Limpar todos os jobs finalizados (prontos, falhos, expirados e cancelados)? Os arquivos serão apagados do storage. Jobs em andamento e testes grátis são preservados.")) return;
+    setClearing(true);
+    try {
+      const r = await clearAllFn({ data: {} });
+      toast.success(r.removed ? `${r.removed} job(s) removido(s)` : "Nada para limpar");
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao limpar a lista");
+    } finally {
+      setClearing(false);
+    }
+  }
 
   async function refresh() {
     setLoading(true);
@@ -237,6 +255,15 @@ export function AdminApkPanel() {
             </Button>
             <Button size="sm" variant="outline" onClick={refresh} className="gap-1.5 font-mono text-[11px] uppercase tracking-wider">
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Atualizar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={clearing}
+              onClick={handleClearAll}
+              className="gap-1.5 font-mono text-[11px] uppercase tracking-wider text-red-300 hover:text-red-200"
+            >
+              {clearing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Limpar lista
             </Button>
           </div>
         </div>

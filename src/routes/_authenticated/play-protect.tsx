@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
-import { Upload, ShieldCheck, Clock, Loader2, CheckCircle2, XCircle, Download, X, AlertTriangle, Sparkles, Gift, FileArchive } from "lucide-react";
+import { Upload, ShieldCheck, Clock, Loader2, CheckCircle2, XCircle, Download, X, AlertTriangle, Sparkles, Gift, FileArchive, Trash2 } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TutorialHintDialog } from "@/components/TutorialHintDialog";
@@ -15,6 +15,7 @@ import {
   createApkJob,
   listApkJobs,
   cancelApkJob,
+  clearMyApkJobs,
   getApkResultDownload,
 } from "@/lib/apk-jobs.functions";
 
@@ -71,12 +72,28 @@ function PlayProtectPage() {
   const [dragOver, setDragOver] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const statusFn = useServerFn(getPlayProtectStatus);
   const createFn = useServerFn(createApkJob);
   const listFn = useServerFn(listApkJobs);
   const cancelFn = useServerFn(cancelApkJob);
   const dlFn = useServerFn(getApkResultDownload);
+  const clearFn = useServerFn(clearMyApkJobs);
+
+  async function handleClear() {
+    if (!confirm("Limpar o histórico de jobs finalizados? Os arquivos processados serão apagados e os links de download deixarão de funcionar.")) return;
+    setClearing(true);
+    try {
+      const r = await clearFn();
+      toast.success(r.removed ? `${r.removed} job(s) removido(s)` : "Nada para limpar");
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao limpar a lista");
+    } finally {
+      setClearing(false);
+    }
+  }
 
   async function refresh() {
     const [s, l] = await Promise.all([statusFn(), listFn()]);
@@ -360,13 +377,26 @@ function PlayProtectPage() {
 
             {/* Jobs */}
             <section className="rounded-lg border border-border/70 bg-card p-5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Histórico</p>
                   <h3 className="mt-1 font-display text-lg font-semibold tracking-tight">Meus jobs</h3>
                 </div>
-                <div className="text-xs text-muted-foreground">{jobs.length} total</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{jobs.length} total</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={clearing || !jobs.some((j) => ["done", "failed", "expired", "cancelled"].includes(j.status))}
+                    onClick={handleClear}
+                    className="gap-1.5 font-mono text-[11px] uppercase tracking-wider"
+                  >
+                    {clearing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    Limpar lista
+                  </Button>
+                </div>
               </div>
+
 
               {jobs.length === 0 ? (
                 <div className="mt-6 rounded border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
