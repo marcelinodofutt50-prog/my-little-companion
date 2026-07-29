@@ -1311,8 +1311,62 @@ function priorityMeta(p?: string | null): { label: string; cls: string } | null 
 type Thread = { id: string; user_id: string; subject: string; category?: string | null; priority?: string | null; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null; display_name?: string | null } | null };
 type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
+/** Cache em memória por filtro: evita tela branca ao alternar abas/voltar pro chat. */
+const threadsCache: Record<string, Thread[]> = {};
+
+function isWaitingLong(t: Thread): boolean {
+  const at = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
+  return t.status !== "closed" && at !== null && Date.now() - at > 30 * 60000;
+}
+
+/** Cards de pendências do suporte — clicáveis para filtrar a lista. */
+function SupportOverviewCards({
+  threads, loading, filter, onFilter, quick, onQuick,
+}: {
+  threads: Thread[];
+  loading: boolean;
+  filter: "open" | "mine" | "closed";
+  onFilter: (f: "open" | "mine" | "closed") => void;
+  quick: "all" | "unread" | "waiting" | "unassigned";
+  onQuick: (q: "all" | "unread" | "waiting" | "unassigned") => void;
+}) {
+  const unread = threads.filter((t) => Number(t.unread_by_staff ?? 0) > 0).length;
+  const waiting = threads.filter(isWaitingLong).length;
+  const unassigned = threads.filter((t) => t.status !== "closed" && !t.assigned_to).length;
+
+  const cards = [
+    { key: "all" as const, label: "conversas", hint: filter === "closed" ? "encerradas" : filter === "mine" ? "minhas" : "abertas", value: threads.length, tone: "text-foreground", ring: "border-border/40" },
+    { key: "unread" as const, label: "não lidas", hint: "aguardando leitura", value: unread, tone: "text-neon", ring: unread ? "border-neon/50 bg-neon/5" : "border-border/40" },
+    { key: "waiting" as const, label: "sem resposta", hint: "cliente esperando +30 min", value: waiting, tone: "text-danger", ring: waiting ? "border-danger/50 bg-danger/5" : "border-border/40" },
+    { key: "unassigned" as const, label: "sem responsável", hint: "ninguém assumiu", value: unassigned, tone: "text-cyan", ring: unassigned ? "border-cyan/50 bg-cyan/5" : "border-border/40" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      {cards.map((c) => {
+        const active = quick === c.key;
+        return (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => { if (c.key !== "all" && filter === "closed") onFilter("open"); onQuick(active ? "all" : c.key); }}
+            className={`terminal-card rounded-lg border p-3 text-left transition-colors ${c.ring} ${active ? "ring-1 ring-neon/60" : "hover:border-neon/40"}`}
+          >
+            <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{c.label}</div>
+            <div className={`mt-1 font-mono text-2xl font-bold leading-none ${c.tone}`}>
+              {loading ? <span className="inline-block h-6 w-8 animate-pulse rounded bg-muted/50" /> : c.value}
+            </div>
+            <div className="mt-1 truncate font-mono text-[9px] text-muted-foreground/70">{c.hint}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function AdminChatPanel() {
-  const [threads, setThreads] = useState<Thread[]>([]);
+
+  const [threads, setThreads] = useState<Thread[]>(() => threadsCache["open"] ?? []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chatHasMore, setChatHasMore] = useState(false);
@@ -1321,9 +1375,10 @@ function AdminChatPanel() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !threadsCache["open"]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"open" | "mine" | "closed">("open");
+  const [quick, setQuick] = useState<"all" | "unread" | "waiting" | "unassigned">("all");
   // Default sound preference when nothing is stored yet.
   const SOUND_DEFAULT_ON = true;
   const [soundOn, setSoundOn] = useState<boolean>(SOUND_DEFAULT_ON);
@@ -1357,43 +1412,55 @@ function AdminChatPanel() {
   const closeFn = useServerFn(adminCloseThread);
 
   const refreshThreads = () => threadsFn({ data: { filter } })
-    .then((t) => { setThreads(t as Thread[]); setLoadError(null); })
+    .then((t) => { threadsCache[filter] = t as Thread[]; setThreads(t as Thread[]); setLoadError(null); })
     .catch((e) => setLoadError(e instanceof Error ? e.message : String(e)));
-
 
   useEffect(() => {
     requestNotifyPermission();
+    // Mostra imediatamente o que já está em cache; só exibe skeleton na 1ª carga.
+    const cached = threadsCache[filter];
+    if (cached) { setThreads(cached); setLoading(false); } else { setThreads([]); setLoading(true); }
+    let alive = true;
     threadsFn({ data: { filter } }).then((t) => {
+      if (!alive) return;
+      threadsCache[filter] = t as Thread[];
       setThreads(t as Thread[]);
       setLoadError(null);
       setLoading(false);
       // Em telas pequenas mostramos a lista primeiro (master-detail)
       const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
-      if (isDesktop && (t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
+      if (isDesktop && (t as Thread[]).length && !activeIdRef.current) setActiveId((t as Thread[])[0].id);
     }).catch((e) => {
+      if (!alive) return;
       setLoadError(e instanceof Error ? e.message : String(e));
       setLoading(false);
     });
+
+    // Realtime com coalescência: várias mensagens seguidas = 1 refetch.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefresh = () => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        threadsFn({ data: { filter } })
+          .then((t) => { if (!alive) return; threadsCache[filter] = t as Thread[]; setThreads(t as Thread[]); })
+          .catch(() => {});
+      }, 600);
+    };
     const ch = supabase.channel(`admin-threads-${filter}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages" },
       (payload) => {
         const msg = payload.new as Msg;
-        threadsFn({ data: { filter } }).then((t) => {
-          setThreads(t as Thread[]);
-          if (!msg.is_admin && soundOnRef.current && new Date(msg.created_at).getTime() >= bootAtRef.current) {
-            playNotifyDing();
-            const th = (t as Thread[]).find((x) => x.id === msg.thread_id);
-            if (document.hidden || msg.thread_id !== activeIdRef.current) {
-              showDesktopNotification(
-                `Nova mensagem — ${th?.profile?.email ?? "cliente"}`,
-                (msg.body ?? "[anexo]").slice(0, 140),
-              );
-            }
+        scheduleRefresh();
+        if (!msg.is_admin && soundOnRef.current && new Date(msg.created_at).getTime() >= bootAtRef.current) {
+          playNotifyDing();
+          if (document.hidden || msg.thread_id !== activeIdRef.current) {
+            showDesktopNotification("Nova mensagem no suporte", (msg.body ?? "[anexo]").slice(0, 140));
           }
-        }).catch(() => {});
+        }
       }
     ).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { alive = false; if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
@@ -1464,6 +1531,9 @@ function AdminChatPanel() {
   }
 
   const filtered = threads.filter((t) => {
+    if (quick === "unread" && !(Number(t.unread_by_staff ?? 0) > 0)) return false;
+    if (quick === "waiting" && !isWaitingLong(t)) return false;
+    if (quick === "unassigned" && (t.status === "closed" || t.assigned_to)) return false;
     if (!query) return true;
     const q = query.toLowerCase();
     return (t.profile?.email ?? "").toLowerCase().includes(q) || (t.profile?.display_name ?? "").toLowerCase().includes(q) || (t.profile?.full_name ?? "").toLowerCase().includes(q) || t.subject.toLowerCase().includes(q);
@@ -1472,7 +1542,9 @@ function AdminChatPanel() {
   const activeThread = threads.find((t) => t.id === activeId);
 
   return (
-    <div className="terminal-card scanlines relative grid h-[calc(100dvh-8rem)] grid-cols-1 overflow-hidden md:h-[70vh] md:grid-cols-[320px_1fr]">
+    <div className="space-y-3">
+    <SupportOverviewCards threads={threads} loading={loading} filter={filter} onFilter={setFilter} quick={quick} onQuick={setQuick} />
+    <div className="terminal-card scanlines relative grid h-[calc(100dvh-12rem)] grid-cols-1 overflow-hidden md:h-[70vh] md:grid-cols-[320px_1fr]">
       {/* Thread list */}
       <aside className={`${activeId ? "hidden md:flex" : "flex"} min-h-0 flex-col border-b border-border/40 md:border-b-0 md:border-r`}>
         <div className="border-b border-border/40 p-3">
@@ -1526,7 +1598,19 @@ function AdminChatPanel() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {loading && <div className="p-6 text-center text-xs text-muted-foreground"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></div>}
+          {loading && (
+            <div className="space-y-2 p-3">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-muted/50" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="h-2.5 w-2/3 animate-pulse rounded bg-muted/50" />
+                    <div className="h-2 w-1/2 animate-pulse rounded bg-muted/30" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {!loading && loadError && (
             <div className="m-3 rounded border border-destructive/40 bg-destructive/10 p-3 text-xs">
               <div className="font-mono font-bold text-destructive">falha ao carregar conversas</div>
@@ -1538,9 +1622,12 @@ function AdminChatPanel() {
             <div className="flex flex-col items-center gap-2 p-8 text-center">
               <MessageSquare className="h-7 w-7 text-neon/40" />
               <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                {query ? "nenhum cliente com esse termo" : filter === "open" ? "nenhuma conversa aberta" : filter === "mine" ? "você não assumiu nenhum ticket" : "nenhuma conversa encerrada"}
+                {quick !== "all" ? "nenhuma conversa nesse indicador" : query ? "nenhum cliente com esse termo" : filter === "open" ? "nenhuma conversa aberta" : filter === "mine" ? "você não assumiu nenhum ticket" : "nenhuma conversa encerrada"}
               </div>
-              {!query && filter !== "open" && (
+              {quick !== "all" && (
+                <button type="button" onClick={() => setQuick("all")} className="font-mono text-[10px] uppercase text-neon hover:underline">limpar filtro →</button>
+              )}
+              {quick === "all" && !query && filter !== "open" && (
                 <button type="button" onClick={() => setFilter("open")} className="font-mono text-[10px] uppercase text-neon hover:underline">ver abertas →</button>
               )}
             </div>
@@ -1821,6 +1908,7 @@ function AdminChatPanel() {
           </>
         )}
       </section>
+    </div>
     </div>
   );
 }
