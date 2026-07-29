@@ -93,12 +93,19 @@ export function AdminActiveProblems({ onNavigate }: { onNavigate?: (tab: string)
         ) : (
           <ScrollArea className="h-72 pr-2">
             <div className="space-y-2">
-              {problems.map((p) => (
-                <a
-                  key={`${p.kind}-${p.id}`}
-                  href={p.link ?? "#"}
-                  className="group flex items-start gap-3 rounded-md border border-border/40 bg-background/40 p-2.5 transition-colors hover:border-primary/40 hover:bg-background"
-                >
+              {problems.map((p) => {
+                const clickable = onNavigate && p.link;
+                const Wrapper = clickable ? "button" : "div";
+                return (
+                  <Wrapper
+                    key={`${p.kind}-${p.id}`}
+                    onClick={clickable ? () => {
+                      const tab = p.link!.match(/tab=([^&]+)/)?.[1];
+                      if (tab) onNavigate!(tab);
+                    } : undefined}
+                    className={`group flex items-start gap-3 rounded-md border border-border/40 bg-background/40 p-2.5 transition-colors hover:border-primary/40 hover:bg-background ${clickable ? "cursor-pointer text-left" : ""}`}
+                  >
+
                   <div
                     className={`mt-0.5 shrink-0 rounded p-1.5 ${
                       p.severity === "critical"
