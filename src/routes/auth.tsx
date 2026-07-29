@@ -274,6 +274,38 @@ function AuthPage() {
             </p>
           )}
         </form>
+
+        {(emailBlocked || signupMessage) && (
+          <div className="mt-4 w-full rounded border border-amber-400/40 bg-amber-400/5 p-4 text-xs">
+            <p className="font-mono uppercase tracking-wider text-amber-400">Não recebeu o e-mail?</p>
+            <ul className="mt-2 space-y-1 text-muted-foreground">
+              <li>1. Verifique as pastas <strong>Spam</strong> e <strong>Promoções</strong>.</li>
+              <li>2. Confira se digitou o e-mail corretamente.</li>
+              <li>3. Reenvie apenas uma vez — reenvios seguidos bloqueiam o envio.</li>
+            </ul>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full font-mono text-[11px] uppercase"
+                disabled={resending || cooldown > 0}
+                onClick={resendConfirmation}
+              >
+                {resending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                {cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar e-mail"}
+              </Button>
+              <Button asChild variant="ghost" className="w-full font-mono text-[11px] uppercase">
+                <Link to="/contato">
+                  <LifeBuoy className="mr-2 h-3 w-3" /> Ativar via suporte
+                </Link>
+              </Button>
+            </div>
+            <p className="mt-2 font-mono text-[10px] text-muted-foreground">
+              Se o envio estiver instável, o suporte confirma sua conta manualmente — informe o e-mail cadastrado.
+            </p>
+          </div>
+        )}
+
         <button className="mt-6 font-mono text-xs uppercase text-muted-foreground hover:text-neon" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "Não tem conta? Registre-se" : "Já tem conta? Entrar"}
         </button>
