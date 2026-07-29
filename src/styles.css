@@ -111,8 +111,12 @@
   html, body {
     background: var(--color-background);
     color: var(--color-foreground);
+    /* Impede que qualquer bloco largo force o zoom-out no iPhone */
+    max-width: 100%;
   }
+  body { overflow-x: hidden; }
   * { border-color: var(--color-border); }
+
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
