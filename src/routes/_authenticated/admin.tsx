@@ -1559,7 +1559,26 @@ function AdminChatPanel() {
                 </div>
               </div>
             </div>
-            <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-background/30 p-4">
+            <div
+              ref={listRef}
+              onScroll={() => { const el = listRef.current; if (el && el.scrollTop < 40) void loadOlderAdmin(); }}
+              className="flex-1 space-y-3 overflow-y-auto bg-background/30 p-4"
+            >
+              {(chatHasMore || chatLoadingOlder) && (
+                <div className="flex justify-center pb-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-3 text-[10px] font-mono uppercase tracking-wider"
+                    disabled={chatLoadingOlder}
+                    onClick={() => void loadOlderAdmin()}
+                  >
+                    {chatLoadingOlder ? "carregando..." : "carregar mensagens antigas"}
+                  </Button>
+                </div>
+              )}
+
               {msgs.length === 0 && <div className="pt-16 text-center text-xs text-muted-foreground">Sem mensagens ainda — inicie a conversa.</div>}
               {msgs.map((m) => m.is_system ? (
                 <div key={m.id} className="flex justify-center">
