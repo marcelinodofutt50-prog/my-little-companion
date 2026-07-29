@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { siteUrl } from "@/lib/site-url";
 import { Lost2faHelp } from "@/components/Lost2faHelp";
+import { logEmailEvent } from "@/lib/email-metrics.functions";
 
 
 export const Route = createFileRoute("/auth")({
