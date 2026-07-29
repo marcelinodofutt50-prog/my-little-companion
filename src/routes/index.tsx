@@ -105,6 +105,7 @@ const features = [
 ] as const;
 
 function LandingPage() {
+  const { t } = useI18n();
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       {/* Ambient background */}
@@ -252,14 +253,14 @@ function LandingPage() {
             <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
               {features.map((f) => (
                 <div
-                  key={f.title}
+                  key={f.titleKey}
                   className="group relative bg-card p-6 transition-colors hover:bg-secondary/50"
                 >
                   <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md border border-neon/30 bg-neon/5 text-neon transition-all group-hover:glow-neon">
                     <f.icon className="h-5 w-5" />
                   </div>
-                  <h3 className="font-display text-xl">{f.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
+                  <h3 className="font-display text-xl">{t(f.titleKey)}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(f.descKey)}</p>
                 </div>
               ))}
             </div>
@@ -327,15 +328,15 @@ function LandingPage() {
                         {formatBrl(p.price)}
                       </span>
                       <span className="font-mono text-xs text-muted-foreground">
-                        / {p.duration.toLowerCase()}
+                        / {t(p.durationKey).toLowerCase()}
                       </span>
                     </div>
 
                     <ul className="mb-8 space-y-3 text-sm">
-                      {p.features.map((f) => (
-                        <li key={f} className="flex items-start gap-3 text-muted-foreground">
+                      {p.featureKeys.map((fk) => (
+                        <li key={fk} className="flex items-start gap-3 text-muted-foreground">
                           <span className={`font-mono text-xs font-bold ${bulletClass}`}>[+]</span>
-                          <span>{f}</span>
+                          <span>{t(fk)}</span>
                         </li>
                       ))}
                     </ul>
@@ -370,7 +371,7 @@ function LandingPage() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {sourcePlans.map((p) => (
                 <div
-                  key={p.name}
+                  key={p.tier}
                   className="terminal-card group flex flex-col rounded-lg p-8 transition-all hover:-translate-y-1"
                 >
                   <div
@@ -380,8 +381,8 @@ function LandingPage() {
                   >
                     {p.tier}
                   </div>
-                  <h3 className="mt-3 font-display text-3xl">{p.name}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
+                  <h3 className="mt-3 font-display text-3xl">{t(p.nameKey)}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{t(p.descKey)}</p>
                   <div className="mt-6 flex items-end justify-between border-t border-border pt-6">
                     <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                       Aquisição única
