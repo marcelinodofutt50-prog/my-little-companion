@@ -172,12 +172,13 @@ export const getAdminProblems = createServerFn({ method: "GET" })
     }
 
     // Resolve user emails for display
-    const userIds = Array.from(new Set(problems.map((p) => p.userId).filter(Boolean)));
+    const userIds = Array.from(new Set(problems.map((p) => p.userId).filter(Boolean))) as string[];
     if (userIds.length) {
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
         .select("id,email")
         .in("id", userIds);
+
       const map = Object.fromEntries(((profiles ?? []) as any[]).map((p) => [p.id, p.email]));
       for (const p of problems) {
         if (p.userId) p.userEmail = map[p.userId] ?? undefined;

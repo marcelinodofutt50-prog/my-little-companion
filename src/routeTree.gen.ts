@@ -36,9 +36,11 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
+import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
 import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
 import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
 import { Route as ApiPublicHooksCryptoPollRouteImport } from './routes/api/public/hooks/crypto-poll'
+import { Route as ApiPublicHooksCleanupApkJobsRouteImport } from './routes/api/public/hooks/cleanup-apk-jobs'
 import { Route as ApiPublicHooksApkWorkerRouteImport } from './routes/api/public/hooks/apk-worker'
 
 const TutorialRoute = TutorialRouteImport.update({
@@ -177,6 +179,12 @@ const ApiPublicHooksVerifyExternalPayersRoute =
     path: '/api/public/hooks/verify-external-payers',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksReconcilePendingRoute =
+  ApiPublicHooksReconcilePendingRouteImport.update({
+    id: '/api/public/hooks/reconcile-pending',
+    path: '/api/public/hooks/reconcile-pending',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksExpireLicensesRoute =
   ApiPublicHooksExpireLicensesRouteImport.update({
     id: '/api/public/hooks/expire-licenses',
@@ -193,6 +201,12 @@ const ApiPublicHooksCryptoPollRoute =
   ApiPublicHooksCryptoPollRouteImport.update({
     id: '/api/public/hooks/crypto-poll',
     path: '/api/public/hooks/crypto-poll',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksCleanupApkJobsRoute =
+  ApiPublicHooksCleanupApkJobsRouteImport.update({
+    id: '/api/public/hooks/cleanup-apk-jobs',
+    path: '/api/public/hooks/cleanup-apk-jobs',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksApkWorkerRoute = ApiPublicHooksApkWorkerRouteImport.update({
@@ -228,9 +242,11 @@ export interface FileRoutesByFullPath {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRoutesByTo {
@@ -260,9 +276,11 @@ export interface FileRoutesByTo {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRoutesById {
@@ -294,9 +312,11 @@ export interface FileRoutesById {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRouteTypes {
@@ -328,9 +348,11 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/verify-external-payers'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -360,9 +382,11 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/verify-external-payers'
   id:
     | '__root__'
@@ -393,9 +417,11 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/verify-external-payers'
   fileRoutesById: FileRoutesById
 }
@@ -420,9 +446,11 @@ export interface RootRouteChildren {
   ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicHooksApkWorkerRoute: typeof ApiPublicHooksApkWorkerRoute
+  ApiPublicHooksCleanupApkJobsRoute: typeof ApiPublicHooksCleanupApkJobsRoute
   ApiPublicHooksCryptoPollRoute: typeof ApiPublicHooksCryptoPollRoute
   ApiPublicHooksDailyLicenseCheckRoute: typeof ApiPublicHooksDailyLicenseCheckRoute
   ApiPublicHooksExpireLicensesRoute: typeof ApiPublicHooksExpireLicensesRoute
+  ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 
@@ -617,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksVerifyExternalPayersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/reconcile-pending': {
+      id: '/api/public/hooks/reconcile-pending'
+      path: '/api/public/hooks/reconcile-pending'
+      fullPath: '/api/public/hooks/reconcile-pending'
+      preLoaderRoute: typeof ApiPublicHooksReconcilePendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/expire-licenses': {
       id: '/api/public/hooks/expire-licenses'
       path: '/api/public/hooks/expire-licenses'
@@ -636,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/crypto-poll'
       fullPath: '/api/public/hooks/crypto-poll'
       preLoaderRoute: typeof ApiPublicHooksCryptoPollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/cleanup-apk-jobs': {
+      id: '/api/public/hooks/cleanup-apk-jobs'
+      path: '/api/public/hooks/cleanup-apk-jobs'
+      fullPath: '/api/public/hooks/cleanup-apk-jobs'
+      preLoaderRoute: typeof ApiPublicHooksCleanupApkJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/apk-worker': {
@@ -701,9 +743,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicHooksApkWorkerRoute: ApiPublicHooksApkWorkerRoute,
+  ApiPublicHooksCleanupApkJobsRoute: ApiPublicHooksCleanupApkJobsRoute,
   ApiPublicHooksCryptoPollRoute: ApiPublicHooksCryptoPollRoute,
   ApiPublicHooksDailyLicenseCheckRoute: ApiPublicHooksDailyLicenseCheckRoute,
   ApiPublicHooksExpireLicensesRoute: ApiPublicHooksExpireLicensesRoute,
+  ApiPublicHooksReconcilePendingRoute: ApiPublicHooksReconcilePendingRoute,
   ApiPublicHooksVerifyExternalPayersRoute:
     ApiPublicHooksVerifyExternalPayersRoute,
 }
