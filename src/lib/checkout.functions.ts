@@ -170,7 +170,12 @@ export const createCheckout = createServerFn({ method: "POST" })
       notificationUrl,
     });
 
-    await supabase.from("orders").update({ mp_preference_id: pref.id }).eq("id", order.id);
+    {
+      // orders é somente-leitura para o usuário (RLS): a gravação do preference_id
+      // precisa do client privilegiado, senão a conciliação com o MP nunca acha o pedido.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("orders").update({ mp_preference_id: pref.id }).eq("id", order.id);
+    }
 
     return { orderId: order.id, initPoint: pref.init_point, sandboxInitPoint: pref.sandbox_init_point };
   });
