@@ -41,6 +41,7 @@ import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/p
 import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
 import { Route as ApiPublicHooksCryptoPollRouteImport } from './routes/api/public/hooks/crypto-poll'
 import { Route as ApiPublicHooksCleanupApkJobsRouteImport } from './routes/api/public/hooks/cleanup-apk-jobs'
+import { Route as ApiPublicHooksAutoCloseTicketsRouteImport } from './routes/api/public/hooks/auto-close-tickets'
 import { Route as ApiPublicHooksApkWorkerRouteImport } from './routes/api/public/hooks/apk-worker'
 
 const TutorialRoute = TutorialRouteImport.update({
@@ -209,6 +210,12 @@ const ApiPublicHooksCleanupApkJobsRoute =
     path: '/api/public/hooks/cleanup-apk-jobs',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksAutoCloseTicketsRoute =
+  ApiPublicHooksAutoCloseTicketsRouteImport.update({
+    id: '/api/public/hooks/auto-close-tickets',
+    path: '/api/public/hooks/auto-close-tickets',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksApkWorkerRoute = ApiPublicHooksApkWorkerRouteImport.update({
   id: '/api/public/hooks/apk-worker',
   path: '/api/public/hooks/apk-worker',
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
   '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
@@ -276,6 +284,7 @@ export interface FileRoutesByTo {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
   '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
@@ -312,6 +321,7 @@ export interface FileRoutesById {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
+  '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
   '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/auto-close-tickets'
     | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/auto-close-tickets'
     | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
@@ -417,6 +429,7 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
+    | '/api/public/hooks/auto-close-tickets'
     | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
@@ -446,6 +459,7 @@ export interface RootRouteChildren {
   ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicHooksApkWorkerRoute: typeof ApiPublicHooksApkWorkerRoute
+  ApiPublicHooksAutoCloseTicketsRoute: typeof ApiPublicHooksAutoCloseTicketsRoute
   ApiPublicHooksCleanupApkJobsRoute: typeof ApiPublicHooksCleanupApkJobsRoute
   ApiPublicHooksCryptoPollRoute: typeof ApiPublicHooksCryptoPollRoute
   ApiPublicHooksDailyLicenseCheckRoute: typeof ApiPublicHooksDailyLicenseCheckRoute
@@ -680,6 +694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksCleanupApkJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/auto-close-tickets': {
+      id: '/api/public/hooks/auto-close-tickets'
+      path: '/api/public/hooks/auto-close-tickets'
+      fullPath: '/api/public/hooks/auto-close-tickets'
+      preLoaderRoute: typeof ApiPublicHooksAutoCloseTicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/apk-worker': {
       id: '/api/public/hooks/apk-worker'
       path: '/api/public/hooks/apk-worker'
@@ -743,6 +764,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicHooksApkWorkerRoute: ApiPublicHooksApkWorkerRoute,
+  ApiPublicHooksAutoCloseTicketsRoute: ApiPublicHooksAutoCloseTicketsRoute,
   ApiPublicHooksCleanupApkJobsRoute: ApiPublicHooksCleanupApkJobsRoute,
   ApiPublicHooksCryptoPollRoute: ApiPublicHooksCryptoPollRoute,
   ApiPublicHooksDailyLicenseCheckRoute: ApiPublicHooksDailyLicenseCheckRoute,
