@@ -67,6 +67,8 @@ type PlanMeta = {
   icon: any;
   features: string[];
   cadence?: string;
+  note?: string;
+
 };
 
 function metaFor(plan: Plan): PlanMeta {
