@@ -18,10 +18,17 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
 
 export function AdminEmailMetrics() {
   const fetchMetrics = useServerFn(getEmailMetrics);
+  const runTest = useServerFn(sendTestEmail);
+  const [testEmail, setTestEmail] = useState("");
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin-email-metrics"],
     queryFn: () => fetchMetrics({ data: { hours: 24 } }),
     refetchInterval: 60_000,
+  });
+
+  const test = useMutation({
+    mutationFn: (email: string) => runTest({ data: { email } }),
+    onSettled: () => refetch(),
   });
 
   const rateLimited = data?.rateLimited ?? 0;
@@ -29,6 +36,7 @@ export function AdminEmailMetrics() {
 
   return (
     <div className="terminal-card scanlines relative p-4">
+
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-neon">
           Envio de e-mails · 24h
