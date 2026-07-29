@@ -28,6 +28,7 @@ import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
+import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 
 
 
@@ -98,6 +99,15 @@ function AdminPage() {
   const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">("todos");
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [threadsOpenCount, setThreadsOpenCount] = useState(0);
+  // Badges "precisa de ação" por seção, em tempo real (Realtime + poll 30s).
+  const { counts: sectionCounts, updatedAt: countsUpdatedAt } = useAdminSectionCounts(true);
+  const navBadges: Record<string, number> = {
+    chat: Math.max(threadsOpenCount, sectionCounts.chat),
+    orders: sectionCounts.orders,
+    refunds: sectionCounts.refunds,
+    apk: sectionCounts.apk,
+  };
+  const totalPending = navBadges.chat + navBadges.orders + navBadges.refunds + navBadges.apk;
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
   const [email, setEmail] = useState("");
@@ -365,6 +375,7 @@ function AdminPage() {
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
+                        const badge = navBadges[t.id] ?? 0;
                         return (
                           <button
                             key={t.id}
@@ -383,6 +394,16 @@ function AdminPage() {
                               </div>
                               {t.hint && <div className="truncate text-[9px] text-muted-foreground/70">{t.hint}</div>}
                             </div>
+                            {badge > 0 && (
+                              <span
+                                title={`${badge} item(ns) aguardando ação`}
+                                className={`grid h-4 min-w-4 shrink-0 place-items-center rounded-full px-1 font-mono text-[9px] ${
+                                  t.id === "chat" ? "animate-pulse bg-red-500 text-white" : "bg-neon/20 text-neon"
+                                }`}
+                              >
+                                {badge > 99 ? "99+" : badge}
+                              </span>
+                            )}
                             {active && <span className="h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />}
                           </button>
                         );
@@ -407,11 +428,24 @@ function AdminPage() {
             {/* Section title bar */}
             {activeMeta && (
               <div className="mb-4 border-b border-border/40 pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <activeMeta.icon className="h-4 w-4 text-neon" />
                   <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
-                  {activeMeta.hint && <span className="ml-2 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+                  {activeMeta.hint && <span className="ml-1 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+                  {(navBadges[tab] ?? 0) > 0 && (
+                    <span className="rounded-full bg-neon/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-neon">
+                      {navBadges[tab]} pendente{navBadges[tab] > 1 ? "s" : ""}
+                    </span>
+                  )}
+                  <span
+                    title={countsUpdatedAt ? `Atualizado ${new Date(countsUpdatedAt).toLocaleTimeString("pt-BR")}` : "Sincronizando..."}
+                    className="ml-auto flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground"
+                  >
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon" />
+                    ao vivo{totalPending > 0 ? ` · ${totalPending}` : ""}
+                  </span>
                 </div>
+
                 {TAB_DESC[tab] && (
                   <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">{TAB_DESC[tab]}</p>
                 )}
@@ -970,7 +1004,7 @@ function AdminPage() {
         primary={["overview", "chat", "orders", "licenses"]}
         tab={tab}
         onChange={(id) => setTab(id as Tab)}
-        badges={{ chat: threadsOpenCount }}
+        badges={navBadges}
       />
     </div>
   );
