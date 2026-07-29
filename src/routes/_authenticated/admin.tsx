@@ -890,7 +890,7 @@ function AdminPage() {
               return now - ref > ARCHIVE_AFTER_DAYS * dayMs;
             };
             const q = licSearch.trim().toLowerCase();
-            const visibleBase = licenses.filter((l) => licShowArchived || !isArchived(l));
+            const visibleBase = licenses.filter((l) => (licScope === "active" ? !isArchived(l) : isArchived(l)));
             const archivedCount = licenses.filter(isArchived).length;
             const trialsCount = visibleBase.filter((l) => l.is_trial).length;
             const paidCount = visibleBase.length - trialsCount;
