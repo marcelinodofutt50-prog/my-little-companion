@@ -877,9 +877,9 @@ function AdminPage() {
               if (diff <= 5 * dayMs) return "expiring";
               return "active";
             };
-            // "Arquivada": morta há mais de 2 dias (vencida ou revogada).
+            // "Arquivada": morta há mais de 3 dias (vencida ou revogada).
             // Se voltar a valer (cliente reativou / admin estendeu), sai do arquivo sozinha.
-            const ARCHIVE_AFTER_DAYS = 2;
+            const ARCHIVE_AFTER_DAYS = 3;
             const isArchived = (l: any): boolean => {
               const s = statusOf(l);
               if (s !== "expired" && s !== "revoked") return false;
