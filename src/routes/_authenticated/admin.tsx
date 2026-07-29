@@ -288,8 +288,8 @@ function AdminPage() {
       const r: any = await fixBugFn({ data: { licenseId: id } });
       toast.success(
         r.passwordReapplied
-          ? `Login corrigido — validade mantida em ${r.expiresAt}. Peça para o cliente entrar de novo.`
-          : `Data reprocessada (validade ${r.expiresAt}), mas o painel não aceitou reaplicar a senha. Se continuar com erro, use "Recriar credenciais".`,
+          ? `Login corrigido${r.expiresAt ? ` — validade mantida em ${r.expiresAt}` : ""}. Peça para o cliente fechar o BMob e entrar de novo.`
+          : `Data reprocessada${r.expiresAt ? ` (validade ${r.expiresAt})` : ""}, mas o painel não aceitou reaplicar a senha. Se continuar com erro, use "Recriar credenciais".`,
         { duration: 12000 },
       );
       setLicenses(await licensesFn());

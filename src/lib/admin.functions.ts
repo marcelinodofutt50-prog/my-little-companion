@@ -120,45 +120,68 @@ export const adminFixLoginBug = createServerFn({ method: "POST" })
     const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
     const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
+    if (lic.disabled_at) throw new Error("Esta licença está desativada — reative antes de corrigir.");
+    if (!lic.yaarsa_email) throw new Error("Licença sem e-mail no painel");
 
     const panel = ((lic as any).panel ?? "v457") as "v457" | "v46";
     const ymd = (d: Date) => d.toISOString().slice(0, 10);
-    const original = lic.expires_at ? new Date(lic.expires_at) : (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d; })();
-    const bumped = new Date(original.getTime() + 24 * 60 * 60 * 1000);
+    const original = lic.expires_at ? new Date(lic.expires_at) : null;
+    const bumped = original ? new Date(original.getTime() + 24 * 60 * 60 * 1000) : null;
     const steps: { step: string; ok: boolean; message?: string }[] = [];
+    let dateBumped = false;
 
-    // 1) +1 dia
-    const up = await yaarsaExtend(lic.yaarsa_email, ymd(bumped), panel);
-    steps.push({ step: `expira → ${ymd(bumped)}`, ok: !up.Fail, message: up.Fail ?? up.Success });
-    if (up.Fail) throw new Error(`Falha ao empurrar a data: ${up.Fail}`);
-
-    // 2) reaplica a mesma senha
-    let passOk = false;
-    try {
-      const plain = decrypt(lic.yaarsa_password_enc);
-      const pw = await yaarsaSetPassword(lic.yaarsa_email, plain, panel);
-      passOk = !pw.Fail;
-      steps.push({ step: "senha reaplicada", ok: passOk, message: pw.Fail ?? pw.Success });
-    } catch (e) {
-      steps.push({ step: "senha reaplicada", ok: false, message: String((e as Error)?.message || e) });
+    // 1) empurra a validade 1 dia (ex.: 20 → 21). Licença sem data (vitalícia)
+    //    pula essa etapa para não inventar vencimento no painel.
+    if (original && bumped) {
+      const up = await yaarsaExtend(lic.yaarsa_email, ymd(bumped), panel);
+      steps.push({ step: `validade → ${ymd(bumped)}`, ok: !up.Fail, message: up.Fail ?? up.Success });
+      if (up.Fail) throw new Error(`Falha ao empurrar a data no painel: ${up.Fail}`);
+      dateBumped = true;
+    } else {
+      steps.push({ step: "validade inalterada (licença sem vencimento)", ok: true });
     }
 
-    // 3) volta a data original (sempre tenta, mesmo se a senha falhar)
-    const back = await yaarsaExtend(lic.yaarsa_email, ymd(original), panel);
-    steps.push({ step: `expira → ${ymd(original)}`, ok: !back.Fail, message: back.Fail ?? back.Success });
-    if (back.Fail) throw new Error(`A data ficou em ${ymd(bumped)} — falha ao voltar: ${back.Fail}`);
+    // 2) reaplica exatamente a MESMA senha já entregue ao cliente
+    let passOk = false;
+    let passMsg = "";
+    try {
+      const plain = decrypt(lic.yaarsa_password_enc);
+      const pw = await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username ?? undefined);
+      passOk = !pw.Fail;
+      passMsg = String(pw.Fail ?? pw.Success ?? "");
+      steps.push({ step: "senha reaplicada", ok: passOk, message: passMsg });
+    } catch (e) {
+      passMsg = String((e as Error)?.message || e);
+      steps.push({ step: "senha reaplicada", ok: false, message: passMsg });
+    }
+
+    // 3) volta para a data original (sempre tenta, mesmo se a senha falhar)
+    if (dateBumped && original) {
+      const back = await yaarsaExtend(lic.yaarsa_email, ymd(original), panel);
+      steps.push({ step: `validade → ${ymd(original)}`, ok: !back.Fail, message: back.Fail ?? back.Success });
+      if (back.Fail) {
+        throw new Error(`Atenção: a validade ficou em ${ymd(bumped!)} e não voltou para ${ymd(original)} — ${back.Fail}. Use "Estender manualmente" para corrigir a data.`);
+      }
+    }
 
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin.from("integration_logs").insert({
         source: `yaarsa-${panel}`, action: "admin_fix_login_bug",
         outcome: passOk ? "success" : "partial",
-        context: { license_id: lic.id, user_id: lic.user_id, steps } as any,
+        error: passOk ? null : passMsg || null,
+        context: { license_id: lic.id, user_id: lic.user_id, actor: context.userId, steps } as any,
       });
     } catch { /* best-effort */ }
 
-    return { ok: true, passwordReapplied: passOk, expiresAt: ymd(original), steps };
+    return {
+      ok: true,
+      passwordReapplied: passOk,
+      expiresAt: original ? ymd(original) : null,
+      steps,
+    };
   });
+
 
 export const adminListThreads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

@@ -222,25 +222,31 @@ export async function yaarsaExtend(email: string, newExpireDate: string, panel: 
   return yaarsaPost({ action: "cexpire", email, expire_date: newExpireDate, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
-// Reaplica a senha da conta no painel. Alguns builds do Yaarsa usam nomes de
-// ação diferentes para troca de senha, então tentamos os candidatos conhecidos
-// e paramos no primeiro que não for recusado como "ação inválida" (1001).
+// Reaplica/troca a senha da conta no painel.
+// Verificado no painel real: a ação é `update` (responde
+// {"Success":"Password updated successfully!"}). Mantemos aliases de outras
+// builds como fallback caso o painel seja atualizado.
 export async function yaarsaSetPassword(
   email: string,
   password: string,
   panel: YaarsaPanel = "v457",
+  username?: string,
 ): Promise<YaarsaResponse & { action?: string }> {
-  const candidates = ["cpassword", "cpass", "changepassword", "cpasswd"];
+  const candidates = ["update", "cpassword", "cpass", "changepassword"];
   let last: YaarsaResponse = { Fail: "Painel não aceitou nenhuma ação de troca de senha" };
   for (const action of candidates) {
-    const r = await yaarsaPost({ action, email, password, adminkey: yaarsaAdminKey(panel) }, panel);
+    const fields: Record<string, string> = { action, email, password, adminkey: yaarsaAdminKey(panel) };
+    if (username) fields.username = username;
+    const r = await yaarsaPost(fields, panel);
     if (r.Success) return { ...r, action };
     last = r;
-    const invalidAction = /1001|ação inválida|invalid action/i.test(String(r.Fail ?? ""));
+    // Ação desconhecida no painel → corpo vazio/inesperado ou erro 1001.
+    const invalidAction = /1001|ação inválida|invalid action|resposta inesperada/i.test(String(r.Fail ?? ""));
     if (!invalidAction) return { ...r, action };
   }
   return last;
 }
+
 
 // Look up an email in a given panel by attempting a benign cexpire with a
 // future date (tomorrow, UTC). Yaarsa returns 1005 ("not found") when the
