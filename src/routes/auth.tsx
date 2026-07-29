@@ -84,15 +84,23 @@ function bumpAttempts(email: string): number {
   return list.length;
 }
 
-function currentAttempts(email: string): number {
-  if (typeof window === "undefined") return 0;
+/** Tentativas de envio na última hora + horário do último envio (para o status). */
+function attemptsInfo(email: string): { count: number; last: number | null } {
+  if (typeof window === "undefined") return { count: 0, last: null };
   const key = keyFor(ATTEMPTS_KEY, email);
-  if (!key) return 0;
+  if (!key) return { count: 0, last: null };
   const now = Date.now();
   try {
     const list: number[] = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-    return list.filter((t) => now - t < 3600_000).length;
-  } catch { return 0; }
+    const recent = list.filter((t) => now - t < 3600_000);
+    return { count: recent.length, last: recent.length ? recent[recent.length - 1] : null };
+  } catch { return { count: 0, last: null }; }
+}
+
+function formatTime(ts: number): string {
+  try {
+    return new Date(ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch { return ""; }
 }
 
 function AuthPage() {
@@ -107,11 +115,14 @@ function AuthPage() {
   const [signupMessage, setSignupMessage] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [emailBlocked, setEmailBlocked] = useState(false);
+  const [sendInfo, setSendInfo] = useState<{ count: number; last: number | null }>({ count: 0, last: null });
 
-  // Cooldown é por e-mail: trocar de e-mail mostra a trava (ou a ausência dela) do novo usuário.
+  // Cooldown e histórico são por e-mail: trocar de e-mail mostra o estado do novo usuário.
   useEffect(() => {
     setCooldown(readCooldown(email));
+    setSendInfo(attemptsInfo(email));
   }, [email]);
+
 
   // Contagem regressiva quando o envio de e-mails está temporariamente bloqueado.
   useEffect(() => {
