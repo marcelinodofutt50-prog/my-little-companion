@@ -290,13 +290,13 @@ function AuthPage() {
             <label className="mb-1 block font-mono text-xs uppercase text-muted-foreground">Senha</label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === "in" ? "current-password" : "new-password"} />
           </div>
-          <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading || cooldown > 0}>
+          <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading || (mode === "up" && cooldown > 0)}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {cooldown > 0
+            {mode === "up" && cooldown > 0
               ? `Aguarde ${cooldown}s`
               : mode === "in" ? "Entrar" : "Criar conta"}
           </Button>
-          {cooldown > 0 && (
+          {mode === "up" && cooldown > 0 && (
             <p className="text-center font-mono text-[11px] text-muted-foreground">
               Limite temporário de envio de e-mails. Se você já recebeu o link, use-o — não precisa reenviar.
             </p>
