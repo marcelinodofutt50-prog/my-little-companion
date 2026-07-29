@@ -26,8 +26,10 @@ import { RgbModeToggle } from "@/components/RgbModeToggle";
 import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
 import { OrderHistory } from "@/components/OrderHistory";
+import { LicenseRenewCard } from "@/components/LicenseRenewCard";
 import { listMyOrders, type MyOrder } from "@/lib/orders.functions";
 import { InAppNotifications } from "@/components/InAppNotifications";
+
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
 import { HowItWorksSteps } from "@/components/HowItWorksSteps";
 
