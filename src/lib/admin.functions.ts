@@ -1119,3 +1119,101 @@ export const adminHealthMonitor = createServerFn({ method: "GET" })
       },
     };
   });
+
+// ---------------------------------------------------------------------------
+// Busca global do admin (Ctrl+K) — clientes, pedidos, licenças e tickets
+// ---------------------------------------------------------------------------
+export const adminGlobalSearch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ q: z.string() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const q = data.q.trim();
+    if (q.length < 2) return { users: [], orders: [], licenses: [], threads: [] };
+    const like = `%${q}%`;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [users, orders, licenses, threads] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id,email,full_name,display_name,created_at")
+        .or(`email.ilike.${like},full_name.ilike.${like},display_name.ilike.${like}`)
+        .limit(8),
+      supabaseAdmin
+        .from("orders")
+        .select("id,user_id,plan_slug,amount,status,created_at")
+        .or(isUuid ? `id.eq.${q},mp_payment_id.eq.${q}` : `mp_payment_id.ilike.${like},plan_slug.ilike.${like}`)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabaseAdmin
+        .from("licenses")
+        .select("id,user_id,plan_slug,yaarsa_email,yaarsa_username,expires_at,revoked,panel")
+        .or(`yaarsa_email.ilike.${like},yaarsa_username.ilike.${like}`)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabaseAdmin
+        .from("support_threads")
+        .select("id,user_id,subject,status,category,updated_at")
+        .ilike("subject", like)
+        .order("updated_at", { ascending: false })
+        .limit(8),
+    ]);
+
+    return {
+      users: users.data ?? [],
+      orders: orders.data ?? [],
+      licenses: licenses.data ?? [],
+      threads: threads.data ?? [],
+    };
+  });
+
+// Ficha 360º de um cliente: tudo que existe sobre ele em um lugar só.
+export const adminCustomer360 = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const uid = data.userId;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [profile, roles, licenses, orders, threads, refunds, apkJobs, cashback, referrals] = await Promise.all([
+      supabaseAdmin.from("profiles").select("*").eq("id", uid).maybeSingle(),
+      supabaseAdmin.from("user_roles").select("role").eq("user_id", uid),
+      supabaseAdmin.from("licenses").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(30),
+      supabaseAdmin.from("orders").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(30),
+      supabaseAdmin.from("support_threads").select("id,subject,status,category,priority,updated_at,unread_by_staff").eq("user_id", uid).order("updated_at", { ascending: false }).limit(15),
+      supabaseAdmin.from("refund_requests").select("id,amount,status,reason,created_at,deadline_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(15),
+      supabaseAdmin.from("apk_jobs").select("id,status,source_filename,created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(10),
+      supabaseAdmin.from("cashback_ledger").select("amount").eq("user_id", uid),
+      supabaseAdmin.from("referrals").select("id,reward_amount,reward_status,created_at").eq("referrer_id", uid).limit(20),
+    ]);
+
+    const paidOrders = (orders.data ?? []).filter((o: any) => o.status === "paid");
+    const totalSpent = paidOrders.reduce((s: number, o: any) => s + Number(o.amount || 0), 0);
+    const cashbackBalance = (cashback.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+    const activeLicenses = (licenses.data ?? []).filter(
+      (l: any) => !l.revoked && !l.disabled_at && (!l.expires_at || new Date(l.expires_at) > new Date()),
+    );
+
+    return {
+      profile: profile.data ?? null,
+      roles: (roles.data ?? []).map((r: any) => r.role),
+      licenses: licenses.data ?? [],
+      orders: orders.data ?? [],
+      threads: threads.data ?? [],
+      refunds: refunds.data ?? [],
+      apkJobs: apkJobs.data ?? [],
+      referrals: referrals.data ?? [],
+      summary: {
+        totalSpent,
+        paidOrdersCount: paidOrders.length,
+        ordersCount: (orders.data ?? []).length,
+        cashbackBalance,
+        activeLicensesCount: activeLicenses.length,
+        openThreads: (threads.data ?? []).filter((t: any) => t.status !== "closed").length,
+        pendingRefunds: (refunds.data ?? []).filter((r: any) => r.status === "pending").length,
+        firstSeen: profile.data?.created_at ?? null,
+      },
+    };
+  });
