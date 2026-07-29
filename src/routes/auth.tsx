@@ -118,6 +118,25 @@ function AuthPage() {
   const [cooldown, setCooldown] = useState(0);
   const [emailBlocked, setEmailBlocked] = useState(false);
   const [sendInfo, setSendInfo] = useState<{ count: number; last: number | null }>({ count: 0, last: null });
+  /** true quando o e-mail digitado já pertence a uma conta (inclui alias do Gmail). */
+  const [emailTaken, setEmailTaken] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
+  // Digitou outro e-mail? o aviso de "já cadastrado" some.
+  useEffect(() => { setEmailTaken(false); }, [email]);
+
+  /** Checagem ao sair do campo, só no cadastro: evita erro depois de preencher tudo. */
+  async function verifyEmailFree() {
+    if (mode !== "up") return;
+    const clean = normalizeEmail(email);
+    if (!z.string().email().safeParse(clean).success) return;
+    setCheckingEmail(true);
+    try {
+      const r = await checkEmailAvailability({ data: { email: clean } });
+      setEmailTaken(!r.available);
+    } catch { /* checagem é só conveniência */ }
+    finally { setCheckingEmail(false); }
+  }
 
   // Cooldown e histórico são por e-mail: trocar de e-mail mostra o estado do novo usuário.
   useEffect(() => {
