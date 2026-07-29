@@ -71,6 +71,7 @@ function DashboardPage() {
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
   const [extraTab, setExtraTab] = useState<"downloads" | "historico" | "resumo" | "beneficios" | "ajuda">("downloads");
   const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [orderLastSync, setOrderLastSync] = useState<Date | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   // Tick para o trial sumir sozinho do painel assim que expirar
   const [nowTick, setNowTick] = useState(() => Date.now());
