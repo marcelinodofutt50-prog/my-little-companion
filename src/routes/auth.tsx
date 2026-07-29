@@ -474,10 +474,24 @@ function AuthPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full font-mono uppercase tracking-wider"
+              disabled={loading || (mode === "up" && signupBlockSecs > 0)}
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === "in" ? "Entrar" : "Criar conta"}
+              {mode === "up" && signupBlockSecs > 0
+                ? `Aguarde ${signupBlockSecs}s`
+                : mode === "in" ? "Entrar" : "Criar conta"}
             </Button>
+
+            {mode === "up" && signupBlockSecs > 0 && (
+              <p className="font-mono text-[10px] leading-relaxed text-amber-400">
+                Muitas tentativas de cadastro nesta conexão. O bloqueio é temporário —
+                se você é cliente de verdade, fale com o suporte que liberamos na hora.
+              </p>
+            )}
+
 
             <p className="flex items-start gap-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neon/70" />
