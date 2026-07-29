@@ -167,6 +167,24 @@
     backdrop-filter: blur(10px);
   }
 
+  /* Pricing cards — clean dark premium */
+  .price-card {
+    background: oklch(0.08 0.008 160);
+    border: 1px solid oklch(0.22 0.02 162);
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
+  }
+  .price-card:hover {
+    border-color: oklch(0.3 0.04 162);
+  }
+  .price-card-popular {
+    border-color: oklch(0.7 0.16 148 / 0.55);
+    background: oklch(0.09 0.012 150);
+  }
+  .glow-neon-soft {
+    box-shadow: 0 0 40px oklch(0.84 0.2 148 / 0.12), 0 0 80px oklch(0.84 0.2 148 / 0.06);
+  }
+
   .scanlines { position: relative; }
   .scanlines::before {
     content: "";
