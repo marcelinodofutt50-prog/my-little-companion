@@ -353,8 +353,9 @@ function PlansPage() {
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <div>
-                  <div className="text-sm font-semibold">Tem cupom, indicação ou quer presentear?</div>
-                  <div className="text-[11px] text-muted-foreground">Opcional — clique para abrir. Sem isso, é só escolher o plano abaixo.</div>
+                  <div className="text-sm font-semibold">Cupom, indicação, presente ou login antigo</div>
+                  <div className="text-[11px] text-muted-foreground">Aplique cupom/indicação, presenteie alguém ou sincronize seu login antigo (Shadow 4.5.7 / 4.6) — tudo aqui.</div>
+
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
