@@ -71,6 +71,7 @@ function DashboardPage() {
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
   const [extraTab, setExtraTab] = useState<"downloads" | "historico" | "resumo" | "beneficios" | "ajuda">("downloads");
   const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [orderLastSync, setOrderLastSync] = useState<Date | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   // Tick para o trial sumir sozinho do painel assim que expirar
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -103,6 +104,7 @@ function DashboardPage() {
       const list = l as License[];
       setLicenses(list); setBalance(c.balance);
       setOrders((o ?? []) as MyOrder[]);
+      setOrderLastSync(new Date());
       // Hydrate trial credentials card from server-stored (encrypted) license
       // so it survives reloads / device switches. Trials expirados somem do topo.
       const trial = list.find((x) => x.is_trial);
@@ -129,6 +131,7 @@ function DashboardPage() {
 
   useEffect(() => {
     let ch: ReturnType<typeof supabase.channel> | null = null;
+    let ordersCh: ReturnType<typeof supabase.channel> | null = null;
     supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         setEmail(data.user.email ?? "");
@@ -140,15 +143,39 @@ function DashboardPage() {
         ch = supabase.channel(`licenses:${data.user.id}`)
           .on("postgres_changes", { event: "*", schema: "public", table: "licenses", filter: `user_id=eq.${data.user.id}` }, () => refresh())
           .subscribe();
+        // Realtime para pedidos em andamento (status, pagamento, entrega)
+        ordersCh = supabase.channel(`orders:${data.user.id}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${data.user.id}` }, () => refresh())
+          .subscribe();
       }
     });
     refresh();
     // Load cached legacy status, then re-detect in background (cheap when cache is fresh).
     legacyStatusFn().then((r) => setLegacyStatus(r.status)).catch(() => {});
     detectFn().then((r) => setLegacyStatus(r.status)).catch(() => {});
-    return () => { if (ch) supabase.removeChannel(ch); };
+    return () => {
+      if (ch) supabase.removeChannel(ch);
+      if (ordersCh) supabase.removeChannel(ordersCh);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Polling suave só enquanto houver pedidos em andamento (backup do realtime).
+  useEffect(() => {
+    const hasOpen = orders.some((o) => o.stage !== "delivered" && o.stage !== "refunded" && o.stage !== "failed");
+    if (!hasOpen) return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        ordersFn()
+          .then((o) => {
+            setOrders((o ?? []) as MyOrder[]);
+            setOrderLastSync(new Date());
+          })
+          .catch(() => {});
+      }
+    }, 15000);
+    return () => clearInterval(id);
+  }, [orders, ordersFn]);
 
   async function startUpgrade() {
     setUpgradeLoading(true);
@@ -324,9 +351,16 @@ function DashboardPage() {
             <div className="mt-5 space-y-3">
               <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                 <span>// pedidos em andamento · {open.length}</span>
-                <button onClick={() => setExtraTab("historico")} className="text-cyan hover:underline">
-                  ver histórico{hidden > 0 ? ` (+${hidden})` : ""}
-                </button>
+                <div className="flex items-center gap-2">
+                  {orderLastSync && (
+                    <span className="hidden text-[9px] tracking-wider text-muted-foreground/70 sm:inline">
+                      atualizado {orderLastSync.toLocaleTimeString("pt-BR")}
+                    </span>
+                  )}
+                  <button onClick={() => setExtraTab("historico")} className="text-cyan hover:underline">
+                    ver histórico{hidden > 0 ? ` (+${hidden})` : ""}
+                  </button>
+                </div>
               </div>
               <OrderStatusTimeline
                 order={{
