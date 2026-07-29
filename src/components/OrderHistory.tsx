@@ -14,10 +14,30 @@ function fmt(iso: string | null) {
   return iso ? new Date(iso).toLocaleString("pt-BR") : "—";
 }
 
+type StageFilter = "all" | "delivered" | "refunded" | "failed";
+type PeriodFilter = "all" | "7d" | "30d" | "90d" | "year";
+
+const STAGE_TABS: { key: StageFilter; label: string }[] = [
+  { key: "all", label: "todos" },
+  { key: "delivered", label: "entregues" },
+  { key: "refunded", label: "reembolsados" },
+  { key: "failed", label: "falhas" },
+];
+
+const PERIOD_TABS: { key: PeriodFilter; label: string; days: number | null }[] = [
+  { key: "all", label: "todo período", days: null },
+  { key: "7d", label: "7 dias", days: 7 },
+  { key: "30d", label: "30 dias", days: 30 },
+  { key: "90d", label: "90 dias", days: 90 },
+  { key: "year", label: "12 meses", days: 365 },
+];
+
 /** Histórico de pedidos já concluídos (entregues, reembolsados ou com falha). */
 export function OrderHistory() {
   const [orders, setOrders] = useState<MyOrder[] | null>(null);
   const [q, setQ] = useState("");
+  const [stage, setStage] = useState<StageFilter>("all");
+  const [period, setPeriod] = useState<PeriodFilter>("all");
   const fetchFn = useServerFn(listMyOrders);
 
   useEffect(() => {
@@ -36,17 +56,26 @@ export function OrderHistory() {
 
   const done = orders.filter((o) => o.stage === "delivered" || o.stage === "refunded" || o.stage === "failed");
   const term = q.trim().toLowerCase();
-  const list = term
-    ? done.filter(
-        (o) =>
-          (o.plan_name ?? o.plan_slug).toLowerCase().includes(term) ||
-          o.id.toLowerCase().includes(term),
-      )
-    : done;
+  const days = PERIOD_TABS.find((p) => p.key === period)?.days ?? null;
+  const cutoff = days ? Date.now() - days * 86400000 : null;
+
+  const list = done.filter((o) => {
+    if (stage !== "all" && o.stage !== stage) return false;
+    if (cutoff && new Date(o.created_at).getTime() < cutoff) return false;
+    if (
+      term &&
+      !(o.plan_name ?? o.plan_slug).toLowerCase().includes(term) &&
+      !o.id.toLowerCase().includes(term)
+    )
+      return false;
+    return true;
+  });
 
   const totalPago = done
     .filter((o) => o.stage === "delivered")
     .reduce((s, o) => s + o.amount, 0);
+
+  const filtersOn = stage !== "all" || period !== "all" || term.length > 0;
 
   return (
     <div className="space-y-4">
@@ -65,6 +94,41 @@ export function OrderHistory() {
           className="w-full bg-transparent font-mono text-xs outline-none placeholder:text-muted-foreground/60"
         />
       </div>
+
+      <div className="space-y-2">
+        <FilterRow
+          icon={<Filter className="h-3 w-3" />}
+          label="status"
+          options={STAGE_TABS}
+          active={stage}
+          onSelect={(k) => setStage(k as StageFilter)}
+        />
+        <FilterRow
+          icon={<CalendarRange className="h-3 w-3" />}
+          label="período"
+          options={PERIOD_TABS}
+          active={period}
+          onSelect={(k) => setPeriod(k as PeriodFilter)}
+        />
+        <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
+          <span>
+            {list.length} de {done.length} pedido{done.length === 1 ? "" : "s"}
+          </span>
+          {filtersOn && (
+            <button
+              onClick={() => {
+                setStage("all");
+                setPeriod("all");
+                setQ("");
+              }}
+              className="flex items-center gap-1 uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <X className="h-3 w-3" /> limpar filtros
+            </button>
+          )}
+        </div>
+      </div>
+
 
       {list.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border/50 p-8 text-center">
