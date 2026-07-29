@@ -624,7 +624,7 @@ function DashboardPage() {
           return (
             <section id="minhas-licencas" className="mt-10">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-cyan">// suas licenças</h2>
+                <h2 className="osint-label text-cyan">// suas licenças</h2>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex overflow-hidden rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
                     {tabs.map((t) => (
