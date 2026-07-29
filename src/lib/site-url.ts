@@ -1,13 +1,16 @@
 /**
  * Canonical public URL of the site.
  *
- * Set VITE_SITE_URL (ex.: https://www.shadowstore.com) no ambiente de produção
+ * Set VITE_SITE_URL (ex.: https://www.shadowdashstore.com) no ambiente de produção
  * para que os links de confirmação de e-mail e o retorno do OAuth apontem
  * sempre para o domínio oficial, mesmo quando o app é aberto por uma URL
  * alternativa (deploy preview da Vercel, etc.).
  *
- * Sem a variável definida, cai no origin atual (dev/preview).
+ * Sem a variável definida, cai no origin atual (dev/preview) ou no domínio
+ * oficial padrão durante o SSR.
  */
+const DEFAULT_SITE = "https://www.shadowdashstore.com";
+
 export function siteUrl(path = ""): string {
   const configured = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim();
   const base =
@@ -15,10 +18,19 @@ export function siteUrl(path = ""): string {
       ? configured.replace(/\/+$/, "")
       : typeof window !== "undefined"
         ? window.location.origin
-        : "";
+        : DEFAULT_SITE;
   if (!path) return base;
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+export function siteDomain(): string {
+  try {
+    return new URL(siteUrl()).hostname.replace(/^www\./, "");
+  } catch {
+    return "shadowdashstore.com";
+  }
+}
+
 
 /**
  * Detecta se o navegador está numa URL de callback de confirmação de e-mail
