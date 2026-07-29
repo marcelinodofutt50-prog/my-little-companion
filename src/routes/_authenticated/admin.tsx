@@ -481,7 +481,8 @@ function AdminPage() {
                 />
 
                 <AdminDailyReport />
-                <AdminActiveProblems />
+                <AdminActiveProblems onNavigate={setTab} />
+
 
                 {/* Mini strip: HOJE */}
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
