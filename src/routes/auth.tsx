@@ -250,6 +250,7 @@ function AuthPage() {
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
         bumpAttempts();
+        window.localStorage.setItem(LAST_EMAIL_KEY, email.trim().toLowerCase());
         const { data: signUpData, error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
