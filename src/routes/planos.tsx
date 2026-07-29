@@ -80,10 +80,11 @@ function metaFor(plan: Plan): PlanMeta {
     cadence: "pagamento único",
     features: [
       "Shadow 4.6+ com todos os módulos",
-      "Bypass Play Protect ativo",
+      "Bypass Play Protect da própria BTmob (assinatura ~1 dia)",
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
-      "Fila prioritária no Play Protect Cloak",
+      "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
+
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
