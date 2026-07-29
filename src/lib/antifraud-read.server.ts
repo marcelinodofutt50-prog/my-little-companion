@@ -6,6 +6,7 @@ export type SignupIpRow = {
   user_id: string | null;
   user_agent: string | null;
   suspicious: boolean;
+  allowlisted?: boolean;
   accounts_in_window: number;
   created_at: string;
 };
@@ -56,6 +57,22 @@ export async function loadSignupIpReport(input: {
   if (error) return { rows: [], total: 0, suspiciousCount: 0, uniqueIps: 0, config };
 
   const rows = (data ?? []) as SignupIpRow[];
+
+  // Marca quais conexões já foram liberadas manualmente pelo admin.
+  const hashes = Array.from(new Set(rows.map((r) => r.ip_hash)));
+  if (hashes.length) {
+    const { data: allow } = await supabaseAdmin
+      .from("antifraud_allowlist")
+      .select("ip_hash, expires_at")
+      .in("ip_hash", hashes);
+    const now = Date.now();
+    const active = new Set(
+      (allow ?? [])
+        .filter((a) => !a.expires_at || new Date(a.expires_at).getTime() > now)
+        .map((a) => a.ip_hash),
+    );
+    for (const r of rows) r.allowlisted = active.has(r.ip_hash);
+  }
 
   return {
     config,
