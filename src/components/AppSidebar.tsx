@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import shadowMark from "@/assets/shadow-mask.png";
+import { secureSignOut } from "@/lib/session";
 
 type Item = { title: string; url: string; icon: any; hash?: string };
 
@@ -101,7 +102,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
       <SidebarFooter className="border-t border-sidebar-border/60">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => supabase.auth.signOut()} tooltip="Sair">
+            <SidebarMenuButton onClick={() => { void secureSignOut(); }} tooltip="Sair">
               <LogOut className="h-4 w-4" />
               {!collapsed && <span className="text-sm">Sair</span>}
             </SidebarMenuButton>
