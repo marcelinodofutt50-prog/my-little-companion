@@ -33,6 +33,45 @@ const schema = z.object({
   password: z.string().min(6, "Mínimo 6 caracteres").max(72),
 });
 
+const COOLDOWN_KEY = "shadow.auth.emailCooldownUntil";
+const ATTEMPTS_KEY = "shadow.auth.emailAttempts";
+const MAX_ATTEMPTS_PER_HOUR = 3;
+
+function readCooldown(): number {
+  if (typeof window === "undefined") return 0;
+  const until = Number(window.localStorage.getItem(COOLDOWN_KEY) ?? 0);
+  if (!until) return 0;
+  return Math.max(0, Math.ceil((until - Date.now()) / 1000));
+}
+
+function writeCooldown(secs: number) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(COOLDOWN_KEY, String(Date.now() + secs * 1000));
+}
+
+/** Conta tentativas de envio na última hora (evita queimar a cota do remetente). */
+function bumpAttempts(): number {
+  if (typeof window === "undefined") return 0;
+  const now = Date.now();
+  let list: number[] = [];
+  try {
+    list = JSON.parse(window.localStorage.getItem(ATTEMPTS_KEY) ?? "[]");
+  } catch { list = []; }
+  list = list.filter((t) => now - t < 3600_000);
+  list.push(now);
+  window.localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(list));
+  return list.length;
+}
+
+function currentAttempts(): number {
+  if (typeof window === "undefined") return 0;
+  const now = Date.now();
+  try {
+    const list: number[] = JSON.parse(window.localStorage.getItem(ATTEMPTS_KEY) ?? "[]");
+    return list.filter((t) => now - t < 3600_000).length;
+  } catch { return 0; }
+}
+
 function AuthPage() {
   const { next, code, type } = Route.useSearch();
   const navigate = useNavigate();
@@ -40,9 +79,16 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
   const [signupMessage, setSignupMessage] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [emailBlocked, setEmailBlocked] = useState(false);
+
+  // Restaura o cooldown mesmo se o usuário recarregar a página.
+  useEffect(() => {
+    setCooldown(readCooldown());
+  }, []);
 
   // Contagem regressiva quando o envio de e-mails está temporariamente bloqueado.
   useEffect(() => {
@@ -50,6 +96,11 @@ function AuthPage() {
     const t = setTimeout(() => setCooldown((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [cooldown]);
+
+  function startCooldown(secs: number) {
+    writeCooldown(secs);
+    setCooldown(secs);
+  }
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
@@ -77,6 +128,63 @@ function AuthPage() {
     });
   }, [navigate, next]);
 
+  function handleAuthError(err: any) {
+    const raw = String(err?.message ?? "");
+    const status = err?.status ?? err?.code;
+    const isRateLimit =
+      status === 429 ||
+      /rate limit|too many requests|over_email_send_rate_limit|security purposes/i.test(raw);
+
+    if (isRateLimit) {
+      const secs = Number(raw.match(/(\d+)\s*second/i)?.[1] ?? 90);
+      startCooldown(secs);
+      setSignupMessage(null);
+      setEmailBlocked(true);
+      toast.error(
+        `Limite de envio de e-mails atingido. Aguarde ${secs}s — sua conta não foi perdida.`
+      );
+    } else if (/already registered|already been registered|user already/i.test(raw)) {
+      toast.error("Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.");
+      setMode("in");
+    } else if (/email not confirmed/i.test(raw)) {
+      setEmailBlocked(true);
+      toast.error("Confirme seu e-mail antes de entrar. Veja a caixa de entrada e o spam.");
+    } else if (/invalid login credentials/i.test(raw)) {
+      toast.error("E-mail ou senha incorretos.");
+    } else {
+      toast.error(raw || "Não foi possível concluir. Tente novamente.");
+    }
+  }
+
+  /** Fallback: reenvia o e-mail de confirmação com trava local de tentativas. */
+  async function resendConfirmation() {
+    if (resending || cooldown > 0) return;
+    const parsedEmail = z.string().trim().email().safeParse(email);
+    if (!parsedEmail.success) return toast.error("Digite seu e-mail acima para reenviar.");
+    if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
+      startCooldown(300);
+      return toast.error(
+        "Você já pediu o e-mail várias vezes nesta hora. Use o link que já chegou (veja Spam/Promoções) ou fale com o suporte."
+      );
+    }
+    setResending(true);
+    try {
+      bumpAttempts();
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: parsedEmail.data,
+        options: { emailRedirectTo: siteUrl() },
+      });
+      if (error) throw error;
+      startCooldown(90);
+      toast.success("E-mail reenviado. Verifique também Spam e Promoções.");
+    } catch (err: any) {
+      handleAuthError(err);
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (loading || cooldown > 0) return;
@@ -85,11 +193,20 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "up") {
+        if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
+          startCooldown(300);
+          setEmailBlocked(true);
+          throw new Error(
+            "Muitas tentativas de cadastro nesta hora. Aguarde alguns minutos ou fale com o suporte."
+          );
+        }
+        bumpAttempts();
         const { error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
         toast.success("Conta criada! Confirme seu e-mail.");
+        setEmailBlocked(false);
         setSignupMessage(
           "Enviamos um e-mail de confirmação para você.\n\n" +
           "1. Abra o Gmail (ou app de e-mail).\n" +
@@ -98,38 +215,17 @@ function AuthPage() {
           "4. Você será logado automaticamente.\n\n" +
           "Se não achar, olhe na pasta Spam ou Promoções."
         );
-        setCooldown(60);
+        startCooldown(60);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate({ to: (next as any) || "/dashboard" });
       }
     } catch (err: any) {
-      const raw = String(err?.message ?? "");
-      const status = err?.status ?? err?.code;
-      const isRateLimit =
-        status === 429 ||
-        /rate limit|too many requests|over_email_send_rate_limit|security purposes/i.test(raw);
-
-      if (isRateLimit) {
-        const secs = Number(raw.match(/(\d+)\s*second/i)?.[1] ?? 60);
-        setCooldown(secs);
-        setSignupMessage(null);
-        toast.error(
-          `Muitas tentativas de envio de e-mail agora. Aguarde ${secs}s e tente de novo — sua conta não foi perdida.`
-        );
-      } else if (/already registered|already been registered|user already/i.test(raw)) {
-        toast.error("Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.");
-        setMode("in");
-      } else if (/email not confirmed/i.test(raw)) {
-        toast.error("Confirme seu e-mail antes de entrar. Veja a caixa de entrada e o spam.");
-      } else if (/invalid login credentials/i.test(raw)) {
-        toast.error("E-mail ou senha incorretos.");
-      } else {
-        toast.error(raw || "Não foi possível concluir. Tente novamente.");
-      }
+      handleAuthError(err);
     } finally { setLoading(false); }
   }
+
 
 
   return (
