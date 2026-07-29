@@ -612,8 +612,10 @@ function Metric({ value, label }: { value: string; label: string }) {
 function TierComparison() {
   const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; lifetime: React.ReactNode }[] = [
     { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", lifetime: "Shadow 4.6+" },
-    { label: "Bypass Play Protect", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
+    { label: "Bypass Play Protect (BTmob nativo) — assinatura ~1 dia", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
+    { label: "Play Protect Cloak do site — assinatura 2 a 3 semanas", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "à parte", lifetime: "à parte" },
     { label: "Recursos completos", weekly: "básico", monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
+
     { label: "Atualizações grátis", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "pagas", lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
     { label: "Suporte prioritário", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
     { label: "Duração", weekly: "7 dias", monthly: "30 dias", lifetime: "vitalícia" },
