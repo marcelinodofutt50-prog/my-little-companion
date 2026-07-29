@@ -130,6 +130,7 @@ function DashboardPage() {
 
   useEffect(() => {
     let ch: ReturnType<typeof supabase.channel> | null = null;
+    let ordersCh: ReturnType<typeof supabase.channel> | null = null;
     supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         setEmail(data.user.email ?? "");
@@ -141,15 +142,39 @@ function DashboardPage() {
         ch = supabase.channel(`licenses:${data.user.id}`)
           .on("postgres_changes", { event: "*", schema: "public", table: "licenses", filter: `user_id=eq.${data.user.id}` }, () => refresh())
           .subscribe();
+        // Realtime para pedidos em andamento (status, pagamento, entrega)
+        ordersCh = supabase.channel(`orders:${data.user.id}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${data.user.id}` }, () => refresh())
+          .subscribe();
       }
     });
     refresh();
     // Load cached legacy status, then re-detect in background (cheap when cache is fresh).
     legacyStatusFn().then((r) => setLegacyStatus(r.status)).catch(() => {});
     detectFn().then((r) => setLegacyStatus(r.status)).catch(() => {});
-    return () => { if (ch) supabase.removeChannel(ch); };
+    return () => {
+      if (ch) supabase.removeChannel(ch);
+      if (ordersCh) supabase.removeChannel(ordersCh);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Polling suave só enquanto houver pedidos em andamento (backup do realtime).
+  useEffect(() => {
+    const hasOpen = orders.some((o) => o.stage !== "delivered" && o.stage !== "refunded" && o.stage !== "failed");
+    if (!hasOpen) return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        ordersFn()
+          .then((o) => {
+            setOrders((o ?? []) as MyOrder[]);
+            setOrderLastSync(new Date());
+          })
+          .catch(() => {});
+      }
+    }, 15000);
+    return () => clearInterval(id);
+  }, [orders, ordersFn]);
 
   async function startUpgrade() {
     setUpgradeLoading(true);
