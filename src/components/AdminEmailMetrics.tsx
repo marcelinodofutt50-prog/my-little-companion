@@ -1,8 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, MailCheck, RefreshCw, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, MailCheck, RefreshCw, Send, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getEmailMetrics } from "@/lib/email-metrics.functions";
+import { Input } from "@/components/ui/input";
+import { getEmailMetrics, sendTestEmail } from "@/lib/email-metrics.functions";
+
 
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
