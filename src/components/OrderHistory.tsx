@@ -94,7 +94,7 @@ export function OrderHistory() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="buscar por plano ou nº do pedido"
+          placeholder="buscar por nº do pedido (ex: #a1b2c3) ou plano"
           className="w-full bg-transparent font-mono text-xs outline-none placeholder:text-muted-foreground/60"
         />
       </div>
