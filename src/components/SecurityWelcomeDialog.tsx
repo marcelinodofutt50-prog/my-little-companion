@@ -74,11 +74,12 @@ export function SecurityWelcomeDialog() {
 
         const generatedAt = (profile as any)?.recovery_codes_generated_at ?? null;
         const ackAt = (profile as any)?.security_ack_at ?? null;
-        const remaining = count ?? 0;
+        const left = count ?? 0;
 
         setHadCodes(Boolean(generatedAt));
-        setExhausted(Boolean(generatedAt) && remaining === 0);
-        if (!ackAt || remaining === 0) setOpen(true);
+        setRemaining(left);
+        setExhausted(Boolean(generatedAt) && left === 0);
+        if (!ackAt || left === 0) setOpen(true);
       })
       .catch(() => {});
   }, []);
