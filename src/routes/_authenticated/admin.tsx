@@ -991,7 +991,7 @@ function AdminPage() {
         primary={["overview", "chat", "orders", "licenses"]}
         tab={tab}
         onChange={(id) => setTab(id as Tab)}
-        badges={{ chat: threadsOpenCount }}
+        badges={navBadges}
       />
     </div>
   );
