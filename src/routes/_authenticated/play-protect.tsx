@@ -499,3 +499,13 @@ function PlayProtectPage() {
     </SidebarProvider>
   );
 }
+
+function QueueStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded border border-sky-500/30 bg-background/30 px-2 py-1.5">
+      <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-sky-300/70">{label}</div>
+      <div className="font-mono text-sm text-sky-100">{value}</div>
+    </div>
+  );
+}
+
