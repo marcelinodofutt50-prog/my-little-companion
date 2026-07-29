@@ -46,15 +46,35 @@ export const listMyThreads = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+/**
+ * Lista mensagens de forma paginada (mais recentes primeiro no banco,
+ * devolvidas em ordem cronológica). Use `before` (created_at ISO da mensagem
+ * mais antiga já carregada) para buscar o histórico anterior.
+ */
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
+  .inputValidator((i: unknown) => z.object({
+    threadId: z.string().uuid(),
+    limit: z.number().int().min(5).max(100).optional(),
+    before: z.string().optional(),
+  }).parse(i))
   .handler(async ({ data, context }) => {
-    const { data: msgs, error } = await context.supabase
-      .from("support_messages").select("*").eq("thread_id", data.threadId).order("created_at", { ascending: true });
+    const limit = data.limit ?? 30;
+    let q = context.supabase
+      .from("support_messages")
+      .select("*")
+      .eq("thread_id", data.threadId)
+      .order("created_at", { ascending: false })
+      .limit(limit + 1);
+    if (data.before) q = q.lt("created_at", data.before);
+    const { data: rows, error } = await q;
     if (error) throw error;
-    return msgs ?? [];
+    const list = rows ?? [];
+    const hasMore = list.length > limit;
+    const page = hasMore ? list.slice(0, limit) : list;
+    return { messages: page.reverse(), hasMore };
   });
+
 
 /**
  * Marca a thread como lida pelo cliente (zera unread_by_customer).
