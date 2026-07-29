@@ -323,20 +323,28 @@ function AdminPage() {
         <div className="terminal-card scanlines relative overflow-hidden p-4 sm:p-5">
           <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-neon/10 blur-3xl" />
-          <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
+          <div className="relative flex flex-col justify-between gap-3 md:flex-row md:items-center">
+            <div className="min-w-0">
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.35em] text-violet">
                 <ShieldCheck className="h-3.5 w-3.5" /> admin control center
               </div>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">Painel Administrativo</h1>
-              <p className="mt-1 break-all font-mono text-[10px] text-muted-foreground sm:text-[11px]">
-                sessão · <span className="text-foreground/70">{email}</span> · {new Date().toLocaleString("pt-BR")}
-              </p>
+              <h1 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">Painel Administrativo</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 rounded border border-neon/30 bg-neon/5 px-2 py-1 text-neon">
+                  <Circle className="h-2 w-2 fill-neon text-neon" /> sistemas online
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded border border-border/50 bg-background/50 px-2 py-1 text-muted-foreground">
+                  <ShieldCheck className="h-3 w-3 text-cyan" />
+                  <span className="max-w-[180px] truncate normal-case text-foreground/80 sm:max-w-none">{email}</span>
+                </span>
+                {totalPending > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-amber-400">
+                    {totalPending} pendente{totalPending > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="hidden items-center gap-2 rounded-md border border-neon/30 bg-neon/5 px-3 py-1.5 font-mono text-[10px] uppercase text-neon md:inline-flex">
-                <Circle className="h-2 w-2 fill-neon text-neon" /> sistemas online
-              </div>
               <Link to="/dashboard"><Button size="sm" variant="outline" className="font-mono uppercase tracking-wider">Meu Painel</Button></Link>
               <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
