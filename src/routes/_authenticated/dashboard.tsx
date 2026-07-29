@@ -260,7 +260,7 @@ function DashboardPage() {
               const statusColor = statusTone === "danger" ? "text-danger" : statusTone === "amber" ? "text-amber-400" : statusTone === "neon" ? "text-neon" : "text-muted-foreground";
               const statusRing = statusTone === "danger" ? "border-danger/50 bg-danger/5" : statusTone === "amber" ? "border-amber-400/40 bg-amber-400/5" : statusTone === "neon" ? "border-neon/40 bg-neon/5" : "border-border/50 bg-background/40";
               return (
-                <div className="rainbow-ring relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-br from-background via-background to-neon/[0.04] p-5 sm:p-6">
+                <div className="osint-panel osint-corners osint-sweep rainbow-ring relative overflow-hidden p-5 sm:p-6" style={{ ["--osint-sweep-h" as any]: "170px" }}>
                   <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[var(--neon)] opacity-[0.08] blur-3xl" />
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
@@ -269,7 +269,7 @@ function DashboardPage() {
                         <img src={shadowMark} alt="Shadow" className="h-12 w-12 object-contain drop-shadow-[0_0_18px_rgba(201,168,76,0.55)] md:h-14 md:w-14" />
                       </div>
                       <div className="min-w-0">
-                        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-neon/80">// operator</div>
+                        <div className="osint-label text-neon/80">// operator</div>
                         <h1 className="rainbow-text mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{displayIdentity(displayName, email)}</h1>
                         <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                           sessão · {new Date().toLocaleDateString("pt-BR")} · {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
@@ -314,6 +314,7 @@ function DashboardPage() {
                       Atualizar
                     </Button>
                   </div>
+                  <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
                 </div>
               );
             })()}
@@ -624,7 +625,7 @@ function DashboardPage() {
           return (
             <section id="minhas-licencas" className="mt-10">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-cyan">// suas licenças</h2>
+                <h2 className="osint-label text-cyan">// suas licenças</h2>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex overflow-hidden rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
                     {tabs.map((t) => (
@@ -860,7 +861,7 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
 
   const terminal = lic.disabled_at || lic.revoked;
   return (
-    <motion.div layout initial={false} className="terminal-card scanlines relative overflow-hidden">
+    <motion.div layout initial={false} className="terminal-card scanlines osint-corners relative overflow-hidden">
       <div className={`absolute inset-y-0 left-0 w-[3px] ${accentBar}`} />
       {/* HEADER — clickable summary row */}
       <button

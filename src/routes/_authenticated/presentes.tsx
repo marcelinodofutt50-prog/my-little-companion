@@ -67,9 +67,9 @@ function GiftsPage() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="osint-panel osint-corners osint-sweep relative flex flex-wrap items-end justify-between gap-4 overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "120px" }}>
           <div>
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+            <div className="osint-label flex items-center gap-2 text-primary">
               <Gift className="h-3.5 w-3.5" /> presentes
             </div>
             <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Histórico de presentes</h1>

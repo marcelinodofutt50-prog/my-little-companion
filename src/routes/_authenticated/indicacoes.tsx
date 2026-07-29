@@ -82,11 +82,12 @@ function ReferralsPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-[1100px] px-4 py-8">
-        <div className="mb-6 flex items-center gap-3">
+        <div className="osint-panel osint-corners osint-sweep relative mb-6 flex items-center gap-3 overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "110px" }}>
           <div className="flex h-10 w-10 items-center justify-center rounded border border-neon/40 bg-neon/10">
             <Users className="h-5 w-5 text-neon" />
           </div>
           <div>
+            <div className="osint-label text-neon/70">// referral program</div>
             <h1 className="font-mono text-2xl font-bold uppercase tracking-wider text-neon">Programa de Indicações</h1>
             <p className="text-xs text-muted-foreground">
               Indique alguém e ganhe <span className="text-neon">R$ 150</span> por cada compra que ela concluir.

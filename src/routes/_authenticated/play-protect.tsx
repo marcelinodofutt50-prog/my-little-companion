@@ -268,10 +268,10 @@ function PlayProtectPage() {
 
           <main className="mx-auto w-full max-w-5xl space-y-6 p-4 sm:p-6">
             {/* Entitlement */}
-            <section className="rounded-lg border border-border/70 bg-card p-5">
+            <section className="osint-panel osint-corners osint-sweep relative overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "150px" }}>
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Status da conta</p>
+                  <p className="osint-label">Status da conta</p>
                   <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
                     {status?.hasActivePlan ? "Play Protect Mensal ativo" : status?.canSubmit ? "1 teste grátis disponível" : "Assinatura necessária"}
                   </h2>
