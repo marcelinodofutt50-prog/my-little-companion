@@ -8,7 +8,7 @@ import {
   ChevronRight, Check, Minus,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { ConversionBoosters, LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
+import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { VersionCompare } from "@/components/VersionCompare";
 import { MigrationOffer } from "@/components/MigrationOffer";
 
@@ -330,7 +330,7 @@ function PlansPage() {
       </section>
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-12 pb-28 md:pb-12">
-        <LiveSalesToasts />
+        
         <ConversionBoosters />
         <TrustBadges className="mt-6" />
 
