@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet, Copy, RotateCcw, ChevronLeft, Wrench,
+  Wallet, Copy, RotateCcw, ChevronLeft, Wrench, Bot,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
@@ -46,11 +46,21 @@ import { AdminPermissionsMatrix } from "@/components/AdminPermissionsMatrix";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrl, tierLabel, type VersionTier } from "@/lib/plans";
 import {
   adminStats, adminListUsers, adminListOrders, adminListLicenses,
-  adminRevokeLicense, adminExtendLicense, adminFixLoginBug,
+  adminRevokeLicense, adminExtendLicense, adminFixLoginBug, adminAnalyzeLoginBug,
   adminSetRole, adminListRoles, adminRenewClientServer, adminRecreateLicense,
   adminListThreads, adminListThreadMessages, adminSendMessage, adminListLogs,
   adminAssumeThread, adminCloseThread,
@@ -151,7 +161,10 @@ function AdminPage() {
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
   const fixBugFn = useServerFn(adminFixLoginBug);
+  const analyzeBugFn = useServerFn(adminAnalyzeLoginBug);
   const [fixingLic, setFixingLic] = useState<string | null>(null);
+  const [fixBugDialog, setFixBugDialog] = useState<{ open: boolean; licenseId: string | null }>({ open: false, licenseId: null });
+  const [bugAnalysis, setBugAnalysis] = useState<{ loading: boolean; diagnosis: string | null; factors: { label: string; value: string; alert: boolean }[] | null }>({ loading: false, diagnosis: null, factors: null });
   const threadsCountFn = useServerFn(adminListThreads);
 
   // Track which lists have been loaded so realtime/polling don't refetch
@@ -279,10 +292,20 @@ function AdminPage() {
       setLicenses(await licensesFn());
     } catch (e: any) { toast.error(e.message); }
   }
-  /** Corrige o bug de login no BMob: +1 dia, reaplica a mesma senha, volta a data. */
-  async function fixLoginBug(id: string) {
+  /** Abre o modal explicativo e dispara análise de IA com os fatores do caso. */
+  function openFixLoginBug(id: string) {
     if (fixingLic) return;
-    if (!confirm("Corrigir bug de login deste cliente?\n\nVamos empurrar a validade 1 dia, reaplicar a mesma senha no painel e voltar a data original.")) return;
+    setBugAnalysis({ loading: true, diagnosis: null, factors: null });
+    setFixBugDialog({ open: true, licenseId: id });
+    analyzeBugFn({ data: { licenseId: id } })
+      .then((r: any) => setBugAnalysis({ loading: false, diagnosis: r.diagnosis, factors: r.factors }))
+      .catch((e: any) => setBugAnalysis({ loading: false, diagnosis: `Não foi possível gerar o diagnóstico automático: ${e.message}`, factors: [] }));
+  }
+  /** Executa a correção: +1 dia, reaplica a mesma senha, volta a data. */
+  async function confirmFixLoginBug() {
+    const id = fixBugDialog.licenseId;
+    if (!id || fixingLic) return;
+    setFixBugDialog({ open: false, licenseId: null });
     setFixingLic(id);
     try {
       const r: any = await fixBugFn({ data: { licenseId: id } });
@@ -965,7 +988,7 @@ function AdminPage() {
                           variant="outline"
                           disabled={fixingLic === l.id}
                           title="Corrigir bug de erro (BMob): +1 dia, reaplica a senha e volta a data"
-                          onClick={() => fixLoginBug(l.id)}
+                          onClick={() => openFixLoginBug(l.id)}
                           className="h-7 gap-1 border-amber-400/60 px-2 font-mono text-[10px] uppercase tracking-wider text-amber-400 hover:bg-amber-400/10"
                         >
                           {fixingLic === l.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wrench className="h-3 w-3" />}
@@ -1178,6 +1201,75 @@ function AdminPage() {
         onClose={() => setCustomer360(null)}
         onOpenThread={() => { setCustomer360(null); setTab("chat"); }}
       />
+
+      {/* Modal explicativo: Corrigir bug de login BMob */}
+      <AlertDialog open={fixBugDialog.open} onOpenChange={(open) => setFixBugDialog({ open, licenseId: open ? fixBugDialog.licenseId : null })}>
+        <AlertDialogContent className="border-amber-400/30 bg-[#0b1220]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-400">
+              <Wrench className="h-4 w-4" />
+              Corrigir bug de login
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left text-muted-foreground">
+              Use este recurso quando o cliente não conseguir logar na <strong>BTMob</strong> por erro de <em>e-mail/senha inválido</em>, ou quando a licença dele foi renovada no pagamento mas o painel não refletiu a nova data (ex.: pagou dia 20, mas o login não foi para o próximo dia 20).
+              <br /><br />
+              <span className="text-neon font-mono text-xs">O que será feito:</span>
+              <ol className="mt-2 ml-4 list-decimal text-sm text-foreground space-y-1">
+                <li>Empurra a validade do login <strong>+1 dia</strong> no painel.</li>
+                <li>Reaplica a <strong>mesma senha atual</strong> do cliente (não gera nova).</li>
+                <li>Volta a data de vencimento para o <strong>dia original</strong>.</li>
+              </ol>
+              <br />
+              Isso costuma resolver travamentos de sincronização entre o pagamento e o painel da BMob. O cliente deve fechar o app e tentar entrar novamente.
+            </AlertDialogDescription>
+
+            {/* Diagnóstico de IA */}
+            <div className="mt-4 rounded border border-border/40 bg-[#0a0f18] p-3">
+              <div className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-neon">
+                <Bot className="h-3.5 w-3.5" />
+                Diagnóstico automático
+              </div>
+              {bugAnalysis.loading ? (
+                <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Analisando fatores da licença e histórico de integração...
+                </div>
+              ) : bugAnalysis.diagnosis ? (
+                <div className="space-y-3">
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                    {bugAnalysis.diagnosis}
+                  </div>
+                  {bugAnalysis.factors && bugAnalysis.factors.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {bugAnalysis.factors.map((f, idx) => (
+                        <div key={idx} className={`rounded border p-2 ${f.alert ? "border-amber-400/40 bg-amber-400/10" : "border-border/30 bg-muted/20"}`}>
+                          <div className="text-[10px] uppercase text-muted-foreground">{f.label}</div>
+                          <div className={`text-xs font-semibold ${f.alert ? "text-amber-400" : "text-foreground"}`}>{f.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">Clique para abrir o caso e aguarde a análise.</div>
+              )}
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFixBugDialog({ open: false, licenseId: null })} className="border-border/40 text-muted-foreground hover:bg-muted">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmFixLoginBug}
+              disabled={fixingLic === fixBugDialog.licenseId}
+              className="gap-2 bg-amber-500 text-black hover:bg-amber-400"
+            >
+              {fixingLic === fixBugDialog.licenseId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
+              Confirmar correção
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -2760,6 +2852,7 @@ function ReferralsAdminPanel() {
           </div>
         )}
       </div>
+
     </div>
   );
 }

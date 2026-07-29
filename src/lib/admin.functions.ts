@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { tierFromPlanSlug, type VersionTier } from "@/lib/plans";
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
@@ -179,6 +181,72 @@ export const adminFixLoginBug = createServerFn({ method: "POST" })
       passwordReapplied: passOk,
       expiresAt: original ? ymd(original) : null,
       steps,
+    };
+  });
+
+
+export const adminAnalyzeLoginBug = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    if (!lic) throw new Error("Licença não encontrada");
+
+    const [profile, orders, logs] = await Promise.all([
+      lic.user_id ? context.supabase.from("profiles").select("id,email,full_name,display_name,created_at").eq("id", lic.user_id).maybeSingle() : Promise.resolve({ data: null }),
+      context.supabase.from("orders").select("id,status,amount,created_at,plan_slug").eq("user_id", lic.user_id).order("created_at", { ascending: false }).limit(5),
+      context.supabase.from("integration_logs").select("action,created_at,outcome,error,context").eq("source", `yaarsa-${(lic as any).panel ?? "v46"}`).ilike("context->>license_id", data.licenseId).order("created_at", { ascending: false }).limit(10),
+    ]);
+
+    const expiresAt = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "sem vencimento";
+    const isExpired = lic.expires_at ? new Date(lic.expires_at) < new Date() : false;
+    const lastOrder = (orders.data ?? [])[0];
+    const hasRecentPayment = lastOrder && lastOrder.status === "paid" && new Date(lastOrder.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentFailures = (logs.data ?? []).filter((l: any) => l.outcome === "error" || l.outcome === "partial").slice(0, 3);
+
+    const prompt = `Você é um técnico de suporte sênior da ShadowDash. Analise o caso abaixo de um cliente que não consegue logar no painel BTMob e explique, em 3-4 parágrafos curtos e diretos, quais são os fatores mais prováveis e a recomendação de ação. Responda em português do Brasil, tom profissional e objetivo, sem alarmismo.
+
+Dados da licença:
+- ID: ${lic.id}
+- Painel: ${(lic as any).panel ?? "v46"}
+- E-mail no painel: ${lic.yaarsa_email ?? "não configurado"}
+- Usuário no painel: ${lic.yaarsa_username ?? "não configurado"}
+- Vencimento: ${expiresAt} ${isExpired ? "(EXPIRADA)" : ""}
+- Desativada em: ${lic.disabled_at ? new Date(lic.disabled_at).toISOString().slice(0, 10) : "não"}
+- Revogada: ${lic.revoked ? "sim" : "não"}
+- Criada em: ${lic.created_at ? new Date(lic.created_at).toISOString().slice(0, 10) : "—"}
+
+Dados do cliente:
+- E-mail: ${profile.data?.email ?? "—"}
+- Nome: ${profile.data?.full_name ?? profile.data?.display_name ?? "—"}
+- Cliente desde: ${profile.data?.created_at ? new Date(profile.data.created_at).toISOString().slice(0, 10) : "—"}
+
+Pedidos recentes:
+${(orders.data ?? []).map((o: any) => `- ${new Date(o.created_at).toISOString().slice(0, 10)} | ${o.status} | ${o.plan_slug ?? "—"} | R$ ${o.amount}`).join("\n") || "nenhum pedido"}
+
+Falhas recentes de integração no painel:
+${recentFailures.map((l: any) => `- ${new Date(l.created_at).toISOString().slice(0, 10)} | ${l.action} | ${l.outcome}${l.error ? ` | erro: ${l.error}` : ""}`).join("\n") || "nenhuma falha recente"}
+
+Instrução final: Dê um diagnóstico com 3 fatores numerados (ex: 1. Vencimento não refletiu após pagamento, 2. Senha desincronizada, 3. Possível revogação/desativação) e uma conclusão dizendo se a correção automática (empurrar validade + reaplicar senha) é adequada ou se precisa de ação manual. Máximo 300 palavras.`;
+
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("LOVABLE_API_KEY não configurada no servidor");
+    const gateway = createLovableAiGatewayProvider(key);
+    const { text } = await generateText({
+      model: gateway("google/gemini-3.6-flash"),
+      prompt,
+      temperature: 0.2,
+    });
+
+    return {
+      diagnosis: text,
+      factors: [
+        { label: "Vencimento", value: expiresAt, alert: isExpired },
+        { label: "Pagamento recente", value: hasRecentPayment ? "sim" : "não", alert: !hasRecentPayment && isExpired },
+        { label: "Licença ativa", value: lic.disabled_at || lic.revoked ? "não" : "sim", alert: !!(lic.disabled_at || lic.revoked) },
+        { label: "Falhas recentes", value: `${recentFailures.length} no painel`, alert: recentFailures.length > 0 },
+      ],
     };
   });
 
