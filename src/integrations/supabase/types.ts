@@ -877,6 +877,39 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_ip_log: {
+        Row: {
+          accounts_in_window: number
+          created_at: string
+          email_masked: string | null
+          id: string
+          ip_hash: string
+          suspicious: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accounts_in_window?: number
+          created_at?: string
+          email_masked?: string | null
+          id?: string
+          ip_hash: string
+          suspicious?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accounts_in_window?: number
+          created_at?: string
+          email_masked?: string | null
+          id?: string
+          ip_hash?: string
+          suspicious?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           attachment_type: string | null
