@@ -490,5 +490,7 @@ export const abortApkJob = createServerFn({ method: "POST" })
       .from("apk_jobs")
       .update({ status: "cancelled", cleared_at: now, completed_at: now, is_free_trial: false, source_path: "" } as any)
       .eq("id", job.id);
+    // Upload nunca chegou ao servidor: devolve o teste grátis reservado.
+    await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", context.userId).eq("job_id", job.id);
     return { ok: true };
   });
