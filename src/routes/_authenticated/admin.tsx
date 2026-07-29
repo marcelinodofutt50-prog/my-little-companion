@@ -408,9 +408,6 @@ function AdminPage() {
                           </button>
                         );
                       })}
-
-                        );
-                      })}
                     </div>
 
                   </div>
