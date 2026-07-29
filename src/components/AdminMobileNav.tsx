@@ -51,6 +51,7 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
   };
 
   const inQuick = quick.some((i) => i.id === tab);
+  const current = all.find((i) => i.id === tab);
 
   return (
     <>
@@ -67,13 +68,23 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                 key={item.id}
                 onClick={() => pick(item.id)}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-colors ${
-                  active ? "text-neon" : "text-muted-foreground active:text-foreground"
+                className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-all ${
+                  active
+                    ? "bg-neon/10 text-neon"
+                    : "text-muted-foreground active:text-foreground"
                 }`}
               >
-                {active && <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />}
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span className="w-full truncate text-center font-mono text-[9px] uppercase tracking-wider">{item.label}</span>
+                {active && (
+                  <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />
+                )}
+                <item.icon className={`h-4 w-4 shrink-0 transition-transform ${active ? "scale-110 drop-shadow-[0_0_6px_var(--neon)]" : ""}`} />
+                <span
+                  className={`w-full truncate text-center font-mono text-[9px] uppercase tracking-wider ${
+                    active ? "font-bold" : ""
+                  }`}
+                >
+                  {item.label}
+                </span>
                 {badge > 0 && (
                   <span className="absolute right-2 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 font-mono text-[9px] text-white">
                     {badge > 9 ? "9+" : badge}
@@ -84,15 +95,30 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
           })}
           <button
             onClick={() => setOpen(true)}
-            className={`flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-colors ${
-              !inQuick ? "text-neon" : "text-muted-foreground active:text-foreground"
+            aria-current={!inQuick ? "page" : undefined}
+            className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-all ${
+              !inQuick ? "bg-neon/10 text-neon" : "text-muted-foreground active:text-foreground"
             }`}
           >
-            <LayoutGrid className="h-4 w-4 shrink-0" />
-            <span className="font-mono text-[9px] uppercase tracking-wider">Tudo</span>
+            {!inQuick && (
+              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />
+            )}
+            {!inQuick && current ? (
+              <current.icon className="h-4 w-4 shrink-0 scale-110 drop-shadow-[0_0_6px_var(--neon)]" />
+            ) : (
+              <LayoutGrid className="h-4 w-4 shrink-0" />
+            )}
+            <span
+              className={`w-full truncate px-1 text-center font-mono text-[9px] uppercase tracking-wider ${
+                !inQuick ? "font-bold" : ""
+              }`}
+            >
+              {!inQuick && current ? current.label : "Tudo"}
+            </span>
           </button>
         </div>
       </nav>
+
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto border-border/50 bg-background p-0">
