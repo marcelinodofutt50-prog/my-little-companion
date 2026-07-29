@@ -25,7 +25,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrl } from "@/lib/plans";
 import { createCheckout } from "@/lib/checkout.functions";
+import { siteUrl } from "@/lib/site-url";
 import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus } from "@/lib/license.functions";
+
 import { validateReferralCode } from "@/lib/referrals.functions";
 
 
