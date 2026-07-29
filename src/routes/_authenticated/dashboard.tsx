@@ -23,6 +23,10 @@ import { NicknameDialog } from "@/components/NicknameDialog";
 import { SecurityWelcomeDialog } from "@/components/SecurityWelcomeDialog";
 import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
+import { InAppNotifications } from "@/components/InAppNotifications";
+import { HelpCenterWidget } from "@/components/HelpCenterWidget";
 
 import { getMyProfile } from "@/lib/profile.functions";
 import { displayIdentity } from "@/lib/identity";
@@ -62,7 +66,7 @@ function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [licFilter, setLicFilter] = useState<"all" | "active" | "trial" | "archived">("active");
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
-  const [extraTab, setExtraTab] = useState<"downloads" | "resumo" | "beneficios">("downloads");
+  const [extraTab, setExtraTab] = useState<"downloads" | "resumo" | "beneficios" | "ajuda">("downloads");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   // Tick para o trial sumir sozinho do painel assim que expirar
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -191,6 +195,7 @@ function DashboardPage() {
               <div className="truncate font-display text-sm text-foreground">{displayIdentity(displayName, email)}</div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
+              <InAppNotifications />
               <RgbModeToggle />
               <NicknameDialog displayName={displayName} email={email} onChange={setDisplayName} compact />
               <Link to="/planos"><Button size="sm" variant="ghost" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"><Sparkles className="mr-1.5 h-3.5 w-3.5" />Planos</Button></Link>
@@ -265,6 +270,9 @@ function DashboardPage() {
                         <Sparkles className="mr-1.5 h-3 w-3" /> {daysLeft !== null && daysLeft <= 5 ? "Renovar agora" : "Comprar"}
                       </Button>
                     </Link>
+                    <Button size="sm" variant="outline" onClick={() => setExtraTab("ajuda")} className="font-mono text-[11px] uppercase tracking-wider">
+                      <LifeBuoy className="mr-1.5 h-3 w-3 text-cyan" /> Ajuda
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={refresh} disabled={refreshing} className="ml-auto font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                       {refreshing && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
                       Atualizar
@@ -273,6 +281,32 @@ function DashboardPage() {
                 </div>
               );
             })()}
+
+        {(() => {
+          const activeCount = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date())).length;
+          if (activeCount >= 2) return null;
+          return <OnboardingChecklist />;
+        })()}
+
+        {(() => {
+          const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
+          if (active.length === 0) return null;
+          const mostRecent = [...licenses].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+          if (!mostRecent) return null;
+          return (
+            <div className="mt-5">
+              <OrderStatusTimeline
+                order={{
+                  status: "delivered",
+                  created_at: mostRecent.created_at,
+                  paid_at: mostRecent.created_at,
+                  processing_at: mostRecent.created_at,
+                  delivered_at: mostRecent.created_at,
+                }}
+              />
+            </div>
+          );
+        })()}
 
         <ExpiryAlerts licenses={licenses} />
 
@@ -509,9 +543,23 @@ function DashboardPage() {
                 </div>
               </div>
               {licenses.length === 0 ? (
-                <div className="terminal-card scanlines relative p-10 text-center text-muted-foreground">
-                  <TerminalIcon className="mx-auto mb-2 h-8 w-8 text-neon" />
-                  Nenhuma licença ainda. <Link to="/planos" className="text-neon hover:underline">Ver planos →</Link>
+                <div className="terminal-card scanlines rgb-border relative flex flex-col items-center gap-3 p-10 text-center">
+                  <TerminalIcon className="h-9 w-9 text-neon" />
+                  <div>
+                    <h3 className="font-display text-lg font-semibold text-foreground">Você ainda não tem nenhuma licença</h3>
+                    <p className="mt-1 max-w-md font-mono text-xs text-muted-foreground">
+                      Comece com um trial gratuito de 1 dia ou escolha um plano para liberar o acesso completo ao Shadow.
+                    </p>
+                  </div>
+                  <div className="mt-2 flex flex-wrap justify-center gap-2">
+                    <Button size="sm" onClick={generate} disabled={trialLoading} className="font-mono text-[11px] uppercase tracking-wider">
+                      {trialLoading && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
+                      <Sparkles className="mr-1.5 h-3 w-3" /> Gerar trial grátis
+                    </Button>
+                    <Link to="/planos">
+                      <Button size="sm" variant="outline" className="font-mono text-[11px] uppercase tracking-wider">Ver planos →</Button>
+                    </Link>
+                  </div>
                 </div>
               ) : sorted.length === 0 ? (
                 <div className="terminal-card scanlines relative flex flex-col items-center gap-1 p-8 text-center font-mono text-xs text-muted-foreground">
@@ -558,6 +606,7 @@ function DashboardPage() {
               { k: "downloads", label: "downloads" },
               { k: "resumo", label: "resumo" },
               { k: "beneficios", label: "benefícios" },
+              { k: "ajuda", label: "ajuda" },
             ] as const).map((t) => (
               <button
                 key={t.k}
@@ -584,6 +633,8 @@ function DashboardPage() {
               )}
             </div>
           )}
+
+          {extraTab === "ajuda" && <HelpCenterWidget />}
         </section>
 
           </main>

@@ -24,6 +24,8 @@ import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
 import { AdminHealthPanel } from "@/components/AdminHealthPanel";
 import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
+import { AdminKpiCards } from "@/components/AdminKpiCards";
+import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
 
 
 
@@ -67,6 +69,10 @@ function AdminPage() {
   const [userFilter, setUserFilter] = useState("");
 
   const [orders, setOrders] = useState<any[]>([]);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">("todos");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [threadsOpenCount, setThreadsOpenCount] = useState(0);
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
   const [email, setEmail] = useState("");
@@ -86,6 +92,7 @@ function AdminPage() {
   const setRoleFn = useServerFn(adminSetRole);
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
+  const threadsCountFn = useServerFn(adminListThreads);
 
   // Track which lists have been loaded so realtime/polling don't refetch
   // datasets the admin never opened. Cuts admin cold-load from 5 parallel
@@ -94,6 +101,10 @@ function AdminPage() {
     users: false, orders: false, licenses: false, roles: false,
   });
   const inflightRef = useRef<{ [K in "stats" | "users" | "orders" | "licenses" | "roles"]?: Promise<any> }>({});
+
+  const loadThreadsCount = useCallback(() => {
+    threadsCountFn({ data: { filter: "open" } }).then((t: any) => setThreadsOpenCount((t as any[]).length)).catch(() => {});
+  }, [threadsCountFn]);
 
   const loadStats = useCallback(() => {
     if (inflightRef.current.stats) return inflightRef.current.stats;
@@ -136,6 +147,7 @@ function AdminPage() {
     loadStats();
     loadOrders();
     loadLicenses();
+    loadThreadsCount();
 
     // Debounced realtime → só refresca listas já carregadas.
     let t: any;
@@ -168,7 +180,7 @@ function AdminPage() {
     }, 90000);
 
     return () => { clearInterval(poll); clearTimeout(t); supabase.removeChannel(ch); };
-  }, [loadStats, loadOrders, loadUsers, loadLicenses, loadRoles]);
+  }, [loadStats, loadOrders, loadUsers, loadLicenses, loadRoles, loadThreadsCount]);
 
   // Lazy-load para as outras abas.
   useEffect(() => {
@@ -385,8 +397,17 @@ function AdminPage() {
               .sort((a, b) => a.days - b.days)
               .slice(0, 6);
             const trialsActive = licenses.filter((l) => l.is_trial && !l.disabled_at && !l.revoked && (!l.expires_at || new Date(l.expires_at) > new Date())).length;
+            const openTicketsCount = threadsOpenCount;
+            const conversionRate = ordersToday.length > 0 ? `${Math.round((paidToday.length / ordersToday.length) * 100)}%` : "—";
             return (
               <div className="space-y-4">
+                <AdminKpiCards
+                  revenueToday={formatBrl(revenueToday)}
+                  pendingOrders={pendingCount}
+                  openTickets={openTicketsCount}
+                  conversionRate={conversionRate}
+                />
+
                 {/* Mini strip: HOJE */}
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                   <MiniStat label="Pedidos hoje" value={String(ordersToday.length)} accent="cyan" />
@@ -554,16 +575,122 @@ function AdminPage() {
             </div>
             </div>
           )}
-          {tab === "orders" && (
-            <div className="terminal-card scanlines relative overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[680px] text-sm">
-                  <thead className="border-b border-border/40 font-mono text-xs uppercase text-muted-foreground"><tr><th className="p-3 text-left">Plano</th><th className="p-3 text-left">Valor</th><th className="p-3 text-left">Status</th><th className="p-3 text-left">Cupom</th><th className="p-3 text-left whitespace-nowrap">Data</th></tr></thead>
-                  <tbody>{orders.map((o) => <tr key={o.id} className="border-b border-border/20 hover:bg-neon/5"><td className="p-3 font-mono text-xs whitespace-nowrap">{o.plan_slug}</td><td className="p-3 font-mono whitespace-nowrap">{formatBrl(Number(o.amount))}</td><td className={`p-3 font-mono text-xs uppercase ${o.status === "paid" ? "text-neon" : "text-muted-foreground"}`}>{o.status}</td><td className="p-3 font-mono text-xs">{o.coupon_code || "—"}</td><td className="p-3 font-mono text-xs whitespace-nowrap">{new Date(o.created_at).toLocaleString("pt-BR")}</td></tr>)}</tbody>
-                </table>
+          {tab === "orders" && (() => {
+            const q = orderSearch.trim().toLowerCase();
+            const statusMap: Record<string, (o: any) => boolean> = {
+              todos: () => true,
+              pendentes: (o) => o.status !== "paid" && o.status !== "failed" && o.status !== "cancelled",
+              pagos: (o) => o.status === "paid",
+              falhos: (o) => o.status === "failed" || o.status === "cancelled",
+            };
+            const filteredOrders = orders.filter((o) => {
+              if (!statusMap[orderStatus](o)) return false;
+              if (!q) return true;
+              const hay = `${o.plan_slug ?? ""} ${o.coupon_code ?? ""} ${o.profile?.email ?? ""} ${o.status ?? ""}`.toLowerCase();
+              return hay.includes(q);
+            });
+            const allVisibleSelected = filteredOrders.length > 0 && filteredOrders.every((o) => selectedOrderIds.has(o.id));
+            const toggleAll = () => {
+              setSelectedOrderIds((prev) => {
+                if (allVisibleSelected) return new Set();
+                return new Set(filteredOrders.map((o) => o.id));
+              });
+            };
+            const toggleOne = (id: string) => {
+              setSelectedOrderIds((prev) => {
+                const next = new Set(prev);
+                if (next.has(id)) next.delete(id); else next.add(id);
+                return next;
+              });
+            };
+            const bulkAction = (label: string) => toast(`${label}: em breve`);
+            return (
+              <div className="space-y-3">
+                <div className="terminal-card scanlines relative flex flex-wrap items-center gap-2 p-3">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={orderSearch}
+                      onChange={(e) => setOrderSearch(e.target.value)}
+                      placeholder="buscar por plano, email ou cupom..."
+                      className="h-9 w-64 pl-8 font-mono text-xs"
+                    />
+                  </div>
+                  <div className="flex gap-1">
+                    {(["todos", "pendentes", "pagos", "falhos"] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setOrderStatus(s)}
+                        className={`rounded border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+                          orderStatus === s
+                            ? "border-neon/50 bg-neon/10 text-neon"
+                            : "border-border/40 text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="ml-auto font-mono text-[10px] uppercase text-muted-foreground">{filteredOrders.length} pedidos</span>
+                </div>
+
+                {selectedOrderIds.size > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 rounded border border-neon/30 bg-neon/5 px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
+                    <span className="text-neon">{selectedOrderIds.size} selecionado(s)</span>
+                    <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Marcar como pago")}>
+                      Marcar como pago
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Reprocessar")}>
+                      Reprocessar
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Exportar CSV")}>
+                      Exportar CSV
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrderIds(new Set())}
+                      className="ml-auto text-muted-foreground hover:text-foreground"
+                    >
+                      limpar
+                    </button>
+                  </div>
+                )}
+
+                <div className="terminal-card scanlines relative overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-sm">
+                      <thead className="border-b border-border/40 font-mono text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th className="p-3 text-left"><input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} /></th>
+                          <th className="p-3 text-left">Plano</th>
+                          <th className="p-3 text-left">Valor</th>
+                          <th className="p-3 text-left">Status</th>
+                          <th className="p-3 text-left">Cupom</th>
+                          <th className="p-3 text-left whitespace-nowrap">Data</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredOrders.map((o) => (
+                          <tr key={o.id} className="border-b border-border/20 hover:bg-neon/5">
+                            <td className="p-3"><input type="checkbox" checked={selectedOrderIds.has(o.id)} onChange={() => toggleOne(o.id)} /></td>
+                            <td className="p-3 font-mono text-xs whitespace-nowrap">{o.plan_slug}</td>
+                            <td className="p-3 font-mono whitespace-nowrap">{formatBrl(Number(o.amount))}</td>
+                            <td className={`p-3 font-mono text-xs uppercase ${o.status === "paid" ? "text-neon" : "text-muted-foreground"}`}>{o.status}</td>
+                            <td className="p-3 font-mono text-xs">{o.coupon_code || "—"}</td>
+                            <td className="p-3 font-mono text-xs whitespace-nowrap">{new Date(o.created_at).toLocaleString("pt-BR")}</td>
+                          </tr>
+                        ))}
+                        {filteredOrders.length === 0 && (
+                          <tr><td colSpan={6} className="p-6 text-center text-xs text-muted-foreground">nenhum pedido encontrado</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           {tab === "licenses" && (() => {
             const now = Date.now();
             const dayMs = 86400000;
@@ -784,7 +911,12 @@ function AdminPage() {
           {tab === "referrals" && <ReferralsAdminPanel />}
           {tab === "health" && <AdminHealthPanel onOpenLogs={() => setTab("logs")} />}
           {tab === "logs" && <AdminLogsPanel />}
-          {tab === "audit" && <AutoRevocationsPanel users={users} licenses={licenses} />}
+          {tab === "audit" && (
+            <div className="space-y-4">
+              <AdminAuditLog entries={demoAuditEntries(email)} />
+              <AutoRevocationsPanel users={users} licenses={licenses} />
+            </div>
+          )}
           {tab === "ia" && <LicenseAiPanel />}
           {tab === "apk" && <AdminApkPanel />}
           {tab === "market" && <AdminMarketPanel />}
@@ -978,6 +1110,17 @@ function ExecStat({ icon: Icon, label, value, sub, accent, pulse }: { icon: any;
   );
 }
 
+function demoAuditEntries(adminEmail: string): AuditLogEntry[] {
+  const now = Date.now();
+  const fmt = (ms: number) => new Date(now - ms).toLocaleString("pt-BR");
+  return [
+    { id: "1", date: fmt(15 * 60000), admin: adminEmail || "admin", action: "Revogou licença", target: "cliente@exemplo.com", status: "sucesso" },
+    { id: "2", date: fmt(90 * 60000), admin: adminEmail || "admin", action: "Estendeu licença", target: "usuario2@exemplo.com", status: "sucesso" },
+    { id: "3", date: fmt(4 * 3600000), admin: "sistema", action: "Cron: revogação automática", target: "3 licenças vencidas", status: "sucesso" },
+    { id: "4", date: fmt(26 * 3600000), admin: adminEmail || "admin", action: "Alterou cargo", target: "moderador@exemplo.com", status: "falha" },
+  ];
+}
+
 function MiniStat({ label, value, accent }: { label: string; value: string; accent: "neon" | "cyan" | "violet" }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
@@ -1151,31 +1294,54 @@ function AdminChatPanel() {
           {!loading && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
           {filtered.map((t) => {
             const active = t.id === activeId;
+            const lastCustomerAt = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
+            const waitingLong = t.status !== "closed" && lastCustomerAt !== null && Date.now() - lastCustomerAt > 30 * 60000;
             return (
-              <button
+              <div
                 key={t.id}
-                onClick={() => setActiveId(t.id)}
-                className={`flex w-full items-center gap-3 border-b border-border/20 p-3 text-left transition-colors ${active ? "bg-neon/10" : "hover:bg-neon/5"}`}
+                className={`group flex w-full items-center gap-3 border-b border-border/20 p-3 text-left transition-colors ${active ? "bg-neon/10" : "hover:bg-neon/5"}`}
               >
-                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${active ? "bg-neon text-primary-foreground" : "bg-muted text-foreground"}`}>
-                  {(t.profile?.display_name || t.profile?.email || "?").slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</div>
-                    {(t.unread_by_staff ?? 0) > 0 && !active && (
-                      <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                <button onClick={() => setActiveId(t.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <div className={`relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${active ? "bg-neon text-primary-foreground" : "bg-muted text-foreground"}`}>
+                    {(t.profile?.display_name || t.profile?.email || "?").slice(0, 2).toUpperCase()}
+                    {waitingLong && (
+                      <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-background bg-danger" title="Aguardando há mais de 30 min" />
                     )}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
-                    <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
-                      {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
-                    </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</div>
+                      {(t.unread_by_staff ?? 0) > 0 && !active && (
+                        <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
+                      <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
+                        {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
+                      </span>
+                      {waitingLong && (
+                        <span className="flex-shrink-0 rounded bg-danger/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-danger">aguardando</span>
+                      )}
+                      <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+                {t.status !== "closed" && !t.assigned_to && (
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try { await assumeFn({ data: { threadId: t.id } }); await refreshThreads(); toast.success("Ticket assumido"); }
+                      catch (err: any) { toast.error(err.message); }
+                    }}
+                    title="Assumir ticket"
+                    className="shrink-0 rounded border border-neon/40 bg-neon/5 px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-neon opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    Assumir
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>

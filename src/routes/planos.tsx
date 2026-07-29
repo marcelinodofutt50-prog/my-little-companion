@@ -5,9 +5,12 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
   HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight,
-  ChevronRight, Check, Minus,
+  ChevronRight, Check, Minus, Search,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { FlashPromoBar } from "@/components/FlashPromoBar";
+import { GuaranteeStrip } from "@/components/GuaranteeStrip";
+import { Testimonials } from "@/components/Testimonials";
 import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { VersionCompare } from "@/components/VersionCompare";
 import { MigrationOffer } from "@/components/MigrationOffer";
@@ -64,7 +67,7 @@ function metaFor(plan: Plan): PlanMeta {
   const s = plan.slug.toLowerCase();
   if (s.includes("lifetime")) return {
     tagline: "Acesso perpétuo à linha 4.6+ com atualizações inclusas.",
-    badge: "Mais escolhido",
+    badge: "Mais econômico",
     icon: Crown,
     cadence: "pagamento único",
     features: [
@@ -77,6 +80,7 @@ function metaFor(plan: Plan): PlanMeta {
   };
   if (s.includes("30") || s.includes("month")) return {
     tagline: "Operação mensal na versão estável 4.5.7.",
+    badge: "Mais popular",
     icon: Calendar,
     cadence: "renovação em 30 dias",
     features: [
@@ -297,6 +301,7 @@ function PlansPage() {
   return (
     <div className="relative min-h-screen">
       <SiteHeader />
+      <FlashPromoBar />
 
       {/* HERO ================================================= */}
       <section className="relative overflow-hidden border-b border-border/40">
@@ -329,9 +334,12 @@ function PlansPage() {
         </div>
       </section>
 
+      <GuaranteeStrip />
+
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-12 pb-28 md:pb-12">
         <ConversionBoosters />
         <TrustBadges className="mt-6" />
+        <Testimonials />
 
 
         {/* BENEFITS PANEL ==================================== */}
@@ -650,6 +658,19 @@ function PreCheckoutFaq() {
   );
 }
 
+function highlightMatch(text: string, term: string) {
+  if (!term.trim()) return text;
+  const escaped = term.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escaped})`, "ig"));
+  return parts.map((part, i) =>
+    part.toLowerCase() === term.trim().toLowerCase() ? (
+      <mark key={i} className="rounded bg-primary/25 text-primary">{part}</mark>
+    ) : (
+      <React.Fragment key={i}>{part}</React.Fragment>
+    )
+  );
+}
+
 function FaqSection() {
   const faq = [
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
@@ -659,23 +680,44 @@ function FaqSection() {
     { q: "O cupom BTMOB40 é seguro?", a: "Sim. Ele dá 40% de cashback no primeiro depósito, que fica no seu saldo e pode ser usado em compras futuras (limitado a 50% do valor de cada compra)." },
     { q: "Vocês emitem nota?", a: "Sim, o comprovante oficial do Mercado Pago é emitido no ato do pagamento e enviado por email pela própria operadora." },
   ];
+  const [search, setSearch] = useState("");
+  const term = search.trim().toLowerCase();
+  const filtered = term
+    ? faq.filter((it) => it.q.toLowerCase().includes(term) || it.a.toLowerCase().includes(term))
+    : faq;
+
   return (
     <section className="mt-16">
       <div className="mb-6 text-center">
         <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">// perguntas frequentes</div>
         <h2 className="mt-2 font-display text-2xl md:text-3xl">Tire suas dúvidas em segundos</h2>
       </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        {faq.map((it) => (
-          <details key={it.q} className="group rounded-xl border border-border/50 bg-card/40 p-4 transition-colors open:border-primary/40 open:bg-card/60">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold group-open:text-primary">
-              <span>{it.q}</span>
-              <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
-            </summary>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{it.a}</p>
-          </details>
-        ))}
+      <div className="mx-auto mb-6 max-w-md">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar nas perguntas frequentes..."
+            className="pl-9"
+          />
+        </div>
       </div>
+      {filtered.length === 0 ? (
+        <div className="text-center text-sm text-muted-foreground">Nenhuma pergunta encontrada para "{search}".</div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {filtered.map((it) => (
+            <details key={it.q} open={!!term} className="group rounded-xl border border-border/50 bg-card/40 p-4 transition-colors open:border-primary/40 open:bg-card/60">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold group-open:text-primary">
+                <span>{highlightMatch(it.q, search)}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{highlightMatch(it.a, search)}</p>
+            </details>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -696,6 +738,8 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   const meta = useMemo(() => metaFor(plan), [plan]);
   const Icon = meta.icon;
   const handleClick = useCallback(() => onBuy(plan.slug), [onBuy, plan.slug]);
+  const isLifetime = plan.slug.toLowerCase().includes("lifetime");
+  const badgeLabel = meta.badge ?? (featured ? "Popular" : undefined);
 
   return (
     <div className={[
@@ -703,10 +747,11 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       featured
         ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)]"
         : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70",
+      isLifetime ? "ring-1 ring-primary/30 shadow-[0_0_45px_-10px_oklch(0.78_0.13_82/0.45)]" : "",
     ].join(" ")}>
-      {featured && (
+      {badgeLabel && (
         <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary">
-          <Crown className="h-3 w-3" /> Popular
+          <Crown className="h-3 w-3" /> {badgeLabel}
         </div>
       )}
 
