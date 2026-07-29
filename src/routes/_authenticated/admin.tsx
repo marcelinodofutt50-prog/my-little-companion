@@ -118,6 +118,9 @@ function AdminPage() {
   const [licStatus, setLicStatus] = useState<"all" | "active" | "expiring" | "expired" | "revoked">("all");
   const [licView, setLicView] = useState<"table" | "grouped">("table");
   const [licSearch, setLicSearch] = useState("");
+  // Licenças vencidas/revogadas há mais de 2 dias somem do painel (arquivadas)
+  // para não poluir. Se o cliente reativar, ela volta sozinha para a lista.
+  const [licShowArchived, setLicShowArchived] = useState(false);
 
 
   const statsFn = useServerFn(adminStats);
@@ -791,10 +794,24 @@ function AdminPage() {
               if (diff <= 5 * dayMs) return "expiring";
               return "active";
             };
+            // "Arquivada": morta há mais de 2 dias (vencida ou revogada).
+            // Se voltar a valer (cliente reativou / admin estendeu), sai do arquivo sozinha.
+            const ARCHIVE_AFTER_DAYS = 2;
+            const isArchived = (l: any): boolean => {
+              const s = statusOf(l);
+              if (s !== "expired" && s !== "revoked") return false;
+              const ref = s === "expired"
+                ? new Date(l.expires_at).getTime()
+                : new Date(l.server_overdue_at ?? l.disabled_at ?? l.updated_at ?? l.created_at ?? now).getTime();
+              if (!Number.isFinite(ref)) return false;
+              return now - ref > ARCHIVE_AFTER_DAYS * dayMs;
+            };
             const q = licSearch.trim().toLowerCase();
-            const trialsCount = licenses.filter((l) => l.is_trial).length;
-            const paidCount = licenses.length - trialsCount;
-            const filtered = licenses.filter((l) => {
+            const visibleBase = licenses.filter((l) => licShowArchived || !isArchived(l));
+            const archivedCount = licenses.filter(isArchived).length;
+            const trialsCount = visibleBase.filter((l) => l.is_trial).length;
+            const paidCount = visibleBase.length - trialsCount;
+            const filtered = visibleBase.filter((l) => {
               if (licKind === "trial" && !l.is_trial) return false;
               if (licKind === "paid" && l.is_trial) return false;
               if (licStatus !== "all" && statusOf(l) !== licStatus) return false;
@@ -880,10 +897,21 @@ function AdminPage() {
             return (
               <div className="terminal-card scanlines relative overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 p-3">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {filtered.length} de {licenses.length} · trials {trialsCount} · pagas {paidCount}
+                  <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>{filtered.length} de {visibleBase.length} · trials {trialsCount} · pagas {paidCount}</span>
+                    {archivedCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setLicShowArchived((v) => !v)}
+                        title="Licenças vencidas/revogadas há mais de 2 dias ficam arquivadas para não poluir o painel. Se o cliente reativar, elas voltam sozinhas."
+                        className={`rounded border px-2 py-1 transition-colors ${licShowArchived ? "border-violet/50 bg-violet/10 text-violet" : "border-border/40 text-muted-foreground hover:text-foreground"}`}
+                      >
+                        {licShowArchived ? "ocultar" : "ver"} arquivadas · {archivedCount}
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+
                     <input
                       value={licSearch}
                       onChange={(e) => setLicSearch(e.target.value)}
@@ -1221,6 +1249,38 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
 
 
 // ============= LIVE CHAT PANEL =============
+/** "há 3 min", "há 2 h", "há 4 d" — usado para SLA e cabeçalho da conversa. */
+function timeAgo(iso?: string | null): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(diff)) return "—";
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h} h`;
+  const d = Math.floor(h / 24);
+  return `há ${d} d`;
+}
+/** Rótulo do separador de dia dentro da conversa. */
+function dayLabel(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const yest = new Date(Date.now() - 86400000);
+  const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+  if (same(d, today)) return "hoje";
+  if (same(d, yest)) return "ontem";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
+function priorityMeta(p?: string | null): { label: string; cls: string } | null {
+  switch ((p ?? "").toLowerCase()) {
+    case "urgent": case "urgente": return { label: "urgente", cls: "border-danger/50 bg-danger/10 text-danger" };
+    case "high": case "alta": return { label: "alta", cls: "border-amber-400/50 bg-amber-400/10 text-amber-400" };
+    case "low": case "baixa": return { label: "baixa", cls: "border-border/40 text-muted-foreground" };
+    default: return null;
+  }
+}
+
 type Thread = { id: string; user_id: string; subject: string; category?: string | null; priority?: string | null; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null; display_name?: string | null } | null };
 type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
@@ -1242,7 +1302,7 @@ function AdminChatPanel() {
   const [soundOn, setSoundOn] = useState<boolean>(SOUND_DEFAULT_ON);
   const [soundHydrated, setSoundHydrated] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const activeIdRef = useRef<string | null>(null);
   const bootAtRef = useRef<number>(Date.now());
   const soundOnRef = useRef(soundOn);
@@ -1432,7 +1492,17 @@ function AdminChatPanel() {
               <Button size="sm" variant="outline" className="mt-2 h-7 text-[11px]" onClick={() => { setLoading(true); refreshThreads().finally(() => setLoading(false)); }}>tentar novamente</Button>
             </div>
           )}
-          {!loading && !loadError && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
+          {!loading && !loadError && filtered.length === 0 && (
+            <div className="flex flex-col items-center gap-2 p-8 text-center">
+              <MessageSquare className="h-7 w-7 text-neon/40" />
+              <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                {query ? "nenhum cliente com esse termo" : filter === "open" ? "nenhuma conversa aberta" : filter === "mine" ? "você não assumiu nenhum ticket" : "nenhuma conversa encerrada"}
+              </div>
+              {!query && filter !== "open" && (
+                <button type="button" onClick={() => setFilter("open")} className="font-mono text-[10px] uppercase text-neon hover:underline">ver abertas →</button>
+              )}
+            </div>
+          )}
           {filtered.map((t) => {
             const active = t.id === activeId;
             const lastCustomerAt = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
@@ -1455,22 +1525,29 @@ function AdminChatPanel() {
                         <span className="flex-shrink-0" aria-hidden>{categoryMeta(t.category).emoji}</span>
                         <span className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</span>
                       </div>
-                      {(t.unread_by_staff ?? 0) > 0 && !active && (
-                        <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
-                      )}
+                      <div className="flex flex-shrink-0 items-center gap-1.5">
+                        <span className="font-mono text-[9px] uppercase text-muted-foreground">{timeAgo(t.last_customer_message_at ?? t.updated_at)}</span>
+                        {(t.unread_by_staff ?? 0) > 0 && !active && (
+                          <span className="rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="mt-0.5 flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
-                      <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
-                        {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
+                    <div className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{t.subject}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[9px] uppercase ${t.status === "closed" ? "bg-muted/40 text-muted-foreground" : t.status === "assigned" ? "bg-cyan/10 text-cyan" : "bg-neon/10 text-neon"}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
+                        {t.status === "assigned" && t.assigned_name ? t.assigned_name : t.status === "closed" ? "encerrado" : "aberto"}
                       </span>
-                      <span className="flex-shrink-0 rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">{categoryMeta(t.category).label}</span>
-                      {waitingLong && (
-                        <span className="flex-shrink-0 rounded bg-danger/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-danger">aguardando</span>
+                      <span className="rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">{categoryMeta(t.category).label}</span>
+                      {priorityMeta(t.priority) && (
+                        <span className={`rounded border px-1.5 py-0.5 font-mono text-[9px] uppercase ${priorityMeta(t.priority)!.cls}`}>{priorityMeta(t.priority)!.label}</span>
                       )}
-                      <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
+                      {waitingLong && (
+                        <span className="rounded bg-danger/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-danger">aguardando</span>
+                      )}
                     </div>
                   </div>
+
                 </button>
                 {t.status !== "closed" && !t.assigned_to && (
                   <button
@@ -1495,13 +1572,16 @@ function AdminChatPanel() {
       {/* Chat area */}
       <section className={`${activeId ? "flex" : "hidden md:flex"} min-h-0 flex-col`}>
         {!activeThread ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-muted-foreground">
             <MessageSquare className="h-10 w-10 text-neon/50" />
-            <div className="font-mono text-xs uppercase">Selecione uma conversa</div>
+            <div className="font-mono text-xs uppercase tracking-wider">Selecione uma conversa</div>
+            <div className="max-w-xs font-mono text-[10px] leading-relaxed text-muted-foreground/70">
+              assuma o ticket para o cliente ver quem está atendendo · encerre quando resolver — uma nova mensagem dele abre outro ticket
+            </div>
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 px-3 py-2 md:px-4 md:py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 bg-background/30 px-3 py-2 md:px-4 md:py-3">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <button
                   type="button"
@@ -1511,6 +1591,9 @@ function AdminChatPanel() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
+                <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-full border border-neon/30 bg-neon/10 font-mono text-xs font-bold text-neon sm:grid">
+                  {(activeThread.profile?.display_name || activeThread.profile?.email || "?").slice(0, 2).toUpperCase()}
+                </div>
                 <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-mono text-sm">{activeThread.profile?.display_name || activeThread.profile?.email || "cliente"}</span>
@@ -1527,14 +1610,25 @@ function AdminChatPanel() {
                       <Copy className="h-3 w-3" />
                     </button>
                   )}
+                  <span className="rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">
+                    {categoryMeta(activeThread.category).emoji} {categoryMeta(activeThread.category).label}
+                  </span>
+                  {priorityMeta(activeThread.priority) && (
+                    <span className={`rounded border px-1.5 py-0.5 font-mono text-[9px] uppercase ${priorityMeta(activeThread.priority)!.cls}`}>
+                      {priorityMeta(activeThread.priority)!.label}
+                    </span>
+                  )}
                 </div>
-                <div className="font-mono text-[10px] uppercase text-muted-foreground">
+                <div className="truncate font-mono text-[10px] uppercase text-muted-foreground">
                   {activeThread.subject}
-                  {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
-                  {activeThread.status === "closed" && " · ENCERRADO"}
+                  {activeThread.assigned_name && ` · atendido por ${activeThread.assigned_name}`}
+                  {activeThread.status === "closed"
+                    ? " · ENCERRADO"
+                    : ` · última msg do cliente ${timeAgo(activeThread.last_customer_message_at ?? activeThread.updated_at)}`}
                 </div>
                 </div>
               </div>
+
               <div className="flex flex-wrap items-center gap-2">
 
                 {activeThread.status !== "closed" && !activeThread.assigned_to && (
@@ -1593,33 +1687,66 @@ function AdminChatPanel() {
                 </div>
               )}
 
-              {msgs.length === 0 && <div className="pt-16 text-center text-xs text-muted-foreground">Sem mensagens ainda — inicie a conversa.</div>}
-              {msgs.map((m) => m.is_system ? (
-                <div key={m.id} className="flex justify-center">
-                  <div className="max-w-[80%] rounded-full border border-cyan/30 bg-cyan/5 px-3 py-1 font-mono text-[10px] text-cyan whitespace-pre-wrap text-center">
-                    {m.body}
-                  </div>
+              {msgs.length === 0 && (
+                <div className="flex flex-col items-center gap-2 pt-16 text-center">
+                  <MessageSquare className="h-6 w-6 text-neon/40" />
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">sem mensagens ainda</div>
+                  <div className="font-mono text-[10px] text-muted-foreground/70">inicie a conversa com uma resposta rápida abaixo</div>
                 </div>
-              ) : (
-                <div key={m.id} className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${m.is_admin ? "border border-violet/40 bg-violet/10" : "border border-border bg-card"}`}>
-                    <div className="mb-1 font-mono text-[9px] uppercase text-muted-foreground">
-                      {m.is_admin ? "você (admin)" : "cliente"} · {new Date(m.created_at).toLocaleTimeString("pt-BR")}
-                    </div>
-                    {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
-                    {m.attachment_url && (
-                      m.attachment_type?.startsWith("image/") ? <img src={m.attachment_url} alt="anexo" className="mt-2 max-h-64 rounded" />
-                      : m.attachment_type?.startsWith("video/") ? <video src={m.attachment_url} controls className="mt-2 max-h-64 rounded" />
-                      : <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-2 block text-cyan underline">Baixar anexo</a>
+              )}
+              {msgs.map((m, i) => {
+                const prev = i > 0 ? msgs[i - 1] : null;
+                const showDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                const sameSender = !!prev && !prev.is_system && !m.is_system && prev.is_admin === m.is_admin;
+                return (
+                  <div key={m.id} className={showDay ? "space-y-3" : sameSender ? "!mt-1" : ""}>
+                    {showDay && (
+                      <div className="flex items-center gap-3">
+                        <div className="h-px flex-1 bg-border/40" />
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{dayLabel(m.created_at)}</span>
+                        <div className="h-px flex-1 bg-border/40" />
+                      </div>
+                    )}
+                    {m.is_system ? (
+                      <div className="flex justify-center">
+                        <div className="max-w-[80%] whitespace-pre-wrap rounded-full border border-cyan/30 bg-cyan/5 px-3 py-1 text-center font-mono text-[10px] text-cyan">
+                          {m.body}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
+                            m.is_admin
+                              ? "rounded-br-sm border border-violet/40 bg-violet/10"
+                              : "rounded-bl-sm border border-border bg-card"
+                          }`}
+                        >
+                          {!sameSender && (
+                            <div className={`mb-1 font-mono text-[9px] uppercase tracking-wider ${m.is_admin ? "text-violet" : "text-neon"}`}>
+                              {m.is_admin ? (activeThread.assigned_name ? `${activeThread.assigned_name} · suporte` : "suporte") : (activeThread.profile?.display_name || "cliente")}
+                            </div>
+                          )}
+                          {m.body && <div className="whitespace-pre-wrap break-words leading-relaxed">{m.body}</div>}
+                          {m.attachment_url && (
+                            m.attachment_type?.startsWith("image/") ? <img src={m.attachment_url} alt="anexo" className="mt-2 max-h-64 rounded" />
+                            : m.attachment_type?.startsWith("video/") ? <video src={m.attachment_url} controls className="mt-2 max-h-64 rounded" />
+                            : <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-2 block text-cyan underline">Baixar anexo</a>
+                          )}
+                          <div className={`mt-1 font-mono text-[9px] text-muted-foreground ${m.is_admin ? "text-right" : ""}`}>
+                            {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <div className="border-t border-border/40 p-3">
-              <div className="mb-2 flex items-center justify-between">
+            <div className="border-t border-border/40 bg-background/40 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                  ctrl+enter para enviar
+                  enter envia · shift+enter quebra linha{body.length > 0 && ` · ${body.length} caracteres`}
                 </span>
                 <QuickRepliesDropdown
                   onPick={(text) => {
@@ -1628,25 +1755,27 @@ function AdminChatPanel() {
                   }}
                 />
               </div>
-              <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
-                <Input
+              <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
+                <textarea
                   ref={inputRef}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
+                  rows={1}
                   onKeyDown={(e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                    if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       send();
                     }
                   }}
-                  placeholder="Responder cliente..."
-                  className="font-mono text-sm"
+                  placeholder={activeThread.status === "closed" ? "Conversa encerrada — responder reabre o atendimento" : "Responder cliente..."}
+                  className="max-h-40 min-h-11 flex-1 resize-none rounded-md border border-border bg-background px-3 py-2.5 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-neon/60 focus:outline-none"
                 />
                 <Button type="submit" disabled={sending || !body.trim()} aria-label="Enviar mensagem" className="glow-neon min-h-11 shrink-0 px-3 font-mono uppercase tracking-wider sm:px-4">
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 sm:mr-2" /><span className="hidden sm:inline">Enviar</span></>}
                 </Button>
               </form>
             </div>
+
           </>
         )}
       </section>
