@@ -1093,6 +1093,12 @@ function AdminPage() {
         onChange={(id) => setTab(id as Tab)}
         badges={navBadges}
       />
+
+      <AdminCustomer360
+        userId={customer360}
+        onClose={() => setCustomer360(null)}
+        onOpenThread={() => { setCustomer360(null); setTab("chat"); }}
+      />
     </div>
   );
 }
