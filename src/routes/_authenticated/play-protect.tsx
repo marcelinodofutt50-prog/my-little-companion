@@ -15,6 +15,7 @@ import {
   createApkJob,
   listApkJobs,
   cancelApkJob,
+  abortApkJob,
   clearMyApkJobs,
   getApkResultDownload,
 } from "@/lib/apk-jobs.functions";
@@ -81,13 +82,21 @@ function PlayProtectPage() {
   const cancelFn = useServerFn(cancelApkJob);
   const dlFn = useServerFn(getApkResultDownload);
   const clearFn = useServerFn(clearMyApkJobs);
+  const abortFn = useServerFn(abortApkJob);
 
   async function handleClear() {
-    if (!confirm("Limpar o histórico de jobs finalizados? Os arquivos processados serão apagados e os links de download deixarão de funcionar.")) return;
+    if (!confirm("Limpar a lista? Jobs finalizados e os que ainda estão na fila serão removidos (APKs em processamento continuam). Os arquivos processados serão apagados e os links de download deixarão de funcionar.")) return;
     setClearing(true);
     try {
       const r = await clearFn();
-      toast.success(r.removed ? `${r.removed} job(s) removido(s)` : "Nada para limpar");
+      if (r.removed) {
+        toast.success(`${r.removed} job(s) removido(s)`);
+      } else {
+        toast.info("Nada para limpar");
+      }
+      if (r.skippedActive) {
+        toast.warning(`${r.skippedActive} APK em processamento não foi removido — aguarde finalizar.`);
+      }
       await refresh();
     } catch (e: any) {
       toast.error(e?.message || "Falha ao limpar a lista");
@@ -182,8 +191,10 @@ function PlayProtectPage() {
     }
     setUploading(true);
     setUploadPct(0);
+    let createdJobId: string | null = null;
     try {
       const job = await createFn({ data: { filename: file.name, sizeBytes: file.size } });
+      createdJobId = job.jobId;
       // Upload direct to signed URL via XHR (progress)
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -200,7 +211,13 @@ function PlayProtectPage() {
       setTutorialOpen(true);
       await refresh();
     } catch (e: any) {
+      // Se o job foi criado mas o upload falhou, descarta para não travar a fila
+      // nem consumir o teste grátis.
+      if (createdJobId) {
+        try { await abortFn({ data: { id: createdJobId } }); } catch { /* ignore */ }
+      }
       toast.error(e?.message || "Falha no envio");
+      try { await refresh(); } catch { /* ignore */ }
     } finally {
       setUploading(false);
       setUploadPct(0);
