@@ -371,19 +371,20 @@ function AdminPage() {
 
 
         {/* GROUPED LAYOUT: sidebar (desktop) + content */}
-        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
+        <div className="mt-5 grid gap-5 lg:grid-cols-[248px_1fr]">
           {/* SIDEBAR NAV */}
           <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
             {/* Desktop: grouped vertical nav */}
-            <nav className="hidden lg:block terminal-card scanlines relative p-3">
-              <div className="mb-3">
+            <nav className="hidden lg:block terminal-card relative rounded-xl border-border/60 p-2.5">
+              <div className="mb-2.5">
                 <input
                   value={navQuery}
                   onChange={(e) => setNavQuery(e.target.value)}
                   placeholder="Buscar seção..."
-                  className="w-full rounded border border-border/50 bg-background/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-muted-foreground/70 focus:border-neon/50"
+                  className="w-full rounded-md border border-border/50 bg-background/60 px-2.5 py-1.5 text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-neon/50"
                 />
               </div>
+
               {filteredGroups.length === 0 && (
                 <div className="px-2 py-3 text-xs text-muted-foreground">Nenhuma seção encontrada.</div>
               )}
