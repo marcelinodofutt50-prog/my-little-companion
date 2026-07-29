@@ -982,7 +982,7 @@ function AdminPage() {
                           variant="outline"
                           disabled={fixingLic === l.id}
                           title="Corrigir bug de erro (BMob): +1 dia, reaplica a senha e volta a data"
-                          onClick={() => fixLoginBug(l.id)}
+                          onClick={() => openFixLoginBug(l.id)}
                           className="h-7 gap-1 border-amber-400/60 px-2 font-mono text-[10px] uppercase tracking-wider text-amber-400 hover:bg-amber-400/10"
                         >
                           {fixingLic === l.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wrench className="h-3 w-3" />}
