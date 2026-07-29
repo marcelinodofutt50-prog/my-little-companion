@@ -171,7 +171,7 @@ export function ProofWall() {
       </div>
 
       <div className="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-        cada print tem uma referência (REF-01…REF-0" + shots.length + ") com fonte e data · clique para ampliar · use ← → para navegar
+        cada print tem uma referência (REF-01 … REF-{String(shots.length).padStart(2, "0")}) com fonte e data · clique para ampliar · use ← → para navegar
       </div>
 
       {open !== null && (
