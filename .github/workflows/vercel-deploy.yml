@@ -1,0 +1,27 @@
+name: Vercel Production Deploy (fallback)
+
+# Rede de segurança: se o webhook nativo do GitHub -> Vercel falhar ou
+# ficar preso, este workflow dispara um Deploy Hook de Production.
+# Requer o secret VERCEL_DEPLOY_HOOK_URL no repositório.
+# (Vercel -> Settings -> Git -> Deploy Hooks -> criar hook para a branch main)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar deploy hook
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "VERCEL_DEPLOY_HOOK_URL nao configurado - pulando (deploy nativo do Vercel cuida disso)."
+            exit 0
+          fi
+          echo "Disparando deploy de producao na Vercel..."
+          curl -sS -X POST "$HOOK" -o response.json -w "HTTP %{http_code}\n"
+          cat response.json
