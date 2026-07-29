@@ -19,7 +19,10 @@ export type AppNotification = {
   createdAt: string;
   /** Rota interna para onde o clique deve levar. */
   href?: string;
+  /** Texto do botão de ação exibido no card (ex.: "Reabrir atendimento"). */
+  actionLabel?: string;
 };
+
 
 /**
  * Agrega notificações reais do usuário (suporte, licenças, reembolsos,
