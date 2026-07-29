@@ -425,17 +425,30 @@ export const adminSetRole = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Wipe existing roles, then insert the new one
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    if (del.error) throw new Error(`Falha ao limpar papéis: ${del.error.message}`);
     const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: data.role });
     if (error) throw new Error(error.message);
-    return { ok: true };
+    // Confirma que gravou de verdade (evita "promovi mas continua cliente").
+    const { data: check } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", data.userId).maybeSingle();
+    if (check?.role !== data.role) throw new Error("O papel não foi salvo. Tente novamente.");
+    return { ok: true, role: data.role };
   });
 
 export const adminListRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data } = await context.supabase.from("user_roles").select("user_id, role");
+    // Precisa do client de serviço: a policy de RLS de user_roles é
+    // por-usuário, então o client do próprio admin devolveria só a
+    // linha dele e a aba Equipe mostrava todo mundo como "cliente".
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("user_roles").select("user_id, role");
+    if (error) {
+      const fb = await context.supabase.from("user_roles").select("user_id, role");
+      return fb.data ?? [];
+    }
     return data ?? [];
   });
 
