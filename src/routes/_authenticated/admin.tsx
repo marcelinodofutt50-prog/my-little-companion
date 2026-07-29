@@ -33,6 +33,8 @@ import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { AdminDailyReport } from "@/components/AdminDailyReport";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
+import { AdminTagline } from "@/components/AdminTagline";
+import { AdminTeamGuide } from "@/components/AdminTeamGuide";
 
 
 
