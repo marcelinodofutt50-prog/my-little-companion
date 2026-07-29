@@ -32,6 +32,7 @@ export function SecurityWelcomeDialog() {
   const [errorText, setErrorText] = useState<string | null>(null);
   /** null = ainda carregando; true = já existiram códigos antes (regeneração) */
   const [hadCodes, setHadCodes] = useState(false);
+  const [remaining, setRemaining] = useState(0);
   const [exhausted, setExhausted] = useState(false);
   const checked = useRef(false);
 
