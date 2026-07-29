@@ -104,6 +104,7 @@ function DashboardPage() {
       const list = l as License[];
       setLicenses(list); setBalance(c.balance);
       setOrders((o ?? []) as MyOrder[]);
+      setOrderLastSync(new Date());
       // Hydrate trial credentials card from server-stored (encrypted) license
       // so it survives reloads / device switches. Trials expirados somem do topo.
       const trial = list.find((x) => x.is_trial);
