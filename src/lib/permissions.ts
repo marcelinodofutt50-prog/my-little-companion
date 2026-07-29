@@ -67,7 +67,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   ia: "view.system",
   chat: "view.chat",
   issue: "license.issue",
-  legacy: "view.licenses",
+  legacy: "license.extend",
   external: "license.extend",
   users: "view.users",
   licenses: "view.licenses",

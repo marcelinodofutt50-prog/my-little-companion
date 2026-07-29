@@ -493,7 +493,7 @@ function AdminPage() {
 
           {/* CONTENT */}
           <div className="min-w-0">
-            <AdminAlertsBanner onOpenLogs={() => setTab("health")} onOpenIA={() => setTab("ia")} />
+            {isAdminUser && <AdminAlertsBanner onOpenLogs={() => setTab("health")} onOpenIA={() => setTab("ia")} />}
 
             {/* Section title bar */}
             {activeMeta && (
@@ -552,8 +552,8 @@ function AdminPage() {
                   conversionRate={conversionRate}
                 />
 
-                <AdminDailyReport />
-                <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />
+                {isAdminUser && <AdminDailyReport />}
+                {isAdminUser && <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />}
 
 
 
@@ -566,11 +566,11 @@ function AdminPage() {
                   <MiniStat label="Trials ativos" value={String(trialsActive)} accent="cyan" />
                 </div>
 
-                {/* Métricas 30 dias */}
-                <AdminMetricsPanel />
+                {/* Métricas 30 dias (financeiro: só admin) */}
+                {isAdminUser && <AdminMetricsPanel />}
 
                 {/* Tendência de receita */}
-                <RevenueSparkline orders={orders} />
+                {isAdminUser && <RevenueSparkline orders={orders} />}
 
 
 
@@ -687,7 +687,7 @@ function AdminPage() {
 
           {tab === "users" && (
             <div className="space-y-4">
-            <AdminTrialResetPanel />
+            {isAdminUser && <AdminTrialResetPanel />}
             <div className="terminal-card scanlines relative overflow-hidden">
               <div className="flex flex-wrap items-center gap-2 border-b border-border/30 p-3">
                 <Input
@@ -788,12 +788,16 @@ function AdminPage() {
                 {selectedOrderIds.size > 0 && (
                   <div className="flex flex-wrap items-center gap-2 rounded border border-neon/30 bg-neon/5 px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
                     <span className="text-neon">{selectedOrderIds.size} selecionado(s)</span>
-                    <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Marcar como pago")}>
-                      Marcar como pago
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Reprocessar")}>
-                      Reprocessar
-                    </Button>
+                    {isAdminUser && (
+                      <>
+                        <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Marcar como pago")}>
+                          Marcar como pago
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Reprocessar")}>
+                          Reprocessar
+                        </Button>
+                      </>
+                    )}
                     <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Exportar CSV")}>
                       Exportar CSV
                     </Button>
@@ -925,10 +929,16 @@ function AdminPage() {
                   </td>
                   <td className="p-3 font-mono text-xs whitespace-nowrap">{l.is_trial ? <span className="text-muted-foreground">—</span> : <>{formatBrl(fee)}<span className="text-muted-foreground">/mês</span></>}</td>
                   <td className="p-3 text-right whitespace-nowrap">
-                    <Button size="sm" variant="ghost" title="Renovar servidor (próx. dia 20)" onClick={() => renew(l.id)}><RefreshCw className="h-3 w-3 text-cyan" /></Button>
-                    <Button size="sm" variant="ghost" title="Recriar credenciais do login" onClick={() => recreate(l.id)}><RotateCw className="h-3 w-3 text-violet" /></Button>
-                    <Button size="sm" variant="ghost" title="Estender manualmente" onClick={() => extend(l.id)}><Calendar className="h-3 w-3" /></Button>
-                    <Button size="sm" variant="ghost" title="Revogar" onClick={() => revoke(l.id)}><Ban className="h-3 w-3 text-danger" /></Button>
+                    {isAdminUser ? (
+                      <>
+                        <Button size="sm" variant="ghost" title="Renovar servidor (próx. dia 20)" onClick={() => renew(l.id)}><RefreshCw className="h-3 w-3 text-cyan" /></Button>
+                        <Button size="sm" variant="ghost" title="Recriar credenciais do login" onClick={() => recreate(l.id)}><RotateCw className="h-3 w-3 text-violet" /></Button>
+                        <Button size="sm" variant="ghost" title="Estender manualmente" onClick={() => extend(l.id)}><Calendar className="h-3 w-3" /></Button>
+                        <Button size="sm" variant="ghost" title="Revogar" onClick={() => revoke(l.id)}><Ban className="h-3 w-3 text-danger" /></Button>
+                      </>
+                    ) : (
+                      <span className="font-mono text-[10px] uppercase text-muted-foreground">somente leitura</span>
+                    )}
                   </td>
                 </tr>
               );
