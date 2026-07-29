@@ -1045,7 +1045,10 @@ function AdminPage() {
           })()}
 
           {tab === "staff" && (
+            <div className="space-y-4">
+            <AdminPermissionsMatrix />
             <div className="terminal-card scanlines relative overflow-hidden">
+
               <div className="border-b border-border/40 p-3 font-mono text-xs uppercase text-muted-foreground">
                 <ShieldCheck className="mr-1 inline h-3 w-3 text-neon" /> Promova usuários para admin ou suporte (moderator).
               </div>
