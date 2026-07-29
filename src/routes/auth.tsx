@@ -344,7 +344,7 @@ function AuthPage() {
           )}
         </form>
 
-        {(emailBlocked || signupMessage) && (
+        {(emailBlocked || signupMessage || mode === "up") && (
           <div className="mt-4 w-full rounded border border-amber-400/40 bg-amber-400/5 p-4 text-xs">
             <p className="font-mono uppercase tracking-wider text-amber-400">Não recebeu o e-mail?</p>
             <ul className="mt-2 space-y-1 text-muted-foreground">
@@ -361,7 +361,7 @@ function AuthPage() {
                 onClick={resendConfirmation}
               >
                 {resending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                {cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar e-mail"}
+                {cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar confirmação"}
               </Button>
               <Button asChild variant="ghost" className="w-full font-mono text-[11px] uppercase">
                 <Link to="/contato">
