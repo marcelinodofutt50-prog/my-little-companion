@@ -350,9 +350,16 @@ function DashboardPage() {
             <div className="mt-5 space-y-3">
               <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                 <span>// pedidos em andamento · {open.length}</span>
-                <button onClick={() => setExtraTab("historico")} className="text-cyan hover:underline">
-                  ver histórico{hidden > 0 ? ` (+${hidden})` : ""}
-                </button>
+                <div className="flex items-center gap-2">
+                  {orderLastSync && (
+                    <span className="hidden text-[9px] tracking-wider text-muted-foreground/70 sm:inline">
+                      atualizado {orderLastSync.toLocaleTimeString("pt-BR")}
+                    </span>
+                  )}
+                  <button onClick={() => setExtraTab("historico")} className="text-cyan hover:underline">
+                    ver histórico{hidden > 0 ? ` (+${hidden})` : ""}
+                  </button>
+                </div>
               </div>
               <OrderStatusTimeline
                 order={{
