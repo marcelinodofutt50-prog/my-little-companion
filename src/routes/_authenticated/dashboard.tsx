@@ -260,7 +260,7 @@ function DashboardPage() {
               const statusColor = statusTone === "danger" ? "text-danger" : statusTone === "amber" ? "text-amber-400" : statusTone === "neon" ? "text-neon" : "text-muted-foreground";
               const statusRing = statusTone === "danger" ? "border-danger/50 bg-danger/5" : statusTone === "amber" ? "border-amber-400/40 bg-amber-400/5" : statusTone === "neon" ? "border-neon/40 bg-neon/5" : "border-border/50 bg-background/40";
               return (
-                <div className="rainbow-ring relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-br from-background via-background to-neon/[0.04] p-5 sm:p-6">
+                <div className="osint-panel osint-corners osint-sweep rainbow-ring relative overflow-hidden p-5 sm:p-6" style={{ ["--osint-sweep-h" as any]: "170px" }}>
                   <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[var(--neon)] opacity-[0.08] blur-3xl" />
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
