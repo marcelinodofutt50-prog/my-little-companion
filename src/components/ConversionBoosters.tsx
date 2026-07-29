@@ -1,16 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { ShieldCheck, Users, Clock, TrendingUp } from "lucide-react";
-
-const PLAN_LABEL: Record<string, string> = {
-  "login-7d": "Plano Semanal",
-  "login-30d": "Plano Mensal",
-  "login-lifetime": "Plano Vitalício",
-  "play-protect-monthly": "Play Protect",
-  "upgrade-457-to-46": "Upgrade v4.6",
-};
 
 /** Live viewer count — deterministic pseudo-random so it doesn't jump wildly. */
 function useLiveViewers() {
@@ -26,39 +16,6 @@ function useLiveViewers() {
     return () => clearInterval(id);
   }, []);
   return n;
-}
-
-/** Toast pop-ups showing recent purchases — pure social proof. */
-export function LiveSalesToasts() {
-  useEffect(() => {
-    let cancelled = false;
-    let shownIds = new Set<string>();
-    let timer: number | undefined;
-
-    async function tick() {
-      if (cancelled) return;
-      const { data } = await supabase
-        .from("public_recent_sales" as any)
-        .select("*")
-        .limit(6);
-      const sales = (data as any[] | null) ?? [];
-      const fresh = sales.filter((s) => !shownIds.has(s.id));
-      if (fresh.length) {
-        const s = fresh[Math.floor(Math.random() * fresh.length)];
-        shownIds.add(s.id);
-        const who = `${s.first_name}${s.last_initial ? ` ${s.last_initial}.` : ""}`;
-        toast.success(`${who} acabou de ativar ${PLAN_LABEL[s.plan_slug] ?? s.plan_slug}`, {
-          duration: 4500,
-          className: "font-mono text-xs",
-        });
-      }
-      timer = window.setTimeout(tick, 18000 + Math.random() * 12000);
-    }
-    // First one after a short delay so it doesn't hit on the initial paint.
-    timer = window.setTimeout(tick, 6000);
-    return () => { cancelled = true; if (timer) clearTimeout(timer); };
-  }, []);
-  return null;
 }
 
 /** Live viewers + guarantee strip for the plans page. */

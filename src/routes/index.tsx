@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SocialProofStrip } from "@/components/SocialProof";
-import { LiveSalesToasts, MobileStickyCTA } from "@/components/ConversionBoosters";
+import { MobileStickyCTA } from "@/components/ConversionBoosters";
 import { Testimonials } from "@/components/Testimonials";
 import { ProofWall } from "@/components/ProofWall";
 import { ImpossibleProof } from "@/components/ImpossibleProof";
@@ -106,8 +106,6 @@ function LandingPage() {
 
       <div className="relative z-10">
         <SiteHeader />
-        <LiveSalesToasts />
-
         <main className="mx-auto max-w-7xl px-6 pb-24 md:px-10 md:pb-0">
 
           {/* HERO — clean, brand-first */}
