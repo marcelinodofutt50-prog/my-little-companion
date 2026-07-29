@@ -464,9 +464,12 @@ function AdminPage() {
                   {activeMeta.hint && <span className="ml-1 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
                   {(navBadges[tab] ?? 0) > 0 && (
                     <span className="rounded-full bg-neon/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-neon">
-                      {navBadges[tab]} pendente{navBadges[tab] > 1 ? "s" : ""}
+                      {tab === "chat"
+                        ? `${navBadges[tab]} não lida${navBadges[tab] > 1 ? "s" : ""}`
+                        : `${navBadges[tab]} pendente${navBadges[tab] > 1 ? "s" : ""}`}
                     </span>
                   )}
+
                   <span
                     title={countsUpdatedAt ? `Atualizado ${new Date(countsUpdatedAt).toLocaleTimeString("pt-BR")}` : "Sincronizando..."}
                     className="ml-auto flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground"
