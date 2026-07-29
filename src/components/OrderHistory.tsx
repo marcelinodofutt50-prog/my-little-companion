@@ -125,7 +125,7 @@ export function OrderHistory() {
         />
         <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
           <span>
-            {list.length} de {done.length} pedido{done.length === 1 ? "" : "s"}
+            {list.length} de {orders.length} pedido{orders.length === 1 ? "" : "s"}
           </span>
           {filtersOn && (
             <button
