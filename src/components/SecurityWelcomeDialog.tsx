@@ -76,15 +76,31 @@ export function SecurityWelcomeDialog() {
         const generatedAt = (profile as any)?.recovery_codes_generated_at ?? null;
         const ackAt = (profile as any)?.security_ack_at ?? null;
         const left = count ?? 0;
+        const ackedLocally = localStorage.getItem(`sd_sec_ack_${user.id}`) === "1";
 
         setHadCodes(Boolean(generatedAt));
         setGeneratedAt(generatedAt);
         setRemaining(left);
         setExhausted(Boolean(generatedAt) && left === 0);
-        if (!ackAt || left === 0) setOpen(true);
+
+        // Só abre automaticamente para quem ainda não viu o aviso.
+        // Quem já leu (mesmo sem códigos ativos) não é interrompido a cada login;
+        // nesse caso mostramos um lembrete leve uma vez por sessão.
+        if (!ackAt && !ackedLocally) {
+          setOpen(true);
+          return;
+        }
+        if (left === 0 && !sessionStorage.getItem(`sd_sec_reminder_${user.id}`)) {
+          sessionStorage.setItem(`sd_sec_reminder_${user.id}`, "1");
+          toast("Você está sem códigos de recuperação ativos", {
+            description: "Gere novos códigos para não perder o acesso à conta.",
+            action: { label: "Gerar agora", onClick: () => setOpen(true) },
+          });
+        }
       })
       .catch(() => {});
   }, []);
+
 
   /** Plano B: gera no navegador e grava direto na tabela (RLS: só as próprias linhas). */
   async function generateViaTableFallback(userId: string): Promise<string[]> {
