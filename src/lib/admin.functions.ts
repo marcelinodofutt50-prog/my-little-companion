@@ -105,7 +105,7 @@ export const adminListThreads = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("support_threads")
-      .select("id, user_id, subject, status, created_at, updated_at, assigned_to, assigned_name, assigned_at, closed_at, closed_by_name, last_customer_message_at, last_staff_message_at, unread_by_staff, unread_by_customer");
+      .select("id, user_id, subject, category, priority, status, created_at, updated_at, assigned_to, assigned_name, assigned_at, closed_at, closed_by_name, last_customer_message_at, last_staff_message_at, unread_by_staff, unread_by_customer");
     if (data.filter === "open") q = q.neq("status", "closed");
     else if (data.filter === "mine") q = q.eq("assigned_to", context.userId).neq("status", "closed");
     else if (data.filter === "closed") q = q.eq("status", "closed");
