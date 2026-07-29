@@ -49,7 +49,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {
+    const patch: any = {
       onboarding_completed_at: new Date().toISOString(),
       onboarding_answers: { ...(data.answers ?? {}), skipped: Boolean(data.skipped) },
     };
