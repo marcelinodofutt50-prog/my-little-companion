@@ -36,15 +36,18 @@ export const getAdminProblems = createServerFn({ method: "GET" })
 
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    // 1) Paid orders without a license for login/category plans
+    // 1) Paid orders without a license for login/upgrade plan categories
+    const { data: plans } = await supabaseAdmin.from("plans").select("slug, category");
+    const planCategory = new Map<string, string>(((plans ?? []) as any[]).map((p) => [p.slug, p.category]));
     const { data: paidOrders } = await supabaseAdmin
       .from("orders")
-      .select("id, user_id, plan_slug, amount, paid_at, status, plan:plans!inner(category)")
+      .select("id, user_id, plan_slug, amount, paid_at, status, created_at")
       .eq("status", "paid")
-      .in("plan.category", ["login", "upgrade"])
       .order("paid_at", { ascending: false })
-      .limit(100);
-    const orderIds = ((paidOrders ?? []) as any[]).map((o) => o.id);
+      .limit(200);
+    const orderIds = ((paidOrders ?? []) as any[])
+      .filter((o) => ["login", "upgrade"].includes(planCategory.get(o.plan_slug) ?? ""))
+      .map((o) => o.id);
     if (orderIds.length) {
       const { data: licenses } = await supabaseAdmin
         .from("licenses")
@@ -52,7 +55,7 @@ export const getAdminProblems = createServerFn({ method: "GET" })
         .in("order_id", orderIds);
       const delivered = new Set(((licenses ?? []) as any[]).map((l) => l.order_id));
       for (const o of (paidOrders ?? []) as any[]) {
-        if (!delivered.has(o.id)) {
+        if (!delivered.has(o.id) && ["login", "upgrade"].includes(planCategory.get(o.plan_slug) ?? "")) {
           problems.push({
             kind: "paid_no_license",
             id: o.id,
@@ -66,6 +69,7 @@ export const getAdminProblems = createServerFn({ method: "GET" })
         }
       }
     }
+
 
     // 2) Orders in yaarsa_failed (Yaarsa creation/renewal failed)
     const { data: failedOrders } = await supabaseAdmin
