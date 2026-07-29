@@ -330,7 +330,6 @@ function PlansPage() {
       </section>
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-12 pb-28 md:pb-12">
-        
         <ConversionBoosters />
         <TrustBadges className="mt-6" />
 

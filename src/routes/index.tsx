@@ -106,8 +106,6 @@ function LandingPage() {
 
       <div className="relative z-10">
         <SiteHeader />
-        
-
         <main className="mx-auto max-w-7xl px-6 pb-24 md:px-10 md:pb-0">
 
           {/* HERO — clean, brand-first */}
