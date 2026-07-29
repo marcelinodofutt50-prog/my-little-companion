@@ -33,6 +33,7 @@ export function SecurityWelcomeDialog() {
   /** null = ainda carregando; true = já existiram códigos antes (regeneração) */
   const [hadCodes, setHadCodes] = useState(false);
   const [remaining, setRemaining] = useState(0);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [exhausted, setExhausted] = useState(false);
   const checked = useRef(false);
 
@@ -77,6 +78,7 @@ export function SecurityWelcomeDialog() {
         const left = count ?? 0;
 
         setHadCodes(Boolean(generatedAt));
+        setGeneratedAt(generatedAt);
         setRemaining(left);
         setExhausted(Boolean(generatedAt) && left === 0);
         if (!ackAt || left === 0) setOpen(true);
@@ -190,6 +192,8 @@ export function SecurityWelcomeDialog() {
           : `${nextCodes.length} códigos de recuperação gerados com sucesso`,
       );
       setHadCodes(true);
+      setRemaining(nextCodes.length);
+      setGeneratedAt(new Date().toISOString());
       setExhausted(false);
     } catch (e: any) {
       console.error("[recovery] falha final ao gerar códigos", {
@@ -208,6 +212,11 @@ export function SecurityWelcomeDialog() {
     }
   }
 
+
+  const hasActiveCodes = hadCodes && remaining > 0 && step === "notice";
+  const generatedLabel = generatedAt
+    ? new Date(generatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
+    : null;
 
   function copyAll() {
     if (!codes) return;
