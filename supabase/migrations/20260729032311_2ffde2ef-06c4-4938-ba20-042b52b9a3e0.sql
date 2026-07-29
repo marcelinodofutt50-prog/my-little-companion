@@ -1,0 +1,2 @@
+SELECT cron.alter_job(jobid, command := replace(command, 'https://project--aa5c6d4b-4a83-49d2-a5ba-32781957814c-dev.lovable.app', 'https://www.shadowdashstore.com'))
+FROM cron.job WHERE jobname IN ('reconcile-pending-orders','cleanup-apk-jobs');

@@ -13,7 +13,12 @@ import { Lost2faHelp } from "@/components/Lost2faHelp";
 
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): {
+    next?: string;
+    code?: string;
+    type?: string;
+    error?: string;
+  } => ({
     next: typeof s.next === "string" ? s.next : undefined,
     code: typeof s.code === "string" ? s.code : undefined,
     type: typeof s.type === "string" ? s.type : undefined,
