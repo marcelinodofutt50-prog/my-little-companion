@@ -16,6 +16,8 @@ import { VersionCompare } from "@/components/VersionCompare";
 import { MigrationOffer } from "@/components/MigrationOffer";
 
 import { TrustBadges } from "@/components/TrustBadges";
+import { HowItWorksSteps } from "@/components/HowItWorksSteps";
+import { PlanAdvisor } from "@/components/PlanAdvisor";
 import { CheckoutFaqFloat } from "@/components/CheckoutFaqFloat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
