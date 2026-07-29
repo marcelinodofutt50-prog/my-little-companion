@@ -251,52 +251,45 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    // O cooldown só vale para envio de e-mail (cadastro). Login nunca é bloqueado.
-    if (mode === "up" && cooldown > 0) return;
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     try {
       if (mode === "up") {
-        if (attemptsInfo(email).count >= MAX_ATTEMPTS_PER_HOUR) {
-          startCooldown(120);
-          setEmailBlocked(true);
-          track("signup", "blocked_local", { error: "local attempt cap reached" });
-          throw new Error(
-            "Muitas tentativas de cadastro nesta hora. Aguarde alguns minutos ou fale com o suporte."
-          );
-        }
         // Antifraude: limite de contas por conexão (IP em hash) numa janela de 24h.
         const guard = await checkSignupAllowed().catch(() => ({ allowed: true }) as any);
         if (!guard.allowed) {
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
-        bumpAttempts(email);
-      setSendInfo(attemptsInfo(email));
         const { data: signUpData, error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
         // await: o fire-and-forget podia perder o registro se a página navegasse logo após o cadastro.
         await recordSignupIp({ data: { email, userId: signUpData.user?.id ?? null } }).catch(() => {});
-        // Se o projeto estiver com confirmação desligada, o Supabase já devolve sessão: entra direto.
+        clearLocalLimits();
+        track("signup", "sent");
+        // Entra direto no painel: a confirmação de e-mail é feita depois, pelo banner do dashboard.
         if (signUpData.session) {
-          clearLocalLimits();
+          toast.success("Conta criada! Bem-vindo.");
           navigate({ to: (next as any) || "/dashboard" });
           return;
         }
-        toast.success("Conta criada! Confirme seu e-mail.");
-        setEmailBlocked(false);
-        track("signup", "sent");
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError) {
+          toast.success("Conta criada! Você pode confirmar o e-mail depois, pelo painel.");
+          navigate({ to: (next as any) || "/dashboard" });
+          return;
+        }
+        toast.success("Conta criada! Confirme seu e-mail para entrar.");
+        setEmailBlocked(true);
         setSignupMessage(
-          "Enviamos um e-mail de confirmação para você.\n\n" +
+          "Sua conta foi criada.\n\n" +
+          "Se o login não abrir automaticamente, confirme o e-mail:\n" +
           "1. Abra o Gmail (ou app de e-mail).\n" +
-          "2. Procure por uma mensagem da Shadow.\n" +
-          "3. Clique no botão laranja \"Confirmar e-mail\".\n" +
-          "4. Você será logado automaticamente.\n\n" +
-          "Se não achar, olhe na pasta Spam ou Promoções."
+          "2. Procure por uma mensagem da Shadow (veja Spam/Promoções).\n" +
+          "3. Clique em \"Confirmar e-mail\" e você entra no painel."
         );
-        startCooldown(60);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
