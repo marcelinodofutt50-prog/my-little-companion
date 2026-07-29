@@ -222,6 +222,26 @@ export async function yaarsaExtend(email: string, newExpireDate: string, panel: 
   return yaarsaPost({ action: "cexpire", email, expire_date: newExpireDate, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
+// Reaplica a senha da conta no painel. Alguns builds do Yaarsa usam nomes de
+// ação diferentes para troca de senha, então tentamos os candidatos conhecidos
+// e paramos no primeiro que não for recusado como "ação inválida" (1001).
+export async function yaarsaSetPassword(
+  email: string,
+  password: string,
+  panel: YaarsaPanel = "v457",
+): Promise<YaarsaResponse & { action?: string }> {
+  const candidates = ["cpassword", "cpass", "changepassword", "cpasswd"];
+  let last: YaarsaResponse = { Fail: "Painel não aceitou nenhuma ação de troca de senha" };
+  for (const action of candidates) {
+    const r = await yaarsaPost({ action, email, password, adminkey: yaarsaAdminKey(panel) }, panel);
+    if (r.Success) return { ...r, action };
+    last = r;
+    const invalidAction = /1001|ação inválida|invalid action/i.test(String(r.Fail ?? ""));
+    if (!invalidAction) return { ...r, action };
+  }
+  return last;
+}
+
 // Look up an email in a given panel by attempting a benign cexpire with a
 // future date (tomorrow, UTC). Yaarsa returns 1005 ("not found") when the
 // email doesn't exist; using a future date avoids false 1006 rejections when
