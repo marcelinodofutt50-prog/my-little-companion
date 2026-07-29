@@ -788,12 +788,16 @@ function AdminPage() {
                 {selectedOrderIds.size > 0 && (
                   <div className="flex flex-wrap items-center gap-2 rounded border border-neon/30 bg-neon/5 px-3 py-2 font-mono text-[10px] uppercase tracking-wider">
                     <span className="text-neon">{selectedOrderIds.size} selecionado(s)</span>
-                    <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Marcar como pago")}>
-                      Marcar como pago
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Reprocessar")}>
-                      Reprocessar
-                    </Button>
+                    {isAdminUser && (
+                      <>
+                        <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Marcar como pago")}>
+                          Marcar como pago
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Reprocessar")}>
+                          Reprocessar
+                        </Button>
+                      </>
+                    )}
                     <Button size="sm" variant="outline" className="h-7 font-mono text-[10px] uppercase" onClick={() => bulkAction("Exportar CSV")}>
                       Exportar CSV
                     </Button>
