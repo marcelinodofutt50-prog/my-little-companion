@@ -439,3 +439,30 @@ export const adminClearApkJobs = createServerFn({ method: "POST" })
     return { removed: list.length };
   });
 
+
+/**
+ * Cliente: descarta um job recém-criado cujo upload falhou. Evita que a fila
+ * fique travada com um job "na fila" sem arquivo e que o teste grátis seja
+ * consumido por uma tentativa que nunca chegou ao servidor.
+ */
+export const abortApkJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: job } = await supabaseAdmin
+      .from("apk_jobs")
+      .select("id,user_id,status,source_path")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!job) return { ok: false };
+    if (job.status !== "queued") return { ok: false };
+    try { if (job.source_path) await supabaseAdmin.storage.from("apk-uploads").remove([job.source_path]); } catch { /* ignore */ }
+    const now = new Date().toISOString();
+    await supabaseAdmin
+      .from("apk_jobs")
+      .update({ status: "cancelled", cleared_at: now, completed_at: now, is_free_trial: false, source_path: "" } as any)
+      .eq("id", job.id);
+    return { ok: true };
+  });
