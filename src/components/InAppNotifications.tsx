@@ -206,11 +206,22 @@ export function InAppNotifications() {
                 </div>
               </div>
             );
+            const [hrefPath, hrefQuery] = (n.href ?? "").split("?");
+            const search = hrefQuery
+              ? Object.fromEntries(new URLSearchParams(hrefQuery).entries())
+              : undefined;
             return n.href ? (
-              <Link key={n.id} to={n.href as string} onClick={markAllRead} className="block">
+              <Link
+                key={n.id}
+                to={hrefPath as string}
+                search={search as never}
+                onClick={markAllRead}
+                className="block"
+              >
                 {content}
               </Link>
             ) : (
+
               <div key={n.id}>{content}</div>
             );
           })}
