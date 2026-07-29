@@ -230,7 +230,12 @@ export const checkLegacyEmail = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ email: z.string().trim().email().max(255) }).parse(input))
   .handler(async ({ data }) => {
     const { yaarsaLookupEmailAllPanels } = await import("./yaarsa.server");
-    const r = await yaarsaLookupEmailAllPanels(data.email.toLowerCase());
+    let r: Awaited<ReturnType<typeof yaarsaLookupEmailAllPanels>>;
+    try {
+      r = await yaarsaLookupEmailAllPanels(data.email.toLowerCase());
+    } catch (e: any) {
+      throw new Error(`LEGACY_PANEL_UNREACHABLE: ${e?.message || "painel não respondeu"}`);
+    }
     const foundIn = (r.details ?? []).filter((d) => d.found).map((d) => d.panel);
     return {
       found: r.found,
@@ -238,6 +243,7 @@ export const checkLegacyEmail = createServerFn({ method: "POST" })
       suggested_tier: foundIn.includes("v46") ? "lifetime_46" : foundIn.includes("v457") ? "monthly_457" : null,
     };
   });
+
 
 // ============ Reivindicação da licença por cliente antigo ============
 // Cliente informa email + senha + painel confirmado. Verificamos que o email
@@ -258,9 +264,16 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
 
     // 1) A licença precisa realmente existir no painel escolhido.
     const { yaarsaLookupEmail, yaarsaExtend, encrypt } = await import("./yaarsa.server");
-    const lookup = await yaarsaLookupEmail(email, data.panel);
+    let lookup: Awaited<ReturnType<typeof yaarsaLookupEmail>>;
+    try {
+      lookup = await yaarsaLookupEmail(email, data.panel);
+    } catch (e: any) {
+      throw new Error(`LEGACY_PANEL_UNREACHABLE: ${e?.message || "painel não respondeu"}`);
+    }
     if (!lookup.found) {
-      throw new Error(`Email não encontrado no painel ${data.panel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7"}`);
+      throw new Error(
+        `LEGACY_EMAIL_NOT_IN_PANEL: o email ${email} não existe no painel ${data.panel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7"}`,
+      );
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -276,13 +289,34 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
       };
     }
 
+    // 2b) Esse email já pertence a outra conta do dashboard? Bloqueia com motivo claro.
+    const { data: claimedByOther } = await supabaseAdmin
+      .from("licenses").select("id").eq("yaarsa_email", email).neq("user_id", userId).limit(1).maybeSingle();
+    if (claimedByOther) {
+      throw new Error(
+        "LEGACY_ALREADY_CLAIMED: este login antigo já está vinculado a outra conta do dashboard",
+      );
+    }
+
     // 3) Alinha o expire_date no Yaarsa até o próximo dia 20 (ciclo de renovação legacy).
     const today = new Date();
     const next20 = new Date(today.getFullYear(), today.getMonth(), 20);
     if (today.getDate() >= 20) next20.setMonth(next20.getMonth() + 1);
     const ymd = next20.toISOString().slice(0, 10);
-    const ext = await yaarsaExtend(email, ymd, data.panel);
-    if (ext.Fail) throw new Error(`Painel: ${ext.Fail}`);
+    let ext: Awaited<ReturnType<typeof yaarsaExtend>>;
+    try {
+      ext = await yaarsaExtend(email, ymd, data.panel);
+    } catch (e: any) {
+      throw new Error(`LEGACY_PANEL_UNREACHABLE: ${e?.message || "painel não respondeu ao renovar"}`);
+    }
+    if (ext.Fail) {
+      const f = String(ext.Fail);
+      if (/password|senha|credential|unauthor/i.test(f)) {
+        throw new Error(`LEGACY_BAD_PASSWORD: ${f}`);
+      }
+      throw new Error(`LEGACY_PANEL_REJECTED: ${f}`);
+    }
+
 
     // 4) Persiste a licença legada no dashboard do cliente.
     const usernameGuess = email.split("@")[0].slice(0, 16);
@@ -305,7 +339,15 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
       version_tier: versionTier,
       panel: data.panel,
     } as any).select("id").single();
-    if (insErr || !lic) throw new Error(insErr?.message || "Falha ao registrar licença");
+    if (insErr || !lic) {
+      await supabaseAdmin.from("integration_logs").insert({
+        source: `yaarsa-${data.panel}`, action: "legacy_claim", outcome: "error",
+        error: insErr?.message || "insert falhou",
+        context: { user_id: userId, email } as any,
+      });
+      throw new Error(`LEGACY_DB_ERROR: ${insErr?.message || "não foi possível registrar a licença"}`);
+    }
+
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${data.panel}`, action: "legacy_claim", outcome: "success",
