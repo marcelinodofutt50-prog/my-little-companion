@@ -12,9 +12,11 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    // Destrava jobs vencidos (evita fila travada bloqueando novos envios).
+    await supabase.rpc("expire_stale_apk_jobs").catch?.(() => {});
     const [{ data: active }, consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).or(`status.in.(${CONSUMED_STATUSES.join(",")}),is_free_trial.eq.true`),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_free_trial", true).in("status", CONSUMED_STATUSES as any),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).is("cleared_at", null),
       supabase
@@ -80,7 +82,7 @@ export const createApkJob = createServerFn({ method: "POST" })
 
     const [{ data: active }, consumedRes, pendingRes] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).or(`status.in.(${CONSUMED_STATUSES.join(",")}),is_free_trial.eq.true`),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_free_trial", true).in("status", CONSUMED_STATUSES as any),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
     ]);
     const consumed = consumedRes.count ?? 0;
@@ -141,10 +143,10 @@ export const cancelApkJob = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { error } = await supabase
       .from("apk_jobs")
-      .update({ status: "cancelled" } as any)
+      .update({ status: "cancelled", completed_at: new Date().toISOString() } as any)
       .eq("id", data.id)
       .eq("user_id", userId)
-      .eq("status", "queued");
+      .in("status", ["queued", "claimed"] as any);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
