@@ -21,12 +21,16 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
 
     const rows = (referrals ?? []) as any[];
     const referredIds = rows.map((r) => r.referred_id);
-    let emailMap: Record<string, string> = {};
+    // Privacidade: o indicador nunca vê o e-mail real de quem indicou.
+    // Mostramos apelido público quando existir, senão e-mail mascarado.
+    let labelMap: Record<string, string> = {};
     if (referredIds.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: profs } = await supabaseAdmin
-        .from("profiles").select("id, email").in("id", referredIds);
-      emailMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.email]));
+        .from("profiles").select("id, email, display_name").in("id", referredIds);
+      labelMap = Object.fromEntries(
+        (profs ?? []).map((p: any) => [p.id, p.display_name || maskEmail(p.email) || "Membro Shadow"]),
+      );
     }
 
     const totalGranted = rows.filter((r) => r.reward_status !== "pending").length;
