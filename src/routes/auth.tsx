@@ -42,6 +42,14 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
   const [signupMessage, setSignupMessage] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+
+  // Contagem regressiva quando o envio de e-mails está temporariamente bloqueado.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
