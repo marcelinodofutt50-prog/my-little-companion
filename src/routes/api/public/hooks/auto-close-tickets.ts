@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/hooks/auto-close-tickets")({
 
         const { data: threads, error } = await supabaseAdmin
           .from("support_threads")
-          .select("id, status, created_at, updated_at, last_customer_message_at, last_staff_message_at")
+          .select("id, user_id, status, created_at, updated_at, last_customer_message_at, last_staff_message_at")
           .neq("status", "closed")
           .limit(500);
 
@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/public/hooks/auto-close-tickets")({
           closed++;
           await supabaseAdmin.from("support_messages").insert({
             thread_id: t.id,
-            sender_id: "00000000-0000-0000-0000-000000000000",
+            sender_id: t.user_id,
             is_admin: true,
             is_system: true,
             body: `Ticket encerrado automaticamente por inatividade (${IDLE_HOURS}h sem mensagens). Se ainda precisar de ajuda, é só enviar uma nova mensagem que abrimos outro atendimento.`,
