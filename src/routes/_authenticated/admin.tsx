@@ -102,10 +102,12 @@ function AdminPage() {
   const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">("todos");
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [threadsOpenCount, setThreadsOpenCount] = useState(0);
+  // Badge do chat = SÓ mensagens não lidas (estilo WhatsApp), não tickets abertos.
+  const [threadsUnreadCount, setThreadsUnreadCount] = useState(0);
   // Badges "precisa de ação" por seção, em tempo real (Realtime + poll 30s).
   const { counts: sectionCounts, updatedAt: countsUpdatedAt } = useAdminSectionCounts(true);
   const navBadges: Record<string, number> = {
-    chat: Math.max(threadsOpenCount, sectionCounts.chat),
+    chat: Math.max(threadsUnreadCount, sectionCounts.chat),
     orders: sectionCounts.orders,
     refunds: sectionCounts.refunds,
     apk: sectionCounts.apk,
@@ -144,7 +146,13 @@ function AdminPage() {
   const inflightRef = useRef<{ [K in "stats" | "users" | "orders" | "licenses" | "roles"]?: Promise<any> }>({});
 
   const loadThreadsCount = useCallback(() => {
-    threadsCountFn({ data: { filter: "open" } }).then((t: any) => setThreadsOpenCount((t as any[]).length)).catch(() => {});
+    threadsCountFn({ data: { filter: "open" } })
+      .then((t: any) => {
+        const list = (t as any[]) ?? [];
+        setThreadsOpenCount(list.length);
+        setThreadsUnreadCount(list.filter((x) => Number(x?.unread_by_staff ?? 0) > 0).length);
+      })
+      .catch(() => {});
   }, [threadsCountFn]);
 
   const loadStats = useCallback(() => {
