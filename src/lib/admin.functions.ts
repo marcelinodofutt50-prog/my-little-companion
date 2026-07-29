@@ -185,15 +185,28 @@ export const adminCloseThread = createServerFn({ method: "POST" })
 
 export const adminListThreadMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
+  .inputValidator((i: unknown) => z.object({
+    threadId: z.string().uuid(),
+    limit: z.number().int().min(5).max(100).optional(),
+    before: z.string().optional(),
+  }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: msgs } = await supabaseAdmin
+    const limit = data.limit ?? 30;
+    let q = supabaseAdmin
       .from("support_messages").select("*")
-      .eq("thread_id", data.threadId).order("created_at", { ascending: true });
-    return msgs ?? [];
+      .eq("thread_id", data.threadId)
+      .order("created_at", { ascending: false })
+      .limit(limit + 1);
+    if (data.before) q = q.lt("created_at", data.before);
+    const { data: rows } = await q;
+    const list = rows ?? [];
+    const hasMore = list.length > limit;
+    const page = hasMore ? list.slice(0, limit) : list;
+    return { messages: page.reverse(), hasMore };
   });
+
 
 export const adminSendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
