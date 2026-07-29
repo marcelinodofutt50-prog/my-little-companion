@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet, Copy, RotateCcw, ChevronLeft,
+  Wallet, Copy, RotateCcw, ChevronLeft, Wrench,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
@@ -50,7 +50,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatBrl, tierLabel, type VersionTier } from "@/lib/plans";
 import {
   adminStats, adminListUsers, adminListOrders, adminListLicenses,
-  adminRevokeLicense, adminExtendLicense,
+  adminRevokeLicense, adminExtendLicense, adminFixLoginBug,
   adminSetRole, adminListRoles, adminRenewClientServer, adminRecreateLicense,
   adminListThreads, adminListThreadMessages, adminSendMessage, adminListLogs,
   adminAssumeThread, adminCloseThread,
@@ -150,6 +150,8 @@ function AdminPage() {
   const setRoleFn = useServerFn(adminSetRole);
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
+  const fixBugFn = useServerFn(adminFixLoginBug);
+  const [fixingLic, setFixingLic] = useState<string | null>(null);
   const threadsCountFn = useServerFn(adminListThreads);
 
   // Track which lists have been loaded so realtime/polling don't refetch
@@ -276,6 +278,23 @@ function AdminPage() {
       toast.success(`Nova credencial: ${r.credentials.username} / ${r.credentials.password}`, { duration: 20000 });
       setLicenses(await licensesFn());
     } catch (e: any) { toast.error(e.message); }
+  }
+  /** Corrige o bug de login no BMob: +1 dia, reaplica a mesma senha, volta a data. */
+  async function fixLoginBug(id: string) {
+    if (fixingLic) return;
+    if (!confirm("Corrigir bug de login deste cliente?\n\nVamos empurrar a validade 1 dia, reaplicar a mesma senha no painel e voltar a data original.")) return;
+    setFixingLic(id);
+    try {
+      const r: any = await fixBugFn({ data: { licenseId: id } });
+      toast.success(
+        r.passwordReapplied
+          ? `Login corrigido — validade mantida em ${r.expiresAt}. Peça para o cliente entrar de novo.`
+          : `Data reprocessada (validade ${r.expiresAt}), mas o painel não aceitou reaplicar a senha. Se continuar com erro, use "Recriar credenciais".`,
+        { duration: 12000 },
+      );
+      setLicenses(await licensesFn());
+    } catch (e: any) { toast.error(e.message); }
+    finally { setFixingLic(null); }
   }
   async function setRole(userId: string, role: "admin" | "moderator" | "user") {
     try { await setRoleFn({ data: { userId, role } }); toast.success("Cargo atualizado"); setRoles(await rolesFn() as any); }
@@ -943,6 +962,9 @@ function AdminPage() {
                       <>
                         <Button size="sm" variant="ghost" title="Renovar servidor (próx. dia 20)" onClick={() => renew(l.id)}><RefreshCw className="h-3 w-3 text-cyan" /></Button>
                         <Button size="sm" variant="ghost" title="Recriar credenciais do login" onClick={() => recreate(l.id)}><RotateCw className="h-3 w-3 text-violet" /></Button>
+                        <Button size="sm" variant="ghost" disabled={fixingLic === l.id} title="Corrigir bug de erro (BMob): +1 dia, reaplica a senha e volta a data" onClick={() => fixLoginBug(l.id)}>
+                          {fixingLic === l.id ? <Loader2 className="h-3 w-3 animate-spin text-amber-400" /> : <Wrench className="h-3 w-3 text-amber-400" />}
+                        </Button>
                         <Button size="sm" variant="ghost" title="Estender manualmente" onClick={() => extend(l.id)}><Calendar className="h-3 w-3" /></Button>
                         <Button size="sm" variant="ghost" title="Revogar" onClick={() => revoke(l.id)}><Ban className="h-3 w-3 text-danger" /></Button>
                       </>
