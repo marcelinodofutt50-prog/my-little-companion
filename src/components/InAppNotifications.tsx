@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Bell, BellOff, RefreshCcw, ShieldAlert, CheckCircle2, MessageSquare, Receipt, ArrowLeftRight, Loader2 } from "lucide-react";
+import { Bell, BellOff, RefreshCcw, ShieldAlert, CheckCircle2, MessageSquare, Receipt, ArrowLeftRight, Archive, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ const ICONS: Record<NotificationKind, typeof Bell> = {
   suspended: ShieldAlert,
   order: Receipt,
   migration: ArrowLeftRight,
+  license: Archive,
   info: Bell,
 };
 
@@ -31,6 +32,7 @@ const COLORS: Record<NotificationKind, string> = {
   suspended: "text-destructive",
   order: "text-cyan",
   migration: "text-cyan",
+  license: "text-amber-400",
   info: "text-muted-foreground",
 };
 
