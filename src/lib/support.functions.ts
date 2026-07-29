@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
 
 /**
  * Retorna a thread aberta do usuário. Se a última thread estiver fechada
@@ -137,15 +138,6 @@ export const sendMessage = createServerFn({ method: "POST" })
  * Define a categoria (assunto) do atendimento do próprio cliente.
  * Categorias válidas são fixas para evitar entrada livre no banco.
  */
-export const SUPPORT_CATEGORIES = [
-  "servidor",
-  "login",
-  "pagamento",
-  "apk",
-  "reembolso",
-  "outro",
-] as const;
-
 export const setThreadCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({
