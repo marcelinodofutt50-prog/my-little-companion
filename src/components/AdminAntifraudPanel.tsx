@@ -1,10 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { RefreshCw, ShieldAlert, Fingerprint } from "lucide-react";
+import { RefreshCw, ShieldAlert, Fingerprint, ShieldCheck, ShieldX } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getSignupIpReport } from "@/lib/antifraud.read.functions";
+import {
+  allowSignupConnection,
+  revokeSignupConnection,
+} from "@/lib/antifraud.allow.functions";
 
 const DAY_OPTIONS = [1, 7, 30, 90];
 
@@ -19,6 +24,9 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
 
 export function AdminAntifraudPanel() {
   const fetchReport = useServerFn(getSignupIpReport);
+  const allowFn = useServerFn(allowSignupConnection);
+  const revokeFn = useServerFn(revokeSignupConnection);
+  const [busyHash, setBusyHash] = useState<string | null>(null);
   const [days, setDays] = useState(7);
   const [minAccounts, setMinAccounts] = useState(1);
   const [onlySuspicious, setOnlySuspicious] = useState(false);
@@ -32,6 +40,25 @@ export function AdminAntifraudPanel() {
   });
 
   const rows = data?.rows ?? [];
+
+  async function toggleAllow(ipHash: string, allowed: boolean) {
+    if (busyHash) return;
+    setBusyHash(ipHash);
+    try {
+      if (allowed) {
+        await revokeFn({ data: { ipHash } });
+        toast.success("Liberação removida — o limite volta a valer nesta conexão.");
+      } else {
+        await allowFn({ data: { ipHash, reason: "Liberado pelo admin no painel" } });
+        toast.success("Conexão liberada — o cliente já pode criar a conta.");
+      }
+      await refetch();
+    } catch {
+      toast.error("Não foi possível atualizar a liberação.");
+    } finally {
+      setBusyHash(null);
+    }
+  }
 
   return (
     <div className="terminal-card scanlines relative p-4">
@@ -134,6 +161,30 @@ export function AdminAntifraudPanel() {
                 {r.accounts_in_window} conta(s)/{data?.config?.windowHours ?? 24}h
               </span>
               <span>{new Date(r.created_at).toLocaleString("pt-BR")}</span>
+              <button
+                onClick={() => toggleAllow(r.ip_hash, !!r.allowlisted)}
+                disabled={busyHash === r.ip_hash}
+                className={`flex items-center gap-1 rounded border px-2 py-0.5 uppercase tracking-wider transition disabled:opacity-50 ${
+                  r.allowlisted
+                    ? "border-neon/60 bg-neon/10 text-neon"
+                    : "border-border/60 hover:text-neon"
+                }`}
+                title={
+                  r.allowlisted
+                    ? "Conexão liberada manualmente — clique para voltar ao limite normal"
+                    : "Liberar esta conexão para o cliente conseguir criar conta"
+                }
+              >
+                {r.allowlisted ? (
+                  <>
+                    <ShieldCheck className="h-3 w-3" /> Liberada
+                  </>
+                ) : (
+                  <>
+                    <ShieldX className="h-3 w-3" /> Liberar
+                  </>
+                )}
+              </button>
             </div>
           </div>
         ))}

@@ -77,6 +77,19 @@ export async function countRecentSignups(ipHash: string): Promise<number> {
   return count ?? 0;
 }
 
+/** Conexão liberada manualmente pelo admin (ignora o bloqueio). */
+export async function isAllowlisted(ipHash: string): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("antifraud_allowlist")
+    .select("expires_at")
+    .eq("ip_hash", ipHash)
+    .maybeSingle();
+  if (!data) return false;
+  if (data.expires_at && new Date(data.expires_at).getTime() < Date.now()) return false;
+  return true;
+}
+
 export type SignupGuardResult = {
   allowed: boolean;
   reason?: string;
@@ -88,8 +101,9 @@ export async function evaluateSignup(): Promise<SignupGuardResult> {
     const cfg = antifraudConfig();
     const ip = clientIp();
     if (!ip) return { allowed: true, accountsInWindow: 0 };
-    const used = await countRecentSignups(await hashIp(ip));
-    if (used >= cfg.maxAccounts) {
+    const ipHash = await hashIp(ip);
+    const used = await countRecentSignups(ipHash);
+    if (used >= cfg.maxAccounts && !(await isAllowlisted(ipHash))) {
       return {
         allowed: false,
         accountsInWindow: used,

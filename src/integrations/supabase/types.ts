@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      antifraud_allowlist: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_email: string | null
+          expires_at: string | null
+          id: string
+          ip_hash: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_hash: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_hash?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       apk_jobs: {
         Row: {
           claimed_at: string | null
