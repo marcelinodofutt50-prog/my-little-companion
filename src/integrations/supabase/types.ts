@@ -926,6 +926,7 @@ export type Database = {
           assigned_at: string | null
           assigned_name: string | null
           assigned_to: string | null
+          category: string
           closed_at: string | null
           closed_by: string | null
           closed_by_name: string | null
@@ -933,6 +934,7 @@ export type Database = {
           id: string
           last_customer_message_at: string | null
           last_staff_message_at: string | null
+          priority: string
           status: string
           subject: string
           unread_by_customer: number
@@ -944,6 +946,7 @@ export type Database = {
           assigned_at?: string | null
           assigned_name?: string | null
           assigned_to?: string | null
+          category?: string
           closed_at?: string | null
           closed_by?: string | null
           closed_by_name?: string | null
@@ -951,6 +954,7 @@ export type Database = {
           id?: string
           last_customer_message_at?: string | null
           last_staff_message_at?: string | null
+          priority?: string
           status?: string
           subject?: string
           unread_by_customer?: number
@@ -962,6 +966,7 @@ export type Database = {
           assigned_at?: string | null
           assigned_name?: string | null
           assigned_to?: string | null
+          category?: string
           closed_at?: string | null
           closed_by?: string | null
           closed_by_name?: string | null
@@ -969,6 +974,7 @@ export type Database = {
           id?: string
           last_customer_message_at?: string | null
           last_staff_message_at?: string | null
+          priority?: string
           status?: string
           subject?: string
           unread_by_customer?: number
