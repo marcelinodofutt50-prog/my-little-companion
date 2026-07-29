@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
+import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import {
   adminListPendingApkJobs,
   adminGetApkSourceDownload,
