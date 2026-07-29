@@ -380,12 +380,19 @@ function AdminPage() {
               )}
               {filteredGroups.map((g, gi) => {
                 const accentColor = g.accent === "neon" ? "text-neon" : g.accent === "cyan" ? "text-cyan" : "text-violet";
+                const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
                   <div key={g.title} className={gi > 0 ? "mt-4 border-t border-border/40 pt-4" : ""}>
-                    <div className={`px-2 pb-2 font-mono text-[9px] uppercase tracking-[0.25em] ${accentColor}`}>
-                      // {g.title}
+                    <div className={`flex items-center gap-2 px-2 pb-2 font-mono text-[9px] uppercase tracking-[0.25em] ${accentColor}`}>
+                      <span className="truncate">// {g.title}</span>
+                      {groupPending > 0 && (
+                        <span className="ml-auto rounded-full bg-foreground/10 px-1.5 py-px text-[8px] tracking-normal text-foreground/70">
+                          {groupPending > 99 ? "99+" : groupPending}
+                        </span>
+                      )}
                     </div>
                     <div className="space-y-0.5">
+
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
