@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
+import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
 import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
 import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
@@ -180,6 +181,12 @@ const ApiPublicHooksVerifyExternalPayersRoute =
     path: '/api/public/hooks/verify-external-payers',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksResendConfirmationsRoute =
+  ApiPublicHooksResendConfirmationsRouteImport.update({
+    id: '/api/public/hooks/resend-confirmations',
+    path: '/api/public/hooks/resend-confirmations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksReconcilePendingRoute =
   ApiPublicHooksReconcilePendingRouteImport.update({
     id: '/api/public/hooks/reconcile-pending',
@@ -255,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
+  '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRoutesByTo {
@@ -290,6 +298,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
+  '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRoutesById {
@@ -327,6 +336,7 @@ export interface FileRoutesById {
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
+  '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 export interface FileRouteTypes {
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/reconcile-pending'
+    | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/reconcile-pending'
+    | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
   id:
     | '__root__'
@@ -435,6 +447,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/reconcile-pending'
+    | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
   fileRoutesById: FileRoutesById
 }
@@ -465,6 +478,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDailyLicenseCheckRoute: typeof ApiPublicHooksDailyLicenseCheckRoute
   ApiPublicHooksExpireLicensesRoute: typeof ApiPublicHooksExpireLicensesRoute
   ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
+  ApiPublicHooksResendConfirmationsRoute: typeof ApiPublicHooksResendConfirmationsRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
 }
 
@@ -659,6 +673,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksVerifyExternalPayersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/resend-confirmations': {
+      id: '/api/public/hooks/resend-confirmations'
+      path: '/api/public/hooks/resend-confirmations'
+      fullPath: '/api/public/hooks/resend-confirmations'
+      preLoaderRoute: typeof ApiPublicHooksResendConfirmationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reconcile-pending': {
       id: '/api/public/hooks/reconcile-pending'
       path: '/api/public/hooks/reconcile-pending'
@@ -770,6 +791,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDailyLicenseCheckRoute: ApiPublicHooksDailyLicenseCheckRoute,
   ApiPublicHooksExpireLicensesRoute: ApiPublicHooksExpireLicensesRoute,
   ApiPublicHooksReconcilePendingRoute: ApiPublicHooksReconcilePendingRoute,
+  ApiPublicHooksResendConfirmationsRoute:
+    ApiPublicHooksResendConfirmationsRoute,
   ApiPublicHooksVerifyExternalPayersRoute:
     ApiPublicHooksVerifyExternalPayersRoute,
 }
