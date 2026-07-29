@@ -146,6 +146,7 @@ function AuthPage() {
     if (at) window.localStorage.removeItem(at);
     setCooldown(0);
     setEmailBlocked(false);
+    setSendInfo({ count: 0, last: null });
   }
 
 
@@ -220,7 +221,7 @@ function AuthPage() {
     if (resending || cooldown > 0) return;
     const parsedEmail = z.string().trim().email().safeParse(email);
     if (!parsedEmail.success) return toast.error("Digite seu e-mail acima para reenviar.");
-    if (currentAttempts(email) >= MAX_ATTEMPTS_PER_HOUR) {
+    if (attemptsInfo(email).count >= MAX_ATTEMPTS_PER_HOUR) {
       startCooldown(300);
       track("resend", "blocked_local", { error: "local attempt cap reached" });
       return toast.error(
@@ -230,6 +231,7 @@ function AuthPage() {
     setResending(true);
     try {
       bumpAttempts(email);
+      setSendInfo(attemptsInfo(email));
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: parsedEmail.data,
@@ -256,7 +258,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "up") {
-        if (currentAttempts(email) >= MAX_ATTEMPTS_PER_HOUR) {
+        if (attemptsInfo(email).count >= MAX_ATTEMPTS_PER_HOUR) {
           startCooldown(120);
           setEmailBlocked(true);
           track("signup", "blocked_local", { error: "local attempt cap reached" });
@@ -270,6 +272,7 @@ function AuthPage() {
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
         bumpAttempts(email);
+      setSendInfo(attemptsInfo(email));
         const { data: signUpData, error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
