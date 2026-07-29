@@ -480,8 +480,12 @@ function AdminPage() {
                   conversionRate={conversionRate}
                 />
 
+                <AdminDailyReport />
+                <AdminActiveProblems />
+
                 {/* Mini strip: HOJE */}
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
                   <MiniStat label="Pedidos hoje" value={String(ordersToday.length)} accent="cyan" />
                   <MiniStat label="Pagos hoje" value={String(paidToday.length)} accent="neon" />
                   <MiniStat label="Receita hoje" value={formatBrl(revenueToday)} accent="violet" />
