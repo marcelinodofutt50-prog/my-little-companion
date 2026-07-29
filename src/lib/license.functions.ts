@@ -339,7 +339,15 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
       version_tier: versionTier,
       panel: data.panel,
     } as any).select("id").single();
-    if (insErr || !lic) throw new Error(insErr?.message || "Falha ao registrar licença");
+    if (insErr || !lic) {
+      await supabaseAdmin.from("integration_logs").insert({
+        source: `yaarsa-${data.panel}`, action: "legacy_claim", outcome: "error",
+        error: insErr?.message || "insert falhou",
+        context: { user_id: userId, email } as any,
+      });
+      throw new Error(`LEGACY_DB_ERROR: ${insErr?.message || "não foi possível registrar a licença"}`);
+    }
+
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${data.panel}`, action: "legacy_claim", outcome: "success",
