@@ -328,33 +328,33 @@ function AdminPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-[1400px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-4 sm:py-6 lg:pb-6">
         {/* HEADER BAR */}
-        <div className="terminal-card scanlines relative overflow-hidden p-4 sm:p-5">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet/10 blur-3xl" />
-          <div className="pointer-events-none absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-neon/10 blur-3xl" />
-          <div className="relative flex flex-col justify-between gap-3 md:flex-row md:items-center">
+        <div className="terminal-card relative overflow-hidden rounded-xl border-border/60 p-4 sm:p-5">
+          <div className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-neon/50 to-transparent" />
+          <div className="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-violet/[0.07] blur-3xl" />
+          <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.35em] text-violet">
-                <ShieldCheck className="h-3.5 w-3.5" /> admin control center
+              <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.35em] text-muted-foreground">
+                <ShieldCheck className="h-3.5 w-3.5 text-violet" /> admin control center
               </div>
-              <h1 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">Painel Administrativo</h1>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1.5 rounded border border-neon/30 bg-neon/5 px-2 py-1 text-neon">
-                  <Circle className="h-2 w-2 fill-neon text-neon" /> sistemas online
+              <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">Painel Administrativo</h1>
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/[0.07] px-2.5 py-1 text-neon">
+                  <Circle className="h-1.5 w-1.5 fill-neon text-neon" /> operacional
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded border border-border/50 bg-background/50 px-2 py-1 text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-muted-foreground">
                   <ShieldCheck className="h-3 w-3 text-cyan" />
                   <span className="max-w-[180px] truncate normal-case text-foreground/80 sm:max-w-none">{email}</span>
                 </span>
                 {totalPending > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-amber-400">
-                    {totalPending} pendente{totalPending > 1 ? "s" : ""}
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-amber-400">
+                    {totalPending} pendência{totalPending > 1 ? "s" : ""}
                   </span>
                 )}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Link to="/dashboard"><Button size="sm" variant="outline" className="font-mono uppercase tracking-wider">Meu Painel</Button></Link>
-              <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono uppercase tracking-wider">
+              <Link to="/dashboard"><Button size="sm" variant="ghost" className="font-mono text-[10px] uppercase tracking-wider">Meu Painel</Button></Link>
+              <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono text-[10px] uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
               </Button>
             </div>
@@ -362,27 +362,29 @@ function AdminPage() {
         </div>
 
         {/* STATS */}
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
           <ExecStat icon={Users} label="Clientes cadastrados" value={stats ? String(stats.users) : "—"} sub="conta total" accent="cyan" />
           <ExecStat icon={KeyRound} label="Licenças ativas" value={stats ? String(stats.licenses) : "—"} sub="em operação" accent="neon" />
           <ExecStat icon={DollarSign} label="Receita bruta" value={stats ? formatBrl(stats.revenue) : "—"} sub="pedidos pagos" accent="violet" />
           <ExecStat icon={Activity} label="Servidor" value="ONLINE" sub="uptime 99.9%" accent="neon" pulse />
         </div>
 
+
         {/* GROUPED LAYOUT: sidebar (desktop) + content */}
-        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
+        <div className="mt-5 grid gap-5 lg:grid-cols-[248px_1fr]">
           {/* SIDEBAR NAV */}
           <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
             {/* Desktop: grouped vertical nav */}
-            <nav className="hidden lg:block terminal-card scanlines relative p-3">
-              <div className="mb-3">
+            <nav className="hidden lg:block terminal-card relative rounded-xl border-border/60 p-2.5">
+              <div className="mb-2.5">
                 <input
                   value={navQuery}
                   onChange={(e) => setNavQuery(e.target.value)}
                   placeholder="Buscar seção..."
-                  className="w-full rounded border border-border/50 bg-background/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-muted-foreground/70 focus:border-neon/50"
+                  className="w-full rounded-md border border-border/50 bg-background/60 px-2.5 py-1.5 text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-neon/50"
                 />
               </div>
+
               {filteredGroups.length === 0 && (
                 <div className="px-2 py-3 text-xs text-muted-foreground">Nenhuma seção encontrada.</div>
               )}
@@ -390,17 +392,16 @@ function AdminPage() {
                 const accentColor = g.accent === "neon" ? "text-neon" : g.accent === "cyan" ? "text-cyan" : "text-violet";
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
-                  <div key={g.title} className={gi > 0 ? "mt-4 border-t border-border/40 pt-4" : ""}>
-                    <div className={`flex items-center gap-2 px-2 pb-2 font-mono text-[9px] uppercase tracking-[0.25em] ${accentColor}`}>
-                      <span className="truncate">// {g.title}</span>
+                  <div key={g.title} className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}>
+                    <div className={`flex items-center gap-2 px-2 pb-1.5 font-mono text-[9px] uppercase tracking-[0.25em] ${accentColor}`}>
+                      <span className="truncate opacity-80">{g.title}</span>
                       {groupPending > 0 && (
                         <span className="ml-auto rounded-full bg-foreground/10 px-1.5 py-px text-[8px] tracking-normal text-foreground/70">
                           {groupPending > 99 ? "99+" : groupPending}
                         </span>
                       )}
                     </div>
-                    <div className="space-y-0.5">
-
+                    <div className="space-y-px">
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
@@ -409,44 +410,45 @@ function AdminPage() {
                           <button
                             key={t.id}
                             onClick={() => setTab(t.id)}
-                            className={`group flex w-full items-center gap-2 rounded px-2 py-2 text-left transition-colors ${
+                            aria-current={active ? "page" : undefined}
+                            className={`group relative flex w-full items-center gap-2.5 rounded-md py-2 pl-3 pr-2 text-left transition-colors ${
                               active
-                                ? "bg-neon/10 text-neon"
-                                : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                                ? "bg-neon/[0.12] text-neon"
+                                : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                             }`}
                           >
-                            <t.icon className={`h-3.5 w-3.5 shrink-0 ${active ? "text-neon" : "text-muted-foreground group-hover:text-foreground"}`} />
+                            {active && <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-neon" />}
+                            <t.icon className={`h-3.5 w-3.5 shrink-0 ${active ? "text-neon" : "text-muted-foreground/80 group-hover:text-foreground"}`} />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
-                                <div className="truncate font-mono text-[11px] uppercase tracking-wider">{t.label}</div>
+                                <div className={`truncate font-mono text-[11px] uppercase tracking-wider ${active ? "font-semibold" : ""}`}>{t.label}</div>
                                 {isNew && !active && <span className="rounded bg-violet/20 px-1 py-px font-mono text-[8px] uppercase tracking-wider text-violet">novo</span>}
                               </div>
-                              {t.hint && <div className="truncate text-[9px] text-muted-foreground/70">{t.hint}</div>}
+                              {t.hint && <div className="truncate text-[9px] text-muted-foreground/60">{t.hint}</div>}
                             </div>
                             {badge > 0 && (
                               <span
                                 title={`${badge} item(ns) aguardando ação`}
                                 className={`grid h-4 min-w-4 shrink-0 place-items-center rounded-full px-1 font-mono text-[9px] ${
-                                  t.id === "chat" ? "animate-pulse bg-red-500 text-white" : "bg-neon/20 text-neon"
+                                  t.id === "chat" ? "bg-red-500 text-white" : "bg-neon/20 text-neon"
                                 }`}
                               >
                                 {badge > 99 ? "99+" : badge}
                               </span>
                             )}
-                            {active && <span className="h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />}
                           </button>
                         );
                       })}
                     </div>
-
                   </div>
                 );
               })}
-              <div className="mt-4 border-t border-border/40 pt-3">
-                <Link to="/suporte" className="flex items-center gap-2 rounded px-2 py-2 font-mono text-[11px] uppercase tracking-wider text-cyan hover:bg-cyan/5">
+              <div className="mt-3 border-t border-border/40 pt-2">
+                <Link to="/suporte" className="flex items-center gap-2.5 rounded-md py-2 pl-3 pr-2 font-mono text-[11px] uppercase tracking-wider text-cyan transition-colors hover:bg-cyan/5">
                   <LifeBuoy className="h-3.5 w-3.5" /> Ver Suporte
                 </Link>
               </div>
+
             </nav>
           </aside>
 
@@ -456,11 +458,12 @@ function AdminPage() {
 
             {/* Section title bar */}
             {activeMeta && (
-              <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border/40 bg-background/80 px-3 pb-3 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:-mx-1 sm:px-1">
+              <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border/40 bg-background/85 px-3 pb-2.5 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:-mx-1 sm:px-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground/60">admin /</span>
+                  <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground/50">admin /</span>
                   <activeMeta.icon className="h-4 w-4 text-neon" />
-                  <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
+                  <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
+
                   {activeMeta.hint && <span className="ml-1 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
                   {(navBadges[tab] ?? 0) > 0 && (
                     <span className="rounded-full bg-neon/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-neon">
@@ -1236,18 +1239,19 @@ function AdminLogsPanel() {
 function ExecStat({ icon: Icon, label, value, sub, accent, pulse }: { icon: any; label: string; value: string; sub: string; accent: "neon" | "cyan" | "violet"; pulse?: boolean }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
-    <div className="terminal-card scanlines group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5">
-      <div className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-70 ${color}`} />
-      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span>{label}</span>
-        <Icon className={`h-3.5 w-3.5 ${color}`} />
+    <div className="terminal-card group relative overflow-hidden rounded-xl border-border/60 p-4 transition-colors hover:border-foreground/20">
+      <div className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50 ${color}`} />
+      <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="truncate">{label}</span>
+        <Icon className={`h-3.5 w-3.5 shrink-0 opacity-80 ${color}`} />
       </div>
-      <div className={`mt-2 flex items-center gap-2 font-mono text-2xl font-bold ${color}`}>
+      <div className={`mt-2.5 flex items-center gap-2 font-mono text-[26px] leading-none font-bold tabular-nums ${color}`}>
         {pulse && <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-current" />}
         {value}
       </div>
-      <div className="mt-1 font-mono text-[10px] uppercase text-muted-foreground/70">{sub}</div>
+      <div className="mt-2 font-mono text-[10px] uppercase text-muted-foreground/60">{sub}</div>
     </div>
+
   );
 }
 
@@ -1265,10 +1269,11 @@ function demoAuditEntries(adminEmail: string): AuditLogEntry[] {
 function MiniStat({ label, value, accent }: { label: string; value: string; accent: "neon" | "cyan" | "violet" }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
-    <div className="rounded border border-border/40 bg-background/40 p-3">
-      <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-mono text-lg font-bold ${color}`}>{value}</div>
+    <div className="rounded-lg border border-border/40 bg-background/40 p-3 transition-colors hover:border-foreground/15">
+      <div className="truncate font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">{label}</div>
+      <div className={`mt-1.5 font-mono text-lg font-bold tabular-nums ${color}`}>{value}</div>
     </div>
+
   );
 }
 
