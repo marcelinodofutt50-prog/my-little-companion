@@ -366,7 +366,28 @@ function AuthPage() {
               <li>2. Confira se digitou o e-mail corretamente.</li>
               <li>3. Reenvie apenas uma vez — reenvios seguidos bloqueiam o envio.</li>
             </ul>
+
+            {sendInfo.count > 0 && (
+              <div className="mt-3 rounded border border-neon/40 bg-neon/5 px-3 py-2">
+                <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-neon">
+                  <Mail className="h-3 w-3" /> E-mail enviado
+                  {sendInfo.last ? ` às ${formatTime(sendInfo.last)}` : ""}
+                </p>
+                <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  {sendInfo.count} {sendInfo.count === 1 ? "envio" : "envios"} na última hora
+                  {" · "}restam {Math.max(0, MAX_ATTEMPTS_PER_HOUR - sendInfo.count)} de {MAX_ATTEMPTS_PER_HOUR}
+                </p>
+              </div>
+            )}
+
+            {cooldown > 0 && (
+              <p className="mt-3 font-mono text-[10px] text-amber-400">
+                Aguarde {cooldown}s antes de reenviar — o e-mail anterior ainda pode chegar. Reenviar antes disso não acelera a entrega.
+              </p>
+            )}
+
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+
               <Button
                 type="button"
                 variant="outline"
