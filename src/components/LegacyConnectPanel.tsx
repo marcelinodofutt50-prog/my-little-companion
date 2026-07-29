@@ -15,25 +15,123 @@ const panelMeta: Record<Panel, { label: string; version: string; tone: string; i
   v457: { label: "Shadow 4.5.7", version: "Mensal · legacy", tone: "text-cyan", ip: "191.96.78.81" },
 };
 
-type ErrCategory = "network" | "credential" | "not_found" | "server" | "generic";
-type CategorizedError = { message: string; category: ErrCategory; retryable: boolean };
+type ErrCategory = "network" | "credential" | "not_found" | "duplicate" | "server" | "database" | "auth" | "generic";
+type CategorizedError = {
+  title: string;
+  message: string;
+  fixes: string[];
+  category: ErrCategory;
+  retryable: boolean;
+  code: string;
+  raw: string;
+};
+
+const CATEGORY_LABEL: Record<ErrCategory, string> = {
+  network: "Conexão",
+  credential: "Senha do painel",
+  not_found: "Email não encontrado",
+  duplicate: "Já vinculado",
+  server: "Painel indisponível",
+  database: "Registro da licença",
+  auth: "Sessão expirada",
+  generic: "Erro inesperado",
+};
 
 function categorize(raw: string): CategorizedError {
-  const m = (raw || "").toLowerCase();
-  if (/network|fetch|failed to fetch|timeout|econnre|socket/.test(m)) {
-    return { message: "Sem conexão com o servidor. Verifique sua internet.", category: "network", retryable: true };
+  const r = String(raw || "").trim();
+  const m = r.toLowerCase();
+  const base = { raw: r };
+
+  if (/legacy_already_claimed/.test(m)) {
+    return {
+      ...base, code: "LEGACY_ALREADY_CLAIMED", category: "duplicate", retryable: false,
+      title: "Este login antigo já pertence a outra conta",
+      message: "O email informado já foi vinculado ao dashboard por outra conta. Por segurança, um login só pode ficar em uma conta.",
+      fixes: [
+        "Entre na conta que você usou primeiro (verifique outros emails de cadastro).",
+        "Se você perdeu o acesso àquela conta, use /recuperar com seus códigos de recuperação.",
+        "Se acha que alguém vinculou seu login indevidamente, abra um chamado em /suporte agora.",
+      ],
+    };
   }
-  if (/not found|não encontrado|nao encontrado|inexistente/.test(m)) {
-    return { message: raw || "Email não localizado no painel selecionado.", category: "not_found", retryable: false };
+  if (/legacy_email_not_in_panel|not found|não encontrado|nao encontrado|inexistente/.test(m)) {
+    return {
+      ...base, code: "LEGACY_EMAIL_NOT_IN_PANEL", category: "not_found", retryable: false,
+      title: "Email não localizado no painel escolhido",
+      message: r.includes(":") ? r.split(":").slice(1).join(":").trim() : "Não encontramos esse email no painel selecionado.",
+      fixes: [
+        "Confira se digitou o email exatamente como no painel (sem espaços e sem maiúsculas).",
+        "Tente o outro painel: quem comprou antes costuma estar na 4.5.7, e as compras novas na 4.6.",
+        "Nunca comprou antes? Escolha um plano novo em /planos.",
+      ],
+    };
   }
-  if (/senha|password|invalid credential|unauthorized|401/.test(m)) {
-    return { message: "Senha do painel incorreta. Confira e tente novamente.", category: "credential", retryable: true };
+  if (/legacy_bad_password|senha|password|invalid credential|unauthorized|401/.test(m)) {
+    return {
+      ...base, code: "LEGACY_BAD_PASSWORD", category: "credential", retryable: true,
+      title: "Senha do painel incorreta",
+      message: "O painel recusou a senha informada para esse email.",
+      fixes: [
+        "Digite a senha atual do painel Shadow (não é a senha do site).",
+        "Cuidado com Caps Lock e espaços colados ao copiar/colar.",
+        "Não lembra a senha? Peça a redefinição em /suporte informando o email do painel.",
+      ],
+    };
   }
-  if (/painel:|yaarsa|500|502|503|internal/.test(m)) {
-    return { message: raw || "Servidor de licenças indisponível. Tentaremos novamente em instantes.", category: "server", retryable: true };
+  if (/legacy_panel_unreachable|legacy_panel_rejected|painel:|yaarsa|500|502|503|504|internal|bad gateway/.test(m)) {
+    return {
+      ...base, code: /rejected/.test(m) ? "LEGACY_PANEL_REJECTED" : "LEGACY_PANEL_UNREACHABLE", category: "server", retryable: true,
+      title: "O painel de licenças não respondeu",
+      message: r.includes(":") ? r.split(":").slice(1).join(":").trim() : "Servidor de licenças temporariamente indisponível.",
+      fixes: [
+        "Aguarde cerca de 1 minuto e clique em Tentar novamente.",
+        "Nada foi cobrado e nenhuma licença foi alterada nessa tentativa.",
+        "Se persistir por mais de 10 minutos, abra um chamado em /suporte com o código do erro abaixo.",
+      ],
+    };
   }
-  return { message: raw || "Falha inesperada. Tente novamente.", category: "generic", retryable: true };
+  if (/legacy_db_error|duplicate key|violates|constraint|permission denied|rls/.test(m)) {
+    return {
+      ...base, code: "LEGACY_DB_ERROR", category: "database", retryable: true,
+      title: "Não conseguimos registrar a licença na sua conta",
+      message: r.includes(":") ? r.split(":").slice(1).join(":").trim() : "O painel aceitou, mas o registro no dashboard falhou.",
+      fixes: [
+        "Clique em Tentar novamente — a operação é segura e não duplica licença.",
+        "Se continuar, abra /suporte com o email do painel; nosso time vincula manualmente em minutos.",
+      ],
+    };
+  }
+  if (/unauthorized|jwt|sess|token|logged/.test(m) && /401|expired|missing/.test(m)) {
+    return {
+      ...base, code: "AUTH_EXPIRED", category: "auth", retryable: false,
+      title: "Sua sessão expirou",
+      message: "Você precisa estar logado para vincular um login antigo.",
+      fixes: ["Recarregue a página e faça login novamente.", "Depois abra este painel e repita os 3 passos."],
+    };
+  }
+  if (/network|fetch|failed to fetch|timeout|econnre|socket|offline/.test(m)) {
+    return {
+      ...base, code: "NETWORK", category: "network", retryable: true,
+      title: "Sem conexão com o servidor",
+      message: "Sua internet caiu ou a requisição não chegou até nós.",
+      fixes: [
+        "Verifique o Wi-Fi ou os dados móveis.",
+        "Desative VPN/proxy caso esteja usando e tente de novo.",
+        "Clique em Tentar novamente — nada foi perdido.",
+      ],
+    };
+  }
+  return {
+    ...base, code: "UNKNOWN", category: "generic", retryable: true,
+    title: "Falha inesperada na sincronização",
+    message: r || "Não conseguimos concluir a sincronização do login antigo.",
+    fixes: [
+      "Tente novamente em alguns segundos.",
+      "Se repetir, copie o código do erro abaixo e envie em /suporte.",
+    ],
+  };
 }
+
 
 function formatBrDate(ymd: string | null): string {
   if (!ymd) return "—";
