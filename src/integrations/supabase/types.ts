@@ -946,6 +946,30 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_attempts: {
+        Row: {
+          created_at: string
+          email_masked: string | null
+          id: string
+          ip_hash: string
+          outcome: string
+        }
+        Insert: {
+          created_at?: string
+          email_masked?: string | null
+          id?: string
+          ip_hash: string
+          outcome?: string
+        }
+        Update: {
+          created_at?: string
+          email_masked?: string | null
+          id?: string
+          ip_hash?: string
+          outcome?: string
+        }
+        Relationships: []
+      }
       signup_ip_log: {
         Row: {
           accounts_in_window: number
