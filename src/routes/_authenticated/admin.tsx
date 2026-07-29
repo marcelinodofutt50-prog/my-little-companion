@@ -1249,6 +1249,38 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
 
 
 // ============= LIVE CHAT PANEL =============
+/** "há 3 min", "há 2 h", "há 4 d" — usado para SLA e cabeçalho da conversa. */
+function timeAgo(iso?: string | null): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(diff)) return "—";
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h} h`;
+  const d = Math.floor(h / 24);
+  return `há ${d} d`;
+}
+/** Rótulo do separador de dia dentro da conversa. */
+function dayLabel(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const yest = new Date(Date.now() - 86400000);
+  const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+  if (same(d, today)) return "hoje";
+  if (same(d, yest)) return "ontem";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
+function priorityMeta(p?: string | null): { label: string; cls: string } | null {
+  switch ((p ?? "").toLowerCase()) {
+    case "urgent": case "urgente": return { label: "urgente", cls: "border-danger/50 bg-danger/10 text-danger" };
+    case "high": case "alta": return { label: "alta", cls: "border-amber-400/50 bg-amber-400/10 text-amber-400" };
+    case "low": case "baixa": return { label: "baixa", cls: "border-border/40 text-muted-foreground" };
+    default: return null;
+  }
+}
+
 type Thread = { id: string; user_id: string; subject: string; category?: string | null; priority?: string | null; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null; display_name?: string | null } | null };
 type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
