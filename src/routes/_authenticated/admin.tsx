@@ -959,15 +959,23 @@ function AdminPage() {
                   <td className="p-3 font-mono text-xs whitespace-nowrap">{l.is_trial ? <span className="text-muted-foreground">—</span> : <>{formatBrl(fee)}<span className="text-muted-foreground">/mês</span></>}</td>
                   <td className="p-3 text-right whitespace-nowrap">
                     {isAdminUser ? (
-                      <>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={fixingLic === l.id}
+                          title="Corrigir bug de erro (BMob): +1 dia, reaplica a senha e volta a data"
+                          onClick={() => fixLoginBug(l.id)}
+                          className="h-7 gap-1 border-amber-400/60 px-2 font-mono text-[10px] uppercase tracking-wider text-amber-400 hover:bg-amber-400/10"
+                        >
+                          {fixingLic === l.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wrench className="h-3 w-3" />}
+                          Corrigir bug
+                        </Button>
                         <Button size="sm" variant="ghost" title="Renovar servidor (próx. dia 20)" onClick={() => renew(l.id)}><RefreshCw className="h-3 w-3 text-cyan" /></Button>
                         <Button size="sm" variant="ghost" title="Recriar credenciais do login" onClick={() => recreate(l.id)}><RotateCw className="h-3 w-3 text-violet" /></Button>
-                        <Button size="sm" variant="ghost" disabled={fixingLic === l.id} title="Corrigir bug de erro (BMob): +1 dia, reaplica a senha e volta a data" onClick={() => fixLoginBug(l.id)}>
-                          {fixingLic === l.id ? <Loader2 className="h-3 w-3 animate-spin text-amber-400" /> : <Wrench className="h-3 w-3 text-amber-400" />}
-                        </Button>
                         <Button size="sm" variant="ghost" title="Estender manualmente" onClick={() => extend(l.id)}><Calendar className="h-3 w-3" /></Button>
                         <Button size="sm" variant="ghost" title="Revogar" onClick={() => revoke(l.id)}><Ban className="h-3 w-3 text-danger" /></Button>
-                      </>
+                      </div>
                     ) : (
                       <span className="font-mono text-[10px] uppercase text-muted-foreground">somente leitura</span>
                     )}
