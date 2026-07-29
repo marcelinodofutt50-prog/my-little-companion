@@ -375,6 +375,7 @@ function AdminPage() {
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
+                        const badge = navBadges[t.id] ?? 0;
                         return (
                           <button
                             key={t.id}
@@ -393,8 +394,21 @@ function AdminPage() {
                               </div>
                               {t.hint && <div className="truncate text-[9px] text-muted-foreground/70">{t.hint}</div>}
                             </div>
+                            {badge > 0 && (
+                              <span
+                                title={`${badge} item(ns) aguardando ação`}
+                                className={`grid h-4 min-w-4 shrink-0 place-items-center rounded-full px-1 font-mono text-[9px] ${
+                                  t.id === "chat" ? "animate-pulse bg-red-500 text-white" : "bg-neon/20 text-neon"
+                                }`}
+                              >
+                                {badge > 99 ? "99+" : badge}
+                              </span>
+                            )}
                             {active && <span className="h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />}
                           </button>
+                        );
+                      })}
+
                         );
                       })}
                     </div>
