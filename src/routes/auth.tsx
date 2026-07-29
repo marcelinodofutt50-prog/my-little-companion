@@ -35,44 +35,62 @@ const schema = z.object({
   password: z.string().min(6, "Mínimo 6 caracteres").max(72),
 });
 
+/** Travas locais são por usuário (e-mail): cada e-mail tem seu próprio cooldown. */
 const COOLDOWN_KEY = "shadow.auth.emailCooldownUntil";
 const ATTEMPTS_KEY = "shadow.auth.emailAttempts";
-const LAST_EMAIL_KEY = "shadow.auth.lastEmail";
 const MAX_ATTEMPTS_PER_HOUR = 8;
 /** Trava local nunca passa de 60s: o limite real do servidor já foi ampliado. */
 const MAX_COOLDOWN_SECS = 60;
 
-function readCooldown(): number {
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function keyFor(base: string, email: string): string | null {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return null;
+  return `${base}:${normalized}`;
+}
+
+function readCooldown(email: string): number {
   if (typeof window === "undefined") return 0;
-  const until = Number(window.localStorage.getItem(COOLDOWN_KEY) ?? 0);
+  const key = keyFor(COOLDOWN_KEY, email);
+  if (!key) return 0;
+  const until = Number(window.localStorage.getItem(key) ?? 0);
   if (!until) return 0;
   return Math.max(0, Math.ceil((until - Date.now()) / 1000));
 }
 
-function writeCooldown(secs: number) {
+function writeCooldown(email: string, secs: number) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(COOLDOWN_KEY, String(Date.now() + secs * 1000));
+  const key = keyFor(COOLDOWN_KEY, email);
+  if (!key) return;
+  window.localStorage.setItem(key, String(Date.now() + secs * 1000));
 }
 
-/** Conta tentativas de envio na última hora (evita queimar a cota do remetente). */
-function bumpAttempts(): number {
+/** Conta tentativas de envio na última hora para o e-mail informado. */
+function bumpAttempts(email: string): number {
   if (typeof window === "undefined") return 0;
+  const key = keyFor(ATTEMPTS_KEY, email);
+  if (!key) return 0;
   const now = Date.now();
   let list: number[] = [];
   try {
-    list = JSON.parse(window.localStorage.getItem(ATTEMPTS_KEY) ?? "[]");
+    list = JSON.parse(window.localStorage.getItem(key) ?? "[]");
   } catch { list = []; }
   list = list.filter((t) => now - t < 3600_000);
   list.push(now);
-  window.localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(list));
+  window.localStorage.setItem(key, JSON.stringify(list));
   return list.length;
 }
 
-function currentAttempts(): number {
+function currentAttempts(email: string): number {
   if (typeof window === "undefined") return 0;
+  const key = keyFor(ATTEMPTS_KEY, email);
+  if (!key) return 0;
   const now = Date.now();
   try {
-    const list: number[] = JSON.parse(window.localStorage.getItem(ATTEMPTS_KEY) ?? "[]");
+    const list: number[] = JSON.parse(window.localStorage.getItem(key) ?? "[]");
     return list.filter((t) => now - t < 3600_000).length;
   } catch { return 0; }
 }
@@ -90,10 +108,10 @@ function AuthPage() {
   const [cooldown, setCooldown] = useState(0);
   const [emailBlocked, setEmailBlocked] = useState(false);
 
-  // Restaura o cooldown mesmo se o usuário recarregar a página.
+  // Cooldown é por e-mail: trocar de e-mail mostra a trava (ou a ausência dela) do novo usuário.
   useEffect(() => {
-    setCooldown(readCooldown());
-  }, []);
+    setCooldown(readCooldown(email));
+  }, [email]);
 
   // Contagem regressiva quando o envio de e-mails está temporariamente bloqueado.
   useEffect(() => {
@@ -104,30 +122,21 @@ function AuthPage() {
 
   function startCooldown(secs: number) {
     const capped = Math.min(Math.max(1, secs), MAX_COOLDOWN_SECS);
-    writeCooldown(capped);
+    writeCooldown(email, capped);
     setCooldown(capped);
   }
 
-  /** Limpa travas locais após sucesso (evita cliente preso em "Aguarde Xs"). */
+  /** Limpa travas locais do e-mail atual após sucesso (evita cliente preso em "Aguarde Xs"). */
   function clearLocalLimits() {
     if (typeof window === "undefined") return;
-    window.localStorage.removeItem(COOLDOWN_KEY);
-    window.localStorage.removeItem(ATTEMPTS_KEY);
+    const cd = keyFor(COOLDOWN_KEY, email);
+    const at = keyFor(ATTEMPTS_KEY, email);
+    if (cd) window.localStorage.removeItem(cd);
+    if (at) window.localStorage.removeItem(at);
     setCooldown(0);
     setEmailBlocked(false);
   }
 
-  // Outro e-mail = outra pessoa/tentativa: não herda a trava local do e-mail anterior.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const normalized = email.trim().toLowerCase();
-    if (!normalized) return;
-    const last = window.localStorage.getItem(LAST_EMAIL_KEY);
-    if (last && last !== normalized) {
-      window.localStorage.removeItem(LAST_EMAIL_KEY);
-      clearLocalLimits();
-    }
-  }, [email]);
 
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
@@ -200,7 +209,7 @@ function AuthPage() {
     if (resending || cooldown > 0) return;
     const parsedEmail = z.string().trim().email().safeParse(email);
     if (!parsedEmail.success) return toast.error("Digite seu e-mail acima para reenviar.");
-    if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
+    if (currentAttempts(email) >= MAX_ATTEMPTS_PER_HOUR) {
       startCooldown(300);
       track("resend", "blocked_local", { error: "local attempt cap reached" });
       return toast.error(
@@ -209,7 +218,7 @@ function AuthPage() {
     }
     setResending(true);
     try {
-      bumpAttempts();
+      bumpAttempts(email);
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: parsedEmail.data,
@@ -236,7 +245,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "up") {
-        if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
+        if (currentAttempts(email) >= MAX_ATTEMPTS_PER_HOUR) {
           startCooldown(120);
           setEmailBlocked(true);
           track("signup", "blocked_local", { error: "local attempt cap reached" });
@@ -249,8 +258,7 @@ function AuthPage() {
         if (!guard.allowed) {
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
-        bumpAttempts();
-        window.localStorage.setItem(LAST_EMAIL_KEY, email.trim().toLowerCase());
+        bumpAttempts(email);
         const { data: signUpData, error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
@@ -336,7 +344,7 @@ function AuthPage() {
           )}
         </form>
 
-        {(emailBlocked || signupMessage) && (
+        {(emailBlocked || signupMessage || mode === "up") && (
           <div className="mt-4 w-full rounded border border-amber-400/40 bg-amber-400/5 p-4 text-xs">
             <p className="font-mono uppercase tracking-wider text-amber-400">Não recebeu o e-mail?</p>
             <ul className="mt-2 space-y-1 text-muted-foreground">
@@ -353,7 +361,7 @@ function AuthPage() {
                 onClick={resendConfirmation}
               >
                 {resending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                {cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar e-mail"}
+                {cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar confirmação"}
               </Button>
               <Button asChild variant="ghost" className="w-full font-mono text-[11px] uppercase">
                 <Link to="/contato">
