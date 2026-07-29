@@ -1412,43 +1412,55 @@ function AdminChatPanel() {
   const closeFn = useServerFn(adminCloseThread);
 
   const refreshThreads = () => threadsFn({ data: { filter } })
-    .then((t) => { setThreads(t as Thread[]); setLoadError(null); })
+    .then((t) => { threadsCache[filter] = t as Thread[]; setThreads(t as Thread[]); setLoadError(null); })
     .catch((e) => setLoadError(e instanceof Error ? e.message : String(e)));
-
 
   useEffect(() => {
     requestNotifyPermission();
+    // Mostra imediatamente o que já está em cache; só exibe skeleton na 1ª carga.
+    const cached = threadsCache[filter];
+    if (cached) { setThreads(cached); setLoading(false); } else { setThreads([]); setLoading(true); }
+    let alive = true;
     threadsFn({ data: { filter } }).then((t) => {
+      if (!alive) return;
+      threadsCache[filter] = t as Thread[];
       setThreads(t as Thread[]);
       setLoadError(null);
       setLoading(false);
       // Em telas pequenas mostramos a lista primeiro (master-detail)
       const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
-      if (isDesktop && (t as Thread[]).length && !activeId) setActiveId((t as Thread[])[0].id);
+      if (isDesktop && (t as Thread[]).length && !activeIdRef.current) setActiveId((t as Thread[])[0].id);
     }).catch((e) => {
+      if (!alive) return;
       setLoadError(e instanceof Error ? e.message : String(e));
       setLoading(false);
     });
+
+    // Realtime com coalescência: várias mensagens seguidas = 1 refetch.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefresh = () => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        threadsFn({ data: { filter } })
+          .then((t) => { if (!alive) return; threadsCache[filter] = t as Thread[]; setThreads(t as Thread[]); })
+          .catch(() => {});
+      }, 600);
+    };
     const ch = supabase.channel(`admin-threads-${filter}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages" },
       (payload) => {
         const msg = payload.new as Msg;
-        threadsFn({ data: { filter } }).then((t) => {
-          setThreads(t as Thread[]);
-          if (!msg.is_admin && soundOnRef.current && new Date(msg.created_at).getTime() >= bootAtRef.current) {
-            playNotifyDing();
-            const th = (t as Thread[]).find((x) => x.id === msg.thread_id);
-            if (document.hidden || msg.thread_id !== activeIdRef.current) {
-              showDesktopNotification(
-                `Nova mensagem — ${th?.profile?.email ?? "cliente"}`,
-                (msg.body ?? "[anexo]").slice(0, 140),
-              );
-            }
+        scheduleRefresh();
+        if (!msg.is_admin && soundOnRef.current && new Date(msg.created_at).getTime() >= bootAtRef.current) {
+          playNotifyDing();
+          if (document.hidden || msg.thread_id !== activeIdRef.current) {
+            showDesktopNotification("Nova mensagem no suporte", (msg.body ?? "[anexo]").slice(0, 140));
           }
-        }).catch(() => {});
+        }
       }
     ).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { alive = false; if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
