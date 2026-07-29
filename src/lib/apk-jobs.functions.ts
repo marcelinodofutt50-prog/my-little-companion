@@ -357,23 +357,26 @@ export const clearMyApkJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Só limpa jobs finalizados ou ainda na fila. Jobs que o time já começou a
+    // processar (claimed/sending/processing) NÃO são apagados, senão o arquivo
+    // some no meio do atendimento.
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
       .select("id,status,source_path,result_path")
       .eq("user_id", context.userId)
       .is("cleared_at", null)
-      .in("status", [...TERMINAL_STATUSES, ...PENDING_STATUSES] as any);
+      .in("status", [...TERMINAL_STATUSES, "queued"] as any);
     const list = (rows ?? []) as any[];
-    if (!list.length) return { removed: 0 };
+    if (!list.length) return { removed: 0, skippedActive: 0 };
     await removeJobFiles(supabaseAdmin, list);
     const now = new Date().toISOString();
-    const pendingIds = list.filter((r) => (PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
-    const doneIds = list.filter((r) => !(PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
-    if (pendingIds.length) {
+    const queuedIds = list.filter((r) => r.status === "queued").map((r) => r.id);
+    const doneIds = list.filter((r) => r.status !== "queued").map((r) => r.id);
+    if (queuedIds.length) {
       const { error } = await supabaseAdmin
         .from("apk_jobs")
-        .update({ cleared_at: now, status: "cancelled", source_path: "", result_path: null } as any)
-        .in("id", pendingIds);
+        .update({ cleared_at: now, status: "cancelled", completed_at: now, source_path: "", result_path: null } as any)
+        .in("id", queuedIds);
       if (error) throw new Error(error.message);
     }
     if (doneIds.length) {
@@ -383,35 +386,47 @@ export const clearMyApkJobs = createServerFn({ method: "POST" })
         .in("id", doneIds);
       if (error) throw new Error(error.message);
     }
-    return { removed: list.length };
+    const { count: stillActive } = await supabaseAdmin
+      .from("apk_jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", context.userId)
+      .is("cleared_at", null)
+      .in("status", ["claimed", "sending", "processing"] as any);
+    return { removed: list.length, skippedActive: stillActive ?? 0 };
   });
 
 // Admin: clear finished jobs from the whole queue. Optionally scoped to a
 // single user. Também marca como limpo em vez de apagar o histórico.
 export const adminClearApkJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid().optional() }).parse(i ?? {}))
+  .inputValidator((i: unknown) => z.object({
+    userId: z.string().uuid().optional(),
+    includeActive: z.boolean().optional(),
+  }).parse(i ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const statuses = data.includeActive
+      ? [...TERMINAL_STATUSES, ...PENDING_STATUSES]
+      : [...TERMINAL_STATUSES, "queued"];
     let q = supabaseAdmin
       .from("apk_jobs")
       .select("id,status,source_path,result_path")
       .is("cleared_at", null)
-      .in("status", [...TERMINAL_STATUSES, ...PENDING_STATUSES] as any);
+      .in("status", statuses as any);
     if (data.userId) q = q.eq("user_id", data.userId);
     const { data: rows } = await q;
     const list = (rows ?? []) as any[];
     if (!list.length) return { removed: 0 };
     await removeJobFiles(supabaseAdmin, list);
     const now = new Date().toISOString();
-    const pendingIds = list.filter((r) => (PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
+    const openIds = list.filter((r) => (PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
     const doneIds = list.filter((r) => !(PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
-    if (pendingIds.length) {
+    if (openIds.length) {
       const { error } = await supabaseAdmin
         .from("apk_jobs")
-        .update({ cleared_at: now, status: "cancelled", source_path: "", result_path: null } as any)
-        .in("id", pendingIds);
+        .update({ cleared_at: now, status: "cancelled", completed_at: now, source_path: "", result_path: null } as any)
+        .in("id", openIds);
       if (error) throw new Error(error.message);
     }
     if (doneIds.length) {
