@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
 
 /**
  * Retorna a thread aberta do usuário. Se a última thread estiver fechada
@@ -131,4 +132,29 @@ export const sendMessage = createServerFn({ method: "POST" })
     }).select("*").single();
     if (error) throw error;
     return { ...msg, thread_id: effectiveThreadId };
+  });
+
+/**
+ * Define a categoria (assunto) do atendimento do próprio cliente.
+ * Categorias válidas são fixas para evitar entrada livre no banco.
+ */
+export const setThreadCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({
+    threadId: z.string().uuid(),
+    category: z.enum(SUPPORT_CATEGORIES),
+    subject: z.string().trim().min(2).max(120).optional(),
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    const priority = data.category === "servidor" || data.category === "pagamento" ? "alta" : "normal";
+    const { data: updated, error } = await context.supabase
+      .from("support_threads")
+      .update({ category: data.category, priority, subject: data.subject ?? `Suporte — ${data.category}` })
+      .eq("id", data.threadId)
+      .eq("user_id", context.userId)
+      .select("*")
+      .maybeSingle();
+    if (error) throw error;
+    if (!updated) throw new Error("Conversa não encontrada");
+    return updated;
   });

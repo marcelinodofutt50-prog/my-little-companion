@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
-import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer } from "@/lib/support.functions";
+import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer, setThreadCategory } from "@/lib/support.functions";
+import { SUPPORT_CATEGORY_META, categoryMeta, type SupportCategory } from "@/lib/support-categories";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 
 export const Route = createFileRoute("/_authenticated/suporte")({
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/suporte")({
   component: SupportPage,
 });
 
+type Thread = { id: string; category?: string | null; status?: string | null; assigned_name?: string | null };
 type Msg = { id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 type PendingMsg = {
   clientId: string;
@@ -28,7 +30,8 @@ type PendingMsg = {
 };
 
 function SupportPage() {
-  const [thread, setThread] = useState<{ id: string } | null>(null);
+  const [thread, setThread] = useState<Thread | null>(null);
+  const [savingCat, setSavingCat] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
   const [body, setBody] = useState("");
@@ -44,6 +47,7 @@ function SupportPage() {
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
   const markReadFn = useServerFn(markThreadReadByCustomer);
+  const setCatFn = useServerFn(setThreadCategory);
 
   useEffect(() => {
     requestNotifyPermission();
@@ -88,6 +92,19 @@ function SupportPage() {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, []);
+
+  async function chooseCategory(cat: SupportCategory) {
+    if (!thread || savingCat) return;
+    setSavingCat(true);
+    try {
+      const updated: any = await setCatFn({ data: { threadId: thread.id, category: cat } });
+      setThread((prev) => (prev ? { ...prev, ...updated } : updated));
+      toast.success(`Assunto definido: ${categoryMeta(cat).label}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível definir o assunto");
+    }
+    setSavingCat(false);
+  }
 
   async function trySend(clientId: string, payload: { body?: string; attachmentPath?: string; attachmentType?: string }) {
     if (!thread) return;
@@ -163,15 +180,86 @@ function SupportPage() {
 
   const sending = pending.some((p) => p.status === "sending");
 
+  const active = categoryMeta(thread?.category);
+  const chosen = !!thread?.category && thread.category !== "outro";
+  const empty = msgs.length === 0 && pending.length === 0;
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="font-mono text-xs uppercase tracking-[0.3em] text-neon">// support channel</div>
-        <h1 className="mt-1 text-2xl font-bold">Chat com Admin</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Anexe prints, vídeos ou arquivos. Nosso time responde em minutos.</p>
+        <h1 className="mt-1 text-2xl font-bold">Suporte Shadow</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Escolha o assunto, descreva o problema e anexe prints se precisar. Respondemos em minutos.
+        </p>
 
-        <div className="mt-6 terminal-card scanlines relative flex h-[65vh] flex-col overflow-hidden">
+        {/* Status do atendimento */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-mono uppercase tracking-wider">
+          <span className="flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-neon">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon" /> online agora
+          </span>
+          <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-muted-foreground">
+            ticket {thread ? `#${thread.id.slice(0, 8)}` : "abrindo..."}
+          </span>
+          <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-muted-foreground">
+            {active.emoji} {active.label}
+          </span>
+          {thread?.assigned_name && (
+            <span className="rounded-full border border-violet/40 bg-violet/10 px-3 py-1 text-violet-foreground">
+              atendente: {thread.assigned_name}
+            </span>
+          )}
+        </div>
+
+        {/* Categorias */}
+        <section className="mt-5">
+          <div className="mb-2 text-xs font-medium text-muted-foreground">
+            {chosen ? "Assunto do atendimento (pode trocar):" : "Qual é o assunto?"}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {SUPPORT_CATEGORY_META.map((c) => {
+              const on = thread?.category === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  disabled={!thread || savingCat}
+                  onClick={() => chooseCategory(c.id)}
+                  className={`rounded-lg border p-3 text-left transition disabled:opacity-50 ${
+                    on ? "border-neon/60 bg-neon/10 shadow-lg" : "border-border/60 bg-card/50 hover:border-neon/40 hover:bg-card"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <span aria-hidden>{c.emoji}</span>
+                    <span className="truncate">{c.label}</span>
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">{c.hint}</div>
+                  {c.urgent && <div className="mt-1 inline-block rounded bg-destructive/15 px-1.5 py-0.5 text-[9px] font-mono uppercase text-destructive">prioridade alta</div>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Mensagens rápidas */}
+        {empty && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {active.quickMessages.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setBody(q)}
+                className="rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground transition hover:border-neon/40 hover:text-foreground"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
+
           {hasNewAdmin && (
             <button
               type="button"
@@ -182,7 +270,11 @@ function SupportPage() {
             </button>
           )}
           <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-            {msgs.length === 0 && pending.length === 0 && <div className="pt-16 text-center text-sm text-muted-foreground">Nenhuma mensagem. Envie a primeira.</div>}
+            {msgs.length === 0 && pending.length === 0 && <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
+                <div className="text-3xl" aria-hidden>{active.emoji}</div>
+                <div className="text-sm font-medium">{active.label}</div>
+                <div className="text-xs text-muted-foreground">Descreva o que aconteceu ou toque em uma mensagem rápida acima.</div>
+              </div>}
             {msgs.map((m) => {
               if (m.is_system) {
                 return (

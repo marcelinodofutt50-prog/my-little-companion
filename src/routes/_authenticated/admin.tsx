@@ -10,6 +10,7 @@ import {
   Wallet, Copy, RotateCcw, ChevronLeft,
 } from "lucide-react";
 
+import { categoryMeta } from "@/lib/support-categories";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LicenseAiPanel } from "@/components/LicenseAiPanel";
 import { AdminAlertsBanner } from "@/components/AdminAlertsBanner";
@@ -1189,7 +1190,7 @@ function MiniStat({ label, value, accent }: { label: string; value: string; acce
 
 
 // ============= LIVE CHAT PANEL =============
-type Thread = { id: string; user_id: string; subject: string; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null; display_name?: string | null } | null };
+type Thread = { id: string; user_id: string; subject: string; category?: string | null; priority?: string | null; status: string; updated_at: string; assigned_to?: string | null; assigned_name?: string | null; unread_by_staff?: number; last_customer_message_at?: string | null; profile: { email: string; full_name: string | null; display_name?: string | null } | null };
 type Msg = { id: string; thread_id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 
 function AdminChatPanel() {
@@ -1364,7 +1365,10 @@ function AdminChatPanel() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</div>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="flex-shrink-0" aria-hidden>{categoryMeta(t.category).emoji}</span>
+                        <span className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</span>
+                      </div>
                       {(t.unread_by_staff ?? 0) > 0 && !active && (
                         <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
                       )}
@@ -1374,6 +1378,7 @@ function AdminChatPanel() {
                       <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
                         {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
                       </span>
+                      <span className="flex-shrink-0 rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">{categoryMeta(t.category).label}</span>
                       {waitingLong && (
                         <span className="flex-shrink-0 rounded bg-danger/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-danger">aguardando</span>
                       )}
