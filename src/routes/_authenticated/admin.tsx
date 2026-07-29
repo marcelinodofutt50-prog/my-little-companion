@@ -33,6 +33,8 @@ import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { AdminDailyReport } from "@/components/AdminDailyReport";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
+import { AdminTagline } from "@/components/AdminTagline";
+import { AdminTeamGuide } from "@/components/AdminTeamGuide";
 
 
 
@@ -346,6 +348,8 @@ function AdminPage() {
               <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
                 Painel Administrativo
               </h1>
+              <AdminTagline className="mt-1" />
+
               <div className="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/[0.07] px-2.5 py-1 text-neon">
                   <Circle className="h-1.5 w-1.5 fill-neon text-neon pulse-dot" /> operacional
@@ -366,7 +370,9 @@ function AdminPage() {
                 onSelectUser={(id) => setCustomer360(id)}
                 onOpenThread={() => setTab("chat")}
               />
+              <AdminTeamGuide onOpenSection={(id) => setTab(id as Tab)} />
               <Link to="/dashboard"><Button size="sm" variant="ghost" className="font-mono text-[10px] uppercase tracking-wider">Meu Painel</Button></Link>
+
               <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono text-[10px] uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
               </Button>
