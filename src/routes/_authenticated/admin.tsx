@@ -328,33 +328,33 @@ function AdminPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-[1400px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-4 sm:py-6 lg:pb-6">
         {/* HEADER BAR */}
-        <div className="terminal-card scanlines relative overflow-hidden p-4 sm:p-5">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet/10 blur-3xl" />
-          <div className="pointer-events-none absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-neon/10 blur-3xl" />
-          <div className="relative flex flex-col justify-between gap-3 md:flex-row md:items-center">
+        <div className="terminal-card relative overflow-hidden rounded-xl border-border/60 p-4 sm:p-5">
+          <div className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-neon/50 to-transparent" />
+          <div className="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-violet/[0.07] blur-3xl" />
+          <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.35em] text-violet">
-                <ShieldCheck className="h-3.5 w-3.5" /> admin control center
+              <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.35em] text-muted-foreground">
+                <ShieldCheck className="h-3.5 w-3.5 text-violet" /> admin control center
               </div>
-              <h1 className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">Painel Administrativo</h1>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1.5 rounded border border-neon/30 bg-neon/5 px-2 py-1 text-neon">
-                  <Circle className="h-2 w-2 fill-neon text-neon" /> sistemas online
+              <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">Painel Administrativo</h1>
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/[0.07] px-2.5 py-1 text-neon">
+                  <Circle className="h-1.5 w-1.5 fill-neon text-neon" /> operacional
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded border border-border/50 bg-background/50 px-2 py-1 text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-muted-foreground">
                   <ShieldCheck className="h-3 w-3 text-cyan" />
                   <span className="max-w-[180px] truncate normal-case text-foreground/80 sm:max-w-none">{email}</span>
                 </span>
                 {totalPending > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-amber-400">
-                    {totalPending} pendente{totalPending > 1 ? "s" : ""}
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-amber-400">
+                    {totalPending} pendência{totalPending > 1 ? "s" : ""}
                   </span>
                 )}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Link to="/dashboard"><Button size="sm" variant="outline" className="font-mono uppercase tracking-wider">Meu Painel</Button></Link>
-              <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono uppercase tracking-wider">
+              <Link to="/dashboard"><Button size="sm" variant="ghost" className="font-mono text-[10px] uppercase tracking-wider">Meu Painel</Button></Link>
+              <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono text-[10px] uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
               </Button>
             </div>
@@ -362,12 +362,13 @@ function AdminPage() {
         </div>
 
         {/* STATS */}
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
           <ExecStat icon={Users} label="Clientes cadastrados" value={stats ? String(stats.users) : "—"} sub="conta total" accent="cyan" />
           <ExecStat icon={KeyRound} label="Licenças ativas" value={stats ? String(stats.licenses) : "—"} sub="em operação" accent="neon" />
           <ExecStat icon={DollarSign} label="Receita bruta" value={stats ? formatBrl(stats.revenue) : "—"} sub="pedidos pagos" accent="violet" />
           <ExecStat icon={Activity} label="Servidor" value="ONLINE" sub="uptime 99.9%" accent="neon" pulse />
         </div>
+
 
         {/* GROUPED LAYOUT: sidebar (desktop) + content */}
         <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
