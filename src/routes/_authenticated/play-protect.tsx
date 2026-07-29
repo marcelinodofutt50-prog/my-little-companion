@@ -10,6 +10,7 @@ import { TutorialHintDialog } from "@/components/TutorialHintDialog";
 const ppConfigAsset = { url: "/img/play-protect-config.png" };
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import {
   getPlayProtectStatus,
   createApkJob,
