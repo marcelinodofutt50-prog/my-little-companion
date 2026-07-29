@@ -103,8 +103,9 @@ function AuthPage() {
   }, [cooldown]);
 
   function startCooldown(secs: number) {
-    writeCooldown(secs);
-    setCooldown(secs);
+    const capped = Math.min(Math.max(1, secs), MAX_COOLDOWN_SECS);
+    writeCooldown(capped);
+    setCooldown(capped);
   }
 
   /** Limpa travas locais após sucesso (evita cliente preso em "Aguarde Xs"). */
@@ -113,7 +114,21 @@ function AuthPage() {
     window.localStorage.removeItem(COOLDOWN_KEY);
     window.localStorage.removeItem(ATTEMPTS_KEY);
     setCooldown(0);
+    setEmailBlocked(false);
   }
+
+  // Outro e-mail = outra pessoa/tentativa: não herda a trava local do e-mail anterior.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return;
+    const last = window.localStorage.getItem(LAST_EMAIL_KEY);
+    if (last && last !== normalized) {
+      window.localStorage.removeItem(LAST_EMAIL_KEY);
+      clearLocalLimits();
+    }
+  }, [email]);
+
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
