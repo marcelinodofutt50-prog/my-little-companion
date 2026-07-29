@@ -23,7 +23,7 @@ import { NicknameDialog } from "@/components/NicknameDialog";
 import { SecurityWelcomeDialog } from "@/components/SecurityWelcomeDialog";
 import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
-import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -181,7 +181,7 @@ function DashboardPage() {
   }
 
 
-  function copyText(v: string, label: string) { navigator.clipboard.writeText(v); toast.success(`${label} copiado`); }
+  function copyText(v: string, label: string) { navigator.clipboard.writeText(v); markOnboardingStep(ONBOARDING_STEP.CREDENTIALS); toast.success(`${label} copiado`); }
 
   return (
     <SidebarProvider>
@@ -756,7 +756,7 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
     return { text: days === 0 ? "expira hoje" : `${days}d restantes`, color };
   })();
 
-  function copy(v: string, label: string) { navigator.clipboard.writeText(v); toast.success(`${label} copiado`); }
+  function copy(v: string, label: string) { navigator.clipboard.writeText(v); markOnboardingStep(ONBOARDING_STEP.CREDENTIALS); toast.success(`${label} copiado`); }
 
   async function run(kind: "suspend" | "reactivate" | "disable") {
     if (kind === "disable" && !confirm("Desativar em definitivo? A conta será removida do servidor e não poderá ser reativada.")) return;
