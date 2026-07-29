@@ -236,7 +236,8 @@ function AuthPage() {
           email, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
-        void recordSignupIp({ data: { email, userId: signUpData.user?.id ?? null } }).catch(() => {});
+        // await: o fire-and-forget podia perder o registro se a página navegasse logo após o cadastro.
+        await recordSignupIp({ data: { email, userId: signUpData.user?.id ?? null } }).catch(() => {});
         toast.success("Conta criada! Confirme seu e-mail.");
         setEmailBlocked(false);
         track("signup", "sent");

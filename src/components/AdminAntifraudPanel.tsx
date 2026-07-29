@@ -131,7 +131,7 @@ export function AdminAntifraudPanel() {
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <span className={r.accounts_in_window > 1 ? "text-amber-400" : undefined}>
-                {r.accounts_in_window} conta(s)/24h
+                {r.accounts_in_window} conta(s)/{data?.config?.windowHours ?? 24}h
               </span>
               <span>{new Date(r.created_at).toLocaleString("pt-BR")}</span>
             </div>
@@ -142,6 +142,13 @@ export function AdminAntifraudPanel() {
       <p className="mt-3 font-mono text-[10px] text-muted-foreground">
         O IP nunca é armazenado em claro — apenas o hash com salt do servidor.
       </p>
+      {data?.config && (
+        <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+          Regra ativa: bloqueio acima de {data.config.maxAccounts} contas por conexão em{" "}
+          {data.config.windowHours}h · marca suspeito acima de {data.config.suspiciousThreshold}.
+          Ajustável por variável de ambiente, sem recompilar.
+        </p>
+      )}
     </div>
   );
 }

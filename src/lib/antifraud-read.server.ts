@@ -15,6 +15,7 @@ export type SignupIpReport = {
   total: number;
   suspiciousCount: number;
   uniqueIps: number;
+  config: { maxAccounts: number; suspiciousThreshold: number; windowHours: number };
 };
 
 export async function loadSignupIpReport(input: {
@@ -36,20 +37,28 @@ export async function loadSignupIpReport(input: {
 
   if (input.onlySuspicious) query = query.eq("suspicious", true);
 
-  const { data, error } = await query;
-  if (error) return { rows: [], total: 0, suspiciousCount: 0, uniqueIps: 0 };
-
-  let rows = (data ?? []) as SignupIpRow[];
-  const term = input.search?.trim().toLowerCase();
+  // Busca aplicada no banco (antes do limite), senão o filtro perdia registros antigos.
+  const term = input.search?.trim();
   if (term) {
-    rows = rows.filter(
-      (r) =>
-        (r.email_masked ?? "").toLowerCase().includes(term) ||
-        r.ip_hash.toLowerCase().includes(term),
-    );
+    const safe = term.replace(/[%,()]/g, "");
+    if (safe) query = query.or(`email_masked.ilike.%${safe}%,ip_hash.ilike.%${safe}%`);
   }
 
+  const { antifraudConfig } = await import("@/lib/antifraud.server");
+  const cfg = antifraudConfig();
+  const config = {
+    maxAccounts: cfg.maxAccounts,
+    suspiciousThreshold: cfg.suspiciousThreshold,
+    windowHours: cfg.windowHours,
+  };
+
+  const { data, error } = await query;
+  if (error) return { rows: [], total: 0, suspiciousCount: 0, uniqueIps: 0, config };
+
+  const rows = (data ?? []) as SignupIpRow[];
+
   return {
+    config,
     rows,
     total: rows.length,
     suspiciousCount: rows.filter((r) => r.suspicious).length,
