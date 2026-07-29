@@ -14,18 +14,19 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const [{ data: active }, consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", CONSUMED_STATUSES as any),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).or(`status.in.(${CONSUMED_STATUSES.join(",")}),is_free_trial.eq.true`),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).is("cleared_at", null),
       supabase
         .from("apk_jobs")
         .select("id,created_at,status")
         .eq("user_id", userId)
         .in("status", PENDING_STATUSES as any)
+        .is("cleared_at", null)
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle(),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).in("status", PENDING_STATUSES as any),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).in("status", PENDING_STATUSES as any).is("cleared_at", null),
     ]);
     const consumed = consumedRes.count ?? 0;
     const pending = pendingRes.count ?? 0;
@@ -39,6 +40,7 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
         .from("apk_jobs")
         .select("id", { count: "exact", head: true })
         .in("status", PENDING_STATUSES as any)
+        .is("cleared_at", null)
         .lt("created_at", myOldest.data.created_at);
       queuePosition = (count ?? 0) + 1;
     }
@@ -78,8 +80,8 @@ export const createApkJob = createServerFn({ method: "POST" })
 
     const [{ data: active }, consumedRes, pendingRes] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", CONSUMED_STATUSES as any),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).or(`status.in.(${CONSUMED_STATUSES.join(",")}),is_free_trial.eq.true`),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
     ]);
     const consumed = consumedRes.count ?? 0;
     const pending = pendingRes.count ?? 0;
@@ -355,18 +357,30 @@ export const clearMyApkJobs = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
-      .select("id,source_path,result_path")
+      .select("id,status,source_path,result_path")
       .eq("user_id", context.userId)
       .is("cleared_at", null)
-      .in("status", TERMINAL_STATUSES as any);
+      .in("status", [...TERMINAL_STATUSES, ...PENDING_STATUSES] as any);
     const list = (rows ?? []) as any[];
     if (!list.length) return { removed: 0 };
     await removeJobFiles(supabaseAdmin, list);
-    const { error } = await supabaseAdmin
-      .from("apk_jobs")
-      .update({ cleared_at: new Date().toISOString(), source_path: "", result_path: null } as any)
-      .in("id", list.map((r) => r.id));
-    if (error) throw new Error(error.message);
+    const now = new Date().toISOString();
+    const pendingIds = list.filter((r) => (PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
+    const doneIds = list.filter((r) => !(PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
+    if (pendingIds.length) {
+      const { error } = await supabaseAdmin
+        .from("apk_jobs")
+        .update({ cleared_at: now, status: "cancelled", source_path: "", result_path: null } as any)
+        .in("id", pendingIds);
+      if (error) throw new Error(error.message);
+    }
+    if (doneIds.length) {
+      const { error } = await supabaseAdmin
+        .from("apk_jobs")
+        .update({ cleared_at: now, source_path: "", result_path: null } as any)
+        .in("id", doneIds);
+      if (error) throw new Error(error.message);
+    }
     return { removed: list.length };
   });
 
@@ -380,19 +394,31 @@ export const adminClearApkJobs = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("apk_jobs")
-      .select("id,source_path,result_path")
+      .select("id,status,source_path,result_path")
       .is("cleared_at", null)
-      .in("status", TERMINAL_STATUSES as any);
+      .in("status", [...TERMINAL_STATUSES, ...PENDING_STATUSES] as any);
     if (data.userId) q = q.eq("user_id", data.userId);
     const { data: rows } = await q;
     const list = (rows ?? []) as any[];
     if (!list.length) return { removed: 0 };
     await removeJobFiles(supabaseAdmin, list);
-    const { error } = await supabaseAdmin
-      .from("apk_jobs")
-      .update({ cleared_at: new Date().toISOString(), source_path: "", result_path: null } as any)
-      .in("id", list.map((r) => r.id));
-    if (error) throw new Error(error.message);
+    const now = new Date().toISOString();
+    const pendingIds = list.filter((r) => (PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
+    const doneIds = list.filter((r) => !(PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
+    if (pendingIds.length) {
+      const { error } = await supabaseAdmin
+        .from("apk_jobs")
+        .update({ cleared_at: now, status: "cancelled", source_path: "", result_path: null } as any)
+        .in("id", pendingIds);
+      if (error) throw new Error(error.message);
+    }
+    if (doneIds.length) {
+      const { error } = await supabaseAdmin
+        .from("apk_jobs")
+        .update({ cleared_at: now, source_path: "", result_path: null } as any)
+        .in("id", doneIds);
+      if (error) throw new Error(error.message);
+    }
     return { removed: list.length };
   });
 
