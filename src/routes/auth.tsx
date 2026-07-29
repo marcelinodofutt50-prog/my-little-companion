@@ -226,11 +226,17 @@ function AuthPage() {
             "Muitas tentativas de cadastro nesta hora. Aguarde alguns minutos ou fale com o suporte."
           );
         }
+        // Antifraude: limite de contas por conexão (IP em hash) numa janela de 24h.
+        const guard = await checkSignupAllowed().catch(() => ({ allowed: true }) as any);
+        if (!guard.allowed) {
+          throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
+        }
         bumpAttempts();
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
+        void recordSignupIp({ data: { email, userId: signUpData.user?.id ?? null } }).catch(() => {});
         toast.success("Conta criada! Confirme seu e-mail.");
         setEmailBlocked(false);
         track("signup", "sent");
