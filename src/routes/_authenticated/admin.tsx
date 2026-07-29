@@ -1243,24 +1243,27 @@ function AdminLogsPanel() {
   );
 }
 
-function ExecStat({ icon: Icon, label, value, sub, accent, pulse }: { icon: any; label: string; value: string; sub: string; accent: "neon" | "cyan" | "violet"; pulse?: boolean }) {
+function ExecStat({ icon: Icon, label, value, sub, accent, pulse, code }: { icon: any; label: string; value: string; sub: string; accent: "neon" | "cyan" | "violet"; pulse?: boolean; code?: string }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
-    <div className="terminal-card group relative overflow-hidden rounded-xl border-border/60 p-4 transition-colors hover:border-foreground/20">
+    <div className="osint-panel osint-corners group relative overflow-hidden p-4 transition-colors hover:border-foreground/25">
       <div className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50 ${color}`} />
       <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-        <span className="truncate">{label}</span>
+        <span className="truncate pl-2.5">{label}</span>
         <Icon className={`h-3.5 w-3.5 shrink-0 opacity-80 ${color}`} />
       </div>
-      <div className={`mt-2.5 flex items-center gap-2 font-mono text-[26px] leading-none font-bold tabular-nums ${color}`}>
+      <div className={`mt-2.5 flex items-center gap-2 pl-2.5 font-mono text-[26px] leading-none font-bold tabular-nums ${color}`}>
         {pulse && <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-current" />}
         {value}
       </div>
-      <div className="mt-2 font-mono text-[10px] uppercase text-muted-foreground/60">{sub}</div>
+      <div className="mt-2 flex items-center justify-between gap-2 pl-2.5 font-mono text-[10px] uppercase text-muted-foreground/60">
+        <span className="truncate">{sub}</span>
+        {code && <span className={`shrink-0 tracking-[0.18em] opacity-40 ${color}`}>{code}</span>}
+      </div>
     </div>
-
   );
 }
+
 
 function demoAuditEntries(adminEmail: string): AuditLogEntry[] {
   const now = Date.now();
