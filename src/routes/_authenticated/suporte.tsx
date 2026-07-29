@@ -50,6 +50,7 @@ function SupportPage() {
   const [uid, setUid] = useState<string>("");
   const [lastSeenAdminAt, setLastSeenAdminAt] = useState<number>(() => Date.now());
   const fileRef = useRef<HTMLInputElement>(null);
+  const composerRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const mountedAtRef = useRef<number>(Date.now());
   const isAdminRef = useRef(false);
@@ -448,7 +449,7 @@ function SupportPage() {
             <Button type="button" size="icon" variant="outline" onClick={() => { unlockNotifySound(); fileRef.current?.click(); }} disabled={uploading}>
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
             </Button>
-            <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem..." />
+            <Input ref={composerRef} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem..." />
             <Button type="submit" size="icon" disabled={sending || uploading || !body.trim()}>
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
