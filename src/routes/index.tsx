@@ -13,6 +13,7 @@ import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
+import { useI18n } from "@/lib/i18n";
 import shadowMark from "@/assets/shadow-mask.png";
 
 
