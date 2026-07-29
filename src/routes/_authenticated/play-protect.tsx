@@ -360,13 +360,26 @@ function PlayProtectPage() {
 
             {/* Jobs */}
             <section className="rounded-lg border border-border/70 bg-card p-5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Histórico</p>
                   <h3 className="mt-1 font-display text-lg font-semibold tracking-tight">Meus jobs</h3>
                 </div>
-                <div className="text-xs text-muted-foreground">{jobs.length} total</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{jobs.length} total</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={clearing || !jobs.some((j) => ["done", "failed", "expired", "cancelled"].includes(j.status))}
+                    onClick={handleClear}
+                    className="gap-1.5 font-mono text-[11px] uppercase tracking-wider"
+                  >
+                    {clearing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    Limpar lista
+                  </Button>
+                </div>
               </div>
+
 
               {jobs.length === 0 ? (
                 <div className="mt-6 rounded border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
