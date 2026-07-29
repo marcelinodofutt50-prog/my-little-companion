@@ -161,8 +161,10 @@ function AdminPage() {
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
   const fixBugFn = useServerFn(adminFixLoginBug);
+  const analyzeBugFn = useServerFn(adminAnalyzeLoginBug);
   const [fixingLic, setFixingLic] = useState<string | null>(null);
   const [fixBugDialog, setFixBugDialog] = useState<{ open: boolean; licenseId: string | null }>({ open: false, licenseId: null });
+  const [bugAnalysis, setBugAnalysis] = useState<{ loading: boolean; diagnosis: string | null; factors: { label: string; value: string; alert: boolean }[] | null }>({ loading: false, diagnosis: null, factors: null });
   const threadsCountFn = useServerFn(adminListThreads);
 
   // Track which lists have been loaded so realtime/polling don't refetch
