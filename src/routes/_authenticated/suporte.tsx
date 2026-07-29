@@ -336,7 +336,23 @@ function SupportPage() {
               nova resposta do admin
             </button>
           )}
-          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+          <div ref={listRef} onScroll={onListScroll} className="flex-1 space-y-3 overflow-y-auto p-4">
+            {(hasMore || loadingOlder) && (
+              <div className="flex justify-center pb-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1 px-3 text-[10px] font-mono uppercase tracking-wider"
+                  disabled={loadingOlder}
+                  onClick={() => void loadOlder()}
+                >
+                  {loadingOlder ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />}
+                  {loadingOlder ? "carregando..." : "carregar mensagens antigas"}
+                </Button>
+              </div>
+            )}
+
             {msgs.length === 0 && pending.length === 0 && <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
                 <div className="text-3xl" aria-hidden>{active.emoji}</div>
                 <div className="text-sm font-medium">{active.label}</div>
