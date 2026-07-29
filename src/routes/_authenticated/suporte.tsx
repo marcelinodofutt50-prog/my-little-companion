@@ -36,7 +36,9 @@ type PendingMsg = {
 const PAGE_SIZE = 30;
 
 function SupportPage() {
+  const { reabrir } = Route.useSearch();
   const [thread, setThread] = useState<Thread | null>(null);
+
   const [savingCat, setSavingCat] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [hasMore, setHasMore] = useState(false);
