@@ -42,6 +42,14 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
   const [signupMessage, setSignupMessage] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+
+  // Contagem regressiva quando o envio de e-mails está temporariamente bloqueado.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
@@ -71,6 +79,7 @@ function AuthPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading || cooldown > 0) return;
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
@@ -89,15 +98,39 @@ function AuthPage() {
           "4. Você será logado automaticamente.\n\n" +
           "Se não achar, olhe na pasta Spam ou Promoções."
         );
+        setCooldown(60);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate({ to: (next as any) || "/dashboard" });
       }
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (err: any) {
+      const raw = String(err?.message ?? "");
+      const status = err?.status ?? err?.code;
+      const isRateLimit =
+        status === 429 ||
+        /rate limit|too many requests|over_email_send_rate_limit|security purposes/i.test(raw);
+
+      if (isRateLimit) {
+        const secs = Number(raw.match(/(\d+)\s*second/i)?.[1] ?? 60);
+        setCooldown(secs);
+        setSignupMessage(null);
+        toast.error(
+          `Muitas tentativas de envio de e-mail agora. Aguarde ${secs}s e tente de novo — sua conta não foi perdida.`
+        );
+      } else if (/already registered|already been registered|user already/i.test(raw)) {
+        toast.error("Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.");
+        setMode("in");
+      } else if (/email not confirmed/i.test(raw)) {
+        toast.error("Confirme seu e-mail antes de entrar. Veja a caixa de entrada e o spam.");
+      } else if (/invalid login credentials/i.test(raw)) {
+        toast.error("E-mail ou senha incorretos.");
+      } else {
+        toast.error(raw || "Não foi possível concluir. Tente novamente.");
+      }
     } finally { setLoading(false); }
   }
+
 
   return (
     <div className="min-h-screen">
@@ -133,10 +166,17 @@ function AuthPage() {
             <label className="mb-1 block font-mono text-xs uppercase text-muted-foreground">Senha</label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === "in" ? "current-password" : "new-password"} />
           </div>
-          <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading}>
+          <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading || cooldown > 0}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {mode === "in" ? "Entrar" : "Criar conta"}
+            {cooldown > 0
+              ? `Aguarde ${cooldown}s`
+              : mode === "in" ? "Entrar" : "Criar conta"}
           </Button>
+          {cooldown > 0 && (
+            <p className="text-center font-mono text-[11px] text-muted-foreground">
+              Limite temporário de envio de e-mails. Se você já recebeu o link, use-o — não precisa reenviar.
+            </p>
+          )}
         </form>
         <button className="mt-6 font-mono text-xs uppercase text-muted-foreground hover:text-neon" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "Não tem conta? Registre-se" : "Já tem conta? Entrar"}
