@@ -167,14 +167,35 @@ export const setThreadCategory = createServerFn({ method: "POST" })
   }).parse(i))
   .handler(async ({ data, context }) => {
     const priority = data.category === "servidor" || data.category === "pagamento" ? "alta" : "normal";
-    const { data: updated, error } = await context.supabase
-      .from("support_threads")
-      .update({ category: data.category, priority, subject: data.subject ?? `Suporte — ${data.category}` })
-      .eq("id", data.threadId)
-      .eq("user_id", context.userId)
-      .select("*")
-      .maybeSingle();
+    const patch = {
+      category: data.category,
+      priority,
+      subject: data.subject ?? `Suporte — ${data.category}`,
+    };
+
+    async function run(payload: { category?: string; priority?: string; subject?: string }) {
+      return context.supabase
+        .from("support_threads")
+        .update(payload)
+        .eq("id", data.threadId)
+        .eq("user_id", context.userId)
+        .select("*")
+        .maybeSingle();
+    }
+
+    let { data: updated, error } = await run(patch);
+
+    // Fallback: se o cache de schema do PostgREST estiver desatualizado
+    // (PGRST204 "Could not find the 'category' column"), o chat não pode
+    // travar — salvamos ao menos o assunto e seguimos o atendimento.
+    if (error && (error as any).code === "PGRST204") {
+      const retry = await run({ subject: patch.subject });
+      updated = retry.data;
+      error = retry.error;
+    }
+
     if (error) throw error;
     if (!updated) throw new Error("Conversa não encontrada");
     return updated;
   });
+
