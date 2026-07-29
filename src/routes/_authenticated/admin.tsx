@@ -2150,7 +2150,9 @@ function AutoRevocationsPanel({ users, licenses }: { users: any[]; licenses: any
             })}
           </tbody>
         </table>
+        </div>
       </div>
+
     </div>
   );
 }
