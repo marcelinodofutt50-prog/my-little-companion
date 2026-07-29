@@ -101,12 +101,20 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       const { data } = await supabase.auth.getUser();
       const user = data.user;
       if (!user) return;
+      // Marca local: se o backend não aceitou gravar (cache de schema),
+      // ainda assim não insistimos com o cliente a cada F5.
+      if (localStorage.getItem(doneKey(user.id))) {
+        onDone();
+        return;
+      }
+      // select("*") evita erro quando o cache do backend ainda não conhece a coluna
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name,onboarding_completed_at")
+        .select("*")
         .eq("id", user.id)
         .maybeSingle();
       if ((profile as any)?.onboarding_completed_at) {
+        localStorage.setItem(doneKey(user.id), "1");
         onDone();
         return;
       }
