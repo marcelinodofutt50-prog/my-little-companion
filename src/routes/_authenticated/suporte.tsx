@@ -274,11 +274,14 @@ function SupportPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-8">
-        <div className="font-mono text-xs uppercase tracking-[0.3em] text-neon">// support channel</div>
-        <h1 className="mt-1 text-2xl font-bold">Suporte Shadow</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Escolha o assunto, descreva o problema e anexe prints se precisar. Respondemos em minutos.
-        </p>
+        <div className="osint-panel osint-corners osint-sweep relative overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "120px" }}>
+          <div className="osint-label text-neon">// support channel</div>
+          <h1 className="mt-1 text-2xl font-bold">Suporte Shadow</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Escolha o assunto, descreva o problema e anexe prints se precisar. Respondemos em minutos.
+          </p>
+          <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
+        </div>
 
         {/* Status do atendimento */}
         <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-mono uppercase tracking-wider">
