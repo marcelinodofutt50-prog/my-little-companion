@@ -362,7 +362,18 @@ function AdminPage() {
             </div>
             {/* Desktop: grouped vertical nav */}
             <nav className="hidden lg:block terminal-card scanlines relative p-3">
-              {tabGroups.map((g, gi) => {
+              <div className="mb-3">
+                <input
+                  value={navQuery}
+                  onChange={(e) => setNavQuery(e.target.value)}
+                  placeholder="Buscar seção..."
+                  className="w-full rounded border border-border/50 bg-background/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-muted-foreground/70 focus:border-neon/50"
+                />
+              </div>
+              {filteredGroups.length === 0 && (
+                <div className="px-2 py-3 text-xs text-muted-foreground">Nenhuma seção encontrada.</div>
+              )}
+              {filteredGroups.map((g, gi) => {
                 const accentColor = g.accent === "neon" ? "text-neon" : g.accent === "cyan" ? "text-cyan" : "text-violet";
                 return (
                   <div key={g.title} className={gi > 0 ? "mt-4 border-t border-border/40 pt-4" : ""}>
