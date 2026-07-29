@@ -284,9 +284,23 @@ function DashboardPage() {
             })()}
 
         {(() => {
-          const activeCount = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date())).length;
-          if (activeCount >= 2) return null;
-          return <OnboardingChecklist />;
+          const activeList = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
+          if (activeList.length >= 2) return null;
+          const primaryLic = activeList.find((l) => !l.is_trial) ?? activeList[0];
+          return (
+            <OnboardingChecklist
+              hasActiveLicense={activeList.length > 0}
+              onGoToLicense={() => document.getElementById("minhas-licencas")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              onCopyCredentials={() => {
+                if (!primaryLic) return false;
+                navigator.clipboard.writeText(
+                  `user: ${primaryLic.yaarsa_username}\nemail: ${primaryLic.yaarsa_email}\npass: ${primaryLic.password}\nserver: ${primaryLic.server_ip}`
+                );
+                toast.success("Credenciais copiadas");
+                return true;
+              }}
+            />
+          );
         })()}
 
         <HowItWorksSteps variant="dashboard" className="mt-5" />
@@ -524,7 +538,7 @@ function DashboardPage() {
           ];
 
           return (
-            <section className="mt-10">
+            <section id="minhas-licencas" className="mt-10">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-cyan">// suas licenças</h2>
                 <div className="flex flex-wrap items-center gap-2">
