@@ -712,6 +712,8 @@ export type Database = {
           legacy_checked_at: string | null
           legacy_panel_hits: Json | null
           legacy_status: string
+          onboarding_answers: Json
+          onboarding_completed_at: string | null
           pix_key: string | null
           recovery_codes_generated_at: string | null
           referral_code: string | null
@@ -729,6 +731,8 @@ export type Database = {
           legacy_checked_at?: string | null
           legacy_panel_hits?: Json | null
           legacy_status?: string
+          onboarding_answers?: Json
+          onboarding_completed_at?: string | null
           pix_key?: string | null
           recovery_codes_generated_at?: string | null
           referral_code?: string | null
@@ -746,6 +750,8 @@ export type Database = {
           legacy_checked_at?: string | null
           legacy_panel_hits?: Json | null
           legacy_status?: string
+          onboarding_answers?: Json
+          onboarding_completed_at?: string | null
           pix_key?: string | null
           recovery_codes_generated_at?: string | null
           referral_code?: string | null
