@@ -277,14 +277,14 @@ function PlayProtectPage() {
                 <div className="min-w-0">
                   <p className="osint-label">Status da conta</p>
                   <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
-                    {status?.hasActivePlan ? "Play Protect Mensal ativo" : status?.canSubmit ? "1 teste grátis disponível" : "Assinatura necessária"}
+                    {status?.hasActivePlan ? "Play Protect Mensal ativo" : status?.canSubmit ? "1 teste grátis disponível (único por conta)" : "Assinatura necessária"}
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {status?.hasActivePlan
                       ? "Envios ilimitados enquanto o plano estiver ativo."
                       : status?.canSubmit
-                      ? "Você pode enviar 1 APK grátis. Depois, ative o plano mensal (R$ 450) para continuar."
-                      : "Você já usou seu envio grátis. Ative o plano Play Protect Mensal para enviar mais APKs."}
+                      ? "Você tem 1 APK grátis — um único por conta, não é diário. Depois, ative o plano mensal (R$ 450) para continuar."
+                      : "Você já usou o seu único envio grátis. Ative o plano Play Protect (R$ 450/mês) para enviar mais APKs."}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">

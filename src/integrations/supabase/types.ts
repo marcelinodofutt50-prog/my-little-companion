@@ -44,6 +44,24 @@ export type Database = {
         }
         Relationships: []
       }
+      apk_free_trials: {
+        Row: {
+          job_id: string | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          job_id?: string | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          job_id?: string | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       apk_jobs: {
         Row: {
           claimed_at: string | null

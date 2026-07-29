@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getAccountSetupState, completeOnboarding } from "@/lib/onboarding.functions";
 
 type Choice = { value: string; label: string; hint?: string };
 
@@ -95,6 +97,8 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const checked = useRef(false);
+  const loadState = useServerFn(getAccountSetupState);
+  const saveState = useServerFn(completeOnboarding);
 
   const totalSteps = QUESTIONS.length + 2;
 
@@ -105,27 +109,23 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       const { data } = await supabase.auth.getUser();
       const user = data.user;
       if (!user) return;
-      // Marca local: se o backend não aceitou gravar (cache de schema),
-      // ainda assim não insistimos com o cliente a cada F5.
+      // Marca local: evita piscar o wizard antes da resposta do servidor.
       if (localStorage.getItem(doneKey(user.id))) {
         onDone();
         return;
       }
-      // select("*") evita erro quando o cache do backend ainda não conhece a coluna
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-      if ((profile as any)?.onboarding_completed_at) {
+      // Fonte da verdade: estado gravado no servidor.
+      const state: any = await loadState({});
+      if (state?.onboardingDone) {
         localStorage.setItem(doneKey(user.id), "1");
+        if (state.displayName) onDisplayName?.(state.displayName);
         onDone();
         return;
       }
-      setNick((profile as any)?.display_name ?? "");
+      setNick(state?.displayName ?? "");
       setOpen(true);
     })().catch(() => onDone());
-  }, [onDone]);
+  }, [onDone, onDisplayName, loadState]);
 
   async function finish(skipped = false) {
     if (saving) return;
@@ -136,40 +136,8 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       if (!user) throw new Error("Sessão expirada");
       const cleanNick = nick.trim();
 
-      const base: any = { onboarding_completed_at: new Date().toISOString() };
-      if (cleanNick) base.display_name = cleanNick;
-
-      // Sempre marca localmente primeiro: mesmo se o backend recusar a coluna,
-      // a configuração inicial não volta a aparecer a cada F5.
+      await saveState({ data: { displayName: cleanNick || undefined, answers, skipped } });
       localStorage.setItem(doneKey(user.id), "1");
-
-      // Tenta salvar com as respostas; se a coluna ainda não estiver no cache do
-      // backend, salva o essencial mesmo assim (não trava o cliente na tela).
-      const isSchemaCache = (err: any) => {
-        const msg = String(err?.message ?? "");
-        return err?.code === "PGRST204" || err?.code === "PGRST205" || /schema cache|could not find/i.test(msg);
-      };
-
-      let { error } = await supabase
-        .from("profiles")
-        .update({ ...base, onboarding_answers: { ...answers, skipped } })
-        .eq("id", user.id);
-
-      if (error && isSchemaCache(error)) {
-        console.warn("[onboarding] salvando sem onboarding_answers", error);
-        const retry = await supabase.from("profiles").update(base).eq("id", user.id);
-        error = retry.error;
-      }
-      // Último fallback: se nem onboarding_completed_at existir no cache,
-      // grava apenas o apelido e segue em frente sem mostrar erro.
-      if (error && isSchemaCache(error)) {
-        console.warn("[onboarding] salvando somente o apelido", error);
-        const retry = cleanNick
-          ? await supabase.from("profiles").update({ display_name: cleanNick }).eq("id", user.id)
-          : { error: null as any };
-        error = retry.error;
-      }
-      if (error) throw error;
 
       if (cleanNick) onDisplayName?.(cleanNick);
       if (!skipped) toast.success("Painel configurado — bem-vindo à Shadow");
@@ -182,6 +150,7 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       onDone();
     }
   }
+
 
   const question = index >= 1 && index <= QUESTIONS.length ? QUESTIONS[index - 1] : null;
   const isSummary = index === totalSteps - 1;

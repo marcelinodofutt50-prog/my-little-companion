@@ -16,7 +16,7 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
     try { await supabase.rpc("expire_stale_apk_jobs"); } catch { /* ignore */ }
     const [{ data: active }, consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_free_trial", true).in("status", CONSUMED_STATUSES as any),
+      supabase.from("apk_free_trials").select("user_id", { count: "exact", head: true }).eq("user_id", userId),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).is("cleared_at", null),
       supabase
@@ -63,7 +63,7 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
       blockReason: pending > 0
         ? "Você já tem um APK sendo processado. Aguarde ele finalizar para enviar o próximo."
         : (!hasActive && consumed > 0)
-          ? "Teste grátis já utilizado. Ative o plano Play Protect Mensal para continuar."
+          ? "Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar."
           : null,
 
     };
@@ -82,7 +82,7 @@ export const createApkJob = createServerFn({ method: "POST" })
 
     const [{ data: active }, consumedRes, pendingRes] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_free_trial", true).in("status", CONSUMED_STATUSES as any),
+      supabase.from("apk_free_trials").select("user_id", { count: "exact", head: true }).eq("user_id", userId),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
     ]);
     const consumed = consumedRes.count ?? 0;
@@ -94,7 +94,7 @@ export const createApkJob = createServerFn({ method: "POST" })
       throw new Error("Você já tem um APK em processamento. Aguarde finalizar para enviar o próximo.");
     }
     if (!hasActive && consumed > 0) {
-      throw new Error("Teste grátis já utilizado. Ative o plano Play Protect Mensal para continuar.");
+      throw new Error("Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar.");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -102,10 +102,24 @@ export const createApkJob = createServerFn({ method: "POST" })
     const cleanName = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
     const sourcePath = `${userId}/${jobId}/${cleanName}`;
 
+    // Reserva atômica do teste grátis (PK por usuário): duas abas em paralelo
+    // não conseguem consumir dois testes.
+    if (isFreeTrial) {
+      const { error: trialErr } = await supabaseAdmin
+        .from("apk_free_trials")
+        .insert({ user_id: userId, job_id: jobId } as any);
+      if (trialErr) {
+        throw new Error("Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar.");
+      }
+    }
+
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("apk-uploads")
       .createSignedUploadUrl(sourcePath);
-    if (signErr || !signed) throw new Error(signErr?.message || "Falha ao gerar URL de upload");
+    if (signErr || !signed) {
+      if (isFreeTrial) await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", userId).eq("job_id", jobId);
+      throw new Error(signErr?.message || "Falha ao gerar URL de upload");
+    }
 
     const { error: insErr } = await supabase.from("apk_jobs").insert({
       id: jobId,
@@ -116,7 +130,11 @@ export const createApkJob = createServerFn({ method: "POST" })
       source_size_bytes: data.sizeBytes,
       is_free_trial: isFreeTrial,
     } as any);
-    if (insErr) throw new Error(insErr.message);
+    if (insErr) {
+      if (isFreeTrial) await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", userId).eq("job_id", jobId);
+      throw new Error(insErr.message);
+    }
+
 
     return { jobId, uploadUrl: signed.signedUrl, token: signed.token, path: sourcePath };
   });
@@ -466,11 +484,25 @@ export const abortApkJob = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!job) return { ok: false };
     if (job.status !== "queued") return { ok: false };
+    // O arquivo existe no storage? Se existir, o envio foi real e o teste grátis é consumido.
+    let uploadExists = false;
+    try {
+      if (job.source_path) {
+        const dir = job.source_path.split("/").slice(0, -1).join("/");
+        const name = job.source_path.split("/").pop();
+        const { data: files } = await supabaseAdmin.storage.from("apk-uploads").list(dir);
+        uploadExists = Boolean(files?.some((f: any) => f.name === name && (f.metadata?.size ?? 0) > 0));
+      }
+    } catch { /* ignore */ }
     try { if (job.source_path) await supabaseAdmin.storage.from("apk-uploads").remove([job.source_path]); } catch { /* ignore */ }
     const now = new Date().toISOString();
     await supabaseAdmin
       .from("apk_jobs")
       .update({ status: "cancelled", cleared_at: now, completed_at: now, is_free_trial: false, source_path: "" } as any)
       .eq("id", job.id);
+    // Só devolve o teste grátis se o arquivo realmente nunca chegou ao storage.
+    if (!uploadExists) {
+      await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", context.userId).eq("job_id", job.id);
+    }
     return { ok: true };
   });
