@@ -2777,6 +2777,43 @@ function ReferralsAdminPanel() {
           </div>
         )}
       </div>
+
+      {/* Modal explicativo: Corrigir bug de login BMob */}
+      <AlertDialog open={fixBugDialog.open} onOpenChange={(open) => setFixBugDialog({ open, licenseId: open ? fixBugDialog.licenseId : null })}>
+        <AlertDialogContent className="border-amber-400/30 bg-[#0b1220]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-400">
+              <Wrench className="h-4 w-4" />
+              Corrigir bug de login
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left text-muted-foreground">
+              Use este recurso quando o cliente não conseguir logar na <strong>BTMob</strong> por erro de <em>e-mail/senha inválido</em>, ou quando a licença dele foi renovada no pagamento mas o painel não refletiu a nova data (ex.: pagou dia 20, mas o login não foi para o próximo dia 20).
+              <br /><br />
+              <span className="text-neon font-mono text-xs">O que será feito:</span>
+              <ol className="mt-2 ml-4 list-decimal text-sm text-foreground space-y-1">
+                <li>Empurra a validade do login <strong>+1 dia</strong> no painel.</li>
+                <li>Reaplica a <strong>mesma senha atual</strong> do cliente (não gera nova).</li>
+                <li>Volta a data de vencimento para o <strong>dia original</strong>.</li>
+              </ol>
+              <br />
+              Isso costuma resolver travamentos de sincronização entre o pagamento e o painel da BMob. O cliente deve fechar o app e tentar entrar novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFixBugDialog({ open: false, licenseId: null })} className="border-border/40 text-muted-foreground hover:bg-muted">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmFixLoginBug}
+              disabled={fixingLic === fixBugDialog.licenseId}
+              className="gap-2 bg-amber-500 text-black hover:bg-amber-400"
+            >
+              {fixingLic === fixBugDialog.licenseId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}
+              Confirmar correção
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
