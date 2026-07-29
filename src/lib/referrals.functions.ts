@@ -1,14 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-/** Mascara e-mail para exibição entre usuários: ma***@gmail.com */
-function maskEmail(email: string | null | undefined): string | null {
-  if (!email) return null;
-  const [user, domain] = email.split("@");
-  if (!domain) return "***";
-  return `${user.slice(0, 2)}***@${domain}`;
-}
+import { publicUserLabel } from "@/lib/privacy";
 
 export const getMyReferralInfo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -37,7 +30,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       const { data: profs } = await supabaseAdmin
         .from("profiles").select("id, email, display_name").in("id", referredIds);
       labelMap = Object.fromEntries(
-        (profs ?? []).map((p: any) => [p.id, p.display_name || maskEmail(p.email) || "Membro Shadow"]),
+        (profs ?? []).map((p: any) => [p.id, publicUserLabel(p.display_name, p.email)]),
       );
     }
 
