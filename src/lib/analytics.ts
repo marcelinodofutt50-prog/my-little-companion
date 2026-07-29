@@ -9,24 +9,51 @@ export type TrackProps = Record<string, string | number | boolean | null | undef
 const STORE_KEY = "shadow:events";
 const MAX = 200;
 
+/** Chaves que jamais devem ser gravadas/enviadas junto de um evento. */
+const PII_KEYS = /^(email|e_mail|mail|user_id|userid|uid|cpf|phone|telefone|pix|pix_key|password|senha|token|full_name|nome)$/i;
+
+function scrub(props: TrackProps): TrackProps {
+  const out: TrackProps = {};
+  for (const [k, v] of Object.entries(props)) {
+    if (PII_KEYS.test(k)) continue;
+    if (typeof v === "string" && (v.includes("@") || v.length > 120)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/** Apaga o histórico local de eventos (chamado no logout). */
+export function clearTrackedEvents() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORE_KEY);
+    localStorage.removeItem(STORE_KEY);
+  } catch {
+    /* storage indisponível */
+  }
+}
+
 export function track(event: string, props: TrackProps = {}) {
   if (typeof window === "undefined") return;
-  const payload = { event, props, ts: Date.now() };
+  const safeProps = scrub(props);
+  const payload = { event, props: safeProps, ts: Date.now() };
 
   try {
     const ph = (window as any).posthog;
-    if (ph?.capture) ph.capture(event, props);
+    if (ph?.capture) ph.capture(event, safeProps);
     const gtag = (window as any).gtag;
-    if (typeof gtag === "function") gtag("event", event, props);
+    if (typeof gtag === "function") gtag("event", event, safeProps);
   } catch {
     /* tracking nunca pode quebrar a UI */
   }
 
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    // sessionStorage: o rastro morre ao fechar a aba, não fica no aparelho.
+    const raw = sessionStorage.getItem(STORE_KEY);
     const list = raw ? (JSON.parse(raw) as unknown[]) : [];
     list.push(payload);
-    localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-MAX)));
+    sessionStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-MAX)));
+    localStorage.removeItem(STORE_KEY); // limpa rastro antigo de versões anteriores
   } catch {
     /* storage cheio ou indisponível */
   }
@@ -41,7 +68,7 @@ export function track(event: string, props: TrackProps = {}) {
 export function readTrackedEvents(): Array<{ event: string; props: TrackProps; ts: number }> {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = sessionStorage.getItem(STORE_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
