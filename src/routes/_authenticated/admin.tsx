@@ -1425,7 +1425,14 @@ function AdminChatPanel() {
         </div>
         <div className="flex-1 overflow-y-auto">
           {loading && <div className="p-6 text-center text-xs text-muted-foreground"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></div>}
-          {!loading && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
+          {!loading && loadError && (
+            <div className="m-3 rounded border border-destructive/40 bg-destructive/10 p-3 text-xs">
+              <div className="font-mono font-bold text-destructive">falha ao carregar conversas</div>
+              <div className="mt-1 break-words text-muted-foreground">{loadError}</div>
+              <Button size="sm" variant="outline" className="mt-2 h-7 text-[11px]" onClick={() => { setLoading(true); refreshThreads().finally(() => setLoading(false)); }}>tentar novamente</Button>
+            </div>
+          )}
+          {!loading && !loadError && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
           {filtered.map((t) => {
             const active = t.id === activeId;
             const lastCustomerAt = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
