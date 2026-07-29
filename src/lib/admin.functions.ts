@@ -102,18 +102,29 @@ export const adminListThreads = createServerFn({ method: "GET" })
   }).parse(i ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin
-      .from("support_threads")
-      .select("id, user_id, subject, category, priority, status, created_at, updated_at, assigned_to, assigned_name, assigned_at, closed_at, closed_by_name, last_customer_message_at, last_staff_message_at, unread_by_staff, unread_by_customer");
-    if (data.filter === "open") q = q.neq("status", "closed");
-    else if (data.filter === "mine") q = q.eq("assigned_to", context.userId).neq("status", "closed");
-    else if (data.filter === "closed") q = q.eq("status", "closed");
-    const { data: threads } = await q.order("last_customer_message_at", { ascending: false }).limit(300);
+    const { pickAdminClient } = await import("./admin-read.server");
+    const { db } = await pickAdminClient(context.supabase);
+    const columns =
+      "id, user_id, subject, category, priority, status, created_at, updated_at, assigned_to, assigned_name, assigned_at, closed_at, closed_by_name, last_customer_message_at, last_staff_message_at, unread_by_staff, unread_by_customer";
+    const run = async (cols: string) => {
+      let q = db.from("support_threads").select(cols);
+      if (data.filter === "open") q = q.neq("status", "closed");
+      else if (data.filter === "mine") q = q.eq("assigned_to", context.userId).neq("status", "closed");
+      else if (data.filter === "closed") q = q.eq("status", "closed");
+      return q.order("updated_at", { ascending: false }).limit(300);
+    };
+    let { data: threads, error } = await run(columns);
+    if (error) {
+      // Cache de schema desatualizado (PGRST204/PGRST205) ou coluna nova ausente:
+      // tenta de novo só com o essencial em vez de devolver lista vazia.
+      console.warn("[adminListThreads] falha na query completa:", error.message);
+      ({ data: threads, error } = await run("*"));
+      if (error) throw new Error(`Não foi possível carregar as conversas: ${error.message}`);
+    }
     const list = threads ?? [];
-    const userIds = Array.from(new Set(list.map((t: any) => t.user_id)));
+    const userIds = Array.from(new Set(list.map((t: any) => t.user_id).filter(Boolean)));
     const { data: profs } = userIds.length
-      ? await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", userIds)
+      ? await db.from("profiles").select("id,email,full_name,display_name").in("id", userIds)
       : { data: [] as any[] };
     const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
     return list.map((t: any) => ({ ...t, profile: map.get(t.user_id) ?? null }));
