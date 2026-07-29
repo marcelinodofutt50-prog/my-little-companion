@@ -314,6 +314,7 @@ function DashboardPage() {
                       Atualizar
                     </Button>
                   </div>
+                  <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
                 </div>
               );
             })()}
