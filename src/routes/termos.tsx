@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
+import { siteUrl } from "@/lib/site-url";
 
-const SITE = "https://www.shadowstore.com";
 
 export const Route = createFileRoute("/termos")({
   head: () => ({
