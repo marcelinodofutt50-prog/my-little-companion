@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LayoutGrid, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -25,6 +25,17 @@ const accentText = (a: AdminNavGroup["accent"]) =>
 export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const activeRef = useRef<HTMLButtonElement | null>(null);
+
+  // ao abrir a lista completa, rola até a seção atual
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      activeRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 120);
+    return () => clearTimeout(t);
+  }, [open]);
+
   const all = groups.flatMap((g) => g.items);
   const quick = primary
     .map((id) => all.find((i) => i.id === id))
@@ -51,6 +62,7 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
   };
 
   const inQuick = quick.some((i) => i.id === tab);
+  const current = all.find((i) => i.id === tab);
 
   return (
     <>
@@ -67,13 +79,23 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                 key={item.id}
                 onClick={() => pick(item.id)}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-colors ${
-                  active ? "text-neon" : "text-muted-foreground active:text-foreground"
+                className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-all ${
+                  active
+                    ? "bg-neon/10 text-neon"
+                    : "text-muted-foreground active:text-foreground"
                 }`}
               >
-                {active && <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />}
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span className="w-full truncate text-center font-mono text-[9px] uppercase tracking-wider">{item.label}</span>
+                {active && (
+                  <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />
+                )}
+                <item.icon className={`h-4 w-4 shrink-0 transition-transform ${active ? "scale-110 drop-shadow-[0_0_6px_var(--neon)]" : ""}`} />
+                <span
+                  className={`w-full truncate text-center font-mono text-[9px] uppercase tracking-wider ${
+                    active ? "font-bold" : ""
+                  }`}
+                >
+                  {item.label}
+                </span>
                 {badge > 0 && (
                   <span className="absolute right-2 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 font-mono text-[9px] text-white">
                     {badge > 9 ? "9+" : badge}
@@ -84,15 +106,30 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
           })}
           <button
             onClick={() => setOpen(true)}
-            className={`flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-colors ${
-              !inQuick ? "text-neon" : "text-muted-foreground active:text-foreground"
+            aria-current={!inQuick ? "page" : undefined}
+            className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-all ${
+              !inQuick ? "bg-neon/10 text-neon" : "text-muted-foreground active:text-foreground"
             }`}
           >
-            <LayoutGrid className="h-4 w-4 shrink-0" />
-            <span className="font-mono text-[9px] uppercase tracking-wider">Tudo</span>
+            {!inQuick && (
+              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />
+            )}
+            {!inQuick && current ? (
+              <current.icon className="h-4 w-4 shrink-0 scale-110 drop-shadow-[0_0_6px_var(--neon)]" />
+            ) : (
+              <LayoutGrid className="h-4 w-4 shrink-0" />
+            )}
+            <span
+              className={`w-full truncate px-1 text-center font-mono text-[9px] uppercase tracking-wider ${
+                !inQuick ? "font-bold" : ""
+              }`}
+            >
+              {!inQuick && current ? current.label : "Tudo"}
+            </span>
           </button>
         </div>
       </nav>
+
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto border-border/50 bg-background p-0">
@@ -127,17 +164,28 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                     return (
                       <button
                         key={item.id}
+                        ref={active ? activeRef : undefined}
                         onClick={() => pick(item.id)}
+                        aria-current={active ? "page" : undefined}
                         className={`relative flex min-h-[62px] flex-col justify-center gap-1 rounded border px-3 py-2 text-left transition-colors ${
                           active
-                            ? "border-neon/50 bg-neon/10 text-neon"
+                            ? "border-neon bg-neon/15 text-neon shadow-[0_0_12px_-4px_var(--neon)]"
                             : "border-border/50 bg-background/40 text-foreground active:border-foreground/40"
                         }`}
                       >
+                        {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-neon" />}
                         <div className="flex items-center gap-1.5">
                           <item.icon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate font-mono text-[10px] uppercase tracking-wider">{item.label}</span>
+                          <span className={`truncate font-mono text-[10px] uppercase tracking-wider ${active ? "font-bold" : ""}`}>
+                            {item.label}
+                          </span>
+                          {active && (
+                            <span className="ml-auto rounded bg-neon/20 px-1 font-mono text-[8px] uppercase tracking-wider text-neon">
+                              atual
+                            </span>
+                          )}
                         </div>
+
                         {item.hint && (
                           <span className="truncate text-[9px] text-muted-foreground">{item.hint}</span>
                         )}
