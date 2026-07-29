@@ -133,3 +133,104 @@ export const getEmailMetrics = createServerFn({ method: "GET" })
     };
     return metrics;
   });
+
+export type TestEmailResult = {
+  ok: boolean;
+  recipientMasked: string | null;
+  latencyMs: number;
+  httpStatus: number | null;
+  retryAfter: number | null;
+  senderDomain: string;
+  senderVerified: boolean;
+  message: string;
+  at: string;
+};
+
+/**
+ * Dispara um e-mail real de teste (recovery) para diagnosticar entrega/rate limit.
+ * Somente admin. Nunca cria usuários novos.
+ */
+export const sendTestEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { email: string }) => {
+    const email = String(input?.email ?? "").trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      throw new Error("E-mail inválido");
+    }
+    return { email };
+  })
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const senderDomain = process.env.EMAIL_SENDER_DOMAIN ?? "shadowdashstore.com";
+    const senderVerified = Boolean(process.env.EMAIL_SENDER_DOMAIN);
+
+    const started = Date.now();
+    let httpStatus: number | null = null;
+    let retryAfter: number | null = null;
+    let ok = false;
+    let message = "";
+
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error } = await supabaseAdmin.auth.resetPasswordForEmail(data.email);
+      if (error) {
+        httpStatus = (error as any).status ?? null;
+        if (httpStatus === 429) {
+          const m = /(\d+)\s*second/i.exec(error.message ?? "");
+          retryAfter = m ? Number(m[1]) : 60;
+          message = `Rate limit do provedor (429). Aguarde ${retryAfter}s.`;
+        } else {
+          message = error.message ?? "Falha desconhecida no envio";
+        }
+      } else {
+        ok = true;
+        httpStatus = 200;
+        message = senderVerified
+          ? `E-mail aceito pelo provedor e enviado por ${senderDomain}.`
+          : `E-mail aceito pelo provedor, mas o domínio ${senderDomain} ainda não está verificado — o envio saiu pelo remetente padrão (cota baixa, risco de spam).`;
+      }
+    } catch (e: any) {
+      message = e?.message ?? "Erro inesperado";
+    }
+
+    const latencyMs = Date.now() - started;
+
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("integration_logs").insert({
+        source: "auth_email",
+        action: "test_send",
+        endpoint_kind: "supabase_auth",
+        outcome: ok ? "sent" : httpStatus === 429 ? "rate_limited" : "failed",
+        http_status: httpStatus,
+        error: ok ? null : message.slice(0, 500),
+        context: {
+          recipient_masked: maskEmail(data.email),
+          retry_after_seconds: retryAfter,
+          latency_ms: latencyMs,
+          sender_domain: senderDomain,
+          sender_verified: senderVerified,
+        },
+      });
+    } catch {
+      /* logging não pode quebrar o teste */
+    }
+
+    const result: TestEmailResult = {
+      ok,
+      recipientMasked: maskEmail(data.email),
+      latencyMs,
+      httpStatus,
+      retryAfter,
+      senderDomain,
+      senderVerified,
+      message,
+      at: new Date().toISOString(),
+    };
+    return result;
+  });

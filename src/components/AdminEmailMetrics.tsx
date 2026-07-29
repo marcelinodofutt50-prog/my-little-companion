@@ -1,8 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, MailCheck, RefreshCw, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, MailCheck, RefreshCw, Send, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getEmailMetrics } from "@/lib/email-metrics.functions";
+import { Input } from "@/components/ui/input";
+import { getEmailMetrics, sendTestEmail } from "@/lib/email-metrics.functions";
+
 
 function Stat({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return (
@@ -15,10 +18,17 @@ function Stat({ label, value, tone }: { label: string; value: string | number; t
 
 export function AdminEmailMetrics() {
   const fetchMetrics = useServerFn(getEmailMetrics);
+  const runTest = useServerFn(sendTestEmail);
+  const [testEmail, setTestEmail] = useState("");
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin-email-metrics"],
     queryFn: () => fetchMetrics({ data: { hours: 24 } }),
     refetchInterval: 60_000,
+  });
+
+  const test = useMutation({
+    mutationFn: (email: string) => runTest({ data: { email } }),
+    onSettled: () => refetch(),
   });
 
   const rateLimited = data?.rateLimited ?? 0;
@@ -26,6 +36,7 @@ export function AdminEmailMetrics() {
 
   return (
     <div className="terminal-card scanlines relative p-4">
+
       <div className="flex items-center justify-between gap-2">
         <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-neon">
           Envio de e-mails · 24h
@@ -34,6 +45,67 @@ export function AdminEmailMetrics() {
           <RefreshCw className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
       </div>
+
+      <div className="mt-3 rounded border border-border/60 bg-background/40 p-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          Teste de envio · shadowdashstore.com
+        </p>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="email"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            placeholder="seu@email.com"
+            className="h-8 font-mono text-xs"
+          />
+          <Button
+            size="sm"
+            className="h-8 shrink-0"
+            disabled={test.isPending || !testEmail.includes("@")}
+            onClick={() => test.mutate(testEmail.trim())}
+          >
+            <Send className={`mr-1 h-3 w-3 ${test.isPending ? "animate-pulse" : ""}`} />
+            {test.isPending ? "Enviando..." : "Enviar teste"}
+          </Button>
+        </div>
+
+        {test.isPending && (
+          <p className="mt-2 font-mono text-[10px] text-muted-foreground">
+            Disparando e-mail real e medindo resposta do provedor...
+          </p>
+        )}
+
+        {test.isError && (
+          <p className="mt-2 font-mono text-[10px] text-destructive">
+            {(test.error as Error)?.message ?? "Falha ao executar o teste"}
+          </p>
+        )}
+
+        {test.data && (
+          <div
+            className={`mt-2 space-y-1 rounded border px-2 py-2 font-mono text-[10px] ${
+              test.data.ok
+                ? "border-neon/40 bg-neon/5 text-neon"
+                : "border-destructive/40 bg-destructive/5 text-destructive"
+            }`}
+          >
+            <p className="flex items-center gap-1">
+              {test.data.ok ? <MailCheck className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+              {test.data.message}
+            </p>
+            <p className="text-muted-foreground">
+              destino {test.data.recipientMasked ?? "—"} · status {test.data.httpStatus ?? "—"} ·{" "}
+              {test.data.latencyMs}ms ·{" "}
+              {test.data.senderVerified ? "domínio verificado" : "domínio não verificado"}
+              {test.data.retryAfter ? ` · aguarde ${test.data.retryAfter}s` : ""}
+            </p>
+            <p className="text-muted-foreground">
+              {new Date(test.data.at).toLocaleString("pt-BR")}
+            </p>
+          </div>
+        )}
+      </div>
+
 
       {isLoading ? (
         <p className="mt-3 font-mono text-xs text-muted-foreground">Carregando métricas...</p>
