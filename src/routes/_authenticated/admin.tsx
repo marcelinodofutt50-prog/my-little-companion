@@ -346,6 +346,8 @@ function AdminPage() {
               <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
                 Painel Administrativo
               </h1>
+              <AdminTagline className="mt-1" />
+
               <div className="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/[0.07] px-2.5 py-1 text-neon">
                   <Circle className="h-1.5 w-1.5 fill-neon text-neon pulse-dot" /> operacional
