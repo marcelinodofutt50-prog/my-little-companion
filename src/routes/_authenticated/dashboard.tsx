@@ -392,11 +392,11 @@ function DashboardPage() {
 
         {(() => {
           const renewable = licenses
-            .filter((l) => !l.is_trial && !l.revoked && !l.disabled_at && !l.suspended_at && l.expires_at)
-            .map((l) => ({ l, days: Math.ceil((new Date(l.expires_at).getTime() - Date.now()) / 86400000) }))
+            .filter((l) => !l.is_trial && !l.revoked && !l.disabled_at && !l.suspended_at && !!l.expires_at)
+            .map((l) => ({ l, days: Math.ceil((new Date(l.expires_at!).getTime() - Date.now()) / 86400000) }))
             .filter((x) => x.days <= 7)
             .sort((a, b) => a.days - b.days)[0];
-          if (!renewable) return null;
+          if (!renewable || !renewable.l.expires_at) return null;
           const plan = renewable.l.plan_slug;
           return (
             <div className="mt-5">
@@ -410,6 +410,7 @@ function DashboardPage() {
             </div>
           );
         })()}
+
 
         {/* STATS — só o que o hero não mostra */}
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
