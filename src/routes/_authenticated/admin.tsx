@@ -1894,6 +1894,7 @@ function AdminChatPanel() {
         )}
       </section>
     </div>
+    </div>
   );
 }
 
