@@ -13,7 +13,7 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     // Destrava jobs vencidos (evita fila travada bloqueando novos envios).
-    await supabase.rpc("expire_stale_apk_jobs").catch?.(() => {});
+    try { await supabase.rpc("expire_stale_apk_jobs"); } catch { /* ignore */ }
     const [{ data: active }, consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_free_trial", true).in("status", CONSUMED_STATUSES as any),
