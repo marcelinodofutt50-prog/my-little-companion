@@ -36,7 +36,7 @@ const schema = z.object({
 
 const COOLDOWN_KEY = "shadow.auth.emailCooldownUntil";
 const ATTEMPTS_KEY = "shadow.auth.emailAttempts";
-const MAX_ATTEMPTS_PER_HOUR = 3;
+const MAX_ATTEMPTS_PER_HOUR = 8;
 
 function readCooldown(): number {
   if (typeof window === "undefined") return 0;
@@ -101,6 +101,14 @@ function AuthPage() {
   function startCooldown(secs: number) {
     writeCooldown(secs);
     setCooldown(secs);
+  }
+
+  /** Limpa travas locais após sucesso (evita cliente preso em "Aguarde Xs"). */
+  function clearLocalLimits() {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(COOLDOWN_KEY);
+    window.localStorage.removeItem(ATTEMPTS_KEY);
+    setCooldown(0);
   }
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
