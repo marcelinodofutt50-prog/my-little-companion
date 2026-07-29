@@ -139,24 +139,35 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       const base: any = { onboarding_completed_at: new Date().toISOString() };
       if (cleanNick) base.display_name = cleanNick;
 
+      // Sempre marca localmente primeiro: mesmo se o backend recusar a coluna,
+      // a configuração inicial não volta a aparecer a cada F5.
+      localStorage.setItem(doneKey(user.id), "1");
+
       // Tenta salvar com as respostas; se a coluna ainda não estiver no cache do
       // backend, salva o essencial mesmo assim (não trava o cliente na tela).
+      const isSchemaCache = (err: any) => {
+        const msg = String(err?.message ?? "");
+        return err?.code === "PGRST204" || err?.code === "PGRST205" || /schema cache|could not find/i.test(msg);
+      };
+
       let { error } = await supabase
         .from("profiles")
         .update({ ...base, onboarding_answers: { ...answers, skipped } })
         .eq("id", user.id);
 
-      if (error) {
-        const msg = String((error as any)?.message ?? "");
-        const isSchemaCache =
-          (error as any)?.code === "PGRST204" ||
-          (error as any)?.code === "PGRST205" ||
-          /schema cache|could not find/i.test(msg);
-        if (isSchemaCache) {
-          console.warn("[onboarding] salvando sem onboarding_answers", error);
-          const retry = await supabase.from("profiles").update(base).eq("id", user.id);
-          error = retry.error;
-        }
+      if (error && isSchemaCache(error)) {
+        console.warn("[onboarding] salvando sem onboarding_answers", error);
+        const retry = await supabase.from("profiles").update(base).eq("id", user.id);
+        error = retry.error;
+      }
+      // Último fallback: se nem onboarding_completed_at existir no cache,
+      // grava apenas o apelido e segue em frente sem mostrar erro.
+      if (error && isSchemaCache(error)) {
+        console.warn("[onboarding] salvando somente o apelido", error);
+        const retry = cleanNick
+          ? await supabase.from("profiles").update({ display_name: cleanNick }).eq("id", user.id)
+          : { error: null as any };
+        error = retry.error;
       }
       if (error) throw error;
 
