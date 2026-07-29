@@ -5,11 +5,33 @@
  */
 import { getRequestHeader } from "@tanstack/react-start/server";
 
-/** Máximo de contas criadas a partir do mesmo IP em 24h. */
-export const MAX_ACCOUNTS_PER_IP_24H = 3;
-/** Acima disso marcamos como suspeito para revisão do admin (sem bloquear). */
-export const SUSPICIOUS_THRESHOLD = 2;
-const WINDOW_MS = 24 * 60 * 60 * 1000;
+/**
+ * Configuração por variável de ambiente (lida a cada request, sem recompilar):
+ * - ANTIFRAUD_MAX_ACCOUNTS_PER_IP: máximo de contas por IP na janela (default 3)
+ * - ANTIFRAUD_SUSPICIOUS_THRESHOLD: acima disso marca como suspeito (default 2)
+ * - ANTIFRAUD_WINDOW_HOURS: tamanho da janela em horas (default 24)
+ */
+function envInt(name: string, fallback: number, min: number, max: number): number {
+  const raw = process.env[name];
+  if (raw == null || raw === "") return fallback;
+  const n = Number.parseInt(String(raw).trim(), 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+export function antifraudConfig() {
+  const maxAccounts = envInt("ANTIFRAUD_MAX_ACCOUNTS_PER_IP", 3, 1, 1000);
+  const suspicious = envInt("ANTIFRAUD_SUSPICIOUS_THRESHOLD", 2, 1, 1000);
+  const windowHours = envInt("ANTIFRAUD_WINDOW_HOURS", 24, 1, 24 * 30);
+  return {
+    maxAccounts,
+    // limiar de suspeito nunca acima do bloqueio: seria inútil
+    suspiciousThreshold: Math.min(suspicious, maxAccounts),
+    windowMs: windowHours * 60 * 60 * 1000,
+    windowHours,
+  };
+}
+
 
 /** IP real do cliente, lido apenas de headers do servidor. */
 export function clientIp(): string | null {
