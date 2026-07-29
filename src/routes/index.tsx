@@ -261,13 +261,13 @@ function LandingPage() {
           </section>
 
           {/* PRICING */}
-          <section className="border-t border-border py-20">
-            <div className="mb-12 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+          <section className="border-t border-border py-20 md:py-28">
+            <div className="mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
               <div>
                 <div className="font-mono text-[10px] uppercase tracking-[0.32em] text-cyan">
                   // licenças
                 </div>
-                <h2 className="mt-3 font-display text-4xl md:text-5xl">
+                <h2 className="mt-3 font-display text-4xl md:text-6xl">
                   Acesso à <span className="italic text-neon">ferramenta</span>
                 </h2>
               </div>
@@ -276,32 +276,32 @@ function LandingPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               {plans.map((p) => {
                 const accentClass =
                   p.accent === "neon" ? "text-neon" : p.accent === "cyan" ? "text-cyan" : "text-violet";
-                const glowClass =
-                  p.accent === "neon" ? "glow-neon" : p.accent === "cyan" ? "glow-cyan" : "glow-violet";
+                const bulletClass =
+                  p.accent === "neon" ? "bg-neon" : p.accent === "cyan" ? "bg-cyan" : "bg-violet";
                 return (
                   <div
                     key={p.slug}
-                    className={`terminal-card relative flex flex-col rounded-lg p-8 transition-all hover:-translate-y-1 ${
-                      p.highlight ? `rgb-border ${glowClass}` : ""
+                    className={`price-card relative flex flex-col rounded-lg p-8 transition-all duration-300 hover:-translate-y-1 ${
+                      p.highlight ? "price-card-popular glow-neon-soft" : ""
                     }`}
                   >
                     {p.highlight && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-neon/50 bg-background px-3 py-1 font-mono text-[9px] uppercase tracking-[0.28em] text-neon">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-neon/60 bg-[#0a0f0a] px-4 py-1 font-mono text-[9px] uppercase tracking-[0.28em] text-neon">
                         ★ Mais escolhido
                       </div>
                     )}
                     <div className={`font-mono text-[10px] uppercase tracking-[0.28em] ${accentClass}`}>
                       {p.tier}
                     </div>
-                    <h3 className="mt-3 font-display text-3xl">{p.name}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
+                    <h3 className="mt-3 font-display text-3xl tracking-tight">{p.name}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
 
-                    <div className="my-6 flex items-baseline gap-2">
-                      <span className={`font-display text-5xl ${accentClass}`}>
+                    <div className="my-6 flex items-baseline gap-2 border-b border-border pb-6">
+                      <span className={`font-display text-5xl tracking-tight ${accentClass}`}>
                         {formatBrl(p.price)}
                       </span>
                       <span className="font-mono text-xs text-muted-foreground">
@@ -309,21 +309,21 @@ function LandingPage() {
                       </span>
                     </div>
 
-                    <ul className="mb-8 space-y-2 border-t border-border pt-4 text-sm">
+                    <ul className="mb-8 space-y-3 text-sm">
                       {p.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-muted-foreground">
-                          <span className={`h-1 w-1 rounded-full ${p.accent === "neon" ? "bg-neon" : p.accent === "cyan" ? "bg-cyan" : "bg-violet"}`} />
-                          {f}
+                        <li key={f} className="flex items-start gap-3 text-muted-foreground">
+                          <span className={`mt-1.5 h-1.5 w-1.5 rounded-full ${bulletClass}`} />
+                          <span>{f}</span>
                         </li>
                       ))}
                     </ul>
 
                     <Link to="/planos" className="mt-auto">
                       <Button
-                        className={`w-full rounded-md py-6 font-mono text-[10px] uppercase tracking-[0.24em] ${
+                        className={`w-full rounded-md py-6 font-mono text-[10px] uppercase tracking-[0.24em] transition-all ${
                           p.highlight
-                            ? "bg-neon text-background hover:bg-neon/90"
-                            : "bg-secondary text-foreground hover:bg-secondary/70"
+                            ? "bg-neon text-background hover:bg-neon/85 hover:shadow-[0_0_30px_rgba(132,204,22,0.35)]"
+                            : "bg-[#0a0f0a] text-foreground border border-border hover:border-neon/40 hover:bg-secondary/30"
                         }`}
                       >
                         {p.highlight ? "Assinar agora" : "Comprar"}
