@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Bell, RefreshCcw, ShieldAlert, CheckCircle2, MessageSquare, Receipt, ArrowLeftRight, Loader2 } from "lucide-react";
+import { Bell, BellOff, RefreshCcw, ShieldAlert, CheckCircle2, MessageSquare, Receipt, ArrowLeftRight, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +67,7 @@ export function InAppNotifications() {
       const res = (await fetchFn()) as { isAdmin: boolean; items: AppNotification[] };
       const data = res.items ?? [];
       setIsAdmin(!!res.isAdmin);
+      setAdminChecked(true);
       setItems(data);
       const known = knownRef.current;
       if (known && announce) {
@@ -101,6 +102,7 @@ export function InAppNotifications() {
       const { data: adminFlag } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
       const admin = !!adminFlag;
       setIsAdmin(admin);
+      setAdminChecked(true);
       channel = supabase
         .channel(`notif-${uid}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${uid}` }, () => void refresh())
@@ -129,6 +131,21 @@ export function InAppNotifications() {
     setReadIds(ids);
     try { localStorage.setItem(READ_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
   }
+
+  // Sem permissão: sino e opções de chat ficam ocultos, com aviso claro.
+  if (adminChecked && !isAdmin) {
+    return (
+      <div
+        title="Notificações e chat de suporte são exclusivos da equipe administrativa."
+        className="flex items-center gap-1.5 rounded-md border border-border/40 bg-background/40 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground"
+      >
+        <BellOff className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">sem permissão</span>
+      </div>
+    );
+  }
+
+  if (!adminChecked) return null;
 
   return (
     <DropdownMenu onOpenChange={(open) => { if (open) { unlockNotifySound(); void refresh(false); } }}>
