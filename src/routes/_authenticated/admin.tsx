@@ -1598,7 +1598,19 @@ function AdminChatPanel() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {loading && <div className="p-6 text-center text-xs text-muted-foreground"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></div>}
+          {loading && (
+            <div className="space-y-2 p-3">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-muted/50" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="h-2.5 w-2/3 animate-pulse rounded bg-muted/50" />
+                    <div className="h-2 w-1/2 animate-pulse rounded bg-muted/30" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {!loading && loadError && (
             <div className="m-3 rounded border border-destructive/40 bg-destructive/10 p-3 text-xs">
               <div className="font-mono font-bold text-destructive">falha ao carregar conversas</div>
