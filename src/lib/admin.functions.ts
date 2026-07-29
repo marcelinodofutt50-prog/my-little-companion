@@ -8,6 +8,15 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Forbidden");
 }
 
+/** Admin OU moderador (Suporte). Usado nas áreas de atendimento. */
+async function assertStaff(ctx: { supabase: any; userId: string }) {
+  const [a, m] = await Promise.all([
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" }),
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "moderator" }),
+  ]);
+  if (!a.data && !m.data) throw new Error("Forbidden");
+}
+
 // Compute expire_date + server_paid_until aligned to next day 20 for monthly plans.
 function computeExpiries(planSlug: string, customExpire?: string | null) {
   const next20 = (() => {
@@ -27,7 +36,7 @@ function computeExpiries(planSlug: string, customExpire?: string | null) {
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { data, error } = await context.supabase
       .from("profiles")
       .select("id,email,full_name,display_name,created_at")
@@ -41,7 +50,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
 export const adminListOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { data } = await context.supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
     const rows = data ?? [];
     const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
@@ -56,7 +65,7 @@ export const adminListOrders = createServerFn({ method: "GET" })
 export const adminListLicenses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { data } = await context.supabase.from("licenses").select("*").order("created_at", { ascending: false }).limit(200);
     const rows = data ?? [];
     const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
@@ -101,7 +110,7 @@ export const adminListThreads = createServerFn({ method: "GET" })
     filter: z.enum(["open", "mine", "closed", "all"]).default("open"),
   }).parse(i ?? {}))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { pickAdminClient } = await import("./admin-read.server");
     const { db } = await pickAdminClient(context.supabase);
     const columns =
@@ -139,7 +148,7 @@ export const adminAssumeThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin
       .from("profiles").select("full_name,email").eq("id", context.userId).maybeSingle();
@@ -172,7 +181,7 @@ export const adminCloseThread = createServerFn({ method: "POST" })
     reason: z.string().trim().max(200).optional(),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin
       .from("profiles").select("full_name,email").eq("id", context.userId).maybeSingle();
@@ -202,7 +211,7 @@ export const adminListThreadMessages = createServerFn({ method: "GET" })
     before: z.string().optional(),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { pickAdminClient } = await import("./admin-read.server");
     const { db } = await pickAdminClient(context.supabase);
     const limit = data.limit ?? 30;
@@ -228,7 +237,7 @@ export const adminSendMessage = createServerFn({ method: "POST" })
     body: z.string().trim().min(1).max(4000),
   }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     // Use the authenticated supabase client (not supabaseAdmin) so the
     // enforce_support_msg_admin_flag trigger sees auth.uid() = admin and
     // preserves is_admin=true. When inserted via service_role, auth.uid()
@@ -250,7 +259,7 @@ export const adminSendMessage = createServerFn({ method: "POST" })
 export const adminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { count: users } = await context.supabase.from("profiles").select("*", { count: "exact", head: true });
     const { count: licenses } = await context.supabase.from("licenses").select("*", { count: "exact", head: true }).eq("revoked", false);
     const { data: paid } = await context.supabase.from("orders").select("amount").eq("status", "paid");
@@ -1127,7 +1136,7 @@ export const adminGlobalSearch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ q: z.string() }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const q = data.q.trim();
     if (q.length < 2) return { users: [], orders: [], licenses: [], threads: [] };
     const like = `%${q}%`;
@@ -1173,7 +1182,7 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const uid = data.userId;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
