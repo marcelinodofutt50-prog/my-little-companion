@@ -484,13 +484,25 @@ export const abortApkJob = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!job) return { ok: false };
     if (job.status !== "queued") return { ok: false };
+    // O arquivo existe no storage? Se existir, o envio foi real e o teste grátis é consumido.
+    let uploadExists = false;
+    try {
+      if (job.source_path) {
+        const dir = job.source_path.split("/").slice(0, -1).join("/");
+        const name = job.source_path.split("/").pop();
+        const { data: files } = await supabaseAdmin.storage.from("apk-uploads").list(dir);
+        uploadExists = Boolean(files?.some((f: any) => f.name === name && (f.metadata?.size ?? 0) > 0));
+      }
+    } catch { /* ignore */ }
     try { if (job.source_path) await supabaseAdmin.storage.from("apk-uploads").remove([job.source_path]); } catch { /* ignore */ }
     const now = new Date().toISOString();
     await supabaseAdmin
       .from("apk_jobs")
       .update({ status: "cancelled", cleared_at: now, completed_at: now, is_free_trial: false, source_path: "" } as any)
       .eq("id", job.id);
-    // Upload nunca chegou ao servidor: devolve o teste grátis reservado.
-    await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", context.userId).eq("job_id", job.id);
+    // Só devolve o teste grátis se o arquivo realmente nunca chegou ao storage.
+    if (!uploadExists) {
+      await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", context.userId).eq("job_id", job.id);
+    }
     return { ok: true };
   });
