@@ -392,17 +392,16 @@ function AdminPage() {
                 const accentColor = g.accent === "neon" ? "text-neon" : g.accent === "cyan" ? "text-cyan" : "text-violet";
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
-                  <div key={g.title} className={gi > 0 ? "mt-4 border-t border-border/40 pt-4" : ""}>
-                    <div className={`flex items-center gap-2 px-2 pb-2 font-mono text-[9px] uppercase tracking-[0.25em] ${accentColor}`}>
-                      <span className="truncate">// {g.title}</span>
+                  <div key={g.title} className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}>
+                    <div className={`flex items-center gap-2 px-2 pb-1.5 font-mono text-[9px] uppercase tracking-[0.25em] ${accentColor}`}>
+                      <span className="truncate opacity-80">{g.title}</span>
                       {groupPending > 0 && (
                         <span className="ml-auto rounded-full bg-foreground/10 px-1.5 py-px text-[8px] tracking-normal text-foreground/70">
                           {groupPending > 99 ? "99+" : groupPending}
                         </span>
                       )}
                     </div>
-                    <div className="space-y-0.5">
-
+                    <div className="space-y-px">
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
@@ -411,44 +410,45 @@ function AdminPage() {
                           <button
                             key={t.id}
                             onClick={() => setTab(t.id)}
-                            className={`group flex w-full items-center gap-2 rounded px-2 py-2 text-left transition-colors ${
+                            aria-current={active ? "page" : undefined}
+                            className={`group relative flex w-full items-center gap-2.5 rounded-md py-2 pl-3 pr-2 text-left transition-colors ${
                               active
-                                ? "bg-neon/10 text-neon"
-                                : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                                ? "bg-neon/[0.12] text-neon"
+                                : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                             }`}
                           >
-                            <t.icon className={`h-3.5 w-3.5 shrink-0 ${active ? "text-neon" : "text-muted-foreground group-hover:text-foreground"}`} />
+                            {active && <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-neon" />}
+                            <t.icon className={`h-3.5 w-3.5 shrink-0 ${active ? "text-neon" : "text-muted-foreground/80 group-hover:text-foreground"}`} />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
-                                <div className="truncate font-mono text-[11px] uppercase tracking-wider">{t.label}</div>
+                                <div className={`truncate font-mono text-[11px] uppercase tracking-wider ${active ? "font-semibold" : ""}`}>{t.label}</div>
                                 {isNew && !active && <span className="rounded bg-violet/20 px-1 py-px font-mono text-[8px] uppercase tracking-wider text-violet">novo</span>}
                               </div>
-                              {t.hint && <div className="truncate text-[9px] text-muted-foreground/70">{t.hint}</div>}
+                              {t.hint && <div className="truncate text-[9px] text-muted-foreground/60">{t.hint}</div>}
                             </div>
                             {badge > 0 && (
                               <span
                                 title={`${badge} item(ns) aguardando ação`}
                                 className={`grid h-4 min-w-4 shrink-0 place-items-center rounded-full px-1 font-mono text-[9px] ${
-                                  t.id === "chat" ? "animate-pulse bg-red-500 text-white" : "bg-neon/20 text-neon"
+                                  t.id === "chat" ? "bg-red-500 text-white" : "bg-neon/20 text-neon"
                                 }`}
                               >
                                 {badge > 99 ? "99+" : badge}
                               </span>
                             )}
-                            {active && <span className="h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_var(--neon)]" />}
                           </button>
                         );
                       })}
                     </div>
-
                   </div>
                 );
               })}
-              <div className="mt-4 border-t border-border/40 pt-3">
-                <Link to="/suporte" className="flex items-center gap-2 rounded px-2 py-2 font-mono text-[11px] uppercase tracking-wider text-cyan hover:bg-cyan/5">
+              <div className="mt-3 border-t border-border/40 pt-2">
+                <Link to="/suporte" className="flex items-center gap-2.5 rounded-md py-2 pl-3 pr-2 font-mono text-[11px] uppercase tracking-wider text-cyan transition-colors hover:bg-cyan/5">
                   <LifeBuoy className="h-3.5 w-3.5" /> Ver Suporte
                 </Link>
               </div>
+
             </nav>
           </aside>
 
