@@ -25,6 +25,8 @@ import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
 import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
+import { OrderHistory } from "@/components/OrderHistory";
+import { listMyOrders, type MyOrder } from "@/lib/orders.functions";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
 import { HowItWorksSteps } from "@/components/HowItWorksSteps";
@@ -67,7 +69,8 @@ function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [licFilter, setLicFilter] = useState<"all" | "active" | "trial" | "archived">("active");
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
-  const [extraTab, setExtraTab] = useState<"downloads" | "resumo" | "beneficios" | "ajuda">("downloads");
+  const [extraTab, setExtraTab] = useState<"downloads" | "historico" | "resumo" | "beneficios" | "ajuda">("downloads");
+  const [orders, setOrders] = useState<MyOrder[]>([]);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   // Tick para o trial sumir sozinho do painel assim que expirar
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -308,21 +311,31 @@ function DashboardPage() {
 
 
         {(() => {
-          const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
-          if (active.length === 0) return null;
-          const mostRecent = [...licenses].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-          if (!mostRecent) return null;
+          const open = orders.filter((o) => o.stage !== "delivered" && o.stage !== "refunded" && o.stage !== "failed");
+          if (open.length === 0) return null;
           return (
-            <div className="mt-5">
-              <OrderStatusTimeline
-                order={{
-                  status: "delivered",
-                  created_at: mostRecent.created_at,
-                  paid_at: mostRecent.created_at,
-                  processing_at: mostRecent.created_at,
-                  delivered_at: mostRecent.created_at,
-                }}
-              />
+            <div className="mt-5 space-y-3">
+              <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                <span>// pedidos em andamento · {open.length}</span>
+                <button onClick={() => setExtraTab("historico")} className="text-cyan hover:underline">
+                  ver histórico
+                </button>
+              </div>
+              {open.map((o) => (
+                <OrderStatusTimeline
+                  key={o.id}
+                  order={{
+                    id: o.id,
+                    status: o.stage,
+                    created_at: o.created_at,
+                    paid_at: o.paid_at,
+                    processing_at: o.processing_at,
+                    delivered_at: o.delivered_at,
+                    plan_name: o.plan_name,
+                    amount: o.amount,
+                  }}
+                />
+              ))}
             </div>
           );
         })()}
@@ -623,6 +636,7 @@ function DashboardPage() {
           <div className="mb-4 flex w-full overflow-x-auto rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
             {([
               { k: "downloads", label: "downloads" },
+              { k: "historico", label: "histórico" },
               { k: "resumo", label: "resumo" },
               { k: "beneficios", label: "benefícios" },
               { k: "ajuda", label: "ajuda" },
@@ -638,6 +652,8 @@ function DashboardPage() {
           </div>
 
           {extraTab === "downloads" && <DownloadsSection licenses={licenses} isAdmin={isAdmin} />}
+
+          {extraTab === "historico" && <OrderHistory />}
 
           {extraTab === "resumo" && (
             <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
