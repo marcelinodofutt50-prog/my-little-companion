@@ -46,14 +46,14 @@ export function SecurityWelcomeDialog() {
   async function ackSecurityNoticeDirect() {
     try {
       const user = await getCurrentUser();
-      await supabase
-        .from("profiles")
-        .update({ security_ack_at: new Date().toISOString() })
-        .eq("id", user.id);
+      // Marca local primeiro: mesmo se a rede falhar, o aviso não volta a cada login.
+      localStorage.setItem(`sd_sec_ack_${user.id}`, "1");
+      await ackFn({});
     } catch {
       // Não bloqueia o usuário: esse campo só controla se o aviso aparece de novo.
     }
   }
+
 
   useEffect(() => {
     if (checked.current) return;
