@@ -16,7 +16,7 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
     try { await supabase.rpc("expire_stale_apk_jobs"); } catch { /* ignore */ }
     const [{ data: active }, consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_free_trial", true).in("status", CONSUMED_STATUSES as any),
+      supabase.from("apk_free_trials").select("user_id", { count: "exact", head: true }).eq("user_id", userId),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).is("cleared_at", null),
       supabase
@@ -63,7 +63,7 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
       blockReason: pending > 0
         ? "Você já tem um APK sendo processado. Aguarde ele finalizar para enviar o próximo."
         : (!hasActive && consumed > 0)
-          ? "Teste grátis já utilizado. Ative o plano Play Protect Mensal para continuar."
+          ? "Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar."
           : null,
 
     };
@@ -82,7 +82,7 @@ export const createApkJob = createServerFn({ method: "POST" })
 
     const [{ data: active }, consumedRes, pendingRes] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_free_trial", true).in("status", CONSUMED_STATUSES as any),
+      supabase.from("apk_free_trials").select("user_id", { count: "exact", head: true }).eq("user_id", userId),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
     ]);
     const consumed = consumedRes.count ?? 0;
@@ -94,7 +94,7 @@ export const createApkJob = createServerFn({ method: "POST" })
       throw new Error("Você já tem um APK em processamento. Aguarde finalizar para enviar o próximo.");
     }
     if (!hasActive && consumed > 0) {
-      throw new Error("Teste grátis já utilizado. Ative o plano Play Protect Mensal para continuar.");
+      throw new Error("Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar.");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
