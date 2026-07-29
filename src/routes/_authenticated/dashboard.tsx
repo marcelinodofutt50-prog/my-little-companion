@@ -97,9 +97,10 @@ function DashboardPage() {
   async function refresh() {
     setRefreshing(true);
     try {
-      const [l, c] = await Promise.all([listFn(), cashFn()]);
+      const [l, c, o] = await Promise.all([listFn(), cashFn(), ordersFn().catch(() => [] as MyOrder[])]);
       const list = l as License[];
       setLicenses(list); setBalance(c.balance);
+      setOrders((o ?? []) as MyOrder[]);
       // Hydrate trial credentials card from server-stored (encrypted) license
       // so it survives reloads / device switches. Trials expirados somem do topo.
       const trial = list.find((x) => x.is_trial);
