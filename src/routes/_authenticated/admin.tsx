@@ -135,9 +135,9 @@ function AdminPage() {
   const [licStatus, setLicStatus] = useState<"all" | "active" | "expiring" | "expired" | "revoked">("all");
   const [licView, setLicView] = useState<"table" | "grouped">("table");
   const [licSearch, setLicSearch] = useState("");
-  // Licenças vencidas/revogadas há mais de 2 dias somem do painel (arquivadas)
+  // Licenças vencidas/revogadas há mais de 3 dias somem do painel (arquivadas)
   // para não poluir. Se o cliente reativar, ela volta sozinha para a lista.
-  const [licShowArchived, setLicShowArchived] = useState(false);
+  const [licScope, setLicScope] = useState<"active" | "archived">("active");
 
 
   const statsFn = useServerFn(adminStats);
@@ -877,9 +877,9 @@ function AdminPage() {
               if (diff <= 5 * dayMs) return "expiring";
               return "active";
             };
-            // "Arquivada": morta há mais de 2 dias (vencida ou revogada).
+            // "Arquivada": morta há mais de 3 dias (vencida ou revogada).
             // Se voltar a valer (cliente reativou / admin estendeu), sai do arquivo sozinha.
-            const ARCHIVE_AFTER_DAYS = 2;
+            const ARCHIVE_AFTER_DAYS = 3;
             const isArchived = (l: any): boolean => {
               const s = statusOf(l);
               if (s !== "expired" && s !== "revoked") return false;
@@ -890,7 +890,7 @@ function AdminPage() {
               return now - ref > ARCHIVE_AFTER_DAYS * dayMs;
             };
             const q = licSearch.trim().toLowerCase();
-            const visibleBase = licenses.filter((l) => licShowArchived || !isArchived(l));
+            const visibleBase = licenses.filter((l) => (licScope === "active" ? !isArchived(l) : isArchived(l)));
             const archivedCount = licenses.filter(isArchived).length;
             const trialsCount = visibleBase.filter((l) => l.is_trial).length;
             const paidCount = visibleBase.length - trialsCount;
@@ -988,19 +988,19 @@ function AdminPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 p-3">
                   <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     <span>{filtered.length} de {visibleBase.length} · trials {trialsCount} · pagas {paidCount}</span>
-                    {archivedCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setLicShowArchived((v) => !v)}
-                        title="Licenças vencidas/revogadas há mais de 2 dias ficam arquivadas para não poluir o painel. Se o cliente reativar, elas voltam sozinhas."
-                        className={`rounded border px-2 py-1 transition-colors ${licShowArchived ? "border-violet/50 bg-violet/10 text-violet" : "border-border/40 text-muted-foreground hover:text-foreground"}`}
-                      >
-                        {licShowArchived ? "ocultar" : "ver"} arquivadas · {archivedCount}
-                      </button>
-                    )}
+                    <div className="flex overflow-hidden rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
+                      {([
+                        { k: "active", label: "Painel" },
+                        { k: "archived", label: `Arquivadas · ${archivedCount}` },
+                      ] as const).map((t) => (
+                        <button key={t.k} onClick={() => setLicScope(t.k)}
+                          className={`px-2 py-1 transition-colors ${licScope === t.k ? "bg-neon/15 text-neon" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"}`}>
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-
                     <input
                       value={licSearch}
                       onChange={(e) => setLicSearch(e.target.value)}
@@ -1045,6 +1045,11 @@ function AdminPage() {
                       ))}
                     </div>
                   </div>
+                  {licScope === "archived" && (
+                    <div className="w-full rounded border border-danger/30 bg-danger/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-danger">
+                      Licenças vencidas/revogadas há mais de 3 dias. Se reativadas, voltam ao painel automaticamente.
+                    </div>
+                  )}
                 </div>
                 {licView === "table" ? (
                   <div className="overflow-x-auto">
