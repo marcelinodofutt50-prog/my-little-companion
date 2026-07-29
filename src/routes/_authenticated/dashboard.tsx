@@ -13,6 +13,7 @@ import { RefundSection } from "@/components/RefundSection";
 import { TutorialHintDialog } from "@/components/TutorialHintDialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import { formatBrl, tierFromPlanSlug, tierLabel, tierAccent, getTierFeatures, serverFeeFor, downloadsForTier, type VersionTier } from "@/lib/plans";
 import { listMyLicenses, generateTrial, getMyCashbackBalance, suspendMyLicense, reactivateMyLicense, disableMyLicense } from "@/lib/license.functions";
@@ -139,8 +140,8 @@ function DashboardPage() {
       if (data.user) {
         setEmail(data.user.email ?? "");
         profileFn().then((p) => setDisplayName(p.display_name ?? null)).catch(() => {});
-        const { data: role } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
-        setIsAdmin(!!role);
+        const role = await fetchMyRole(data.user.id);
+        setIsAdmin(isStaffRole(role));
         // Scope realtime to just this user so unrelated license mutations
         // (other clients, admin batch operations) don't force a refetch.
         ch = supabase.channel(`licenses:${data.user.id}`)

@@ -174,12 +174,20 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
     return { url: signed.signedUrl, filename: safeName };
   });
 
+/** Admin ou Suporte (moderador) — a fila do Play Protect é operada pelos dois. */
+async function assertStaff(ctx: any) {
+  const [a, m] = await Promise.all([
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" }),
+    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "moderator" }),
+  ]);
+  if (!a.data && !m.data) throw new Error("Forbidden");
+}
+
 // Admin
 export const adminListApkJobs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Forbidden");
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
@@ -201,8 +209,7 @@ export const adminListApkJobs = createServerFn({ method: "GET" })
 export const adminListPendingApkJobs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Forbidden");
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
@@ -222,8 +229,7 @@ export const adminListPendingApkJobs = createServerFn({ method: "GET" })
   });
 
 async function assertAdmin(ctx: any) {
-  const { data: isAdmin } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (!isAdmin) throw new Error("Forbidden");
+  await assertStaff(ctx);
 }
 
 // Admin: download original APK sent by client

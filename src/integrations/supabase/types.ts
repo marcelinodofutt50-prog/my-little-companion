@@ -1142,6 +1142,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       reactivate_server_licenses_for_user: {
         Args: { _paid_until: string; _user_id: string }
         Returns: {

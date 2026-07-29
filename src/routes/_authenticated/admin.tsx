@@ -57,6 +57,8 @@ import {
 } from "@/lib/admin.functions";
 import { playNotifyDing, unlockNotifySound, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 import { secureSignOut } from "@/lib/session";
+import { fetchMyRole, isStaffRole } from "@/lib/roles";
+import { SECTION_CAP, can, ROLE_LABEL, type Role } from "@/lib/permissions";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -64,8 +66,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
-    const { data: role } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
-    if (!role) throw redirect({ to: "/dashboard" });
+    const role = await fetchMyRole(u.user.id);
+    if (!isStaffRole(role)) throw redirect({ to: "/dashboard" });
   },
   component: AdminPage,
 });
@@ -96,6 +98,9 @@ const TAB_DESC: Record<Tab, string> = {
 };
 
 function AdminPage() {
+  const [role, setRoleState] = useState<Role>("moderator");
+  useEffect(() => { fetchMyRole().then(setRoleState).catch(() => {}); }, []);
+  const isAdminUser = role === "admin";
   const [tab, setTab] = useState<Tab>("overview");
   // Ficha 360º do cliente (aberta pela busca global Ctrl+K)
   const [customer360, setCustomer360] = useState<string | null>(null);
@@ -312,11 +317,14 @@ function AdminPage() {
       ],
     },
   ];
-  const allTabs = tabGroups.flatMap((g) => g.items);
+  const visibleGroups = tabGroups
+    .map((g) => ({ ...g, items: g.items.filter((t) => can(role, SECTION_CAP[t.id])) }))
+    .filter((g) => g.items.length > 0);
+  const allTabs = visibleGroups.flatMap((g) => g.items);
   const activeMeta = allTabs.find((t) => t.id === tab);
   const navTerm = navQuery.trim().toLowerCase();
   const filteredGroups = navTerm
-    ? tabGroups
+    ? visibleGroups
         .map((g) => ({
           ...g,
           items: g.items.filter(
@@ -327,7 +335,7 @@ function AdminPage() {
           ),
         }))
         .filter((g) => g.items.length > 0)
-    : tabGroups;
+    : visibleGroups;
   const filteredTabs = filteredGroups.flatMap((g) => g.items);
 
 
@@ -346,9 +354,12 @@ function AdminPage() {
                 <span className="hidden h-3 w-px bg-border sm:inline-block" />
                 <span className="hidden text-neon/70 sm:inline">node//shadow-01</span>
                 <span className="hidden text-cyan/60 sm:inline">sec::lvl-4</span>
+                <span className={`rounded-full border px-2 py-px tracking-[0.2em] ${isAdminUser ? "border-neon/40 text-neon" : "border-cyan/40 text-cyan"}`}>
+                  {ROLE_LABEL[role]}
+                </span>
               </div>
               <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
-                Painel Administrativo
+                {isAdminUser ? "Painel Administrativo" : "Painel de Suporte"}
               </h1>
               <AdminTagline className="mt-1" />
 
@@ -1100,7 +1111,7 @@ function AdminPage() {
       </main>
 
       <AdminMobileNav
-        groups={tabGroups}
+        groups={visibleGroups}
         primary={["overview", "chat", "orders", "licenses"]}
         tab={tab}
         onChange={(id) => setTab(id as Tab)}

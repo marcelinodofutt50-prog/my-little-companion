@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer, setThreadCategory } from "@/lib/support.functions";
 import { SUPPORT_CATEGORY_META, categoryMeta, type SupportCategory } from "@/lib/support-categories";
@@ -70,8 +71,8 @@ function SupportPage() {
       const id = data.user?.id;
       if (cancelled || !id) return;
       setUid(id);
-      const { data: adminFlag } = await supabase.rpc("has_role", { _user_id: id, _role: "admin" });
-      if (!cancelled) isAdminRef.current = !!adminFlag;
+      const role = await fetchMyRole(id);
+      if (!cancelled) isAdminRef.current = isStaffRole(role);
     });
     openFn()
       .then((t) => { if (!cancelled) setThread(t); })

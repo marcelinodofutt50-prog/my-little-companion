@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { listMyNotifications, type AppNotification, type NotificationKind } from "@/lib/notifications.functions";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 
@@ -101,8 +102,8 @@ export function InAppNotifications() {
     supabase.auth.getUser().then(async ({ data }) => {
       const uid = data.user?.id;
       if (!uid) return;
-      const { data: adminFlag } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
-      const admin = !!adminFlag;
+      const role = await fetchMyRole(uid);
+      const admin = isStaffRole(role);
       setIsAdmin(admin);
       setAdminChecked(true);
       channel = supabase
