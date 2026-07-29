@@ -84,15 +84,23 @@ function bumpAttempts(email: string): number {
   return list.length;
 }
 
-function currentAttempts(email: string): number {
-  if (typeof window === "undefined") return 0;
+/** Tentativas de envio na última hora + horário do último envio (para o status). */
+function attemptsInfo(email: string): { count: number; last: number | null } {
+  if (typeof window === "undefined") return { count: 0, last: null };
   const key = keyFor(ATTEMPTS_KEY, email);
-  if (!key) return 0;
+  if (!key) return { count: 0, last: null };
   const now = Date.now();
   try {
     const list: number[] = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-    return list.filter((t) => now - t < 3600_000).length;
-  } catch { return 0; }
+    const recent = list.filter((t) => now - t < 3600_000);
+    return { count: recent.length, last: recent.length ? recent[recent.length - 1] : null };
+  } catch { return { count: 0, last: null }; }
+}
+
+function formatTime(ts: number): string {
+  try {
+    return new Date(ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch { return ""; }
 }
 
 function AuthPage() {
@@ -107,11 +115,14 @@ function AuthPage() {
   const [signupMessage, setSignupMessage] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [emailBlocked, setEmailBlocked] = useState(false);
+  const [sendInfo, setSendInfo] = useState<{ count: number; last: number | null }>({ count: 0, last: null });
 
-  // Cooldown é por e-mail: trocar de e-mail mostra a trava (ou a ausência dela) do novo usuário.
+  // Cooldown e histórico são por e-mail: trocar de e-mail mostra o estado do novo usuário.
   useEffect(() => {
     setCooldown(readCooldown(email));
+    setSendInfo(attemptsInfo(email));
   }, [email]);
+
 
   // Contagem regressiva quando o envio de e-mails está temporariamente bloqueado.
   useEffect(() => {
@@ -135,6 +146,7 @@ function AuthPage() {
     if (at) window.localStorage.removeItem(at);
     setCooldown(0);
     setEmailBlocked(false);
+    setSendInfo({ count: 0, last: null });
   }
 
 
@@ -209,7 +221,7 @@ function AuthPage() {
     if (resending || cooldown > 0) return;
     const parsedEmail = z.string().trim().email().safeParse(email);
     if (!parsedEmail.success) return toast.error("Digite seu e-mail acima para reenviar.");
-    if (currentAttempts(email) >= MAX_ATTEMPTS_PER_HOUR) {
+    if (attemptsInfo(email).count >= MAX_ATTEMPTS_PER_HOUR) {
       startCooldown(300);
       track("resend", "blocked_local", { error: "local attempt cap reached" });
       return toast.error(
@@ -219,6 +231,7 @@ function AuthPage() {
     setResending(true);
     try {
       bumpAttempts(email);
+      setSendInfo(attemptsInfo(email));
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: parsedEmail.data,
@@ -245,7 +258,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "up") {
-        if (currentAttempts(email) >= MAX_ATTEMPTS_PER_HOUR) {
+        if (attemptsInfo(email).count >= MAX_ATTEMPTS_PER_HOUR) {
           startCooldown(120);
           setEmailBlocked(true);
           track("signup", "blocked_local", { error: "local attempt cap reached" });
@@ -259,6 +272,7 @@ function AuthPage() {
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
         bumpAttempts(email);
+      setSendInfo(attemptsInfo(email));
         const { data: signUpData, error } = await supabase.auth.signUp({
           email, password, options: { emailRedirectTo: siteUrl() },
         });
@@ -352,7 +366,28 @@ function AuthPage() {
               <li>2. Confira se digitou o e-mail corretamente.</li>
               <li>3. Reenvie apenas uma vez — reenvios seguidos bloqueiam o envio.</li>
             </ul>
+
+            {sendInfo.count > 0 && (
+              <div className="mt-3 rounded border border-neon/40 bg-neon/5 px-3 py-2">
+                <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-neon">
+                  <Mail className="h-3 w-3" /> E-mail enviado
+                  {sendInfo.last ? ` às ${formatTime(sendInfo.last)}` : ""}
+                </p>
+                <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  {sendInfo.count} {sendInfo.count === 1 ? "envio" : "envios"} na última hora
+                  {" · "}restam {Math.max(0, MAX_ATTEMPTS_PER_HOUR - sendInfo.count)} de {MAX_ATTEMPTS_PER_HOUR}
+                </p>
+              </div>
+            )}
+
+            {cooldown > 0 && (
+              <p className="mt-3 font-mono text-[10px] text-amber-400">
+                Aguarde {cooldown}s antes de reenviar — o e-mail anterior ainda pode chegar. Reenviar antes disso não acelera a entrega.
+              </p>
+            )}
+
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+
               <Button
                 type="button"
                 variant="outline"
