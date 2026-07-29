@@ -1294,31 +1294,54 @@ function AdminChatPanel() {
           {!loading && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
           {filtered.map((t) => {
             const active = t.id === activeId;
+            const lastCustomerAt = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
+            const waitingLong = t.status !== "closed" && lastCustomerAt !== null && Date.now() - lastCustomerAt > 30 * 60000;
             return (
-              <button
+              <div
                 key={t.id}
-                onClick={() => setActiveId(t.id)}
-                className={`flex w-full items-center gap-3 border-b border-border/20 p-3 text-left transition-colors ${active ? "bg-neon/10" : "hover:bg-neon/5"}`}
+                className={`group flex w-full items-center gap-3 border-b border-border/20 p-3 text-left transition-colors ${active ? "bg-neon/10" : "hover:bg-neon/5"}`}
               >
-                <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${active ? "bg-neon text-primary-foreground" : "bg-muted text-foreground"}`}>
-                  {(t.profile?.display_name || t.profile?.email || "?").slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</div>
-                    {(t.unread_by_staff ?? 0) > 0 && !active && (
-                      <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                <button onClick={() => setActiveId(t.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <div className={`relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${active ? "bg-neon text-primary-foreground" : "bg-muted text-foreground"}`}>
+                    {(t.profile?.display_name || t.profile?.email || "?").slice(0, 2).toUpperCase()}
+                    {waitingLong && (
+                      <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-background bg-danger" title="Aguardando há mais de 30 min" />
                     )}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
-                    <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
-                      {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
-                    </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</div>
+                      {(t.unread_by_staff ?? 0) > 0 && !active && (
+                        <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
+                      <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
+                        {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
+                      </span>
+                      {waitingLong && (
+                        <span className="flex-shrink-0 rounded bg-danger/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-danger">aguardando</span>
+                      )}
+                      <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+                {t.status !== "closed" && !t.assigned_to && (
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try { await assumeFn({ data: { threadId: t.id } }); await refreshThreads(); toast.success("Ticket assumido"); }
+                      catch (err: any) { toast.error(err.message); }
+                    }}
+                    title="Assumir ticket"
+                    className="shrink-0 rounded border border-neon/40 bg-neon/5 px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-neon opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    Assumir
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
