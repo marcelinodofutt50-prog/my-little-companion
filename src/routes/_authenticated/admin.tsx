@@ -566,11 +566,11 @@ function AdminPage() {
                   <MiniStat label="Trials ativos" value={String(trialsActive)} accent="cyan" />
                 </div>
 
-                {/* Métricas 30 dias */}
-                <AdminMetricsPanel />
+                {/* Métricas 30 dias (financeiro: só admin) */}
+                {isAdminUser && <AdminMetricsPanel />}
 
                 {/* Tendência de receita */}
-                <RevenueSparkline orders={orders} />
+                {isAdminUser && <RevenueSparkline orders={orders} />}
 
 
 
