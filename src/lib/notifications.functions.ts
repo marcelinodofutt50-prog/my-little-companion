@@ -24,13 +24,19 @@ export const listMyNotifications = createServerFn({ method: "GET" })
     const out: AppNotification[] = [];
     const now = Date.now();
 
+    // Notificações de chat/mensagens são exclusivas de admins.
+    const { data: isAdminRaw } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    const isAdmin = !!isAdminRaw;
+
     const [threads, licenses, refunds, orders, migrations] = await Promise.all([
-      supabase
-        .from("support_threads")
-        .select("id, subject, status, unread_by_customer, last_staff_message_at, updated_at")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(10),
+      isAdmin
+        ? supabase
+            .from("support_threads")
+            .select("id, subject, status, unread_by_staff, last_customer_message_at, updated_at")
+            .gt("unread_by_staff", 0)
+            .order("updated_at", { ascending: false })
+            .limit(20)
+        : Promise.resolve({ data: [] as never[] }),
       supabase
         .from("licenses")
         .select("id, plan_slug, expires_at, revoked, suspended_at, disabled_at, server_overdue_at, updated_at")
@@ -57,15 +63,17 @@ export const listMyNotifications = createServerFn({ method: "GET" })
         .limit(5),
     ]);
 
-    for (const t of threads.data ?? []) {
-      if ((t.unread_by_customer ?? 0) > 0) {
+    if (isAdmin) {
+      for (const t of threads.data ?? []) {
+        const unread = (t as { unread_by_staff?: number }).unread_by_staff ?? 0;
+        if (unread <= 0) continue;
         out.push({
-          id: `support-${t.id}-${t.last_staff_message_at ?? t.updated_at}`,
+          id: `support-${t.id}-${(t as { last_customer_message_at?: string }).last_customer_message_at ?? t.updated_at}`,
           kind: "support",
-          title: t.unread_by_customer === 1 ? "Nova resposta do suporte" : `${t.unread_by_customer} novas mensagens do suporte`,
-          description: "O time respondeu seu atendimento. Toque para abrir o chat.",
-          createdAt: t.last_staff_message_at ?? t.updated_at,
-          href: "/suporte",
+          title: unread === 1 ? "Nova mensagem de cliente" : `${unread} novas mensagens de clientes`,
+          description: t.subject ? `Ticket: ${t.subject}` : "Um cliente aguarda resposta no chat.",
+          createdAt: (t as { last_customer_message_at?: string }).last_customer_message_at ?? t.updated_at,
+          href: "/admin",
         });
       }
     }
@@ -170,5 +178,5 @@ export const listMyNotifications = createServerFn({ method: "GET" })
     }
 
     out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    return out.slice(0, 30);
+    return { isAdmin, items: out.slice(0, 30) };
   });
