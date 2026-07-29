@@ -35,6 +35,7 @@ import { AdminDailyReport } from "@/components/AdminDailyReport";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 import { AdminTagline } from "@/components/AdminTagline";
 import { AdminTeamGuide } from "@/components/AdminTeamGuide";
+import { AdminPermissionsMatrix } from "@/components/AdminPermissionsMatrix";
 
 
 
