@@ -1622,9 +1622,12 @@ function AdminChatPanel() {
             <div className="flex flex-col items-center gap-2 p-8 text-center">
               <MessageSquare className="h-7 w-7 text-neon/40" />
               <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                {query ? "nenhum cliente com esse termo" : filter === "open" ? "nenhuma conversa aberta" : filter === "mine" ? "você não assumiu nenhum ticket" : "nenhuma conversa encerrada"}
+                {quick !== "all" ? "nenhuma conversa nesse indicador" : query ? "nenhum cliente com esse termo" : filter === "open" ? "nenhuma conversa aberta" : filter === "mine" ? "você não assumiu nenhum ticket" : "nenhuma conversa encerrada"}
               </div>
-              {!query && filter !== "open" && (
+              {quick !== "all" && (
+                <button type="button" onClick={() => setQuick("all")} className="font-mono text-[10px] uppercase text-neon hover:underline">limpar filtro →</button>
+              )}
+              {quick === "all" && !query && filter !== "open" && (
                 <button type="button" onClick={() => setFilter("open")} className="font-mono text-[10px] uppercase text-neon hover:underline">ver abertas →</button>
               )}
             </div>
