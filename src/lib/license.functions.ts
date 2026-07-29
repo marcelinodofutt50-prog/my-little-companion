@@ -230,7 +230,12 @@ export const checkLegacyEmail = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ email: z.string().trim().email().max(255) }).parse(input))
   .handler(async ({ data }) => {
     const { yaarsaLookupEmailAllPanels } = await import("./yaarsa.server");
-    const r = await yaarsaLookupEmailAllPanels(data.email.toLowerCase());
+    let r: Awaited<ReturnType<typeof yaarsaLookupEmailAllPanels>>;
+    try {
+      r = await yaarsaLookupEmailAllPanels(data.email.toLowerCase());
+    } catch (e: any) {
+      throw new Error(`LEGACY_PANEL_UNREACHABLE: ${e?.message || "painel não respondeu"}`);
+    }
     const foundIn = (r.details ?? []).filter((d) => d.found).map((d) => d.panel);
     return {
       found: r.found,
@@ -238,6 +243,7 @@ export const checkLegacyEmail = createServerFn({ method: "POST" })
       suggested_tier: foundIn.includes("v46") ? "lifetime_46" : foundIn.includes("v457") ? "monthly_457" : null,
     };
   });
+
 
 // ============ Reivindicação da licença por cliente antigo ============
 // Cliente informa email + senha + painel confirmado. Verificamos que o email
