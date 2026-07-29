@@ -1366,7 +1366,7 @@ function SupportOverviewCards({
 
 function AdminChatPanel() {
 
-  const [threads, setThreads] = useState<Thread[]>([]);
+  const [threads, setThreads] = useState<Thread[]>(() => threadsCache["open"] ?? []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chatHasMore, setChatHasMore] = useState(false);
@@ -1375,9 +1375,10 @@ function AdminChatPanel() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !threadsCache["open"]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"open" | "mine" | "closed">("open");
+  const [quick, setQuick] = useState<"all" | "unread" | "waiting" | "unassigned">("all");
   // Default sound preference when nothing is stored yet.
   const SOUND_DEFAULT_ON = true;
   const [soundOn, setSoundOn] = useState<boolean>(SOUND_DEFAULT_ON);
