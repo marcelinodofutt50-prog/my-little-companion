@@ -794,10 +794,24 @@ function AdminPage() {
               if (diff <= 5 * dayMs) return "expiring";
               return "active";
             };
+            // "Arquivada": morta há mais de 2 dias (vencida ou revogada).
+            // Se voltar a valer (cliente reativou / admin estendeu), sai do arquivo sozinha.
+            const ARCHIVE_AFTER_DAYS = 2;
+            const isArchived = (l: any): boolean => {
+              const s = statusOf(l);
+              if (s !== "expired" && s !== "revoked") return false;
+              const ref = s === "expired"
+                ? new Date(l.expires_at).getTime()
+                : new Date(l.server_overdue_at ?? l.disabled_at ?? l.updated_at ?? l.created_at ?? now).getTime();
+              if (!Number.isFinite(ref)) return false;
+              return now - ref > ARCHIVE_AFTER_DAYS * dayMs;
+            };
             const q = licSearch.trim().toLowerCase();
-            const trialsCount = licenses.filter((l) => l.is_trial).length;
-            const paidCount = licenses.length - trialsCount;
-            const filtered = licenses.filter((l) => {
+            const visibleBase = licenses.filter((l) => licShowArchived || !isArchived(l));
+            const archivedCount = licenses.filter(isArchived).length;
+            const trialsCount = visibleBase.filter((l) => l.is_trial).length;
+            const paidCount = visibleBase.length - trialsCount;
+            const filtered = visibleBase.filter((l) => {
               if (licKind === "trial" && !l.is_trial) return false;
               if (licKind === "paid" && l.is_trial) return false;
               if (licStatus !== "all" && statusOf(l) !== licStatus) return false;
