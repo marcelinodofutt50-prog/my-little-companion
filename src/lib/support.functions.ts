@@ -173,7 +173,7 @@ export const setThreadCategory = createServerFn({ method: "POST" })
       subject: data.subject ?? `Suporte — ${data.category}`,
     };
 
-    async function run(payload: Record<string, unknown>) {
+    async function run(payload: { category?: string; priority?: string; subject?: string }) {
       return context.supabase
         .from("support_threads")
         .update(payload)
