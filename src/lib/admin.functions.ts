@@ -195,7 +195,7 @@ export const adminAnalyzeLoginBug = createServerFn({ method: "POST" })
 
     const [profile, orders, logs] = await Promise.all([
       lic.user_id ? context.supabase.from("profiles").select("id,email,full_name,display_name,created_at").eq("id", lic.user_id).maybeSingle() : Promise.resolve({ data: null }),
-      context.supabase.from("orders").select("id,status,amount,created_at,payment_method,plan_slug").eq("user_id", lic.user_id).order("created_at", { ascending: false }).limit(5),
+      context.supabase.from("orders").select("id,status,amount,created_at,plan_slug").eq("user_id", lic.user_id).order("created_at", { ascending: false }).limit(5),
       context.supabase.from("integration_logs").select("action,created_at,outcome,error,context").eq("source", `yaarsa-${(lic as any).panel ?? "v46"}`).ilike("context->>license_id", data.licenseId).order("created_at", { ascending: false }).limit(10),
     ]);
 
