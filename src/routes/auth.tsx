@@ -349,7 +349,7 @@ function AuthPage() {
           )}
         </form>
 
-        {(emailBlocked || signupMessage || mode === "up") && (
+        {(emailBlocked || signupMessage) && (
           <div className="mt-4 w-full rounded border border-amber-400/40 bg-amber-400/5 p-4 text-xs">
             <p className="font-mono uppercase tracking-wider text-amber-400">Não recebeu o e-mail?</p>
             <ul className="mt-2 space-y-1 text-muted-foreground">
