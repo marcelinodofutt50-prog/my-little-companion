@@ -84,6 +84,63 @@ export const listMyNotifications = createServerFn({ method: "GET" })
           href: "/admin",
         });
       }
+
+      // ===== Licenças arquivadas / reativadas (visão global do admin) =====
+      // Arquivada = vencida ou revogada há mais de 2 dias (some do painel).
+      // Reativada = voltou a valer depois de ter passado do prazo de arquivo.
+      const DAY = 86400000;
+      const ARCHIVE_AFTER = 2 * DAY;
+      const { data: allLic } = await supabase
+        .from("licenses")
+        .select(
+          "id, user_id, plan_slug, yaarsa_username, expires_at, revoked, disabled_at, server_overdue_at, created_at, updated_at",
+        )
+        .order("updated_at", { ascending: false })
+        .limit(200);
+
+      for (const l of allLic ?? []) {
+        if (l.disabled_at) continue;
+        const who = l.yaarsa_username || (l.user_id ? `cliente ${String(l.user_id).slice(0, 8)}` : "cliente");
+        const expMs = l.expires_at ? new Date(l.expires_at).getTime() : null;
+        const isExpired = expMs !== null && expMs <= now;
+
+        if (isExpired || l.revoked) {
+          const refMs = l.revoked
+            ? new Date(l.server_overdue_at ?? l.updated_at ?? l.created_at ?? now).getTime()
+            : (expMs as number);
+          const age = now - refMs;
+          // Avisa só na janela em que ela acabou de ser arquivada (2 a 4 dias),
+          // para não repetir a mesma notificação para sempre.
+          if (age >= ARCHIVE_AFTER && age < ARCHIVE_AFTER + 2 * DAY) {
+            out.push({
+              id: `lic-archived-${l.id}`,
+              kind: "license",
+              title: "Licença arquivada",
+              description: `${who} (${l.plan_slug ?? "plano"}) ficou ${l.revoked ? "revogada" : "vencida"} há mais de 2 dias e saiu do painel.`,
+              createdAt: new Date(refMs + ARCHIVE_AFTER).toISOString(),
+              href: "/admin",
+            });
+          }
+          continue;
+        }
+
+        // Reativada: está válida agora, sem bloqueio, mas foi atualizada há pouco
+        // e já tinha idade suficiente para ter passado pelo arquivo.
+        const updMs = new Date(l.updated_at ?? l.created_at ?? now).getTime();
+        const createdMs = new Date(l.created_at ?? updMs).getTime();
+        const wasOldEnough = now - createdMs > ARCHIVE_AFTER;
+        const recentlyTouched = now - updMs < 2 * DAY;
+        if (!l.revoked && !l.server_overdue_at && wasOldEnough && recentlyTouched && updMs - createdMs > ARCHIVE_AFTER) {
+          out.push({
+            id: `lic-reactivated-${l.id}-${l.updated_at}`,
+            kind: "license",
+            title: "Licença reativada",
+            description: `${who} (${l.plan_slug ?? "plano"}) voltou a ficar ativa e reapareceu no painel de licenças.`,
+            createdAt: l.updated_at ?? new Date(updMs).toISOString(),
+            href: "/admin",
+          });
+        }
+      }
     }
 
     for (const l of licenses.data ?? []) {
