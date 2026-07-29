@@ -57,6 +57,8 @@ import {
 } from "@/lib/admin.functions";
 import { playNotifyDing, unlockNotifySound, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 import { secureSignOut } from "@/lib/session";
+import { fetchMyRole, isStaffRole } from "@/lib/roles";
+import { SECTION_CAP, can, ROLE_LABEL, type Role } from "@/lib/permissions";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -64,8 +66,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
-    const { data: role } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
-    if (!role) throw redirect({ to: "/dashboard" });
+    const role = await fetchMyRole(u.user.id);
+    if (!isStaffRole(role)) throw redirect({ to: "/dashboard" });
   },
   component: AdminPage,
 });
@@ -96,6 +98,9 @@ const TAB_DESC: Record<Tab, string> = {
 };
 
 function AdminPage() {
+  const [role, setRoleState] = useState<Role>("moderator");
+  useEffect(() => { fetchMyRole().then(setRoleState).catch(() => {}); }, []);
+  const isAdminUser = role === "admin";
   const [tab, setTab] = useState<Tab>("overview");
   // Ficha 360º do cliente (aberta pela busca global Ctrl+K)
   const [customer360, setCustomer360] = useState<string | null>(null);
@@ -312,11 +317,14 @@ function AdminPage() {
       ],
     },
   ];
-  const allTabs = tabGroups.flatMap((g) => g.items);
+  const visibleGroups = tabGroups
+    .map((g) => ({ ...g, items: g.items.filter((t) => can(role, SECTION_CAP[t.id])) }))
+    .filter((g) => g.items.length > 0);
+  const allTabs = visibleGroups.flatMap((g) => g.items);
   const activeMeta = allTabs.find((t) => t.id === tab);
   const navTerm = navQuery.trim().toLowerCase();
   const filteredGroups = navTerm
-    ? tabGroups
+    ? visibleGroups
         .map((g) => ({
           ...g,
           items: g.items.filter(
@@ -327,7 +335,7 @@ function AdminPage() {
           ),
         }))
         .filter((g) => g.items.length > 0)
-    : tabGroups;
+    : visibleGroups;
   const filteredTabs = filteredGroups.flatMap((g) => g.items);
 
 
