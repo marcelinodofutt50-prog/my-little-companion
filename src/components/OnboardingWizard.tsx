@@ -84,6 +84,10 @@ type Props = {
   onDisplayName?: (nick: string | null) => void;
 };
 
+/** Marca local de conclusão (fallback quando o backend não consegue gravar). */
+const doneKey = (userId: string) => `sd_onboarding_done_${userId}`;
+
+
 export function OnboardingWizard({ onDone, onDisplayName }: Props) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0); // 0 = apelido, 1..n = perguntas, n+1 = resumo
