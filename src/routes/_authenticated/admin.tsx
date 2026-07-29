@@ -320,8 +320,16 @@ function AdminPage() {
     finally { setFixingLic(null); }
   }
   async function setRole(userId: string, role: "admin" | "moderator" | "user") {
-    try { await setRoleFn({ data: { userId, role } }); toast.success("Cargo atualizado"); setRoles(await rolesFn() as any); }
-    catch (e: any) { toast.error(e.message); }
+    const label = role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente";
+    try {
+      await setRoleFn({ data: { userId, role } });
+      setRoles(await rolesFn() as any);
+      toast.success(`Cargo atualizado para ${label}`, {
+        description: role === "user" ? undefined : "Peça para a pessoa sair e entrar de novo (F5) para o painel liberar os acessos.",
+        duration: 8000,
+      });
+    }
+    catch (e: any) { toast.error(e.message ?? "Não foi possível atualizar o cargo"); }
   }
 
   const tabGroups: { title: string; accent: "neon" | "cyan" | "violet"; items: { id: Tab; label: string; icon: any; hint?: string }[] }[] = [
