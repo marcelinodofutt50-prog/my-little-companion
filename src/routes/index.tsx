@@ -73,6 +73,7 @@ const plans = [
     accent: "violet",
     descKey: "plan.life.desc",
     featureKeys: ["plan.f.lifetime", "plan.f.updates", "plan.f.vip"],
+    highlight: false,
   },
 ] as const;
 
