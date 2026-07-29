@@ -79,6 +79,7 @@ function AuthPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading || cooldown > 0) return;
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
@@ -97,15 +98,39 @@ function AuthPage() {
           "4. Você será logado automaticamente.\n\n" +
           "Se não achar, olhe na pasta Spam ou Promoções."
         );
+        setCooldown(60);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate({ to: (next as any) || "/dashboard" });
       }
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (err: any) {
+      const raw = String(err?.message ?? "");
+      const status = err?.status ?? err?.code;
+      const isRateLimit =
+        status === 429 ||
+        /rate limit|too many requests|over_email_send_rate_limit|security purposes/i.test(raw);
+
+      if (isRateLimit) {
+        const secs = Number(raw.match(/(\d+)\s*second/i)?.[1] ?? 60);
+        setCooldown(secs);
+        setSignupMessage(null);
+        toast.error(
+          `Muitas tentativas de envio de e-mail agora. Aguarde ${secs}s e tente de novo — sua conta não foi perdida.`
+        );
+      } else if (/already registered|already been registered|user already/i.test(raw)) {
+        toast.error("Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.");
+        setMode("in");
+      } else if (/email not confirmed/i.test(raw)) {
+        toast.error("Confirme seu e-mail antes de entrar. Veja a caixa de entrada e o spam.");
+      } else if (/invalid login credentials/i.test(raw)) {
+        toast.error("E-mail ou senha incorretos.");
+      } else {
+        toast.error(raw || "Não foi possível concluir. Tente novamente.");
+      }
     } finally { setLoading(false); }
   }
+
 
   return (
     <div className="min-h-screen">
