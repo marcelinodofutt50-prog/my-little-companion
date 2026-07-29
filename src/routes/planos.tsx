@@ -813,6 +813,14 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         </ul>
       )}
 
+      {meta.note && (
+        <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+          <span className="font-mono uppercase tracking-wider text-amber-400">// atenção</span>{" "}
+          {meta.note}
+        </p>
+      )}
+
+
       {hasBenefit && (
         <ul className="mt-4 space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3 font-mono text-[11px]">
           {b.discount > 0 && (
