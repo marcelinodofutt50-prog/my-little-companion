@@ -1490,7 +1490,22 @@ function AdminChatPanel() {
               >
                 {soundOn ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
               </button>
-              <span className="font-mono text-[10px] text-muted-foreground">{threads.length}</span>
+              {(() => {
+                const unread = threads.reduce((n, t) => n + (Number(t.unread_by_staff ?? 0) > 0 ? 1 : 0), 0);
+                return (
+                  <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+                    {unread > 0 && (
+                      <span
+                        title={`${unread} conversa(s) com mensagem não lida`}
+                        className="rounded-full bg-neon px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground"
+                      >
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
+                    {threads.length}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <div className="mb-2 flex gap-1">
