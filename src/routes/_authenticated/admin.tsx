@@ -1687,33 +1687,66 @@ function AdminChatPanel() {
                 </div>
               )}
 
-              {msgs.length === 0 && <div className="pt-16 text-center text-xs text-muted-foreground">Sem mensagens ainda — inicie a conversa.</div>}
-              {msgs.map((m) => m.is_system ? (
-                <div key={m.id} className="flex justify-center">
-                  <div className="max-w-[80%] rounded-full border border-cyan/30 bg-cyan/5 px-3 py-1 font-mono text-[10px] text-cyan whitespace-pre-wrap text-center">
-                    {m.body}
-                  </div>
+              {msgs.length === 0 && (
+                <div className="flex flex-col items-center gap-2 pt-16 text-center">
+                  <MessageSquare className="h-6 w-6 text-neon/40" />
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">sem mensagens ainda</div>
+                  <div className="font-mono text-[10px] text-muted-foreground/70">inicie a conversa com uma resposta rápida abaixo</div>
                 </div>
-              ) : (
-                <div key={m.id} className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${m.is_admin ? "border border-violet/40 bg-violet/10" : "border border-border bg-card"}`}>
-                    <div className="mb-1 font-mono text-[9px] uppercase text-muted-foreground">
-                      {m.is_admin ? "você (admin)" : "cliente"} · {new Date(m.created_at).toLocaleTimeString("pt-BR")}
-                    </div>
-                    {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
-                    {m.attachment_url && (
-                      m.attachment_type?.startsWith("image/") ? <img src={m.attachment_url} alt="anexo" className="mt-2 max-h-64 rounded" />
-                      : m.attachment_type?.startsWith("video/") ? <video src={m.attachment_url} controls className="mt-2 max-h-64 rounded" />
-                      : <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-2 block text-cyan underline">Baixar anexo</a>
+              )}
+              {msgs.map((m, i) => {
+                const prev = i > 0 ? msgs[i - 1] : null;
+                const showDay = !prev || new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                const sameSender = !!prev && !prev.is_system && !m.is_system && prev.is_admin === m.is_admin;
+                return (
+                  <div key={m.id} className={showDay ? "space-y-3" : sameSender ? "!mt-1" : ""}>
+                    {showDay && (
+                      <div className="flex items-center gap-3">
+                        <div className="h-px flex-1 bg-border/40" />
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{dayLabel(m.created_at)}</span>
+                        <div className="h-px flex-1 bg-border/40" />
+                      </div>
+                    )}
+                    {m.is_system ? (
+                      <div className="flex justify-center">
+                        <div className="max-w-[80%] whitespace-pre-wrap rounded-full border border-cyan/30 bg-cyan/5 px-3 py-1 text-center font-mono text-[10px] text-cyan">
+                          {m.body}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
+                            m.is_admin
+                              ? "rounded-br-sm border border-violet/40 bg-violet/10"
+                              : "rounded-bl-sm border border-border bg-card"
+                          }`}
+                        >
+                          {!sameSender && (
+                            <div className={`mb-1 font-mono text-[9px] uppercase tracking-wider ${m.is_admin ? "text-violet" : "text-neon"}`}>
+                              {m.is_admin ? (activeThread.assigned_name ? `${activeThread.assigned_name} · suporte` : "suporte") : (activeThread.profile?.display_name || "cliente")}
+                            </div>
+                          )}
+                          {m.body && <div className="whitespace-pre-wrap break-words leading-relaxed">{m.body}</div>}
+                          {m.attachment_url && (
+                            m.attachment_type?.startsWith("image/") ? <img src={m.attachment_url} alt="anexo" className="mt-2 max-h-64 rounded" />
+                            : m.attachment_type?.startsWith("video/") ? <video src={m.attachment_url} controls className="mt-2 max-h-64 rounded" />
+                            : <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-2 block text-cyan underline">Baixar anexo</a>
+                          )}
+                          <div className={`mt-1 font-mono text-[9px] text-muted-foreground ${m.is_admin ? "text-right" : ""}`}>
+                            {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <div className="border-t border-border/40 p-3">
-              <div className="mb-2 flex items-center justify-between">
+            <div className="border-t border-border/40 bg-background/40 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                  ctrl+enter para enviar
+                  enter envia · shift+enter quebra linha{body.length > 0 && ` · ${body.length} caracteres`}
                 </span>
                 <QuickRepliesDropdown
                   onPick={(text) => {
@@ -1722,25 +1755,27 @@ function AdminChatPanel() {
                   }}
                 />
               </div>
-              <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
-                <Input
+              <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
+                <textarea
                   ref={inputRef}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
+                  rows={1}
                   onKeyDown={(e) => {
-                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                    if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       send();
                     }
                   }}
-                  placeholder="Responder cliente..."
-                  className="font-mono text-sm"
+                  placeholder={activeThread.status === "closed" ? "Conversa encerrada — responder reabre o atendimento" : "Responder cliente..."}
+                  className="max-h-40 min-h-11 flex-1 resize-none rounded-md border border-border bg-background px-3 py-2.5 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-neon/60 focus:outline-none"
                 />
                 <Button type="submit" disabled={sending || !body.trim()} aria-label="Enviar mensagem" className="glow-neon min-h-11 shrink-0 px-3 font-mono uppercase tracking-wider sm:px-4">
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 sm:mr-2" /><span className="hidden sm:inline">Enviar</span></>}
                 </Button>
               </form>
             </div>
+
           </>
         )}
       </section>
