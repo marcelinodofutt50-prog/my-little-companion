@@ -32,6 +32,8 @@ export function SecurityWelcomeDialog() {
   const [errorText, setErrorText] = useState<string | null>(null);
   /** null = ainda carregando; true = já existiram códigos antes (regeneração) */
   const [hadCodes, setHadCodes] = useState(false);
+  const [remaining, setRemaining] = useState(0);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [exhausted, setExhausted] = useState(false);
   const checked = useRef(false);
 
@@ -73,11 +75,13 @@ export function SecurityWelcomeDialog() {
 
         const generatedAt = (profile as any)?.recovery_codes_generated_at ?? null;
         const ackAt = (profile as any)?.security_ack_at ?? null;
-        const remaining = count ?? 0;
+        const left = count ?? 0;
 
         setHadCodes(Boolean(generatedAt));
-        setExhausted(Boolean(generatedAt) && remaining === 0);
-        if (!ackAt || remaining === 0) setOpen(true);
+        setGeneratedAt(generatedAt);
+        setRemaining(left);
+        setExhausted(Boolean(generatedAt) && left === 0);
+        if (!ackAt || left === 0) setOpen(true);
       })
       .catch(() => {});
   }, []);
@@ -188,6 +192,8 @@ export function SecurityWelcomeDialog() {
           : `${nextCodes.length} códigos de recuperação gerados com sucesso`,
       );
       setHadCodes(true);
+      setRemaining(nextCodes.length);
+      setGeneratedAt(new Date().toISOString());
       setExhausted(false);
     } catch (e: any) {
       console.error("[recovery] falha final ao gerar códigos", {
@@ -206,6 +212,11 @@ export function SecurityWelcomeDialog() {
     }
   }
 
+
+  const hasActiveCodes = hadCodes && remaining > 0 && step === "notice";
+  const generatedLabel = generatedAt
+    ? new Date(generatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
+    : null;
 
   function copyAll() {
     if (!codes) return;
@@ -262,34 +273,64 @@ export function SecurityWelcomeDialog() {
                 </div>
               </div>
             ))}
-            <div className="flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-3">
-              <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
-              <div>
-                <div className="text-xs font-semibold">
-                  {exhausted
-                    ? "Seus códigos acabaram"
-                    : hadCodes
-                      ? "Gerar novos códigos"
-                      : "Recuperação de conta"}
+            {hasActiveCodes ? (
+              <div className="flex items-start gap-3 rounded-md border border-neon/40 bg-neon/5 p-3">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
+                <div>
+                  <div className="text-xs font-semibold">Você já tem códigos de backup</div>
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    Existem <span className="text-neon">{remaining} código(s) de recuperação ativos</span> na sua conta
+                    {generatedLabel ? ` (gerados em ${generatedLabel})` : ""}. Por segurança eles não podem ser exibidos
+                    de novo. Se você guardou o arquivo .txt, está tudo certo — é só continuar.
+                  </p>
                 </div>
-                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                  {exhausted
-                    ? "Você já usou todos os códigos anteriores. Gere um novo conjunto de 8 códigos para não perder o acesso."
-                    : hadCodes
-                      ? "Ao gerar um novo conjunto, todos os códigos antigos deixam de funcionar imediatamente."
-                      : "Vamos gerar 8 códigos de uso único. Se você perder o acesso ao e-mail, use um deles em /recuperar para criar uma senha nova."}
-                </p>
               </div>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button onClick={handleGenerate} disabled={loading} className="w-full font-mono uppercase">
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {loading ? "Gerando..." : hadCodes ? "Gerar novos códigos" : "Gerar meus códigos"}
-              </Button>
-              <Button variant="ghost" onClick={close} disabled={loading} className="w-full font-mono uppercase sm:w-auto">
-                Depois
-              </Button>
-            </div>
+            ) : (
+              <div className="flex items-start gap-3 rounded-md border border-primary/30 bg-primary/5 p-3">
+                <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-neon" />
+                <div>
+                  <div className="text-xs font-semibold">
+                    {exhausted ? "Seus códigos acabaram" : "Recuperação de conta"}
+                  </div>
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    {exhausted
+                      ? "Você já usou todos os códigos anteriores. Gere um novo conjunto de 8 códigos para não perder o acesso."
+                      : "Vamos gerar 8 códigos de uso único. Se você perder o acesso ao e-mail, use um deles em /recuperar para criar uma senha nova."}
+                  </p>
+                </div>
+              </div>
+            )}
+            {hasActiveCodes ? (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button onClick={close} disabled={loading} className="w-full font-mono uppercase">
+                  <Check className="mr-2 h-4 w-4" /> Entendi, continuar
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerate}
+                  disabled={loading}
+                  className="w-full font-mono uppercase sm:w-auto"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading ? "Gerando..." : "Gerar novos"}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button onClick={handleGenerate} disabled={loading} className="w-full font-mono uppercase">
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading ? "Gerando..." : "Gerar meus códigos"}
+                </Button>
+                <Button variant="ghost" onClick={close} disabled={loading} className="w-full font-mono uppercase sm:w-auto">
+                  Depois
+                </Button>
+              </div>
+            )}
+            {hasActiveCodes && (
+              <p className="text-[11px] text-amber-400">
+                Gerar novos códigos invalida imediatamente os antigos.
+              </p>
+            )}
             {errorText && (
               <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-[11px] leading-snug text-destructive">
                 <span className="font-semibold">Não consegui gerar ainda.</span> Motivo: {errorText}
