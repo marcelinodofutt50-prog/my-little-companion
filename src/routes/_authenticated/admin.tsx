@@ -1228,6 +1228,9 @@ function AdminChatPanel() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [chatHasMore, setChatHasMore] = useState(false);
+  const [chatLoadingOlder, setChatLoadingOlder] = useState(false);
+
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
@@ -1302,7 +1305,11 @@ function AdminChatPanel() {
 
   useEffect(() => {
     if (!activeId) return;
-    msgsFn({ data: { threadId: activeId } }).then((m) => setMsgs(m as Msg[])).catch(() => {});
+    setMsgs([]);
+    setChatHasMore(false);
+    msgsFn({ data: { threadId: activeId, limit: 30 } })
+      .then((r: any) => { setMsgs((r?.messages ?? []) as Msg[]); setChatHasMore(!!r?.hasMore); })
+      .catch(() => {});
     const ch = supabase.channel(`admin-t-${activeId}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${activeId}` },
       (payload) => setMsgs((prev) => {
@@ -1314,8 +1321,37 @@ function AdminChatPanel() {
     return () => { supabase.removeChannel(ch); };
   }, [activeId, msgsFn]);
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length]);
+  async function loadOlderAdmin() {
+    if (!activeId || chatLoadingOlder || !chatHasMore || msgs.length === 0) return;
+    setChatLoadingOlder(true);
+    const el = listRef.current;
+    const prevHeight = el?.scrollHeight ?? 0;
+    try {
+      const r: any = await msgsFn({ data: { threadId: activeId, limit: 30, before: msgs[0].created_at } });
+      const older = (r?.messages ?? []) as Msg[];
+      setChatHasMore(!!r?.hasMore);
+      if (older.length) {
+        setMsgs((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          return [...older.filter((m) => !seen.has(m.id)), ...prev];
+        });
+        requestAnimationFrame(() => {
+          const node = listRef.current;
+          if (node) node.scrollTop = node.scrollHeight - prevHeight;
+        });
+      }
+    } catch { /* silencioso */ }
+    setChatLoadingOlder(false);
+  }
+
+  const lastMsgId = msgs.length ? msgs[msgs.length - 1].id : "";
+  useEffect(() => {
+    if (chatLoadingOlder) return;
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMsgId]);
   useEffect(() => { inputRef.current?.focus(); }, [activeId]);
+
 
 
   async function send() {
@@ -1523,7 +1559,26 @@ function AdminChatPanel() {
                 </div>
               </div>
             </div>
-            <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-background/30 p-4">
+            <div
+              ref={listRef}
+              onScroll={() => { const el = listRef.current; if (el && el.scrollTop < 40) void loadOlderAdmin(); }}
+              className="flex-1 space-y-3 overflow-y-auto bg-background/30 p-4"
+            >
+              {(chatHasMore || chatLoadingOlder) && (
+                <div className="flex justify-center pb-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-3 text-[10px] font-mono uppercase tracking-wider"
+                    disabled={chatLoadingOlder}
+                    onClick={() => void loadOlderAdmin()}
+                  >
+                    {chatLoadingOlder ? "carregando..." : "carregar mensagens antigas"}
+                  </Button>
+                </div>
+              )}
+
               {msgs.length === 0 && <div className="pt-16 text-center text-xs text-muted-foreground">Sem mensagens ainda — inicie a conversa.</div>}
               {msgs.map((m) => m.is_system ? (
                 <div key={m.id} className="flex justify-center">

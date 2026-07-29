@@ -29,11 +29,16 @@ type PendingMsg = {
   created_at: string;
 };
 
+const PAGE_SIZE = 30;
+
 function SupportPage() {
   const [thread, setThread] = useState<Thread | null>(null);
   const [savingCat, setSavingCat] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [pending, setPending] = useState<PendingMsg[]>([]);
+
   const [body, setBody] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uid, setUid] = useState<string>("");
@@ -72,8 +77,14 @@ function SupportPage() {
   useEffect(() => {
     if (!threadId) return;
     let cancelled = false;
-    listFn({ data: { threadId } })
-      .then((m) => { if (!cancelled) setMsgs(m as Msg[]); })
+    setMsgs([]);
+    setHasMore(false);
+    listFn({ data: { threadId, limit: PAGE_SIZE } })
+      .then((r: any) => {
+        if (cancelled) return;
+        setMsgs((r?.messages ?? []) as Msg[]);
+        setHasMore(!!r?.hasMore);
+      })
       .catch(() => {});
     markReadFn({ data: { threadId } }).catch(() => {});
 
@@ -97,8 +108,48 @@ function SupportPage() {
     return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [threadId, listFn, markReadFn]);
 
+  // Carrega mensagens antigas mantendo a posição visual do scroll.
+  async function loadOlder() {
+    if (!threadId || loadingOlder || !hasMore || msgs.length === 0) return;
+    setLoadingOlder(true);
+    const el = listRef.current;
+    const prevHeight = el?.scrollHeight ?? 0;
+    try {
+      const r: any = await listFn({ data: { threadId, limit: PAGE_SIZE, before: msgs[0].created_at } });
+      const older = (r?.messages ?? []) as Msg[];
+      setHasMore(!!r?.hasMore);
+      if (older.length) {
+        setMsgs((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          return [...older.filter((m) => !seen.has(m.id)), ...prev];
+        });
+        requestAnimationFrame(() => {
+          const node = listRef.current;
+          if (node) node.scrollTop = node.scrollHeight - prevHeight;
+        });
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível carregar o histórico");
+    }
+    setLoadingOlder(false);
+  }
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length, pending.length]);
+  // Auto-carrega ao chegar no topo da lista.
+  function onListScroll() {
+    const el = listRef.current;
+    if (el && el.scrollTop < 40) void loadOlder();
+  }
+
+
+
+  // Só rola para o fim quando chega mensagem nova (não ao carregar histórico).
+  const lastMsgId = msgs.length ? msgs[msgs.length - 1].id : "";
+  useEffect(() => {
+    if (loadingOlder) return;
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMsgId, pending.length]);
+
 
   // Mark admin messages as seen when tab is focused
   useEffect(() => {
@@ -285,7 +336,23 @@ function SupportPage() {
               nova resposta do admin
             </button>
           )}
-          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+          <div ref={listRef} onScroll={onListScroll} className="flex-1 space-y-3 overflow-y-auto p-4">
+            {(hasMore || loadingOlder) && (
+              <div className="flex justify-center pb-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1 px-3 text-[10px] font-mono uppercase tracking-wider"
+                  disabled={loadingOlder}
+                  onClick={() => void loadOlder()}
+                >
+                  {loadingOlder ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />}
+                  {loadingOlder ? "carregando..." : "carregar mensagens antigas"}
+                </Button>
+              </div>
+            )}
+
             {msgs.length === 0 && pending.length === 0 && <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
                 <div className="text-3xl" aria-hidden>{active.emoji}</div>
                 <div className="text-sm font-medium">{active.label}</div>
