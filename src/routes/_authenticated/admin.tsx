@@ -897,10 +897,21 @@ function AdminPage() {
             return (
               <div className="terminal-card scanlines relative overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 p-3">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {filtered.length} de {licenses.length} · trials {trialsCount} · pagas {paidCount}
+                  <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>{filtered.length} de {visibleBase.length} · trials {trialsCount} · pagas {paidCount}</span>
+                    {archivedCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setLicShowArchived((v) => !v)}
+                        title="Licenças vencidas/revogadas há mais de 2 dias ficam arquivadas para não poluir o painel. Se o cliente reativar, elas voltam sozinhas."
+                        className={`rounded border px-2 py-1 transition-colors ${licShowArchived ? "border-violet/50 bg-violet/10 text-violet" : "border-border/40 text-muted-foreground hover:text-foreground"}`}
+                      >
+                        {licShowArchived ? "ocultar" : "ver"} arquivadas · {archivedCount}
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+
                     <input
                       value={licSearch}
                       onChange={(e) => setLicSearch(e.target.value)}
