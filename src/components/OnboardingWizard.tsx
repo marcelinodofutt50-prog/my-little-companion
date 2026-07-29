@@ -122,7 +122,7 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       const { data } = await supabase.auth.getUser();
       const user = data.user;
       if (!user) throw new Error("Sessão expirada");
-      const payload: Record<string, unknown> = {
+      const payload: any = {
         onboarding_completed_at: new Date().toISOString(),
         onboarding_answers: { ...answers, skipped },
       };
