@@ -88,6 +88,8 @@ function DashboardPage() {
   const listFn = useServerFn(listMyLicenses);
   const trialFn = useServerFn(generateTrial);
   const cashFn = useServerFn(getMyCashbackBalance);
+  const ordersFn = useServerFn(listMyOrders);
+
   const detectFn = useServerFn(detectLegacyForCurrentUser);
   const legacyStatusFn = useServerFn(getMyLegacyStatus);
   const checkoutFn = useServerFn(createCheckout);
