@@ -493,7 +493,7 @@ function AdminPage() {
 
           {/* CONTENT */}
           <div className="min-w-0">
-            <AdminAlertsBanner onOpenLogs={() => setTab("health")} onOpenIA={() => setTab("ia")} />
+            {isAdminUser && <AdminAlertsBanner onOpenLogs={() => setTab("health")} onOpenIA={() => setTab("ia")} />}
 
             {/* Section title bar */}
             {activeMeta && (
