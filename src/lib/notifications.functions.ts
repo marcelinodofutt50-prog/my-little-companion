@@ -36,8 +36,11 @@ export const listMyNotifications = createServerFn({ method: "GET" })
     const now = Date.now();
 
     // Notificações de chat/mensagens são exclusivas de admins.
-    const { data: isAdminRaw } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    const isAdmin = !!isAdminRaw;
+    const [adminRes, modRes] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.rpc("has_role", { _user_id: userId, _role: "moderator" }),
+    ]);
+    const isAdmin = !!adminRes.data || !!modRes.data;
 
     const [threads, licenses, refunds, orders, migrations, myClosedThreads] = await Promise.all([
       isAdmin
