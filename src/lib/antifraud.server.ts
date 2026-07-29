@@ -94,16 +94,80 @@ export type SignupGuardResult = {
   allowed: boolean;
   reason?: string;
   accountsInWindow: number;
+  /** segundos até poder tentar de novo (rate limit por tentativas) */
+  retryAfter?: number;
 };
 
-export async function evaluateSignup(): Promise<SignupGuardResult> {
+/**
+ * Rate limit ad-hoc de tentativas de cadastro por conexão.
+ * Configurável por env:
+ * - ANTIFRAUD_MAX_ATTEMPTS (default 5)
+ * - ANTIFRAUD_ATTEMPTS_WINDOW_MIN (default 10)
+ */
+export function rateLimitConfig() {
+  return {
+    maxAttempts: envInt("ANTIFRAUD_MAX_ATTEMPTS", 5, 2, 100),
+    windowMs: envInt("ANTIFRAUD_ATTEMPTS_WINDOW_MIN", 10, 1, 24 * 60) * 60 * 1000,
+  };
+}
+
+/** Registra a tentativa e devolve quantas houve na janela + quando libera. */
+async function checkAndRecordAttempt(
+  ipHash: string,
+  email?: string | null,
+): Promise<{ blocked: boolean; retryAfter: number }> {
+  const cfg = rateLimitConfig();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const since = new Date(Date.now() - cfg.windowMs).toISOString();
+  const { data } = await supabaseAdmin
+    .from("signup_attempts")
+    .select("created_at")
+    .eq("ip_hash", ipHash)
+    .gte("created_at", since)
+    .order("created_at", { ascending: true });
+
+  const attempts = data ?? [];
+  const blocked = attempts.length >= cfg.maxAttempts;
+  // libera quando a tentativa mais antiga sair da janela
+  const oldest = attempts[0] ? new Date(attempts[0].created_at).getTime() : Date.now();
+  const retryAfter = blocked
+    ? Math.max(1, Math.ceil((oldest + cfg.windowMs - Date.now()) / 1000))
+    : 0;
+
+  await supabaseAdmin.from("signup_attempts").insert({
+    ip_hash: ipHash,
+    email_masked: maskEmail(email ?? undefined),
+    outcome: blocked ? "rate_limited" : "attempt",
+  });
+
+  return { blocked, retryAfter };
+}
+
+export async function evaluateSignup(email?: string | null): Promise<SignupGuardResult> {
   try {
     const cfg = antifraudConfig();
     const ip = clientIp();
     if (!ip) return { allowed: true, accountsInWindow: 0 };
     const ipHash = await hashIp(ip);
+    const allowlisted = await isAllowlisted(ipHash);
+
+    if (!allowlisted) {
+      // 1) Rate limit: muitas tentativas seguidas nesta conexão
+      const rl = await checkAndRecordAttempt(ipHash, email);
+      if (rl.blocked) {
+        const mins = Math.ceil(rl.retryAfter / 60);
+        return {
+          allowed: false,
+          accountsInWindow: 0,
+          retryAfter: rl.retryAfter,
+          reason: `Muitas tentativas de cadastro nesta conexão. Tente de novo em ${mins} min ou fale com o suporte.`,
+        };
+      }
+    }
+
+    // 2) Limite de contas por conexão na janela longa
     const used = await countRecentSignups(ipHash);
-    if (used >= cfg.maxAccounts && !(await isAllowlisted(ipHash))) {
+    if (used >= cfg.maxAccounts && !allowlisted) {
       return {
         allowed: false,
         accountsInWindow: used,
@@ -116,6 +180,7 @@ export async function evaluateSignup(): Promise<SignupGuardResult> {
     return { allowed: true, accountsInWindow: 0 };
   }
 }
+
 
 export async function persistSignup(input: { email?: string; userId?: string | null }) {
   try {
