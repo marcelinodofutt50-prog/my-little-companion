@@ -60,7 +60,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatBrl, tierLabel, type VersionTier } from "@/lib/plans";
 import {
   adminStats, adminListUsers, adminListOrders, adminListLicenses,
-  adminRevokeLicense, adminExtendLicense, adminFixLoginBug,
+  adminRevokeLicense, adminExtendLicense, adminFixLoginBug, adminAnalyzeLoginBug,
   adminSetRole, adminListRoles, adminRenewClientServer, adminRecreateLicense,
   adminListThreads, adminListThreadMessages, adminSendMessage, adminListLogs,
   adminAssumeThread, adminCloseThread,
