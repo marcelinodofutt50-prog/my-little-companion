@@ -1,7 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type NotificationKind = "support" | "renewal" | "refund" | "suspended" | "order" | "migration" | "info";
+export type NotificationKind =
+  | "support"
+  | "renewal"
+  | "refund"
+  | "suspended"
+  | "order"
+  | "migration"
+  | "license"
+  | "info";
 
 export type AppNotification = {
   id: string;
