@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Check, Minus, ShieldCheck, LifeBuoy, User } from "lucide-react";
 import { MATRIX_ROWS, ROLE_CAPS, ROLE_DESC, ROLE_LABEL, can, type Role } from "@/lib/permissions";
 
@@ -43,8 +44,8 @@ export function AdminPermissionsMatrix() {
           </thead>
           <tbody>
             {MATRIX_ROWS.map((g) => (
-              <>
-                <tr key={g.group} className="bg-foreground/[0.03]">
+              <Fragment key={g.group}>
+                <tr className="bg-foreground/[0.03]">
                   <td colSpan={4} className="px-1 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-cyan/80">
                     {g.group}
                   </td>
@@ -66,7 +67,7 @@ export function AdminPermissionsMatrix() {
                     ))}
                   </tr>
                 ))}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
