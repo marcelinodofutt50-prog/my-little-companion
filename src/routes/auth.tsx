@@ -209,14 +209,16 @@ function AuthPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (loading || cooldown > 0) return;
+    if (loading) return;
+    // O cooldown só vale para envio de e-mail (cadastro). Login nunca é bloqueado.
+    if (mode === "up" && cooldown > 0) return;
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     try {
       if (mode === "up") {
         if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
-          startCooldown(300);
+          startCooldown(120);
           setEmailBlocked(true);
           track("signup", "blocked_local", { error: "local attempt cap reached" });
           throw new Error(
@@ -243,8 +245,13 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        clearLocalLimits();
         navigate({ to: (next as any) || "/dashboard" });
       }
+    } catch (err: any) {
+      handleAuthError(err, mode === "up" ? "signup" : "signin");
+    } finally { setLoading(false); }
+  }
     } catch (err: any) {
       handleAuthError(err, mode === "up" ? "signup" : "signin");
     } finally { setLoading(false); }
