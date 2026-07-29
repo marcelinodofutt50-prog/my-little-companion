@@ -105,35 +105,36 @@ export function AdminActiveProblems({ onNavigate }: { onNavigate?: (tab: string)
                     } : undefined}
                     className={`group flex items-start gap-3 rounded-md border border-border/40 bg-background/40 p-2.5 transition-colors hover:border-primary/40 hover:bg-background ${clickable ? "cursor-pointer text-left" : ""}`}
                   >
-
-                  <div
-                    className={`mt-0.5 shrink-0 rounded p-1.5 ${
-                      p.severity === "critical"
-                        ? "bg-danger/10 text-danger"
-                        : p.severity === "warning"
-                        ? "bg-amber-400/10 text-amber-400"
-                        : "bg-primary/10 text-primary"
-                    }`}
-                  >
-                    {icons[p.kind]}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                        {kindLabel[p.kind]}
-                      </span>
-                      <span className="ml-auto font-mono text-[9px] text-muted-foreground/70">
-                        {new Date(p.createdAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                      </span>
+                    <div
+                      className={`mt-0.5 shrink-0 rounded p-1.5 ${
+                        p.severity === "critical"
+                          ? "bg-danger/10 text-danger"
+                          : p.severity === "warning"
+                          ? "bg-amber-400/10 text-amber-400"
+                          : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      {icons[p.kind]}
                     </div>
-                    <p className="mt-0.5 text-sm font-medium leading-snug">{p.title}</p>
-                    <p className="text-xs text-muted-foreground">{p.detail}</p>
-                    {p.userEmail && (
-                      <p className="mt-1 font-mono text-[10px] text-muted-foreground/70">{p.userEmail}</p>
-                    )}
-                  </div>
-                </a>
-              ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {kindLabel[p.kind]}
+                        </span>
+                        <span className="ml-auto font-mono text-[9px] text-muted-foreground/70">
+                          {new Date(p.createdAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-sm font-medium leading-snug">{p.title}</p>
+                      <p className="text-xs text-muted-foreground">{p.detail}</p>
+                      {p.userEmail && (
+                        <p className="mt-1 font-mono text-[10px] text-muted-foreground/70">{p.userEmail}</p>
+                      )}
+                    </div>
+                  </Wrapper>
+                );
+              })}
+
             </div>
           </ScrollArea>
         )}
