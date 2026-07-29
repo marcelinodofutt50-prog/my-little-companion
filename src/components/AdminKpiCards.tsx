@@ -13,15 +13,16 @@ function KpiCard({
   const color =
     accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : accent === "violet" ? "text-violet" : "text-amber-400";
   return (
-    <div className="terminal-card scanlines group relative overflow-hidden p-4 transition-all hover:-translate-y-0.5">
-      <div className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-70 ${color}`} />
-      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span>{label}</span>
-        <Icon className={`h-3.5 w-3.5 ${color}`} />
+    <div className="terminal-card group relative overflow-hidden rounded-xl border-border/60 p-4 transition-colors hover:border-foreground/20">
+      <div className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50 ${color}`} />
+      <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="truncate">{label}</span>
+        <Icon className={`h-3.5 w-3.5 shrink-0 opacity-80 ${color}`} />
       </div>
-      <div className={`mt-2 font-mono text-2xl font-bold ${color}`}>{value}</div>
-      {sub && <div className="mt-1 font-mono text-[10px] uppercase text-muted-foreground/70">{sub}</div>}
+      <div className={`mt-2.5 font-mono text-[26px] leading-none font-bold tabular-nums ${color}`}>{value}</div>
+      {sub && <div className="mt-2 font-mono text-[10px] uppercase text-muted-foreground/60">{sub}</div>}
     </div>
+
   );
 }
 
