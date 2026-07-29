@@ -1302,7 +1302,7 @@ function AdminChatPanel() {
   const [soundOn, setSoundOn] = useState<boolean>(SOUND_DEFAULT_ON);
   const [soundHydrated, setSoundHydrated] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const activeIdRef = useRef<string | null>(null);
   const bootAtRef = useRef<number>(Date.now());
   const soundOnRef = useRef(soundOn);
