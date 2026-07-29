@@ -36,7 +36,7 @@ const schema = z.object({
 
 const COOLDOWN_KEY = "shadow.auth.emailCooldownUntil";
 const ATTEMPTS_KEY = "shadow.auth.emailAttempts";
-const MAX_ATTEMPTS_PER_HOUR = 3;
+const MAX_ATTEMPTS_PER_HOUR = 8;
 
 function readCooldown(): number {
   if (typeof window === "undefined") return 0;
@@ -101,6 +101,14 @@ function AuthPage() {
   function startCooldown(secs: number) {
     writeCooldown(secs);
     setCooldown(secs);
+  }
+
+  /** Limpa travas locais após sucesso (evita cliente preso em "Aguarde Xs"). */
+  function clearLocalLimits() {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(COOLDOWN_KEY);
+    window.localStorage.removeItem(ATTEMPTS_KEY);
+    setCooldown(0);
   }
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
@@ -201,14 +209,16 @@ function AuthPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (loading || cooldown > 0) return;
+    if (loading) return;
+    // O cooldown só vale para envio de e-mail (cadastro). Login nunca é bloqueado.
+    if (mode === "up" && cooldown > 0) return;
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     try {
       if (mode === "up") {
         if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
-          startCooldown(300);
+          startCooldown(120);
           setEmailBlocked(true);
           track("signup", "blocked_local", { error: "local attempt cap reached" });
           throw new Error(
@@ -235,6 +245,7 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        clearLocalLimits();
         navigate({ to: (next as any) || "/dashboard" });
       }
     } catch (err: any) {
@@ -279,13 +290,13 @@ function AuthPage() {
             <label className="mb-1 block font-mono text-xs uppercase text-muted-foreground">Senha</label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={mode === "in" ? "current-password" : "new-password"} />
           </div>
-          <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading || cooldown > 0}>
+          <Button type="submit" className="w-full font-mono uppercase tracking-wider" disabled={loading || (mode === "up" && cooldown > 0)}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {cooldown > 0
+            {mode === "up" && cooldown > 0
               ? `Aguarde ${cooldown}s`
               : mode === "in" ? "Entrar" : "Criar conta"}
           </Button>
-          {cooldown > 0 && (
+          {mode === "up" && cooldown > 0 && (
             <p className="text-center font-mono text-[11px] text-muted-foreground">
               Limite temporário de envio de e-mails. Se você já recebeu o link, use-o — não precisa reenviar.
             </p>
