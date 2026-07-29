@@ -108,8 +108,6 @@ function AdminPage() {
     apk: sectionCounts.apk,
   };
   const totalPending = navBadges.chat + navBadges.orders + navBadges.refunds + navBadges.apk;
-    apk: sectionCounts.apk,
-  };
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
   const [email, setEmail] = useState("");
