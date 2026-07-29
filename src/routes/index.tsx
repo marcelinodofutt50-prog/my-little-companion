@@ -260,9 +260,9 @@ function LandingPage() {
             </div>
           </section>
 
-          {/* PRICING */}
+          {/* PRICING — Cyber-terminal tactical tiers */}
           <section className="border-t border-border py-20 md:py-28">
-            <div className="mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+            <div className="mb-16 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
               <div>
                 <div className="font-mono text-[10px] uppercase tracking-[0.32em] text-cyan">
                   // licenças
@@ -276,31 +276,48 @@ function LandingPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:items-start">
               {plans.map((p) => {
                 const accentClass =
                   p.accent === "neon" ? "text-neon" : p.accent === "cyan" ? "text-cyan" : "text-violet";
+                const borderClass =
+                  p.accent === "neon" ? "border-neon/30 hover:border-neon/60" : p.accent === "cyan" ? "border-cyan/30 hover:border-cyan/60" : "border-violet/30 hover:border-violet/60";
                 const bulletClass =
-                  p.accent === "neon" ? "bg-neon" : p.accent === "cyan" ? "bg-cyan" : "bg-violet";
+                  p.accent === "neon" ? "text-neon" : p.accent === "cyan" ? "text-cyan" : "text-violet";
+                const statusLabel =
+                  p.accent === "neon" ? "Tier: Alpha" : p.accent === "cyan" ? "Status: Active" : "Status: Infinite";
+                const btnClass = p.highlight
+                  ? "bg-cyan text-background hover:bg-cyan/85 shadow-[0_0_30px_rgba(6,182,212,0.35)]"
+                  : p.accent === "cyan"
+                    ? "bg-neon/10 text-neon border border-neon/40 hover:bg-neon/20"
+                    : p.accent === "violet"
+                      ? "bg-violet/10 text-violet border border-violet/40 hover:bg-violet/20"
+                      : "bg-neon/10 text-neon border border-neon/40 hover:bg-neon/20";
+
                 return (
                   <div
                     key={p.slug}
-                    className={`price-card relative flex flex-col rounded-lg p-8 transition-all duration-300 hover:-translate-y-1 ${
-                      p.highlight ? "price-card-popular glow-neon-soft" : ""
+                    className={`relative flex flex-col rounded-lg p-8 transition-all duration-300 ${
+                      p.highlight
+                        ? "z-10 scale-[1.03] border-2 border-cyan bg-[#0d0d0d] shadow-[0_0_40px_rgba(6,182,212,0.12)]"
+                        : `bg-[#0a0a0a] border ${borderClass}`
                     }`}
                   >
                     {p.highlight && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-neon/60 bg-[#0a0f0a] px-4 py-1 font-mono text-[9px] uppercase tracking-[0.28em] text-neon">
-                        ★ Mais escolhido
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded bg-cyan px-3 py-1 font-mono text-[9px] font-black uppercase tracking-[0.2em] text-background">
+                        Mais escolhido
                       </div>
                     )}
-                    <div className={`font-mono text-[10px] uppercase tracking-[0.28em] ${accentClass}`}>
+                    <div className={`absolute top-0 right-0 p-2 font-mono text-[9px] font-bold uppercase tracking-widest ${accentClass} opacity-40`}>
+                      {statusLabel}
+                    </div>
+
+                    <div className={`mt-2 font-mono text-[10px] font-bold uppercase tracking-[0.28em] ${accentClass}`}>
                       {p.tier}
                     </div>
                     <h3 className="mt-3 font-display text-3xl tracking-tight">{p.name}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
 
-                    <div className="my-6 flex items-baseline gap-2 border-b border-border pb-6">
+                    <div className="my-6 flex items-baseline gap-1 border-b border-border pb-6">
                       <span className={`font-display text-5xl tracking-tight ${accentClass}`}>
                         {formatBrl(p.price)}
                       </span>
@@ -312,7 +329,7 @@ function LandingPage() {
                     <ul className="mb-8 space-y-3 text-sm">
                       {p.features.map((f) => (
                         <li key={f} className="flex items-start gap-3 text-muted-foreground">
-                          <span className={`mt-1.5 h-1.5 w-1.5 rounded-full ${bulletClass}`} />
+                          <span className={`font-mono text-xs font-bold ${bulletClass}`}>[+]</span>
                           <span>{f}</span>
                         </li>
                       ))}
@@ -320,11 +337,7 @@ function LandingPage() {
 
                     <Link to="/planos" className="mt-auto">
                       <Button
-                        className={`w-full rounded-md py-6 font-mono text-[10px] uppercase tracking-[0.24em] transition-all ${
-                          p.highlight
-                            ? "bg-neon text-background hover:bg-neon/85 hover:shadow-[0_0_30px_rgba(132,204,22,0.35)]"
-                            : "bg-[#0a0f0a] text-foreground border border-border hover:border-neon/40 hover:bg-secondary/30"
-                        }`}
+                        className={`w-full rounded-md py-6 font-mono text-[10px] font-black uppercase tracking-[0.24em] transition-all ${btnClass}`}
                       >
                         {p.highlight ? "Assinar agora" : "Comprar"}
                       </Button>
