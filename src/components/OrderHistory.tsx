@@ -188,6 +188,42 @@ export function OrderHistory() {
   );
 }
 
+function FilterRow({
+  icon,
+  label,
+  options,
+  active,
+  onSelect,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  options: { key: string; label: string }[];
+  active: string;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+        {icon} {label}
+      </span>
+      {options.map((o) => (
+        <button
+          key={o.key}
+          onClick={() => onSelect(o.key)}
+          className={`rounded border px-2 py-0.5 font-mono text-[10px] transition-colors ${
+            active === o.key
+              ? "border-neon/50 bg-neon/10 text-neon"
+              : "border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border/40 bg-card/40 p-3">
