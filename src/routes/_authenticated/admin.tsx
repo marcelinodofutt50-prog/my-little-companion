@@ -448,8 +448,9 @@ function AdminPage() {
 
             {/* Section title bar */}
             {activeMeta && (
-              <div className="mb-4 border-b border-border/40 pb-3">
+              <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border/40 bg-background/80 px-3 pb-3 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:-mx-1 sm:px-1">
                 <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground/60">admin /</span>
                   <activeMeta.icon className="h-4 w-4 text-neon" />
                   <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
                   {activeMeta.hint && <span className="ml-1 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
