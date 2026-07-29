@@ -68,7 +68,7 @@ export function maskEmail(email?: string | null): string | null {
 
 export async function countRecentSignups(ipHash: string): Promise<number> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const since = new Date(Date.now() - WINDOW_MS).toISOString();
+  const since = new Date(Date.now() - antifraudConfig().windowMs).toISOString();
   const { count } = await supabaseAdmin
     .from("signup_ip_log")
     .select("id", { count: "exact", head: true })
@@ -85,15 +85,15 @@ export type SignupGuardResult = {
 
 export async function evaluateSignup(): Promise<SignupGuardResult> {
   try {
+    const cfg = antifraudConfig();
     const ip = clientIp();
     if (!ip) return { allowed: true, accountsInWindow: 0 };
     const used = await countRecentSignups(await hashIp(ip));
-    if (used >= MAX_ACCOUNTS_PER_IP_24H) {
+    if (used >= cfg.maxAccounts) {
       return {
         allowed: false,
         accountsInWindow: used,
-        reason:
-          "Detectamos várias contas criadas nesta conexão nas últimas 24 horas. Se você é um cliente real, fale com o suporte que liberamos manualmente.",
+        reason: `Detectamos várias contas criadas nesta conexão nas últimas ${cfg.windowHours} horas. Se você é um cliente real, fale com o suporte que liberamos manualmente.`,
       };
     }
     return { allowed: true, accountsInWindow: used };
@@ -116,8 +116,9 @@ export async function persistSignup(input: { email?: string; userId?: string | n
       user_id: input.userId ?? null,
       user_agent: clientUserAgent(),
       accounts_in_window: used + 1,
-      suspicious: used + 1 > SUSPICIOUS_THRESHOLD,
+      suspicious: used + 1 > antifraudConfig().suspiciousThreshold,
     });
+
   } catch {
     // registro nunca quebra o cadastro
   }
