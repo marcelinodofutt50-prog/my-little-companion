@@ -12,6 +12,7 @@ import { siteUrl } from "@/lib/site-url";
 import { Lost2faHelp } from "@/components/Lost2faHelp";
 import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
+import { checkEmailAvailability } from "@/lib/signup.functions";
 
 
 export const Route = createFileRoute("/auth")({
@@ -117,6 +118,25 @@ function AuthPage() {
   const [cooldown, setCooldown] = useState(0);
   const [emailBlocked, setEmailBlocked] = useState(false);
   const [sendInfo, setSendInfo] = useState<{ count: number; last: number | null }>({ count: 0, last: null });
+  /** true quando o e-mail digitado já pertence a uma conta (inclui alias do Gmail). */
+  const [emailTaken, setEmailTaken] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
+  // Digitou outro e-mail? o aviso de "já cadastrado" some.
+  useEffect(() => { setEmailTaken(false); }, [email]);
+
+  /** Checagem ao sair do campo, só no cadastro: evita erro depois de preencher tudo. */
+  async function verifyEmailFree() {
+    if (mode !== "up") return;
+    const clean = normalizeEmail(email);
+    if (!z.string().email().safeParse(clean).success) return;
+    setCheckingEmail(true);
+    try {
+      const r = await checkEmailAvailability({ data: { email: clean } });
+      setEmailTaken(!r.available);
+    } catch { /* checagem é só conveniência */ }
+    finally { setCheckingEmail(false); }
+  }
 
   // Cooldown e histórico são por e-mail: trocar de e-mail mostra o estado do novo usuário.
   useEffect(() => {
@@ -252,22 +272,44 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    const parsed = schema.safeParse({ email, password });
+    const cleanEmail = normalizeEmail(email);
+    const parsed = schema.safeParse({ email: cleanEmail, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     try {
       if (mode === "up") {
-        // Antifraude: limite de contas por conexão (IP em hash) numa janela de 24h.
+        // 1) Mesma caixa de entrada já cadastrada? (cobre alias do Gmail: pontos e +tag)
+        const avail = await checkEmailAvailability({ data: { email: cleanEmail } })
+          .catch(() => ({ available: true }) as any);
+        if (!avail.available) {
+          setMode("in");
+          setEmailTaken(true);
+          toast.error(
+            avail.reason === "alias"
+              ? `Este Gmail já tem conta (${avail.aliasOf ?? "cadastrada"}). Pontos e "+" são ignorados pelo Gmail — use "Entrar".`
+              : "Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.",
+          );
+          return;
+        }
+        // 2) Antifraude: limite de contas por conexão (IP em hash) numa janela de 24h.
         const guard = await checkSignupAllowed().catch(() => ({ allowed: true }) as any);
         if (!guard.allowed) {
           throw new Error(guard.reason ?? "Cadastro bloqueado por segurança. Fale com o suporte.");
         }
         const { data: signUpData, error } = await supabase.auth.signUp({
-          email, password, options: { emailRedirectTo: siteUrl() },
+          email: cleanEmail, password, options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
+        // O Supabase devolve um usuário "fantasma" (sem identities) quando o e-mail
+        // já existe, para não vazar cadastro. Tratamos como duplicado.
+        if (signUpData.user && (signUpData.user.identities?.length ?? 0) === 0) {
+          setMode("in");
+          setEmailTaken(true);
+          toast.error("Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.");
+          return;
+        }
         // await: o fire-and-forget podia perder o registro se a página navegasse logo após o cadastro.
-        await recordSignupIp({ data: { email, userId: signUpData.user?.id ?? null } }).catch(() => {});
+        await recordSignupIp({ data: { email: cleanEmail, userId: signUpData.user?.id ?? null } }).catch(() => {});
         clearLocalLimits();
         track("signup", "sent");
         // Entra direto no painel: a confirmação de e-mail é feita depois, pelo banner do dashboard.
@@ -276,7 +318,7 @@ function AuthPage() {
           navigate({ to: (next as any) || "/dashboard" });
           return;
         }
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (!signInError) {
           toast.success("Conta criada! Você pode confirmar o e-mail depois, pelo painel.");
           navigate({ to: (next as any) || "/dashboard" });
@@ -292,12 +334,13 @@ function AuthPage() {
           "3. Clique em \"Confirmar e-mail\" e você entra no painel."
         );
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
         clearLocalLimits();
         navigate({ to: (next as any) || "/dashboard" });
       }
     } catch (err: any) {
+
       handleAuthError(err, mode === "up" ? "signup" : "signin");
     } finally { setLoading(false); }
   }
@@ -360,11 +403,28 @@ function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={verifyEmailFree}
                 required
                 autoComplete="email"
+                inputMode="email"
+                spellCheck={false}
                 placeholder="voce@email.com"
+                className={emailTaken ? "border-amber-400/60" : undefined}
               />
+              {mode === "up" && checkingEmail && (
+                <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">verificando e-mail…</p>
+              )}
+              {mode === "up" && emailTaken && !checkingEmail && (
+                <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-amber-400">
+                  Já existe conta com esse e-mail. O Gmail ignora pontos e “+tag”, então
+                  variações contam como a mesma caixa.{" "}
+                  <button type="button" onClick={() => setMode("in")} className="underline hover:text-neon">
+                    Entrar
+                  </button>
+                </p>
+              )}
             </div>
+
 
             <div>
               <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
