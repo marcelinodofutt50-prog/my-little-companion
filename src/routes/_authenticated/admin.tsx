@@ -428,11 +428,24 @@ function AdminPage() {
             {/* Section title bar */}
             {activeMeta && (
               <div className="mb-4 border-b border-border/40 pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <activeMeta.icon className="h-4 w-4 text-neon" />
                   <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
-                  {activeMeta.hint && <span className="ml-2 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+                  {activeMeta.hint && <span className="ml-1 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+                  {(navBadges[tab] ?? 0) > 0 && (
+                    <span className="rounded-full bg-neon/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-neon">
+                      {navBadges[tab]} pendente{navBadges[tab] > 1 ? "s" : ""}
+                    </span>
+                  )}
+                  <span
+                    title={countsUpdatedAt ? `Atualizado ${new Date(countsUpdatedAt).toLocaleTimeString("pt-BR")}` : "Sincronizando..."}
+                    className="ml-auto flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground"
+                  >
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon" />
+                    ao vivo{totalPending > 0 ? ` · ${totalPending}` : ""}
+                  </span>
                 </div>
+
                 {TAB_DESC[tab] && (
                   <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">{TAB_DESC[tab]}</p>
                 )}
