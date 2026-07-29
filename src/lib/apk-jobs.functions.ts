@@ -126,6 +126,7 @@ export const listApkJobs = createServerFn({ method: "GET" })
       .from("apk_jobs")
       .select("*")
       .eq("user_id", userId)
+      .is("cleared_at", null)
       .order("created_at", { ascending: false })
       .limit(50);
     return data ?? [];
