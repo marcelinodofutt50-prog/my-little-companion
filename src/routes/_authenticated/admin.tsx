@@ -1228,6 +1228,9 @@ function AdminChatPanel() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [chatHasMore, setChatHasMore] = useState(false);
+  const [chatLoadingOlder, setChatLoadingOlder] = useState(false);
+
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
