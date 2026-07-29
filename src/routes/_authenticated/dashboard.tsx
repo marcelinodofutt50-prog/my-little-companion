@@ -24,6 +24,7 @@ import { daysUntil, severityFromDays, severityColor, type ExpirySeverity } from 
 import { NicknameDialog } from "@/components/NicknameDialog";
 import { SecurityWelcomeDialog } from "@/components/SecurityWelcomeDialog";
 import { ExpiryReminder } from "@/components/ExpiryReminder";
+import { EmailConfirmBanner } from "@/components/EmailConfirmBanner";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
 import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
@@ -242,6 +243,7 @@ function DashboardPage() {
           </header>
           <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
             <SecurityWelcomeDialog />
+            <EmailConfirmBanner />
             <ExpiryReminder />
 
             {(() => {
