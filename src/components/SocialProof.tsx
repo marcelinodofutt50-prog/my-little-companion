@@ -2,47 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, ShieldCheck, Zap, Clock } from "lucide-react";
 
-type Sale = {
-  id: string;
-  first_name: string;
-  last_initial: string;
-  plan_slug: string;
-  amount: number;
-  created_at: string;
-};
-
-const PLAN_LABEL: Record<string, string> = {
-  "login-7d": "Plano Semanal",
-  "login-30d": "Plano Mensal",
-  "login-lifetime": "Plano Vitalício",
-  "play-protect-monthly": "Play Protect",
-  "upgrade-457-to-46": "Upgrade v4.6",
-};
-
-function planLabel(slug: string) {
-  return PLAN_LABEL[slug] ?? slug;
-}
-
-function timeAgo(iso: string) {
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return `há ${Math.floor(s)}s`;
-  if (s < 3600) return `há ${Math.floor(s / 60)}min`;
-  if (s < 86400) return `há ${Math.floor(s / 3600)}h`;
-  return `há ${Math.floor(s / 86400)}d`;
-}
-
 export function SocialProofStrip() {
-  const [sales, setSales] = useState<Sale[]>([]);
   const [count, setCount] = useState<number>(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("public_recent_sales" as any)
-        .select("*")
-        .limit(10);
-      if (!cancelled && data) setSales(data as unknown as Sale[]);
       const { count: total } = await supabase
         .from("orders" as any)
         .select("*", { count: "exact", head: true })
@@ -73,7 +38,6 @@ export function SocialProofStrip() {
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );
