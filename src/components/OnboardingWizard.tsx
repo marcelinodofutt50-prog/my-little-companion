@@ -122,18 +122,37 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       const { data } = await supabase.auth.getUser();
       const user = data.user;
       if (!user) throw new Error("Sessão expirada");
-      const payload: any = {
-        onboarding_completed_at: new Date().toISOString(),
-        onboarding_answers: { ...answers, skipped },
-      };
       const cleanNick = nick.trim();
-      if (cleanNick) payload.display_name = cleanNick;
-      const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
+
+      const base: any = { onboarding_completed_at: new Date().toISOString() };
+      if (cleanNick) base.display_name = cleanNick;
+
+      // Tenta salvar com as respostas; se a coluna ainda não estiver no cache do
+      // backend, salva o essencial mesmo assim (não trava o cliente na tela).
+      let { error } = await supabase
+        .from("profiles")
+        .update({ ...base, onboarding_answers: { ...answers, skipped } })
+        .eq("id", user.id);
+
+      if (error) {
+        const msg = String((error as any)?.message ?? "");
+        const isSchemaCache =
+          (error as any)?.code === "PGRST204" ||
+          (error as any)?.code === "PGRST205" ||
+          /schema cache|could not find/i.test(msg);
+        if (isSchemaCache) {
+          console.warn("[onboarding] salvando sem onboarding_answers", error);
+          const retry = await supabase.from("profiles").update(base).eq("id", user.id);
+          error = retry.error;
+        }
+      }
       if (error) throw error;
+
       if (cleanNick) onDisplayName?.(cleanNick);
       if (!skipped) toast.success("Painel configurado — bem-vindo à Shadow");
     } catch (e: any) {
-      toast.error(e?.message ?? "Não consegui salvar sua configuração");
+      console.error("[onboarding] falha ao salvar", e);
+      toast.error("Não consegui salvar tudo agora, mas você já pode usar o painel normalmente.");
     } finally {
       setSaving(false);
       setOpen(false);
