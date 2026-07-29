@@ -252,6 +252,7 @@ Instrução final: Dê um diagnóstico com 3 fatores numerados (ex: 1. Venciment
   });
 
 
+export const adminListThreads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({
     filter: z.enum(["open", "mine", "closed", "all"]).default("open"),
