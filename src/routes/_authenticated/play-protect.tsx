@@ -10,6 +10,7 @@ import { TutorialHintDialog } from "@/components/TutorialHintDialog";
 const ppConfigAsset = { url: "/img/play-protect-config.png" };
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import {
   getPlayProtectStatus,
   createApkJob,
@@ -74,6 +75,7 @@ function PlayProtectPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const statusFn = useServerFn(getPlayProtectStatus);
@@ -225,18 +227,20 @@ function PlayProtectPage() {
   }
 
   async function onDownload(id: string) {
+    if (downloadingId) return;
+    setDownloadingId(id);
+    const toastId = toast.loading("Preparando download...");
     try {
-      const { url, filename } = await dlFn({ data: { id } });
-      const a = document.createElement("a");
-      a.href = url;
-      if (filename) a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const { url, filename } = await withRetry(() => dlFn({ data: { id } }));
+      triggerDownload(url, filename ?? undefined);
+      toast.success("Download iniciado. Se não começar, toque novamente.", { id: toastId });
     } catch (e: any) {
-      toast.error(e?.message || "Falha ao gerar download");
+      toast.error(friendlyDownloadError(e), { id: toastId, duration: 7000 });
+    } finally {
+      setDownloadingId(null);
     }
   }
+
 
   async function onCancel(id: string) {
     try {
@@ -519,8 +523,9 @@ function PlayProtectPage() {
                             {meta.label}
                           </div>
                           {j.status === "done" && (
-                            <Button size="sm" onClick={() => onDownload(j.id)} className="gap-1.5">
-                              <Download className="h-3.5 w-3.5" /> Baixar
+                            <Button size="sm" onClick={() => onDownload(j.id)} disabled={downloadingId === j.id} className="gap-1.5">
+                              {downloadingId === j.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                              {downloadingId === j.id ? "Preparando..." : "Baixar"}
                             </Button>
                           )}
                           {j.status === "queued" && (

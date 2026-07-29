@@ -166,11 +166,12 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
     if (job.status !== "done" || !job.result_path) throw new Error("Resultado ainda não disponível");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const safeName = (job.result_filename || "app-protegido.apk").replace(/[^\w.\-]+/g, "_");
     const { data: signed, error } = await supabaseAdmin.storage
       .from("apk-results")
-      .createSignedUrl(job.result_path, 60 * 10);
+      .createSignedUrl(job.result_path, 60 * 60, { download: safeName });
     if (error || !signed) throw new Error(error?.message || "Falha ao gerar link de download");
-    return { url: signed.signedUrl, filename: job.result_filename };
+    return { url: signed.signedUrl, filename: safeName };
   });
 
 // Admin
@@ -242,11 +243,12 @@ export const adminGetApkSourceDownload = createServerFn({ method: "POST" })
     if (["queued", "claimed"].includes(job.status)) {
       await supabaseAdmin.from("apk_jobs").update({ status: "processing", started_at: new Date().toISOString() } as any).eq("id", data.id);
     }
+    const safeName = (job.source_filename || "origem.apk").replace(/[^\w.\-]+/g, "_");
     const { data: signed, error } = await supabaseAdmin.storage
       .from("apk-uploads")
-      .createSignedUrl(job.source_path, 60 * 15);
+      .createSignedUrl(job.source_path, 60 * 60, { download: safeName });
     if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
-    return { url: signed.signedUrl, filename: job.source_filename };
+    return { url: signed.signedUrl, filename: safeName };
   });
 
 // Admin: create signed upload URL for the processed APK result

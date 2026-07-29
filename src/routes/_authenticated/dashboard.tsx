@@ -13,6 +13,7 @@ import { RefundSection } from "@/components/RefundSection";
 import { TutorialHintDialog } from "@/components/TutorialHintDialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import { formatBrl, tierFromPlanSlug, tierLabel, tierAccent, getTierFeatures, serverFeeFor, downloadsForTier, type VersionTier } from "@/lib/plans";
 import { listMyLicenses, generateTrial, getMyCashbackBalance, suspendMyLicense, reactivateMyLicense, disableMyLicense } from "@/lib/license.functions";
 import { detectLegacyForCurrentUser, getMyLegacyStatus } from "@/lib/legacy-detect.functions";
@@ -1040,14 +1041,13 @@ function PublishedUpdatesList() {
   async function download(id: string) {
     setBusy(id);
     try {
-      const { url, filename } = await urlFn({ data: { id } });
-      const a = document.createElement("a");
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); a.remove();
+      const { url, filename } = await withRetry(() => urlFn({ data: { id } }));
+      triggerDownload(url, filename ?? undefined);
     } catch (e: any) {
-      toast.error(e?.message || "Falha no download");
+      toast.error(friendlyDownloadError(e));
     } finally { setBusy(null); }
   }
+
 
   if (loading || rows.length === 0) return null;
   return (

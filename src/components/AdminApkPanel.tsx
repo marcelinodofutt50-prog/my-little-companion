@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
+import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import {
   adminListPendingApkJobs,
   adminGetApkSourceDownload,
@@ -161,19 +162,15 @@ export function AdminApkPanel() {
 
   async function downloadSource(j: Job) {
     try {
-      const { url, filename } = await dlFn({ data: { id: j.id } });
-      const a = document.createElement("a");
-      a.href = url;
-      if (filename) a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      const { url, filename } = await withRetry(() => dlFn({ data: { id: j.id } }));
+      triggerDownload(url, filename ?? undefined);
       toast.success("Download iniciado — job movido para 'processing'.");
       refresh();
     } catch (e: any) {
-      toast.error(e?.message || "Falha no download");
+      toast.error(friendlyDownloadError(e));
     }
   }
+
 
   async function uploadResult(j: Job, file: File) {
     if (!/\.apk$/i.test(file.name)) { toast.error("Envie um .apk processado"); return; }
