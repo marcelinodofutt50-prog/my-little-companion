@@ -569,6 +569,9 @@ function AdminPage() {
                 {/* Métricas 30 dias (financeiro: só admin) */}
                 {isAdminUser && <AdminMetricsPanel />}
 
+                {/* Saúde de envio de e-mails (rate limits / falhas) */}
+                {isAdminUser && <AdminEmailMetrics />}
+
                 {/* Tendência de receita */}
                 {isAdminUser && <RevenueSparkline orders={orders} />}
 
