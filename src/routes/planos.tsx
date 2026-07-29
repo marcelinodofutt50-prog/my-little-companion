@@ -143,6 +143,9 @@ function PlansPage() {
 
   const [cashbackBalance, setCashbackBalance] = useState(0);
   const [useCash, setUseCash] = useState(false);
+  const [giftOn, setGiftOn] = useState(false);
+  const [giftEmail, setGiftEmail] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
 
   const [referral, setReferral] = useState("");
   const [referralValid, setReferralValid] = useState<{ name: string } | null>(null);
@@ -265,13 +268,16 @@ function PlansPage() {
         useCashback: useCash && cashbackBalance > 0,
         referralCode: referralValid ? referral : undefined,
         returnOrigin: window.location.origin,
+        gift: giftOn && giftEmail.trim()
+          ? { email: giftEmail.trim(), message: giftMessage.trim() || undefined }
+          : undefined,
       } });
       window.location.href = r.initPoint;
     } catch (e: any) {
       toast.error(e?.message?.includes("Plano") ? e.message : "Não foi possível iniciar o checkout. Tente novamente.");
       setLoadingPlan(null);
     }
-  }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral]);
+  }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
 
   const { licenses, servers, sources, upgrades } = useMemo(() => {
     const serverAll = plans.filter((p) => p.category === "server");
@@ -431,6 +437,47 @@ function PlansPage() {
                   <div className="font-mono text-lg text-primary">{formatBrl(cashbackBalance)}</div>
                 </label>
               )}
+
+              {/* Presentear */}
+              <div className="md:col-span-2 rounded-lg border border-border/70 bg-background/40 px-4 py-3">
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={giftOn}
+                    onChange={(e) => setGiftOn(e.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <div>
+                    <div className="text-sm">🎁 Presentear alguém</div>
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      você paga, o acesso cai direto na conta da pessoa
+                    </div>
+                  </div>
+                </label>
+                {giftOn && (
+                  <div className="mt-3 space-y-2">
+                    <input
+                      type="email"
+                      value={giftEmail}
+                      onChange={(e) => setGiftEmail(e.target.value)}
+                      placeholder="e-mail da conta de quem vai receber"
+                      className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <input
+                      type="text"
+                      maxLength={300}
+                      value={giftMessage}
+                      onChange={(e) => setGiftMessage(e.target.value)}
+                      placeholder="mensagem no presente (opcional)"
+                      className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                      A pessoa precisa já ter uma conta criada aqui no site com esse e-mail.
+                      O acesso e as credenciais aparecem no painel e no suporte dela assim que o PIX for confirmado.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <LegacyLookup />
