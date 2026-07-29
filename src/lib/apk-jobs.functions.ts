@@ -179,6 +179,7 @@ export const adminListApkJobs = createServerFn({ method: "GET" })
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
       .select("*")
+      .is("cleared_at", null)
       .order("created_at", { ascending: false })
       .limit(200);
     const list = (rows ?? []) as any[];
@@ -201,6 +202,7 @@ export const adminListPendingApkJobs = createServerFn({ method: "GET" })
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
       .select("*")
+      .is("cleared_at", null)
       .in("status", ["queued", "claimed", "sending", "processing", "failed"])
       .order("created_at", { ascending: true })
       .limit(200);
