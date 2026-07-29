@@ -39,7 +39,7 @@ export const listMyNotifications = createServerFn({ method: "GET" })
     const { data: isAdminRaw } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
     const isAdmin = !!isAdminRaw;
 
-    const [threads, licenses, refunds, orders, migrations] = await Promise.all([
+    const [threads, licenses, refunds, orders, migrations, myClosedThreads] = await Promise.all([
       isAdmin
         ? supabase
             .from("support_threads")
@@ -72,7 +72,36 @@ export const listMyNotifications = createServerFn({ method: "GET" })
         .eq("user_id", userId)
         .order("updated_at", { ascending: false })
         .limit(5),
+      // Tickets do próprio cliente encerrados automaticamente por inatividade.
+      supabase
+        .from("support_threads")
+        .select("id, subject, status, closed_at, closed_by_name")
+        .eq("user_id", userId)
+        .eq("status", "closed")
+        .order("closed_at", { ascending: false })
+        .limit(5),
     ]);
+
+    // ===== Aviso ao cliente: atendimento encerrado por inatividade =====
+    for (const t of myClosedThreads.data ?? []) {
+      const byName = (t as { closed_by_name?: string | null }).closed_by_name ?? "";
+      const closedAt = (t as { closed_at?: string | null }).closed_at;
+      if (!closedAt) continue;
+      if (!/inatividade|sistema/i.test(byName)) continue;
+      // Mostra somente nos 7 dias seguintes ao encerramento.
+      if (now - new Date(closedAt).getTime() > 7 * 86400000) continue;
+      out.push({
+        id: `support-autoclosed-${t.id}`,
+        kind: "support",
+        title: "Atendimento encerrado por inatividade",
+        description:
+          "Seu ticket ficou 5h sem mensagens e foi fechado automaticamente. Se ainda precisar de ajuda, reabra e envie uma nova mensagem — o histórico continua salvo.",
+        createdAt: closedAt,
+        href: "/suporte?reabrir=1",
+        actionLabel: "Reabrir atendimento",
+      });
+    }
+
 
     if (isAdmin) {
       for (const t of threads.data ?? []) {
