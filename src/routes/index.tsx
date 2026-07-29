@@ -13,6 +13,7 @@ import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
 import { formatBrl } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
+import { useI18n } from "@/lib/i18n";
 import shadowMark from "@/assets/shadow-mask.png";
 
 
@@ -42,64 +43,70 @@ const plans = [
   {
     slug: "login-7d",
     tier: "TIER_01",
+    tierKey: null,
     name: "Weekly Ops",
-    duration: "7 Dias",
+    durationKey: "plan.7d.duration",
     price: 450,
     accent: "cyan",
-    desc: "Acesso completo à ferramenta para operações curtas e reconhecimento tático.",
-    features: ["Painel completo", "Credenciais AES-256", "Suporte 24/7"],
+    descKey: "plan.7d.desc",
+    featureKeys: ["plan.f.panel", "plan.f.aes", "plan.f.support"],
+    highlight: false,
   },
   {
     slug: "login-30d",
     tier: "TIER_02 · PRIORITÁRIO",
+    tierKey: "plan.tier2",
     name: "Monthly Intel",
-    duration: "30 Dias",
+    durationKey: "plan.30d.duration",
     price: 750,
     accent: "neon",
-    desc: "Capacidade operacional estendida com processamento prioritário.",
-    features: ["Tudo do Weekly", "Fila prioritária", "Trial de 1 dia incluso"],
+    descKey: "plan.30d.desc",
+    featureKeys: ["plan.f.allweekly", "plan.f.queue", "plan.f.trial"],
     highlight: true,
   },
   {
     slug: "login-lifetime",
     tier: "TIER_03",
+    tierKey: null,
     name: "Eternal",
-    duration: "Vitalício",
+    durationKey: "plan.life.duration",
     price: 1700,
     accent: "violet",
-    desc: "Acesso permanente + todas as atualizações futuras. Suporte VIP.",
-    features: ["Licença vitalícia", "Updates for life", "VIP direto"],
+    descKey: "plan.life.desc",
+    featureKeys: ["plan.f.lifetime", "plan.f.updates", "plan.f.vip"],
+    highlight: false,
   },
-];
+] as const;
 
 const sourcePlans = [
   {
     tier: "SRC_YAARSA",
-    name: "Código-fonte do painel",
+    nameKey: "src.panel.name",
     price: 2700,
     accent: "cyan",
-    desc: "Repositório completo do painel para hospedagem soberana.",
+    descKey: "src.panel.desc",
   },
   {
     tier: "SRC_FULL",
-    name: "BTMOB + Servidor",
+    nameKey: "src.full.name",
     price: 4600,
     accent: "violet",
-    desc: "Código-fonte do programa e do servidor. Independência absoluta.",
+    descKey: "src.full.desc",
   },
-];
+] as const;
 
 
 const features = [
-  { icon: Lock, title: "AES-256-GCM", desc: "Credenciais criptografadas ponta-a-ponta. Nem nós lemos em texto puro." },
-  { icon: Zap, title: "PIX automático", desc: "Mercado Pago aprovou → licença provisionada em segundos." },
-  { icon: ShieldCheck, title: "Anonimato real", desc: "Servidor dedicado, sem logs cruzados, com rotação IP." },
-  { icon: Cpu, title: "Painel OSINT", desc: "Dashboard operacional com métricas em tempo real." },
-  { icon: Fingerprint, title: "Trial 24h", desc: "1 trial gratuito por conta. Testa antes de comprar." },
-  { icon: Activity, title: "Renovação D-20", desc: "Servidor renova todo dia 20. Automatizado no painel." },
-];
+  { icon: Lock, titleKey: "feat.aes.title", descKey: "feat.aes.desc" },
+  { icon: Zap, titleKey: "feat.pix.title", descKey: "feat.pix.desc" },
+  { icon: ShieldCheck, titleKey: "feat.anon.title", descKey: "feat.anon.desc" },
+  { icon: Cpu, titleKey: "feat.panel.title", descKey: "feat.panel.desc" },
+  { icon: Fingerprint, titleKey: "feat.trial.title", descKey: "feat.trial.desc" },
+  { icon: Activity, titleKey: "feat.renew.title", descKey: "feat.renew.desc" },
+] as const;
 
 function LandingPage() {
+  const { t } = useI18n();
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       {/* Ambient background */}
@@ -247,14 +254,14 @@ function LandingPage() {
             <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
               {features.map((f) => (
                 <div
-                  key={f.title}
+                  key={f.titleKey}
                   className="group relative bg-card p-6 transition-colors hover:bg-secondary/50"
                 >
                   <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md border border-neon/30 bg-neon/5 text-neon transition-all group-hover:glow-neon">
                     <f.icon className="h-5 w-5" />
                   </div>
-                  <h3 className="font-display text-xl">{f.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
+                  <h3 className="font-display text-xl">{t(f.titleKey)}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(f.descKey)}</p>
                 </div>
               ))}
             </div>
@@ -322,15 +329,15 @@ function LandingPage() {
                         {formatBrl(p.price)}
                       </span>
                       <span className="font-mono text-xs text-muted-foreground">
-                        / {p.duration.toLowerCase()}
+                        / {t(p.durationKey).toLowerCase()}
                       </span>
                     </div>
 
                     <ul className="mb-8 space-y-3 text-sm">
-                      {p.features.map((f) => (
-                        <li key={f} className="flex items-start gap-3 text-muted-foreground">
+                      {p.featureKeys.map((fk) => (
+                        <li key={fk} className="flex items-start gap-3 text-muted-foreground">
                           <span className={`font-mono text-xs font-bold ${bulletClass}`}>[+]</span>
-                          <span>{f}</span>
+                          <span>{t(fk)}</span>
                         </li>
                       ))}
                     </ul>
@@ -365,7 +372,7 @@ function LandingPage() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {sourcePlans.map((p) => (
                 <div
-                  key={p.name}
+                  key={p.tier}
                   className="terminal-card group flex flex-col rounded-lg p-8 transition-all hover:-translate-y-1"
                 >
                   <div
@@ -375,8 +382,8 @@ function LandingPage() {
                   >
                     {p.tier}
                   </div>
-                  <h3 className="mt-3 font-display text-3xl">{p.name}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{p.desc}</p>
+                  <h3 className="mt-3 font-display text-3xl">{t(p.nameKey)}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{t(p.descKey)}</p>
                   <div className="mt-6 flex items-end justify-between border-t border-border pt-6">
                     <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                       Aquisição única
