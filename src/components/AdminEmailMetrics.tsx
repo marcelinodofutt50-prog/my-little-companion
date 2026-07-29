@@ -46,6 +46,67 @@ export function AdminEmailMetrics() {
         </Button>
       </div>
 
+      <div className="mt-3 rounded border border-border/60 bg-background/40 p-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          Teste de envio · shadowdashstore.com
+        </p>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="email"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            placeholder="seu@email.com"
+            className="h-8 font-mono text-xs"
+          />
+          <Button
+            size="sm"
+            className="h-8 shrink-0"
+            disabled={test.isPending || !testEmail.includes("@")}
+            onClick={() => test.mutate(testEmail.trim())}
+          >
+            <Send className={`mr-1 h-3 w-3 ${test.isPending ? "animate-pulse" : ""}`} />
+            {test.isPending ? "Enviando..." : "Enviar teste"}
+          </Button>
+        </div>
+
+        {test.isPending && (
+          <p className="mt-2 font-mono text-[10px] text-muted-foreground">
+            Disparando e-mail real e medindo resposta do provedor...
+          </p>
+        )}
+
+        {test.isError && (
+          <p className="mt-2 font-mono text-[10px] text-destructive">
+            {(test.error as Error)?.message ?? "Falha ao executar o teste"}
+          </p>
+        )}
+
+        {test.data && (
+          <div
+            className={`mt-2 space-y-1 rounded border px-2 py-2 font-mono text-[10px] ${
+              test.data.ok
+                ? "border-neon/40 bg-neon/5 text-neon"
+                : "border-destructive/40 bg-destructive/5 text-destructive"
+            }`}
+          >
+            <p className="flex items-center gap-1">
+              {test.data.ok ? <MailCheck className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+              {test.data.message}
+            </p>
+            <p className="text-muted-foreground">
+              destino {test.data.recipientMasked ?? "—"} · status {test.data.httpStatus ?? "—"} ·{" "}
+              {test.data.latencyMs}ms ·{" "}
+              {test.data.senderVerified ? "domínio verificado" : "domínio não verificado"}
+              {test.data.retryAfter ? ` · aguarde ${test.data.retryAfter}s` : ""}
+            </p>
+            <p className="text-muted-foreground">
+              {new Date(test.data.at).toLocaleString("pt-BR")}
+            </p>
+          </div>
+        )}
+      </div>
+
+
       {isLoading ? (
         <p className="mt-3 font-mono text-xs text-muted-foreground">Carregando métricas...</p>
       ) : (
