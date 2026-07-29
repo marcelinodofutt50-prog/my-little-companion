@@ -1515,22 +1515,29 @@ function AdminChatPanel() {
                         <span className="flex-shrink-0" aria-hidden>{categoryMeta(t.category).emoji}</span>
                         <span className="truncate font-mono text-xs text-foreground">{t.profile?.display_name || t.profile?.email || "cliente"}</span>
                       </div>
-                      {(t.unread_by_staff ?? 0) > 0 && !active && (
-                        <span className="flex-shrink-0 rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
-                      )}
+                      <div className="flex flex-shrink-0 items-center gap-1.5">
+                        <span className="font-mono text-[9px] uppercase text-muted-foreground">{timeAgo(t.last_customer_message_at ?? t.updated_at)}</span>
+                        {(t.unread_by_staff ?? 0) > 0 && !active && (
+                          <span className="rounded-full bg-neon px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary-foreground">{t.unread_by_staff}</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="mt-0.5 flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
-                      <span className="truncate font-mono text-[10px] uppercase text-muted-foreground">
-                        {t.status === "assigned" && t.assigned_name ? `com ${t.assigned_name}` : t.status}
+                    <div className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{t.subject}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[9px] uppercase ${t.status === "closed" ? "bg-muted/40 text-muted-foreground" : t.status === "assigned" ? "bg-cyan/10 text-cyan" : "bg-neon/10 text-neon"}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${t.status === "closed" ? "bg-muted-foreground" : t.status === "assigned" ? "bg-cyan" : "bg-neon"}`} />
+                        {t.status === "assigned" && t.assigned_name ? t.assigned_name : t.status === "closed" ? "encerrado" : "aberto"}
                       </span>
-                      <span className="flex-shrink-0 rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">{categoryMeta(t.category).label}</span>
-                      {waitingLong && (
-                        <span className="flex-shrink-0 rounded bg-danger/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-danger">aguardando</span>
+                      <span className="rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">{categoryMeta(t.category).label}</span>
+                      {priorityMeta(t.priority) && (
+                        <span className={`rounded border px-1.5 py-0.5 font-mono text-[9px] uppercase ${priorityMeta(t.priority)!.cls}`}>{priorityMeta(t.priority)!.label}</span>
                       )}
-                      <span className="font-mono text-[10px] text-muted-foreground">· {new Date(t.last_customer_message_at ?? t.updated_at).toLocaleDateString("pt-BR")}</span>
+                      {waitingLong && (
+                        <span className="rounded bg-danger/15 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-danger">aguardando</span>
+                      )}
                     </div>
                   </div>
+
                 </button>
                 {t.status !== "closed" && !t.assigned_to && (
                   <button
