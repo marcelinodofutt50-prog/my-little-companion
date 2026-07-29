@@ -55,21 +55,25 @@ export function OrderHistory() {
   }
 
   const done = orders.filter((o) => o.stage === "delivered" || o.stage === "refunded" || o.stage === "failed");
-  const term = q.trim().toLowerCase();
+  // Aceita "#a1b2c3", "A1B2C3", id completo ou parte do nome do plano.
+  const raw = q.trim().toLowerCase();
+  const term = raw.replace(/^#/, "").replace(/\s+/g, "");
   const days = PERIOD_TABS.find((p) => p.key === period)?.days ?? null;
   const cutoff = days ? Date.now() - days * 86400000 : null;
+
+  const matches = (o: MyOrder) => {
+    if (!term) return true;
+    const id = o.id.toLowerCase();
+    if (id.includes(term) || id.replace(/-/g, "").includes(term.replace(/-/g, ""))) return true;
+    return (o.plan_name ?? o.plan_slug).toLowerCase().includes(raw);
+  };
 
   const list = done.filter((o) => {
     if (stage !== "all" && o.stage !== stage) return false;
     if (cutoff && new Date(o.created_at).getTime() < cutoff) return false;
-    if (
-      term &&
-      !(o.plan_name ?? o.plan_slug).toLowerCase().includes(term) &&
-      !o.id.toLowerCase().includes(term)
-    )
-      return false;
-    return true;
+    return matches(o);
   });
+
 
   const totalPago = done
     .filter((o) => o.stage === "delivered")
@@ -90,7 +94,7 @@ export function OrderHistory() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="buscar por plano ou nº do pedido"
+          placeholder="buscar por nº do pedido (ex: #a1b2c3) ou plano"
           className="w-full bg-transparent font-mono text-xs outline-none placeholder:text-muted-foreground/60"
         />
       </div>

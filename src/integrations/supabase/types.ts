@@ -17,6 +17,7 @@ export type Database = {
       apk_jobs: {
         Row: {
           claimed_at: string | null
+          cleared_at: string | null
           completed_at: string | null
           created_at: string
           error_message: string | null
@@ -39,6 +40,7 @@ export type Database = {
         }
         Insert: {
           claimed_at?: string | null
+          cleared_at?: string | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
@@ -61,6 +63,7 @@ export type Database = {
         }
         Update: {
           claimed_at?: string | null
+          cleared_at?: string | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null

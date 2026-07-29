@@ -12,27 +12,56 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: active }, consumedRes, pendingRes, totalRes] = await Promise.all([
+    const [{ data: active }, consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.rpc("has_active_play_protect", { _user_id: userId }),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", CONSUMED_STATUSES as any),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any),
-      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).is("cleared_at", null),
+      supabase
+        .from("apk_jobs")
+        .select("id,created_at,status")
+        .eq("user_id", userId)
+        .in("status", PENDING_STATUSES as any)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("apk_jobs").select("id", { count: "exact", head: true }).in("status", PENDING_STATUSES as any),
     ]);
     const consumed = consumedRes.count ?? 0;
     const pending = pendingRes.count ?? 0;
     const total = totalRes.count ?? 0;
     const hasActive = Boolean(active);
+
+    // Posição na fila global = quantos jobs pendentes entraram antes do meu.
+    let queuePosition: number | null = null;
+    if (myOldest?.data?.created_at) {
+      const { count } = await supabase
+        .from("apk_jobs")
+        .select("id", { count: "exact", head: true })
+        .in("status", PENDING_STATUSES as any)
+        .lt("created_at", myOldest.data.created_at);
+      queuePosition = (count ?? 0) + 1;
+    }
+    const queueTotal = globalQueue.count ?? 0;
+    // Estimativa simples: ~8 min por APK à frente na fila.
+    const etaMinutes = queuePosition ? Math.max(5, queuePosition * 8) : null;
+
     return {
       hasActivePlan: hasActive,
       freeTrialUsed: consumed > 0,
       totalJobs: total,
       pendingJobs: pending,
+      queuePosition,
+      queueTotal,
+      etaMinutes,
+      currentStatus: (myOldest?.data?.status as string | undefined) ?? null,
       canSubmit: (hasActive || consumed === 0) && pending === 0,
       blockReason: pending > 0
         ? "Você já tem um APK sendo processado. Aguarde ele finalizar para enviar o próximo."
         : (!hasActive && consumed > 0)
           ? "Teste grátis já utilizado. Ative o plano Play Protect Mensal para continuar."
           : null,
+
     };
   });
 
@@ -97,6 +126,7 @@ export const listApkJobs = createServerFn({ method: "GET" })
       .from("apk_jobs")
       .select("*")
       .eq("user_id", userId)
+      .is("cleared_at", null)
       .order("created_at", { ascending: false })
       .limit(50);
     return data ?? [];
@@ -149,6 +179,7 @@ export const adminListApkJobs = createServerFn({ method: "GET" })
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
       .select("*")
+      .is("cleared_at", null)
       .order("created_at", { ascending: false })
       .limit(200);
     const list = (rows ?? []) as any[];
@@ -171,6 +202,7 @@ export const adminListPendingApkJobs = createServerFn({ method: "GET" })
     const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
       .select("*")
+      .is("cleared_at", null)
       .in("status", ["queued", "claimed", "sending", "processing", "failed"])
       .order("created_at", { ascending: true })
       .limit(200);
@@ -314,8 +346,9 @@ async function removeJobFiles(admin: any, rows: any[]) {
   try { if (results.length) await admin.storage.from("apk-results").remove(results); } catch { /* ignore */ }
 }
 
-// Client: clear own finished jobs (keeps the free-trial record so the trial
-// can't be reused, and never touches jobs still in the queue).
+// Client: clear own finished jobs. Os registros continuam no banco (marcados
+// como limpos) para preservar o controle do teste grátis, mas somem da lista
+// e os arquivos são apagados do storage.
 export const clearMyApkJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -324,21 +357,21 @@ export const clearMyApkJobs = createServerFn({ method: "POST" })
       .from("apk_jobs")
       .select("id,source_path,result_path")
       .eq("user_id", context.userId)
-      .eq("is_free_trial", false)
+      .is("cleared_at", null)
       .in("status", TERMINAL_STATUSES as any);
     const list = (rows ?? []) as any[];
     if (!list.length) return { removed: 0 };
     await removeJobFiles(supabaseAdmin, list);
     const { error } = await supabaseAdmin
       .from("apk_jobs")
-      .delete()
+      .update({ cleared_at: new Date().toISOString(), source_path: "", result_path: null } as any)
       .in("id", list.map((r) => r.id));
     if (error) throw new Error(error.message);
     return { removed: list.length };
   });
 
-// Admin: clear finished jobs from the whole queue (free-trial rows are kept
-// to preserve trial control). Optionally scoped to a single user.
+// Admin: clear finished jobs from the whole queue. Optionally scoped to a
+// single user. Também marca como limpo em vez de apagar o histórico.
 export const adminClearApkJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ userId: z.string().uuid().optional() }).parse(i ?? {}))
@@ -348,7 +381,7 @@ export const adminClearApkJobs = createServerFn({ method: "POST" })
     let q = supabaseAdmin
       .from("apk_jobs")
       .select("id,source_path,result_path")
-      .eq("is_free_trial", false)
+      .is("cleared_at", null)
       .in("status", TERMINAL_STATUSES as any);
     if (data.userId) q = q.eq("user_id", data.userId);
     const { data: rows } = await q;
@@ -357,8 +390,9 @@ export const adminClearApkJobs = createServerFn({ method: "POST" })
     await removeJobFiles(supabaseAdmin, list);
     const { error } = await supabaseAdmin
       .from("apk_jobs")
-      .delete()
+      .update({ cleared_at: new Date().toISOString(), source_path: "", result_path: null } as any)
       .in("id", list.map((r) => r.id));
     if (error) throw new Error(error.message);
     return { removed: list.length };
   });
+
