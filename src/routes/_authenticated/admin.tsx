@@ -27,6 +27,8 @@ import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
+import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
+import { AdminCustomer360 } from "@/components/AdminCustomer360";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { AdminDailyReport } from "@/components/AdminDailyReport";
@@ -91,6 +93,8 @@ const TAB_DESC: Record<Tab, string> = {
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
+  // Ficha 360º do cliente (aberta pela busca global Ctrl+K)
+  const [customer360, setCustomer360] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(null);
   const [users, setUsers] = useState<any[]>([]);
@@ -358,6 +362,10 @@ function AdminPage() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <AdminGlobalSearch
+                onSelectUser={(id) => setCustomer360(id)}
+                onOpenThread={() => setTab("chat")}
+              />
               <Link to="/dashboard"><Button size="sm" variant="ghost" className="font-mono text-[10px] uppercase tracking-wider">Meu Painel</Button></Link>
               <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono text-[10px] uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
@@ -1084,6 +1092,12 @@ function AdminPage() {
         tab={tab}
         onChange={(id) => setTab(id as Tab)}
         badges={navBadges}
+      />
+
+      <AdminCustomer360
+        userId={customer360}
+        onClose={() => setCustomer360(null)}
+        onOpenThread={() => { setCustomer360(null); setTab("chat"); }}
       />
     </div>
   );
