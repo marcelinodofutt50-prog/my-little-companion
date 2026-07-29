@@ -73,9 +73,16 @@ export const createCheckout = createServerFn({ method: "POST" })
     if (data.useCashback) {
       const { data: ledger } = await supabase.from("cashback_ledger").select("amount").eq("user_id", userId);
       const balance = (ledger ?? []).reduce((s, r) => s + Number(r.amount), 0);
-      cashbackUsed = Math.min(balance, amount * 0.5); // max 50% desconto por cashback
+      // Saldo já "reservado" por pedidos pendentes ainda não pagos não pode ser
+      // reutilizado — senão o mesmo cashback vira desconto infinito.
+      const { data: pendingOrders } = await supabase
+        .from("orders").select("cashback_used").eq("user_id", userId).eq("status", "pending");
+      const reserved = (pendingOrders ?? []).reduce((s, o) => s + Number(o.cashback_used ?? 0), 0);
+      const available = Math.max(0, balance - reserved);
+      cashbackUsed = Math.max(0, Math.min(available, amount * 0.5)); // max 50% desconto por cashback
       amount = Math.max(1, amount - cashbackUsed);
     }
+
 
     // Validate + encrypt legacy claim (server renewal for old client) before persisting.
     let legacyMeta: { email: string; password_enc: string; ip: string; panel: "v457" | "v46" } | null = null;
