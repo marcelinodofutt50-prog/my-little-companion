@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet, Copy, RotateCcw, ChevronLeft, Wrench,
+  Wallet, Copy, RotateCcw, ChevronLeft, Wrench, Bot,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
