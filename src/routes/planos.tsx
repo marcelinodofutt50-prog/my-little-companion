@@ -36,9 +36,10 @@ export const Route = createFileRoute("/planos")({
     { property: "og:title", content: "Planos Shadow — Licenças, servidor e código-fonte" },
     { property: "og:description", content: "PIX oficial Mercado Pago, ativação automática em menos de 1 minuto e garantia de 7 dias." },
     { property: "og:type", content: "website" },
-    { property: "og:url", content: "https://www.shadowstore.com/planos" },
+    { property: "og:url", content: siteUrl("/planos") },
     { name: "twitter:card", content: "summary_large_image" },
-  ], links: [{ rel: "canonical", href: "https://www.shadowstore.com/planos" }] }),
+  ], links: [{ rel: "canonical", href: siteUrl("/planos") }] }),
+
   component: PlansPage,
 });
 
