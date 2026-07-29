@@ -258,6 +258,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const saved = (typeof window !== "undefined" && (localStorage.getItem("shadow.lang") as Lang | null)) || null;
     if (saved === "pt" || saved === "en") setLangState(saved);
   }, []);
+  useEffect(() => {
+    if (typeof document !== "undefined") document.documentElement.lang = lang === "en" ? "en" : "pt-BR";
+  }, [lang]);
   const setLang = (l: Lang) => {
     setLangState(l);
     try { localStorage.setItem("shadow.lang", l); } catch {}
