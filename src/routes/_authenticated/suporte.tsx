@@ -14,8 +14,12 @@ import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unloc
 
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : undefined,
+  }),
   component: SupportPage,
 });
+
 
 type Thread = { id: string; category?: string | null; status?: string | null; assigned_name?: string | null };
 type Msg = { id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
