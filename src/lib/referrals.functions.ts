@@ -2,6 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/** Mascara e-mail para exibição entre usuários: ma***@gmail.com */
+function maskEmail(email: string | null | undefined): string | null {
+  if (!email) return null;
+  const [user, domain] = email.split("@");
+  if (!domain) return "***";
+  return `${user.slice(0, 2)}***@${domain}`;
+}
+
 export const getMyReferralInfo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -43,7 +51,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       code: (profile?.referral_code as string) ?? null,
       pref: (profile?.referral_reward_pref as "cashback" | "free_month" | "pix") ?? "cashback",
       pixKey: (profile?.pix_key as string) ?? null,
-      referrals: rows.map((r) => ({ ...r, referred_email: emailMap[r.referred_id] ?? null })),
+      referrals: rows.map((r) => ({ ...r, referred_label: labelMap[r.referred_id] ?? "Membro Shadow" })),
       stats: { total: rows.length, granted: totalGranted, pending: totalPending, cashback: totalCashback },
     };
   });
@@ -76,7 +84,7 @@ export const validateReferralCode = createServerFn({ method: "POST" })
     const code = data.code.toUpperCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
-      .from("profiles").select("id, full_name").eq("referral_code", code).maybeSingle();
+      .from("profiles").select("id, display_name").eq("referral_code", code).maybeSingle();
     if (!prof || prof.id === context.userId) return { valid: false };
-    return { valid: true, referrerName: (prof as any).full_name || "Membro Shadow" };
+    return { valid: true, referrerName: (prof as any).display_name || "Membro Shadow" };
   });

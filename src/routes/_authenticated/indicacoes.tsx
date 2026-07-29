@@ -195,7 +195,7 @@ function ReferralsPage() {
                     {info.referrals.map((r: any) => (
                       <tr key={r.id} className="border-b border-border/20">
                         <td className="p-3 font-mono text-[11px] whitespace-nowrap">{new Date(r.created_at).toLocaleDateString("pt-BR")}</td>
-                        <td className="p-3 text-xs">{r.referred_email || <span className="text-muted-foreground">—</span>}</td>
+                        <td className="p-3 text-xs">{r.referred_label || <span className="text-muted-foreground">—</span>}</td>
                         <td className="p-3 font-mono text-[11px] uppercase">{labelForReward(r.reward_type)}</td>
                         <td className="p-3 font-mono text-[11px]">{formatBrl(Number(r.reward_amount))}</td>
                         <td className={`p-3 font-mono text-[11px] uppercase ${statusColor(r.reward_status)}`}>{r.reward_status}</td>
