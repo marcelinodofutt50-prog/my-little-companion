@@ -1572,13 +1572,16 @@ function AdminChatPanel() {
       {/* Chat area */}
       <section className={`${activeId ? "flex" : "hidden md:flex"} min-h-0 flex-col`}>
         {!activeThread ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-muted-foreground">
             <MessageSquare className="h-10 w-10 text-neon/50" />
-            <div className="font-mono text-xs uppercase">Selecione uma conversa</div>
+            <div className="font-mono text-xs uppercase tracking-wider">Selecione uma conversa</div>
+            <div className="max-w-xs font-mono text-[10px] leading-relaxed text-muted-foreground/70">
+              assuma o ticket para o cliente ver quem está atendendo · encerre quando resolver — uma nova mensagem dele abre outro ticket
+            </div>
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 px-3 py-2 md:px-4 md:py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 bg-background/30 px-3 py-2 md:px-4 md:py-3">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <button
                   type="button"
@@ -1588,6 +1591,9 @@ function AdminChatPanel() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
+                <div className="hidden h-10 w-10 shrink-0 place-items-center rounded-full border border-neon/30 bg-neon/10 font-mono text-xs font-bold text-neon sm:grid">
+                  {(activeThread.profile?.display_name || activeThread.profile?.email || "?").slice(0, 2).toUpperCase()}
+                </div>
                 <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-mono text-sm">{activeThread.profile?.display_name || activeThread.profile?.email || "cliente"}</span>
@@ -1604,14 +1610,25 @@ function AdminChatPanel() {
                       <Copy className="h-3 w-3" />
                     </button>
                   )}
+                  <span className="rounded bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">
+                    {categoryMeta(activeThread.category).emoji} {categoryMeta(activeThread.category).label}
+                  </span>
+                  {priorityMeta(activeThread.priority) && (
+                    <span className={`rounded border px-1.5 py-0.5 font-mono text-[9px] uppercase ${priorityMeta(activeThread.priority)!.cls}`}>
+                      {priorityMeta(activeThread.priority)!.label}
+                    </span>
+                  )}
                 </div>
-                <div className="font-mono text-[10px] uppercase text-muted-foreground">
+                <div className="truncate font-mono text-[10px] uppercase text-muted-foreground">
                   {activeThread.subject}
-                  {activeThread.assigned_name && ` · atribuído a ${activeThread.assigned_name}`}
-                  {activeThread.status === "closed" && " · ENCERRADO"}
+                  {activeThread.assigned_name && ` · atendido por ${activeThread.assigned_name}`}
+                  {activeThread.status === "closed"
+                    ? " · ENCERRADO"
+                    : ` · última msg do cliente ${timeAgo(activeThread.last_customer_message_at ?? activeThread.updated_at)}`}
                 </div>
                 </div>
               </div>
+
               <div className="flex flex-wrap items-center gap-2">
 
                 {activeThread.status !== "closed" && !activeThread.assigned_to && (
