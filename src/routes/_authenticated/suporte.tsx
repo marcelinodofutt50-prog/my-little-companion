@@ -29,11 +29,16 @@ type PendingMsg = {
   created_at: string;
 };
 
+const PAGE_SIZE = 30;
+
 function SupportPage() {
   const [thread, setThread] = useState<Thread | null>(null);
   const [savingCat, setSavingCat] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [pending, setPending] = useState<PendingMsg[]>([]);
+
   const [body, setBody] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uid, setUid] = useState<string>("");
