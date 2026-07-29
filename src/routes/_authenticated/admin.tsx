@@ -257,6 +257,21 @@ function AdminPage() {
   ];
   const allTabs = tabGroups.flatMap((g) => g.items);
   const activeMeta = allTabs.find((t) => t.id === tab);
+  const navTerm = navQuery.trim().toLowerCase();
+  const filteredGroups = navTerm
+    ? tabGroups
+        .map((g) => ({
+          ...g,
+          items: g.items.filter(
+            (t) =>
+              t.label.toLowerCase().includes(navTerm) ||
+              (t.hint ?? "").toLowerCase().includes(navTerm) ||
+              (TAB_DESC[t.id] ?? "").toLowerCase().includes(navTerm),
+          ),
+        }))
+        .filter((g) => g.items.length > 0)
+    : tabGroups;
+  const filteredTabs = filteredGroups.flatMap((g) => g.items);
 
 
   return (
