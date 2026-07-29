@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
-import { Upload, ShieldCheck, Clock, Loader2, CheckCircle2, XCircle, Download, X, AlertTriangle, Sparkles, Gift, FileArchive } from "lucide-react";
+import { Upload, ShieldCheck, Clock, Loader2, CheckCircle2, XCircle, Download, X, AlertTriangle, Sparkles, Gift, FileArchive, Trash2 } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TutorialHintDialog } from "@/components/TutorialHintDialog";
@@ -15,6 +15,7 @@ import {
   createApkJob,
   listApkJobs,
   cancelApkJob,
+  clearMyApkJobs,
   getApkResultDownload,
 } from "@/lib/apk-jobs.functions";
 
@@ -71,12 +72,28 @@ function PlayProtectPage() {
   const [dragOver, setDragOver] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const statusFn = useServerFn(getPlayProtectStatus);
   const createFn = useServerFn(createApkJob);
   const listFn = useServerFn(listApkJobs);
   const cancelFn = useServerFn(cancelApkJob);
   const dlFn = useServerFn(getApkResultDownload);
+  const clearFn = useServerFn(clearMyApkJobs);
+
+  async function handleClear() {
+    if (!confirm("Limpar o histórico de jobs finalizados? Os arquivos processados serão apagados e os links de download deixarão de funcionar.")) return;
+    setClearing(true);
+    try {
+      const r = await clearFn();
+      toast.success(r.removed ? `${r.removed} job(s) removido(s)` : "Nada para limpar");
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao limpar a lista");
+    } finally {
+      setClearing(false);
+    }
+  }
 
   async function refresh() {
     const [s, l] = await Promise.all([statusFn(), listFn()]);
