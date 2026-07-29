@@ -121,6 +121,21 @@ function AuthPage() {
   /** true quando o e-mail digitado já pertence a uma conta (inclui alias do Gmail). */
   const [emailTaken, setEmailTaken] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  /** bloqueio temporário por excesso de tentativas de cadastro (rate limit do servidor). */
+  const [signupBlockUntil, setSignupBlockUntil] = useState<number | null>(null);
+  const [signupBlockSecs, setSignupBlockSecs] = useState(0);
+
+  useEffect(() => {
+    if (!signupBlockUntil) return setSignupBlockSecs(0);
+    const tick = () => {
+      const secs = Math.max(0, Math.ceil((signupBlockUntil - Date.now()) / 1000));
+      setSignupBlockSecs(secs);
+      if (secs === 0) setSignupBlockUntil(null);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [signupBlockUntil]);
 
   // Digitou outro e-mail? o aviso de "já cadastrado" some.
   useEffect(() => { setEmailTaken(false); }, [email]);
