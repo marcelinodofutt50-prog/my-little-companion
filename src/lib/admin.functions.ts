@@ -203,15 +203,17 @@ export const adminListThreadMessages = createServerFn({ method: "GET" })
   }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { pickAdminClient } = await import("./admin-read.server");
+    const { db } = await pickAdminClient(context.supabase);
     const limit = data.limit ?? 30;
-    let q = supabaseAdmin
+    let q = db
       .from("support_messages").select("*")
       .eq("thread_id", data.threadId)
       .order("created_at", { ascending: false })
       .limit(limit + 1);
     if (data.before) q = q.lt("created_at", data.before);
-    const { data: rows } = await q;
+    const { data: rows, error } = await q;
+    if (error) throw new Error(`Não foi possível carregar as mensagens: ${error.message}`);
     const list = rows ?? [];
     const hasMore = list.length > limit;
     const page = hasMore ? list.slice(0, limit) : list;
