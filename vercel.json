@@ -3,5 +3,15 @@
   "framework": null,
   "installCommand": "bun install",
   "buildCommand": "bun run build",
-  "regions": ["gru1"]
+  "regions": ["gru1"],
+  "github": {
+    "enabled": true,
+    "autoJobCancelation": true,
+    "silent": false
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
 }
