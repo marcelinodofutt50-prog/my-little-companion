@@ -360,6 +360,10 @@ function AdminPage() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <AdminGlobalSearch
+                onSelectUser={(id) => setCustomer360(id)}
+                onOpenThread={() => setTab("chat")}
+              />
               <Link to="/dashboard"><Button size="sm" variant="ghost" className="font-mono text-[10px] uppercase tracking-wider">Meu Painel</Button></Link>
               <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono text-[10px] uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
