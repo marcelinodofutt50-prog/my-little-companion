@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
   HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight,
-  ChevronRight, Check, Minus, Search,
+  ChevronRight, Check, Minus, Search, Info,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
@@ -21,6 +21,7 @@ import { PlanAdvisor } from "@/components/PlanAdvisor";
 import { CheckoutFaqFloat } from "@/components/CheckoutFaqFloat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrl } from "@/lib/plans";
 import { createCheckout } from "@/lib/checkout.functions";
@@ -925,14 +926,30 @@ function LegacyLookup() {
 
   return (
     <div className="border-t border-border/40 px-5 py-4">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-primary"
-      >
-        <span>Sou cliente antigo — vincular meu login existente</span>
-        <ChevronRight className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-90" : ""}`} />
-      </button>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className="group flex w-full items-center justify-between rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-primary shadow-[0_0_20px_-8px_oklch(0.78_0.13_82/0.45)] transition-all hover:border-primary/70 hover:bg-primary/10 hover:shadow-[0_0_28px_-10px_oklch(0.78_0.13_82/0.55)]"
+            >
+              <span className="flex items-center gap-2">
+                <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-primary" />
+                Sou cliente antigo — vincular meu login existente
+                <span className="hidden rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold sm:inline-block">CLIQUE AQUI</span>
+              </span>
+              <ChevronRight className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-90" : ""}`} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs text-center leading-relaxed">
+            <div className="flex flex-col items-center gap-1.5">
+              <Info className="h-3.5 w-3.5" />
+              <span>Se você já comprou antes na Shadow 4.5.7 ou 4.6, clique para sincronizar seu login antigo com esta conta. Seus dados e licença aparecem no dashboard em segundos.</span>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       {open && (
         <div className="mt-4 space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row">
