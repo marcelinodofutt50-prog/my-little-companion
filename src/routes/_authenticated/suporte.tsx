@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer } from "@/lib/support.functions";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 
@@ -45,6 +46,7 @@ function SupportPage() {
 
   useEffect(() => {
     requestNotifyPermission();
+    markOnboardingStep(ONBOARDING_STEP.SUPPORT);
     supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? ""));
     openFn().then(async (t) => {
       setThread(t);
