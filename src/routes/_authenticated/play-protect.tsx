@@ -523,8 +523,9 @@ function PlayProtectPage() {
                             {meta.label}
                           </div>
                           {j.status === "done" && (
-                            <Button size="sm" onClick={() => onDownload(j.id)} className="gap-1.5">
-                              <Download className="h-3.5 w-3.5" /> Baixar
+                            <Button size="sm" onClick={() => onDownload(j.id)} disabled={downloadingId === j.id} className="gap-1.5">
+                              {downloadingId === j.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                              {downloadingId === j.id ? "Preparando..." : "Baixar"}
                             </Button>
                           )}
                           {j.status === "queued" && (
