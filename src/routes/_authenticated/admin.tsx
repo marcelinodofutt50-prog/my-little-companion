@@ -425,10 +425,15 @@ function AdminPage() {
 
             {/* Section title bar */}
             {activeMeta && (
-              <div className="mb-4 flex items-center gap-2 border-b border-border/40 pb-3">
-                <activeMeta.icon className="h-4 w-4 text-neon" />
-                <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
-                {activeMeta.hint && <span className="ml-2 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+              <div className="mb-4 border-b border-border/40 pb-3">
+                <div className="flex items-center gap-2">
+                  <activeMeta.icon className="h-4 w-4 text-neon" />
+                  <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
+                  {activeMeta.hint && <span className="ml-2 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+                </div>
+                {TAB_DESC[tab] && (
+                  <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">{TAB_DESC[tab]}</p>
+                )}
               </div>
             )}
 
