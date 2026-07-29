@@ -73,6 +73,7 @@ function PlayProtectPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const statusFn = useServerFn(getPlayProtectStatus);
   const createFn = useServerFn(createApkJob);
@@ -136,6 +137,35 @@ function PlayProtectPage() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [userId]);
+
+  // Auto-refresh da fila (posição/ETA) enquanto houver jobs em andamento.
+  // A posição depende de jobs de outros usuários, que o realtime (filtrado por user_id) não enxerga.
+  useEffect(() => {
+    if (!userId) return;
+    const hasActive = jobs.some((j) => ["queued", "claimed", "sending", "processing"].includes(j.status));
+    if (!hasActive) return;
+
+    let stopped = false;
+    const tick = async () => {
+      if (stopped || document.visibilityState !== "visible") return;
+      try {
+        const s = await statusFn();
+        if (!stopped) {
+          setStatus(s);
+          setLastSync(new Date());
+        }
+      } catch { /* silencioso */ }
+    };
+    const id = window.setInterval(tick, 15000);
+    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    tick();
+    return () => {
+      stopped = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [userId, jobs]);
 
   const activeCount = useMemo(
     () => jobs.filter((j) => ["queued", "claimed", "sending", "processing"].includes(j.status)).length,
@@ -278,6 +308,11 @@ function PlayProtectPage() {
                           )}%`,
                         }}
                       />
+                    </div>
+                  ) : null}
+                  {lastSync ? (
+                    <div className="text-[11px] text-sky-300/70">
+                      Atualizado automaticamente às {lastSync.toLocaleTimeString("pt-BR")} · a cada 15s
                     </div>
                   ) : null}
                 </div>
