@@ -292,10 +292,14 @@ function AdminPage() {
       setLicenses(await licensesFn());
     } catch (e: any) { toast.error(e.message); }
   }
-  /** Abre o modal explicativo antes de corrigir o bug de login no BMob. */
+  /** Abre o modal explicativo e dispara análise de IA com os fatores do caso. */
   function openFixLoginBug(id: string) {
     if (fixingLic) return;
+    setBugAnalysis({ loading: true, diagnosis: null, factors: null });
     setFixBugDialog({ open: true, licenseId: id });
+    analyzeBugFn({ data: { licenseId: id } })
+      .then((r: any) => setBugAnalysis({ loading: false, diagnosis: r.diagnosis, factors: r.factors }))
+      .catch((e: any) => setBugAnalysis({ loading: false, diagnosis: `Não foi possível gerar o diagnóstico automático: ${e.message}`, factors: [] }));
   }
   /** Executa a correção: +1 dia, reaplica a mesma senha, volta a data. */
   async function confirmFixLoginBug() {
