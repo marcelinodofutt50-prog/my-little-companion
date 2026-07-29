@@ -1305,7 +1305,11 @@ function AdminChatPanel() {
 
   useEffect(() => {
     if (!activeId) return;
-    msgsFn({ data: { threadId: activeId } }).then((m) => setMsgs(m as Msg[])).catch(() => {});
+    setMsgs([]);
+    setChatHasMore(false);
+    msgsFn({ data: { threadId: activeId, limit: 30 } })
+      .then((r: any) => { setMsgs((r?.messages ?? []) as Msg[]); setChatHasMore(!!r?.hasMore); })
+      .catch(() => {});
     const ch = supabase.channel(`admin-t-${activeId}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${activeId}` },
       (payload) => setMsgs((prev) => {
@@ -1317,8 +1321,37 @@ function AdminChatPanel() {
     return () => { supabase.removeChannel(ch); };
   }, [activeId, msgsFn]);
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length]);
+  async function loadOlderAdmin() {
+    if (!activeId || chatLoadingOlder || !chatHasMore || msgs.length === 0) return;
+    setChatLoadingOlder(true);
+    const el = listRef.current;
+    const prevHeight = el?.scrollHeight ?? 0;
+    try {
+      const r: any = await msgsFn({ data: { threadId: activeId, limit: 30, before: msgs[0].created_at } });
+      const older = (r?.messages ?? []) as Msg[];
+      setChatHasMore(!!r?.hasMore);
+      if (older.length) {
+        setMsgs((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          return [...older.filter((m) => !seen.has(m.id)), ...prev];
+        });
+        requestAnimationFrame(() => {
+          const node = listRef.current;
+          if (node) node.scrollTop = node.scrollHeight - prevHeight;
+        });
+      }
+    } catch { /* silencioso */ }
+    setChatLoadingOlder(false);
+  }
+
+  const lastMsgId = msgs.length ? msgs[msgs.length - 1].id : "";
+  useEffect(() => {
+    if (chatLoadingOlder) return;
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMsgId]);
   useEffect(() => { inputRef.current?.focus(); }, [activeId]);
+
 
 
   async function send() {
