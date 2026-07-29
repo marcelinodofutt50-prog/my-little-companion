@@ -403,11 +403,28 @@ function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={verifyEmailFree}
                 required
                 autoComplete="email"
+                inputMode="email"
+                spellCheck={false}
                 placeholder="voce@email.com"
+                className={emailTaken ? "border-amber-400/60" : undefined}
               />
+              {mode === "up" && checkingEmail && (
+                <p className="mt-1.5 font-mono text-[10px] text-muted-foreground">verificando e-mail…</p>
+              )}
+              {mode === "up" && emailTaken && !checkingEmail && (
+                <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-amber-400">
+                  Já existe conta com esse e-mail. O Gmail ignora pontos e “+tag”, então
+                  variações contam como a mesma caixa.{" "}
+                  <button type="button" onClick={() => setMode("in")} className="underline hover:text-neon">
+                    Entrar
+                  </button>
+                </p>
+              )}
             </div>
+
 
             <div>
               <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
