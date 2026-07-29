@@ -91,10 +91,12 @@ function metaFor(plan: Plan): PlanMeta {
     cadence: "renovação em 30 dias",
     features: [
       "Shadow 4.5.7 completa",
-      "Bypass Play Protect ativo",
+      "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
     ],
+    note: "O bypass incluso é o nativo da BTmob: a assinatura do aplicativo vale só 1 dia, então é preciso gerar APK novo todo dia. O Play Protect Cloak do site (à parte) entrega assinatura de 2 a 3 semanas — menos rebuild e muito menos perda de cliente.",
+
   };
   if (s.includes("7d") || s.includes("week") || s === "trial") return {
     tagline: "Ideal para validar a ferramenta em um ciclo curto.",
