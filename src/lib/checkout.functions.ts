@@ -17,6 +17,10 @@ export const createCheckout = createServerFn({ method: "POST" })
         ip: z.string().trim().min(3).max(45),
         panel: z.enum(["v457", "v46"]),
       }).optional(),
+      gift: z.object({
+        email: z.string().trim().email().max(255),
+        message: z.string().trim().max(300).optional(),
+      }).optional(),
     }).parse(input)
   )
   .handler(async ({ data, context }) => {
@@ -99,7 +103,34 @@ export const createCheckout = createServerFn({ method: "POST" })
       upgradeMeta = { from_license_id: existing?.id ?? null, legacy_status: st };
     }
 
-    const metadata = legacyMeta ? { legacy_claim: legacyMeta } : upgradeMeta ? { upgrade: upgradeMeta } : null;
+    // ===== Presente: a licença vai para a conta de outra pessoa =====
+    let giftMeta: { recipient_id: string; email: string; message: string | null; from: string | null } | null = null;
+    if (data.gift) {
+      if (plan.category === "upgrade") throw new Error("Upgrade não pode ser presenteado — ele depende da conta antiga do comprador.");
+      if (legacyMeta) throw new Error("Renovação legacy não pode ser presenteada.");
+      const giftEmail = data.gift.email.toLowerCase();
+      const buyerEmail = String(context.claims?.email ?? "").toLowerCase();
+      if (giftEmail === buyerEmail) throw new Error("Esse é o seu próprio e-mail. Para comprar pra você, desative a opção de presente.");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: recipient } = await supabaseAdmin
+        .from("profiles").select("id,email").ilike("email", giftEmail).maybeSingle();
+      if (!recipient) {
+        throw new Error("Não encontramos uma conta com esse e-mail. Peça pra pessoa criar a conta no site primeiro (leva 1 minuto) e tente de novo.");
+      }
+      if (recipient.id === userId) throw new Error("Você não pode presentear a si mesmo.");
+      giftMeta = {
+        recipient_id: recipient.id,
+        email: recipient.email,
+        message: data.gift.message?.slice(0, 300) || null,
+        from: buyerEmail || null,
+      };
+    }
+
+    const metadata = {
+      ...(legacyMeta ? { legacy_claim: legacyMeta } : {}),
+      ...(upgradeMeta ? { upgrade: upgradeMeta } : {}),
+      ...(giftMeta ? { gift: giftMeta } : {}),
+    };
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
@@ -111,7 +142,7 @@ export const createCheckout = createServerFn({ method: "POST" })
         cashback_used: cashbackUsed,
         referrer_id: referrerId,
         status: "pending",
-        metadata,
+        metadata: Object.keys(metadata).length ? metadata : null,
       } as any)
       .select("id")
       .single();
