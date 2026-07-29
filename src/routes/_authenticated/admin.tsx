@@ -481,7 +481,8 @@ function AdminPage() {
                 />
 
                 <AdminDailyReport />
-                <AdminActiveProblems onNavigate={setTab} />
+                <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />
+
 
 
                 {/* Mini strip: HOJE */}
