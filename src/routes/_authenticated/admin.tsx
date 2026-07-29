@@ -162,6 +162,7 @@ function AdminPage() {
   const recreateFn = useServerFn(adminRecreateLicense);
   const fixBugFn = useServerFn(adminFixLoginBug);
   const [fixingLic, setFixingLic] = useState<string | null>(null);
+  const [fixBugDialog, setFixBugDialog] = useState<{ open: boolean; licenseId: string | null }>({ open: false, licenseId: null });
   const threadsCountFn = useServerFn(adminListThreads);
 
   // Track which lists have been loaded so realtime/polling don't refetch
