@@ -339,6 +339,8 @@ function PlansPage() {
       <GuaranteeStrip />
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 py-12 pb-28 md:pb-12">
+        <HowItWorksSteps variant="checkout" />
+        <PlanAdvisor className="mt-5" />
         <ConversionBoosters />
         <TrustBadges className="mt-6" />
         <Testimonials />
@@ -346,18 +348,24 @@ function PlansPage() {
 
         {/* BENEFITS PANEL ==================================== */}
         {loggedIn && (
-          <div className="mx-auto mb-14 max-w-3xl overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur">
-            <div className="flex items-center justify-between border-b border-border/40 px-5 py-3">
+          <details open={anyBenefit} className="group mx-auto mb-14 max-w-3xl overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 border-b border-border/40 px-5 py-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Painel de benefícios</span>
+                <div>
+                  <div className="text-sm font-semibold">Tem cupom, indicação ou quer presentear?</div>
+                  <div className="text-[11px] text-muted-foreground">Opcional — clique para abrir. Sem isso, é só escolher o plano abaixo.</div>
+                </div>
               </div>
-              {anyBenefit && (
-                <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary">
-                  ativo
-                </span>
-              )}
-            </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {anyBenefit && (
+                  <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary">
+                    ativo
+                  </span>
+                )}
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
+              </div>
+            </summary>
 
             <div className="grid gap-5 p-5 md:grid-cols-2">
               {/* Coupon */}
