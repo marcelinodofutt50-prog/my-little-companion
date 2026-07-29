@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, LifeBuoy } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import shadowMark from "@/assets/shadow-mask.png";
 import { Button } from "@/components/ui/button";
