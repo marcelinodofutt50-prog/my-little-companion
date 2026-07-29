@@ -37,7 +37,10 @@ const schema = z.object({
 
 const COOLDOWN_KEY = "shadow.auth.emailCooldownUntil";
 const ATTEMPTS_KEY = "shadow.auth.emailAttempts";
+const LAST_EMAIL_KEY = "shadow.auth.lastEmail";
 const MAX_ATTEMPTS_PER_HOUR = 8;
+/** Trava local nunca passa de 60s: o limite real do servidor já foi ampliado. */
+const MAX_COOLDOWN_SECS = 60;
 
 function readCooldown(): number {
   if (typeof window === "undefined") return 0;
