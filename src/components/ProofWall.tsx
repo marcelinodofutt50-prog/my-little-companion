@@ -8,7 +8,10 @@ const pPhones = { url: "/img/proof-phones.jpg" };
 const pPix300 = { url: "/img/proof-pix-300.jpg" };
 const pDouglas = { url: "/img/proof-telegram-douglas.jpg" };
 
-type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet" };
+type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet"; ref?: string; source?: string; date?: string };
+
+/** Código de referência estável de cada prova (REF-01, REF-02, ...). */
+const refCode = (i: number) => `REF-${String(i + 1).padStart(2, "0")}`;
 
 const shots: Shot[] = [
 
@@ -16,6 +19,8 @@ const shots: Shot[] = [
     src: pPhones.url,
     caption: '"Deu bom" · "finalmente 🔥🔥" — 3 dispositivos espelhados no PC operando em tempo real.',
     tag: "Operação real",
+    source: "WhatsApp · captura de tela",
+    date: "jan/2026",
     accent: "neon",
   },
 
@@ -23,36 +28,48 @@ const shots: Shot[] = [
     src: p2.url,
     caption: 'PIX de R$ 1.800 recebido · cliente confirma "meu login ai · ta rodando ag ainda"',
     tag: "Pagamento + entrega",
+    source: "Mercado Pago · comprovante PIX",
+    date: "jan/2026",
     accent: "cyan",
   },
   {
     src: p4.url,
     caption: 'PIX de R$ 900 do "cliente btmob" — "Brigado pela confiança 🔥"',
     tag: "Cliente recorrente",
+    source: "Mercado Pago · comprovante PIX",
+    date: "fev/2026",
     accent: "violet",
   },
   {
     src: pPix300.url,
     caption: 'Renovação de R$ 300 · painel responde "Expire Date updated successfully!" em segundos.',
     tag: "Renovação automática",
+    source: "Painel Shadow · log de renovação",
+    date: "jan/2026",
     accent: "cyan",
   },
   {
     src: p3.url,
     caption: 'Entrega do BTMOB 4.0 FULL SRC (912 MB) · "Obrigado pela confiança 🔥🔥🔥"',
     tag: "Código-fonte entregue",
+    source: "WhatsApp · envio de arquivo",
+    date: "2026",
     accent: "neon",
   },
   {
     src: pDouglas.url,
     caption: '"Se eu for precisando de suporte só acionar né?" · "sim claro" — suporte pós-venda ativo.',
     tag: "Suporte contínuo",
+    source: "Telegram · atendimento",
+    date: "2026",
     accent: "violet",
   },
   {
     src: p1.url,
     caption: '"criar seu login e ja era" · "ja ta tudo pronto" — ativação instantânea confirmada pelo cliente.',
     tag: "Ativação em minutos",
+    source: "WhatsApp · conversa com cliente",
+    date: "2026",
     accent: "neon",
   },
 ];
@@ -126,7 +143,10 @@ export function ProofWall() {
               alt={s.caption}
               className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-x-0 top-0 flex justify-start p-2">
+            <div className="absolute inset-x-0 top-0 flex flex-wrap items-center justify-start gap-1 p-2">
+              <span className="rounded border border-border/60 bg-background/75 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground backdrop-blur-sm">
+                {refCode(i)}
+              </span>
               <span
                 className={`rounded border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider backdrop-blur-sm ${accentBadge[s.accent]}`}
               >
@@ -137,6 +157,11 @@ export function ProofWall() {
               <p className="line-clamp-2 text-[11px] leading-snug text-foreground/90">
                 {s.caption}
               </p>
+              {(s.source || s.date) && (
+                <p className="mt-1 font-mono text-[8px] uppercase tracking-wider text-muted-foreground/80">
+                  fonte: {s.source}{s.date ? ` · ${s.date}` : ""}
+                </p>
+              )}
             </div>
             <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background/70 opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
               <ZoomIn className="h-3.5 w-3.5 text-neon" />
@@ -146,7 +171,7 @@ export function ProofWall() {
       </div>
 
       <div className="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-        clique em qualquer print para ampliar · use ← → para navegar
+        cada print tem uma referência (REF-01 … REF-{String(shots.length).padStart(2, "0")}) com fonte e data · clique para ampliar · use ← → para navegar
       </div>
 
       {open !== null && (
@@ -192,15 +217,23 @@ export function ProofWall() {
               className="max-h-[75vh] w-auto rounded-lg border border-border object-contain shadow-2xl"
             />
             <div className="w-full rounded-md border border-border bg-card/60 p-3 text-center backdrop-blur">
-              <div
-                className={`inline-block rounded border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${accentBadge[shots[open].accent]}`}
-              >
-                {shots[open].tag}
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="rounded border border-border/60 bg-background/70 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
+                  {refCode(open)}
+                </span>
+                <span
+                  className={`inline-block rounded border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${accentBadge[shots[open].accent]}`}
+                >
+                  {shots[open].tag}
+                </span>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-foreground/90">
                 {shots[open].caption}
               </p>
               <div className="mt-2 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                fonte: {shots[open].source ?? "captura original"}{shots[open].date ? ` · ${shots[open].date}` : ""}
+              </div>
+              <div className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">
                 {open + 1} / {shots.length}
               </div>
             </div>
