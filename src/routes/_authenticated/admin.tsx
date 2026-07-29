@@ -1531,6 +1531,9 @@ function AdminChatPanel() {
   }
 
   const filtered = threads.filter((t) => {
+    if (quick === "unread" && !(Number(t.unread_by_staff ?? 0) > 0)) return false;
+    if (quick === "waiting" && !isWaitingLong(t)) return false;
+    if (quick === "unassigned" && (t.status === "closed" || t.assigned_to)) return false;
     if (!query) return true;
     const q = query.toLowerCase();
     return (t.profile?.email ?? "").toLowerCase().includes(q) || (t.profile?.display_name ?? "").toLowerCase().includes(q) || (t.profile?.full_name ?? "").toLowerCase().includes(q) || t.subject.toLowerCase().includes(q);
@@ -1539,7 +1542,9 @@ function AdminChatPanel() {
   const activeThread = threads.find((t) => t.id === activeId);
 
   return (
-    <div className="terminal-card scanlines relative grid h-[calc(100dvh-8rem)] grid-cols-1 overflow-hidden md:h-[70vh] md:grid-cols-[320px_1fr]">
+    <div className="space-y-3">
+    <SupportOverviewCards threads={threads} loading={loading} filter={filter} onFilter={setFilter} quick={quick} onQuick={setQuick} />
+    <div className="terminal-card scanlines relative grid h-[calc(100dvh-12rem)] grid-cols-1 overflow-hidden md:h-[70vh] md:grid-cols-[320px_1fr]">
       {/* Thread list */}
       <aside className={`${activeId ? "hidden md:flex" : "flex"} min-h-0 flex-col border-b border-border/40 md:border-b-0 md:border-r`}>
         <div className="border-b border-border/40 p-3">
