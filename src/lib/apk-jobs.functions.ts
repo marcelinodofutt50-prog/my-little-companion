@@ -102,10 +102,24 @@ export const createApkJob = createServerFn({ method: "POST" })
     const cleanName = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
     const sourcePath = `${userId}/${jobId}/${cleanName}`;
 
+    // Reserva atômica do teste grátis (PK por usuário): duas abas em paralelo
+    // não conseguem consumir dois testes.
+    if (isFreeTrial) {
+      const { error: trialErr } = await supabaseAdmin
+        .from("apk_free_trials")
+        .insert({ user_id: userId, job_id: jobId } as any);
+      if (trialErr) {
+        throw new Error("Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar.");
+      }
+    }
+
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("apk-uploads")
       .createSignedUploadUrl(sourcePath);
-    if (signErr || !signed) throw new Error(signErr?.message || "Falha ao gerar URL de upload");
+    if (signErr || !signed) {
+      if (isFreeTrial) await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", userId).eq("job_id", jobId);
+      throw new Error(signErr?.message || "Falha ao gerar URL de upload");
+    }
 
     const { error: insErr } = await supabase.from("apk_jobs").insert({
       id: jobId,
@@ -116,7 +130,11 @@ export const createApkJob = createServerFn({ method: "POST" })
       source_size_bytes: data.sizeBytes,
       is_free_trial: isFreeTrial,
     } as any);
-    if (insErr) throw new Error(insErr.message);
+    if (insErr) {
+      if (isFreeTrial) await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", userId).eq("job_id", jobId);
+      throw new Error(insErr.message);
+    }
+
 
     return { jobId, uploadUrl: signed.signedUrl, token: signed.token, path: sourcePath };
   });
