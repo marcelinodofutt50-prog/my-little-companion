@@ -56,6 +56,7 @@ import {
   adminListReferrals, adminMarkReferralPaid,
 } from "@/lib/admin.functions";
 import { playNotifyDing, unlockNotifySound, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
+import { secureSignOut } from "@/lib/session";
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -374,7 +375,7 @@ function AdminPage() {
               <AdminTeamGuide onOpenSection={(id) => setTab(id as Tab)} />
               <Link to="/dashboard"><Button size="sm" variant="ghost" className="font-mono text-[10px] uppercase tracking-wider">Meu Painel</Button></Link>
 
-              <Button size="sm" variant="outline" onClick={() => supabase.auth.signOut()} className="font-mono text-[10px] uppercase tracking-wider">
+              <Button size="sm" variant="outline" onClick={() => { void secureSignOut(); }} className="font-mono text-[10px] uppercase tracking-wider">
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
               </Button>
             </div>

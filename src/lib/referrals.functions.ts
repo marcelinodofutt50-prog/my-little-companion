@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { publicUserLabel } from "@/lib/privacy";
 
 export const getMyReferralInfo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -21,12 +22,16 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
 
     const rows = (referrals ?? []) as any[];
     const referredIds = rows.map((r) => r.referred_id);
-    let emailMap: Record<string, string> = {};
+    // Privacidade: o indicador nunca vê o e-mail real de quem indicou.
+    // Mostramos apelido público quando existir, senão e-mail mascarado.
+    let labelMap: Record<string, string> = {};
     if (referredIds.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: profs } = await supabaseAdmin
-        .from("profiles").select("id, email").in("id", referredIds);
-      emailMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.email]));
+        .from("profiles").select("id, email, display_name").in("id", referredIds);
+      labelMap = Object.fromEntries(
+        (profs ?? []).map((p: any) => [p.id, publicUserLabel(p.display_name, p.email)]),
+      );
     }
 
     const totalGranted = rows.filter((r) => r.reward_status !== "pending").length;
@@ -39,7 +44,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       code: (profile?.referral_code as string) ?? null,
       pref: (profile?.referral_reward_pref as "cashback" | "free_month" | "pix") ?? "cashback",
       pixKey: (profile?.pix_key as string) ?? null,
-      referrals: rows.map((r) => ({ ...r, referred_email: emailMap[r.referred_id] ?? null })),
+      referrals: rows.map((r) => ({ ...r, referred_label: labelMap[r.referred_id] ?? "Membro Shadow" })),
       stats: { total: rows.length, granted: totalGranted, pending: totalPending, cashback: totalCashback },
     };
   });
@@ -72,7 +77,7 @@ export const validateReferralCode = createServerFn({ method: "POST" })
     const code = data.code.toUpperCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
-      .from("profiles").select("id, full_name").eq("referral_code", code).maybeSingle();
+      .from("profiles").select("id, display_name").eq("referral_code", code).maybeSingle();
     if (!prof || prof.id === context.userId) return { valid: false };
-    return { valid: true, referrerName: (prof as any).full_name || "Membro Shadow" };
+    return { valid: true, referrerName: (prof as any).display_name || "Membro Shadow" };
   });
