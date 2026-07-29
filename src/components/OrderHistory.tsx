@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, PackageCheck, RotateCcw, AlertTriangle, Gift, Receipt, Search, Filter, CalendarRange, X } from "lucide-react";
+import { Loader2, PackageCheck, RotateCcw, AlertTriangle, Gift, Receipt, Search, Filter, CalendarRange, X, Clock } from "lucide-react";
 import { listMyOrders, type MyOrder } from "@/lib/orders.functions";
 import { Button } from "@/components/ui/button";
 
@@ -8,17 +8,20 @@ const STAGE_META: Record<string, { label: string; cls: string; icon: typeof Pack
   delivered: { label: "entregue", cls: "border-neon/40 bg-neon/10 text-neon", icon: PackageCheck },
   refunded: { label: "reembolsado", cls: "border-violet/40 bg-violet/10 text-violet", icon: RotateCcw },
   failed: { label: "falhou", cls: "border-danger/40 bg-danger/10 text-danger", icon: AlertTriangle },
+  pending: { label: "pendente", cls: "border-amber/40 bg-amber/10 text-amber-400", icon: Clock },
+  processing: { label: "processando", cls: "border-cyan/40 bg-cyan/10 text-cyan", icon: Clock },
 };
 
 function fmt(iso: string | null) {
   return iso ? new Date(iso).toLocaleString("pt-BR") : "—";
 }
 
-type StageFilter = "all" | "delivered" | "refunded" | "failed";
+type StageFilter = "all" | "andamento" | "delivered" | "refunded" | "failed";
 type PeriodFilter = "all" | "7d" | "30d" | "90d" | "year";
 
 const STAGE_TABS: { key: StageFilter; label: string }[] = [
   { key: "all", label: "todos" },
+  { key: "andamento", label: "andamento" },
   { key: "delivered", label: "entregues" },
   { key: "refunded", label: "reembolsados" },
   { key: "failed", label: "falhas" },
@@ -32,7 +35,7 @@ const PERIOD_TABS: { key: PeriodFilter; label: string; days: number | null }[] =
   { key: "year", label: "12 meses", days: 365 },
 ];
 
-/** Histórico de pedidos já concluídos (entregues, reembolsados ou com falha). */
+/** Histórico de todos os pedidos (concluídos e em andamento). */
 export function OrderHistory() {
   const [orders, setOrders] = useState<MyOrder[] | null>(null);
   const [q, setQ] = useState("");
@@ -68,8 +71,14 @@ export function OrderHistory() {
     return (o.plan_name ?? o.plan_slug).toLowerCase().includes(raw);
   };
 
-  const list = done.filter((o) => {
-    if (stage !== "all" && o.stage !== stage) return false;
+  const list = orders.filter((o) => {
+    if (stage !== "all") {
+      if (stage === "andamento") {
+        if (o.stage === "delivered" || o.stage === "refunded" || o.stage === "failed") return false;
+      } else if (o.stage !== stage) {
+        return false;
+      }
+    }
     if (cutoff && new Date(o.created_at).getTime() < cutoff) return false;
     return matches(o);
   });
@@ -84,7 +93,7 @@ export function OrderHistory() {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Pedidos concluídos" value={String(done.length)} />
+        <Stat label="Total de pedidos" value={String(orders.length)} />
         <Stat label="Total investido" value={`R$ ${totalPago.toFixed(2).replace(".", ",")}`} />
         <Stat label="Entregas automáticas" value={`${done.filter((o) => o.stage === "delivered").length}`} />
       </div>
@@ -116,7 +125,7 @@ export function OrderHistory() {
         />
         <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
           <span>
-            {list.length} de {done.length} pedido{done.length === 1 ? "" : "s"}
+            {list.length} de {orders.length} pedido{orders.length === 1 ? "" : "s"}
           </span>
           {filtersOn && (
             <button
@@ -138,7 +147,7 @@ export function OrderHistory() {
         <div className="rounded-lg border border-dashed border-border/50 p-8 text-center">
           <Receipt className="mx-auto h-6 w-6 text-muted-foreground/60" />
           <p className="mt-2 font-mono text-xs text-muted-foreground">
-            Nenhum pedido concluído por aqui ainda. Assim que uma compra for entregue, ela aparece neste histórico.
+            Nenhum pedido encontrado neste filtro. Assim que uma compra for iniciada, ela aparece aqui.
           </p>
         </div>
       ) : (

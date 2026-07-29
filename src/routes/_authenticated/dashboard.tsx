@@ -314,31 +314,40 @@ function DashboardPage() {
 
 
         {(() => {
-          const open = orders.filter((o) => o.stage !== "delivered" && o.stage !== "refunded" && o.stage !== "failed");
+          const open = orders
+            .filter((o) => o.stage !== "delivered" && o.stage !== "refunded" && o.stage !== "failed")
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           if (open.length === 0) return null;
+          const latest = open[0];
+          const hidden = open.length - 1;
           return (
             <div className="mt-5 space-y-3">
               <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                 <span>// pedidos em andamento · {open.length}</span>
                 <button onClick={() => setExtraTab("historico")} className="text-cyan hover:underline">
-                  ver histórico
+                  ver histórico{hidden > 0 ? ` (+${hidden})` : ""}
                 </button>
               </div>
-              {open.map((o) => (
-                <OrderStatusTimeline
-                  key={o.id}
-                  order={{
-                    id: o.id,
-                    status: o.stage,
-                    created_at: o.created_at,
-                    paid_at: o.paid_at,
-                    processing_at: o.processing_at,
-                    delivered_at: o.delivered_at,
-                    plan_name: o.plan_name,
-                    amount: o.amount,
-                  }}
-                />
-              ))}
+              <OrderStatusTimeline
+                order={{
+                  id: latest.id,
+                  status: latest.stage,
+                  created_at: latest.created_at,
+                  paid_at: latest.paid_at,
+                  processing_at: latest.processing_at,
+                  delivered_at: latest.delivered_at,
+                  plan_name: latest.plan_name,
+                  amount: latest.amount,
+                }}
+              />
+              {hidden > 0 && (
+                <button
+                  onClick={() => setExtraTab("historico")}
+                  className="w-full rounded border border-border/40 bg-background/40 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  + {hidden} pedido{hidden === 1 ? "" : "s"} em andamento no histórico
+                </button>
+              )}
             </div>
           );
         })()}
