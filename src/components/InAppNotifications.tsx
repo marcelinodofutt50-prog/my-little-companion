@@ -166,7 +166,7 @@ export function InAppNotifications() {
               </div>
             );
             return n.href ? (
-              <Link key={n.id} to={n.href} onClick={markAllRead} className="block">
+              <Link key={n.id} to={n.href as string} onClick={markAllRead} className="block">
                 {content}
               </Link>
             ) : (
