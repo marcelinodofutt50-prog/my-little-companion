@@ -67,6 +67,8 @@ type PlanMeta = {
   icon: any;
   features: string[];
   cadence?: string;
+  note?: string;
+
 };
 
 function metaFor(plan: Plan): PlanMeta {
@@ -78,10 +80,11 @@ function metaFor(plan: Plan): PlanMeta {
     cadence: "pagamento único",
     features: [
       "Shadow 4.6+ com todos os módulos",
-      "Bypass Play Protect ativo",
+      "Bypass Play Protect da própria BTmob (assinatura ~1 dia)",
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
-      "Fila prioritária no Play Protect Cloak",
+      "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
+
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
@@ -91,10 +94,12 @@ function metaFor(plan: Plan): PlanMeta {
     cadence: "renovação em 30 dias",
     features: [
       "Shadow 4.5.7 completa",
-      "Bypass Play Protect ativo",
+      "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
     ],
+    note: "O bypass incluso é o nativo da BTmob: a assinatura do aplicativo vale só 1 dia, então é preciso gerar APK novo todo dia. O Play Protect Cloak do site (à parte) entrega assinatura de 2 a 3 semanas — menos rebuild e muito menos perda de cliente.",
+
   };
   if (s.includes("7d") || s.includes("week") || s === "trial") return {
     tagline: "Ideal para validar a ferramenta em um ciclo curto.",
@@ -608,8 +613,10 @@ function Metric({ value, label }: { value: string; label: string }) {
 function TierComparison() {
   const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; lifetime: React.ReactNode }[] = [
     { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", lifetime: "Shadow 4.6+" },
-    { label: "Bypass Play Protect", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
+    { label: "Bypass Play Protect (BTmob nativo) — assinatura ~1 dia", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
+    { label: "Play Protect Cloak do site — assinatura 2 a 3 semanas", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "à parte", lifetime: "à parte" },
     { label: "Recursos completos", weekly: "básico", monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
+
     { label: "Atualizações grátis", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "pagas", lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
     { label: "Suporte prioritário", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
     { label: "Duração", weekly: "7 dias", monthly: "30 dias", lifetime: "vitalícia" },
@@ -808,6 +815,14 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
           ))}
         </ul>
       )}
+
+      {meta.note && (
+        <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+          <span className="font-mono uppercase tracking-wider text-amber-400">// atenção</span>{" "}
+          {meta.note}
+        </p>
+      )}
+
 
       {hasBenefit && (
         <ul className="mt-4 space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3 font-mono text-[11px]">
