@@ -304,3 +304,61 @@ export const adminFailApkJob = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const TERMINAL_STATUSES = ["done", "failed", "expired", "cancelled"] as const;
+
+async function removeJobFiles(admin: any, rows: any[]) {
+  const sources = rows.map((r) => r.source_path).filter(Boolean);
+  const results = rows.map((r) => r.result_path).filter(Boolean);
+  try { if (sources.length) await admin.storage.from("apk-uploads").remove(sources); } catch { /* ignore */ }
+  try { if (results.length) await admin.storage.from("apk-results").remove(results); } catch { /* ignore */ }
+}
+
+// Client: clear own finished jobs (keeps the free-trial record so the trial
+// can't be reused, and never touches jobs still in the queue).
+export const clearMyApkJobs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("apk_jobs")
+      .select("id,source_path,result_path")
+      .eq("user_id", context.userId)
+      .eq("is_free_trial", false)
+      .in("status", TERMINAL_STATUSES as any);
+    const list = (rows ?? []) as any[];
+    if (!list.length) return { removed: 0 };
+    await removeJobFiles(supabaseAdmin, list);
+    const { error } = await supabaseAdmin
+      .from("apk_jobs")
+      .delete()
+      .in("id", list.map((r) => r.id));
+    if (error) throw new Error(error.message);
+    return { removed: list.length };
+  });
+
+// Admin: clear finished jobs from the whole queue (free-trial rows are kept
+// to preserve trial control). Optionally scoped to a single user.
+export const adminClearApkJobs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid().optional() }).parse(i ?? {}))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
+      .from("apk_jobs")
+      .select("id,source_path,result_path")
+      .eq("is_free_trial", false)
+      .in("status", TERMINAL_STATUSES as any);
+    if (data.userId) q = q.eq("user_id", data.userId);
+    const { data: rows } = await q;
+    const list = (rows ?? []) as any[];
+    if (!list.length) return { removed: 0 };
+    await removeJobFiles(supabaseAdmin, list);
+    const { error } = await supabaseAdmin
+      .from("apk_jobs")
+      .delete()
+      .in("id", list.map((r) => r.id));
+    if (error) throw new Error(error.message);
+    return { removed: list.length };
+  });
