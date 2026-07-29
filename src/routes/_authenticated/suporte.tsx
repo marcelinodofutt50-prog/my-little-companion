@@ -72,8 +72,14 @@ function SupportPage() {
   useEffect(() => {
     if (!threadId) return;
     let cancelled = false;
-    listFn({ data: { threadId } })
-      .then((m) => { if (!cancelled) setMsgs(m as Msg[]); })
+    setMsgs([]);
+    setHasMore(false);
+    listFn({ data: { threadId, limit: PAGE_SIZE } })
+      .then((r: any) => {
+        if (cancelled) return;
+        setMsgs((r?.messages ?? []) as Msg[]);
+        setHasMore(!!r?.hasMore);
+      })
       .catch(() => {});
     markReadFn({ data: { threadId } }).catch(() => {});
 
@@ -96,6 +102,39 @@ function SupportPage() {
 
     return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [threadId, listFn, markReadFn]);
+
+  // Carrega mensagens antigas mantendo a posição visual do scroll.
+  async function loadOlder() {
+    if (!threadId || loadingOlder || !hasMore || msgs.length === 0) return;
+    setLoadingOlder(true);
+    const el = listRef.current;
+    const prevHeight = el?.scrollHeight ?? 0;
+    try {
+      const r: any = await listFn({ data: { threadId, limit: PAGE_SIZE, before: msgs[0].created_at } });
+      const older = (r?.messages ?? []) as Msg[];
+      setHasMore(!!r?.hasMore);
+      if (older.length) {
+        setMsgs((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          return [...older.filter((m) => !seen.has(m.id)), ...prev];
+        });
+        requestAnimationFrame(() => {
+          const node = listRef.current;
+          if (node) node.scrollTop = node.scrollHeight - prevHeight;
+        });
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível carregar o histórico");
+    }
+    setLoadingOlder(false);
+  }
+
+  // Auto-carrega ao chegar no topo da lista.
+  function onListScroll() {
+    const el = listRef.current;
+    if (el && el.scrollTop < 40) void loadOlder();
+  }
+
 
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length, pending.length]);
