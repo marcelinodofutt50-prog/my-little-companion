@@ -1269,10 +1269,11 @@ function demoAuditEntries(adminEmail: string): AuditLogEntry[] {
 function MiniStat({ label, value, accent }: { label: string; value: string; accent: "neon" | "cyan" | "violet" }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
-    <div className="rounded border border-border/40 bg-background/40 p-3">
-      <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-mono text-lg font-bold ${color}`}>{value}</div>
+    <div className="rounded-lg border border-border/40 bg-background/40 p-3 transition-colors hover:border-foreground/15">
+      <div className="truncate font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">{label}</div>
+      <div className={`mt-1.5 font-mono text-lg font-bold tabular-nums ${color}`}>{value}</div>
     </div>
+
   );
 }
 
