@@ -23,6 +23,7 @@ import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { RevenueSparkline } from "@/components/RevenueSparkline";
 import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
 import { AdminEmailMetrics } from "@/components/AdminEmailMetrics";
+import { AdminAntifraudPanel } from "@/components/AdminAntifraudPanel";
 import { AdminHealthPanel } from "@/components/AdminHealthPanel";
 import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
