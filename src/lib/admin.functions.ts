@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { tierFromPlanSlug, type VersionTier } from "@/lib/plans";
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
