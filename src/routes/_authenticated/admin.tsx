@@ -27,6 +27,7 @@ import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
+import { AdminMobileNav } from "@/components/AdminMobileNav";
 
 
 
@@ -301,7 +302,7 @@ function AdminPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[1400px] overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
+      <main className="mx-auto w-full max-w-[1400px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-4 sm:py-6 lg:pb-6">
         {/* HEADER BAR */}
         <div className="terminal-card scanlines relative overflow-hidden p-4 sm:p-5">
           <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet/10 blur-3xl" />
@@ -339,28 +340,7 @@ function AdminPage() {
         {/* GROUPED LAYOUT: sidebar (desktop) + content */}
         <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
           {/* SIDEBAR NAV */}
-          <aside className="lg:sticky lg:top-4 lg:self-start">
-            {/* Mobile: horizontal scroller */}
-            <div className="lg:hidden sticky top-0 z-20 -mx-3 overflow-x-auto border-b border-border/30 bg-background/85 px-3 py-2 backdrop-blur [-webkit-overflow-scrolling:touch] sm:-mx-4 sm:px-4">
-              <div className="flex gap-1.5 whitespace-nowrap">
-                {filteredTabs.map((t) => {
-                  const active = tab === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => setTab(t.id)}
-                      className={`flex items-center gap-1.5 rounded border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors ${
-                        active
-                          ? "border-neon/50 bg-neon/10 text-neon"
-                          : "border-border/50 bg-background/40 text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-                      }`}
-                    >
-                      <t.icon className="h-3 w-3" /> {t.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
             {/* Desktop: grouped vertical nav */}
             <nav className="hidden lg:block terminal-card scanlines relative p-3">
               <div className="mb-3">
@@ -984,6 +964,14 @@ function AdminPage() {
           </div>
         </div>
       </main>
+
+      <AdminMobileNav
+        groups={tabGroups}
+        primary={["overview", "chat", "orders", "licenses"]}
+        tab={tab}
+        onChange={(id) => setTab(id as Tab)}
+        badges={{ chat: threadsOpenCount }}
+      />
     </div>
   );
 }
