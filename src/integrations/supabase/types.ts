@@ -293,6 +293,39 @@ export type Database = {
           },
         ]
       }
+      email_confirm_retries: {
+        Row: {
+          attempts: number
+          created_at: string
+          done: boolean
+          email: string
+          last_attempt_at: string | null
+          last_error: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          done?: boolean
+          email: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          done?: boolean
+          email?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       integration_logs: {
         Row: {
           action: string | null
