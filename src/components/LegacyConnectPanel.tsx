@@ -167,8 +167,33 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
     navigator.clipboard.writeText(txt).then(() => toast.success(`${label} copiado`)).catch(() => toast.error("Falha ao copiar"));
   }
 
+  function validationError(
+    category: ErrCategory,
+    title: string,
+    message: string,
+    fixes: string[],
+  ): CategorizedError {
+    return { category, title, message, fixes, retryable: false, code: "VALIDATION", raw: message };
+  }
+
+  function fail(ce: CategorizedError) {
+    setErr(ce);
+    toast.error(ce.title, {
+      description: `${ce.message}${ce.fixes[0] ? ` — ${ce.fixes[0]}` : ""}`,
+      duration: 9000,
+      action: ce.category === "not_found"
+        ? { label: "Ver planos", onClick: () => { window.location.href = "/planos"; } }
+        : { label: "Suporte", onClick: () => { window.location.href = "/suporte"; } },
+    });
+  }
+
   async function verify() {
-    if (!email.trim()) { setErr({ message: "Informe o email do seu login antigo", category: "generic", retryable: false }); return; }
+    if (!email.trim()) {
+      fail(validationError("generic", "Informe o email do login antigo", "O campo de email está vazio.", [
+        "Digite o mesmo email que você usa para entrar no painel Shadow.",
+      ]));
+      return;
+    }
     setBusy(true); setErr(null); setResult(null); setAttempts((n) => n + 1);
     try {
       const r = await checkLegacyEmail({ data: { email: email.trim().toLowerCase() } });
@@ -177,17 +202,32 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
       if (r.found) {
         setStep(2); setAttempts(0);
         if (panels.length === 1) setSelectedPanel(panels[0]);
-        toast.success("Login encontrado no painel");
+        toast.success("Login encontrado no painel", {
+          description: panels.length === 1
+            ? `Detectamos sua conta em ${panelMeta[panels[0]].label}. Agora confirme a senha do painel.`
+            : "Seu email existe em mais de um painel. Escolha qual deseja vincular.",
+        });
       } else {
-        setErr({ message: "Email não localizado. Confira ou crie uma conta nova em /planos.", category: "not_found", retryable: false });
+        fail(categorize(`LEGACY_EMAIL_NOT_IN_PANEL: não encontramos ${email.trim().toLowerCase()} em nenhum painel (4.5.7 ou 4.6)`));
       }
-    } catch (e: any) { setErr(categorize(e?.message)); toast.error("Falha na verificação"); }
+    } catch (e: any) { fail(categorize(e?.message)); }
     finally { setBusy(false); }
   }
 
   async function claim() {
-    if (!selectedPanel) { setErr({ message: "Escolha o painel", category: "generic", retryable: false }); return; }
-    if (!password.trim()) { setErr({ message: "Informe a senha atual do painel", category: "credential", retryable: false }); return; }
+    if (!selectedPanel) {
+      fail(validationError("generic", "Escolha o painel", "Nenhum painel foi selecionado.", [
+        "Toque em Shadow 4.6 ou Shadow 4.5.7 antes de continuar.",
+      ]));
+      return;
+    }
+    if (!password.trim()) {
+      fail(validationError("credential", "Informe a senha do painel", "O campo de senha está vazio.", [
+        "Use a senha atual do painel Shadow — não é a senha do site.",
+        "Esqueceu? Peça a redefinição em /suporte.",
+      ]));
+      return;
+    }
     setClaiming(true); setErr(null); setAttempts((n) => n + 1);
     try {
       const r = await claimLegacyLicense({
@@ -195,11 +235,12 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
       }) as ClaimResult;
       setClaimed(r); setStep(3); setAttempts(0);
       onLinked?.();
-      if (r.already) toast.info("Essa licença já estava vinculada — atualizando dashboard");
-      else toast.success("Licença vinculada com sucesso");
-    } catch (e: any) { setErr(categorize(e?.message)); toast.error("Não foi possível vincular"); }
+      if (r.already) toast.info("Essa licença já estava vinculada", { description: "Atualizando seu dashboard com os dados existentes." });
+      else toast.success("Licença vinculada com sucesso", { description: "Preço legacy garantido. Veja os detalhes na tela." });
+    } catch (e: any) { fail(categorize(e?.message)); }
     finally { setClaiming(false); }
   }
+
 
   function reset() {
     setStep(1); setEmail(""); setPassword(""); setResult(null); setSelectedPanel("");
