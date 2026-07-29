@@ -26,11 +26,12 @@ const kindLabel: Record<AdminProblem["kind"], string> = {
   old_pending_order: "Pedido antigo",
 };
 
-export function AdminActiveProblems() {
+export function AdminActiveProblems({ onNavigate }: { onNavigate?: (tab: string) => void }) {
   const [problems, setProblems] = useState<AdminProblem[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const fn = useServerFn(getAdminProblems);
+
 
   const load = async () => {
     setLoading(true);
