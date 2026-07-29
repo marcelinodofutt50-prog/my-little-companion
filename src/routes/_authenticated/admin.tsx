@@ -301,9 +301,9 @@ function AdminPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader />
-      <main className="mx-auto max-w-[1400px] px-4 py-6">
+      <main className="mx-auto w-full max-w-[1400px] overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
         {/* HEADER BAR */}
-        <div className="terminal-card scanlines relative overflow-hidden p-5">
+        <div className="terminal-card scanlines relative overflow-hidden p-4 sm:p-5">
           <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-neon/10 blur-3xl" />
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -311,8 +311,8 @@ function AdminPage() {
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.35em] text-violet">
                 <ShieldCheck className="h-3.5 w-3.5" /> admin control center
               </div>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Painel Administrativo</h1>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">Painel Administrativo</h1>
+              <p className="mt-1 break-all font-mono text-[10px] text-muted-foreground sm:text-[11px]">
                 sessão · <span className="text-foreground/70">{email}</span> · {new Date().toLocaleString("pt-BR")}
               </p>
             </div>
@@ -341,7 +341,7 @@ function AdminPage() {
           {/* SIDEBAR NAV */}
           <aside className="lg:sticky lg:top-4 lg:self-start">
             {/* Mobile: horizontal scroller */}
-            <div className="lg:hidden sticky top-0 z-20 -mx-4 overflow-x-auto border-b border-border/30 bg-background/85 px-4 py-2 backdrop-blur">
+            <div className="lg:hidden sticky top-0 z-20 -mx-3 overflow-x-auto border-b border-border/30 bg-background/85 px-3 py-2 backdrop-blur [-webkit-overflow-scrolling:touch] sm:-mx-4 sm:px-4">
               <div className="flex gap-1.5 whitespace-nowrap">
                 {filteredTabs.map((t) => {
                   const active = tab === t.id;
@@ -2103,7 +2103,8 @@ function AutoRevocationsPanel({ users, licenses }: { users: any[]; licenses: any
       </div>
 
       <div className="terminal-card scanlines relative overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[820px] text-sm">
           <thead className="border-b border-border/40 bg-background/40 font-mono text-[10px] uppercase text-muted-foreground">
             <tr>
               <th className="p-3 text-left">Quando</th>
@@ -2149,7 +2150,9 @@ function AutoRevocationsPanel({ users, licenses }: { users: any[]; licenses: any
             })}
           </tbody>
         </table>
+        </div>
       </div>
+
     </div>
   );
 }
@@ -2229,7 +2232,8 @@ function ReferralsAdminPanel() {
         ) : filtered.length === 0 ? (
           <div className="p-8 text-center font-mono text-xs text-muted-foreground">Nenhuma indicação.</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="border-b border-border/40 font-mono text-[10px] uppercase text-muted-foreground">
               <tr>
                 <th className="p-3 text-left">Data</th>
@@ -2276,6 +2280,7 @@ function ReferralsAdminPanel() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
