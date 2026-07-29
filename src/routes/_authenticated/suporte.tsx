@@ -78,6 +78,18 @@ function SupportPage() {
     return () => { cancelled = true; };
   }, [openFn]);
 
+  // Reabertura vinda da notificação de encerramento por inatividade.
+  const reopenNotifiedRef = useRef(false);
+  useEffect(() => {
+    if (!reabrir || !thread?.id || reopenNotifiedRef.current) return;
+    reopenNotifiedRef.current = true;
+    toast.success("Atendimento reaberto", {
+      description: "Envie sua mensagem que a equipe retoma daqui. Seu histórico anterior continua salvo.",
+    });
+    composerRef.current?.focus();
+  }, [reabrir, thread?.id]);
+
+
   // Mensagens + realtime da thread ativa (re-assina quando a thread muda).
   const threadId = thread?.id;
   useEffect(() => {
