@@ -53,7 +53,7 @@ export const createCheckout = createServerFn({ method: "POST" })
     let couponRow: { code: string; discount_pct: number; cashback_pct: number } | null = null;
     if (data.couponCode) {
       const { data: c } = await supabase.from("coupons").select("*").eq("code", data.couponCode.toUpperCase()).eq("active", true).maybeSingle();
-      if (c) {
+      if (c && (c.uses_left === null || c.uses_left === undefined || Number(c.uses_left) > 0)) {
         couponRow = c;
         amount = amount * (1 - (c.discount_pct ?? 0) / 100);
       }
