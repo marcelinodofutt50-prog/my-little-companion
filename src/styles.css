@@ -236,7 +236,29 @@
     animation: caret-blink 1.05s step-end infinite;
   }
   @keyframes caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Tagline "Your shadow, everywhere." — brilho deslizante */
+  .tagline-shimmer {
+    background: linear-gradient(
+      100deg,
+      color-mix(in oklab, var(--muted-foreground) 80%, transparent) 0%,
+      color-mix(in oklab, var(--muted-foreground) 80%, transparent) 38%,
+      var(--neon) 50%,
+      color-mix(in oklab, var(--muted-foreground) 80%, transparent) 62%,
+      color-mix(in oklab, var(--muted-foreground) 80%, transparent) 100%
+    );
+    background-size: 260% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: tagline-shimmer 5.5s linear infinite;
+  }
+  @keyframes tagline-shimmer {
+    0% { background-position: 160% 0; }
+    100% { background-position: -60% 0; }
+  }
 }
+
 
 #lovable-badge { display: none !important; }
 
