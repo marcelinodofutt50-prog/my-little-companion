@@ -142,7 +142,14 @@ function SupportPage() {
 
 
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length, pending.length]);
+  // Só rola para o fim quando chega mensagem nova (não ao carregar histórico).
+  const lastMsgId = msgs.length ? msgs[msgs.length - 1].id : "";
+  useEffect(() => {
+    if (loadingOlder) return;
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMsgId, pending.length]);
+
 
   // Mark admin messages as seen when tab is focused
   useEffect(() => {
