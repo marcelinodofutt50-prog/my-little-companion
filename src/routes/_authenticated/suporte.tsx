@@ -180,15 +180,86 @@ function SupportPage() {
 
   const sending = pending.some((p) => p.status === "sending");
 
+  const active = categoryMeta(thread?.category);
+  const chosen = !!thread?.category && thread.category !== "outro";
+  const empty = msgs.length === 0 && pending.length === 0;
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="font-mono text-xs uppercase tracking-[0.3em] text-neon">// support channel</div>
-        <h1 className="mt-1 text-2xl font-bold">Chat com Admin</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Anexe prints, vídeos ou arquivos. Nosso time responde em minutos.</p>
+        <h1 className="mt-1 text-2xl font-bold">Suporte Shadow</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Escolha o assunto, descreva o problema e anexe prints se precisar. Respondemos em minutos.
+        </p>
 
-        <div className="mt-6 terminal-card scanlines relative flex h-[65vh] flex-col overflow-hidden">
+        {/* Status do atendimento */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-mono uppercase tracking-wider">
+          <span className="flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-neon">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon" /> online agora
+          </span>
+          <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-muted-foreground">
+            ticket {thread ? `#${thread.id.slice(0, 8)}` : "abrindo..."}
+          </span>
+          <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-muted-foreground">
+            {active.emoji} {active.label}
+          </span>
+          {thread?.assigned_name && (
+            <span className="rounded-full border border-violet/40 bg-violet/10 px-3 py-1 text-violet-foreground">
+              atendente: {thread.assigned_name}
+            </span>
+          )}
+        </div>
+
+        {/* Categorias */}
+        <section className="mt-5">
+          <div className="mb-2 text-xs font-medium text-muted-foreground">
+            {chosen ? "Assunto do atendimento (pode trocar):" : "Qual é o assunto?"}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {SUPPORT_CATEGORY_META.map((c) => {
+              const on = thread?.category === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  disabled={!thread || savingCat}
+                  onClick={() => chooseCategory(c.id)}
+                  className={`rounded-lg border p-3 text-left transition disabled:opacity-50 ${
+                    on ? "border-neon/60 bg-neon/10 shadow-[0_0_18px_-6px_var(--neon,theme(colors.emerald.400))]" : "border-border/60 bg-card/50 hover:border-neon/40 hover:bg-card"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <span aria-hidden>{c.emoji}</span>
+                    <span className="truncate">{c.label}</span>
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">{c.hint}</div>
+                  {c.urgent && <div className="mt-1 inline-block rounded bg-destructive/15 px-1.5 py-0.5 text-[9px] font-mono uppercase text-destructive">prioridade alta</div>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Mensagens rápidas */}
+        {empty && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {active.quickMessages.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setBody(q)}
+                className="rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground transition hover:border-neon/40 hover:text-foreground"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
+
           {hasNewAdmin && (
             <button
               type="button"
