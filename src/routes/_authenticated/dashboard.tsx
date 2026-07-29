@@ -860,7 +860,7 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
 
   const terminal = lic.disabled_at || lic.revoked;
   return (
-    <motion.div layout initial={false} className="terminal-card scanlines relative overflow-hidden">
+    <motion.div layout initial={false} className="terminal-card scanlines osint-corners relative overflow-hidden">
       <div className={`absolute inset-y-0 left-0 w-[3px] ${accentBar}`} />
       {/* HEADER — clickable summary row */}
       <button
