@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { siteUrl } from "@/lib/site-url";
 import { Lost2faHelp } from "@/components/Lost2faHelp";
+import { logEmailEvent } from "@/lib/email-metrics.functions";
 
 
 export const Route = createFileRoute("/auth")({
@@ -128,7 +129,16 @@ function AuthPage() {
     });
   }, [navigate, next]);
 
-  function handleAuthError(err: any) {
+  /** Envia telemetria de e-mail sem bloquear o fluxo do usuário. */
+  function track(
+    action: string,
+    outcome: "sent" | "failed" | "rate_limited" | "blocked_local",
+    extra?: { error?: string; retryAfter?: number; httpStatus?: number },
+  ) {
+    void logEmailEvent({ data: { action, outcome, email, ...extra } }).catch(() => {});
+  }
+
+  function handleAuthError(err: any, action: string) {
     const raw = String(err?.message ?? "");
     const status = err?.status ?? err?.code;
     const isRateLimit =
@@ -140,6 +150,7 @@ function AuthPage() {
       startCooldown(secs);
       setSignupMessage(null);
       setEmailBlocked(true);
+      track(action, "rate_limited", { error: raw, retryAfter: secs, httpStatus: 429 });
       toast.error(
         `Limite de envio de e-mails atingido. Aguarde ${secs}s — sua conta não foi perdida.`
       );
@@ -152,6 +163,7 @@ function AuthPage() {
     } else if (/invalid login credentials/i.test(raw)) {
       toast.error("E-mail ou senha incorretos.");
     } else {
+      if (action !== "signin") track(action, "failed", { error: raw, httpStatus: Number(status) || undefined });
       toast.error(raw || "Não foi possível concluir. Tente novamente.");
     }
   }
@@ -163,6 +175,7 @@ function AuthPage() {
     if (!parsedEmail.success) return toast.error("Digite seu e-mail acima para reenviar.");
     if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
       startCooldown(300);
+      track("resend", "blocked_local", { error: "local attempt cap reached" });
       return toast.error(
         "Você já pediu o e-mail várias vezes nesta hora. Use o link que já chegou (veja Spam/Promoções) ou fale com o suporte."
       );
@@ -177,9 +190,10 @@ function AuthPage() {
       });
       if (error) throw error;
       startCooldown(90);
+      track("resend", "sent");
       toast.success("E-mail reenviado. Verifique também Spam e Promoções.");
     } catch (err: any) {
-      handleAuthError(err);
+      handleAuthError(err, "resend");
     } finally {
       setResending(false);
     }
@@ -196,6 +210,7 @@ function AuthPage() {
         if (currentAttempts() >= MAX_ATTEMPTS_PER_HOUR) {
           startCooldown(300);
           setEmailBlocked(true);
+          track("signup", "blocked_local", { error: "local attempt cap reached" });
           throw new Error(
             "Muitas tentativas de cadastro nesta hora. Aguarde alguns minutos ou fale com o suporte."
           );
@@ -207,6 +222,7 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Conta criada! Confirme seu e-mail.");
         setEmailBlocked(false);
+        track("signup", "sent");
         setSignupMessage(
           "Enviamos um e-mail de confirmação para você.\n\n" +
           "1. Abra o Gmail (ou app de e-mail).\n" +
@@ -222,9 +238,10 @@ function AuthPage() {
         navigate({ to: (next as any) || "/dashboard" });
       }
     } catch (err: any) {
-      handleAuthError(err);
+      handleAuthError(err, mode === "up" ? "signup" : "signin");
     } finally { setLoading(false); }
   }
+
 
 
 

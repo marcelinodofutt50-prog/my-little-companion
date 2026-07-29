@@ -22,6 +22,7 @@ import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel"
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { RevenueSparkline } from "@/components/RevenueSparkline";
 import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
+import { AdminEmailMetrics } from "@/components/AdminEmailMetrics";
 import { AdminHealthPanel } from "@/components/AdminHealthPanel";
 import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
@@ -568,6 +569,9 @@ function AdminPage() {
 
                 {/* Métricas 30 dias (financeiro: só admin) */}
                 {isAdminUser && <AdminMetricsPanel />}
+
+                {/* Saúde de envio de e-mails (rate limits / falhas) */}
+                {isAdminUser && <AdminEmailMetrics />}
 
                 {/* Tendência de receita */}
                 {isAdminUser && <RevenueSparkline orders={orders} />}
