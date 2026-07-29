@@ -56,7 +56,9 @@ export function InAppNotifications() {
   const [readIds, setReadIds] = useState<string[]>(() => loadRead());
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
   const knownRef = useRef<Set<string> | null>(null);
+
 
   const fetchFn = useServerFn(listMyNotifications);
 
