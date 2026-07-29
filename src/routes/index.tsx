@@ -42,62 +42,65 @@ const plans = [
   {
     slug: "login-7d",
     tier: "TIER_01",
+    tierKey: null,
     name: "Weekly Ops",
-    duration: "7 Dias",
+    durationKey: "plan.7d.duration",
     price: 450,
     accent: "cyan",
-    desc: "Acesso completo à ferramenta para operações curtas e reconhecimento tático.",
-    features: ["Painel completo", "Credenciais AES-256", "Suporte 24/7"],
+    descKey: "plan.7d.desc",
+    featureKeys: ["plan.f.panel", "plan.f.aes", "plan.f.support"],
   },
   {
     slug: "login-30d",
     tier: "TIER_02 · PRIORITÁRIO",
+    tierKey: "plan.tier2",
     name: "Monthly Intel",
-    duration: "30 Dias",
+    durationKey: "plan.30d.duration",
     price: 750,
     accent: "neon",
-    desc: "Capacidade operacional estendida com processamento prioritário.",
-    features: ["Tudo do Weekly", "Fila prioritária", "Trial de 1 dia incluso"],
+    descKey: "plan.30d.desc",
+    featureKeys: ["plan.f.allweekly", "plan.f.queue", "plan.f.trial"],
     highlight: true,
   },
   {
     slug: "login-lifetime",
     tier: "TIER_03",
+    tierKey: null,
     name: "Eternal",
-    duration: "Vitalício",
+    durationKey: "plan.life.duration",
     price: 1700,
     accent: "violet",
-    desc: "Acesso permanente + todas as atualizações futuras. Suporte VIP.",
-    features: ["Licença vitalícia", "Updates for life", "VIP direto"],
+    descKey: "plan.life.desc",
+    featureKeys: ["plan.f.lifetime", "plan.f.updates", "plan.f.vip"],
   },
-];
+] as const;
 
 const sourcePlans = [
   {
     tier: "SRC_YAARSA",
-    name: "Código-fonte do painel",
+    nameKey: "src.panel.name",
     price: 2700,
     accent: "cyan",
-    desc: "Repositório completo do painel para hospedagem soberana.",
+    descKey: "src.panel.desc",
   },
   {
     tier: "SRC_FULL",
-    name: "BTMOB + Servidor",
+    nameKey: "src.full.name",
     price: 4600,
     accent: "violet",
-    desc: "Código-fonte do programa e do servidor. Independência absoluta.",
+    descKey: "src.full.desc",
   },
-];
+] as const;
 
 
 const features = [
-  { icon: Lock, title: "AES-256-GCM", desc: "Credenciais criptografadas ponta-a-ponta. Nem nós lemos em texto puro." },
-  { icon: Zap, title: "PIX automático", desc: "Mercado Pago aprovou → licença provisionada em segundos." },
-  { icon: ShieldCheck, title: "Anonimato real", desc: "Servidor dedicado, sem logs cruzados, com rotação IP." },
-  { icon: Cpu, title: "Painel OSINT", desc: "Dashboard operacional com métricas em tempo real." },
-  { icon: Fingerprint, title: "Trial 24h", desc: "1 trial gratuito por conta. Testa antes de comprar." },
-  { icon: Activity, title: "Renovação D-20", desc: "Servidor renova todo dia 20. Automatizado no painel." },
-];
+  { icon: Lock, titleKey: "feat.aes.title", descKey: "feat.aes.desc" },
+  { icon: Zap, titleKey: "feat.pix.title", descKey: "feat.pix.desc" },
+  { icon: ShieldCheck, titleKey: "feat.anon.title", descKey: "feat.anon.desc" },
+  { icon: Cpu, titleKey: "feat.panel.title", descKey: "feat.panel.desc" },
+  { icon: Fingerprint, titleKey: "feat.trial.title", descKey: "feat.trial.desc" },
+  { icon: Activity, titleKey: "feat.renew.title", descKey: "feat.renew.desc" },
+] as const;
 
 function LandingPage() {
   return (
