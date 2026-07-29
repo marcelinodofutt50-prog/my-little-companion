@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { Bell, RefreshCcw, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { Bell, RefreshCcw, ShieldAlert, CheckCircle2, MessageSquare, Receipt, ArrowLeftRight, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,101 +10,167 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { listMyNotifications, type AppNotification, type NotificationKind } from "@/lib/notifications.functions";
+import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 
-type NotificationKind = "renewal" | "refund" | "suspended" | "info";
-
-type AppNotification = {
-  id: string;
-  kind: NotificationKind;
-  title: string;
-  description: string;
-  createdAt: string;
-  read?: boolean;
-};
-
-const DEMO_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: "1",
-    kind: "renewal",
-    title: "Sua licença expira em breve",
-    description: "Renove agora e mantenha o acesso sem interrupções.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: "2",
-    kind: "refund",
-    title: "Reembolso aprovado",
-    description: "Seu pedido de reembolso foi processado com sucesso.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    read: true,
-  },
-  {
-    id: "3",
-    kind: "suspended",
-    title: "Licença suspensa",
-    description: "Uma de suas licenças foi suspensa por inatividade.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    read: true,
-  },
-];
-
-const ICONS: Record<NotificationKind, any> = {
+const ICONS: Record<NotificationKind, typeof Bell> = {
+  support: MessageSquare,
   renewal: RefreshCcw,
   refund: CheckCircle2,
   suspended: ShieldAlert,
+  order: Receipt,
+  migration: ArrowLeftRight,
   info: Bell,
 };
 
 const COLORS: Record<NotificationKind, string> = {
+  support: "text-violet",
   renewal: "text-amber-400",
   refund: "text-neon",
-  suspended: "text-danger",
-  info: "text-cyan",
+  suspended: "text-destructive",
+  order: "text-cyan",
+  migration: "text-cyan",
+  info: "text-muted-foreground",
 };
 
+const READ_KEY = "shadow.notifications.read";
+
+function loadRead(): string[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(READ_KEY) ?? "[]"); } catch { return []; }
+}
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.round(diff / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `há ${h}h`;
+  return new Date(iso).toLocaleDateString("pt-BR");
+}
+
 export function InAppNotifications() {
-  const [notifications] = useState<AppNotification[]>(DEMO_NOTIFICATIONS);
-  const unread = notifications.filter((n) => !n.read).length;
+  const [items, setItems] = useState<AppNotification[]>([]);
+  const [readIds, setReadIds] = useState<string[]>(() => loadRead());
+  const [loading, setLoading] = useState(true);
+  const knownRef = useRef<Set<string> | null>(null);
+
+  const fetchFn = useServerFn(listMyNotifications);
+
+  const refresh = useCallback(async (announce = true) => {
+    try {
+      const data = (await fetchFn()) as AppNotification[];
+      setItems(data);
+      const known = knownRef.current;
+      if (known && announce) {
+        const fresh = data.filter((n) => !known.has(n.id));
+        const support = fresh.find((n) => n.kind === "support");
+        if (support) {
+          playNotifyDing();
+          toast.message(support.title, { description: support.description });
+          showDesktopNotification(support.title, support.description);
+        } else if (fresh.length > 0) {
+          toast.message(fresh[0].title, { description: fresh[0].description });
+        }
+      }
+      knownRef.current = new Set(data.map((n) => n.id));
+    } catch {
+      /* silencioso: notificações nunca devem quebrar a página */
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchFn]);
+
+  useEffect(() => {
+    requestNotifyPermission();
+    void refresh(false);
+    const t = setInterval(() => void refresh(), 60_000);
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid) return;
+      channel = supabase
+        .channel(`notif-${uid}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "support_threads", filter: `user_id=eq.${uid}` }, () => void refresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${uid}` }, () => void refresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "refund_requests", filter: `user_id=eq.${uid}` }, () => void refresh())
+        .subscribe();
+    });
+
+    return () => {
+      clearInterval(t);
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [refresh]);
+
+  const unread = useMemo(() => items.filter((n) => !readIds.includes(n.id)), [items, readIds]);
+
+  function markAllRead() {
+    const ids = Array.from(new Set([...readIds, ...items.map((n) => n.id)])).slice(-200);
+    setReadIds(ids);
+    try { localStorage.setItem(READ_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
+  }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => { if (open) { unlockNotifySound(); void refresh(false); } }}>
       <DropdownMenuTrigger asChild>
-        <button className="relative flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/60 hover:text-primary">
-          <Bell className="h-4 w-4" />
-          {unread > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-mono text-[9px] font-bold text-background">
-              {unread}
+        <button
+          aria-label="Notificações"
+          className="relative flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-background/60 hover:text-primary"
+        >
+          <Bell className={`h-4 w-4 ${unread.length > 0 ? "animate-pulse text-primary" : ""}`} />
+          {unread.length > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 font-mono text-[9px] font-bold text-background">
+              {unread.length > 9 ? "9+" : unread.length}
             </span>
           )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 border-border/50 bg-card/95 backdrop-blur-md">
-        <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/80">
-          // notificações
+        <DropdownMenuLabel className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-primary/80">
+          <span>// notificações</span>
+          {items.length > 0 && (
+            <button onClick={markAllRead} className="text-[9px] normal-case tracking-normal text-muted-foreground hover:text-primary">
+              marcar tudo como lido
+            </button>
+          )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {notifications.length === 0 && (
-          <div className="p-4 text-center font-mono text-xs text-muted-foreground">Nenhuma notificação</div>
+        {loading && (
+          <div className="flex items-center justify-center gap-2 p-4 font-mono text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> carregando…
+          </div>
+        )}
+        {!loading && items.length === 0 && (
+          <div className="p-4 text-center font-mono text-xs text-muted-foreground">Tudo em dia. Sem novidades.</div>
         )}
         <div className="max-h-80 overflow-y-auto">
-          {notifications.map((n) => {
-            const Icon = ICONS[n.kind];
-            return (
+          {items.map((n) => {
+            const Icon = ICONS[n.kind] ?? Bell;
+            const isRead = readIds.includes(n.id);
+            const content = (
               <div
-                key={n.id}
-                className={`flex gap-2.5 border-b border-border/30 px-3 py-2.5 last:border-0 ${
-                  n.read ? "opacity-70" : "bg-neon/[0.03]"
+                className={`flex gap-2.5 border-b border-border/30 px-3 py-2.5 last:border-0 transition-colors hover:bg-primary/5 ${
+                  isRead ? "opacity-60" : "bg-primary/[0.04]"
                 }`}
               >
-                <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${COLORS[n.kind]}`} />
+                <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${COLORS[n.kind] ?? "text-muted-foreground"}`} />
                 <div className="min-w-0">
                   <div className="text-xs font-medium text-foreground">{n.title}</div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">{n.description}</div>
-                  <div className="mt-1 font-mono text-[9px] text-muted-foreground/70">
-                    {new Date(n.createdAt).toLocaleString("pt-BR")}
-                  </div>
+                  <div className="mt-1 font-mono text-[9px] text-muted-foreground/70">{timeAgo(n.createdAt)}</div>
                 </div>
               </div>
+            );
+            return n.href ? (
+              <Link key={n.id} to={n.href as string} onClick={markAllRead} className="block">
+                {content}
+              </Link>
+            ) : (
+              <div key={n.id}>{content}</div>
             );
           })}
         </div>

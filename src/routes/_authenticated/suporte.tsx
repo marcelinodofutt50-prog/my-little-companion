@@ -7,7 +7,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { getOrCreateThread, listMessages, sendMessage } from "@/lib/support.functions";
+import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer } from "@/lib/support.functions";
+import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
@@ -40,24 +41,32 @@ function SupportPage() {
   const openFn = useServerFn(getOrCreateThread);
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
+  const markReadFn = useServerFn(markThreadReadByCustomer);
 
   useEffect(() => {
+    requestNotifyPermission();
     supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? ""));
     openFn().then(async (t) => {
       setThread(t);
       const m = await listFn({ data: { threadId: t.id } });
       setMsgs(m as Msg[]);
+      markReadFn({ data: { threadId: t.id } }).catch(() => {});
       const ch = supabase.channel(`t-${t.id}`).on("postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${t.id}` },
         (payload) => setMsgs((prev) => {
           const next = payload.new as Msg;
           if (prev.some((x) => x.id === next.id)) return prev;
+          if (next.is_admin && !next.is_system) {
+            playNotifyDing();
+            if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
+            markReadFn({ data: { threadId: t.id } }).catch(() => {});
+          }
           return [...prev, next];
         })
       ).subscribe();
       return () => { supabase.removeChannel(ch); };
     });
-  }, [openFn, listFn]);
+  }, [openFn, listFn, markReadFn]);
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [msgs.length, pending.length]);
 
@@ -229,9 +238,9 @@ function SupportPage() {
               );
             })}
           </div>
-          <form className="flex items-center gap-2 border-t border-border/40 p-3" onSubmit={(e) => { e.preventDefault(); send(); }}>
+          <form className="flex items-center gap-2 border-t border-border/40 p-3" onSubmit={(e) => { e.preventDefault(); unlockNotifySound(); send(); }}>
             <input ref={fileRef} type="file" hidden onChange={pickFile} accept="image/*,video/*,.pdf,.txt,.log,.zip" />
-            <Button type="button" size="icon" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
+            <Button type="button" size="icon" variant="outline" onClick={() => { unlockNotifySound(); fileRef.current?.click(); }} disabled={uploading}>
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
             </Button>
             <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem..." />
