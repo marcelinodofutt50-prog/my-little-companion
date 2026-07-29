@@ -687,7 +687,7 @@ function AdminPage() {
 
           {tab === "users" && (
             <div className="space-y-4">
-            <AdminTrialResetPanel />
+            {isAdminUser && <AdminTrialResetPanel />}
             <div className="terminal-card scanlines relative overflow-hidden">
               <div className="flex flex-wrap items-center gap-2 border-b border-border/30 p-3">
                 <Input
