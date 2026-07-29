@@ -227,7 +227,7 @@ function SupportPage() {
                   disabled={!thread || savingCat}
                   onClick={() => chooseCategory(c.id)}
                   className={`rounded-lg border p-3 text-left transition disabled:opacity-50 ${
-                    on ? "border-neon/60 bg-neon/10 shadow-[0_0_18px_-6px_var(--neon,theme(colors.emerald.400))]" : "border-border/60 bg-card/50 hover:border-neon/40 hover:bg-card"
+                    on ? "border-neon/60 bg-neon/10 shadow-lg" : "border-border/60 bg-card/50 hover:border-neon/40 hover:bg-card"
                   }`}
                 >
                   <div className="flex items-center gap-2 text-sm font-semibold">
@@ -270,7 +270,11 @@ function SupportPage() {
             </button>
           )}
           <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-            {msgs.length === 0 && pending.length === 0 && <div className="pt-16 text-center text-sm text-muted-foreground">Nenhuma mensagem. Envie a primeira.</div>}
+            {msgs.length === 0 && pending.length === 0 && <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
+                <div className="text-3xl" aria-hidden>{active.emoji}</div>
+                <div className="text-sm font-medium">{active.label}</div>
+                <div className="text-xs text-muted-foreground">Descreva o que aconteceu ou toque em uma mensagem rápida acima.</div>
+              </div>}
             {msgs.map((m) => {
               if (m.is_system) {
                 return (
