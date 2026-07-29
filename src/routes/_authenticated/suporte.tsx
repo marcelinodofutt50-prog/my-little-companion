@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
-import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer } from "@/lib/support.functions";
+import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer, setThreadCategory } from "@/lib/support.functions";
+import { SUPPORT_CATEGORY_META, categoryMeta, type SupportCategory } from "@/lib/support-categories";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 
 export const Route = createFileRoute("/_authenticated/suporte")({
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/suporte")({
   component: SupportPage,
 });
 
+type Thread = { id: string; category?: string | null; status?: string | null; assigned_name?: string | null };
 type Msg = { id: string; body: string | null; attachment_url: string | null; attachment_type: string | null; is_admin: boolean; is_system?: boolean; created_at: string; sender_id: string };
 type PendingMsg = {
   clientId: string;
@@ -28,7 +30,8 @@ type PendingMsg = {
 };
 
 function SupportPage() {
-  const [thread, setThread] = useState<{ id: string } | null>(null);
+  const [thread, setThread] = useState<Thread | null>(null);
+  const [savingCat, setSavingCat] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
   const [body, setBody] = useState("");
@@ -44,6 +47,7 @@ function SupportPage() {
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
   const markReadFn = useServerFn(markThreadReadByCustomer);
+  const setCatFn = useServerFn(setThreadCategory);
 
   useEffect(() => {
     requestNotifyPermission();
@@ -88,6 +92,19 @@ function SupportPage() {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, []);
+
+  async function chooseCategory(cat: SupportCategory) {
+    if (!thread || savingCat) return;
+    setSavingCat(true);
+    try {
+      const updated: any = await setCatFn({ data: { threadId: thread.id, category: cat } });
+      setThread((prev) => (prev ? { ...prev, ...updated } : updated));
+      toast.success(`Assunto definido: ${categoryMeta(cat).label}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível definir o assunto");
+    }
+    setSavingCat(false);
+  }
 
   async function trySend(clientId: string, payload: { body?: string; attachmentPath?: string; attachmentType?: string }) {
     if (!thread) return;
