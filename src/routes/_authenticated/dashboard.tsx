@@ -27,6 +27,7 @@ import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
+import { HowItWorksSteps } from "@/components/HowItWorksSteps";
 
 import { getMyProfile } from "@/lib/profile.functions";
 import { displayIdentity } from "@/lib/identity";
