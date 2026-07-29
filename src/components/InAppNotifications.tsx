@@ -55,18 +55,22 @@ export function InAppNotifications() {
   const [items, setItems] = useState<AppNotification[]>([]);
   const [readIds, setReadIds] = useState<string[]>(() => loadRead());
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const knownRef = useRef<Set<string> | null>(null);
 
   const fetchFn = useServerFn(listMyNotifications);
 
   const refresh = useCallback(async (announce = true) => {
     try {
-      const data = (await fetchFn()) as AppNotification[];
+      const res = (await fetchFn()) as { isAdmin: boolean; items: AppNotification[] };
+      const data = res.items ?? [];
+      setIsAdmin(!!res.isAdmin);
       setItems(data);
       const known = knownRef.current;
       if (known && announce) {
         const fresh = data.filter((n) => !known.has(n.id));
-        const support = fresh.find((n) => n.kind === "support");
+        // Alertas sonoros/desktop de chat são apenas para admins.
+        const support = res.isAdmin ? fresh.find((n) => n.kind === "support") : undefined;
         if (support) {
           playNotifyDing();
           toast.message(support.title, { description: support.description });
@@ -89,15 +93,25 @@ export function InAppNotifications() {
     const t = setInterval(() => void refresh(), 60_000);
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       const uid = data.user?.id;
       if (!uid) return;
+      const { data: adminFlag } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+      const admin = !!adminFlag;
+      setIsAdmin(admin);
       channel = supabase
         .channel(`notif-${uid}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "support_threads", filter: `user_id=eq.${uid}` }, () => void refresh())
         .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${uid}` }, () => void refresh())
-        .on("postgres_changes", { event: "*", schema: "public", table: "refund_requests", filter: `user_id=eq.${uid}` }, () => void refresh())
-        .subscribe();
+        .on("postgres_changes", { event: "*", schema: "public", table: "refund_requests", filter: `user_id=eq.${uid}` }, () => void refresh());
+      // Somente admins assinam eventos de chat/suporte.
+      if (admin) {
+        channel = channel.on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "support_threads" },
+          () => void refresh(),
+        );
+      }
+      channel.subscribe();
     });
 
     return () => {
@@ -131,7 +145,7 @@ export function InAppNotifications() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 border-border/50 bg-card/95 backdrop-blur-md">
         <DropdownMenuLabel className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-primary/80">
-          <span>// notificações</span>
+          <span>// notificações{isAdmin ? " · admin" : ""}</span>
           {items.length > 0 && (
             <button onClick={markAllRead} className="text-[9px] normal-case tracking-normal text-muted-foreground hover:text-primary">
               marcar tudo como lido

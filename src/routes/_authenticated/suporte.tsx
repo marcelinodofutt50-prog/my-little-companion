@@ -38,6 +38,7 @@ function SupportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const mountedAtRef = useRef<number>(Date.now());
+  const isAdminRef = useRef(false);
 
   const openFn = useServerFn(getOrCreateThread);
   const listFn = useServerFn(listMessages);
@@ -46,6 +47,12 @@ function SupportPage() {
 
   useEffect(() => {
     requestNotifyPermission();
+    supabase.auth.getUser().then(async ({ data }) => {
+      const id = data.user?.id;
+      if (!id) return;
+      const { data: adminFlag } = await supabase.rpc("has_role", { _user_id: id, _role: "admin" });
+      isAdminRef.current = !!adminFlag;
+    });
     markOnboardingStep(ONBOARDING_STEP.SUPPORT);
     supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? ""));
     openFn().then(async (t) => {
@@ -59,8 +66,11 @@ function SupportPage() {
           const next = payload.new as Msg;
           if (prev.some((x) => x.id === next.id)) return prev;
           if (next.is_admin && !next.is_system) {
-            playNotifyDing();
-            if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
+            // Alertas de chat (som/desktop) são restritos a admins.
+            if (isAdminRef.current) {
+              playNotifyDing();
+              if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
+            }
             markReadFn({ data: { threadId: t.id } }).catch(() => {});
           }
           return [...prev, next];
