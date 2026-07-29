@@ -249,11 +249,40 @@ function PlayProtectPage() {
                 </div>
               </div>
               {hasPending && (
-                <div className="mt-4 flex items-start gap-2 rounded border border-sky-500/40 bg-sky-500/10 p-3 text-sm text-sky-200">
-                  <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" />
-                  <div>Você tem <span className="font-semibold">{status?.pendingJobs}</span> APK em processamento. Aguarde finalizar para enviar o próximo — atualizamos essa tela em tempo real.</div>
+                <div className="mt-4 space-y-3 rounded border border-sky-500/40 bg-sky-500/10 p-3 text-sm text-sky-200">
+                  <div className="flex items-start gap-2">
+                    <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin" />
+                    <div>
+                      Você tem <span className="font-semibold">{status?.pendingJobs}</span> APK em processamento.
+                      Aguarde finalizar para enviar o próximo — atualizamos essa tela em tempo real.
+                    </div>
+                  </div>
+                  {status?.queuePosition ? (
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <QueueStat label="sua posição" value={`${status.queuePosition}º`} />
+                      <QueueStat label="fila total" value={`${status.queueTotal ?? 0}`} />
+                      <QueueStat
+                        label="previsão"
+                        value={status.etaMinutes ? `~${status.etaMinutes} min` : "—"}
+                      />
+                    </div>
+                  ) : null}
+                  {status?.queuePosition ? (
+                    <div className="h-1.5 overflow-hidden rounded-full bg-sky-500/20">
+                      <div
+                        className="h-full rounded-full bg-sky-400 transition-all"
+                        style={{
+                          width: `${Math.max(
+                            8,
+                            100 - ((status.queuePosition - 1) / Math.max(1, status.queueTotal || 1)) * 100,
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               )}
+
               {banner && (
                 <div className="mt-4 flex items-start gap-2 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
