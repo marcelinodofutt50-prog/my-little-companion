@@ -1492,7 +1492,17 @@ function AdminChatPanel() {
               <Button size="sm" variant="outline" className="mt-2 h-7 text-[11px]" onClick={() => { setLoading(true); refreshThreads().finally(() => setLoading(false)); }}>tentar novamente</Button>
             </div>
           )}
-          {!loading && !loadError && filtered.length === 0 && <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma conversa</div>}
+          {!loading && !loadError && filtered.length === 0 && (
+            <div className="flex flex-col items-center gap-2 p-8 text-center">
+              <MessageSquare className="h-7 w-7 text-neon/40" />
+              <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                {query ? "nenhum cliente com esse termo" : filter === "open" ? "nenhuma conversa aberta" : filter === "mine" ? "você não assumiu nenhum ticket" : "nenhuma conversa encerrada"}
+              </div>
+              {!query && filter !== "open" && (
+                <button type="button" onClick={() => setFilter("open")} className="font-mono text-[10px] uppercase text-neon hover:underline">ver abertas →</button>
+              )}
+            </div>
+          )}
           {filtered.map((t) => {
             const active = t.id === activeId;
             const lastCustomerAt = t.last_customer_message_at ? new Date(t.last_customer_message_at).getTime() : null;
