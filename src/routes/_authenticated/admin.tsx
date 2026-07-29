@@ -60,9 +60,32 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "health" | "audit" | "apk" | "market" | "updates" | "refunds" | "selftest";
 
+// Explicação em linguagem simples de cada seção do painel.
+const TAB_DESC: Record<Tab, string> = {
+  overview: "Resumo do dia: quanto entrou, o que está pendente e atalhos rápidos.",
+  ia: "Diagnóstico automático: a IA aponta erros e o que precisa de atenção.",
+  chat: "Conversas ao vivo com os clientes. Assuma o ticket e responda por aqui.",
+  issue: "Criar um login manualmente para um cliente, sem passar pelo pagamento.",
+  legacy: "Clientes antigos (v4.5.7) que pagam a mensalidade de servidor de R$ 250.",
+  external: "Quem pagou por fora (PIX direto). Aqui você estende o acesso na mão.",
+  users: "Todas as contas cadastradas no site, com e-mail e data de criação.",
+  licenses: "Todos os logins criados: ativos, vencendo, expirados e revogados.",
+  orders: "Todas as compras: quem pagou, quanto, quando e se foi entregue.",
+  market: "Produtos do Mercado: cadastrar, editar preço, imagem e ativar/desativar.",
+  referrals: "Indicações e cashback: quem indicou quem e quanto tem a receber.",
+  refunds: "Pedidos de reembolso. Você tem 2 dias para aprovar ou recusar cada um.",
+  staff: "Quem é admin ou moderador. Cuidado: admin vê e altera tudo.",
+  health: "Saúde do sistema: erros recentes, falhas de entrega e alertas.",
+  logs: "Registro técnico do servidor, útil para investigar um problema específico.",
+  audit: "Histórico de ações dos administradores, com data e responsável.",
+  apk: "Fila do Play Protect: APKs enviados pelos clientes aguardando processamento.",
+  updates: "Publicar uma nova versão do app para os clientes baixarem.",
+  selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
+};
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
+  const [navQuery, setNavQuery] = useState("");
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -257,6 +280,21 @@ function AdminPage() {
   ];
   const allTabs = tabGroups.flatMap((g) => g.items);
   const activeMeta = allTabs.find((t) => t.id === tab);
+  const navTerm = navQuery.trim().toLowerCase();
+  const filteredGroups = navTerm
+    ? tabGroups
+        .map((g) => ({
+          ...g,
+          items: g.items.filter(
+            (t) =>
+              t.label.toLowerCase().includes(navTerm) ||
+              (t.hint ?? "").toLowerCase().includes(navTerm) ||
+              (TAB_DESC[t.id] ?? "").toLowerCase().includes(navTerm),
+          ),
+        }))
+        .filter((g) => g.items.length > 0)
+    : tabGroups;
+  const filteredTabs = filteredGroups.flatMap((g) => g.items);
 
 
   return (
@@ -304,7 +342,7 @@ function AdminPage() {
             {/* Mobile: horizontal scroller */}
             <div className="lg:hidden sticky top-0 z-20 -mx-4 overflow-x-auto border-b border-border/30 bg-background/85 px-4 py-2 backdrop-blur">
               <div className="flex gap-1.5 whitespace-nowrap">
-                {allTabs.map((t) => {
+                {filteredTabs.map((t) => {
                   const active = tab === t.id;
                   return (
                     <button
@@ -324,7 +362,18 @@ function AdminPage() {
             </div>
             {/* Desktop: grouped vertical nav */}
             <nav className="hidden lg:block terminal-card scanlines relative p-3">
-              {tabGroups.map((g, gi) => {
+              <div className="mb-3">
+                <input
+                  value={navQuery}
+                  onChange={(e) => setNavQuery(e.target.value)}
+                  placeholder="Buscar seção..."
+                  className="w-full rounded border border-border/50 bg-background/60 px-2.5 py-1.5 text-xs outline-none placeholder:text-muted-foreground/70 focus:border-neon/50"
+                />
+              </div>
+              {filteredGroups.length === 0 && (
+                <div className="px-2 py-3 text-xs text-muted-foreground">Nenhuma seção encontrada.</div>
+              )}
+              {filteredGroups.map((g, gi) => {
                 const accentColor = g.accent === "neon" ? "text-neon" : g.accent === "cyan" ? "text-cyan" : "text-violet";
                 return (
                   <div key={g.title} className={gi > 0 ? "mt-4 border-t border-border/40 pt-4" : ""}>
@@ -376,10 +425,15 @@ function AdminPage() {
 
             {/* Section title bar */}
             {activeMeta && (
-              <div className="mb-4 flex items-center gap-2 border-b border-border/40 pb-3">
-                <activeMeta.icon className="h-4 w-4 text-neon" />
-                <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
-                {activeMeta.hint && <span className="ml-2 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+              <div className="mb-4 border-b border-border/40 pb-3">
+                <div className="flex items-center gap-2">
+                  <activeMeta.icon className="h-4 w-4 text-neon" />
+                  <h2 className="font-mono text-sm uppercase tracking-wider text-foreground">{activeMeta.label}</h2>
+                  {activeMeta.hint && <span className="ml-2 font-mono text-[10px] text-muted-foreground">// {activeMeta.hint}</span>}
+                </div>
+                {TAB_DESC[tab] && (
+                  <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">{TAB_DESC[tab]}</p>
+                )}
               </div>
             )}
 
