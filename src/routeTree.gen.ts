@@ -34,6 +34,7 @@ import { Route as AuthenticatedIndicacoesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
+import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
@@ -170,6 +171,11 @@ const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   path: '/api/public/mp-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBackendHealthRoute = ApiPublicBackendHealthRouteImport.update({
+  id: '/api/public/backend-health',
+  path: '/api/public/backend-health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatLicenseAiRoute = ApiChatLicenseAiRouteImport.update({
   id: '/api/chat/license-ai',
   path: '/api/chat/license-ai',
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
+  '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
+  '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
+  '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -366,6 +375,7 @@ export interface FileRouteTypes {
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
     | '/api/chat/license-ai'
+    | '/api/public/backend-health'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
     | '/api/chat/license-ai'
+    | '/api/public/backend-health'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -439,6 +450,7 @@ export interface FileRouteTypes {
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
     | '/api/chat/license-ai'
+    | '/api/public/backend-health'
     | '/api/public/mp-webhook'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -470,6 +482,7 @@ export interface RootRouteChildren {
   PagamentoPendenteRoute: typeof PagamentoPendenteRoute
   PagamentoSucessoRoute: typeof PagamentoSucessoRoute
   ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
+  ApiPublicBackendHealthRoute: typeof ApiPublicBackendHealthRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicHooksApkWorkerRoute: typeof ApiPublicHooksApkWorkerRoute
   ApiPublicHooksAutoCloseTicketsRoute: typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -659,6 +672,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/backend-health': {
+      id: '/api/public/backend-health'
+      path: '/api/public/backend-health'
+      fullPath: '/api/public/backend-health'
+      preLoaderRoute: typeof ApiPublicBackendHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat/license-ai': {
       id: '/api/chat/license-ai'
       path: '/api/chat/license-ai'
@@ -783,6 +803,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagamentoPendenteRoute: PagamentoPendenteRoute,
   PagamentoSucessoRoute: PagamentoSucessoRoute,
   ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
+  ApiPublicBackendHealthRoute: ApiPublicBackendHealthRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicHooksApkWorkerRoute: ApiPublicHooksApkWorkerRoute,
   ApiPublicHooksAutoCloseTicketsRoute: ApiPublicHooksAutoCloseTicketsRoute,
