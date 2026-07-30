@@ -142,21 +142,24 @@ export function EmailConfirmBanner() {
         <div className="flex items-start gap-3">
           <MailWarning className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
           <div className="text-sm">
-            <p className="font-mono uppercase tracking-wider text-amber-300">Confirme seu e-mail</p>
+            <p className="font-mono uppercase tracking-wider text-amber-300">Confirmação de e-mail pendente</p>
             <p className="text-muted-foreground">
-              Sua conta já está ativa e você pode usar tudo normalmente. Quando o e-mail de
-              confirmação chegar, clique no link para proteger sua conta e garantir a recuperação
-              de senha.
+              Sua conta já está liberada e você pode usar o painel normalmente. Enviamos um e-mail
+              de confirmação para <strong className="text-amber-200">{email}</strong>. Ele pode
+              levar alguns minutos para chegar.
             </p>
+            <ul className="mt-2 list-inside list-disc text-xs text-muted-foreground">
+              <li>Verifique a caixa de entrada, spam e promoções.</li>
+              <li>Clique no link do e-mail para proteger sua conta e habilitar a recuperação de senha.</li>
+              <li>Se não receber, clicamos no botão ao lado para enviar novamente.</li>
+            </ul>
             <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-200/80">
               <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {autoStatus ??
                   (exhausted
-                    ? `Reenvio automático concluído (${MAX_AUTO_ATTEMPTS}/${MAX_AUTO_ATTEMPTS}). Use o botão se ainda não recebeu.`
-                    : `Reenvio automático ativo — tentamos sozinho assim que o envio voltar (${auto.attempts}/${MAX_AUTO_ATTEMPTS} tentativas).`)}
-              </span>
-            </p>
+                    ? `Reenvio automático concluído (${MAX_AUTO_ATTEMPTS}/${MAX_AUTO_ATTEMPTS}). Se ainda não recebeu, clique em "Enviar confirmação".`
+                    : `Reenvio automático ativo: tentamos enviar sozinho quando o serviço volta (${auto.attempts}/${MAX_AUTO_ATTEMPTS} tentativas).`)}
           </div>
         </div>
         <Button
