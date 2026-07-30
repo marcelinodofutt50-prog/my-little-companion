@@ -4,27 +4,43 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 // ============================================================================
 // MULTI-PANEL SUPPORT
 // ----------------------------------------------------------------------------
-// We now talk to two Yaarsa VPS instances:
+// We talk to up to three Yaarsa VPS instances:
+//   - v455: weekly panel  (Shadow 4.5.5)  → YAARSA_V455_BASE_URL + YAARSA_V455_ADMIN_KEY
 //   - v457: original panel (Shadow 4.5.7)  → YAARSA_BASE_URL + YAARSA_ADMIN_KEY
 //   - v46 : newer panel   (Shadow 4.6+)    → YAARSA_V46_BASE_URL + YAARSA_V46_ADMIN_KEY
 // Every public helper accepts an optional `panel` argument. When omitted we
 // default to `v457` (the original panel) so old call sites keep working.
 // ============================================================================
-export type YaarsaPanel = "v457" | "v46";
+export type YaarsaPanel = "v455" | "v457" | "v46";
+export const ALL_PANELS: YaarsaPanel[] = ["v455", "v457", "v46"];
+
+/** Semanal só vai para a VPS 4.5.5 quando existe uma configurada. */
+function weeklyPanel(): YaarsaPanel {
+  return hasPanelServer("v455") ? "v455" : "v457";
+}
 
 export function panelFromTier(tier: string | null | undefined): YaarsaPanel {
-  return tier === "lifetime_46" ? "v46" : "v457";
+  if (tier === "lifetime_46") return "v46";
+  if (tier === "weekly") return weeklyPanel();
+  return "v457";
 }
 
 export function panelFromPlanSlug(slug: string | null | undefined): YaarsaPanel {
   if (!slug) return "v457";
   const s = slug.toLowerCase();
   if (s.includes("lifetime")) return "v46";
+  if (s.includes("7d") || s.includes("week") || s.includes("seman") || s === "trial") return weeklyPanel();
   return "v457";
 }
 
 type PanelConfig = { baseEnv: string; keyEnv: string; defaultUrl: string };
 const PANEL_CONFIG: Record<YaarsaPanel, PanelConfig> = {
+  v455: {
+    baseEnv: "YAARSA_V455_BASE_URL",
+    keyEnv: "YAARSA_V455_ADMIN_KEY",
+    // Sem VPS própria da 4.5.5 ainda: cai no painel 4.5.7.
+    defaultUrl: "http://191-96-78-81.sslip.io/yaarsa/proxy.php",
+  },
   v457: {
     baseEnv: "YAARSA_BASE_URL",
     keyEnv: "YAARSA_ADMIN_KEY",
@@ -41,13 +57,18 @@ const PANEL_CONFIG: Record<YaarsaPanel, PanelConfig> = {
 // `refreshPanelOverrides()` antes de cada operação. Permite ao admin trocar de
 // VPS pelo painel, sem redeploy. Sem override, valem as variáveis de ambiente.
 type PanelRuntime = { baseUrl?: string; adminKey?: string };
-const runtimeOverrides: Record<YaarsaPanel, PanelRuntime> = { v457: {}, v46: {} };
+const runtimeOverrides: Record<YaarsaPanel, PanelRuntime> = { v455: {}, v457: {}, v46: {} };
+
+/** Existe VPS configurada (banco ou ambiente) para esse painel? */
+export function hasPanelServer(panel: YaarsaPanel): boolean {
+  return !!(runtimeOverrides[panel].baseUrl || process.env[PANEL_CONFIG[panel].baseEnv]);
+}
 
 export async function refreshPanelOverrides(force = false): Promise<void> {
   try {
     const { loadPanelOverrides } = await import("@/lib/panel-servers.server");
     const map = await loadPanelOverrides(force);
-    for (const p of ["v457", "v46"] as YaarsaPanel[]) {
+    for (const p of ALL_PANELS) {
       const o = map.get(p);
       runtimeOverrides[p] = o ? { baseUrl: o.baseUrl, adminKey: o.adminKey } : {};
     }
@@ -55,6 +76,7 @@ export async function refreshPanelOverrides(force = false): Promise<void> {
     console.warn("[yaarsa] overrides indisponíveis, usando ambiente:", (e as Error)?.message);
   }
 }
+
 
 /** Endereço efetivo do painel (override do banco > ambiente > padrão). */
 export function panelBaseUrl(panel: YaarsaPanel): string {
