@@ -26,6 +26,7 @@ import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
 import { AdminEmailMetrics } from "@/components/AdminEmailMetrics";
 import { AdminAntifraudPanel } from "@/components/AdminAntifraudPanel";
 import { AdminHealthPanel } from "@/components/AdminHealthPanel";
+import { AdminPanelServers } from "@/components/AdminPanelServers";
 import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
@@ -1212,7 +1213,12 @@ function AdminPage() {
           )}
 
           {tab === "referrals" && <ReferralsAdminPanel />}
-          {tab === "health" && <AdminHealthPanel onOpenLogs={() => setTab("logs")} />}
+          {tab === "health" && (
+            <div className="space-y-6">
+              <AdminHealthPanel onOpenLogs={() => setTab("logs")} />
+              {role === "admin" && <AdminPanelServers />}
+            </div>
+          )}
           {tab === "logs" && <AdminLogsPanel />}
           {tab === "audit" && (
             <div className="space-y-4">
