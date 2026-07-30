@@ -1,5 +1,5 @@
 {
-  "build": "2026-07-30T23:40:00.000000Z",
-  "marker": "panel-servers-audit",
-  "note": "IP entregue ao cliente passa a seguir a VPS configurada + verificacao completa (simula compra real) por painel"
+  "build": "2026-07-31T00:10:00.000000Z",
+  "marker": "panel-servers-verified-log",
+  "note": "verificacao completa obrigatoria antes de trocar VPS + log auditavel + aba propria Servidores VPS"
 }
