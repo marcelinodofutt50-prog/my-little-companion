@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { ackSecurityNotice } from "@/lib/onboarding.functions";
+import { ackSecurityNotice, getAccountSetupState } from "@/lib/onboarding.functions";
 
 const bullets = [
   {
