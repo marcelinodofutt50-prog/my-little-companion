@@ -18,6 +18,7 @@ import { AdminApkPanel } from "@/components/AdminApkPanel";
 import { AdminRefundsPanel } from "@/components/AdminRefundsPanel";
 import { AdminMarketPanel } from "@/components/AdminMarketPanel";
 import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
+import { AdminAnnouncementsPanel } from "@/components/AdminAnnouncementsPanel";
 import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { RevenueSparkline } from "@/components/RevenueSparkline";
