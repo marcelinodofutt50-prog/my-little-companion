@@ -253,6 +253,8 @@ function DashboardPage() {
             <OnboardingWizard onDone={() => setOnboardingDone(true)} onDisplayName={setDisplayName} />
             {onboardingDone && <SecurityWelcomeDialog />}
             <EmailConfirmBanner />
+            <AnnouncementsBanner />
+
             <ExpiryReminder />
 
             {(() => {
