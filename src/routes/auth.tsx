@@ -322,7 +322,35 @@ function AuthPage() {
         const { data: signUpData, error } = await supabase.auth.signUp({
           email: cleanEmail, password, options: { emailRedirectTo: siteUrl() },
         });
-        if (error) throw error;
+
+        // Falha de ENVIO de e-mail (limite atingido) não pode impedir a venda:
+        // criamos a conta pelo servidor e seguimos direto pro painel.
+        if (error) {
+          const raw = String(error.message ?? "");
+          const emailIssue =
+            (error as any)?.status === 429 ||
+            /rate limit|too many requests|over_email_send_rate_limit|sending confirmation|error sending|smtp/i.test(raw);
+          if (!emailIssue) throw error;
+
+          const fb = await createAccountWhenEmailBlocked({ data: { email: cleanEmail, password } })
+            .catch(() => ({ ok: false }) as any);
+          if (fb?.exists) {
+            setMode("in");
+            setEmailTaken(true);
+            toast.error("Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.");
+            return;
+          }
+          if (!fb?.ok) throw error;
+
+          await recordSignupIp({ data: { email: cleanEmail, userId: null } }).catch(() => {});
+          clearLocalLimits();
+          track("signup", "sent");
+          const { error: fbSignIn } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+          if (fbSignIn) throw fbSignIn;
+          toast.success("Conta criada! Bem-vindo.");
+          navigate({ to: (next as any) || "/dashboard" });
+          return;
+        }
         // O Supabase devolve um usuário "fantasma" (sem identities) quando o e-mail
         // já existe, para não vazar cadastro. Tratamos como duplicado.
         if (signUpData.user && (signUpData.user.identities?.length ?? 0) === 0) {
@@ -369,6 +397,7 @@ function AuthPage() {
           "2. Procure por uma mensagem da Shadow (veja Spam/Promoções).\n" +
           "3. Clique em \"Confirmar e-mail\" e você entra no painel."
         );
+
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
