@@ -7,7 +7,7 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   await assertAdminRole(ctx);
 }
 
-const panelEnum = z.enum(["v457", "v46"]);
+const panelEnum = z.enum(["v455", "v457", "v46"]);
 
 /** Lista os servidores configurados + o que está valendo no ambiente. */
 export const adminListPanelServers = createServerFn({ method: "GET" })
@@ -21,18 +21,22 @@ export const adminListPanelServers = createServerFn({ method: "GET" })
     await refreshPanelOverrides(true);
     const rows = await listPanelServersMasked();
     const effective = {
+      v455: panelBaseUrl("v455"),
       v457: panelBaseUrl("v457"),
       v46: panelBaseUrl("v46"),
     };
     const effectiveIp = {
+      v455: panelServerHost("v455"),
       v457: panelServerHost("v457"),
       v46: panelServerHost("v46"),
     };
     const source = {
+      v455: panelConfigSource("v455"),
       v457: panelConfigSource("v457"),
       v46: panelConfigSource("v46"),
     };
     const envFallback = {
+      v455: (process.env.YAARSA_V455_BASE_URL || "").trim() || null,
       v457: (process.env.YAARSA_BASE_URL || "").trim() || null,
       v46: (process.env.YAARSA_V46_BASE_URL || "").trim() || null,
     };
