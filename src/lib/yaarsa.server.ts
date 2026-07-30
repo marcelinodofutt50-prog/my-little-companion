@@ -236,6 +236,7 @@ export async function yaarsaCreateAccount(input: {
   panel?: YaarsaPanel;
 }): Promise<YaarsaResponse> {
   const panel = input.panel ?? "v457";
+  await refreshPanelOverrides();
   return yaarsaPost({
     action: "add",
     username: input.username,
@@ -250,10 +251,12 @@ export async function yaarsaCreateAccount(input: {
 }
 
 export async function yaarsaRemoveAccount(email: string, panel: YaarsaPanel = "v457"): Promise<YaarsaResponse> {
+  await refreshPanelOverrides();
   return yaarsaPost({ action: "remove", email, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
 export async function yaarsaExtend(email: string, newExpireDate: string, panel: YaarsaPanel = "v457"): Promise<YaarsaResponse> {
+  await refreshPanelOverrides();
   return yaarsaPost({ action: "cexpire", email, expire_date: newExpireDate, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
@@ -267,6 +270,7 @@ export async function yaarsaSetPassword(
   panel: YaarsaPanel = "v457",
   username?: string,
 ): Promise<YaarsaResponse & { action?: string }> {
+  await refreshPanelOverrides();
   const candidates = ["update", "cpassword", "cpass", "changepassword"];
   let last: YaarsaResponse = { Fail: "Painel não aceitou nenhuma ação de troca de senha" };
   for (const action of candidates) {
@@ -301,6 +305,7 @@ const EXISTS_RE = /1006|date\s*not\s*accepted|not\s*accepted|expired|expira|expi
 
 
 export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Promise<YaarsaLookup> {
+  await refreshPanelOverrides();
   const r = await yaarsaPost(
     { action: "cexpire", email, expire_date: "invalid-probe", adminkey: yaarsaAdminKey(panel) },
     panel,
