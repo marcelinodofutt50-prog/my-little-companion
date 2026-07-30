@@ -15,7 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { I18nProvider } from "@/lib/i18n";
-import { BackendMismatchBanner } from "@/components/BackendMismatchBanner";
+
 
 function NotFoundComponent() {
   return (
@@ -133,7 +133,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <BackendMismatchBanner />
+        
         <Outlet />
         <Toaster theme="dark" richColors position="top-right" />
       </I18nProvider>

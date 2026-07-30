@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * SERVIDOR está usando e se as chaves estão presentes. Nenhum valor de chave é
  * exposto — só o "ref" do projeto, que já é público no bundle do navegador.
  */
-const EXPECTED_REF = "yvvjaoqzhjqnchhwhwvy";
+const EXPECTED_REF = "dvnksmqbpbzwgwmbnjjy";
 
 function refFromUrl(url: string | undefined): string | null {
   if (!url) return null;
