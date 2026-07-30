@@ -95,10 +95,10 @@ export function EmailConfirmBanner() {
         setCooldown(60);
         setAutoStatus(
           mode === "auto"
-            ? `Reenvio automático feito (${next.attempts}/${MAX_AUTO_ATTEMPTS}). Confirme assim que o e-mail chegar.`
+            ? `Reenvio automático feito (${next.attempts}/${MAX_AUTO_ATTEMPTS}). Quando o e-mail chegar, clique no link. Não afeta seu acesso ao painel.`
             : null,
         );
-        if (mode === "manual") toast.success("E-mail de confirmação enviado. Confirme assim que chegar.");
+        if (mode === "manual") toast.success("E-mail de confirmação enviado. Quando chegar, clique no link — sua conta já está liberada.");
       } catch (e: any) {
         const msg = e?.message ?? "Não foi possível enviar agora.";
         if (mode === "auto") {
