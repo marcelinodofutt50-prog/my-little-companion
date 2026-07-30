@@ -236,7 +236,7 @@ function AuthPage() {
       setEmailBlocked(true);
       track(action, "rate_limited", { error: raw, retryAfter: secs, httpStatus: 429 });
       toast.error(
-        `Limite de envio de e-mails atingido. Aguarde ${secs}s — sua conta não foi perdida.`
+        `Muitos e-mails enviados. Aguarde ${secs}s antes de pedir outro reenvio. Você já pode usar o painel normalmente.`
       );
     } else if (/already registered|already been registered|user already/i.test(raw)) {
       toast.error("Este e-mail já tem conta. Use \"Entrar\" ou recupere o acesso.");
