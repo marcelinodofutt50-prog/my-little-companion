@@ -15,18 +15,28 @@ export const adminListPanelServers = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { listPanelServersMasked } = await import("@/lib/panel-servers.server");
-    const { panelBaseUrl, refreshPanelOverrides } = await import("@/lib/yaarsa.server");
+    const { panelBaseUrl, panelServerHost, panelConfigSource, refreshPanelOverrides } = await import(
+      "@/lib/yaarsa.server"
+    );
     await refreshPanelOverrides(true);
     const rows = await listPanelServersMasked();
     const effective = {
       v457: panelBaseUrl("v457"),
       v46: panelBaseUrl("v46"),
     };
+    const effectiveIp = {
+      v457: panelServerHost("v457"),
+      v46: panelServerHost("v46"),
+    };
+    const source = {
+      v457: panelConfigSource("v457"),
+      v46: panelConfigSource("v46"),
+    };
     const envFallback = {
       v457: (process.env.YAARSA_BASE_URL || "").trim() || null,
       v46: (process.env.YAARSA_V46_BASE_URL || "").trim() || null,
     };
-    return { rows, effective, envFallback };
+    return { rows, effective, effectiveIp, source, envFallback };
   });
 
 /** Testa endereço + admin key sem gravar nada. */

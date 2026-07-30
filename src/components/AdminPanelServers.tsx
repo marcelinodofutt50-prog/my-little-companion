@@ -43,6 +43,8 @@ export function AdminPanelServers() {
   const [rows, setRows] = useState<Row[]>([]);
   const [effective, setEffective] = useState<Record<string, string>>({});
   const [envFallback, setEnvFallback] = useState<Record<string, string | null>>({});
+  const [effectiveIp, setEffectiveIp] = useState<Record<string, string>>({});
+  const [source, setSource] = useState<Record<string, string>>({});
   const [drafts, setDrafts] = useState<Record<PanelKey, Draft>>({
     v457: { label: "", baseUrl: "", adminKey: "", notes: "" },
     v46: { label: "", baseUrl: "", adminKey: "", notes: "" },
@@ -64,6 +66,8 @@ export function AdminPanelServers() {
       setRows(res.rows ?? []);
       setEffective(res.effective ?? {});
       setEnvFallback(res.envFallback ?? {});
+      setEffectiveIp(res.effectiveIp ?? {});
+      setSource(res.source ?? {});
       setDrafts((prev) => {
         const next = { ...prev };
         for (const r of (res.rows ?? []) as Row[]) {
@@ -258,7 +262,14 @@ export function AdminPanelServers() {
 
             <div className="mt-3 space-y-1 font-mono text-[11px] text-muted-foreground">
               <div>
-                em uso agora: <span className="text-foreground">{effective[panel] || "—"}</span>
+                em uso agora: <span className="text-foreground">{effective[panel] || "—"}</span>{" "}
+                <span className="opacity-70">
+                  ({source[panel] === "painel" ? "definido aqui" : source[panel] === "ambiente" ? "variável de ambiente" : "padrão do código"})
+                </span>
+              </div>
+              <div>
+                IP entregue ao cliente:{" "}
+                <span className="text-foreground">{effectiveIp[panel] || "—"}</span>
               </div>
               {row?.adminKeyMasked && (
                 <div>
