@@ -33,7 +33,7 @@ export function BackendMismatchBanner() {
   if (!ref) return null;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[100] bg-danger px-4 py-2 text-center font-mono text-xs text-danger-foreground">
+    <div className="fixed inset-x-0 top-0 z-[100] bg-danger px-4 py-2 text-center font-mono text-xs text-background">
       Configuração do servidor desatualizada neste domínio. Alguns recursos podem falhar — estamos
       corrigindo. (backend: {ref})
     </div>
