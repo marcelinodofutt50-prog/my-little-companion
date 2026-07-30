@@ -436,8 +436,36 @@ export const adminSetRole = createServerFn({ method: "POST" })
     return { ok: true, role: data.role };
   });
 
+/**
+ * Promove/rebaixa alguém pelo e-mail — evita depender da lista de usuários
+ * (que pode estar paginada/filtrada) na hora de liberar um atendente.
+ */
+export const adminSetRoleByEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({
+    email: z.string().trim().email().max(200),
+    role: z.enum(["admin", "moderator", "user"]),
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const email = data.email.toLowerCase();
+    const { data: prof } = await supabaseAdmin
+      .from("profiles").select("id,email").ilike("email", email).maybeSingle();
+    if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
+    const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", prof.id);
+    if (del.error) throw new Error(`Falha ao limpar papéis: ${del.error.message}`);
+    const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: prof.id, role: data.role });
+    if (error) throw new Error(error.message);
+    const { data: check } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", prof.id).maybeSingle();
+    if (check?.role !== data.role) throw new Error("O papel não foi salvo. Tente novamente.");
+    return { ok: true, email: prof.email, role: data.role };
+  });
+
 export const adminListRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
+
   .handler(async ({ context }) => {
     await assertAdmin(context);
     // Precisa do client de serviço: a policy de RLS de user_roles é
