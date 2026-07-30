@@ -945,6 +945,18 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
               onCopy={() => { if (!showIp) { toast.info("Revele o IP primeiro"); return; } copy(lic.server_ip, "IP"); }}
               right={<button onClick={() => setShowIp(!showIp)} className="text-muted-foreground hover:text-neon">{showIp ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}</button>} />
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Link
+              to="/suporte"
+              search={{ erro: "1", lic: lic.yaarsa_username } as any}
+              className="inline-flex items-center gap-1.5 rounded border border-amber-400/50 bg-amber-400/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-amber-400 transition-colors hover:bg-amber-400/20"
+            >
+              <AlertTriangle className="h-3 w-3" /> Tem algum erro?
+            </Link>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              // erro 803 / login travado? clique aqui que a gente corrige
+            </span>
+          </div>
           {!terminal && (
             <div className="mt-4 flex flex-wrap gap-2 border-t border-border/40 pt-3">
               <Button
@@ -953,6 +965,7 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
               >
                 <Copy className="mr-1 h-3 w-3" /> Copiar tudo
               </Button>
+
               {lic.suspended_at ? (
                 <Button size="sm" variant="outline" onClick={() => run("reactivate")} disabled={busy !== null} className="font-mono text-xs uppercase">
                   {busy === "reactivate" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Play className="mr-1 h-3 w-3" />} Reativar
