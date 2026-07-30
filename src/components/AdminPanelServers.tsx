@@ -244,7 +244,19 @@ export function AdminPanelServers() {
   async function fullCheck(panel: PanelKey) {
     setBusy(`full-${panel}`);
     try {
-      const res: any = await fullCheckFn({ data: { panel } });
+      const d = drafts[panel];
+      const existing = rows.find((r) => r.panel === panel);
+      const usingDraft = !!(d.baseUrl.trim() && d.adminKey.trim());
+      if (!usingDraft && !existing) {
+        toast.info("Preencha endereço e admin key abaixo para verificar este servidor.");
+        setBusy(null);
+        return;
+      }
+      const res: any = await fullCheckFn({
+        data: usingDraft
+          ? { panel, baseUrl: d.baseUrl.trim(), adminKey: d.adminKey.trim() }
+          : { panel },
+      });
       setChecks((c) => ({ ...c, [panel]: res }));
       if (res.ok) toast.success(res.message);
       else toast.error(res.message);
@@ -404,7 +416,13 @@ export function AdminPanelServers() {
                 <div className="mb-2 space-y-0.5 text-muted-foreground">
                   <div>
                     endereço: {checks[panel].baseUrl ?? "—"}
-                    {checks[panel].source ? ` (origem: ${checks[panel].source})` : ""}
+                    {checks[panel].source
+                      ? ` (origem: ${
+                          checks[panel].source === "formulario"
+                            ? "dados digitados agora (ainda não salvos)"
+                            : checks[panel].source
+                        })`
+                      : ""}
                   </div>
                   <div>IP entregue ao cliente: {checks[panel].serverIp || "—"}</div>
                   {checks[panel].testAccount && (

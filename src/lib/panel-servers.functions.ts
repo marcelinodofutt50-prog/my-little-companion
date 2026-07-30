@@ -217,11 +217,19 @@ export const adminTestCurrentPanel = createServerFn({ method: "POST" })
  */
 export const adminFullPanelCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        panel: panelEnum,
+        baseUrl: z.string().trim().max(300).optional().nullable(),
+        adminKey: z.string().trim().max(200).optional().nullable(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { runFullPanelCheck } = await import("@/lib/panel-servers.server");
-    return runFullPanelCheck(data.panel);
+    return runFullPanelCheck(data.panel, { baseUrl: data.baseUrl, adminKey: data.adminKey });
   });
 
 /** Registro auditável das verificações e trocas de VPS. */

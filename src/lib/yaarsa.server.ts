@@ -77,9 +77,32 @@ const PANEL_CONFIG: Record<YaarsaPanel, PanelConfig> = {
 type PanelRuntime = { baseUrl?: string; adminKey?: string };
 const runtimeOverrides: Record<YaarsaPanel, PanelRuntime> = { v455: {}, v457: {}, v46: {} };
 
+// Configuração "fixada" temporariamente (usada pela verificação com os dados
+// que o admin acabou de digitar, antes de salvar). Enquanto estiver fixada,
+// nem o banco nem o ambiente sobrescrevem esses valores.
+const pinnedOverrides: Partial<Record<YaarsaPanel, PanelRuntime>> = {};
+
+/** Roda `fn` usando um endereço/admin key temporários para o painel. */
+export async function withPanelConfig<T>(
+  panel: YaarsaPanel,
+  cfg: { baseUrl: string; adminKey: string },
+  fn: () => Promise<T>,
+): Promise<T> {
+  pinnedOverrides[panel] = { baseUrl: cfg.baseUrl.trim(), adminKey: cfg.adminKey.trim() };
+  try {
+    return await fn();
+  } finally {
+    delete pinnedOverrides[panel];
+  }
+}
+
+function effective(panel: YaarsaPanel): PanelRuntime {
+  return pinnedOverrides[panel] ?? runtimeOverrides[panel];
+}
+
 /** Existe VPS configurada (banco ou ambiente) para esse painel? */
 export function hasPanelServer(panel: YaarsaPanel): boolean {
-  return !!(runtimeOverrides[panel].baseUrl || process.env[PANEL_CONFIG[panel].baseEnv]);
+  return !!(effective(panel).baseUrl || process.env[PANEL_CONFIG[panel].baseEnv]);
 }
 
 export async function refreshPanelOverrides(force = false): Promise<void> {
@@ -95,11 +118,12 @@ export async function refreshPanelOverrides(force = false): Promise<void> {
   }
 }
 
-/** Endereço efetivo do painel (override do banco > ambiente > padrão). */
+/** Endereço efetivo do painel (formulário > banco > ambiente > padrão). */
 export function panelBaseUrl(panel: YaarsaPanel): string {
   const cfg = PANEL_CONFIG[panel];
-  return (runtimeOverrides[panel].baseUrl || process.env[cfg.baseEnv] || cfg.defaultUrl).trim();
+  return (effective(panel).baseUrl || process.env[cfg.baseEnv] || cfg.defaultUrl).trim();
 }
+
 
 /**
  * IP/host efetivo do painel — derivado do endereço realmente em uso.
@@ -128,11 +152,13 @@ export async function resolvePanelServerHost(panel: YaarsaPanel): Promise<string
 }
 
 /** Origem da configuração atual do painel (para diagnóstico no admin). */
-export function panelConfigSource(panel: YaarsaPanel): "painel" | "ambiente" | "padrao" {
+export function panelConfigSource(panel: YaarsaPanel): "formulario" | "painel" | "ambiente" | "padrao" {
+  if (pinnedOverrides[panel]?.baseUrl) return "formulario";
   if (runtimeOverrides[panel].baseUrl) return "painel";
   if (process.env[PANEL_CONFIG[panel].baseEnv]) return "ambiente";
   return "padrao";
 }
+
 
 // Resolve the Yaarsa API endpoints for a given panel.
 // Honor the configured URL as-is when it points to a callable .php entry
@@ -185,13 +211,20 @@ export function sanitizeAdminKey(raw: string, label = "admin key"): string {
   return cleaned;
 }
 
+const PANEL_LABEL: Record<YaarsaPanel, string> = { v455: "4.5.5", v457: "4.5.7", v46: "4.6" };
+
 function yaarsaAdminKey(panel: YaarsaPanel): string {
   const cfg = PANEL_CONFIG[panel];
-  const override = runtimeOverrides[panel].adminKey;
+  const override = effective(panel).adminKey;
   const raw = override || process.env[cfg.keyEnv];
-  if (!raw) throw new Error(`${cfg.keyEnv} not set`);
-  return sanitizeAdminKey(raw, override ? `admin key do painel ${panel}` : cfg.keyEnv);
+  if (!raw) {
+    throw new Error(
+      `Nenhuma admin key configurada para o painel ${PANEL_LABEL[panel]}. Preencha o endereço e a admin key no formulário abaixo e clique em "Verificação completa" ou "Salvar e usar".`,
+    );
+  }
+  return sanitizeAdminKey(raw, override ? `admin key do painel ${PANEL_LABEL[panel]}` : cfg.keyEnv);
 }
+
 
 function encKey(): Buffer {
   const raw = process.env.LICENSE_ENC_KEY;
