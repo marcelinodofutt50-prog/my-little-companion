@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Server, ShieldCheck, ShieldAlert, RotateCcw, Plug, Save, Stethoscope, Check, X } from "lucide-react";
+import { Loader2, Server, ShieldCheck, ShieldAlert, RotateCcw, Plug, Save, Stethoscope, Check, X, ScrollText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import {
   adminResetPanelServer,
   adminTestCurrentPanel,
   adminFullPanelCheck,
+  adminPanelServerLog,
 } from "@/lib/panel-servers.functions";
 
 type PanelKey = "v457" | "v46";
@@ -50,6 +51,7 @@ export function AdminPanelServers() {
     v46: { label: "", baseUrl: "", adminKey: "", notes: "" },
   });
   const [busy, setBusy] = useState<string | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
   const [checks, setChecks] = useState<Record<string, { ok: boolean; message: string; serverIp: string; steps: { step: string; ok: boolean; detail: string }[] }>>({});
 
   const listFn = useServerFn(adminListPanelServers);
@@ -58,6 +60,7 @@ export function AdminPanelServers() {
   const resetFn = useServerFn(adminResetPanelServer);
   const testCurrentFn = useServerFn(adminTestCurrentPanel);
   const fullCheckFn = useServerFn(adminFullPanelCheck);
+  const logFn = useServerFn(adminPanelServerLog);
 
   async function load() {
     setLoading(true);
@@ -68,6 +71,12 @@ export function AdminPanelServers() {
       setEnvFallback(res.envFallback ?? {});
       setEffectiveIp(res.effectiveIp ?? {});
       setSource(res.source ?? {});
+      try {
+        const lg: any = await logFn();
+        setEvents(lg.events ?? []);
+      } catch {
+        /* log é opcional */
+      }
       setDrafts((prev) => {
         const next = { ...prev };
         for (const r of (res.rows ?? []) as Row[]) {
@@ -136,6 +145,7 @@ export function AdminPanelServers() {
           skipTest,
         },
       });
+      if (res.check) setChecks((c) => ({ ...c, [panel]: res.check }));
       if (res.saved) {
         toast.success(res.message ?? "Servidor salvo");
         setDraft(panel, { adminKey: "" });
@@ -408,6 +418,57 @@ export function AdminPanelServers() {
           </div>
         );
       })}
+
+      <div className="rounded-lg border border-border/60 bg-card/40 p-4">
+        <div className="flex items-center gap-2 font-mono text-sm">
+          <ScrollText className="h-4 w-4 text-primary" />
+          <span className="font-semibold">Registro de verificações e trocas</span>
+        </div>
+        <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+          Toda verificação completa e toda troca de VPS fica registrada aqui, com quem fez, quando e o
+          resultado de cada passo. Trocas reprovadas são desfeitas automaticamente.
+        </p>
+        {events.length === 0 ? (
+          <div className="mt-3 font-mono text-[11px] text-muted-foreground">nenhum registro ainda</div>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {events.map((ev) => (
+              <li key={ev.id} className="rounded border border-border/50 p-2 font-mono text-[11px]">
+                <div className="flex flex-wrap items-center gap-2">
+                  {ev.ok ? (
+                    <ShieldCheck className="h-3 w-3 text-primary" />
+                  ) : (
+                    <ShieldAlert className="h-3 w-3 text-danger" />
+                  )}
+                  <span className="font-semibold">{ev.action}</span>
+                  <span className="text-muted-foreground">
+                    {ev.panel === "v46" ? "4.6" : ev.panel === "v457" ? "4.5.7" : ev.panel}
+                  </span>
+                  <span className="text-muted-foreground">{new Date(ev.at).toLocaleString("pt-BR")}</span>
+                  {ev.actor && <span className="text-muted-foreground">por {ev.actor}</span>}
+                </div>
+                <div className="mt-1 text-muted-foreground">{ev.message}</div>
+                {ev.steps && (
+                  <ul className="mt-1 space-y-0.5">
+                    {ev.steps.map((st: any, i: number) => (
+                      <li key={i} className="flex items-start gap-1">
+                        {st.ok ? (
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+                        ) : (
+                          <X className="mt-0.5 h-3 w-3 shrink-0 text-danger" />
+                        )}
+                        <span>
+                          {st.step} — <span className="text-muted-foreground">{st.detail}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
