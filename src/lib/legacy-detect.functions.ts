@@ -35,6 +35,8 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
             ? []
             : [profile.legacy_status]) as string[],
         cached: true,
+        inconclusive: false,
+
       };
     }
 
