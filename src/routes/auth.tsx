@@ -347,6 +347,19 @@ function AuthPage() {
           navigate({ to: (next as any) || "/dashboard" });
           return;
         }
+        // Backend ainda exigindo confirmação: liberamos a conta recém-criada e tentamos de novo.
+        if (/email not confirmed|not confirmed/i.test(signInError.message ?? "")) {
+          const freed = await confirmFreshSignupEmail({ data: { email: cleanEmail } }).catch(() => ({ ok: false }) as any);
+          if (freed?.ok) {
+            const retry = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+            if (!retry.error) {
+              toast.success("Conta criada! Bem-vindo.");
+              navigate({ to: (next as any) || "/dashboard" });
+              return;
+            }
+          }
+        }
+
         toast.success("Conta criada! Confirme seu e-mail para entrar.");
         setEmailBlocked(true);
         setSignupMessage(
