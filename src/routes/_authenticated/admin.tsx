@@ -384,6 +384,7 @@ function AdminPage() {
       title: "Sistema", accent: "cyan", items: [
         { id: "staff", label: "Equipe", icon: ShieldCheck },
         { id: "health", label: "Monitoramento", icon: Activity, hint: "erros & regressões" },
+        { id: "servers", label: "Servidores VPS", icon: Server, hint: "trocar VPS 4.5.7 / 4.6" },
         { id: "logs", label: "Logs do servidor", icon: ScrollText },
         { id: "audit", label: "Auditoria", icon: ShieldAlert },
         { id: "selftest", label: "Autoteste de Compra", icon: Activity, hint: "fluxo PIX ponta a ponta" },
