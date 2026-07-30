@@ -674,6 +674,57 @@ export type Database = {
           },
         ]
       }
+      panel_servers: {
+        Row: {
+          admin_key_enc: string
+          base_url: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          last_test_at: string | null
+          last_test_message: string | null
+          last_test_ok: boolean | null
+          notes: string | null
+          panel: string
+          updated_at: string
+          updated_by: string | null
+          updated_by_email: string | null
+        }
+        Insert: {
+          admin_key_enc: string
+          base_url: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          notes?: string | null
+          panel: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_email?: string | null
+        }
+        Update: {
+          admin_key_enc?: string
+          base_url?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_test_at?: string | null
+          last_test_message?: string | null
+          last_test_ok?: boolean | null
+          notes?: string | null
+          panel?: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_email?: string | null
+        }
+        Relationships: []
+      }
       payout_requests: {
         Row: {
           admin_notes: string | null
