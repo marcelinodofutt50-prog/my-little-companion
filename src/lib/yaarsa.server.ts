@@ -152,11 +152,13 @@ export async function resolvePanelServerHost(panel: YaarsaPanel): Promise<string
 }
 
 /** Origem da configuração atual do painel (para diagnóstico no admin). */
-export function panelConfigSource(panel: YaarsaPanel): "painel" | "ambiente" | "padrao" {
+export function panelConfigSource(panel: YaarsaPanel): "formulario" | "painel" | "ambiente" | "padrao" {
+  if (pinnedOverrides[panel]?.baseUrl) return "formulario";
   if (runtimeOverrides[panel].baseUrl) return "painel";
   if (process.env[PANEL_CONFIG[panel].baseEnv]) return "ambiente";
   return "padrao";
 }
+
 
 // Resolve the Yaarsa API endpoints for a given panel.
 // Honor the configured URL as-is when it points to a callable .php entry
