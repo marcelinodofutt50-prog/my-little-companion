@@ -123,8 +123,16 @@ export function OnboardingChecklist({
   const pct = Math.round((doneCount / STEPS.length) * 100);
   const allDone = doneCount === STEPS.length;
 
-  return { doneCount, pct, allDone };
-}
+  // Concluiu tudo? mostra o "parabéns" por alguns segundos e some de vez.
+  useEffect(() => {
+    if (!allDone || dismissed) return;
+    const t = setTimeout(() => hideForGood(), 6000);
+    return () => clearTimeout(t);
+  }, [allDone, dismissed]);
+
+  if (dismissed) return null;
+
+
 
 
 
