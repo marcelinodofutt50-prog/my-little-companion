@@ -718,12 +718,12 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { yaarsaCreateAccount, yaarsaExtend, generateCredentials, encrypt, panelFromPlanSlug } = await import("./yaarsa.server");
+    const { yaarsaCreateAccount, yaarsaExtend, generateCredentials, encrypt, resolvePanelFromPlanSlug } = await import("./yaarsa.server");
 
     const { userId, invited } = await resolveOrInviteUser(data.userEmail.toLowerCase());
     const { expiresAt, serverPaidUntil } = computeExpiries(data.planSlug, data.customExpireDate);
     const creds = generateCredentials();
-    const targetPanel = data.panel ?? panelFromPlanSlug(data.planSlug);
+    const targetPanel = data.panel ?? (await resolvePanelFromPlanSlug(data.planSlug));
 
     const yr = await yaarsaCreateAccount({
       username: creds.username,
@@ -830,13 +830,13 @@ export const adminRegisterLegacyLicense = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { yaarsaExtend, encrypt, panelFromPlanSlug } = await import("./yaarsa.server");
+    const { yaarsaExtend, encrypt, resolvePanelFromPlanSlug } = await import("./yaarsa.server");
 
     const { userId, invited } = await resolveOrInviteUser(data.userEmail.toLowerCase());
     const tier: VersionTier = tierFromPlanSlug(data.planSlug);
     const expiresAt = new Date(data.expiresAt);
     if (Number.isNaN(expiresAt.getTime())) throw new Error("Data de expiração inválida");
-    const targetPanel = data.panel ?? panelFromPlanSlug(data.planSlug);
+    const targetPanel = data.panel ?? (await resolvePanelFromPlanSlug(data.planSlug));
 
     // Best-effort: align Yaarsa expire_date with our record on the correct panel.
     try { await yaarsaExtend(data.yaarsaEmail, expiresAt.toISOString().slice(0, 10), targetPanel); } catch { /* ignore */ }

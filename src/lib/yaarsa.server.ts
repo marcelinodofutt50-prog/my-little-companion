@@ -34,6 +34,23 @@ export function panelFromPlanSlug(slug: string | null | undefined): YaarsaPanel 
   return "v457";
 }
 
+/**
+ * Versões assíncronas: garantem que os overrides do banco (`panel_servers`)
+ * estejam carregados ANTES de decidir o painel. Sem isso, num worker "frio" o
+ * plano semanal cairia na 4.5.7 mesmo com a VPS 4.5.5 cadastrada no admin.
+ * Use sempre estas em fluxos de entrega (webhook, cripto, admin).
+ */
+export async function resolvePanelFromPlanSlug(slug: string | null | undefined): Promise<YaarsaPanel> {
+  await refreshPanelOverrides();
+  return panelFromPlanSlug(slug);
+}
+
+export async function resolvePanelFromTier(tier: string | null | undefined): Promise<YaarsaPanel> {
+  await refreshPanelOverrides();
+  return panelFromTier(tier);
+}
+
+
 type PanelConfig = { baseEnv: string; keyEnv: string; defaultUrl: string };
 const PANEL_CONFIG: Record<YaarsaPanel, PanelConfig> = {
   v455: {
