@@ -260,7 +260,10 @@ export async function yaarsaSetPassword(
 export type YaarsaLookup = { found: boolean; panel: YaarsaPanel; raw: YaarsaResponse };
 
 const NOT_FOUND_RE = /1005|not.?found|não\s*encontrado|nao\s*encontrado|cant.?find/i;
-const EXISTS_RE = /1006|expira|expire.?date|invalid.?date|data\s*de\s*expira/i;
+// "Date not accepted or expired." / 1006 → o email EXISTE (o painel só chegou
+// a validar a data porque encontrou a conta).
+const EXISTS_RE = /1006|date\s*not\s*accepted|not\s*accepted|expired|expira|expire.?date|invalid.?date|data\s*de\s*expira/i;
+
 
 export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Promise<YaarsaLookup> {
   const r = await yaarsaPost(
