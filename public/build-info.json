@@ -1,5 +1,5 @@
 {
-  "build": "2026-07-30T15:20:00.000000Z",
-  "marker": "signup-email-ratelimit-fallback",
-  "note": "cadastro nao trava mais por limite de envio de e-mail; conta criada pelo servidor e login imediato"
+  "build": "2026-07-30T15:25:00.000000Z",
+  "marker": "email-confirm-banner-softer",
+  "note": "banner de confirmacao de email mais claro; mensagens de rate limit menos alarmistas; reenvio automatico mais espacado"
 }
