@@ -1,5 +1,5 @@
 {
-  "build": "2026-07-31T00:10:00.000000Z",
-  "marker": "panel-servers-verified-log",
-  "note": "verificacao completa obrigatoria antes de trocar VPS + log auditavel + aba propria Servidores VPS"
+  "build": "2026-07-30T23:35:00.000000Z",
+  "marker": "panel-v455-weekly-server",
+  "note": "novo servidor VPS 4.5.5 (semanal) disponivel no painel admin"
 }

@@ -695,7 +695,7 @@ export const adminListLogs = createServerFn({ method: "GET" })
 const CreateLicenseInput = z.object({
   userEmail: z.string().trim().email().max(255),
   planSlug: z.enum(["login-7d", "login-30d", "login-lifetime"]),
-  panel: z.enum(["v457", "v46"]).optional(),
+  panel: z.enum(["v455", "v457", "v46"]).optional(),
   isLegacy: z.boolean().optional(),
   customExpireDate: z.string().optional(),
   legacyServerFeeBrl: z.number().positive().max(10000).optional(),
@@ -760,7 +760,7 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
       const body =
         `// nova licença emitida pelo admin\n` +
         `plano: ${data.planSlug} (${tier})\n` +
-        `painel: ${targetPanel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7"}\n` +
+        `painel: ${targetPanel === "v46" ? "Shadow 4.6" : targetPanel === "v455" ? "Shadow 4.5.5" : "Shadow 4.5.7"}\n` +
         `user: ${creds.username}\n` +
         `email: ${creds.email}\n` +
         `senha: ${creds.password}\n` +
@@ -818,7 +818,7 @@ const RegisterLegacyInput = z.object({
   yaarsaUsername: z.string().trim().min(1).max(64),
   yaarsaEmail: z.string().trim().email().max(255),
   yaarsaPassword: z.string().trim().min(1).max(128),
-  panel: z.enum(["v457", "v46"]).optional(),
+  panel: z.enum(["v455", "v457", "v46"]).optional(),
   serverIp: z.string().trim().min(1).max(64).optional(),
   expiresAt: z.string().min(1),
   legacyServerFeeBrl: z.number().positive().max(10000).optional(),

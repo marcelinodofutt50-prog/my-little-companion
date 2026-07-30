@@ -7,7 +7,7 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   await assertAdminRole(ctx);
 }
 
-const panelEnum = z.enum(["v457", "v46"]);
+const panelEnum = z.enum(["v455", "v457", "v46"]);
 
 /** Lista os servidores configurados + o que está valendo no ambiente. */
 export const adminListPanelServers = createServerFn({ method: "GET" })
@@ -15,24 +15,27 @@ export const adminListPanelServers = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { listPanelServersMasked } = await import("@/lib/panel-servers.server");
-    const { panelBaseUrl, panelServerHost, panelConfigSource, refreshPanelOverrides } = await import(
-      "@/lib/yaarsa.server"
-    );
+    const { panelBaseUrl, panelServerHost, panelConfigSource, refreshPanelOverrides } =
+      await import("@/lib/yaarsa.server");
     await refreshPanelOverrides(true);
     const rows = await listPanelServersMasked();
     const effective = {
+      v455: panelBaseUrl("v455"),
       v457: panelBaseUrl("v457"),
       v46: panelBaseUrl("v46"),
     };
     const effectiveIp = {
+      v455: panelServerHost("v455"),
       v457: panelServerHost("v457"),
       v46: panelServerHost("v46"),
     };
     const source = {
+      v455: panelConfigSource("v455"),
       v457: panelConfigSource("v457"),
       v46: panelConfigSource("v46"),
     };
     const envFallback = {
+      v455: (process.env.YAARSA_V455_BASE_URL || "").trim() || null,
       v457: (process.env.YAARSA_BASE_URL || "").trim() || null,
       v46: (process.env.YAARSA_V46_BASE_URL || "").trim() || null,
     };
@@ -43,7 +46,12 @@ export const adminListPanelServers = createServerFn({ method: "GET" })
 export const adminTestPanelServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ baseUrl: z.string().trim().min(4).max(300), adminKey: z.string().trim().min(1).max(200) }).parse(d),
+    z
+      .object({
+        baseUrl: z.string().trim().min(4).max(300),
+        adminKey: z.string().trim().min(1).max(200),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);

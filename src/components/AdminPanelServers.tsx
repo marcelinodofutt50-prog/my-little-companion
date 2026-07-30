@@ -27,9 +27,10 @@ import {
   adminPanelServerLog,
 } from "@/lib/panel-servers.functions";
 
-type PanelKey = "v457" | "v46";
+type PanelKey = "v455" | "v457" | "v46";
 
 const PANEL_META: Record<PanelKey, { title: string; hint: string }> = {
+  v455: { title: "Servidor 4.5.5", hint: "VPS que gera os logins da versão 4.5.5 / semanal" },
   v457: { title: "Servidor 4.5.7", hint: "VPS que gera os logins da versão 4.5.7" },
   v46: { title: "Servidor 4.6", hint: "VPS que gera os logins da versão 4.6 / lifetime" },
 };
@@ -59,6 +60,7 @@ export function AdminPanelServers() {
   const [effectiveIp, setEffectiveIp] = useState<Record<string, string>>({});
   const [source, setSource] = useState<Record<string, string>>({});
   const [drafts, setDrafts] = useState<Record<PanelKey, Draft>>({
+    v455: { label: "", baseUrl: "", adminKey: "", notes: "" },
     v457: { label: "", baseUrl: "", adminKey: "", notes: "" },
     v46: { label: "", baseUrl: "", adminKey: "", notes: "" },
   });
@@ -254,7 +256,7 @@ export function AdminPanelServers() {
         </div>
       </div>
 
-      {(["v457", "v46"] as PanelKey[]).map((panel) => {
+      {(["v455", "v457", "v46"] as PanelKey[]).map((panel) => {
         const row = rows.find((r) => r.panel === panel);
         const d = drafts[panel];
         const meta = PANEL_META[panel];
@@ -498,7 +500,13 @@ export function AdminPanelServers() {
                   )}
                   <span className="font-semibold">{ev.action}</span>
                   <span className="text-muted-foreground">
-                    {ev.panel === "v46" ? "4.6" : ev.panel === "v457" ? "4.5.7" : ev.panel}
+                    {ev.panel === "v46"
+                      ? "4.6"
+                      : ev.panel === "v457"
+                        ? "4.5.7"
+                        : ev.panel === "v455"
+                          ? "4.5.5"
+                          : ev.panel}
                   </span>
                   <span className="text-muted-foreground">
                     {new Date(ev.at).toLocaleString("pt-BR")}
