@@ -78,7 +78,10 @@ export async function listPanelServersMasked() {
       "panel,label,base_url,admin_key_enc,notes,is_active,updated_at,updated_by_email,last_test_at,last_test_ok,last_test_message",
     )
     .order("panel");
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/does not exist|42P01/i.test(error.message ?? "")) return [];
+    throw new Error(friendlyDbError(error));
+  }
   return (data ?? []).map((r: any) => {
     let masked: string | null = null;
     try {
@@ -137,14 +140,29 @@ export async function upsertPanelServer(input: {
     patch.admin_key_enc = existing.admin_key_enc;
   }
   const { error } = await db.from("panel_servers").upsert(patch, { onConflict: "panel" });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyDbError(error, input.panel));
   invalidatePanelCache();
+}
+
+/** Traduz erros crus do banco para algo que o admin entenda e saiba resolver. */
+export function friendlyDbError(error: { message?: string; code?: string }, panel?: YaarsaPanel) {
+  const msg = String(error?.message ?? "");
+  if (/panel_servers_panel_check|violates check constraint/i.test(msg)) {
+    return `O banco em uso ainda não conhece o painel ${panel ?? ""} (falta a atualização da tabela panel_servers). O site precisa estar apontando para o backend atualizado.`.trim();
+  }
+  if (/relation .*panel_servers.* does not exist|42P01/i.test(msg)) {
+    return "A tabela de servidores (panel_servers) não existe no banco em uso — o site está conectado a um backend desatualizado.";
+  }
+  if (/permission denied|row-level security/i.test(msg)) {
+    return "Sem permissão para gravar o servidor. Faça login novamente como administrador.";
+  }
+  return msg || "Erro desconhecido ao gravar o servidor.";
 }
 
 export async function deletePanelServer(panel: YaarsaPanel) {
   const db = await adminDb();
   const { error } = await db.from("panel_servers").delete().eq("panel", panel);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyDbError(error, panel));
   invalidatePanelCache();
 }
 
