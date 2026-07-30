@@ -133,7 +133,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <BackendMismatchBanner />
+        
         <Outlet />
         <Toaster theme="dark" richColors position="top-right" />
       </I18nProvider>
