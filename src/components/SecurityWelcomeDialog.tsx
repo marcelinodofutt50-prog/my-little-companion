@@ -295,14 +295,25 @@ export function SecurityWelcomeDialog() {
     setSaved(true);
   }
 
-  async function close() {
+  function close() {
     if (codes && saved) toast.success("Tudo certo — seus códigos de recuperação estão ativos");
-    await ackSecurityNoticeDirect();
+    // Fecha na hora: a marcação no servidor acontece em segundo plano para que
+    // uma rede lenta nunca deixe o modal (e o fundo escuro) travado na tela.
     setOpen(false);
+    void ackSecurityNoticeDirect().catch(() => {});
   }
+
+  // Segurança extra: se o modal for desmontado enquanto aberto, o Radix pode
+  // deixar `pointer-events: none` no body e a página fica "preta e travada".
+  useEffect(() => {
+    if (open) return;
+    document.body.style.pointerEvents = "";
+  }, [open]);
+  useEffect(() => () => { document.body.style.pointerEvents = ""; }, []);
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) close(); }}>
+
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-mono uppercase tracking-wider">
