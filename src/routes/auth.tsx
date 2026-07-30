@@ -12,7 +12,7 @@ import { siteUrl } from "@/lib/site-url";
 import { Lost2faHelp } from "@/components/Lost2faHelp";
 import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
-import { checkEmailAvailability, confirmFreshSignupEmail } from "@/lib/signup.functions";
+import { checkEmailAvailability, confirmFreshSignupEmail, createAccountWhenEmailBlocked } from "@/lib/signup.functions";
 
 
 export const Route = createFileRoute("/auth")({
