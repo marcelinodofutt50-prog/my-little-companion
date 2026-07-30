@@ -274,3 +274,21 @@ export async function listPanelEvents(limit = 25) {
     steps: (r.context?.steps ?? null) as { step: string; ok: boolean; detail: string }[] | null,
   }));
 }
+
+/** Snapshot bruto de um painel (usado para desfazer uma troca reprovada). */
+export async function snapshotPanelServer(panel: YaarsaPanel) {
+  const db = await adminDb();
+  const { data } = await db.from("panel_servers").select("*").eq("panel", panel).maybeSingle();
+  return (data ?? null) as Record<string, unknown> | null;
+}
+
+/** Restaura o snapshot (ou remove o registro se antes não existia). */
+export async function restorePanelServer(panel: YaarsaPanel, snap: Record<string, unknown> | null) {
+  const db = await adminDb();
+  if (!snap) {
+    await db.from("panel_servers").delete().eq("panel", panel);
+  } else {
+    await db.from("panel_servers").upsert(snap, { onConflict: "panel" });
+  }
+  invalidatePanelCache();
+}
