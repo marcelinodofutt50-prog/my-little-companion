@@ -119,11 +119,14 @@ export function OnboardingChecklist({
     navigate({ to: "/suporte" });
   }
 
-  if (dismissed) return null;
-
   const doneCount = STEPS.filter((s) => completed.includes(s.id)).length;
   const pct = Math.round((doneCount / STEPS.length) * 100);
   const allDone = doneCount === STEPS.length;
+
+  return { doneCount, pct, allDone };
+}
+
+
 
   return (
     <motion.div
