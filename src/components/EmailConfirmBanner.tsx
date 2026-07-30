@@ -133,7 +133,7 @@ export function EmailConfirmBanner() {
       void send("auto");
     };
     tick();
-    const id = setInterval(tick, 30_000);
+    const id = setInterval(tick, 60_000); // checa a cada 1 min (intervalo real é de 20 min)
     return () => clearInterval(id);
   }, [auto, confirmed, email, send]);
 
