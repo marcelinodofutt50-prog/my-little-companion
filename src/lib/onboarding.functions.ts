@@ -14,11 +14,7 @@ export const getAccountSetupState = createServerFn({ method: "GET" })
     const userId = context.userId;
 
     const [{ data: profile }, { count }] = await Promise.all([
-      supabaseAdmin
-        .from("profiles")
-        .select("display_name,onboarding_completed_at,security_ack_at,recovery_codes_generated_at")
-        .eq("id", userId)
-        .maybeSingle(),
+      supabaseAdmin.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabaseAdmin
         .from("recovery_codes")
         .select("id", { count: "exact", head: true })
@@ -55,8 +51,25 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     };
     if (data.displayName) patch.display_name = data.displayName;
 
-    const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", context.userId);
-    if (error) throw new Error(error.message);
+    let { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", context.userId);
+
+    // Cache de schema desatualizado / coluna ausente: grava ao menos o que dá,
+    // em vez de falhar e fazer o wizard reaparecer para o cliente.
+    if (error) {
+      const minimal: any = { onboarding_completed_at: patch.onboarding_completed_at };
+      if (patch.display_name) minimal.display_name = patch.display_name;
+      const retry = await supabaseAdmin.from("profiles").update(minimal).eq("id", context.userId);
+      error = retry.error;
+      if (error && patch.display_name) {
+        const last = await supabaseAdmin
+          .from("profiles")
+          .update({ display_name: patch.display_name })
+          .eq("id", context.userId);
+        error = last.error;
+      }
+    }
+
+    if (error) return { ok: false, degraded: true, reason: error.message };
     return { ok: true };
   });
 

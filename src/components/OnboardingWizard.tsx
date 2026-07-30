@@ -136,8 +136,10 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
       if (!user) throw new Error("Sessão expirada");
       const cleanNick = nick.trim();
 
-      await saveState({ data: { displayName: cleanNick || undefined, answers, skipped } });
+      // Marca local PRIMEIRO: mesmo que o banco recuse a gravação (coluna
+      // ausente/cache de schema), a configuração não volta a cada F5.
       localStorage.setItem(doneKey(user.id), "1");
+      await saveState({ data: { displayName: cleanNick || undefined, answers, skipped } });
 
       if (cleanNick) onDisplayName?.(cleanNick);
       if (!skipped) toast.success("Painel configurado — bem-vindo à Shadow");

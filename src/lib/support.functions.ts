@@ -100,11 +100,8 @@ export const sendMessage = createServerFn({ method: "POST" })
     attachmentType: z.string().max(100).optional(),
   }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i))
   .handler(async ({ data, context }) => {
-    const [adminRes, modRes] = await Promise.all([
-      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
-      context.supabase.rpc("has_role", { _user_id: context.userId, _role: "moderator" }),
-    ]);
-    const isStaff = !!adminRes.data || !!modRes.data;
+    const { resolveRoles } = await import("@/lib/roles.server");
+    const { isStaff } = await resolveRoles(context);
 
     // Load thread once; validate access and closed-state.
     const { data: thread, error: tErr } = await context.supabase
