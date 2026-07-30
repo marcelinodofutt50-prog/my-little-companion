@@ -142,28 +142,23 @@ export const adminTestCurrentPanel = createServerFn({ method: "POST" })
  *
  * Se todos os passos passarem, uma compra real naquele painel entrega o login.
  */
-export const adminFullPanelCheck = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+export async function runFullPanelCheck(panel: "v457" | "v46") {
     const y = await import("@/lib/yaarsa.server");
-    const { recordPanelTest } = await import("@/lib/panel-servers.server");
+    const { recordPanelTest, logPanelEvent } = await import("@/lib/panel-servers.server");
     await y.refreshPanelOverrides(true);
 
     const steps: { step: string; ok: boolean; detail: string }[] = [];
     const push = (step: string, ok: boolean, detail: string) => steps.push({ step, ok, detail });
 
-    const baseUrl = y.panelBaseUrl(data.panel);
-    const serverIp = y.panelServerHost(data.panel);
-    const source = y.panelConfigSource(data.panel);
+    const baseUrl = y.panelBaseUrl(panel);
+    const serverIp = y.panelServerHost(panel);
+    const source = y.panelConfigSource(panel);
     push("Endereço configurado", !!baseUrl, `${baseUrl} (origem: ${source})`);
 
     let keyOk = true;
     try {
-      // Só valida presença/format — o valor nunca sai daqui.
-      const probe = await y.yaarsaLookupEmail(`probe-${Date.now()}@shadow-check.invalid`, data.panel);
-      push("Servidor responde e aceita a admin key", true, probe.found ? "resposta válida" : "resposta válida");
+      await y.yaarsaLookupEmail(`probe-${Date.now()}@shadow-check.invalid`, panel);
+      push("Servidor responde e aceita a admin key", true, "resposta válida");
     } catch (e) {
       keyOk = false;
       push("Servidor responde e aceita a admin key", false, String((e as Error)?.message || e));
@@ -186,7 +181,7 @@ export const adminFullPanelCheck = createServerFn({ method: "POST" })
         planSlug: "login-7d",
         totalPaid: 0,
         additionalInfo: "shadow-healthcheck",
-        panel: data.panel,
+        panel,
       });
       created = !r.Fail;
       push("Criar login de teste (igual a uma compra)", created, r.Fail ?? r.Success ?? "ok");
@@ -194,27 +189,45 @@ export const adminFullPanelCheck = createServerFn({ method: "POST" })
 
     if (created && creds) {
       const ymd = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-      const ext = await y.yaarsaExtend(creds.email, ymd, data.panel);
+      const ext = await y.yaarsaExtend(creds.email, ymd, panel);
       push("Ajustar validade do login", !ext.Fail, ext.Fail ?? ext.Success ?? "ok");
 
-      const pw = await y.yaarsaSetPassword(creds.email, creds.password, data.panel, creds.username);
+      const pw = await y.yaarsaSetPassword(creds.email, creds.password, panel, creds.username);
       push("Definir senha do cliente", !pw.Fail, pw.Fail ?? pw.Success ?? "ok");
 
       try {
-        const look = await y.yaarsaLookupEmail(creds.email, data.panel);
+        const look = await y.yaarsaLookupEmail(creds.email, panel);
         push("Confirmar que o login existe no painel", look.found, look.found ? "encontrado" : "não encontrado");
       } catch (e) {
         push("Confirmar que o login existe no painel", false, String((e as Error)?.message || e));
       }
 
-      const rm = await y.yaarsaRemoveAccount(creds.email, data.panel);
+      const rm = await y.yaarsaRemoveAccount(creds.email, panel);
       push("Remover login de teste", !rm.Fail, rm.Fail ?? rm.Success ?? "ok");
     }
 
     const ok = steps.every((s) => s.ok);
     const message = ok
-      ? `Tudo certo — uma compra na ${data.panel === "v46" ? "4.6" : "4.5.7"} entrega o login normalmente. IP entregue ao cliente: ${serverIp}`
+      ? `Tudo certo — uma compra na ${panel === "v46" ? "4.6" : "4.5.7"} entrega o login normalmente. IP entregue ao cliente: ${serverIp}`
       : `Falhou em: ${steps.filter((s) => !s.ok).map((s) => s.step).join(", ")}`;
-    await recordPanelTest(data.panel, ok, message);
+    await recordPanelTest(panel, ok, message);
+    await logPanelEvent({ panel, action: "verificacao_completa", outcome: ok ? "ok" : "fail", message, baseUrl, serverIp, steps });
     return { ok, steps, serverIp, baseUrl, source, message };
+}
+
+export const adminFullPanelCheck = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    return runFullPanelCheck(data.panel);
+  });
+
+/** Registro auditável das verificações e trocas de VPS. */
+export const adminPanelServerLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { listPanelEvents } = await import("@/lib/panel-servers.server");
+    return { events: await listPanelEvents(25) };
   });
