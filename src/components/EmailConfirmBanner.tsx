@@ -11,9 +11,9 @@ import { siteUrl } from "@/lib/site-url";
  * reenviar sozinho quando o envio volta a funcionar (com limite de tentativas).
  */
 
-const MAX_AUTO_ATTEMPTS = 3;
-const RETRY_INTERVAL_MS = 10 * 60 * 1000; // 10 min entre tentativas automáticas
-const BACKOFF_MS = 90 * 1000; // espera após falha (limite de envio, etc.)
+const MAX_AUTO_ATTEMPTS = 2;
+const RETRY_INTERVAL_MS = 20 * 60 * 1000; // 20 min entre tentativas automáticas (evita rate limit)
+const BACKOFF_MS = 5 * 60 * 1000; // espera 5 min após falha (limite de envio, etc.)
 
 type AutoState = { attempts: number; lastAt: number; done: boolean };
 
@@ -95,10 +95,10 @@ export function EmailConfirmBanner() {
         setCooldown(60);
         setAutoStatus(
           mode === "auto"
-            ? `Reenvio automático feito (${next.attempts}/${MAX_AUTO_ATTEMPTS}). Confirme assim que o e-mail chegar.`
+            ? `Reenvio automático feito (${next.attempts}/${MAX_AUTO_ATTEMPTS}). Quando o e-mail chegar, clique no link. Não afeta seu acesso ao painel.`
             : null,
         );
-        if (mode === "manual") toast.success("E-mail de confirmação enviado. Confirme assim que chegar.");
+        if (mode === "manual") toast.success("E-mail de confirmação enviado. Quando chegar, clique no link — sua conta já está liberada.");
       } catch (e: any) {
         const msg = e?.message ?? "Não foi possível enviar agora.";
         if (mode === "auto") {
@@ -106,9 +106,14 @@ export function EmailConfirmBanner() {
           const next = { ...auto, lastAt: Date.now() - RETRY_INTERVAL_MS + BACKOFF_MS };
           setAuto(next);
           writeAuto(email, next);
-          setAutoStatus("Envio instável no momento — vamos tentar reenviar sozinho em instantes.");
+          setAutoStatus("Serviço de e-mail cheio no momento. Tentamos de novo mais tarde, automaticamente.");
         } else {
-          toast.error(msg);
+          // Manual: evita mensagem alarmista. A conta já está liberada, então o usuário não fica preso.
+          if (/rate limit|too many requests|over_email_send_rate_limit/i.test(msg)) {
+            toast.error("Muitos e-mails enviados recentemente. Aguarde um pouco ou tente novamente mais tarde. Sua conta continua liberada.");
+          } else {
+            toast.error("Não conseguimos enviar agora. Você pode usar o painel normalmente enquanto isso.");
+          }
           setCooldown(60);
         }
       } finally {
@@ -128,7 +133,7 @@ export function EmailConfirmBanner() {
       void send("auto");
     };
     tick();
-    const id = setInterval(tick, 30_000);
+    const id = setInterval(tick, 60_000); // checa a cada 1 min (intervalo real é de 20 min)
     return () => clearInterval(id);
   }, [auto, confirmed, email, send]);
 
