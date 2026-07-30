@@ -7,7 +7,7 @@ import {
   ShieldCheck, LifeBuoy, MessageSquare, Send, Loader2, Search,
   BarChart3, Activity, Zap, LogOut, Circle, ScrollText, Download,
   UserPlus, Sparkles, History, ShieldAlert, Gift, Check, Bell, BellOff, Store, Package,
-  Wallet, Copy, RotateCcw, ChevronLeft, Wrench, Bot,
+  Wallet, Copy, RotateCcw, ChevronLeft, Wrench, Bot, Server,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
@@ -86,7 +86,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "health" | "audit" | "apk" | "market" | "updates" | "refunds" | "selftest";
+type Tab = "overview" | "ia" | "chat" | "issue" | "legacy" | "external" | "users" | "orders" | "licenses" | "referrals" | "staff" | "logs" | "health" | "servers" | "audit" | "apk" | "market" | "updates" | "refunds" | "selftest";
 
 // Explicação em linguagem simples de cada seção do painel.
 const TAB_DESC: Record<Tab, string> = {
@@ -108,6 +108,7 @@ const TAB_DESC: Record<Tab, string> = {
   audit: "Histórico de ações dos administradores, com data e responsável.",
   apk: "Fila do Play Protect: APKs enviados pelos clientes aguardando processamento.",
   updates: "Publicar uma nova versão do app para os clientes baixarem.",
+  servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
 };
 
@@ -384,6 +385,7 @@ function AdminPage() {
       title: "Sistema", accent: "cyan", items: [
         { id: "staff", label: "Equipe", icon: ShieldCheck },
         { id: "health", label: "Monitoramento", icon: Activity, hint: "erros & regressões" },
+        { id: "servers", label: "Servidores VPS", icon: Server, hint: "trocar VPS 4.5.7 / 4.6" },
         { id: "logs", label: "Logs do servidor", icon: ScrollText },
         { id: "audit", label: "Auditoria", icon: ShieldAlert },
         { id: "selftest", label: "Autoteste de Compra", icon: Activity, hint: "fluxo PIX ponta a ponta" },
@@ -1219,6 +1221,7 @@ function AdminPage() {
               {role === "admin" && <AdminPanelServers />}
             </div>
           )}
+          {tab === "servers" && role === "admin" && <AdminPanelServers />}
           {tab === "logs" && <AdminLogsPanel />}
           {tab === "audit" && (
             <div className="space-y-4">
