@@ -274,8 +274,8 @@ async function fulfillOrderInner(orderId: string) {
   }
 
   // ============ New-license path (default: login plans) ============
-  const { panelFromPlanSlug } = await import("@/lib/yaarsa.server");
-  const targetPanel = panelFromPlanSlug(order.plan_slug);
+  const { resolvePanelFromPlanSlug } = await import("@/lib/yaarsa.server");
+  const targetPanel = await resolvePanelFromPlanSlug(order.plan_slug);
   const creds = generateCredentials();
   const yr = await yaarsaCreateAccount({
     username: creds.username,

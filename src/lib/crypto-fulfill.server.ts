@@ -9,7 +9,7 @@
  */
 export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boolean; reason?: string; licenseId?: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { yaarsaCreateAccount, yaarsaExtend, generateCredentials, encrypt, panelFromPlanSlug } = await import("./yaarsa.server");
+  const { yaarsaCreateAccount, yaarsaExtend, generateCredentials, encrypt, resolvePanelFromPlanSlug } = await import("./yaarsa.server");
   const { tierFromPlanSlug } = await import("./plans");
 
   // Atomic claim: only fulfill a payment currently in 'confirmed' state.
@@ -63,7 +63,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
       return t;
     })();
 
-    const targetPanel = panelFromPlanSlug(claimed.plan_slug);
+    const targetPanel = await resolvePanelFromPlanSlug(claimed.plan_slug);
     const creds = generateCredentials();
     let yr = await yaarsaCreateAccount({
       username: creds.username,
