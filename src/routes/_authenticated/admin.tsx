@@ -61,7 +61,7 @@ import { formatBrl, tierLabel, type VersionTier } from "@/lib/plans";
 import {
   adminStats, adminListUsers, adminListOrders, adminListLicenses,
   adminRevokeLicense, adminExtendLicense, adminFixLoginBug, adminAnalyzeLoginBug,
-  adminSetRole, adminListRoles, adminRenewClientServer, adminRecreateLicense,
+  adminSetRole, adminSetRoleByEmail, adminListRoles, adminRenewClientServer, adminRecreateLicense,
   adminListThreads, adminListThreadMessages, adminSendMessage, adminListLogs,
   adminAssumeThread, adminCloseThread,
   adminCreateLicenseForClient, adminRegisterLegacyLicense,
@@ -157,6 +157,9 @@ function AdminPage() {
   const revokeFn = useServerFn(adminRevokeLicense);
   const extendFn = useServerFn(adminExtendLicense);
   const rolesFn = useServerFn(adminListRoles);
+  const setRoleEmailFn = useServerFn(adminSetRoleByEmail);
+  const [staffEmail, setStaffEmail] = useState("");
+  const [staffBusy, setStaffBusy] = useState(false);
   const setRoleFn = useServerFn(adminSetRole);
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
@@ -330,6 +333,22 @@ function AdminPage() {
       });
     }
     catch (e: any) { toast.error(e.message ?? "Não foi possível atualizar o cargo"); }
+  }
+
+  async function setRoleByEmail(role: "admin" | "moderator" | "user") {
+    const email = staffEmail.trim();
+    if (!email || staffBusy) return;
+    setStaffBusy(true);
+    try {
+      const r: any = await setRoleEmailFn({ data: { email, role } });
+      setRoles(await rolesFn() as any);
+      setStaffEmail("");
+      toast.success(`${r.email} agora é ${role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente"}`, {
+        description: "Peça para a pessoa sair e entrar de novo (F5) para liberar as abas.",
+        duration: 9000,
+      });
+    } catch (e: any) { toast.error(e.message ?? "Não foi possível atualizar o cargo"); }
+    finally { setStaffBusy(false); }
   }
 
   const tabGroups: { title: string; accent: "neon" | "cyan" | "violet"; items: { id: Tab; label: string; icon: any; hint?: string }[] }[] = [
@@ -1150,6 +1169,23 @@ function AdminPage() {
 
               <div className="border-b border-border/40 p-3 font-mono text-xs uppercase text-muted-foreground">
                 <ShieldCheck className="mr-1 inline h-3 w-3 text-neon" /> Promova usuários para admin ou suporte (moderator).
+              </div>
+              <div className="border-b border-border/40 bg-background/30 p-3">
+                <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-cyan">Promover pelo e-mail</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={staffEmail}
+                    onChange={(e) => setStaffEmail(e.target.value)}
+                    placeholder="email@do-atendente.com"
+                    className="min-w-[240px] flex-1 rounded border border-border/50 bg-background/60 px-3 py-2 font-mono text-xs outline-none focus:border-cyan/60"
+                  />
+                  <Button size="sm" variant="outline" disabled={staffBusy || !staffEmail.trim()} onClick={() => setRoleByEmail("moderator")}>Tornar Suporte</Button>
+                  <Button size="sm" variant="ghost" disabled={staffBusy || !staffEmail.trim()} onClick={() => setRoleByEmail("admin")}>Tornar Admin</Button>
+                  <Button size="sm" variant="ghost" disabled={staffBusy || !staffEmail.trim()} onClick={() => setRoleByEmail("user")}>Rebaixar</Button>
+                </div>
+                <p className="mt-2 font-mono text-[10px] text-muted-foreground">
+                  // hoje nenhum atendente está como Suporte — por isso o time não enxerga o Chat nem a Fila Play Protect.
+                </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-sm">
