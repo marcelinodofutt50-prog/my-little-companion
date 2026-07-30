@@ -3,7 +3,9 @@
   "framework": null,
   "installCommand": "bun install",
   "buildCommand": "bun run build",
+  "ignoreCommand": "exit 1",
   "regions": ["gru1"],
+
   "github": {
     "enabled": true,
     "autoJobCancelation": true,
