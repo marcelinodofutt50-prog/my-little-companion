@@ -12,7 +12,7 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId, claims } = context;
     const email = (claims?.email as string | undefined)?.toLowerCase();
-    if (!email) return { status: "none", panels: [] as string[], cached: false };
+    if (!email) return { status: "unchecked", panels: [] as string[], cached: false, inconclusive: true };
 
     const { data: profile } = await supabase
       .from("profiles")
