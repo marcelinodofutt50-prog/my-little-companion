@@ -78,7 +78,10 @@ export async function listPanelServersMasked() {
       "panel,label,base_url,admin_key_enc,notes,is_active,updated_at,updated_by_email,last_test_at,last_test_ok,last_test_message",
     )
     .order("panel");
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/does not exist|42P01/i.test(error.message ?? "")) return [];
+    throw new Error(friendlyDbError(error));
+  }
   return (data ?? []).map((r: any) => {
     let masked: string | null = null;
     try {
@@ -159,7 +162,7 @@ export function friendlyDbError(error: { message?: string; code?: string }, pane
 export async function deletePanelServer(panel: YaarsaPanel) {
   const db = await adminDb();
   const { error } = await db.from("panel_servers").delete().eq("panel", panel);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyDbError(error, panel));
   invalidatePanelCache();
 }
 
