@@ -108,18 +108,16 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
-  const [authRedirectChecked, setAuthRedirectChecked] = useState(false);
 
   // Fallback: se o usuário abriu um link de confirmação de e-mail que ainda
   // aponta para localhost (Supabase Site URL desatualizado), redireciona para
   // o domínio oficial preservando code/type/next.
+  // IMPORTANTE: nunca bloquear a renderização enquanto isso é checado — se o
+  // app renderizar `null` até um efeito rodar, qualquer falha de hidratação
+  // deixa a página totalmente preta.
   useEffect(() => {
     const canonicalUrl = redirectLocalhostAuthToCanonical();
-    if (canonicalUrl) {
-      window.location.replace(canonicalUrl);
-      return;
-    }
-    setAuthRedirectChecked(true);
+    if (canonicalUrl) window.location.replace(canonicalUrl);
   }, []);
 
   useEffect(() => {
@@ -131,8 +129,6 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [queryClient, router]);
 
-  if (!authRedirectChecked) return null;
-
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
@@ -142,3 +138,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
