@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getMyRole } from "@/lib/roles.functions";
 import type { Role } from "@/lib/permissions";
 
 /**
