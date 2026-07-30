@@ -61,10 +61,18 @@ export function OnboardingChecklist({
 }) {
   const navigate = useNavigate();
   const [completed, setCompleted] = useState<number[]>([]);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(true); // esconde até saber o estado salvo
+
+  function hideForGood() {
+    try { localStorage.setItem(HIDDEN_KEY, "1"); } catch { /* ignore */ }
+    setDismissed(true);
+  }
 
   // Passo 1: acessar o dashboard conclui sozinho ao montar.
   useEffect(() => {
+    let hidden = false;
+    try { hidden = localStorage.getItem(HIDDEN_KEY) === "1"; } catch { /* ignore */ }
+    setDismissed(hidden);
     markOnboardingStep(ONBOARDING_STEP.DASHBOARD);
     setCompleted(loadCompleted());
     const sync = () => setCompleted(loadCompleted());
@@ -75,6 +83,7 @@ export function OnboardingChecklist({
       window.removeEventListener("storage", sync);
     };
   }, []);
+
 
   // Passo 2: se já existe licença ativa e o usuário está vendo o painel, conclui.
   useEffect(() => {
