@@ -194,11 +194,8 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
 
 /** Admin ou Suporte (moderador) — a fila do Play Protect é operada pelos dois. */
 async function assertStaff(ctx: any) {
-  const [a, m] = await Promise.all([
-    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" }),
-    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "moderator" }),
-  ]);
-  if (!a.data && !m.data) throw new Error("Forbidden");
+  const { assertStaffRole } = await import("@/lib/roles.server");
+  await assertStaffRole(ctx);
 }
 
 // Admin

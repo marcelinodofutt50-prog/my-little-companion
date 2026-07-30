@@ -6,17 +6,14 @@ import { tierFromPlanSlug, type VersionTier } from "@/lib/plans";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (!data) throw new Error("Forbidden");
+  const { assertAdminRole } = await import("@/lib/roles.server");
+  await assertAdminRole(ctx);
 }
 
 /** Admin OU moderador (Suporte). Usado nas áreas de atendimento. */
 async function assertStaff(ctx: { supabase: any; userId: string }) {
-  const [a, m] = await Promise.all([
-    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" }),
-    ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "moderator" }),
-  ]);
-  if (!a.data && !m.data) throw new Error("Forbidden");
+  const { assertStaffRole } = await import("@/lib/roles.server");
+  await assertStaffRole(ctx);
 }
 
 // Compute expire_date + server_paid_until aligned to next day 20 for monthly plans.
