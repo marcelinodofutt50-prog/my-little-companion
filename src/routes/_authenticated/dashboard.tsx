@@ -26,6 +26,7 @@ import { SecurityWelcomeDialog } from "@/components/SecurityWelcomeDialog";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { EmailConfirmBanner } from "@/components/EmailConfirmBanner";
+import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
 import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
@@ -252,6 +253,8 @@ function DashboardPage() {
             <OnboardingWizard onDone={() => setOnboardingDone(true)} onDisplayName={setDisplayName} />
             {onboardingDone && <SecurityWelcomeDialog />}
             <EmailConfirmBanner />
+            <AnnouncementsBanner />
+
             <ExpiryReminder />
 
             {(() => {
