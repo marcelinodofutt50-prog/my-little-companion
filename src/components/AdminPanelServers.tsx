@@ -73,7 +73,12 @@ export function AdminPanelServers() {
         ok: boolean;
         message: string;
         serverIp: string;
-        steps: { step: string; ok: boolean; detail: string }[];
+        baseUrl?: string;
+        source?: string;
+        durationMs?: number;
+        finishedAt?: string;
+        testAccount?: { username: string; email: string } | null;
+        steps: { step: string; ok: boolean; detail: string; ms?: number }[];
       }
     >
   >({});
@@ -208,6 +213,32 @@ export function AdminPanelServers() {
       toast.error(e?.message ?? "Falha no teste");
     }
     setBusy(null);
+  }
+
+  function copyReport(panel: PanelKey) {
+    const c = checks[panel];
+    if (!c) return;
+    const lines = [
+      `Verificação completa — painel ${panel}`,
+      `Resultado: ${c.ok ? "APROVADO" : "REPROVADO"}`,
+      `Mensagem: ${c.message}`,
+      `Endereço: ${c.baseUrl ?? "—"}${c.source ? ` (origem: ${c.source})` : ""}`,
+      `IP entregue ao cliente: ${c.serverIp || "—"}`,
+      c.testAccount ? `Conta de teste: ${c.testAccount.username} / ${c.testAccount.email}` : "",
+      typeof c.durationMs === "number" ? `Duração: ${(c.durationMs / 1000).toFixed(1)}s` : "",
+      c.finishedAt ? `Concluído em: ${new Date(c.finishedAt).toLocaleString("pt-BR")}` : "",
+      "",
+      ...c.steps.map(
+        (st) =>
+          `${st.ok ? "[OK]" : "[FALHA]"} ${st.step} — ${st.detail}${
+            typeof st.ms === "number" ? ` (${st.ms}ms)` : ""
+          }`,
+      ),
+    ].filter(Boolean);
+    navigator.clipboard
+      .writeText(lines.join("\n"))
+      .then(() => toast.success("Relatório copiado"))
+      .catch(() => toast.error("Não consegui copiar o relatório"));
   }
 
   async function fullCheck(panel: PanelKey) {
@@ -357,9 +388,39 @@ export function AdminPanelServers() {
                     : "border-danger/40 bg-danger/5"
                 }`}
               >
-                <div className="mb-2 font-semibold">
-                  {checks[panel].ok ? "Pronto para vender" : "Não está pronto"} —{" "}
-                  {checks[panel].message}
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div className="font-semibold">
+                    {checks[panel].ok ? "Pronto para vender" : "Não está pronto"} —{" "}
+                    {checks[panel].message}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyReport(panel)}
+                    className="shrink-0 rounded border border-border/60 px-2 py-1 text-[10px] uppercase tracking-wide hover:bg-muted/40"
+                  >
+                    copiar relatório
+                  </button>
+                </div>
+                <div className="mb-2 space-y-0.5 text-muted-foreground">
+                  <div>
+                    endereço: {checks[panel].baseUrl ?? "—"}
+                    {checks[panel].source ? ` (origem: ${checks[panel].source})` : ""}
+                  </div>
+                  <div>IP entregue ao cliente: {checks[panel].serverIp || "—"}</div>
+                  {checks[panel].testAccount && (
+                    <div>
+                      conta de teste usada e apagada: {checks[panel].testAccount!.username} /{" "}
+                      {checks[panel].testAccount!.email}
+                    </div>
+                  )}
+                  {typeof checks[panel].durationMs === "number" && (
+                    <div>
+                      duração: {(checks[panel].durationMs! / 1000).toFixed(1)}s
+                      {checks[panel].finishedAt
+                        ? ` — ${new Date(checks[panel].finishedAt!).toLocaleString("pt-BR")}`
+                        : ""}
+                    </div>
+                  )}
                 </div>
                 <ul className="space-y-1">
                   {checks[panel].steps.map((st, i) => (
@@ -371,6 +432,9 @@ export function AdminPanelServers() {
                       )}
                       <span>
                         {st.step} — <span className="text-muted-foreground">{st.detail}</span>
+                        {typeof st.ms === "number" && (
+                          <span className="text-muted-foreground/70"> ({st.ms}ms)</span>
+                        )}
                       </span>
                     </li>
                   ))}
