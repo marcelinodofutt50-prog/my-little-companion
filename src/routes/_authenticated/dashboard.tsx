@@ -148,13 +148,17 @@ function DashboardPage() {
         setIsAdmin(isStaffRole(role));
         // Scope realtime to just this user so unrelated license mutations
         // (other clients, admin batch operations) don't force a refetch.
-        ch = supabase.channel(`licenses:${data.user.id}`)
+        // Sufixo único evita reaproveitar um canal já inscrito (React StrictMode),
+        // o que quebrava o realtime com "cannot add postgres_changes after subscribe".
+        const tag = Math.random().toString(36).slice(2, 8);
+        ch = supabase.channel(`licenses:${data.user.id}:${tag}`)
           .on("postgres_changes", { event: "*", schema: "public", table: "licenses", filter: `user_id=eq.${data.user.id}` }, () => refresh())
           .subscribe();
         // Realtime para pedidos em andamento (status, pagamento, entrega)
-        ordersCh = supabase.channel(`orders:${data.user.id}`)
+        ordersCh = supabase.channel(`orders:${data.user.id}:${tag}`)
           .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${data.user.id}` }, () => refresh())
           .subscribe();
+
       }
     });
     refresh();

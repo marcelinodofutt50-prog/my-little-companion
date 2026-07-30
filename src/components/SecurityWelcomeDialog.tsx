@@ -249,6 +249,10 @@ export function SecurityWelcomeDialog() {
       setRemaining(nextCodes.length);
       setGeneratedAt(new Date().toISOString());
       setExhausted(false);
+      // Já gerou: marca o aviso como lido agora para que ele não volte a pedir
+      // geração de códigos no próximo login/F5.
+      void ackSecurityNoticeDirect().catch(() => {});
+
     } catch (e: any) {
       console.error("[recovery] falha final ao gerar códigos", {
         message: e?.message,
@@ -295,14 +299,25 @@ export function SecurityWelcomeDialog() {
     setSaved(true);
   }
 
-  async function close() {
+  function close() {
     if (codes && saved) toast.success("Tudo certo — seus códigos de recuperação estão ativos");
-    await ackSecurityNoticeDirect();
+    // Fecha na hora: a marcação no servidor acontece em segundo plano para que
+    // uma rede lenta nunca deixe o modal (e o fundo escuro) travado na tela.
     setOpen(false);
+    void ackSecurityNoticeDirect().catch(() => {});
   }
+
+  // Segurança extra: se o modal for desmontado enquanto aberto, o Radix pode
+  // deixar `pointer-events: none` no body e a página fica "preta e travada".
+  useEffect(() => {
+    if (open) return;
+    document.body.style.pointerEvents = "";
+  }, [open]);
+  useEffect(() => () => { document.body.style.pointerEvents = ""; }, []);
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) close(); }}>
+
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-mono uppercase tracking-wider">
@@ -420,13 +435,14 @@ export function SecurityWelcomeDialog() {
               <Button variant="outline" size="sm" onClick={downloadTxt} className="font-mono uppercase">
                 <Download className="mr-2 h-3.5 w-3.5" /> Baixar .txt
               </Button>
-              <Button size="sm" onClick={close} disabled={!saved} className="ml-auto font-mono uppercase">
+              <Button size="sm" onClick={close} className="ml-auto font-mono uppercase">
                 <Check className="mr-2 h-3.5 w-3.5" /> Guardei
               </Button>
             </div>
             {!saved && (
-              <p className="text-[11px] text-amber-400">Copie ou baixe os códigos para liberar o botão de concluir.</p>
+              <p className="text-[11px] text-amber-400">Recomendado: copie ou baixe os códigos antes de fechar.</p>
             )}
+
           </div>
         )}
       </DialogContent>
