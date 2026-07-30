@@ -1,5 +1,5 @@
 {
-  "build": "2026-07-30T05:27:37.258868Z",
-  "marker": "roles-fallback-onboarding-fix",
-  "note": "fallback de papeis (suporte/moderador) + fix configuracao inicial"
+  "build": "2026-07-30T15:20:00.000000Z",
+  "marker": "signup-email-ratelimit-fallback",
+  "note": "cadastro nao trava mais por limite de envio de e-mail; conta criada pelo servidor e login imediato"
 }
