@@ -247,7 +247,7 @@ export async function logPanelEvent(entry: {
   actorEmail?: string | null;
   baseUrl?: string | null;
   serverIp?: string | null;
-  steps?: { step: string; ok: boolean; detail: string }[];
+  steps?: { step: string; ok: boolean; detail: string; ms?: number }[];
 }) {
   try {
     const db = await adminDb();
@@ -289,7 +289,7 @@ export async function listPanelEvents(limit = 25) {
     ok: r.outcome === "ok",
     message: (r.response_body ?? "") as string,
     actor: (r.context?.actor ?? null) as string | null,
-    steps: (r.context?.steps ?? null) as { step: string; ok: boolean; detail: string }[] | null,
+    steps: (r.context?.steps ?? null) as { step: string; ok: boolean; detail: string; ms?: number }[] | null,
   }));
 }
 
@@ -316,8 +316,14 @@ export async function runFullPanelCheck(panel: YaarsaPanel) {
     
     await y.refreshPanelOverrides(true);
 
-    const steps: { step: string; ok: boolean; detail: string }[] = [];
-    const push = (step: string, ok: boolean, detail: string) => steps.push({ step, ok, detail });
+    const startedAt = Date.now();
+    let mark = startedAt;
+    const steps: { step: string; ok: boolean; detail: string; ms?: number }[] = [];
+    const push = (step: string, ok: boolean, detail: string) => {
+      const now = Date.now();
+      steps.push({ step, ok, detail, ms: now - mark });
+      mark = now;
+    };
 
     const baseUrl = y.panelBaseUrl(panel);
     const serverIp = y.panelServerHost(panel);
@@ -380,7 +386,18 @@ export async function runFullPanelCheck(panel: YaarsaPanel) {
       ? `Tudo certo — uma compra na ${panel === "v46" ? "4.6" : panel === "v455" ? "4.5.5" : "4.5.7"} entrega o login normalmente. IP entregue ao cliente: ${serverIp}`
       : `Falhou em: ${steps.filter((s) => !s.ok).map((s) => s.step).join(", ")}`;
     await recordPanelTest(panel, ok, message);
+    const durationMs = Date.now() - startedAt;
     await logPanelEvent({ panel, action: "verificacao_completa", outcome: ok ? "ok" : "fail", message, baseUrl, serverIp, steps });
-    return { ok, steps, serverIp, baseUrl, source, message };
+    return {
+      ok,
+      steps,
+      serverIp,
+      baseUrl,
+      source,
+      message,
+      durationMs,
+      finishedAt: new Date().toISOString(),
+      testAccount: creds ? { username: creds.username, email: creds.email } : null,
+    };
 }
 
