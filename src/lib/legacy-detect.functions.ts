@@ -40,6 +40,13 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
 
     const { yaarsaLookupEmailAllPanels } = await import("./yaarsa.server");
     const result = await yaarsaLookupEmailAllPanels(email);
+
+    // Painel indisponível / resposta ambígua: não gravamos nada e devolvemos
+    // "unchecked" para o dashboard NÃO exibir o aviso de cliente antigo.
+    if (!result.conclusive) {
+      return { status: "unchecked", panels: [] as string[], cached: false, inconclusive: true };
+    }
+
     const hitPanels = result.details.filter((d) => d.found).map((d) => d.panel);
     const status =
       hitPanels.length === 0
@@ -57,7 +64,8 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
       })
       .eq("id", userId);
 
-    return { status, panels: hitPanels, cached: false };
+    return { status, panels: hitPanels, cached: false, inconclusive: false };
+
   });
 
 // Cheap read of the cached legacy state — used by the dashboard on every load
