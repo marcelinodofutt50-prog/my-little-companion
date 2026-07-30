@@ -218,6 +218,16 @@ export function AdminPanelServers() {
           imediatamente para emissão, renovação, troca de senha e remoção de logins. A admin key é
           guardada criptografada e nunca aparece de volta na tela.
         </p>
+        <div className="mt-3 rounded border border-amber-500/30 bg-amber-500/10 p-3 font-mono text-[11px] leading-relaxed text-amber-200">
+          <span className="font-semibold">Verificação completa:</span> para ter certeza de que uma VPS está
+          pronta para vender, clique no botão{" "}
+          <span className="inline-flex items-center gap-1 rounded bg-background/60 px-1.5 py-0.5 font-semibold text-foreground">
+            <Stethoscope className="h-3 w-3" /> Verificação completa
+          </span>{" "}
+          ao lado de cada servidor. Ele simula uma compra real (cria o login, define a senha, estende a
+          validade e apaga tudo no fim). Só libere vendas quando aparecer{" "}
+          <span className="font-semibold text-primary">Pronto para vender</span>.
+        </div>
       </div>
 
       {(["v457", "v46"] as PanelKey[]).map((panel) => {
