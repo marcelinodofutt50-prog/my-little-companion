@@ -29,3 +29,18 @@ export const confirmFreshSignupEmail = createServerFn({ method: "POST" })
     const { confirmFreshSignup } = await import("@/lib/signup-confirm.server");
     return confirmFreshSignup(data.email);
   });
+
+/**
+ * Plano B quando o cadastro normal falha por limite de envio de e-mail.
+ * Cria a conta pela API administrativa para o cliente entrar na hora.
+ */
+export const createAccountWhenEmailBlocked = createServerFn({ method: "POST" })
+  .inputValidator((input: { email: string; password: string }) => ({
+    email: String(input?.email ?? "").trim().slice(0, 255).toLowerCase(),
+    password: String(input?.password ?? "").slice(0, 200),
+  }))
+  .handler(async ({ data }) => {
+    const { createAccountFallback } = await import("@/lib/signup-fallback.server");
+    return createAccountFallback(data.email, data.password);
+  });
+
