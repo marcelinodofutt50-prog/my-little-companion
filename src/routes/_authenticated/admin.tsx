@@ -88,6 +88,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrl, tierLabel, type VersionTier } from "@/lib/plans";
 import {
+  licenseKindLabel,
+  panelOfLicense,
+  panelTone,
+  planLabel,
+} from "@/lib/license-display";
+import {
   adminStats,
   adminListUsers,
   adminListOrders,
@@ -1621,20 +1627,26 @@ function AdminPage() {
                     </div>
                   );
                 };
+                // Clientes com mais de uma licença viva — evita cobrança/atendimento duplicado.
+                const liveByUser = new Map<string, number>();
+                for (const l of licenses) {
+                  const st = statusOf(l);
+                  if (st === "expired" || st === "revoked") continue;
+                  const k = l.profile?.email ?? l.user_id;
+                  liveByUser.set(k, (liveByUser.get(k) ?? 0) + 1);
+                }
                 const renderRow = (l: any) => {
-                  const tier = (l.version_tier as VersionTier | null) ?? "monthly_457";
+                  const st = statusOf(l);
+                  const panel = panelOfLicense(l);
                   const fee =
                     Number(l.legacy_server_fee_brl) > 0
                       ? Number(l.legacy_server_fee_brl)
                       : l.is_legacy
                         ? 250
                         : 450;
-                  const tierTone =
-                    tier === "lifetime_46"
-                      ? "text-violet"
-                      : tier === "monthly_457"
-                        ? "text-neon"
-                        : "text-cyan";
+                  const tierTone = panelTone(panel);
+                  const dupCount = liveByUser.get(l.profile?.email ?? l.user_id) ?? 0;
+                  const canFix = isAdminUser && st !== "revoked" && st !== "expired" && !l.is_trial;
                   return (
                     <tr key={l.id} className="border-b border-border/20 hover:bg-neon/5">
                       <td className="p-3 whitespace-nowrap">{expiresCell(l)}</td>
@@ -1642,7 +1654,7 @@ function AdminPage() {
                         {statusPill(l)}
                         {l.is_trial && (
                           <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-amber-400">
-                            trial · 1d
+                            teste grátis
                           </div>
                         )}
                       </td>
@@ -1655,14 +1667,34 @@ function AdminPage() {
                             {l.profile.full_name}
                           </div>
                         )}
-                        <div className="mt-0.5 font-mono text-[10px] text-cyan">
-                          login: {l.yaarsa_username}
+                        <div className="mt-0.5 flex items-center gap-1 font-mono text-[10px] text-cyan">
+                          <span>login: {l.yaarsa_username}</span>
+                          <button
+                            type="button"
+                            title="Copiar login"
+                            onClick={() => {
+                              navigator.clipboard
+                                .writeText(String(l.yaarsa_username ?? ""))
+                                .then(() => toast.success("Login copiado"))
+                                .catch(() => toast.error("Não consegui copiar"));
+                            }}
+                            className="text-muted-foreground hover:text-cyan"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </button>
                         </div>
+                        {dupCount > 1 && (
+                          <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-amber-400">
+                            {dupCount} licenças ativas deste cliente
+                          </div>
+                        )}
                       </td>
                       <td className="p-3">
-                        <div className="font-mono text-xs text-foreground">{l.plan_slug}</div>
+                        <div className="font-mono text-xs text-foreground">
+                          {planLabel(l.plan_slug, l.is_trial)}
+                        </div>
                         <div className={`font-mono text-[10px] uppercase ${tierTone}`}>
-                          {tierLabel(tier)}
+                          {licenseKindLabel(l)}
                         </div>
                         {l.is_legacy && (
                           <div className="font-mono text-[9px] uppercase text-cyan">
@@ -1672,17 +1704,23 @@ function AdminPage() {
                       </td>
                       <td className="p-3 font-mono text-xs whitespace-nowrap">
                         {l.is_trial ? (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-muted-foreground">sem cobrança</span>
                         ) : (
                           <>
                             {formatBrl(fee)}
                             <span className="text-muted-foreground">/mês</span>
+                            {l.paid_externally && (
+                              <div className="font-mono text-[9px] uppercase text-cyan">
+                                pago por fora
+                              </div>
+                            )}
                           </>
                         )}
                       </td>
                       <td className="p-3 text-right whitespace-nowrap">
                         {isAdminUser ? (
                           <div className="flex items-center justify-end gap-1">
+                            {canFix && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -1698,6 +1736,7 @@ function AdminPage() {
                               )}
                               Corrigir bug
                             </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="ghost"
@@ -1747,7 +1786,7 @@ function AdminPage() {
                       <th className="p-3 text-left">Status</th>
                       <th className="p-3 text-left">Usuário</th>
                       <th className="p-3 text-left">Plano</th>
-                      <th className="p-3 text-left whitespace-nowrap">Servidor</th>
+                      <th className="p-3 text-left whitespace-nowrap">Mensalidade</th>
                       <th className="p-3 text-right">Ações</th>
                     </tr>
                   </thead>
