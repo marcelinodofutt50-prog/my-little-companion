@@ -435,13 +435,14 @@ export function SecurityWelcomeDialog() {
               <Button variant="outline" size="sm" onClick={downloadTxt} className="font-mono uppercase">
                 <Download className="mr-2 h-3.5 w-3.5" /> Baixar .txt
               </Button>
-              <Button size="sm" onClick={close} disabled={!saved} className="ml-auto font-mono uppercase">
+              <Button size="sm" onClick={close} className="ml-auto font-mono uppercase">
                 <Check className="mr-2 h-3.5 w-3.5" /> Guardei
               </Button>
             </div>
             {!saved && (
-              <p className="text-[11px] text-amber-400">Copie ou baixe os códigos para liberar o botão de concluir.</p>
+              <p className="text-[11px] text-amber-400">Recomendado: copie ou baixe os códigos antes de fechar.</p>
             )}
+
           </div>
         )}
       </DialogContent>
