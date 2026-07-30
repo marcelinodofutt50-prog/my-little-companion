@@ -124,3 +124,87 @@ export const adminTestCurrentPanel = createServerFn({ method: "POST" })
       return { ok: false, message: msg };
     }
   });
+
+/**
+ * Verificação COMPLETA de ponta a ponta de um painel: faz exatamente o que
+ * acontece quando um cliente compra — cria uma conta de teste, ajusta a data,
+ * troca a senha, confirma que a conta existe e apaga tudo no fim.
+ *
+ * Se todos os passos passarem, uma compra real naquele painel entrega o login.
+ */
+export const adminFullPanelCheck = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const y = await import("@/lib/yaarsa.server");
+    const { recordPanelTest } = await import("@/lib/panel-servers.server");
+    await y.refreshPanelOverrides(true);
+
+    const steps: { step: string; ok: boolean; detail: string }[] = [];
+    const push = (step: string, ok: boolean, detail: string) => steps.push({ step, ok, detail });
+
+    const baseUrl = y.panelBaseUrl(data.panel);
+    const serverIp = y.panelServerHost(data.panel);
+    const source = y.panelConfigSource(data.panel);
+    push("Endereço configurado", !!baseUrl, `${baseUrl} (origem: ${source})`);
+
+    let keyOk = true;
+    try {
+      // Só valida presença/format — o valor nunca sai daqui.
+      const probe = await y.yaarsaLookupEmail(`probe-${Date.now()}@shadow-check.invalid`, data.panel);
+      push("Servidor responde e aceita a admin key", true, probe.found ? "resposta válida" : "resposta válida");
+    } catch (e) {
+      keyOk = false;
+      push("Servidor responde e aceita a admin key", false, String((e as Error)?.message || e));
+    }
+
+    let created = false;
+    let creds: { username: string; email: string; password: string } | null = null;
+    if (keyOk) {
+      creds = y.generateCredentials();
+      const suffix = `-chk${Date.now().toString().slice(-5)}`;
+      creds = {
+        username: `${creds.username}${suffix}`.slice(0, 24),
+        email: creds.email.replace("@", `${suffix}@`),
+        password: creds.password,
+      };
+      const r = await y.yaarsaCreateAccount({
+        username: creds.username,
+        email: creds.email,
+        password: creds.password,
+        planSlug: "login-7d",
+        totalPaid: 0,
+        additionalInfo: "shadow-healthcheck",
+        panel: data.panel,
+      });
+      created = !r.Fail;
+      push("Criar login de teste (igual a uma compra)", created, r.Fail ?? r.Success ?? "ok");
+    }
+
+    if (created && creds) {
+      const ymd = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      const ext = await y.yaarsaExtend(creds.email, ymd, data.panel);
+      push("Ajustar validade do login", !ext.Fail, ext.Fail ?? ext.Success ?? "ok");
+
+      const pw = await y.yaarsaSetPassword(creds.email, creds.password, data.panel, creds.username);
+      push("Definir senha do cliente", !pw.Fail, pw.Fail ?? pw.Success ?? "ok");
+
+      try {
+        const look = await y.yaarsaLookupEmail(creds.email, data.panel);
+        push("Confirmar que o login existe no painel", look.found, look.found ? "encontrado" : "não encontrado");
+      } catch (e) {
+        push("Confirmar que o login existe no painel", false, String((e as Error)?.message || e));
+      }
+
+      const rm = await y.yaarsaRemoveAccount(creds.email, data.panel);
+      push("Remover login de teste", !rm.Fail, rm.Fail ?? rm.Success ?? "ok");
+    }
+
+    const ok = steps.every((s) => s.ok);
+    const message = ok
+      ? `Tudo certo — uma compra na ${data.panel === "v46" ? "4.6" : "4.5.7"} entrega o login normalmente. IP entregue ao cliente: ${serverIp}`
+      : `Falhou em: ${steps.filter((s) => !s.ok).map((s) => s.step).join(", ")}`;
+    await recordPanelTest(data.panel, ok, message);
+    return { ok, steps, serverIp, baseUrl, source, message };
+  });
