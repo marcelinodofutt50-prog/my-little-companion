@@ -373,7 +373,10 @@ export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Prom
 // `details[].error` marks panels whose answer was inconclusive.
 export async function yaarsaLookupEmailAllPanels(email: string): Promise<{ found: boolean; panel: YaarsaPanel | null; conclusive: boolean; details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }> }> {
   const details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }> = [];
-  for (const p of ["v457", "v46"] as YaarsaPanel[]) {
+  for (const p of ALL_PANELS) {
+    // Sem VPS própria, a 4.5.5 aponta para o mesmo painel da 4.5.7 — evita
+    // consultar o mesmo servidor duas vezes.
+    if (p === "v455" && !hasPanelServer("v455")) continue;
     try {
       const r = await yaarsaLookupEmail(email, p);
       details.push({ panel: p, found: r.found });
@@ -389,8 +392,8 @@ export async function yaarsaLookupEmailAllPanels(email: string): Promise<{ found
 
 
 // ---------------- Shared HTTP plumbing (per-panel cookie jar) ----------------
-const sessionCookies: Record<YaarsaPanel, string> = { v457: "", v46: "" };
-const warmedUp: Record<YaarsaPanel, boolean> = { v457: false, v46: false };
+const sessionCookies: Record<YaarsaPanel, string> = { v455: "", v457: "", v46: "" };
+const warmedUp: Record<YaarsaPanel, boolean> = { v455: false, v457: false, v46: false };
 
 function browserHeaders(url: string, panel: YaarsaPanel, extra: Record<string, string> = {}) {
   const h: Record<string, string> = {
