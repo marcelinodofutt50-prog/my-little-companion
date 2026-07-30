@@ -143,7 +143,7 @@ async function fulfillOrderInner(orderId: string) {
       is_legacy: true,
       panel: "v46",
       upgraded_from_license_id: oldLicenseId,
-      server_ip: "200.9.154.103",
+      server_ip: await (await import("@/lib/yaarsa.server")).resolvePanelServerHost("v46"),
     } as any).select("id, yaarsa_email").single();
 
     // Disable the old v4.5.7 license (DB + best-effort on the old panel).
@@ -311,7 +311,8 @@ async function fulfillOrderInner(orderId: string) {
 
   const { tierFromPlanSlug } = await import("@/lib/plans");
   const versionTier = tierFromPlanSlug(order.plan_slug);
-  const serverIpForPanel = targetPanel === "v46" ? "200.9.154.103" : "191.96.78.81";
+  const { resolvePanelServerHost } = await import("@/lib/yaarsa.server");
+  const serverIpForPanel = await resolvePanelServerHost(targetPanel);
   await supabaseAdmin.from("licenses").insert({
     user_id: beneficiaryId,
     order_id: order.id,

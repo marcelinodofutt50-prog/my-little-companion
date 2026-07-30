@@ -738,7 +738,7 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
     await yaarsaExtend(creds.email, expiresAt.toISOString().slice(0, 10), targetPanel);
 
     const tier: VersionTier = tierFromPlanSlug(data.planSlug);
-    const serverIpForPanel = targetPanel === "v46" ? "200.9.154.103" : "191.96.78.81";
+    const serverIpForPanel = await (await import("@/lib/yaarsa.server")).resolvePanelServerHost(targetPanel);
     const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert({
       user_id: userId,
       plan_slug: data.planSlug,
@@ -862,7 +862,8 @@ export const adminRegisterLegacyLicense = createServerFn({ method: "POST" })
       legacy_server_fee_brl: data.legacyServerFeeBrl ?? 250,
       panel: targetPanel,
     };
-    insertPayload.server_ip = data.serverIp ?? (targetPanel === "v46" ? "200.9.154.103" : "191.96.78.81");
+    insertPayload.server_ip =
+      data.serverIp ?? (await (await import("@/lib/yaarsa.server")).resolvePanelServerHost(targetPanel));
 
     const { data: lic, error } = await supabaseAdmin.from("licenses").insert(insertPayload as any).select("*").single();
     if (error) throw new Error(error.message);

@@ -284,7 +284,8 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
     if (existing) {
       return {
         ok: true, licenseId: existing.id, already: true,
-        panel: data.panel, email, server_ip: data.panel === "v46" ? "200.9.154.103" : "191.96.78.81",
+        panel: data.panel, email,
+        server_ip: await (await import("./yaarsa.server")).resolvePanelServerHost(data.panel),
         next_renewal: null as string | null, version_tier: data.panel === "v46" ? "lifetime_46" : "monthly_457",
       };
     }
@@ -321,7 +322,7 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
     // 4) Persiste a licença legada no dashboard do cliente.
     const usernameGuess = email.split("@")[0].slice(0, 16);
     const versionTier = data.panel === "v46" ? "lifetime_46" : "monthly_457";
-    const serverIp = data.panel === "v46" ? "200.9.154.103" : "191.96.78.81";
+    const serverIp = await (await import("./yaarsa.server")).resolvePanelServerHost(data.panel);
     const planSlug = data.panel === "v46" ? "login-lifetime" : "login-30d";
 
     const { data: lic, error: insErr } = await supabaseAdmin.from("licenses").insert({

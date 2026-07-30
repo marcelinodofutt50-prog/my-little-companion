@@ -20,7 +20,9 @@ export const Route = createFileRoute("/api/public/hooks/reconcile-pending")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { findApprovedPaymentForOrder, getMpPayment } = await import("@/lib/mercadopago.server");
 
-        const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        // 72h: se um painel ficou sem servidor configurado, a entrega continua
+        // sendo tentada por 3 dias depois que o admin arruma a VPS.
+        const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
         const { data: orders, error } = await supabaseAdmin
           .from("orders")
           .select("id, status, mp_payment_id, mp_preference_id, created_at")

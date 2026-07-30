@@ -1,5 +1,5 @@
 {
-  "build": "2026-07-30T23:05:00.000000Z",
-  "marker": "panel-servers-manager",
-  "note": "admin pode cadastrar/trocar a VPS dos paineis 4.5.7 e 4.6 direto no painel (Monitoramento)"
+  "build": "2026-07-30T23:40:00.000000Z",
+  "marker": "panel-servers-audit",
+  "note": "IP entregue ao cliente passa a seguir a VPS configurada + verificacao completa (simula compra real) por painel"
 }

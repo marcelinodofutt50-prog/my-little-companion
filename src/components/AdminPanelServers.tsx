@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Server, ShieldCheck, ShieldAlert, RotateCcw, Plug, Save } from "lucide-react";
+import { Loader2, Server, ShieldCheck, ShieldAlert, RotateCcw, Plug, Save, Stethoscope, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import {
   adminTestPanelServer,
   adminResetPanelServer,
   adminTestCurrentPanel,
+  adminFullPanelCheck,
 } from "@/lib/panel-servers.functions";
 
 type PanelKey = "v457" | "v46";
@@ -42,17 +43,21 @@ export function AdminPanelServers() {
   const [rows, setRows] = useState<Row[]>([]);
   const [effective, setEffective] = useState<Record<string, string>>({});
   const [envFallback, setEnvFallback] = useState<Record<string, string | null>>({});
+  const [effectiveIp, setEffectiveIp] = useState<Record<string, string>>({});
+  const [source, setSource] = useState<Record<string, string>>({});
   const [drafts, setDrafts] = useState<Record<PanelKey, Draft>>({
     v457: { label: "", baseUrl: "", adminKey: "", notes: "" },
     v46: { label: "", baseUrl: "", adminKey: "", notes: "" },
   });
   const [busy, setBusy] = useState<string | null>(null);
+  const [checks, setChecks] = useState<Record<string, { ok: boolean; message: string; serverIp: string; steps: { step: string; ok: boolean; detail: string }[] }>>({});
 
   const listFn = useServerFn(adminListPanelServers);
   const saveFn = useServerFn(adminSavePanelServer);
   const testFn = useServerFn(adminTestPanelServer);
   const resetFn = useServerFn(adminResetPanelServer);
   const testCurrentFn = useServerFn(adminTestCurrentPanel);
+  const fullCheckFn = useServerFn(adminFullPanelCheck);
 
   async function load() {
     setLoading(true);
@@ -61,6 +66,8 @@ export function AdminPanelServers() {
       setRows(res.rows ?? []);
       setEffective(res.effective ?? {});
       setEnvFallback(res.envFallback ?? {});
+      setEffectiveIp(res.effectiveIp ?? {});
+      setSource(res.source ?? {});
       setDrafts((prev) => {
         const next = { ...prev };
         for (const r of (res.rows ?? []) as Row[]) {
@@ -167,6 +174,20 @@ export function AdminPanelServers() {
     setBusy(null);
   }
 
+  async function fullCheck(panel: PanelKey) {
+    setBusy(`full-${panel}`);
+    try {
+      const res: any = await fullCheckFn({ data: { panel } });
+      setChecks((c) => ({ ...c, [panel]: res }));
+      if (res.ok) toast.success(res.message);
+      else toast.error(res.message);
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha na verificação");
+    }
+    setBusy(null);
+  }
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 p-6 font-mono text-xs text-muted-foreground">
@@ -212,6 +233,19 @@ export function AdminPanelServers() {
                 )}
                 <Button
                   size="sm"
+                  onClick={() => fullCheck(panel)}
+                  disabled={busy === `full-${panel}`}
+                  title="Simula uma compra real: cria o login, ajusta validade, define senha e apaga no fim"
+                >
+                  {busy === `full-${panel}` ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Stethoscope className="h-3.5 w-3.5" />
+                  )}
+                  Verificação completa
+                </Button>
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => testCurrent(panel)}
                   disabled={busy === `live-${panel}`}
@@ -228,7 +262,14 @@ export function AdminPanelServers() {
 
             <div className="mt-3 space-y-1 font-mono text-[11px] text-muted-foreground">
               <div>
-                em uso agora: <span className="text-foreground">{effective[panel] || "—"}</span>
+                em uso agora: <span className="text-foreground">{effective[panel] || "—"}</span>{" "}
+                <span className="opacity-70">
+                  ({source[panel] === "painel" ? "definido aqui" : source[panel] === "ambiente" ? "variável de ambiente" : "padrão do código"})
+                </span>
+              </div>
+              <div>
+                IP entregue ao cliente:{" "}
+                <span className="text-foreground">{effectiveIp[panel] || "—"}</span>
               </div>
               {row?.adminKeyMasked && (
                 <div>
@@ -253,6 +294,32 @@ export function AdminPanelServers() {
               )}
               {row?.updatedByEmail && <div>alterado por {row.updatedByEmail}</div>}
             </div>
+
+            {checks[panel] && (
+              <div
+                className={`mt-3 rounded border p-3 font-mono text-[11px] ${
+                  checks[panel].ok ? "border-primary/40 bg-primary/5" : "border-danger/40 bg-danger/5"
+                }`}
+              >
+                <div className="mb-2 font-semibold">
+                  {checks[panel].ok ? "Pronto para vender" : "Não está pronto"} — {checks[panel].message}
+                </div>
+                <ul className="space-y-1">
+                  {checks[panel].steps.map((st, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      {st.ok ? (
+                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+                      ) : (
+                        <X className="mt-0.5 h-3 w-3 shrink-0 text-danger" />
+                      )}
+                      <span>
+                        {st.step} — <span className="text-muted-foreground">{st.detail}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <div>

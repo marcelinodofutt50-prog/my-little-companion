@@ -98,7 +98,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
 
     try { await yaarsaExtend(creds.email, expiresAt.toISOString().slice(0, 10), targetPanel); } catch { /* best-effort */ }
 
-    const serverIp = targetPanel === "v46" ? "200.9.154.103" : "191.96.78.81";
+    const serverIp = await (await import("@/lib/yaarsa.server")).resolvePanelServerHost(targetPanel);
     const { data: lic } = await supabaseAdmin.from("licenses").insert({
       user_id: claimed.user_id,
       order_id: order.id,
