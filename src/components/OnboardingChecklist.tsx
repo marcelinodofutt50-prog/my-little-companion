@@ -154,7 +154,7 @@ export function OnboardingChecklist({
           </p>
         </div>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={hideForGood}
           className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
         >
           ocultar
