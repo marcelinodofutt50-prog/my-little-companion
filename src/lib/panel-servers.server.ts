@@ -215,3 +215,62 @@ export async function probePanelConfig(baseUrl: string, adminKey: string): Promi
   }
   return { ok: false, message: last };
 }
+
+/**
+ * Registro auditável das verificações/alterações de VPS.
+ * Grava em `integration_logs` (source = "panel_servers") para que qualquer
+ * troca de servidor tenha prova do teste feito antes/depois.
+ */
+export async function logPanelEvent(entry: {
+  panel: YaarsaPanel;
+  action: string;
+  outcome: "ok" | "fail";
+  message: string;
+  actorEmail?: string | null;
+  baseUrl?: string | null;
+  serverIp?: string | null;
+  steps?: { step: string; ok: boolean; detail: string }[];
+}) {
+  try {
+    const db = await adminDb();
+    await db.from("integration_logs").insert({
+      source: "panel_servers",
+      action: entry.action,
+      endpoint_kind: entry.panel,
+      url: entry.baseUrl ?? null,
+      outcome: entry.outcome,
+      error: entry.outcome === "fail" ? entry.message.slice(0, 500) : null,
+      response_body: entry.message.slice(0, 1000),
+      context: {
+        panel: entry.panel,
+        actor: entry.actorEmail ?? null,
+        serverIp: entry.serverIp ?? null,
+        steps: entry.steps ?? null,
+      },
+    });
+  } catch (e) {
+    console.warn("[panel-servers] log falhou:", (e as Error)?.message);
+  }
+}
+
+/** Últimos eventos registrados (para o painel admin). */
+export async function listPanelEvents(limit = 25) {
+  const db = await adminDb();
+  const { data, error } = await db
+    .from("integration_logs")
+    .select("id,created_at,action,endpoint_kind,outcome,response_body,context")
+    .eq("source", "panel_servers")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r: any) => ({
+    id: r.id as string,
+    at: r.created_at as string,
+    action: r.action as string,
+    panel: (r.endpoint_kind ?? r.context?.panel ?? "—") as string,
+    ok: r.outcome === "ok",
+    message: (r.response_body ?? "") as string,
+    actor: (r.context?.actor ?? null) as string | null,
+    steps: (r.context?.steps ?? null) as { step: string; ok: boolean; detail: string }[] | null,
+  }));
+}
