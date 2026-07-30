@@ -18,6 +18,17 @@ export async function fetchMyRole(userId?: string | null): Promise<Role> {
   ]);
   if (admin.data) return "admin";
   if (mod.data) return "moderator";
+
+  // Se a RPC falhou (permissão de EXECUTE ausente / cache de schema), o
+  // Suporte ficava sem as abas de atendimento. Confirmamos no servidor.
+  if (admin.error || mod.error) {
+    try {
+      const res: any = await getMyRole({});
+      if (res?.role === "admin" || res?.role === "moderator") return res.role;
+    } catch {
+      /* mantém "user" */
+    }
+  }
   return "user";
 }
 
