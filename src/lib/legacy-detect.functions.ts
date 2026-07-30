@@ -20,11 +20,17 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
+    // Tudo que foi detectado antes desta data usou a lógica antiga (que marcava
+    // qualquer falha do painel como "cliente antigo") — força uma re-checagem.
+    const LOGIC_FIX_AT = Date.parse("2026-07-30T00:00:00Z");
+
     const cachedFresh =
       profile?.legacy_checked_at &&
       profile.legacy_status &&
       profile.legacy_status !== "unchecked" &&
+      new Date(profile.legacy_checked_at).getTime() > LOGIC_FIX_AT &&
       Date.now() - new Date(profile.legacy_checked_at).getTime() < 7 * 24 * 60 * 60 * 1000;
+
 
     if (cachedFresh) {
       return {
