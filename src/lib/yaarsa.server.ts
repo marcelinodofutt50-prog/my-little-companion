@@ -37,15 +37,40 @@ const PANEL_CONFIG: Record<YaarsaPanel, PanelConfig> = {
   },
 };
 
+// Overrides vindos do banco (tabela `panel_servers`), preenchidos por
+// `refreshPanelOverrides()` antes de cada operação. Permite ao admin trocar de
+// VPS pelo painel, sem redeploy. Sem override, valem as variáveis de ambiente.
+type PanelRuntime = { baseUrl?: string; adminKey?: string };
+const runtimeOverrides: Record<YaarsaPanel, PanelRuntime> = { v457: {}, v46: {} };
+
+export async function refreshPanelOverrides(force = false): Promise<void> {
+  try {
+    const { loadPanelOverrides } = await import("@/lib/panel-servers.server");
+    const map = await loadPanelOverrides(force);
+    for (const p of ["v457", "v46"] as YaarsaPanel[]) {
+      const o = map.get(p);
+      runtimeOverrides[p] = o ? { baseUrl: o.baseUrl, adminKey: o.adminKey } : {};
+    }
+  } catch (e) {
+    console.warn("[yaarsa] overrides indisponíveis, usando ambiente:", (e as Error)?.message);
+  }
+}
+
+/** Endereço efetivo do painel (override do banco > ambiente > padrão). */
+export function panelBaseUrl(panel: YaarsaPanel): string {
+  const cfg = PANEL_CONFIG[panel];
+  return (runtimeOverrides[panel].baseUrl || process.env[cfg.baseEnv] || cfg.defaultUrl).trim();
+}
+
 // Resolve the Yaarsa API endpoints for a given panel.
 // Honor the configured URL as-is when it points to a callable .php entry
 // (e.g. /yaarsa/proxy.php or /yaarsa/private/createacc.php). Only reject the
 // admin-UI path (create9999.php) and normalize bare hosts to /yaarsa/proxy.php
 // (with private/createacc.php as a secondary fallback).
-function yaarsaEndpoints(panel: YaarsaPanel): string[] {
-  const cfg = PANEL_CONFIG[panel];
-  const configured = (process.env[cfg.baseEnv] || cfg.defaultUrl).trim().replace(/\/+$/, "");
+export function yaarsaEndpointsFor(rawBase: string): string[] {
+  const configured = rawBase.trim().replace(/\/+$/, "");
   const raw = /^https?:\/\//i.test(configured) ? configured : `http://${configured}`;
+
   const isAdminUi = /create9999\.php/i.test(raw);
   const isCallablePhp = /\.php($|\?)/i.test(raw) && !isAdminUi;
 
