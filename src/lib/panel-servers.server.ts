@@ -311,10 +311,28 @@ export async function restorePanelServer(panel: YaarsaPanel, snap: Record<string
   invalidatePanelCache();
 }
 
-export async function runFullPanelCheck(panel: YaarsaPanel) {
+export async function runFullPanelCheck(
+  panel: YaarsaPanel,
+  draft?: { baseUrl?: string | null; adminKey?: string | null } | null,
+) {
+  const y = await import("@/lib/yaarsa.server");
+  await y.refreshPanelOverrides(true);
+
+  // Quando o admin ainda não salvou (ou digitou uma chave nova), testamos
+  // exatamente o que está no formulário — sem gravar nada no banco.
+  if (draft?.baseUrl?.trim() && draft?.adminKey?.trim()) {
+    return y.withPanelConfig(
+      panel,
+      { baseUrl: draft.baseUrl.trim(), adminKey: draft.adminKey.trim() },
+      () => runFullPanelCheckInner(panel),
+    );
+  }
+  return runFullPanelCheckInner(panel);
+}
+
+async function runFullPanelCheckInner(panel: YaarsaPanel) {
     const y = await import("@/lib/yaarsa.server");
-    
-    await y.refreshPanelOverrides(true);
+
 
     const startedAt = Date.now();
     let mark = startedAt;
