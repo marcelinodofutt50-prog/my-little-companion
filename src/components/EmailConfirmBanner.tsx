@@ -106,9 +106,14 @@ export function EmailConfirmBanner() {
           const next = { ...auto, lastAt: Date.now() - RETRY_INTERVAL_MS + BACKOFF_MS };
           setAuto(next);
           writeAuto(email, next);
-          setAutoStatus("Envio instável no momento — vamos tentar reenviar sozinho em instantes.");
+          setAutoStatus("Serviço de e-mail cheio no momento. Tentamos de novo mais tarde, automaticamente.");
         } else {
-          toast.error(msg);
+          // Manual: evita mensagem alarmista. A conta já está liberada, então o usuário não fica preso.
+          if (/rate limit|too many requests|over_email_send_rate_limit/i.test(msg)) {
+            toast.error("Muitos e-mails enviados recentemente. Aguarde um pouco ou tente novamente mais tarde. Sua conta continua liberada.");
+          } else {
+            toast.error("Não conseguimos enviar agora. Você pode usar o painel normalmente enquanto isso.");
+          }
           setCooldown(60);
         }
       } finally {
