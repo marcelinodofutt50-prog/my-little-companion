@@ -39,6 +39,8 @@ export function SecurityWelcomeDialog() {
   const [exhausted, setExhausted] = useState(false);
   const checked = useRef(false);
   const ackFn = useServerFn(ackSecurityNotice);
+  const loadState = useServerFn(getAccountSetupState);
+
 
   async function getCurrentUser() {
     const { data, error } = await supabase.auth.getUser();
