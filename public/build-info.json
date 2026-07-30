@@ -1,5 +1,1 @@
-{
-  "build": "2026-07-30T23:40:00.000000Z",
-  "marker": "panel-routing-async-fix",
-  "note": "roteamento do painel semanal (4.5.5) agora carrega os overrides do banco antes de decidir"
-}
+{"builtAt":"2026-07-30T23:44:17Z","note":"panel-servers v455 fix"}
