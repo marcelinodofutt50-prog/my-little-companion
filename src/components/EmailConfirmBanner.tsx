@@ -160,6 +160,8 @@ export function EmailConfirmBanner() {
                   (exhausted
                     ? `Reenvio automático concluído (${MAX_AUTO_ATTEMPTS}/${MAX_AUTO_ATTEMPTS}). Se ainda não recebeu, clique em "Enviar confirmação".`
                     : `Reenvio automático ativo: tentamos enviar sozinho quando o serviço volta (${auto.attempts}/${MAX_AUTO_ATTEMPTS} tentativas).`)}
+              </span>
+            </p>
           </div>
         </div>
         <Button
