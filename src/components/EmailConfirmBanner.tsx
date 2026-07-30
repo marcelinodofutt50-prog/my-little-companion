@@ -11,9 +11,9 @@ import { siteUrl } from "@/lib/site-url";
  * reenviar sozinho quando o envio volta a funcionar (com limite de tentativas).
  */
 
-const MAX_AUTO_ATTEMPTS = 3;
-const RETRY_INTERVAL_MS = 10 * 60 * 1000; // 10 min entre tentativas automáticas
-const BACKOFF_MS = 90 * 1000; // espera após falha (limite de envio, etc.)
+const MAX_AUTO_ATTEMPTS = 2;
+const RETRY_INTERVAL_MS = 20 * 60 * 1000; // 20 min entre tentativas automáticas (evita rate limit)
+const BACKOFF_MS = 5 * 60 * 1000; // espera 5 min após falha (limite de envio, etc.)
 
 type AutoState = { attempts: number; lastAt: number; done: boolean };
 
