@@ -69,19 +69,38 @@ export const adminSavePanelServer = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { upsertPanelServer, probePanelConfig, recordPanelTest, listPanelServersMasked } = await import(
-      "@/lib/panel-servers.server"
-    );
+    const {
+      upsertPanelServer,
+      probePanelConfig,
+      recordPanelTest,
+      listPanelServersMasked,
+      snapshotPanelServer,
+      restorePanelServer,
+      runFullPanelCheck,
+      logPanelEvent,
+    } = await import("@/lib/panel-servers.server");
+    const actorEmail = (context.claims?.email as string | undefined) ?? null;
 
-    // Se o admin não quiser pular, validamos ANTES de gravar — assim nunca
-    // trocamos um servidor que funciona por um endereço quebrado.
+    // 1) Sonda rápida ANTES de gravar — nunca trocamos um servidor que
+    // funciona por um endereço quebrado.
     let test: { ok: boolean; message: string } | null = null;
     if (!data.skipTest && data.adminKey && data.adminKey.trim()) {
       test = await probePanelConfig(data.baseUrl, data.adminKey);
       if (!test.ok) {
+        await logPanelEvent({
+          panel: data.panel,
+          action: "troca_recusada",
+          outcome: "fail",
+          message: test.message,
+          actorEmail,
+          baseUrl: data.baseUrl,
+        });
         return { saved: false, test, message: `Não gravei: ${test.message}` };
       }
     }
+
+    // 2) Guarda a configuração atual para poder desfazer.
+    const snapshot = await snapshotPanelServer(data.panel);
 
     await upsertPanelServer({
       panel: data.panel,
@@ -91,16 +110,62 @@ export const adminSavePanelServer = createServerFn({ method: "POST" })
       notes: data.notes ?? null,
       isActive: data.isActive,
       actorId: context.userId,
-      actorEmail: (context.claims?.email as string | undefined) ?? null,
+      actorEmail,
     });
-
-    if (test) await recordPanelTest(data.panel, test.ok, test.message);
 
     const { refreshPanelOverrides } = await import("@/lib/yaarsa.server");
     await refreshPanelOverrides(true);
 
+    if (test) await recordPanelTest(data.panel, test.ok, test.message);
+
+    // 3) Verificação COMPLETA (simula uma compra real). Se reprovar, volta
+    // automaticamente para a configuração anterior.
+    let check: Awaited<ReturnType<typeof runFullPanelCheck>> | null = null;
+    if (!data.skipTest) {
+      check = await runFullPanelCheck(data.panel);
+      if (!check.ok) {
+        await restorePanelServer(data.panel, snapshot);
+        await refreshPanelOverrides(true);
+        await logPanelEvent({
+          panel: data.panel,
+          action: "troca_revertida",
+          outcome: "fail",
+          message: check.message,
+          actorEmail,
+          baseUrl: data.baseUrl,
+          steps: check.steps,
+        });
+        return {
+          saved: false,
+          test,
+          check,
+          message: `Verificação completa reprovou — desfiz a troca. ${check.message}`,
+          rows: await listPanelServersMasked(),
+        };
+      }
+    }
+
+    await logPanelEvent({
+      panel: data.panel,
+      action: data.skipTest ? "troca_forcada" : "troca_aprovada",
+      outcome: "ok",
+      message: check?.message ?? "Salvo sem verificação (forçado pelo admin).",
+      actorEmail,
+      baseUrl: data.baseUrl,
+      serverIp: check?.serverIp ?? null,
+      steps: check?.steps,
+    });
+
     const rows = await listPanelServersMasked();
-    return { saved: true, test, message: "Servidor salvo e já em uso.", rows };
+    return {
+      saved: true,
+      test,
+      check,
+      message: data.skipTest
+        ? "Servidor salvo sem verificação (forçado)."
+        : "Servidor salvo, verificação completa aprovada e já em uso.",
+      rows,
+    };
   });
 
 /** Remove o override e volta a usar as variáveis de ambiente. */
