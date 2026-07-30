@@ -163,3 +163,55 @@ export async function recordPanelTest(panel: YaarsaPanel, ok: boolean, message: 
     /* diagnóstico best-effort */
   }
 }
+
+/**
+ * Testa uma configuração (endereço + admin key) SEM gravar nada e SEM criar
+ * conta: usamos a sonda de leitura do painel (consulta de e-mail inexistente
+ * com data inválida). Respostas possíveis:
+ *  - "cant find this email" / 1005  → painel OK e chave aceita
+ *  - erro de adminkey / 1003        → chave inválida
+ *  - HTML, timeout, HTTP 5xx        → servidor fora do ar / endereço errado
+ */
+export async function probePanelConfig(baseUrl: string, adminKey: string): Promise<{ ok: boolean; message: string; endpoint?: string }> {
+  const { yaarsaEndpointsFor, sanitizeAdminKey } = await import("@/lib/yaarsa.server");
+  let key: string;
+  try {
+    key = sanitizeAdminKey(adminKey, "admin key");
+  } catch (e) {
+    return { ok: false, message: (e as Error).message };
+  }
+  const endpoints = yaarsaEndpointsFor(baseUrl);
+  let last = "sem resposta do servidor";
+  for (const url of endpoints) {
+    try {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 15_000);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          action: "cexpire",
+          email: `probe-${Date.now()}@shadow-check.invalid`,
+          expire_date: "invalid-probe",
+          adminkey: key,
+        }),
+        signal: ctl.signal,
+      });
+      clearTimeout(t);
+      const text = (await res.text()).slice(0, 800);
+      if (!res.ok) { last = `HTTP ${res.status} em ${url}`; continue; }
+      if (/<html|<!doctype/i.test(text)) { last = `O endereço respondeu uma página HTML (${url})`; continue; }
+      if (/1005|cant.?find|not.?found/i.test(text)) {
+        return { ok: true, message: "Servidor respondeu e aceitou a admin key.", endpoint: url };
+      }
+      if (/1006|date\s*not\s*accepted|expired/i.test(text)) {
+        return { ok: true, message: "Servidor respondeu e aceitou a admin key.", endpoint: url };
+      }
+      if (/1003|admin\s*key/i.test(text)) { last = "Admin key rejeitada pelo servidor."; continue; }
+      last = `Resposta inesperada: ${text.slice(0, 160)}`;
+    } catch (e) {
+      last = `Falha de rede: ${(e as Error)?.message || "desconhecida"}`;
+    }
+  }
+  return { ok: false, message: last };
+}
