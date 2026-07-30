@@ -62,6 +62,35 @@ export function panelBaseUrl(panel: YaarsaPanel): string {
   return (runtimeOverrides[panel].baseUrl || process.env[cfg.baseEnv] || cfg.defaultUrl).trim();
 }
 
+/**
+ * IP/host efetivo do painel — derivado do endereço realmente em uso.
+ * É esse valor que vai para `licenses.server_ip` (o que o cliente digita no
+ * app). Nunca use IP fixo no código: se o admin trocar a VPS, o cliente
+ * precisa receber o endereço novo automaticamente.
+ */
+export function panelServerHost(panel: YaarsaPanel): string {
+  const raw = panelBaseUrl(panel);
+  let host = raw.trim().replace(/^https?:\/\//i, "").split("/")[0].split("?")[0];
+  host = host.replace(/:\d+$/, "");
+  // formatos sslip.io: 1.2.3.4.sslip.io  ou  1-2-3-4.sslip.io
+  const m = host.match(/^((?:\d{1,3}[.-]){3}\d{1,3})\.sslip\.io$/i);
+  if (m) return m[1].replace(/-/g, ".");
+  return host;
+}
+
+/** Versão assíncrona: garante que os overrides do banco estejam carregados. */
+export async function resolvePanelServerHost(panel: YaarsaPanel): Promise<string> {
+  await refreshPanelOverrides();
+  return panelServerHost(panel);
+}
+
+/** Origem da configuração atual do painel (para diagnóstico no admin). */
+export function panelConfigSource(panel: YaarsaPanel): "painel" | "ambiente" | "padrao" {
+  if (runtimeOverrides[panel].baseUrl) return "painel";
+  if (process.env[PANEL_CONFIG[panel].baseEnv]) return "ambiente";
+  return "padrao";
+}
+
 // Resolve the Yaarsa API endpoints for a given panel.
 // Honor the configured URL as-is when it points to a callable .php entry
 // (e.g. /yaarsa/proxy.php or /yaarsa/private/createacc.php). Only reject the
