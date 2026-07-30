@@ -699,6 +699,10 @@ function AdminPage() {
                         <Wallet className="h-4 w-4 shrink-0 text-violet" />
                         <div className="min-w-0"><div className="font-mono text-xs uppercase">Pagam por fora</div><div className="text-[10px] text-muted-foreground">Migrar clientes antigos</div></div>
                       </button>
+                      <button onClick={() => setTab("servers")} className="flex w-full items-center gap-3 rounded border border-border/40 bg-background/40 p-3 text-left transition-colors hover:border-neon/40 hover:bg-neon/5">
+                        <Server className="h-4 w-4 shrink-0 text-neon" />
+                        <div className="min-w-0"><div className="font-mono text-xs uppercase">Servidores VPS</div><div className="text-[10px] text-muted-foreground">Trocar VPS 4.5.7 / 4.6</div></div>
+                      </button>
                       <button onClick={() => setTab("apk")} className="flex w-full items-center gap-3 rounded border border-border/40 bg-background/40 p-3 text-left transition-colors hover:border-cyan/40 hover:bg-cyan/5">
                         <Download className="h-4 w-4 shrink-0 text-cyan" />
                         <div className="min-w-0"><div className="font-mono text-xs uppercase">Fila Play Protect</div><div className="text-[10px] text-muted-foreground">APKs pendentes</div></div>
