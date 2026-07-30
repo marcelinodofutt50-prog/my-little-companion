@@ -244,7 +244,19 @@ export function AdminPanelServers() {
   async function fullCheck(panel: PanelKey) {
     setBusy(`full-${panel}`);
     try {
-      const res: any = await fullCheckFn({ data: { panel } });
+      const d = drafts[panel];
+      const existing = rows.find((r) => r.panel === panel);
+      const usingDraft = !!(d.baseUrl.trim() && d.adminKey.trim());
+      if (!usingDraft && !existing) {
+        toast.info("Preencha endereço e admin key abaixo para verificar este servidor.");
+        setBusy(null);
+        return;
+      }
+      const res: any = await fullCheckFn({
+        data: usingDraft
+          ? { panel, baseUrl: d.baseUrl.trim(), adminKey: d.adminKey.trim() }
+          : { panel },
+      });
       setChecks((c) => ({ ...c, [panel]: res }));
       if (res.ok) toast.success(res.message);
       else toast.error(res.message);
