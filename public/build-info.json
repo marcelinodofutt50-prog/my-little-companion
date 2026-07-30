@@ -1,5 +1,5 @@
 {
-  "build": "2026-07-30T15:25:00.000000Z",
-  "marker": "email-confirm-banner-softer",
-  "note": "banner de confirmacao de email mais claro; mensagens de rate limit menos alarmistas; reenvio automatico mais espacado"
+  "build": "2026-07-30T18:55:00.000000Z",
+  "marker": "legacy-detect-strict",
+  "note": "deteccao de cliente antigo agora e read-only e so marca legacy com resposta conclusiva do painel; checklist de primeiros passos some de vez apos concluir/ocultar"
 }
