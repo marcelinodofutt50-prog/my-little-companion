@@ -105,7 +105,7 @@ function SupportPage() {
           "Código do erro (se aparecer): ___. Já tentei fechar e abrir o painel.",
     );
     setThread((t) => t);
-    setCatFn({ data: { threadId: thread.id, category: "login_error" as any } }).catch(() => {});
+    setCatFn({ data: { threadId: thread.id, category: "login" as SupportCategory } }).catch(() => {});
     toast.info("Descreva o erro que a equipe corrige seu login", {
       description: "Se aparecer um código (ex.: 803), coloque na mensagem.",
     });
