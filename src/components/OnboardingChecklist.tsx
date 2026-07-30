@@ -5,7 +5,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 const STORAGE_KEY = "shadow-onboarding-v1";
+const HIDDEN_KEY = "shadow-onboarding-hidden-v1";
 const EVENT = "shadow-onboarding-change";
+
 
 export const ONBOARDING_STEP = {
   DASHBOARD: 0,
@@ -59,10 +61,18 @@ export function OnboardingChecklist({
 }) {
   const navigate = useNavigate();
   const [completed, setCompleted] = useState<number[]>([]);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(true); // esconde até saber o estado salvo
+
+  function hideForGood() {
+    try { localStorage.setItem(HIDDEN_KEY, "1"); } catch { /* ignore */ }
+    setDismissed(true);
+  }
 
   // Passo 1: acessar o dashboard conclui sozinho ao montar.
   useEffect(() => {
+    let hidden = false;
+    try { hidden = localStorage.getItem(HIDDEN_KEY) === "1"; } catch { /* ignore */ }
+    setDismissed(hidden);
     markOnboardingStep(ONBOARDING_STEP.DASHBOARD);
     setCompleted(loadCompleted());
     const sync = () => setCompleted(loadCompleted());
@@ -73,6 +83,7 @@ export function OnboardingChecklist({
       window.removeEventListener("storage", sync);
     };
   }, []);
+
 
   // Passo 2: se já existe licença ativa e o usuário está vendo o painel, conclui.
   useEffect(() => {
@@ -108,11 +119,22 @@ export function OnboardingChecklist({
     navigate({ to: "/suporte" });
   }
 
-  if (dismissed) return null;
-
   const doneCount = STEPS.filter((s) => completed.includes(s.id)).length;
   const pct = Math.round((doneCount / STEPS.length) * 100);
   const allDone = doneCount === STEPS.length;
+
+  // Concluiu tudo? mostra o "parabéns" por alguns segundos e some de vez.
+  useEffect(() => {
+    if (!allDone || dismissed) return;
+    const t = setTimeout(() => hideForGood(), 6000);
+    return () => clearTimeout(t);
+  }, [allDone, dismissed]);
+
+  if (dismissed) return null;
+
+
+
+
 
   return (
     <motion.div
@@ -132,7 +154,7 @@ export function OnboardingChecklist({
           </p>
         </div>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={hideForGood}
           className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
         >
           ocultar

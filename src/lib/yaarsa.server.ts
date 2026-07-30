@@ -248,23 +248,39 @@ export async function yaarsaSetPassword(
 }
 
 
-// Look up an email in a given panel by attempting a benign cexpire with a
-// future date (tomorrow, UTC). Yaarsa returns 1005 ("not found") when the
-// email doesn't exist; using a future date avoids false 1006 rejections when
-// the panel treats today's date as already-expired.
-export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Promise<{ found: boolean; panel: YaarsaPanel; raw: YaarsaResponse }> {
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+// Look up an email in a given panel WITHOUT touching the account.
+// The panel validates the email before the date, so we send a deliberately
+// invalid expire_date: an unknown email answers "cant find this email" (1005)
+// and an existing email answers with a date error (1006) — never mutating it.
+//
+// Semantics are strict on purpose: anything that is not one of those two
+// answers (network failure, HTTP error, adminkey problem, HTML page, ...)
+// is treated as UNKNOWN and throws, so callers never mark a brand-new
+// customer as "legacy" just because the panel hiccuped.
+export type YaarsaLookup = { found: boolean; panel: YaarsaPanel; raw: YaarsaResponse };
+
+const NOT_FOUND_RE = /1005|not.?found|não\s*encontrado|nao\s*encontrado|cant.?find/i;
+// "Date not accepted or expired." / 1006 → o email EXISTE (o painel só chegou
+// a validar a data porque encontrou a conta).
+const EXISTS_RE = /1006|date\s*not\s*accepted|not\s*accepted|expired|expira|expire.?date|invalid.?date|data\s*de\s*expira/i;
+
+
+export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Promise<YaarsaLookup> {
   const r = await yaarsaPost(
-    { action: "cexpire", email, expire_date: tomorrow, adminkey: yaarsaAdminKey(panel) },
+    { action: "cexpire", email, expire_date: "invalid-probe", adminkey: yaarsaAdminKey(panel) },
     panel,
   );
-  const notFound = !!r.Fail && /1005|not.?found|não\s*encontrado|cant.?find/i.test(r.Fail);
-  return { found: !notFound, panel, raw: r };
+  if (r.Success) return { found: true, panel, raw: r };
+  const fail = String(r.Fail || "");
+  if (NOT_FOUND_RE.test(fail)) return { found: false, panel, raw: r };
+  if (EXISTS_RE.test(fail)) return { found: true, panel, raw: r };
+  throw new Error(`lookup_unknown[${panel}]: ${fail || "sem resposta"}`);
 }
 
 
 // Search across all panels — returns the first panel that reports found.
-export async function yaarsaLookupEmailAllPanels(email: string): Promise<{ found: boolean; panel: YaarsaPanel | null; details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }> }> {
+// `details[].error` marks panels whose answer was inconclusive.
+export async function yaarsaLookupEmailAllPanels(email: string): Promise<{ found: boolean; panel: YaarsaPanel | null; conclusive: boolean; details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }> }> {
   const details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }> = [];
   for (const p of ["v457", "v46"] as YaarsaPanel[]) {
     try {
@@ -275,8 +291,11 @@ export async function yaarsaLookupEmailAllPanels(email: string): Promise<{ found
     }
   }
   const firstFound = details.find((d) => d.found)?.panel ?? null;
-  return { found: !!firstFound, panel: firstFound, details };
+  // Conclusive only when every panel gave a clear yes/no, or at least one said yes.
+  const conclusive = !!firstFound || details.every((d) => !d.error);
+  return { found: !!firstFound, panel: firstFound, conclusive, details };
 }
+
 
 // ---------------- Shared HTTP plumbing (per-panel cookie jar) ----------------
 const sessionCookies: Record<YaarsaPanel, string> = { v457: "", v46: "" };

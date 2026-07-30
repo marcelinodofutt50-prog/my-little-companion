@@ -12,7 +12,7 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId, claims } = context;
     const email = (claims?.email as string | undefined)?.toLowerCase();
-    if (!email) return { status: "none", panels: [] as string[], cached: false };
+    if (!email) return { status: "unchecked", panels: [] as string[], cached: false, inconclusive: true };
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -20,11 +20,17 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
+    // Tudo que foi detectado antes desta data usou a lógica antiga (que marcava
+    // qualquer falha do painel como "cliente antigo") — força uma re-checagem.
+    const LOGIC_FIX_AT = Date.parse("2026-07-30T00:00:00Z");
+
     const cachedFresh =
       profile?.legacy_checked_at &&
       profile.legacy_status &&
       profile.legacy_status !== "unchecked" &&
+      new Date(profile.legacy_checked_at).getTime() > LOGIC_FIX_AT &&
       Date.now() - new Date(profile.legacy_checked_at).getTime() < 7 * 24 * 60 * 60 * 1000;
+
 
     if (cachedFresh) {
       return {
@@ -35,11 +41,20 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
             ? []
             : [profile.legacy_status]) as string[],
         cached: true,
+        inconclusive: false,
+
       };
     }
 
     const { yaarsaLookupEmailAllPanels } = await import("./yaarsa.server");
     const result = await yaarsaLookupEmailAllPanels(email);
+
+    // Painel indisponível / resposta ambígua: não gravamos nada e devolvemos
+    // "unchecked" para o dashboard NÃO exibir o aviso de cliente antigo.
+    if (!result.conclusive) {
+      return { status: "unchecked", panels: [] as string[], cached: false, inconclusive: true };
+    }
+
     const hitPanels = result.details.filter((d) => d.found).map((d) => d.panel);
     const status =
       hitPanels.length === 0
@@ -57,7 +72,8 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
       })
       .eq("id", userId);
 
-    return { status, panels: hitPanels, cached: false };
+    return { status, panels: hitPanels, cached: false, inconclusive: false };
+
   });
 
 // Cheap read of the cached legacy state — used by the dashboard on every load
