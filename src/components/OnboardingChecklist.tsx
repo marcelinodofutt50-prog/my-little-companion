@@ -5,7 +5,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 const STORAGE_KEY = "shadow-onboarding-v1";
+const HIDDEN_KEY = "shadow-onboarding-hidden-v1";
 const EVENT = "shadow-onboarding-change";
+
 
 export const ONBOARDING_STEP = {
   DASHBOARD: 0,
