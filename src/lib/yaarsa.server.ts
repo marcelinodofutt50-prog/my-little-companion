@@ -37,15 +37,40 @@ const PANEL_CONFIG: Record<YaarsaPanel, PanelConfig> = {
   },
 };
 
+// Overrides vindos do banco (tabela `panel_servers`), preenchidos por
+// `refreshPanelOverrides()` antes de cada operação. Permite ao admin trocar de
+// VPS pelo painel, sem redeploy. Sem override, valem as variáveis de ambiente.
+type PanelRuntime = { baseUrl?: string; adminKey?: string };
+const runtimeOverrides: Record<YaarsaPanel, PanelRuntime> = { v457: {}, v46: {} };
+
+export async function refreshPanelOverrides(force = false): Promise<void> {
+  try {
+    const { loadPanelOverrides } = await import("@/lib/panel-servers.server");
+    const map = await loadPanelOverrides(force);
+    for (const p of ["v457", "v46"] as YaarsaPanel[]) {
+      const o = map.get(p);
+      runtimeOverrides[p] = o ? { baseUrl: o.baseUrl, adminKey: o.adminKey } : {};
+    }
+  } catch (e) {
+    console.warn("[yaarsa] overrides indisponíveis, usando ambiente:", (e as Error)?.message);
+  }
+}
+
+/** Endereço efetivo do painel (override do banco > ambiente > padrão). */
+export function panelBaseUrl(panel: YaarsaPanel): string {
+  const cfg = PANEL_CONFIG[panel];
+  return (runtimeOverrides[panel].baseUrl || process.env[cfg.baseEnv] || cfg.defaultUrl).trim();
+}
+
 // Resolve the Yaarsa API endpoints for a given panel.
 // Honor the configured URL as-is when it points to a callable .php entry
 // (e.g. /yaarsa/proxy.php or /yaarsa/private/createacc.php). Only reject the
 // admin-UI path (create9999.php) and normalize bare hosts to /yaarsa/proxy.php
 // (with private/createacc.php as a secondary fallback).
-function yaarsaEndpoints(panel: YaarsaPanel): string[] {
-  const cfg = PANEL_CONFIG[panel];
-  const configured = (process.env[cfg.baseEnv] || cfg.defaultUrl).trim().replace(/\/+$/, "");
+export function yaarsaEndpointsFor(rawBase: string): string[] {
+  const configured = rawBase.trim().replace(/\/+$/, "");
   const raw = /^https?:\/\//i.test(configured) ? configured : `http://${configured}`;
+
   const isAdminUi = /create9999\.php/i.test(raw);
   const isCallablePhp = /\.php($|\?)/i.test(raw) && !isAdminUi;
 
@@ -71,21 +96,31 @@ function yaarsaEndpoints(panel: YaarsaPanel): string[] {
   });
 }
 
-function yaarsaAdminKey(panel: YaarsaPanel): string {
-  const cfg = PANEL_CONFIG[panel];
-  const raw = process.env[cfg.keyEnv];
-  if (!raw) throw new Error(`${cfg.keyEnv} not set`);
+function yaarsaEndpoints(panel: YaarsaPanel): string[] {
+  return yaarsaEndpointsFor(panelBaseUrl(panel));
+}
+
+export function sanitizeAdminKey(raw: string, label = "admin key"): string {
   const cleaned = raw
     .replace(/^\uFEFF/, "")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .replace(/\s+/g, "")
     .replace(/^["']|["']$/g, "");
-  if (!cleaned) throw new Error(`${cfg.keyEnv} is empty after sanitization`);
+  if (!cleaned) throw new Error(`${label} vazia`);
   if (/[^\x21-\x7E]/.test(cleaned)) {
-    throw new Error(`${cfg.keyEnv} contains invalid characters (only printable ASCII allowed)`);
+    throw new Error(`${label} contém caracteres inválidos (use apenas ASCII imprimível)`);
   }
   return cleaned;
 }
+
+function yaarsaAdminKey(panel: YaarsaPanel): string {
+  const cfg = PANEL_CONFIG[panel];
+  const override = runtimeOverrides[panel].adminKey;
+  const raw = override || process.env[cfg.keyEnv];
+  if (!raw) throw new Error(`${cfg.keyEnv} not set`);
+  return sanitizeAdminKey(raw, override ? `admin key do painel ${panel}` : cfg.keyEnv);
+}
+
 
 function encKey(): Buffer {
   const raw = process.env.LICENSE_ENC_KEY;
@@ -201,6 +236,7 @@ export async function yaarsaCreateAccount(input: {
   panel?: YaarsaPanel;
 }): Promise<YaarsaResponse> {
   const panel = input.panel ?? "v457";
+  await refreshPanelOverrides();
   return yaarsaPost({
     action: "add",
     username: input.username,
@@ -215,10 +251,12 @@ export async function yaarsaCreateAccount(input: {
 }
 
 export async function yaarsaRemoveAccount(email: string, panel: YaarsaPanel = "v457"): Promise<YaarsaResponse> {
+  await refreshPanelOverrides();
   return yaarsaPost({ action: "remove", email, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
 export async function yaarsaExtend(email: string, newExpireDate: string, panel: YaarsaPanel = "v457"): Promise<YaarsaResponse> {
+  await refreshPanelOverrides();
   return yaarsaPost({ action: "cexpire", email, expire_date: newExpireDate, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
@@ -232,6 +270,7 @@ export async function yaarsaSetPassword(
   panel: YaarsaPanel = "v457",
   username?: string,
 ): Promise<YaarsaResponse & { action?: string }> {
+  await refreshPanelOverrides();
   const candidates = ["update", "cpassword", "cpass", "changepassword"];
   let last: YaarsaResponse = { Fail: "Painel não aceitou nenhuma ação de troca de senha" };
   for (const action of candidates) {
@@ -266,6 +305,7 @@ const EXISTS_RE = /1006|date\s*not\s*accepted|not\s*accepted|expired|expira|expi
 
 
 export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Promise<YaarsaLookup> {
+  await refreshPanelOverrides();
   const r = await yaarsaPost(
     { action: "cexpire", email, expire_date: "invalid-probe", adminkey: yaarsaAdminKey(panel) },
     panel,
