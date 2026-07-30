@@ -416,7 +416,13 @@ export function AdminPanelServers() {
                 <div className="mb-2 space-y-0.5 text-muted-foreground">
                   <div>
                     endereço: {checks[panel].baseUrl ?? "—"}
-                    {checks[panel].source ? ` (origem: ${checks[panel].source})` : ""}
+                    {checks[panel].source
+                      ? ` (origem: ${
+                          checks[panel].source === "formulario"
+                            ? "dados digitados agora (ainda não salvos)"
+                            : checks[panel].source
+                        })`
+                      : ""}
                   </div>
                   <div>IP entregue ao cliente: {checks[panel].serverIp || "—"}</div>
                   {checks[panel].testAccount && (
