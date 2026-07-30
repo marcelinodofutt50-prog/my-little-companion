@@ -211,13 +211,20 @@ export function sanitizeAdminKey(raw: string, label = "admin key"): string {
   return cleaned;
 }
 
+const PANEL_LABEL: Record<YaarsaPanel, string> = { v455: "4.5.5", v457: "4.5.7", v46: "4.6" };
+
 function yaarsaAdminKey(panel: YaarsaPanel): string {
   const cfg = PANEL_CONFIG[panel];
-  const override = runtimeOverrides[panel].adminKey;
+  const override = effective(panel).adminKey;
   const raw = override || process.env[cfg.keyEnv];
-  if (!raw) throw new Error(`${cfg.keyEnv} not set`);
-  return sanitizeAdminKey(raw, override ? `admin key do painel ${panel}` : cfg.keyEnv);
+  if (!raw) {
+    throw new Error(
+      `Nenhuma admin key configurada para o painel ${PANEL_LABEL[panel]}. Preencha o endereço e a admin key no formulário abaixo e clique em "Verificação completa" ou "Salvar e usar".`,
+    );
+  }
+  return sanitizeAdminKey(raw, override ? `admin key do painel ${PANEL_LABEL[panel]}` : cfg.keyEnv);
 }
+
 
 function encKey(): Buffer {
   const raw = process.env.LICENSE_ENC_KEY;
