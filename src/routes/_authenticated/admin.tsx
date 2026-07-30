@@ -230,6 +230,7 @@ function AdminPage() {
     "all",
   );
   const [licView, setLicView] = useState<"table" | "grouped">("table");
+  const [licLimit, setLicLimit] = useState(50);
   const [licSearch, setLicSearch] = useState("");
   // Licenças vencidas/revogadas há mais de 3 dias somem do painel (arquivadas)
   // para não poluir. Se o cliente reativar, ela volta sozinha para a lista.
@@ -1854,7 +1855,10 @@ function AdminPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <input
                           value={licSearch}
-                          onChange={(e) => setLicSearch(e.target.value)}
+                          onChange={(e) => {
+                            setLicSearch(e.target.value);
+                            setLicLimit(50);
+                          }}
                           placeholder="buscar email, login, plano…"
                           className="h-7 w-52 rounded border border-border/40 bg-background/40 px-2 font-mono text-[11px] text-foreground placeholder:text-muted-foreground focus:border-neon/60 focus:outline-none"
                         />
@@ -1922,8 +1926,20 @@ function AdminPage() {
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[960px] text-sm">
                           {headerRow}
-                          <tbody>{sortedFlat.map(renderRow)}</tbody>
+                          <tbody>{sortedFlat.slice(0, licLimit).map(renderRow)}</tbody>
                         </table>
+                        {sortedFlat.length > licLimit && (
+                          <div className="border-t border-border/30 p-3 text-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setLicLimit((n) => n + 50)}
+                              className="font-mono text-[10px] uppercase tracking-wider"
+                            >
+                              mostrar mais ({sortedFlat.length - licLimit} restantes)
+                            </Button>
+                          </div>
+                        )}
                         {sortedFlat.length === 0 && (
                           <div className="p-6 text-center font-mono text-xs uppercase text-muted-foreground">
                             nenhuma licença corresponde ao filtro
