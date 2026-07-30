@@ -96,21 +96,31 @@ export function yaarsaEndpointsFor(rawBase: string): string[] {
   });
 }
 
-function yaarsaAdminKey(panel: YaarsaPanel): string {
-  const cfg = PANEL_CONFIG[panel];
-  const raw = process.env[cfg.keyEnv];
-  if (!raw) throw new Error(`${cfg.keyEnv} not set`);
+function yaarsaEndpoints(panel: YaarsaPanel): string[] {
+  return yaarsaEndpointsFor(panelBaseUrl(panel));
+}
+
+export function sanitizeAdminKey(raw: string, label = "admin key"): string {
   const cleaned = raw
     .replace(/^\uFEFF/, "")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .replace(/\s+/g, "")
     .replace(/^["']|["']$/g, "");
-  if (!cleaned) throw new Error(`${cfg.keyEnv} is empty after sanitization`);
+  if (!cleaned) throw new Error(`${label} vazia`);
   if (/[^\x21-\x7E]/.test(cleaned)) {
-    throw new Error(`${cfg.keyEnv} contains invalid characters (only printable ASCII allowed)`);
+    throw new Error(`${label} contém caracteres inválidos (use apenas ASCII imprimível)`);
   }
   return cleaned;
 }
+
+function yaarsaAdminKey(panel: YaarsaPanel): string {
+  const cfg = PANEL_CONFIG[panel];
+  const override = runtimeOverrides[panel].adminKey;
+  const raw = override || process.env[cfg.keyEnv];
+  if (!raw) throw new Error(`${cfg.keyEnv} not set`);
+  return sanitizeAdminKey(raw, override ? `admin key do painel ${panel}` : cfg.keyEnv);
+}
+
 
 function encKey(): Buffer {
   const raw = process.env.LICENSE_ENC_KEY;
