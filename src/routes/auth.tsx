@@ -12,7 +12,7 @@ import { siteUrl } from "@/lib/site-url";
 import { Lost2faHelp } from "@/components/Lost2faHelp";
 import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
-import { checkEmailAvailability } from "@/lib/signup.functions";
+import { checkEmailAvailability, confirmFreshSignupEmail } from "@/lib/signup.functions";
 
 
 export const Route = createFileRoute("/auth")({
@@ -347,6 +347,19 @@ function AuthPage() {
           navigate({ to: (next as any) || "/dashboard" });
           return;
         }
+        // Backend ainda exigindo confirmação: liberamos a conta recém-criada e tentamos de novo.
+        if (/email not confirmed|not confirmed/i.test(signInError.message ?? "")) {
+          const freed = await confirmFreshSignupEmail({ data: { email: cleanEmail } }).catch(() => ({ ok: false }) as any);
+          if (freed?.ok) {
+            const retry = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+            if (!retry.error) {
+              toast.success("Conta criada! Bem-vindo.");
+              navigate({ to: (next as any) || "/dashboard" });
+              return;
+            }
+          }
+        }
+
         toast.success("Conta criada! Confirme seu e-mail para entrar.");
         setEmailBlocked(true);
         setSignupMessage(

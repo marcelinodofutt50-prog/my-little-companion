@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { ackSecurityNotice } from "@/lib/onboarding.functions";
+import { ackSecurityNotice, getAccountSetupState } from "@/lib/onboarding.functions";
 
 const bullets = [
   {
@@ -39,6 +39,8 @@ export function SecurityWelcomeDialog() {
   const [exhausted, setExhausted] = useState(false);
   const checked = useRef(false);
   const ackFn = useServerFn(ackSecurityNotice);
+  const loadState = useServerFn(getAccountSetupState);
+
 
   async function getCurrentUser() {
     const { data, error } = await supabase.auth.getUser();
@@ -47,13 +49,28 @@ export function SecurityWelcomeDialog() {
   }
 
   async function ackSecurityNoticeDirect() {
+    let userId: string | null = null;
     try {
       const user = await getCurrentUser();
+      userId = user.id;
       // Marca local primeiro: mesmo se a rede falhar, o aviso não volta a cada login.
       localStorage.setItem(`sd_sec_ack_${user.id}`, "1");
+      sessionStorage.setItem(`sd_sec_ack_${user.id}`, "1");
+    } catch {
+      /* sessão perdida: nada a marcar */
+    }
+    try {
       await ackFn({});
     } catch {
-      // Não bloqueia o usuário: esse campo só controla se o aviso aparece de novo.
+      // Fallback direto na tabela (RLS: só a própria linha) para que a marca
+      // fique gravada de verdade e o aviso não volte a cada F5.
+      if (userId) {
+        await supabase
+          .from("profiles")
+          .update({ security_ack_at: new Date().toISOString() })
+          .eq("id", userId)
+          .then(undefined, () => {});
+      }
     }
   }
 
@@ -63,28 +80,45 @@ export function SecurityWelcomeDialog() {
     checked.current = true;
     getCurrentUser()
       .then(async (user) => {
-        const [{ data: profile }, { count }] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("security_ack_at,recovery_codes_generated_at")
-            .eq("id", user.id)
-            .maybeSingle(),
-          supabase
-            .from("recovery_codes")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id)
-            .is("used_at", null),
-        ]);
+        const ackedLocally =
+          localStorage.getItem(`sd_sec_ack_${user.id}`) === "1" ||
+          sessionStorage.getItem(`sd_sec_ack_${user.id}`) === "1";
 
-        const generatedAt = (profile as any)?.recovery_codes_generated_at ?? null;
-        const ackAt = (profile as any)?.security_ack_at ?? null;
-        const left = count ?? 0;
-        const ackedLocally = localStorage.getItem(`sd_sec_ack_${user.id}`) === "1";
+        // Fonte da verdade: estado no servidor (não depende de cache/RLS do navegador).
+        let state: any = null;
+        try {
+          state = await loadState({});
+        } catch {
+          const [{ data: profile }, { count }] = await Promise.all([
+            supabase
+              .from("profiles")
+              .select("security_ack_at,recovery_codes_generated_at")
+              .eq("id", user.id)
+              .maybeSingle(),
+            supabase
+              .from("recovery_codes")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", user.id)
+              .is("used_at", null),
+          ]);
+          state = {
+            securityAcked: Boolean((profile as any)?.security_ack_at),
+            codesGeneratedAt: (profile as any)?.recovery_codes_generated_at ?? null,
+            codesLeft: count ?? 0,
+          };
+        }
+
+        const generatedAt = state?.codesGeneratedAt ?? null;
+        const ackAt = Boolean(state?.securityAcked);
+        const left = state?.codesLeft ?? 0;
 
         setHadCodes(Boolean(generatedAt));
         setGeneratedAt(generatedAt);
         setRemaining(left);
         setExhausted(Boolean(generatedAt) && left === 0);
+
+        // Se o servidor já sabe que o aviso foi lido, guarda a marca local também.
+        if (ackAt) localStorage.setItem(`sd_sec_ack_${user.id}`, "1");
 
         // Só abre automaticamente para quem ainda não viu o aviso.
         // Quem já leu (mesmo sem códigos ativos) não é interrompido a cada login;
@@ -100,6 +134,7 @@ export function SecurityWelcomeDialog() {
             action: { label: "Gerar agora", onClick: () => setOpen(true) },
           });
         }
+
       })
       .catch(() => {});
   }, []);
