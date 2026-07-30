@@ -107,7 +107,8 @@ export function InAppNotifications() {
       setIsAdmin(admin);
       setAdminChecked(true);
       channel = supabase
-        .channel(`notif-${uid}`)
+        .channel(`notif-${uid}-${Math.random().toString(36).slice(2, 8)}`)
+
         .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${uid}` }, () => void refresh())
         .on("postgres_changes", { event: "*", schema: "public", table: "refund_requests", filter: `user_id=eq.${uid}` }, () => void refresh());
       // Somente admins assinam eventos de chat/suporte.
