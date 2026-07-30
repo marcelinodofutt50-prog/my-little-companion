@@ -29,7 +29,8 @@ export function panelFromPlanSlug(slug: string | null | undefined): YaarsaPanel 
   if (!slug) return "v457";
   const s = slug.toLowerCase();
   if (s.includes("lifetime")) return "v46";
-  if (s.includes("7d") || s.includes("week") || s.includes("seman") || s === "trial") return weeklyPanel();
+  if (s.includes("7d") || s.includes("week") || s.includes("seman") || s === "trial")
+    return weeklyPanel();
   return "v457";
 }
 
@@ -77,7 +78,6 @@ export async function refreshPanelOverrides(force = false): Promise<void> {
   }
 }
 
-
 /** Endereço efetivo do painel (override do banco > ambiente > padrão). */
 export function panelBaseUrl(panel: YaarsaPanel): string {
   const cfg = PANEL_CONFIG[panel];
@@ -92,7 +92,11 @@ export function panelBaseUrl(panel: YaarsaPanel): string {
  */
 export function panelServerHost(panel: YaarsaPanel): string {
   const raw = panelBaseUrl(panel);
-  let host = raw.trim().replace(/^https?:\/\//i, "").split("/")[0].split("?")[0];
+  let host = raw
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .split("/")[0]
+    .split("?")[0];
   host = host.replace(/:\d+$/, "");
   // formatos sslip.io: 1.2.3.4.sslip.io  ou  1-2-3-4.sslip.io
   const m = host.match(/^((?:\d{1,3}[.-]){3}\d{1,3})\.sslip\.io$/i);
@@ -172,7 +176,6 @@ function yaarsaAdminKey(panel: YaarsaPanel): string {
   return sanitizeAdminKey(raw, override ? `admin key do painel ${panel}` : cfg.keyEnv);
 }
 
-
 function encKey(): Buffer {
   const raw = process.env.LICENSE_ENC_KEY;
   if (!raw) throw new Error("LICENSE_ENC_KEY not set");
@@ -212,7 +215,9 @@ export function generateCredentials() {
   const username = rand(lower, 5);
   const email = `${username}${Math.floor(Math.random() * 100000)}@gmail.com`;
   const raw = (rand(lower, 4) + rand(upper, 3) + rand(digits, 3) + rand(specials, 2))
-    .split("").sort(() => Math.random() - 0.5).join("");
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
   return { username, email, password: raw };
 }
 
@@ -228,10 +233,18 @@ export function deriveCredentials(seed: string) {
   const suffix = ((h[5] << 16) + (h[18] << 8) + h[19]) % 100000;
   const email = `${uname}${suffix}@gmail.com`;
   const pw = [
-    pick(lower, 6), pick(lower, 7), pick(lower, 8), pick(lower, 9),
-    pick(upper, 10), pick(upper, 11), pick(upper, 12),
-    pick(digits, 13), pick(digits, 14), pick(digits, 15),
-    pick(specials, 16), pick(specials, 17),
+    pick(lower, 6),
+    pick(lower, 7),
+    pick(lower, 8),
+    pick(lower, 9),
+    pick(upper, 10),
+    pick(upper, 11),
+    pick(upper, 12),
+    pick(digits, 13),
+    pick(digits, 14),
+    pick(digits, 15),
+    pick(specials, 16),
+    pick(specials, 17),
   ];
   for (let i = pw.length - 1; i > 0; i--) {
     const j = h[18 + (i % 14)] % (i + 1);
@@ -264,18 +277,26 @@ type YaarsaResponse = { Success?: string; Fail?: string };
 
 function friendlyYaarsaFail(message: string): string {
   const m = message.trim();
-  if (/please check admin key|admin key/i.test(m)) return "Chave administrativa do painel foi rejeitada. Avise o suporte para revalidar as credenciais.";
-  if (/already.*use|already.*exist|email.*use|1004|existe/i.test(m)) return "Este usuário/e-mail já existe no painel. Se for seu, use a opção de cliente antigo.";
-  if (/maximum allowed accounts reached|allowed accounts|limite.*100|100.*accounts/i.test(m)) return "O painel atingiu o limite de 100 contas para esta chave. Contate o suporte para liberar espaço.";
-  if (/cant find|not found|1005|não encontrado/i.test(m)) return "Usuário não encontrado neste painel.";
-  if (/date not accepted|1006|expired|expira/i.test(m)) return "Data de expiração recusada pelo painel. Tente novamente em instantes.";
-  if (/array offset on null|undefined offset|trying to access|warning:|notice:/i.test(m)) return "O painel devolveu uma resposta inválida (erro interno). Tente novamente em alguns segundos.";
-  if (/HTTP 403/i.test(m)) return "O painel bloqueou temporariamente esta requisição (403). Tentando rota alternativa — se persistir, avise o suporte.";
-  if (/devolveu HTML/i.test(m)) return "O painel devolveu uma página HTML em vez de dados. Provavelmente está em manutenção — tente novamente em breve.";
-  if (/falha de rede/i.test(m)) return "Falha de rede ao contatar o painel. Verifique sua conexão e tente novamente.";
+  if (/please check admin key|admin key/i.test(m))
+    return "Chave administrativa do painel foi rejeitada. Avise o suporte para revalidar as credenciais.";
+  if (/already.*use|already.*exist|email.*use|1004|existe/i.test(m))
+    return "Este usuário/e-mail já existe no painel. Se for seu, use a opção de cliente antigo.";
+  if (/maximum allowed accounts reached|allowed accounts|limite.*100|100.*accounts/i.test(m))
+    return "O painel atingiu o limite de 100 contas para esta chave. Contate o suporte para liberar espaço.";
+  if (/cant find|not found|1005|não encontrado/i.test(m))
+    return "Usuário não encontrado neste painel.";
+  if (/date not accepted|1006|expired|expira/i.test(m))
+    return "Data de expiração recusada pelo painel. Tente novamente em instantes.";
+  if (/array offset on null|undefined offset|trying to access|warning:|notice:/i.test(m))
+    return "O painel devolveu uma resposta inválida (erro interno). Tente novamente em alguns segundos.";
+  if (/HTTP 403/i.test(m))
+    return "O painel bloqueou temporariamente esta requisição (403). Tentando rota alternativa — se persistir, avise o suporte.";
+  if (/devolveu HTML/i.test(m))
+    return "O painel devolveu uma página HTML em vez de dados. Provavelmente está em manutenção — tente novamente em breve.";
+  if (/falha de rede/i.test(m))
+    return "Falha de rede ao contatar o painel. Verifique sua conexão e tente novamente.";
   return m;
 }
-
 
 export async function yaarsaCreateAccount(input: {
   username: string;
@@ -288,27 +309,40 @@ export async function yaarsaCreateAccount(input: {
 }): Promise<YaarsaResponse> {
   const panel = input.panel ?? "v457";
   await refreshPanelOverrides();
-  return yaarsaPost({
-    action: "add",
-    username: input.username,
-    email: input.email,
-    password: input.password,
-    adminkey: yaarsaAdminKey(panel),
-    subtype: planToSubtype(input.planSlug),
-    total_paid: String(input.totalPaid),
-    additional_info: input.additionalInfo || `shadow-${input.planSlug}`,
-    expire_date: expireDateFor(input.planSlug),
-  }, panel);
+  return yaarsaPost(
+    {
+      action: "add",
+      username: input.username,
+      email: input.email,
+      password: input.password,
+      adminkey: yaarsaAdminKey(panel),
+      subtype: planToSubtype(input.planSlug),
+      total_paid: String(input.totalPaid),
+      additional_info: input.additionalInfo || `shadow-${input.planSlug}`,
+      expire_date: expireDateFor(input.planSlug),
+    },
+    panel,
+  );
 }
 
-export async function yaarsaRemoveAccount(email: string, panel: YaarsaPanel = "v457"): Promise<YaarsaResponse> {
+export async function yaarsaRemoveAccount(
+  email: string,
+  panel: YaarsaPanel = "v457",
+): Promise<YaarsaResponse> {
   await refreshPanelOverrides();
   return yaarsaPost({ action: "remove", email, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
-export async function yaarsaExtend(email: string, newExpireDate: string, panel: YaarsaPanel = "v457"): Promise<YaarsaResponse> {
+export async function yaarsaExtend(
+  email: string,
+  newExpireDate: string,
+  panel: YaarsaPanel = "v457",
+): Promise<YaarsaResponse> {
   await refreshPanelOverrides();
-  return yaarsaPost({ action: "cexpire", email, expire_date: newExpireDate, adminkey: yaarsaAdminKey(panel) }, panel);
+  return yaarsaPost(
+    { action: "cexpire", email, expire_date: newExpireDate, adminkey: yaarsaAdminKey(panel) },
+    panel,
+  );
 }
 
 // Reaplica/troca a senha da conta no painel.
@@ -325,18 +359,24 @@ export async function yaarsaSetPassword(
   const candidates = ["update", "cpassword", "cpass", "changepassword"];
   let last: YaarsaResponse = { Fail: "Painel não aceitou nenhuma ação de troca de senha" };
   for (const action of candidates) {
-    const fields: Record<string, string> = { action, email, password, adminkey: yaarsaAdminKey(panel) };
+    const fields: Record<string, string> = {
+      action,
+      email,
+      password,
+      adminkey: yaarsaAdminKey(panel),
+    };
     if (username) fields.username = username;
     const r = await yaarsaPost(fields, panel);
     if (r.Success) return { ...r, action };
     last = r;
     // Ação desconhecida no painel → corpo vazio/inesperado ou erro 1001.
-    const invalidAction = /1001|ação inválida|invalid action|resposta inesperada/i.test(String(r.Fail ?? ""));
+    const invalidAction = /1001|ação inválida|invalid action|resposta inesperada/i.test(
+      String(r.Fail ?? ""),
+    );
     if (!invalidAction) return { ...r, action };
   }
   return last;
 }
-
 
 // Look up an email in a given panel WITHOUT touching the account.
 // The panel validates the email before the date, so we send a deliberately
@@ -352,8 +392,8 @@ export type YaarsaLookup = { found: boolean; panel: YaarsaPanel; raw: YaarsaResp
 const NOT_FOUND_RE = /1005|not.?found|não\s*encontrado|nao\s*encontrado|cant.?find/i;
 // "Date not accepted or expired." / 1006 → o email EXISTE (o painel só chegou
 // a validar a data porque encontrou a conta).
-const EXISTS_RE = /1006|date\s*not\s*accepted|not\s*accepted|expired|expira|expire.?date|invalid.?date|data\s*de\s*expira/i;
-
+const EXISTS_RE =
+  /1006|date\s*not\s*accepted|not\s*accepted|expired|expira|expire.?date|invalid.?date|data\s*de\s*expira/i;
 
 export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Promise<YaarsaLookup> {
   await refreshPanelOverrides();
@@ -368,10 +408,16 @@ export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Prom
   throw new Error(`lookup_unknown[${panel}]: ${fail || "sem resposta"}`);
 }
 
-
 // Search across all panels — returns the first panel that reports found.
 // `details[].error` marks panels whose answer was inconclusive.
-export async function yaarsaLookupEmailAllPanels(email: string): Promise<{ found: boolean; panel: YaarsaPanel | null; conclusive: boolean; details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }> }> {
+export async function yaarsaLookupEmailAllPanels(
+  email: string,
+): Promise<{
+  found: boolean;
+  panel: YaarsaPanel | null;
+  conclusive: boolean;
+  details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }>;
+}> {
   const details: Array<{ panel: YaarsaPanel; found: boolean; error?: string }> = [];
   for (const p of ALL_PANELS) {
     // Sem VPS própria, a 4.5.5 aponta para o mesmo painel da 4.5.7 — evita
@@ -389,7 +435,6 @@ export async function yaarsaLookupEmailAllPanels(email: string): Promise<{ found
   const conclusive = !!firstFound || details.every((d) => !d.error);
   return { found: !!firstFound, panel: firstFound, conclusive, details };
 }
-
 
 // ---------------- Shared HTTP plumbing (per-panel cookie jar) ----------------
 const sessionCookies: Record<YaarsaPanel, string> = { v455: "", v457: "", v46: "" };
@@ -434,15 +479,25 @@ async function warmup(url: string, panel: YaarsaPanel) {
     const origin = new URL(url).origin;
     const res = await fetch(`${origin}/`, { method: "GET", headers: browserHeaders(url, panel) });
     captureCookies(res, panel);
-  } catch { /* best-effort */ }
+  } catch {
+    /* best-effort */
+  }
   warmedUp[panel] = true;
 }
 
 async function persistLog(entry: {
-  action?: string; endpoint_kind?: string; url?: string; attempt?: number;
-  http_status?: number; latency_ms?: number; outcome: string;
-  payload?: Record<string, unknown>; response_body?: string; error?: string;
-  context?: Record<string, unknown>; panel?: YaarsaPanel;
+  action?: string;
+  endpoint_kind?: string;
+  url?: string;
+  attempt?: number;
+  http_status?: number;
+  latency_ms?: number;
+  outcome: string;
+  payload?: Record<string, unknown>;
+  response_body?: string;
+  error?: string;
+  context?: Record<string, unknown>;
+  panel?: YaarsaPanel;
 }) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -465,15 +520,21 @@ async function persistLog(entry: {
   }
 }
 
-async function yaarsaPost(fields: Record<string, string>, panel: YaarsaPanel): Promise<YaarsaResponse> {
+async function yaarsaPost(
+  fields: Record<string, string>,
+  panel: YaarsaPanel,
+): Promise<YaarsaResponse> {
   const payload: Record<string, string> = { ...fields };
   delete (payload as any).admin_key;
   const body = JSON.stringify(payload);
 
   const maskKey = (k: string) =>
-    k.length <= 4 ? "*".repeat(k.length) : `${k.slice(0, 2)}${"*".repeat(k.length - 4)}${k.slice(-2)}`;
+    k.length <= 4
+      ? "*".repeat(k.length)
+      : `${k.slice(0, 2)}${"*".repeat(k.length - 4)}${k.slice(-2)}`;
   const debugPayload: Record<string, string> = { ...payload };
-  if (debugPayload.adminkey) debugPayload.adminkey = `${maskKey(debugPayload.adminkey)} (len=${payload.adminkey.length})`;
+  if (debugPayload.adminkey)
+    debugPayload.adminkey = `${maskKey(debugPayload.adminkey)} (len=${payload.adminkey.length})`;
   if (debugPayload.password) debugPayload.password = `***(len=${payload.password.length})`;
 
   const action = payload.action || "unknown";
@@ -484,16 +545,19 @@ async function yaarsaPost(fields: Record<string, string>, panel: YaarsaPanel): P
     new Set(proxyUrl && panel === "v457" ? [proxyUrl, ...directEndpoints] : directEndpoints),
   );
   const map: Record<string, string> = {
-    "1001": "ação inválida", "1002": "campos obrigatórios ausentes",
+    "1001": "ação inválida",
+    "1002": "campos obrigatórios ausentes",
     "1003": "adminkey inválida ou requisição rejeitada pelo servidor",
-    "1004": "usuário/email já existe", "1005": "usuário não encontrado",
+    "1004": "usuário/email já existe",
+    "1005": "usuário não encontrado",
     "1006": "data de expiração inválida",
   };
 
   let lastFail: YaarsaResponse = { Fail: "Nenhum painel respondeu à requisição" };
   let lastNetworkErr: unknown = null;
 
-  const kindOf = (u: string): "PROXY" | "DIRECT" => (proxyUrl && u === proxyUrl ? "PROXY" : "DIRECT");
+  const kindOf = (u: string): "PROXY" | "DIRECT" =>
+    proxyUrl && u === proxyUrl ? "PROXY" : "DIRECT";
   const routingSummary = endpoints.map((u) => `${kindOf(u)}(${u})`).join(" → ");
   console.log(`[yaarsa:${panel}] ROUTING: ${routingSummary}`);
 
@@ -509,7 +573,10 @@ async function yaarsaPost(fields: Record<string, string>, panel: YaarsaPanel): P
       const started = Date.now();
       let text = "";
       let status = 0;
-      let responseMeta: { origin: string; headers: Record<string, string> } = { origin: "unknown", headers: {} };
+      let responseMeta: { origin: string; headers: Record<string, string> } = {
+        origin: "unknown",
+        headers: {},
+      };
       try {
         const res = await fetch(url, {
           method: "POST",
@@ -522,9 +589,13 @@ async function yaarsaPost(fields: Record<string, string>, panel: YaarsaPanel): P
         const latency = Date.now() - started;
 
         const headerSnapshot: Record<string, string> = {};
-        res.headers.forEach((value, key) => { headerSnapshot[key.toLowerCase()] = value; });
+        res.headers.forEach((value, key) => {
+          headerSnapshot[key.toLowerCase()] = value;
+        });
         const originHint =
-          headerSnapshot["cf-ray"] || headerSnapshot["cf-cache-status"] ? "cloudflare" : headerSnapshot["server"] || "unknown";
+          headerSnapshot["cf-ray"] || headerSnapshot["cf-cache-status"]
+            ? "cloudflare"
+            : headerSnapshot["server"] || "unknown";
         responseMeta = { origin: originHint, headers: headerSnapshot };
 
         console.log(`[yaarsa:${panel}] RESP status=${status} body=${text.slice(0, 300)}`);
@@ -532,18 +603,54 @@ async function yaarsaPost(fields: Record<string, string>, panel: YaarsaPanel): P
         const looksLikeYaarsa = /error\s*code\s*:?\s*\d+|"?Success"?|"?Fail"?/i.test(text);
         if ((!res.ok || !text) && !looksLikeYaarsa) {
           if (res.status === 403 && attempt === 0) {
-            await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: "http_error_retry", payload: debugPayload, response_body: text, context: { routing: routingSummary, response: responseMeta } });
+            await persistLog({
+              panel,
+              action,
+              endpoint_kind: kind,
+              url,
+              attempt: attempt + 1,
+              http_status: status,
+              latency_ms: latency,
+              outcome: "http_error_retry",
+              payload: debugPayload,
+              response_body: text,
+              context: { routing: routingSummary, response: responseMeta },
+            });
             continue;
           }
           lastFail = { Fail: `painel[${panel}] (${url}) HTTP ${res.status}` };
-          await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: "http_error", payload: debugPayload, response_body: text, error: lastFail.Fail, context: { routing: routingSummary, response: responseMeta } });
+          await persistLog({
+            panel,
+            action,
+            endpoint_kind: kind,
+            url,
+            attempt: attempt + 1,
+            http_status: status,
+            latency_ms: latency,
+            outcome: "http_error",
+            payload: debugPayload,
+            response_body: text,
+            error: lastFail.Fail,
+            context: { routing: routingSummary, response: responseMeta },
+          });
           break;
         }
       } catch (err) {
         const latency = Date.now() - started;
         lastNetworkErr = err;
         lastFail = { Fail: `painel[${panel}] (${url}) falha de rede` };
-        await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, latency_ms: latency, outcome: "network_error", payload: debugPayload, error: String((err as Error)?.message || err), context: { routing: routingSummary, response: responseMeta } });
+        await persistLog({
+          panel,
+          action,
+          endpoint_kind: kind,
+          url,
+          attempt: attempt + 1,
+          latency_ms: latency,
+          outcome: "network_error",
+          payload: debugPayload,
+          error: String((err as Error)?.message || err),
+          context: { routing: routingSummary, response: responseMeta },
+        });
         break;
       }
 
@@ -551,19 +658,59 @@ async function yaarsaPost(fields: Record<string, string>, panel: YaarsaPanel): P
       try {
         const parsed = JSON.parse(text) as YaarsaResponse & Record<string, unknown>;
         if (parsed.Success) {
-          await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: "success", payload: debugPayload, response_body: text, context: { routing: routingSummary, response: responseMeta } });
+          await persistLog({
+            panel,
+            action,
+            endpoint_kind: kind,
+            url,
+            attempt: attempt + 1,
+            http_status: status,
+            latency_ms: latency,
+            outcome: "success",
+            payload: debugPayload,
+            response_body: text,
+            context: { routing: routingSummary, response: responseMeta },
+          });
           return { Success: String(parsed.Success) };
         }
         if (parsed.Fail) {
           const friendly = friendlyYaarsaFail(String(parsed.Fail));
           // 1005 "not found" during a cexpire is normal for lookup probes — log as informational.
-          const isLookupMiss = action === "cexpire" && /1005|not.?found|não\s*encontrado|cant.?find/i.test(String(parsed.Fail));
-          await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: isLookupMiss ? "lookup_miss" : "yaarsa_fail", payload: debugPayload, response_body: text, error: isLookupMiss ? null as unknown as string : friendly, context: { routing: routingSummary, response: responseMeta } });
+          const isLookupMiss =
+            action === "cexpire" &&
+            /1005|not.?found|não\s*encontrado|cant.?find/i.test(String(parsed.Fail));
+          await persistLog({
+            panel,
+            action,
+            endpoint_kind: kind,
+            url,
+            attempt: attempt + 1,
+            http_status: status,
+            latency_ms: latency,
+            outcome: isLookupMiss ? "lookup_miss" : "yaarsa_fail",
+            payload: debugPayload,
+            response_body: text,
+            error: isLookupMiss ? (null as unknown as string) : friendly,
+            context: { routing: routingSummary, response: responseMeta },
+          });
           return { Fail: friendly };
         }
 
         lastFail = { Fail: `painel[${panel}] resposta inesperada: ${text.slice(0, 160)}` };
-        await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: "unexpected", payload: debugPayload, response_body: text, error: lastFail.Fail, context: { routing: routingSummary, response: responseMeta } });
+        await persistLog({
+          panel,
+          action,
+          endpoint_kind: kind,
+          url,
+          attempt: attempt + 1,
+          http_status: status,
+          latency_ms: latency,
+          outcome: "unexpected",
+          payload: debugPayload,
+          response_body: text,
+          error: lastFail.Fail,
+          context: { routing: routingSummary, response: responseMeta },
+        });
         break;
       } catch {
         const codeMatch = text.match(/error\s*code\s*:?\s*(\d+)/i);
@@ -572,19 +719,71 @@ async function yaarsaPost(fields: Record<string, string>, panel: YaarsaPanel): P
           const friendly = `Yaarsa erro ${code}: ${map[code] ?? text.slice(0, 160)}`;
           if (code === "1003" || code === "1001") {
             lastFail = { Fail: friendly };
-            await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: `yaarsa_code_${code}`, payload: debugPayload, response_body: text, error: friendly, context: { routing: routingSummary, response: responseMeta } });
+            await persistLog({
+              panel,
+              action,
+              endpoint_kind: kind,
+              url,
+              attempt: attempt + 1,
+              http_status: status,
+              latency_ms: latency,
+              outcome: `yaarsa_code_${code}`,
+              payload: debugPayload,
+              response_body: text,
+              error: friendly,
+              context: { routing: routingSummary, response: responseMeta },
+            });
             break;
           }
-          await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: `yaarsa_code_${code}`, payload: debugPayload, response_body: text, error: friendly, context: { routing: routingSummary, response: responseMeta } });
+          await persistLog({
+            panel,
+            action,
+            endpoint_kind: kind,
+            url,
+            attempt: attempt + 1,
+            http_status: status,
+            latency_ms: latency,
+            outcome: `yaarsa_code_${code}`,
+            payload: debugPayload,
+            response_body: text,
+            error: friendly,
+            context: { routing: routingSummary, response: responseMeta },
+          });
           return { Fail: friendly };
         }
         if (/<html|<!doctype/i.test(text)) {
           lastFail = { Fail: `painel[${panel}] devolveu HTML (status ${status})` };
-          await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: "html_response", payload: debugPayload, response_body: text, error: lastFail.Fail, context: { routing: routingSummary, response: responseMeta } });
+          await persistLog({
+            panel,
+            action,
+            endpoint_kind: kind,
+            url,
+            attempt: attempt + 1,
+            http_status: status,
+            latency_ms: latency,
+            outcome: "html_response",
+            payload: debugPayload,
+            response_body: text,
+            error: lastFail.Fail,
+            context: { routing: routingSummary, response: responseMeta },
+          });
           break;
         }
         lastFail = { Fail: `Resposta inesperada painel[${panel}]: ${text.slice(0, 200)}` };
-        await persistLog({ panel, action, endpoint_kind: kind, url, attempt: attempt + 1, http_status: status, latency_ms: latency, outcome: "unparseable", payload: debugPayload, response_body: text, error: lastFail.Fail, context: { routing: routingSummary, response: responseMeta } });
+        await persistLog({
+          panel,
+          action,
+          endpoint_kind: kind,
+          url,
+          attempt: attempt + 1,
+          http_status: status,
+          latency_ms: latency,
+          outcome: "unparseable",
+          payload: debugPayload,
+          response_body: text,
+          error: lastFail.Fail,
+          context: { routing: routingSummary, response: responseMeta },
+        });
         break;
       }
     }

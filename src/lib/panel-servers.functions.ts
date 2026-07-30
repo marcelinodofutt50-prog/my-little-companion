@@ -15,9 +15,8 @@ export const adminListPanelServers = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { listPanelServersMasked } = await import("@/lib/panel-servers.server");
-    const { panelBaseUrl, panelServerHost, panelConfigSource, refreshPanelOverrides } = await import(
-      "@/lib/yaarsa.server"
-    );
+    const { panelBaseUrl, panelServerHost, panelConfigSource, refreshPanelOverrides } =
+      await import("@/lib/yaarsa.server");
     await refreshPanelOverrides(true);
     const rows = await listPanelServersMasked();
     const effective = {
@@ -47,7 +46,12 @@ export const adminListPanelServers = createServerFn({ method: "GET" })
 export const adminTestPanelServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ baseUrl: z.string().trim().min(4).max(300), adminKey: z.string().trim().min(1).max(200) }).parse(d),
+    z
+      .object({
+        baseUrl: z.string().trim().min(4).max(300),
+        adminKey: z.string().trim().min(1).max(200),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);

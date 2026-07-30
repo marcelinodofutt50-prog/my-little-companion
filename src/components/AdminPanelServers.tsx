@@ -500,7 +500,13 @@ export function AdminPanelServers() {
                   )}
                   <span className="font-semibold">{ev.action}</span>
                   <span className="text-muted-foreground">
-                    {ev.panel === "v46" ? "4.6" : ev.panel === "v457" ? "4.5.7" : ev.panel === "v455" ? "4.5.5" : ev.panel}
+                    {ev.panel === "v46"
+                      ? "4.6"
+                      : ev.panel === "v457"
+                        ? "4.5.7"
+                        : ev.panel === "v455"
+                          ? "4.5.5"
+                          : ev.panel}
                   </span>
                   <span className="text-muted-foreground">
                     {new Date(ev.at).toLocaleString("pt-BR")}

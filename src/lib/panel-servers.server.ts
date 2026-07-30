@@ -359,7 +359,7 @@ export async function runFullPanelCheck(panel: YaarsaPanel) {
 
     const ok = steps.every((s) => s.ok);
     const message = ok
-      ? `Tudo certo — uma compra na ${panel === "v46" ? "4.6" : "4.5.7"} entrega o login normalmente. IP entregue ao cliente: ${serverIp}`
+      ? `Tudo certo — uma compra na ${panel === "v46" ? "4.6" : panel === "v455" ? "4.5.5" : "4.5.7"} entrega o login normalmente. IP entregue ao cliente: ${serverIp}`
       : `Falhou em: ${steps.filter((s) => !s.ok).map((s) => s.step).join(", ")}`;
     await recordPanelTest(panel, ok, message);
     await logPanelEvent({ panel, action: "verificacao_completa", outcome: ok ? "ok" : "fail", message, baseUrl, serverIp, steps });

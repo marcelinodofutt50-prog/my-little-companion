@@ -348,7 +348,7 @@ async function fulfillOrderInner(orderId: string) {
       threadId = nt?.id;
     }
     if (threadId) {
-      const serverLabel = targetPanel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7";
+      const serverLabel = targetPanel === "v46" ? "Shadow 4.6" : targetPanel === "v455" ? "Shadow 4.5.5" : "Shadow 4.5.7";
       const giftHeader = giftMeta
         ? `🎁 *Você recebeu um presente${giftMeta.from ? ` de ${giftMeta.from}` : ""}!*${giftMeta.message ? `\n\n_"${giftMeta.message}"_` : ""}\n`
         : "";
