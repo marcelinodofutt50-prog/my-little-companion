@@ -1222,7 +1222,12 @@ function AdminPage() {
           {tab === "ia" && <LicenseAiPanel />}
           {tab === "apk" && <AdminApkPanel />}
           {tab === "market" && <AdminMarketPanel />}
-          {tab === "updates" && <AdminUpdatesPanel />}
+          {tab === "updates" && (
+            <div className="space-y-6">
+              <AdminUpdatesPanel />
+              <AdminAnnouncementsPanel />
+            </div>
+          )}
           {tab === "refunds" && <AdminRefundsPanel />}
           {tab === "selftest" && <AdminSelfTestPanel />}
 
