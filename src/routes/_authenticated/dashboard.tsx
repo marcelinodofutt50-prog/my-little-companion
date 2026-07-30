@@ -39,6 +39,7 @@ import { HowItWorksSteps } from "@/components/HowItWorksSteps";
 
 import { getMyProfile } from "@/lib/profile.functions";
 import { displayIdentity } from "@/lib/identity";
+import { friendlyPanelError } from "@/lib/panel-errors";
 import shadowMark from "@/assets/shadow-mask.png";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -862,7 +863,7 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
       else await disableFn({ data: { licenseId: lic.id, confirm: true } });
       toast.success(kind === "suspend" ? "Licença suspensa" : kind === "reactivate" ? "Licença reativada" : "Licença desativada");
       await onChanged();
-    } catch (e: any) { toast.error(e.message || "Falha na operação"); }
+    } catch (e: any) { toast.error(friendlyPanelError(e, "Falha na operação")); }
     setBusy(null);
   }
 
