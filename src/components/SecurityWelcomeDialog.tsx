@@ -249,6 +249,10 @@ export function SecurityWelcomeDialog() {
       setRemaining(nextCodes.length);
       setGeneratedAt(new Date().toISOString());
       setExhausted(false);
+      // Já gerou: marca o aviso como lido agora para que ele não volte a pedir
+      // geração de códigos no próximo login/F5.
+      void ackSecurityNoticeDirect().catch(() => {});
+
     } catch (e: any) {
       console.error("[recovery] falha final ao gerar códigos", {
         message: e?.message,
