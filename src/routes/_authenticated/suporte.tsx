@@ -17,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : undefined,
+    erro: s.erro === "1" || s.erro === 1 || s.erro === true ? true : undefined,
+    lic: typeof s.lic === "string" && s.lic ? s.lic.slice(0, 60) : undefined,
   }),
   component: SupportPage,
 });
@@ -37,7 +39,7 @@ type PendingMsg = {
 const PAGE_SIZE = 30;
 
 function SupportPage() {
-  const { reabrir } = Route.useSearch();
+  const { reabrir, erro, lic } = Route.useSearch();
   const [thread, setThread] = useState<Thread | null>(null);
 
   const [savingCat, setSavingCat] = useState(false);
@@ -90,6 +92,25 @@ function SupportPage() {
     });
     composerRef.current?.focus();
   }, [reabrir, thread?.id]);
+
+  // Chegou pelo botão "Tem algum erro?" do painel: já deixa a mensagem pronta.
+  const errorPrefillRef = useRef(false);
+  useEffect(() => {
+    if (!erro || !thread?.id || errorPrefillRef.current) return;
+    errorPrefillRef.current = true;
+    setBody((cur) =>
+      cur.trim()
+        ? cur
+        : `Estou com erro no meu login${lic ? ` (usuário: ${lic})` : ""}. ` +
+          "Código do erro (se aparecer): ___. Já tentei fechar e abrir o painel.",
+    );
+    setThread((t) => t);
+    setCatFn({ data: { threadId: thread.id, category: "login_error" as any } }).catch(() => {});
+    toast.info("Descreva o erro que a equipe corrige seu login", {
+      description: "Se aparecer um código (ex.: 803), coloque na mensagem.",
+    });
+    composerRef.current?.focus();
+  }, [erro, lic, thread?.id, setCatFn]);
 
 
   // Mensagens + realtime da thread ativa (re-assina quando a thread muda).
