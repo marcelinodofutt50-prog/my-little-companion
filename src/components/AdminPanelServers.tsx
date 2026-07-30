@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Server, ShieldCheck, ShieldAlert, RotateCcw, Plug, Save, Stethoscope, Check, X, ScrollText } from "lucide-react";
+import {
+  Loader2,
+  Server,
+  ShieldCheck,
+  ShieldAlert,
+  RotateCcw,
+  Plug,
+  Save,
+  Stethoscope,
+  Check,
+  X,
+  ScrollText,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +64,17 @@ export function AdminPanelServers() {
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [events, setEvents] = useState<any[]>([]);
-  const [checks, setChecks] = useState<Record<string, { ok: boolean; message: string; serverIp: string; steps: { step: string; ok: boolean; detail: string }[] }>>({});
+  const [checks, setChecks] = useState<
+    Record<
+      string,
+      {
+        ok: boolean;
+        message: string;
+        serverIp: string;
+        steps: { step: string; ok: boolean; detail: string }[];
+      }
+    >
+  >({});
 
   const listFn = useServerFn(adminListPanelServers);
   const saveFn = useServerFn(adminSavePanelServer);
@@ -112,7 +134,9 @@ export function AdminPanelServers() {
     }
     setBusy(`test-${panel}`);
     try {
-      const res: any = await testFn({ data: { baseUrl: d.baseUrl.trim(), adminKey: d.adminKey.trim() } });
+      const res: any = await testFn({
+        data: { baseUrl: d.baseUrl.trim(), adminKey: d.adminKey.trim() },
+      });
       if (res.ok) toast.success(res.message);
       else toast.error(res.message);
     } catch (e: any) {
@@ -214,18 +238,18 @@ export function AdminPanelServers() {
           <span className="font-semibold">Servidores dos painéis (VPS)</span>
         </div>
         <p className="mt-1 font-mono text-[11px] leading-relaxed text-muted-foreground">
-          Troque a VPS de qualquer versão sem precisar de deploy. O que você salvar aqui passa a valer
-          imediatamente para emissão, renovação, troca de senha e remoção de logins. A admin key é
-          guardada criptografada e nunca aparece de volta na tela.
+          Troque a VPS de qualquer versão sem precisar de deploy. O que você salvar aqui passa a
+          valer imediatamente para emissão, renovação, troca de senha e remoção de logins. A admin
+          key é guardada criptografada e nunca aparece de volta na tela.
         </p>
         <div className="mt-3 rounded border border-amber-500/30 bg-amber-500/10 p-3 font-mono text-[11px] leading-relaxed text-amber-200">
-          <span className="font-semibold">Verificação completa:</span> para ter certeza de que uma VPS está
-          pronta para vender, clique no botão{" "}
+          <span className="font-semibold">Verificação completa:</span> para ter certeza de que uma
+          VPS está pronta para vender, clique no botão{" "}
           <span className="inline-flex items-center gap-1 rounded bg-background/60 px-1.5 py-0.5 font-semibold text-foreground">
             <Stethoscope className="h-3 w-3" /> Verificação completa
           </span>{" "}
-          ao lado de cada servidor. Ele simula uma compra real (cria o login, define a senha, estende a
-          validade e apaga tudo no fim). Só libere vendas quando aparecer{" "}
+          ao lado de cada servidor. Ele simula uma compra real (cria o login, define a senha,
+          estende a validade e apaga tudo no fim). Só libere vendas quando aparecer{" "}
           <span className="font-semibold text-primary">Pronto para vender</span>.
         </div>
       </div>
@@ -284,7 +308,13 @@ export function AdminPanelServers() {
               <div>
                 em uso agora: <span className="text-foreground">{effective[panel] || "—"}</span>{" "}
                 <span className="opacity-70">
-                  ({source[panel] === "painel" ? "definido aqui" : source[panel] === "ambiente" ? "variável de ambiente" : "padrão do código"})
+                  (
+                  {source[panel] === "painel"
+                    ? "definido aqui"
+                    : source[panel] === "ambiente"
+                      ? "variável de ambiente"
+                      : "padrão do código"}
+                  )
                 </span>
               </div>
               <div>
@@ -298,7 +328,8 @@ export function AdminPanelServers() {
               )}
               {row?.adminKeyBroken && (
                 <div className="text-danger">
-                  a chave salva não pôde ser lida (LICENSE_ENC_KEY mudou) — salve a admin key de novo
+                  a chave salva não pôde ser lida (LICENSE_ENC_KEY mudou) — salve a admin key de
+                  novo
                 </div>
               )}
               {!row && envFallback[panel] && <div>ambiente: {envFallback[panel]}</div>}
@@ -309,7 +340,8 @@ export function AdminPanelServers() {
                   ) : (
                     <ShieldAlert className="h-3 w-3 text-danger" />
                   )}
-                  último teste {new Date(row.lastTestAt).toLocaleString("pt-BR")} — {row.lastTestMessage}
+                  último teste {new Date(row.lastTestAt).toLocaleString("pt-BR")} —{" "}
+                  {row.lastTestMessage}
                 </div>
               )}
               {row?.updatedByEmail && <div>alterado por {row.updatedByEmail}</div>}
@@ -318,11 +350,14 @@ export function AdminPanelServers() {
             {checks[panel] && (
               <div
                 className={`mt-3 rounded border p-3 font-mono text-[11px] ${
-                  checks[panel].ok ? "border-primary/40 bg-primary/5" : "border-danger/40 bg-danger/5"
+                  checks[panel].ok
+                    ? "border-primary/40 bg-primary/5"
+                    : "border-danger/40 bg-danger/5"
                 }`}
               >
                 <div className="mb-2 font-semibold">
-                  {checks[panel].ok ? "Pronto para vender" : "Não está pronto"} — {checks[panel].message}
+                  {checks[panel].ok ? "Pronto para vender" : "Não está pronto"} —{" "}
+                  {checks[panel].message}
                 </div>
                 <ul className="space-y-1">
                   {checks[panel].steps.map((st, i) => (
@@ -343,7 +378,9 @@ export function AdminPanelServers() {
 
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <div>
-                <label className="font-mono text-[10px] uppercase text-muted-foreground">Apelido</label>
+                <label className="font-mono text-[10px] uppercase text-muted-foreground">
+                  Apelido
+                </label>
                 <Input
                   value={d.label}
                   onChange={(e) => setDraft(panel, { label: e.target.value })}
@@ -376,7 +413,9 @@ export function AdminPanelServers() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="font-mono text-[10px] uppercase text-muted-foreground">Observações</label>
+                <label className="font-mono text-[10px] uppercase text-muted-foreground">
+                  Observações
+                </label>
                 <Textarea
                   value={d.notes}
                   onChange={(e) => setDraft(panel, { notes: e.target.value })}
@@ -388,7 +427,12 @@ export function AdminPanelServers() {
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => testDraft(panel)} disabled={busy === `test-${panel}`}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => testDraft(panel)}
+                disabled={busy === `test-${panel}`}
+              >
                 {busy === `test-${panel}` ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
@@ -435,11 +479,13 @@ export function AdminPanelServers() {
           <span className="font-semibold">Registro de verificações e trocas</span>
         </div>
         <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-          Toda verificação completa e toda troca de VPS fica registrada aqui, com quem fez, quando e o
-          resultado de cada passo. Trocas reprovadas são desfeitas automaticamente.
+          Toda verificação completa e toda troca de VPS fica registrada aqui, com quem fez, quando e
+          o resultado de cada passo. Trocas reprovadas são desfeitas automaticamente.
         </p>
         {events.length === 0 ? (
-          <div className="mt-3 font-mono text-[11px] text-muted-foreground">nenhum registro ainda</div>
+          <div className="mt-3 font-mono text-[11px] text-muted-foreground">
+            nenhum registro ainda
+          </div>
         ) : (
           <ul className="mt-3 space-y-2">
             {events.map((ev) => (
@@ -454,7 +500,9 @@ export function AdminPanelServers() {
                   <span className="text-muted-foreground">
                     {ev.panel === "v46" ? "4.6" : ev.panel === "v457" ? "4.5.7" : ev.panel}
                   </span>
-                  <span className="text-muted-foreground">{new Date(ev.at).toLocaleString("pt-BR")}</span>
+                  <span className="text-muted-foreground">
+                    {new Date(ev.at).toLocaleString("pt-BR")}
+                  </span>
                   {ev.actor && <span className="text-muted-foreground">por {ev.actor}</span>}
                 </div>
                 <div className="mt-1 text-muted-foreground">{ev.message}</div>
