@@ -192,6 +192,41 @@ export function AdminMigrationWaves() {
               className="mt-1 h-9 font-mono text-xs"
             />
           </div>
+          {isTest ? (
+            <div className="sm:col-span-2 space-y-3 rounded-md border border-violet/40 bg-violet/5 p-3">
+              <p className="font-mono text-[11px] text-muted-foreground">
+                <span className="text-foreground">VPS do servidor beta</span> — preencha para que os
+                logins de teste sejam criados nesta VPS. Se deixar vazio, usa a VPS oficial do
+                painel selecionado.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider">
+                    Endereço da VPS de teste
+                  </Label>
+                  <Input
+                    value={testBaseUrl}
+                    onChange={(e) => setTestBaseUrl(e.target.value)}
+                    placeholder="http://200.9.154.103/yaarsa/proxy.php"
+                    className="mt-1 h-9 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <Label className="font-mono text-[10px] uppercase tracking-wider">
+                    Admin key da VPS de teste
+                  </Label>
+                  <Input
+                    type="password"
+                    value={testAdminKey}
+                    onChange={(e) => setTestAdminKey(e.target.value)}
+                    placeholder="••••••••"
+                    className="mt-1 h-9 font-mono text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="sm:col-span-2">
             <Label className="font-mono text-[10px] uppercase tracking-wider">
               Instruções extras para o cliente (opcional)
