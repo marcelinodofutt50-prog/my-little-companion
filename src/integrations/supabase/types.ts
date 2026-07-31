@@ -659,6 +659,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           deadline_at: string
+          has_deadline: boolean
           id: string
           instructions: string
           is_active: boolean
@@ -674,6 +675,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deadline_at: string
+          has_deadline?: boolean
           id?: string
           instructions?: string
           is_active?: boolean
@@ -689,6 +691,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deadline_at?: string
+          has_deadline?: boolean
           id?: string
           instructions?: string
           is_active?: boolean
