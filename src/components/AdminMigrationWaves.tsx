@@ -253,7 +253,18 @@ export function AdminMigrationWaves() {
                   )}
                   <span>{w.is_test ? "testando" : "migrados"}: {w.migratedCount}</span>
                   <span>faltando: {w.pendingCount}</span>
+                  {w.votes ? (
+                    <span className="text-violet">
+                      votos: {w.votes.approvePct}% aprovam ({w.votes.approve} sim / {w.votes.reject}{" "}
+                      não · {w.votes.total} votos)
+                    </span>
+                  ) : null}
                 </div>
+                {w.votes && w.votes.total > 0 ? (
+                  <div className="mt-1 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                    <div className="h-full bg-violet" style={{ width: `${w.votes.approvePct}%` }} />
+                  </div>
+                ) : null}
                 <p className="mt-1 text-[10px] text-muted-foreground">
                   {w.is_test
                     ? w.is_active
