@@ -17,6 +17,7 @@ export type Wave = {
   opened_at: string;
   deadline_at: string;
   is_active: boolean;
+  is_test: boolean;
   closed_at: string | null;
 };
 
@@ -93,7 +94,7 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     .eq("id", waveId)
     .maybeSingle();
   if (!wave || !wave.is_active) throw new Error("Esta migração não está mais aberta.");
-  if (new Date(wave.deadline_at).getTime() < Date.now()) {
+  if (!wave.is_test && new Date(wave.deadline_at).getTime() < Date.now()) {
     throw new Error("O prazo desta migração já encerrou. Fale com o suporte.");
   }
 
@@ -243,6 +244,7 @@ export async function openWave(input: {
   instructions: string;
   serverLabel?: string | null;
   deadlineHours: number;
+  isTest?: boolean;
   actorId: string;
 }) {
   const supabase = await db();
@@ -251,6 +253,7 @@ export async function openWave(input: {
     .from("migration_waves")
     .update({ is_active: false, closed_at: new Date().toISOString() })
     .eq("panel", input.panel)
+    .eq("is_test", !!input.isTest)
     .eq("is_active", true);
 
   const deadline = new Date(Date.now() + input.deadlineHours * 3600_000).toISOString();
@@ -263,6 +266,7 @@ export async function openWave(input: {
       server_label: input.serverLabel ?? null,
       deadline_at: deadline,
       created_by: input.actorId,
+      is_test: !!input.isTest,
       is_active: true,
     })
     .select("*")
@@ -282,7 +286,8 @@ export async function closeWave(waveId: string, revokeOld: boolean) {
   if (!wave) throw new Error("Onda não encontrada");
 
   let revoked = 0;
-  if (revokeOld) revoked = await revokeOldLicenses(wave as Wave);
+  // Onda de teste nunca revoga nada — é opcional para o cliente.
+  if (revokeOld && !wave.is_test) revoked = await revokeOldLicenses(wave as Wave);
 
   await supabase
     .from("migration_waves")
@@ -336,6 +341,7 @@ export async function enforceExpiredWaves() {
     .from("migration_waves")
     .select("*")
     .eq("is_active", true)
+    .eq("is_test", false)
     .lt("deadline_at", new Date().toISOString());
   if (error) {
     if (/does not exist|42P01/i.test(error.message ?? "")) return { waves: 0, revoked: 0 };
