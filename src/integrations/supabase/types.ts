@@ -653,6 +653,44 @@ export type Database = {
           },
         ]
       }
+      migration_wave_votes: {
+        Row: {
+          approve: boolean
+          comment: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          wave_id: string
+        }
+        Insert: {
+          approve: boolean
+          comment?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          wave_id: string
+        }
+        Update: {
+          approve?: boolean
+          comment?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          wave_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "migration_wave_votes_wave_id_fkey"
+            columns: ["wave_id"]
+            isOneToOne: false
+            referencedRelation: "migration_waves"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       migration_waves: {
         Row: {
           closed_at: string | null

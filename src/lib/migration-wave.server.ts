@@ -219,7 +219,12 @@ export async function listWavesForAdmin() {
       .select("id", { count: "exact", head: true })
       .eq("wave_id", w.id)
       .eq("status", "migrated");
-    out.push({ ...w, migratedCount: count ?? 0, pendingCount: await pendingCount(w) });
+    out.push({
+      ...w,
+      migratedCount: count ?? 0,
+      pendingCount: await pendingCount(w),
+      votes: w.is_test ? await tallyWaveVotes(w.id) : null,
+    });
   }
   return out;
 }
@@ -360,4 +365,107 @@ export async function enforceExpiredWaves() {
       .eq("id", w.id);
   }
   return { waves: (data ?? []).length, revoked };
+}
+
+// ------------------------------------------------------------------ votação
+
+export type VoteTally = { approve: number; reject: number; total: number; approvePct: number };
+
+/** Apuração dos votos de uma onda de teste. */
+export async function tallyWaveVotes(waveId: string): Promise<VoteTally> {
+  const supabase = await db();
+  const { data, error } = await supabase
+    .from("migration_wave_votes")
+    .select("approve")
+    .eq("wave_id", waveId);
+  if (error) {
+    if (/does not exist|42P01/i.test(error.message ?? "")) {
+      return { approve: 0, reject: 0, total: 0, approvePct: 0 };
+    }
+    throw new Error(error.message);
+  }
+  const rows = data ?? [];
+  const approve = rows.filter((r: any) => r.approve).length;
+  const total = rows.length;
+  return {
+    approve,
+    reject: total - approve,
+    total,
+    approvePct: total === 0 ? 0 : Math.round((approve / total) * 100),
+  };
+}
+
+/** Estado da votação para o cliente: só pode votar quem criou o login de teste. */
+export async function getVoteStateForUser(waveId: string, userId: string) {
+  const supabase = await db();
+  const { data: claims } = await supabase
+    .from("migration_wave_claims")
+    .select("id")
+    .eq("wave_id", waveId)
+    .eq("user_id", userId)
+    .limit(1);
+  const { data: mine } = await supabase
+    .from("migration_wave_votes")
+    .select("approve,comment")
+    .eq("wave_id", waveId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return {
+    canVote: (claims ?? []).length > 0,
+    myVote: mine ? { approve: !!mine.approve, comment: (mine.comment ?? "") as string } : null,
+    tally: await tallyWaveVotes(waveId),
+  };
+}
+
+/** Registra (ou troca) o voto do cliente sobre o servidor de teste. */
+export async function castWaveVote(
+  waveId: string,
+  userId: string,
+  approve: boolean,
+  comment: string,
+) {
+  const supabase = await db();
+  const { data: wave } = await supabase
+    .from("migration_waves")
+    .select("id,is_test,is_active")
+    .eq("id", waveId)
+    .maybeSingle();
+  if (!wave) throw new Error("Onda não encontrada.");
+  if (!wave.is_test) throw new Error("Esta onda não é um teste — não há votação.");
+  if (!wave.is_active) throw new Error("A votação deste teste já foi encerrada.");
+
+  const { data: claims } = await supabase
+    .from("migration_wave_claims")
+    .select("id")
+    .eq("wave_id", waveId)
+    .eq("user_id", userId)
+    .limit(1);
+  if ((claims ?? []).length === 0) {
+    throw new Error("Crie e teste o login do servidor novo antes de votar.");
+  }
+
+  const { error } = await supabase
+    .from("migration_wave_votes")
+    .upsert(
+      { wave_id: waveId, user_id: userId, approve, comment: comment || null, updated_at: new Date().toISOString() },
+      { onConflict: "wave_id,user_id" },
+    );
+  if (error) throw new Error(error.message);
+  return { ok: true, tally: await tallyWaveVotes(waveId) };
+}
+
+/** Lista os votos com comentário para o admin ler o feedback. */
+export async function listWaveVotesForAdmin(waveId: string) {
+  const supabase = await db();
+  const { data, error } = await supabase
+    .from("migration_wave_votes")
+    .select("approve,comment,updated_at")
+    .eq("wave_id", waveId)
+    .order("updated_at", { ascending: false })
+    .limit(100);
+  if (error) {
+    if (/does not exist|42P01/i.test(error.message ?? "")) return [];
+    throw new Error(error.message);
+  }
+  return data ?? [];
 }

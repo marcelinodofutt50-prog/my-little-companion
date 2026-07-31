@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getMyMigrationWave, claimMigrationWave } from "@/lib/migration-wave.functions";
+import { MigrationWaveVote } from "@/components/MigrationWaveVote";
 import { toast } from "sonner";
 
 const PANEL_LABEL: Record<string, string> = { v455: "4.5.5", v457: "4.5.7", v46: "4.6" };
@@ -70,13 +71,14 @@ export function MigrationWaveCard() {
   if (status === "migrated" && !creds) {
     return (
       <Card className="mb-4 border-neon/40 bg-background/60">
-        <CardContent className="flex items-center gap-3 py-3">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-neon" />
-          <p className="font-mono text-[11px] text-muted-foreground">
+        <CardContent className="py-3">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-neon" />
+            <p className="font-mono text-[11px] text-muted-foreground">
             {isTest ? (
               <>
                 <span className="text-neon">Login de teste criado</span> — teste o servidor novo do
-                painel {PANEL_LABEL[wave.panel]} e conte pra gente no suporte se ficou bom. Seu
+                painel {PANEL_LABEL[wave.panel]} e vote abaixo se ele já pode virar oficial. Seu
                 login antigo continua funcionando normalmente.
                 {countdown ? (
                   <>
@@ -98,7 +100,9 @@ export function MigrationWaveCard() {
             )}
               </>
             )}
-          </p>
+            </p>
+          </div>
+          {isTest ? <MigrationWaveVote waveId={wave.id} /> : null}
         </CardContent>
       </Card>
     );
