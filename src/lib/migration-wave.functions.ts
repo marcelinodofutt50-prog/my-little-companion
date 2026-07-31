@@ -95,6 +95,9 @@ export const adminOpenMigrationWave = createServerFn({ method: "POST" })
         deadlineHours: z.coerce.number().int().min(2).max(240).default(48),
         isTest: z.boolean().default(false),
         hasDeadline: z.boolean().default(true),
+        testBaseUrl: z.string().trim().max(300).optional().nullable(),
+        testAdminKey: z.string().trim().max(300).optional().nullable(),
+
       })
       .parse(i),
   )

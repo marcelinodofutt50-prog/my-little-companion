@@ -86,7 +86,10 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     yaarsaExtend,
     generateCredentials,
     encrypt,
+    decrypt,
+    withPanelConfig,
     resolvePanelServerHost,
+
   } = await import("@/lib/yaarsa.server");
 
   const { data: wave } = await supabase
@@ -108,11 +111,12 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     );
   }
 
-
+  const run = async () => {
   const serverIp = await resolvePanelServerHost(wave.panel as YaarsaPanel);
   const created: { username: string; email: string; password: string; server_ip: string }[] = [];
 
   for (const old of pending.slice(0, 5)) {
+
     // Trava atômica: a unique (wave_id, old_license_id) impede gerar 2x.
     const { error: claimErr } = await supabase.from("migration_wave_claims").insert({
       wave_id: wave.id,
@@ -194,9 +198,28 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     }
   }
 
-  if (created.length === 0) throw new Error("Seu login novo já foi gerado. Atualize a página.");
-  return { ok: true, credentials: created, deadlineAt: wave.deadline_at as string };
+    if (created.length === 0) throw new Error("Seu login novo já foi gerado. Atualize a página.");
+    return { ok: true, credentials: created, deadlineAt: wave.deadline_at as string };
+  };
+
+  // VPS própria da onda (servidor beta): usa o endereço/admin key da onda,
+  // sem mexer na configuração oficial do painel.
+  if (wave.test_base_url && wave.test_admin_key_enc) {
+    let adminKey = "";
+    try {
+      adminKey = decrypt(wave.test_admin_key_enc);
+    } catch {
+      throw new Error("A admin key da VPS de teste está inválida. Reconfigure a onda no admin.");
+    }
+    return withPanelConfig(
+      wave.panel as YaarsaPanel,
+      { baseUrl: String(wave.test_base_url), adminKey },
+      run,
+    );
+  }
+  return run();
 }
+
 
 // ------------------------------------------------------------------ admin
 
@@ -219,12 +242,15 @@ export async function listWavesForAdmin() {
       .select("id", { count: "exact", head: true })
       .eq("wave_id", w.id)
       .eq("status", "migrated");
+    const { test_admin_key_enc, ...safe } = w as any;
     out.push({
-      ...w,
+      ...safe,
+      hasTestVps: !!test_admin_key_enc,
       migratedCount: count ?? 0,
       pendingCount: await pendingCount(w),
       votes: w.is_test ? await tallyWaveVotes(w.id) : null,
     });
+
   }
   return out;
 }
@@ -252,6 +278,8 @@ export async function openWave(input: {
   deadlineHours: number;
   isTest?: boolean;
   hasDeadline?: boolean;
+  testBaseUrl?: string | null;
+  testAdminKey?: string | null;
   actorId: string;
 }) {
   const supabase = await db();
@@ -262,6 +290,12 @@ export async function openWave(input: {
     .eq("panel", input.panel)
     .eq("is_test", !!input.isTest)
     .eq("is_active", true);
+
+  let testAdminKeyEnc: string | null = null;
+  if (input.testBaseUrl && input.testAdminKey) {
+    const { encrypt } = await import("@/lib/yaarsa.server");
+    testAdminKeyEnc = encrypt(input.testAdminKey.trim());
+  }
 
   const deadline = new Date(Date.now() + input.deadlineHours * 3600_000).toISOString();
   const { data, error } = await supabase
@@ -275,8 +309,11 @@ export async function openWave(input: {
       created_by: input.actorId,
       is_test: !!input.isTest,
       has_deadline: input.hasDeadline !== false,
+      test_base_url: testAdminKeyEnc ? input.testBaseUrl!.trim() : null,
+      test_admin_key_enc: testAdminKeyEnc,
       is_active: true,
     })
+
     .select("*")
     .single();
   if (error) throw new Error(error.message);
