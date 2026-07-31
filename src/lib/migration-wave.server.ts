@@ -194,9 +194,28 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     }
   }
 
-  if (created.length === 0) throw new Error("Seu login novo já foi gerado. Atualize a página.");
-  return { ok: true, credentials: created, deadlineAt: wave.deadline_at as string };
+    if (created.length === 0) throw new Error("Seu login novo já foi gerado. Atualize a página.");
+    return { ok: true, credentials: created, deadlineAt: wave.deadline_at as string };
+  };
+
+  // VPS própria da onda (servidor beta): usa o endereço/admin key da onda,
+  // sem mexer na configuração oficial do painel.
+  if (wave.test_base_url && wave.test_admin_key_enc) {
+    let adminKey = "";
+    try {
+      adminKey = decrypt(wave.test_admin_key_enc);
+    } catch {
+      throw new Error("A admin key da VPS de teste está inválida. Reconfigure a onda no admin.");
+    }
+    return withPanelConfig(
+      wave.panel as YaarsaPanel,
+      { baseUrl: String(wave.test_base_url), adminKey },
+      run,
+    );
+  }
+  return run();
 }
+
 
 // ------------------------------------------------------------------ admin
 
