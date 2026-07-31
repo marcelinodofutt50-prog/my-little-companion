@@ -59,6 +59,7 @@ import { AdminEmailMetrics } from "@/components/AdminEmailMetrics";
 import { AdminAntifraudPanel } from "@/components/AdminAntifraudPanel";
 import { AdminHealthPanel } from "@/components/AdminHealthPanel";
 import { AdminPanelServers } from "@/components/AdminPanelServers";
+import { AdminMigrationWaves } from "@/components/AdminMigrationWaves";
 import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
 import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
@@ -2091,7 +2092,12 @@ function AdminPage() {
                 {role === "admin" && <AdminPanelServers />}
               </div>
             )}
-            {tab === "servers" && role === "admin" && <AdminPanelServers />}
+            {tab === "servers" && role === "admin" && (
+              <div className="space-y-6">
+                <AdminPanelServers />
+                <AdminMigrationWaves />
+              </div>
+            )}
             {tab === "logs" && <AdminLogsPanel />}
             {tab === "audit" && (
               <div className="space-y-4">
