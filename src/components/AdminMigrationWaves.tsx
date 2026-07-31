@@ -27,6 +27,7 @@ export function AdminMigrationWaves() {
   const [serverLabel, setServerLabel] = useState("");
   const [instructions, setInstructions] = useState("");
   const [hours, setHours] = useState(48);
+  const [isTest, setIsTest] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const { data: waves = [] } = useQuery({
@@ -36,7 +37,14 @@ export function AdminMigrationWaves() {
   });
 
   const publish = async () => {
-    if (!confirm(`Publicar a onda de migração do painel ${PANEL_LABEL[panel]}?`)) return;
+    if (
+      !confirm(
+        isTest
+          ? `Publicar o CONVITE DE TESTE do painel ${PANEL_LABEL[panel]}? Ninguém perde o login antigo.`
+          : `Publicar a onda de migração do painel ${PANEL_LABEL[panel]}?`,
+      )
+    )
+      return;
     setBusy(true);
     try {
       await openFn({
@@ -46,9 +54,14 @@ export function AdminMigrationWaves() {
           instructions,
           serverLabel: serverLabel || null,
           deadlineHours: hours,
+          isTest,
         },
       });
-      toast.success("Onda publicada — os clientes elegíveis já veem o aviso");
+      toast.success(
+        isTest
+          ? "Convite de teste publicado — os clientes podem testar sem perder o login antigo"
+          : "Onda publicada — os clientes elegíveis já veem o aviso",
+      );
       qc.invalidateQueries({ queryKey: ["admin-migration-waves"] });
     } catch (e: any) {
       toast.error(e?.message ?? "Falha ao publicar");
@@ -91,6 +104,29 @@ export function AdminMigrationWaves() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-violet/40 bg-violet/5 p-2.5">
+          <input
+            type="checkbox"
+            checked={isTest}
+            onChange={(e) => {
+              const v = e.target.checked;
+              setIsTest(v);
+              setTitle(
+                v
+                  ? "Novo update em teste — crie um login e teste o servidor novo"
+                  : "Novo servidor disponível — gere seu login novo",
+              );
+            }}
+            className="mt-0.5 h-3.5 w-3.5 accent-violet-500"
+          />
+          <span className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+            <span className="text-foreground">Servidor em teste (beta)</span> — o cliente recebe um
+            convite opcional para criar um login e testar o servidor novo.{" "}
+            <span className="text-foreground">Sem prazo e sem revogar o login antigo.</span> Quando
+            aprovar, encerre este convite e publique a onda definitiva.
+          </span>
+        </label>
+
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label className="font-mono text-[10px] uppercase tracking-wider">Painel</Label>
@@ -104,7 +140,7 @@ export function AdminMigrationWaves() {
               <option value="v455">Shadow 4.5.5</option>
             </select>
           </div>
-          <div>
+          <div className={isTest ? "hidden" : ""}>
             <Label className="font-mono text-[10px] uppercase tracking-wider">Prazo (horas)</Label>
             <Input
               type="number"
@@ -173,7 +209,12 @@ export function AdminMigrationWaves() {
                   >
                     {w.is_active ? "ativa" : "encerrada"}
                   </span>
-                  {w.is_active && new Date(w.deadline_at).getTime() <= Date.now() ? (
+                  {w.is_test ? (
+                    <span className="rounded bg-violet/15 px-1.5 py-0.5 text-[10px] uppercase text-violet">
+                      teste
+                    </span>
+                  ) : null}
+                  {w.is_active && !w.is_test && new Date(w.deadline_at).getTime() <= Date.now() ? (
                     <span className="rounded bg-danger/15 px-1.5 py-0.5 text-[10px] uppercase text-danger">
                       prazo vencido
                     </span>
@@ -182,15 +223,26 @@ export function AdminMigrationWaves() {
                   <span className="text-muted-foreground">{w.title}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-3 text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Timer className="h-3 w-3" />
-                    prazo {new Date(w.deadline_at).toLocaleString("pt-BR")}
-                  </span>
-                  <span>migrados: {w.migratedCount}</span>
+                  {w.is_test ? (
+                    <span className="flex items-center gap-1">
+                      <Timer className="h-3 w-3" />
+                      sem prazo (teste)
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <Timer className="h-3 w-3" />
+                      prazo {new Date(w.deadline_at).toLocaleString("pt-BR")}
+                    </span>
+                  )}
+                  <span>{w.is_test ? "testando" : "migrados"}: {w.migratedCount}</span>
                   <span>faltando: {w.pendingCount}</span>
                 </div>
                 <p className="mt-1 text-[10px] text-muted-foreground">
-                  {!w.is_active
+                  {w.is_test
+                    ? w.is_active
+                      ? `Convite de teste ativo — ${w.migratedCount} cliente(s) já criaram login no servidor novo. Nada é revogado.`
+                      : "Convite de teste encerrado."
+                    : !w.is_active
                     ? "Onda encerrada — os clientes não conseguem mais gerar login novo por aqui."
                     : new Date(w.deadline_at).getTime() <= Date.now()
                       ? "Prazo vencido: o botão do cliente está bloqueado. A revogação automática roda a cada 15 min."
@@ -215,7 +267,7 @@ export function AdminMigrationWaves() {
                       variant="destructive"
                       disabled={busy}
                       onClick={() => close(w.id, true)}
-                      className="h-7 font-mono text-[10px] uppercase"
+                      className={`h-7 font-mono text-[10px] uppercase ${w.is_test ? "hidden" : ""}`}
                     >
                       <ShieldOff className="mr-1.5 h-3 w-3" />
                       Revogar antigos agora

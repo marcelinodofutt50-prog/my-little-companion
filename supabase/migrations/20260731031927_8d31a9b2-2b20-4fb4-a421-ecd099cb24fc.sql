@@ -1,0 +1,1 @@
+ALTER TABLE public.migration_waves ADD COLUMN IF NOT EXISTS is_test boolean NOT NULL DEFAULT false;

@@ -39,6 +39,7 @@ export function MigrationWaveCard() {
 
   if (!data) return null;
   const { wave, pending, alreadyMigrated } = data;
+  const isTest = !!(wave as any).isTest;
   const status = (data as any).status as "pending" | "expired" | "migrated";
   const left = hoursLeft(wave.deadlineAt);
   const urgent = left <= 12;
@@ -51,7 +52,14 @@ export function MigrationWaveCard() {
         <CardContent className="flex items-center gap-3 py-3">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-neon" />
           <p className="font-mono text-[11px] text-muted-foreground">
-            Migração concluída — você já gerou o login novo do painel {PANEL_LABEL[wave.panel]}.{" "}
+            {isTest ? (
+              <>
+                <span className="text-neon">Login de teste criado</span> — teste o servidor novo do
+                painel {PANEL_LABEL[wave.panel]} e conte pra gente no suporte se ficou bom. Seu
+                login antigo continua funcionando normalmente.
+              </>
+            ) : (
+              <>Migração concluída — você já gerou o login novo do painel {PANEL_LABEL[wave.panel]}.{" "}
             {left > 0 ? (
               <>
                 O login antigo será revogado em{" "}
@@ -60,6 +68,8 @@ export function MigrationWaveCard() {
               </>
             ) : (
               <>O login antigo já foi revogado. Use apenas o login novo.</>
+            )}
+              </>
             )}
           </p>
         </CardContent>
@@ -105,19 +115,23 @@ export function MigrationWaveCard() {
     <>
       <Card
         className={`relative mb-4 overflow-hidden border bg-background/60 ${
-          urgent ? "border-danger/60" : "border-amber-400/50"
+          isTest ? "border-violet/50" : urgent ? "border-danger/60" : "border-amber-400/50"
         }`}
       >
         <div
           className={`pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full opacity-10 blur-2xl ${
-            urgent ? "bg-danger" : "bg-amber-400"
+            isTest ? "bg-violet" : urgent ? "bg-danger" : "bg-amber-400"
           }`}
         />
         <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <div
               className={`rounded-md p-1.5 ${
-                urgent ? "bg-danger/10 text-danger" : "bg-amber-400/10 text-amber-400"
+                isTest
+                  ? "bg-violet/10 text-violet"
+                  : urgent
+                    ? "bg-danger/10 text-danger"
+                    : "bg-amber-400/10 text-amber-400"
               }`}
             >
               <ServerCog className="h-4 w-4" />
@@ -125,18 +139,28 @@ export function MigrationWaveCard() {
             <div>
               <p className="font-display text-sm font-semibold tracking-tight">{wave.title}</p>
               <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-                Novo servidor do painel {PANEL_LABEL[wave.panel]}
-                {wave.serverLabel ? ` · ${wave.serverLabel}` : ""} · gere seu login novo antes do
-                prazo.
+                {isTest ? "Servidor novo em teste" : "Novo servidor"} do painel{" "}
+                {PANEL_LABEL[wave.panel]}
+                {wave.serverLabel ? ` · ${wave.serverLabel}` : ""}
+                {isTest
+                  ? " · crie um login e teste agora, sem perder o seu login atual."
+                  : " · gere seu login novo antes do prazo."}
               </p>
-              <p
-                className={`mt-1 flex items-center gap-1 font-mono text-[11px] ${
-                  urgent ? "text-danger" : "text-amber-400"
-                }`}
-              >
-                <Timer className="h-3 w-3" />
-                {left}h restantes — depois disso o login antigo é revogado.
-              </p>
+              {isTest ? (
+                <p className="mt-1 flex items-center gap-1 font-mono text-[11px] text-violet">
+                  <Timer className="h-3 w-3" />
+                  Opcional · sem prazo · seu login antigo continua ativo.
+                </p>
+              ) : (
+                <p
+                  className={`mt-1 flex items-center gap-1 font-mono text-[11px] ${
+                    urgent ? "text-danger" : "text-amber-400"
+                  }`}
+                >
+                  <Timer className="h-3 w-3" />
+                  {left}h restantes — depois disso o login antigo é revogado.
+                </p>
+              )}
             </div>
           </div>
           <Button
@@ -145,10 +169,18 @@ export function MigrationWaveCard() {
             disabled={!canClaim || loading}
             title={canClaim ? undefined : "Nenhum login pendente de migração"}
             className={`shrink-0 font-mono text-[11px] uppercase tracking-wider ${
-              urgent ? "bg-danger hover:bg-danger/90" : "bg-amber-500 hover:bg-amber-500/90"
+              isTest
+                ? "bg-violet hover:bg-violet/90"
+                : urgent
+                  ? "bg-danger hover:bg-danger/90"
+                  : "bg-amber-500 hover:bg-amber-500/90"
             }`}
           >
-            {canClaim ? "Gerar login novo" : "Sem login pendente"}
+            {canClaim
+              ? isTest
+                ? "Testar servidor novo"
+                : "Gerar login novo"
+              : "Sem login pendente"}
           </Button>
 
         </CardContent>
@@ -161,7 +193,9 @@ export function MigrationWaveCard() {
               <DialogHeader>
                 <DialogTitle className="font-display">Login novo criado</DialogTitle>
                 <DialogDescription className="font-mono text-[11px]">
-                  Configure o app com estes dados. O login antigo para de funcionar em {left}h.
+                  {isTest
+                    ? "Configure o app com estes dados para testar o servidor novo. Seu login antigo continua funcionando."
+                    : `Configure o app com estes dados. O login antigo para de funcionar em ${left}h.`}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-2">
@@ -198,37 +232,69 @@ export function MigrationWaveCard() {
               <DialogHeader>
                 <DialogTitle className="font-display">Antes de gerar seu login novo</DialogTitle>
                 <DialogDescription className="font-mono text-[11px]">
-                  Leia com atenção — depois do prazo o login antigo é revogado automaticamente.
+                  {isTest
+                    ? "Teste opcional do servidor novo — nada acontece com o seu login atual."
+                    : "Leia com atenção — depois do prazo o login antigo é revogado automaticamente."}
                 </DialogDescription>
               </DialogHeader>
-              <ol className="space-y-2 font-mono text-[11px] text-muted-foreground">
-                <li>
-                  <span className="text-foreground">1.</span> Abra o painel antigo e{" "}
-                  <span className="text-foreground">resuma / anote todos os seus clientes</span>.
-                </li>
-                <li>
-                  <span className="text-foreground">2.</span> Faça backup do que precisar (listas,
-                  configurações, arquivos) — nada é transferido sozinho.
-                </li>
-                <li>
-                  <span className="text-foreground">3.</span> Gere o login novo aqui e recadastre
-                  seus clientes no servidor novo.
-                </li>
-                <li>
-                  <span className="text-foreground">4.</span> Você tem{" "}
-                  <span className={urgent ? "text-danger" : "text-amber-400"}>{left} horas</span>.
-                  Passado o prazo, o login antigo é revogado e o acesso ao servidor antigo acaba.
-                </li>
-              </ol>
+              {isTest ? (
+                <ol className="space-y-2 font-mono text-[11px] text-muted-foreground">
+                  <li>
+                    <span className="text-foreground">1.</span> Vamos criar um{" "}
+                    <span className="text-foreground">login extra de teste</span> no servidor novo.
+                    Seu login atual continua igual, ativo e com a mesma validade.
+                  </li>
+                  <li>
+                    <span className="text-foreground">2.</span> Configure o app com os dados novos e
+                    teste do seu jeito (velocidade, estabilidade, funções).
+                  </li>
+                  <li>
+                    <span className="text-foreground">3.</span> Não precisa mover seus clientes
+                    agora — é só teste.
+                  </li>
+                  <li>
+                    <span className="text-foreground">4.</span> Deu problema ou ficou bom?{" "}
+                    <span className="text-foreground">Abra um chamado no suporte</span> e conte pra
+                    gente antes do servidor virar oficial.
+                  </li>
+                </ol>
+              ) : (
+                <ol className="space-y-2 font-mono text-[11px] text-muted-foreground">
+                  <li>
+                    <span className="text-foreground">1.</span> Abra o painel antigo e{" "}
+                    <span className="text-foreground">resuma / anote todos os seus clientes</span>.
+                  </li>
+                  <li>
+                    <span className="text-foreground">2.</span> Faça backup do que precisar (listas,
+                    configurações, arquivos) — nada é transferido sozinho.
+                  </li>
+                  <li>
+                    <span className="text-foreground">3.</span> Gere o login novo aqui e recadastre
+                    seus clientes no servidor novo.
+                  </li>
+                  <li>
+                    <span className="text-foreground">4.</span> Você tem{" "}
+                    <span className={urgent ? "text-danger" : "text-amber-400"}>{left} horas</span>.
+                    Passado o prazo, o login antigo é revogado e o acesso ao servidor antigo acaba.
+                  </li>
+                </ol>
+              )}
               {wave.instructions ? (
                 <div className="rounded-md border border-border bg-muted/30 p-3 font-mono text-[11px] whitespace-pre-wrap">
                   {wave.instructions}
                 </div>
               ) : null}
-              <div className="flex items-start gap-1.5 rounded-md bg-danger/10 px-2 py-1.5 font-mono text-[10px] text-danger">
-                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-                Sua data de vencimento é mantida. O login antigo NÃO volta depois de revogado.
-              </div>
+              {isTest ? (
+                <div className="flex items-start gap-1.5 rounded-md bg-violet/10 px-2 py-1.5 font-mono text-[10px] text-violet">
+                  <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                  Teste opcional. Nada é revogado e sua data de vencimento é mantida.
+                </div>
+              ) : (
+                <div className="flex items-start gap-1.5 rounded-md bg-danger/10 px-2 py-1.5 font-mono text-[10px] text-danger">
+                  <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                  Sua data de vencimento é mantida. O login antigo NÃO volta depois de revogado.
+                </div>
+              )}
               <DialogFooter>
                 <Button
                   variant="ghost"

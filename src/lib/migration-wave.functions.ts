@@ -32,7 +32,8 @@ export const getMyMigrationWave = createServerFn({ method: "GET" })
     for (const wave of waves) {
       const { pending, claimed } = await listEligibleForUser(wave, context.userId);
       if (pending.length === 0 && claimed.length === 0) continue;
-      const expired = new Date(wave.deadline_at).getTime() <= Date.now();
+      const isTest = !!(wave as any).is_test;
+      const expired = !isTest && new Date(wave.deadline_at).getTime() <= Date.now();
       const status: "pending" | "expired" | "migrated" =
         pending.length === 0 ? "migrated" : expired ? "expired" : "pending";
       return {
@@ -40,6 +41,7 @@ export const getMyMigrationWave = createServerFn({ method: "GET" })
         canClaim: status === "pending",
         wave: {
           id: wave.id,
+          isTest,
           panel: wave.panel,
           title: wave.title,
           instructions: wave.instructions,
@@ -89,6 +91,7 @@ export const adminOpenMigrationWave = createServerFn({ method: "POST" })
         instructions: z.string().trim().max(4000).default(""),
         serverLabel: z.string().trim().max(120).optional().nullable(),
         deadlineHours: z.coerce.number().int().min(2).max(240).default(48),
+        isTest: z.boolean().default(false),
       })
       .parse(i),
   )
