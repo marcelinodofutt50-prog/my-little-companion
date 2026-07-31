@@ -662,6 +662,7 @@ export type Database = {
           id: string
           instructions: string
           is_active: boolean
+          is_test: boolean
           opened_at: string
           panel: string
           server_label: string | null
@@ -676,6 +677,7 @@ export type Database = {
           id?: string
           instructions?: string
           is_active?: boolean
+          is_test?: boolean
           opened_at?: string
           panel: string
           server_label?: string | null
@@ -690,6 +692,7 @@ export type Database = {
           id?: string
           instructions?: string
           is_active?: boolean
+          is_test?: boolean
           opened_at?: string
           panel?: string
           server_label?: string | null
