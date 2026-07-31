@@ -360,14 +360,17 @@ async function runFullPanelCheckInner(panel: YaarsaPanel) {
     let created = false;
     let creds: { username: string; email: string; password: string } | null = null;
     if (keyOk) {
-      creds = y.generateCredentials();
-      const suffix = `-chk${Date.now().toString().slice(-5)}`;
+      const base = y.generateCredentials();
+      // A coluna `usrname` do painel é curta: mantemos o usuário de teste no
+      // mesmo formato de uma compra real (poucos caracteres) e usamos o
+      // e-mail para garantir unicidade.
+      const tag = Date.now().toString().slice(-4);
       creds = {
-        username: `${creds.username}${suffix}`.slice(0, 24),
-        email: creds.email.replace("@", `${suffix}@`),
-        password: creds.password,
+        username: `${base.username.slice(0, 5)}${tag}`.slice(0, 9),
+        email: base.email.replace("@", `chk${tag}@`),
+        password: base.password,
       };
-      const r = await y.yaarsaCreateAccount({
+      let r = await y.yaarsaCreateAccount({
         username: creds.username,
         email: creds.email,
         password: creds.password,
@@ -376,9 +379,25 @@ async function runFullPanelCheckInner(panel: YaarsaPanel) {
         additionalInfo: "shadow-healthcheck",
         panel,
       });
+      // Painéis antigos têm limites de tamanho ainda menores — tenta de novo
+      // com um usuário mínimo antes de reprovar a VPS.
+      if (r.Fail && /22001|too long|truncat/i.test(r.Fail)) {
+        const short = { ...creds, username: base.username.slice(0, 5) };
+        const retry = await y.yaarsaCreateAccount({
+          username: short.username,
+          email: short.email,
+          password: short.password,
+          planSlug: "login-7d",
+          totalPaid: 0,
+          additionalInfo: "shadow-healthcheck",
+          panel,
+        });
+        if (!retry.Fail) { creds = short; r = retry; }
+      }
       created = !r.Fail;
       push("Criar login de teste (igual a uma compra)", created, r.Fail ?? r.Success ?? "ok");
     }
+
 
     if (created && creds) {
       const ymd = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
