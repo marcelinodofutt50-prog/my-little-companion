@@ -242,12 +242,15 @@ export async function listWavesForAdmin() {
       .select("id", { count: "exact", head: true })
       .eq("wave_id", w.id)
       .eq("status", "migrated");
+    const { test_admin_key_enc, ...safe } = w as any;
     out.push({
-      ...w,
+      ...safe,
+      hasTestVps: !!test_admin_key_enc,
       migratedCount: count ?? 0,
       pendingCount: await pendingCount(w),
       votes: w.is_test ? await tallyWaveVotes(w.id) : null,
     });
+
   }
   return out;
 }
