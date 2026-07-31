@@ -612,6 +612,92 @@ export type Database = {
         }
         Relationships: []
       }
+      migration_wave_claims: {
+        Row: {
+          created_at: string
+          id: string
+          new_license_id: string | null
+          old_license_id: string
+          old_revoked_at: string | null
+          status: string
+          user_id: string
+          wave_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_license_id?: string | null
+          old_license_id: string
+          old_revoked_at?: string | null
+          status?: string
+          user_id: string
+          wave_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_license_id?: string | null
+          old_license_id?: string
+          old_revoked_at?: string | null
+          status?: string
+          user_id?: string
+          wave_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "migration_wave_claims_wave_id_fkey"
+            columns: ["wave_id"]
+            isOneToOne: false
+            referencedRelation: "migration_waves"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      migration_waves: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          deadline_at: string
+          id: string
+          instructions: string
+          is_active: boolean
+          opened_at: string
+          panel: string
+          server_label: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_at: string
+          id?: string
+          instructions?: string
+          is_active?: boolean
+          opened_at?: string
+          panel: string
+          server_label?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_at?: string
+          id?: string
+          instructions?: string
+          is_active?: boolean
+          opened_at?: string
+          panel?: string
+          server_label?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
