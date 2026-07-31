@@ -86,7 +86,10 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     yaarsaExtend,
     generateCredentials,
     encrypt,
+    decrypt,
+    withPanelConfig,
     resolvePanelServerHost,
+
   } = await import("@/lib/yaarsa.server");
 
   const { data: wave } = await supabase
