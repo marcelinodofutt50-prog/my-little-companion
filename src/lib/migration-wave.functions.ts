@@ -32,7 +32,12 @@ export const getMyMigrationWave = createServerFn({ method: "GET" })
     for (const wave of waves) {
       const { pending, claimed } = await listEligibleForUser(wave, context.userId);
       if (pending.length === 0 && claimed.length === 0) continue;
+      const expired = new Date(wave.deadline_at).getTime() <= Date.now();
+      const status: "pending" | "expired" | "migrated" =
+        pending.length === 0 ? "migrated" : expired ? "expired" : "pending";
       return {
+        status,
+        canClaim: status === "pending",
         wave: {
           id: wave.id,
           panel: wave.panel,
@@ -52,6 +57,7 @@ export const getMyMigrationWave = createServerFn({ method: "GET" })
       };
     }
     return null;
+
   });
 
 /** Gera o(s) login(s) novo(s) no servidor atual do painel da onda. */
