@@ -16,13 +16,9 @@ export const Route = createFileRoute("/api/public/hooks/auto-close-tickets")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (token !== process.env.CRON_TRIGGER_TOKEN) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { cronUnauthorized } = await import("@/lib/cron-auth.server");
+        const denied = cronUnauthorized(request);
+        if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const cutoff = new Date(Date.now() - IDLE_HOURS * 3600_000).toISOString();
