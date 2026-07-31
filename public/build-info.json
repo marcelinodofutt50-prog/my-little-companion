@@ -1,1 +1,4 @@
-{"builtAt":"2026-07-30T23:44:17Z","note":"panel-servers v455 fix"}
+{
+  "built_at": "2026-07-31T00:19:11Z",
+  "note": "security hardening: cron auth, signup antifraud, health endpoint"
+}
