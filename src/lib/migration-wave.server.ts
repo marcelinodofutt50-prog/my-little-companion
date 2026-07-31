@@ -108,11 +108,12 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     );
   }
 
-
+  const run = async () => {
   const serverIp = await resolvePanelServerHost(wave.panel as YaarsaPanel);
   const created: { username: string; email: string; password: string; server_ip: string }[] = [];
 
   for (const old of pending.slice(0, 5)) {
+
     // Trava atômica: a unique (wave_id, old_license_id) impede gerar 2x.
     const { error: claimErr } = await supabase.from("migration_wave_claims").insert({
       wave_id: wave.id,
