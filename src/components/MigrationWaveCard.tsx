@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getMyMigrationWave, claimMigrationWave } from "@/lib/migration-wave.functions";
+import { MigrationWaveVote } from "@/components/MigrationWaveVote";
 import { toast } from "sonner";
 
 const PANEL_LABEL: Record<string, string> = { v455: "4.5.5", v457: "4.5.7", v46: "4.6" };
