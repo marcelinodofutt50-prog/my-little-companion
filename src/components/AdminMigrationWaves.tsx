@@ -60,7 +60,10 @@ export function AdminMigrationWaves() {
           deadlineHours: hours,
           isTest,
           hasDeadline: isTest ? !noDeadline : true,
+          testBaseUrl: isTest && testBaseUrl.trim() ? testBaseUrl.trim() : null,
+          testAdminKey: isTest && testAdminKey.trim() ? testAdminKey.trim() : null,
         },
+
       });
       toast.success(
         isTest
