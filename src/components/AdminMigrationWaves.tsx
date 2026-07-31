@@ -173,6 +173,11 @@ export function AdminMigrationWaves() {
                   >
                     {w.is_active ? "ativa" : "encerrada"}
                   </span>
+                  {w.is_active && new Date(w.deadline_at).getTime() <= Date.now() ? (
+                    <span className="rounded bg-danger/15 px-1.5 py-0.5 text-[10px] uppercase text-danger">
+                      prazo vencido
+                    </span>
+                  ) : null}
                   <span className="text-foreground">Painel {PANEL_LABEL[w.panel] ?? w.panel}</span>
                   <span className="text-muted-foreground">{w.title}</span>
                 </div>
@@ -184,6 +189,16 @@ export function AdminMigrationWaves() {
                   <span>migrados: {w.migratedCount}</span>
                   <span>faltando: {w.pendingCount}</span>
                 </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {!w.is_active
+                    ? "Onda encerrada — os clientes não conseguem mais gerar login novo por aqui."
+                    : new Date(w.deadline_at).getTime() <= Date.now()
+                      ? "Prazo vencido: o botão do cliente está bloqueado. A revogação automática roda a cada 15 min."
+                      : w.pendingCount === 0
+                        ? "Todos os elegíveis já migraram — pode revogar os antigos com segurança."
+                        : `${w.pendingCount} login(s) ainda no servidor antigo.`}
+                </p>
+
                 {w.is_active && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button

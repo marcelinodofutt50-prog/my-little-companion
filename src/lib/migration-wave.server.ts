@@ -97,8 +97,15 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     throw new Error("O prazo desta migração já encerrou. Fale com o suporte.");
   }
 
-  const { pending } = await listEligibleForUser(wave as Wave, userId);
-  if (pending.length === 0) throw new Error("Você não tem login pendente de migração.");
+  const { pending, claimed } = await listEligibleForUser(wave as Wave, userId);
+  if (pending.length === 0) {
+    throw new Error(
+      claimed.length > 0
+        ? "Você já gerou o login novo desta migração. Atualize a página para ver os dados."
+        : "Nenhum login seu é elegível para esta migração (só entram logins ativos do painel, criados antes da onda).",
+    );
+  }
+
 
   const serverIp = await resolvePanelServerHost(wave.panel as YaarsaPanel);
   const created: { username: string; email: string; password: string; server_ip: string }[] = [];

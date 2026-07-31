@@ -39,22 +39,52 @@ export function MigrationWaveCard() {
 
   if (!data) return null;
   const { wave, pending, alreadyMigrated } = data;
+  const status = (data as any).status as "pending" | "expired" | "migrated";
   const left = hoursLeft(wave.deadlineAt);
   const urgent = left <= 12;
+  const canClaim = status === "pending" && pending.length > 0;
 
-  if (pending.length === 0 && alreadyMigrated && !creds) {
+  // Já migrou: nada a clicar, só o aviso do que acontece com o login antigo.
+  if (status === "migrated" && !creds) {
     return (
       <Card className="mb-4 border-neon/40 bg-background/60">
         <CardContent className="flex items-center gap-3 py-3">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-neon" />
           <p className="font-mono text-[11px] text-muted-foreground">
-            Migração concluída. Seu login antigo do painel {PANEL_LABEL[wave.panel]} será revogado em{" "}
-            <span className="text-foreground">{left}h</span> — use o login novo a partir de agora.
+            Migração concluída — você já gerou o login novo do painel {PANEL_LABEL[wave.panel]}.{" "}
+            {left > 0 ? (
+              <>
+                O login antigo será revogado em{" "}
+                <span className="text-foreground">{left}h</span>. Use apenas o login novo a partir de
+                agora.
+              </>
+            ) : (
+              <>O login antigo já foi revogado. Use apenas o login novo.</>
+            )}
           </p>
         </CardContent>
       </Card>
     );
   }
+
+  // Prazo encerrado sem migrar: não adianta clicar, o servidor recusa.
+  if (status === "expired" && !creds) {
+    return (
+      <Card className="mb-4 border-danger/50 bg-background/60">
+        <CardContent className="flex items-start gap-3 py-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+          <p className="font-mono text-[11px] text-muted-foreground">
+            <span className="text-danger">Prazo de migração encerrado</span> para o painel{" "}
+            {PANEL_LABEL[wave.panel]}. O login novo não pode mais ser gerado por aqui e o login
+            antigo será (ou já foi) revogado.{" "}
+            <span className="text-foreground">Abra um chamado no suporte</span> para liberar sua
+            migração manualmente.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
 
   const doClaim = async () => {
     setLoading(true);
@@ -112,12 +142,15 @@ export function MigrationWaveCard() {
           <Button
             size="sm"
             onClick={() => setOpen(true)}
+            disabled={!canClaim || loading}
+            title={canClaim ? undefined : "Nenhum login pendente de migração"}
             className={`shrink-0 font-mono text-[11px] uppercase tracking-wider ${
               urgent ? "bg-danger hover:bg-danger/90" : "bg-amber-500 hover:bg-amber-500/90"
             }`}
           >
-            Gerar login novo
+            {canClaim ? "Gerar login novo" : "Sem login pendente"}
           </Button>
+
         </CardContent>
       </Card>
 
