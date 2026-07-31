@@ -40,12 +40,20 @@ export async function createAccountFallback(
   if (typeof password !== "string" || password.length < 6) return { ok: false, reason: "weak_password" };
 
   try {
+    // Antifraude/rate limit no servidor: este endpoint cria contas confirmadas,
+    // então ele precisa das MESMAS travas do cadastro normal.
+    const { evaluateSignup, persistSignup } = await import("@/lib/antifraud.server");
+    const guard = await evaluateSignup(email);
+    if (!guard.allowed) {
+      return { ok: false, reason: guard.reason ?? "signup_blocked" };
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const existing = await findUserByEmail(email);
     if (existing) return { ok: false, exists: true, reason: "already_exists" };
 
-    const { error } = await supabaseAdmin.auth.admin.createUser({
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       // Confirmado na criação para o cliente entrar na hora; o aviso de
@@ -53,8 +61,10 @@ export async function createAccountFallback(
       email_confirm: true,
     });
     if (error) return { ok: false, reason: error.message };
+    await persistSignup({ email, userId: data?.user?.id ?? null });
     return { ok: true };
   } catch (e: any) {
     return { ok: false, reason: String(e?.message ?? "unknown") };
   }
 }
+
