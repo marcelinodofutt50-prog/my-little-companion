@@ -114,3 +114,41 @@ export const adminCloseMigrationWave = createServerFn({ method: "POST" })
     const { closeWave } = await import("@/lib/migration-wave.server");
     return closeWave(data.waveId, data.revokeOld);
   });
+
+// --------------------------------------------------------------- votação
+
+/** Estado da votação do servidor de teste para o cliente logado. */
+export const getMigrationWaveVote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { getVoteStateForUser } = await import("@/lib/migration-wave.server");
+    return getVoteStateForUser(data.waveId, context.userId);
+  });
+
+/** Voto do cliente: o servidor de teste deve virar oficial? */
+export const voteMigrationWave = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        waveId: z.string().uuid(),
+        approve: z.boolean(),
+        comment: z.string().trim().max(500).default(""),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { castWaveVote } = await import("@/lib/migration-wave.server");
+    return castWaveVote(data.waveId, context.userId, data.approve, data.comment);
+  });
+
+/** Feedback completo da votação (admin). */
+export const adminListMigrationWaveVotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { listWaveVotesForAdmin } = await import("@/lib/migration-wave.server");
+    return listWaveVotesForAdmin(data.waveId);
+  });
