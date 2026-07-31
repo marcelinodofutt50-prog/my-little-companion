@@ -28,6 +28,7 @@ export function AdminMigrationWaves() {
   const [instructions, setInstructions] = useState("");
   const [hours, setHours] = useState(48);
   const [isTest, setIsTest] = useState(false);
+  const [noDeadline, setNoDeadline] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const { data: waves = [] } = useQuery({
@@ -55,6 +56,7 @@ export function AdminMigrationWaves() {
           serverLabel: serverLabel || null,
           deadlineHours: hours,
           isTest,
+          hasDeadline: isTest ? !noDeadline : true,
         },
       });
       toast.success(
@@ -122,8 +124,8 @@ export function AdminMigrationWaves() {
           <span className="font-mono text-[11px] leading-relaxed text-muted-foreground">
             <span className="text-foreground">Servidor em teste (beta)</span> — o cliente recebe um
             convite opcional para criar um login e testar o servidor novo.{" "}
-            <span className="text-foreground">Sem prazo e sem revogar o login antigo.</span> Quando
-            aprovar, encerre este convite e publique a onda definitiva.
+            <span className="text-foreground">Nada é revogado.</span> Você pode deixar sem prazo ou
+            definir um prazo de teste — quando acabar, o convite encerra sozinho.
           </span>
         </label>
 
@@ -140,16 +142,30 @@ export function AdminMigrationWaves() {
               <option value="v455">Shadow 4.5.5</option>
             </select>
           </div>
-          <div className={isTest ? "hidden" : ""}>
-            <Label className="font-mono text-[10px] uppercase tracking-wider">Prazo (horas)</Label>
+          <div>
+            <Label className="font-mono text-[10px] uppercase tracking-wider">
+              {isTest ? "Prazo do teste (horas)" : "Prazo (horas)"}
+            </Label>
             <Input
               type="number"
               min={2}
               max={240}
               value={hours}
+              disabled={isTest && noDeadline}
               onChange={(e) => setHours(Number(e.target.value))}
-              className="mt-1 h-9 font-mono text-xs"
+              className="mt-1 h-9 font-mono text-xs disabled:opacity-50"
             />
+            {isTest ? (
+              <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={noDeadline}
+                  onChange={(e) => setNoDeadline(e.target.checked)}
+                  className="h-3 w-3 accent-violet-500"
+                />
+                Sem prazo (teste fica aberto até eu encerrar)
+              </label>
+            ) : null}
           </div>
           <div className="sm:col-span-2">
             <Label className="font-mono text-[10px] uppercase tracking-wider">Título do aviso</Label>
@@ -214,7 +230,7 @@ export function AdminMigrationWaves() {
                       teste
                     </span>
                   ) : null}
-                  {w.is_active && !w.is_test && new Date(w.deadline_at).getTime() <= Date.now() ? (
+                  {w.is_active && w.has_deadline !== false && new Date(w.deadline_at).getTime() <= Date.now() ? (
                     <span className="rounded bg-danger/15 px-1.5 py-0.5 text-[10px] uppercase text-danger">
                       prazo vencido
                     </span>
@@ -223,7 +239,7 @@ export function AdminMigrationWaves() {
                   <span className="text-muted-foreground">{w.title}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-3 text-muted-foreground">
-                  {w.is_test ? (
+                  {w.has_deadline === false ? (
                     <span className="flex items-center gap-1">
                       <Timer className="h-3 w-3" />
                       sem prazo (teste)
@@ -231,7 +247,8 @@ export function AdminMigrationWaves() {
                   ) : (
                     <span className="flex items-center gap-1">
                       <Timer className="h-3 w-3" />
-                      prazo {new Date(w.deadline_at).toLocaleString("pt-BR")}
+                      {w.is_test ? "prazo do teste " : "prazo "}
+                      {new Date(w.deadline_at).toLocaleString("pt-BR")}
                     </span>
                   )}
                   <span>{w.is_test ? "testando" : "migrados"}: {w.migratedCount}</span>
@@ -240,7 +257,9 @@ export function AdminMigrationWaves() {
                 <p className="mt-1 text-[10px] text-muted-foreground">
                   {w.is_test
                     ? w.is_active
-                      ? `Convite de teste ativo — ${w.migratedCount} cliente(s) já criaram login no servidor novo. Nada é revogado.`
+                      ? w.has_deadline !== false && new Date(w.deadline_at).getTime() <= Date.now()
+                        ? "Prazo do teste vencido — o convite encerra sozinho na próxima rodada do cron (a cada 15 min). Nada é revogado."
+                        : `Convite de teste ativo — ${w.migratedCount} cliente(s) já criaram login no servidor novo. Nada é revogado.`
                       : "Convite de teste encerrado."
                     : !w.is_active
                     ? "Onda encerrada — os clientes não conseguem mais gerar login novo por aqui."

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2, Copy, Loader2, ServerCog, Timer } from "lucide-react";
@@ -17,8 +17,26 @@ import { toast } from "sonner";
 
 const PANEL_LABEL: Record<string, string> = { v455: "4.5.5", v457: "4.5.7", v46: "4.6" };
 
-function hoursLeft(deadline: string) {
+function hoursLeft(deadline: string | null) {
+  if (!deadline) return Infinity;
   return Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 3600_000));
+}
+
+/** Contador vivo hh:mm:ss até o prazo. */
+function useCountdown(deadline: string | null) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!deadline) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [deadline]);
+  if (!deadline) return null;
+  const ms = new Date(deadline).getTime() - now;
+  if (ms <= 0) return "00:00:00";
+  const h = Math.floor(ms / 3600_000);
+  const m = Math.floor((ms % 3600_000) / 60_000);
+  const sec = Math.floor((ms % 60_000) / 1000);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
 export function MigrationWaveCard() {
@@ -34,14 +52,17 @@ export function MigrationWaveCard() {
   const { data } = useQuery({
     queryKey: ["migration-wave"],
     queryFn: () => getWave(),
-    refetchInterval: 5 * 60_000,
+    refetchInterval: 60_000,
   });
+
+  const deadlineAt = ((data as any)?.wave?.deadlineAt ?? null) as string | null;
+  const countdown = useCountdown(deadlineAt);
 
   if (!data) return null;
   const { wave, pending, alreadyMigrated } = data;
   const isTest = !!(wave as any).isTest;
   const status = (data as any).status as "pending" | "expired" | "migrated";
-  const left = hoursLeft(wave.deadlineAt);
+  const left = hoursLeft(deadlineAt);
   const urgent = left <= 12;
   const canClaim = status === "pending" && pending.length > 0;
 
@@ -57,6 +78,12 @@ export function MigrationWaveCard() {
                 <span className="text-neon">Login de teste criado</span> — teste o servidor novo do
                 painel {PANEL_LABEL[wave.panel]} e conte pra gente no suporte se ficou bom. Seu
                 login antigo continua funcionando normalmente.
+                {countdown ? (
+                  <>
+                    {" "}
+                    O teste encerra em <span className="text-violet">{countdown}</span>.
+                  </>
+                ) : null}
               </>
             ) : (
               <>Migração concluída — você já gerou o login novo do painel {PANEL_LABEL[wave.panel]}.{" "}
@@ -80,15 +107,27 @@ export function MigrationWaveCard() {
   // Prazo encerrado sem migrar: não adianta clicar, o servidor recusa.
   if (status === "expired" && !creds) {
     return (
-      <Card className="mb-4 border-danger/50 bg-background/60">
+      <Card className={`mb-4 bg-background/60 ${isTest ? "border-violet/50" : "border-danger/50"}`}>
         <CardContent className="flex items-start gap-3 py-3">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+          <AlertTriangle
+            className={`mt-0.5 h-4 w-4 shrink-0 ${isTest ? "text-violet" : "text-danger"}`}
+          />
           <p className="font-mono text-[11px] text-muted-foreground">
+            {isTest ? (
+              <>
+                <span className="text-violet">Período de teste encerrado</span> para o painel{" "}
+                {PANEL_LABEL[wave.panel]}. Não dá mais para criar o login de teste — seu login atual
+                segue normal, sem nenhuma alteração.
+              </>
+            ) : (
+              <>
             <span className="text-danger">Prazo de migração encerrado</span> para o painel{" "}
             {PANEL_LABEL[wave.panel]}. O login novo não pode mais ser gerado por aqui e o login
             antigo será (ou já foi) revogado.{" "}
             <span className="text-foreground">Abra um chamado no suporte</span> para liberar sua
             migração manualmente.
+              </>
+            )}
           </p>
         </CardContent>
       </Card>
@@ -149,7 +188,9 @@ export function MigrationWaveCard() {
               {isTest ? (
                 <p className="mt-1 flex items-center gap-1 font-mono text-[11px] text-violet">
                   <Timer className="h-3 w-3" />
-                  Opcional · sem prazo · seu login antigo continua ativo.
+                  {countdown
+                    ? `Teste aberto por mais ${countdown} · seu login antigo continua ativo.`
+                    : "Opcional · sem prazo · seu login antigo continua ativo."}
                 </p>
               ) : (
                 <p
@@ -158,7 +199,7 @@ export function MigrationWaveCard() {
                   }`}
                 >
                   <Timer className="h-3 w-3" />
-                  {left}h restantes — depois disso o login antigo é revogado.
+                  {countdown ?? `${left}h`} restantes — depois disso o login antigo é revogado.
                 </p>
               )}
             </div>

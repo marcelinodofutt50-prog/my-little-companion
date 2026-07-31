@@ -16,6 +16,7 @@ export type Wave = {
   server_label: string | null;
   opened_at: string;
   deadline_at: string;
+  has_deadline: boolean;
   is_active: boolean;
   is_test: boolean;
   closed_at: string | null;
@@ -94,7 +95,7 @@ export async function claimWaveForUser(waveId: string, userId: string) {
     .eq("id", waveId)
     .maybeSingle();
   if (!wave || !wave.is_active) throw new Error("Esta migração não está mais aberta.");
-  if (!wave.is_test && new Date(wave.deadline_at).getTime() < Date.now()) {
+  if (wave.has_deadline !== false && new Date(wave.deadline_at).getTime() < Date.now()) {
     throw new Error("O prazo desta migração já encerrou. Fale com o suporte.");
   }
 
@@ -245,6 +246,7 @@ export async function openWave(input: {
   serverLabel?: string | null;
   deadlineHours: number;
   isTest?: boolean;
+  hasDeadline?: boolean;
   actorId: string;
 }) {
   const supabase = await db();
@@ -267,6 +269,7 @@ export async function openWave(input: {
       deadline_at: deadline,
       created_by: input.actorId,
       is_test: !!input.isTest,
+      has_deadline: input.hasDeadline !== false,
       is_active: true,
     })
     .select("*")
@@ -341,7 +344,7 @@ export async function enforceExpiredWaves() {
     .from("migration_waves")
     .select("*")
     .eq("is_active", true)
-    .eq("is_test", false)
+    .eq("has_deadline", true)
     .lt("deadline_at", new Date().toISOString());
   if (error) {
     if (/does not exist|42P01/i.test(error.message ?? "")) return { waves: 0, revoked: 0 };
@@ -349,7 +352,8 @@ export async function enforceExpiredWaves() {
   }
   let revoked = 0;
   for (const w of (data ?? []) as Wave[]) {
-    revoked += await revokeOldLicenses(w);
+    // Ondas de teste apenas encerram: nada é revogado.
+    if (!w.is_test) revoked += await revokeOldLicenses(w);
     await supabase
       .from("migration_waves")
       .update({ is_active: false, closed_at: new Date().toISOString() })
