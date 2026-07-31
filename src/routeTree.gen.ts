@@ -39,6 +39,7 @@ import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
+import { Route as ApiPublicHooksMigrationWaveEnforceRouteImport } from './routes/api/public/hooks/migration-wave-enforce'
 import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
 import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
 import { Route as ApiPublicHooksCryptoPollRouteImport } from './routes/api/public/hooks/crypto-poll'
@@ -199,6 +200,12 @@ const ApiPublicHooksReconcilePendingRoute =
     path: '/api/public/hooks/reconcile-pending',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMigrationWaveEnforceRoute =
+  ApiPublicHooksMigrationWaveEnforceRouteImport.update({
+    id: '/api/public/hooks/migration-wave-enforce',
+    path: '/api/public/hooks/migration-wave-enforce',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksExpireLicensesRoute =
   ApiPublicHooksExpireLicensesRouteImport.update({
     id: '/api/public/hooks/expire-licenses',
@@ -268,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
@@ -305,6 +313,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
@@ -344,6 +353,7 @@ export interface FileRoutesById {
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
+  '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
@@ -458,6 +470,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
     | '/api/public/hooks/expire-licenses'
+    | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
@@ -490,6 +503,7 @@ export interface RootRouteChildren {
   ApiPublicHooksCryptoPollRoute: typeof ApiPublicHooksCryptoPollRoute
   ApiPublicHooksDailyLicenseCheckRoute: typeof ApiPublicHooksDailyLicenseCheckRoute
   ApiPublicHooksExpireLicensesRoute: typeof ApiPublicHooksExpireLicensesRoute
+  ApiPublicHooksMigrationWaveEnforceRoute: typeof ApiPublicHooksMigrationWaveEnforceRoute
   ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
   ApiPublicHooksResendConfirmationsRoute: typeof ApiPublicHooksResendConfirmationsRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
@@ -707,6 +721,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksReconcilePendingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/migration-wave-enforce': {
+      id: '/api/public/hooks/migration-wave-enforce'
+      path: '/api/public/hooks/migration-wave-enforce'
+      fullPath: '/api/public/hooks/migration-wave-enforce'
+      preLoaderRoute: typeof ApiPublicHooksMigrationWaveEnforceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/expire-licenses': {
       id: '/api/public/hooks/expire-licenses'
       path: '/api/public/hooks/expire-licenses'
@@ -811,6 +832,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksCryptoPollRoute: ApiPublicHooksCryptoPollRoute,
   ApiPublicHooksDailyLicenseCheckRoute: ApiPublicHooksDailyLicenseCheckRoute,
   ApiPublicHooksExpireLicensesRoute: ApiPublicHooksExpireLicensesRoute,
+  ApiPublicHooksMigrationWaveEnforceRoute:
+    ApiPublicHooksMigrationWaveEnforceRoute,
   ApiPublicHooksReconcilePendingRoute: ApiPublicHooksReconcilePendingRoute,
   ApiPublicHooksResendConfirmationsRoute:
     ApiPublicHooksResendConfirmationsRoute,

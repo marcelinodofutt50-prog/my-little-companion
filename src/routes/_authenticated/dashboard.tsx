@@ -32,6 +32,7 @@ import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/comp
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
 import { OrderHistory } from "@/components/OrderHistory";
 import { LicenseRenewCard } from "@/components/LicenseRenewCard";
+import { MigrationWaveCard } from "@/components/MigrationWaveCard";
 import { listMyOrders, type MyOrder } from "@/lib/orders.functions";
 import { InAppNotifications } from "@/components/InAppNotifications";
 
@@ -254,6 +255,8 @@ function DashboardPage() {
             {onboardingDone && <SecurityWelcomeDialog />}
             <EmailConfirmBanner />
             <AnnouncementsBanner />
+
+            <MigrationWaveCard />
 
             <ExpiryReminder />
 
