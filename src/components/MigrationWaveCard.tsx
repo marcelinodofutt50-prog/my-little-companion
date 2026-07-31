@@ -142,12 +142,15 @@ export function MigrationWaveCard() {
           <Button
             size="sm"
             onClick={() => setOpen(true)}
+            disabled={!canClaim || loading}
+            title={canClaim ? undefined : "Nenhum login pendente de migração"}
             className={`shrink-0 font-mono text-[11px] uppercase tracking-wider ${
               urgent ? "bg-danger hover:bg-danger/90" : "bg-amber-500 hover:bg-amber-500/90"
             }`}
           >
-            Gerar login novo
+            {canClaim ? "Gerar login novo" : "Sem login pendente"}
           </Button>
+
         </CardContent>
       </Card>
 
