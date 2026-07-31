@@ -271,6 +271,12 @@ export function AdminMigrationWaves() {
                       teste
                     </span>
                   ) : null}
+                  {w.hasTestVps ? (
+                    <span className="rounded bg-violet/10 px-1.5 py-0.5 text-[10px] uppercase text-violet">
+                      vps própria
+                    </span>
+                  ) : null}
+
                   {w.is_active && w.has_deadline !== false && new Date(w.deadline_at).getTime() <= Date.now() ? (
                     <span className="rounded bg-danger/15 px-1.5 py-0.5 text-[10px] uppercase text-danger">
                       prazo vencido
