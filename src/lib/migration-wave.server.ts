@@ -219,7 +219,12 @@ export async function listWavesForAdmin() {
       .select("id", { count: "exact", head: true })
       .eq("wave_id", w.id)
       .eq("status", "migrated");
-    out.push({ ...w, migratedCount: count ?? 0, pendingCount: await pendingCount(w) });
+    out.push({
+      ...w,
+      migratedCount: count ?? 0,
+      pendingCount: await pendingCount(w),
+      votes: w.is_test ? await tallyWaveVotes(w.id) : null,
+    });
   }
   return out;
 }
