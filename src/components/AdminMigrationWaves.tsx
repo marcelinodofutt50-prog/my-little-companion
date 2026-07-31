@@ -267,7 +267,7 @@ export function AdminMigrationWaves() {
                       variant="destructive"
                       disabled={busy}
                       onClick={() => close(w.id, true)}
-                      className={`h-7 font-mono text-[10px] uppercase ${w.is_test ? "hidden" : ""}`
+                      className={`h-7 font-mono text-[10px] uppercase ${w.is_test ? "hidden" : ""}`}
                     >
                       <ShieldOff className="mr-1.5 h-3 w-3" />
                       Revogar antigos agora
