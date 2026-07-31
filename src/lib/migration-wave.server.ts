@@ -275,6 +275,8 @@ export async function openWave(input: {
   deadlineHours: number;
   isTest?: boolean;
   hasDeadline?: boolean;
+  testBaseUrl?: string | null;
+  testAdminKey?: string | null;
   actorId: string;
 }) {
   const supabase = await db();
@@ -285,6 +287,12 @@ export async function openWave(input: {
     .eq("panel", input.panel)
     .eq("is_test", !!input.isTest)
     .eq("is_active", true);
+
+  let testAdminKeyEnc: string | null = null;
+  if (input.testBaseUrl && input.testAdminKey) {
+    const { encrypt } = await import("@/lib/yaarsa.server");
+    testAdminKeyEnc = encrypt(input.testAdminKey.trim());
+  }
 
   const deadline = new Date(Date.now() + input.deadlineHours * 3600_000).toISOString();
   const { data, error } = await supabase
@@ -298,8 +306,11 @@ export async function openWave(input: {
       created_by: input.actorId,
       is_test: !!input.isTest,
       has_deadline: input.hasDeadline !== false,
+      test_base_url: testAdminKeyEnc ? input.testBaseUrl!.trim() : null,
+      test_admin_key_enc: testAdminKeyEnc,
       is_active: true,
     })
+
     .select("*")
     .single();
   if (error) throw new Error(error.message);
