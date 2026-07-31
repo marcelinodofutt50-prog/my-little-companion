@@ -29,7 +29,10 @@ export function AdminMigrationWaves() {
   const [hours, setHours] = useState(48);
   const [isTest, setIsTest] = useState(false);
   const [noDeadline, setNoDeadline] = useState(true);
+  const [testBaseUrl, setTestBaseUrl] = useState("");
+  const [testAdminKey, setTestAdminKey] = useState("");
   const [busy, setBusy] = useState(false);
+
 
   const { data: waves = [] } = useQuery({
     queryKey: ["admin-migration-waves"],
