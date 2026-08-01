@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Megaphone, ShieldOff, Timer } from "lucide-react";
+import { Loader2, Megaphone, Server, ShieldOff, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -100,19 +100,21 @@ export function AdminMigrationWaves() {
   };
 
   return (
-    <Card className="border-border bg-background/60">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 font-display text-sm tracking-tight">
-          <Megaphone className="h-4 w-4 text-neon" />
+    <Card className="enterprise-surface overflow-hidden border-border bg-card shadow-none">
+      <CardHeader className="border-b border-border bg-muted/30 pb-5">
+        <div className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase text-primary">
+          <Megaphone className="h-3.5 w-3.5" /> Gestão de migrações
+        </div>
+        <CardTitle className="font-display text-xl font-semibold">
           Onda de migração de servidor
         </CardTitle>
-        <p className="font-mono text-[11px] text-muted-foreground">
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
           Avisa quem já tem login no painel escolhido, deixa gerar o login novo no servidor atual e
           revoga o antigo quando o prazo acabar.
         </p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-violet/40 bg-violet/5 p-2.5">
+      <CardContent className="space-y-6 p-5 sm:p-6">
+        <label className="flex cursor-pointer items-start gap-3 rounded-md border border-primary/20 bg-primary/5 p-4">
           <input
             type="checkbox"
             checked={isTest}
@@ -125,23 +127,23 @@ export function AdminMigrationWaves() {
                   : "Novo servidor disponível — gere seu login novo",
               );
             }}
-            className="mt-0.5 h-3.5 w-3.5 accent-violet-500"
+            className="mt-0.5 h-4 w-4 accent-primary"
           />
-          <span className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-            <span className="text-foreground">Servidor em teste (beta)</span> — o cliente recebe um
+          <span className="text-sm leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-foreground">Servidor em teste (beta)</span> — o cliente recebe um
             convite opcional para criar um login e testar o servidor novo.{" "}
             <span className="text-foreground">Nada é revogado.</span> Você pode deixar sem prazo ou
             definir um prazo de teste — quando acabar, o convite encerra sozinho.
           </span>
         </label>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <div>
-            <Label className="font-mono text-[10px] uppercase tracking-wider">Painel</Label>
+            <Label className="text-xs font-semibold">Painel</Label>
             <select
               value={panel}
               onChange={(e) => setPanel(e.target.value as any)}
-              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 font-mono text-xs"
+              className="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             >
               <option value="v46">Shadow 4.6</option>
               <option value="v457">Shadow 4.5.7</option>
@@ -149,7 +151,7 @@ export function AdminMigrationWaves() {
             </select>
           </div>
           <div>
-            <Label className="font-mono text-[10px] uppercase tracking-wider">
+            <Label className="text-xs font-semibold">
               {isTest ? "Prazo do teste (horas)" : "Prazo (horas)"}
             </Label>
             <Input
@@ -159,10 +161,10 @@ export function AdminMigrationWaves() {
               value={hours}
               disabled={isTest && noDeadline}
               onChange={(e) => setHours(Number(e.target.value))}
-              className="mt-1 h-9 font-mono text-xs disabled:opacity-50"
+              className="mt-2 h-10 text-sm disabled:opacity-50"
             />
             {isTest ? (
-              <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={noDeadline}
@@ -174,45 +176,46 @@ export function AdminMigrationWaves() {
             ) : null}
           </div>
           <div className="sm:col-span-2">
-            <Label className="font-mono text-[10px] uppercase tracking-wider">Título do aviso</Label>
+            <Label className="text-xs font-semibold">Título do aviso</Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 h-9 font-mono text-xs"
+              className="mt-2 h-10 text-sm"
             />
           </div>
           <div className="sm:col-span-2">
-            <Label className="font-mono text-[10px] uppercase tracking-wider">
+            <Label className="text-xs font-semibold">
               Nome do servidor novo (opcional)
             </Label>
             <Input
               value={serverLabel}
               onChange={(e) => setServerLabel(e.target.value)}
               placeholder="VPS 2 · 200.9.154.103"
-              className="mt-1 h-9 font-mono text-xs"
+              className="mt-2 h-10 text-sm"
             />
           </div>
           {isTest ? (
-            <div className="sm:col-span-2 space-y-3 rounded-md border border-violet/40 bg-violet/5 p-3">
-              <p className="font-mono text-[11px] text-muted-foreground">
-                <span className="text-foreground">VPS do servidor beta</span> — preencha para que os
+            <div className="space-y-4 rounded-md border border-border bg-muted/30 p-4 sm:col-span-2">
+              <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Server className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span><span className="font-semibold text-foreground">VPS do servidor beta</span> — preencha para que os
                 logins de teste sejam criados nesta VPS. Se deixar vazio, usa a VPS oficial do
-                painel selecionado.
+                painel selecionado.</span>
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider">
+                  <Label className="text-xs font-semibold">
                     Endereço da VPS de teste
                   </Label>
                   <Input
                     value={testBaseUrl}
                     onChange={(e) => setTestBaseUrl(e.target.value)}
                     placeholder="http://200.9.154.103/yaarsa/proxy.php"
-                    className="mt-1 h-9 font-mono text-xs"
+                    className="mt-2 h-10 text-sm"
                   />
                 </div>
                 <div>
-                  <Label className="font-mono text-[10px] uppercase tracking-wider">
+                  <Label className="text-xs font-semibold">
                     Admin key da VPS de teste
                   </Label>
                   <Input
@@ -220,7 +223,7 @@ export function AdminMigrationWaves() {
                     value={testAdminKey}
                     onChange={(e) => setTestAdminKey(e.target.value)}
                     placeholder="••••••••"
-                    className="mt-1 h-9 font-mono text-xs"
+                    className="mt-2 h-10 text-sm"
                   />
                 </div>
               </div>
@@ -228,14 +231,14 @@ export function AdminMigrationWaves() {
           ) : null}
 
           <div className="sm:col-span-2">
-            <Label className="font-mono text-[10px] uppercase tracking-wider">
+            <Label className="text-xs font-semibold">
               Instruções extras para o cliente (opcional)
             </Label>
             <Textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               rows={3}
-              className="mt-1 font-mono text-xs"
+              className="mt-2 text-sm"
               placeholder="Ex.: resuma seus clientes na BT Mob antes de migrar."
             />
           </div>
@@ -243,20 +246,20 @@ export function AdminMigrationWaves() {
         <Button
           onClick={publish}
           disabled={busy || title.trim().length < 4}
-          className="font-mono text-[11px] uppercase tracking-wider"
+          className="h-10 px-5 text-sm font-semibold"
         >
           {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
-          Publicar onda de migração
+          Publicar onda
         </Button>
 
         <div className="space-y-2 pt-2">
           {waves.length === 0 ? (
-            <p className="font-mono text-[11px] text-muted-foreground">Nenhuma onda publicada.</p>
+            <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Nenhuma onda publicada.</p>
           ) : (
             waves.map((w: any) => (
               <div
                 key={w.id}
-                className="rounded-md border border-border bg-muted/20 p-3 font-mono text-[11px]"
+                className="rounded-md border border-border bg-card p-4 text-xs transition-colors hover:bg-muted/20"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span

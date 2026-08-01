@@ -638,37 +638,33 @@ function AdminPage() {
   const filteredTabs = filteredGroups.flatMap((g) => g.items);
 
   return (
-    <div className="min-h-screen">
+    <div className="admin-enterprise min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[1400px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-4 sm:py-6 lg:pb-6">
+      <main className="mx-auto w-full max-w-[1520px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-5 sm:py-6 lg:pb-8">
         {/* HEADER BAR */}
         <div
-          className="osint-panel osint-corners osint-sweep relative overflow-hidden p-4 sm:p-5"
-          style={{ ["--osint-sweep-h" as any]: "150px" }}
+          className="enterprise-surface relative overflow-hidden p-5 sm:p-6"
         >
-          <div className="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-violet/[0.07] blur-3xl" />
-          <div className="pointer-events-none absolute -left-24 bottom--10 h-48 w-48 rounded-full bg-neon/[0.05] blur-3xl" />
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase tracking-[0.35em] text-muted-foreground">
-                <ShieldCheck className="h-3.5 w-3.5 text-violet" /> admin control center
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Central de operações
                 <span className="hidden h-3 w-px bg-border sm:inline-block" />
-                <span className="hidden text-neon/70 sm:inline">node//shadow-01</span>
-                <span className="hidden text-cyan/60 sm:inline">sec::lvl-4</span>
+                <span className="hidden sm:inline">Shadow Dash</span>
                 <span
-                  className={`rounded-full border px-2 py-px tracking-[0.2em] ${isAdminUser ? "border-neon/40 text-neon" : "border-cyan/40 text-cyan"}`}
+                  className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] uppercase text-primary"
                 >
                   {ROLE_LABEL[role]}
                 </span>
               </div>
-              <h1 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
+              <h1 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">
                 {isAdminUser ? "Painel Administrativo" : "Painel de Suporte"}
               </h1>
-              <AdminTagline className="mt-1" />
+              <p className="mt-1 text-sm text-muted-foreground">Gerencie clientes, receita, suporte e infraestrutura em um só lugar.</p>
 
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/[0.07] px-2.5 py-1 text-neon">
-                  <Circle className="h-1.5 w-1.5 fill-neon text-neon pulse-dot" /> operacional
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-primary">
+                  <Circle className="h-1.5 w-1.5 fill-primary text-primary pulse-dot" /> Operacional
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-muted-foreground">
                   <ShieldCheck className="h-3 w-3 text-cyan" />
@@ -711,7 +707,6 @@ function AdminPage() {
               </Button>
             </div>
           </div>
-          <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
         </div>
 
         {/* STATS */}
@@ -752,14 +747,14 @@ function AdminPage() {
         </div>
 
         {/* GROUPED LAYOUT: sidebar (desktop) + content */}
-        <div className="mt-5 grid gap-5 lg:grid-cols-[248px_1fr]">
+        <div className="mt-5 grid gap-5 lg:grid-cols-[232px_minmax(0,1fr)]">
           {/* SIDEBAR NAV */}
           <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
             {/* Desktop: grouped vertical nav */}
-            <nav className="hidden lg:block osint-panel osint-corners relative p-2.5">
-              <div className="mb-2 flex items-center justify-between px-2 pt-1 osint-label">
-                <span>recon // seções</span>
-                <span className="text-neon/60">{allTabs.length}</span>
+            <nav className="enterprise-surface hidden p-3 lg:block">
+              <div className="mb-3 flex items-center justify-between px-2 pt-1 text-[10px] font-semibold uppercase text-muted-foreground">
+                <span>Navegação</span>
+                <span>{allTabs.length}</span>
               </div>
 
               <div className="mb-2.5">
@@ -767,7 +762,7 @@ function AdminPage() {
                   value={navQuery}
                   onChange={(e) => setNavQuery(e.target.value)}
                   placeholder="Buscar seção..."
-                  className="w-full rounded-md border border-border/50 bg-background/60 px-2.5 py-1.5 text-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-neon/50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
               </div>
 
@@ -777,12 +772,6 @@ function AdminPage() {
                 </div>
               )}
               {filteredGroups.map((g, gi) => {
-                const accentColor =
-                  g.accent === "neon"
-                    ? "text-neon"
-                    : g.accent === "cyan"
-                      ? "text-cyan"
-                      : "text-violet";
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
                   <div
@@ -790,7 +779,7 @@ function AdminPage() {
                     className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}
                   >
                     <div
-                      className={`flex items-center gap-2 px-2 pb-1.5 font-mono text-[9px] uppercase tracking-[0.25em] ${accentColor}`}
+                      className="flex items-center gap-2 px-2 pb-1.5 text-[10px] font-semibold uppercase text-muted-foreground"
                     >
                       <span className="truncate opacity-80">{g.title}</span>
                       {groupPending > 0 && (
@@ -811,20 +800,20 @@ function AdminPage() {
                             aria-current={active ? "page" : undefined}
                             className={`group relative flex w-full items-center gap-2.5 rounded-md py-2 pl-3 pr-2 text-left transition-colors ${
                               active
-                                ? "bg-neon/[0.12] text-neon"
+                                ? "bg-primary/10 text-primary"
                                 : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                             }`}
                           >
                             {active && (
-                              <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-neon" />
+                              <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-primary" />
                             )}
                             <t.icon
-                              className={`h-3.5 w-3.5 shrink-0 ${active ? "text-neon" : "text-muted-foreground/80 group-hover:text-foreground"}`}
+                              className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
                             />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
                                 <div
-                                  className={`truncate font-mono text-[11px] uppercase tracking-wider ${active ? "font-semibold" : ""}`}
+                                  className={`truncate text-xs ${active ? "font-semibold" : "font-medium"}`}
                                 >
                                   {t.label}
                                 </div>
@@ -879,19 +868,19 @@ function AdminPage() {
 
             {/* Section title bar */}
             {activeMeta && (
-              <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border/40 bg-background/85 px-3 pb-2.5 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:-mx-1 sm:px-1">
+              <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border bg-background/95 px-3 pb-3 pt-3 backdrop-blur sm:-mx-1 sm:px-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground/50">
-                    admin /
+                  <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Administração /
                   </span>
-                  <activeMeta.icon className="h-4 w-4 text-neon" />
-                  <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-foreground">
+                  <activeMeta.icon className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-foreground">
                     {activeMeta.label}
                   </h2>
 
                   {activeMeta.hint && (
-                    <span className="ml-1 font-mono text-[10px] text-muted-foreground">
-                      // {activeMeta.hint}
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      · {activeMeta.hint}
                     </span>
                   )}
                   {(navBadges[tab] ?? 0) > 0 && (
