@@ -772,12 +772,6 @@ function AdminPage() {
                 </div>
               )}
               {filteredGroups.map((g, gi) => {
-                const accentColor =
-                  g.accent === "neon"
-                    ? "text-neon"
-                    : g.accent === "cyan"
-                      ? "text-cyan"
-                      : "text-violet";
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
                   <div
