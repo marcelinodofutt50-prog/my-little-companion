@@ -282,6 +282,61 @@
 
 /* ===== OSINT / HUD surfaces (admin console) ===== */
 @layer utilities {
+  .admin-enterprise {
+    --background: oklch(0.96 0.008 255);
+    --foreground: oklch(0.25 0.025 255);
+    --card: oklch(0.995 0.002 255);
+    --card-foreground: oklch(0.25 0.025 255);
+    --popover: oklch(0.995 0.002 255);
+    --popover-foreground: oklch(0.25 0.025 255);
+    --primary: oklch(0.43 0.055 255);
+    --primary-foreground: oklch(0.985 0.002 255);
+    --secondary: oklch(0.92 0.012 255);
+    --secondary-foreground: oklch(0.31 0.03 255);
+    --muted: oklch(0.93 0.01 255);
+    --muted-foreground: oklch(0.52 0.025 255);
+    --accent: oklch(0.9 0.02 255);
+    --accent-foreground: oklch(0.3 0.035 255);
+    --border: oklch(0.86 0.015 255);
+    --input: oklch(0.86 0.015 255);
+    --ring: oklch(0.52 0.055 255 / 45%);
+    --neon: oklch(0.48 0.055 255);
+    --cyan: oklch(0.52 0.045 235);
+    --violet: oklch(0.5 0.05 285);
+    color-scheme: light;
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  .enterprise-surface {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    box-shadow: 0 8px 28px -22px oklch(0.25 0.025 255 / 0.4);
+  }
+
+  .admin-enterprise .osint-panel {
+    background: var(--card);
+    border-color: var(--border);
+    backdrop-filter: none;
+  }
+  .admin-enterprise .osint-corners::before,
+  .admin-enterprise .osint-corners::after,
+  .admin-enterprise .osint-sweep::after,
+  .admin-enterprise .osint-ticker {
+    display: none;
+  }
+  .admin-enterprise .font-mono,
+  .admin-enterprise .osint-label {
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+  }
+  .admin-enterprise .glow-neon,
+  .admin-enterprise .glow-cyan,
+  .admin-enterprise .glow-violet {
+    box-shadow: none;
+  }
+
   .osint-panel {
     position: relative;
     background:
