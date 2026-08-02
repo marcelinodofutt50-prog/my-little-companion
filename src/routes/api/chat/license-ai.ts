@@ -208,9 +208,18 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           messages: await convertToModelMessages(messages),
           tools,
           stopWhen: stepCountIs(50),
+          onError: ({ error }) => {
+            console.error("[LicenseAI Error]:", error);
+          }
         });
 
-        return result.toUIMessageStreamResponse({ originalMessages: messages });
+        return result.toUIMessageStreamResponse({
+          originalMessages: messages,
+          getErrorMessage: (error) => {
+            if (error instanceof Error) return error.message;
+            return String(error) || "An unexpected error occurred in Shadow Ops IA";
+          }
+        });
       },
     },
   },
