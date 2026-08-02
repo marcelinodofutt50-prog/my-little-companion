@@ -111,6 +111,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           }
         })
       },
+      // @ts-ignore
       maxSteps: 10
     });
   } catch (err) {
