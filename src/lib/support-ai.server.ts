@@ -28,6 +28,7 @@ REGRAS CRÍTICAS:
 - Sempre responda em Português do Brasil.`;
 
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
+  console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
   const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar", "btmob"];
   const msgLower = userMessage.toLowerCase();
   const hasTrigger = triggers.some(t => msgLower.includes(t));

@@ -21,6 +21,8 @@ export function createGeminiProvider(modelName: string = "gemini-1.5-flash") {
     return google(normalizedName);
   }
 
+  console.warn("[GeminiProvider] Missing GEMINI_API_KEY, falling back to Lovable AI Gateway.");
+
   if (lovableKey) {
     const lovable = createOpenAICompatible({
       name: "lovable",
