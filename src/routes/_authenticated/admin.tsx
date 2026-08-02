@@ -3545,6 +3545,19 @@ function AdminChatPanel() {
                               })}
                             </div>
                           </div>
+                          {!m.is_admin && (
+                            <button
+                              type="button"
+                              title="Responder esta mensagem"
+                              onClick={() => {
+                                setReplyTo(m);
+                                inputRef.current?.focus();
+                              }}
+                              className="mb-1 rounded-full border border-border/60 bg-background/80 p-1.5 text-muted-foreground opacity-0 transition hover:text-neon focus:opacity-100 group-hover:opacity-100"
+                            >
+                              <Reply className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
