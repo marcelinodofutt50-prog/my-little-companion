@@ -258,8 +258,6 @@ export const adminUpdateRefund = createServerFn({ method: "POST" })
       notes: data.adminNotes ?? null,
     });
 
-
-
     if (updated) {
       const { notifyRefundStatus } = await import("@/lib/refund-notify.server");
       await notifyRefundStatus({
@@ -279,9 +277,6 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada no ambiente.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -365,10 +360,7 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
     }
 
     const failed = checks.filter((c) => !c.ok);
-
-    const { generateText } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const gw = createLovableAiGatewayProvider(apiKey);
+    const model = createGeminiProvider("gemini-1.5-flash");
 
     const prompt = [
       "Você é um analista antifraude de uma loja digital brasileira. Avalie se este pedido de reembolso é legítimo.",
@@ -392,7 +384,7 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
     let analysis = "";
     try {
       const res = await generateText({
-        model: createGeminiProvider("gemini-1.5-flash"),
+        model,
         prompt,
       });
       analysis = res.text.trim();
@@ -414,7 +406,6 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
       notes: `Checagens reprovadas: ${checks.filter((c) => !c.ok).length}/${checks.length} · modelo Gemini`,
     });
 
-
     return {
       verdict,
       confidence,
@@ -422,7 +413,6 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
       checks,
       failedCount: failed.length,
       gateway,
-      // Evidências exatas que alimentaram a análise (para conferência manual).
       evidence: {
         refund: {
           id: r.id,
