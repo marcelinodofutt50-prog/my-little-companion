@@ -66,6 +66,7 @@ import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
 import { AdminCustomer360 } from "@/components/AdminCustomer360";
+import { SupportCustomerContext } from "@/components/SupportCustomerContext";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { AdminDailyReport } from "@/components/AdminDailyReport";
