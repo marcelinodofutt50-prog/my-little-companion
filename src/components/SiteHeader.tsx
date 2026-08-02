@@ -11,6 +11,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import shadowMark from "@/assets/shadow-mask.png";
 import type { User } from "@supabase/supabase-js";
 
@@ -75,7 +76,9 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <LanguageToggle className="hidden sm:inline-flex" />
+
           {user ? (
             <Link to="/dashboard">
               <Button size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
@@ -126,7 +129,10 @@ export function SiteHeader() {
                   ))}
                 </nav>
                 <div className="mt-auto space-y-3 px-4 pb-6">
-                  <LanguageToggle />
+                  <div className="flex items-center gap-2">
+                    <LanguageToggle />
+                    <ThemeToggle />
+                  </div>
                   {!user && (
                     <Link to="/auth" onClick={() => setOpen(false)} className="block">
                       <Button variant="outline" className="w-full rounded-none border-foreground font-mono text-[10px] uppercase tracking-[0.2em]">

@@ -107,6 +107,80 @@
 
 .dark { color-scheme: dark; }
 
+/* ===== Tema claro (segue o tema do sistema por padrão) ===== */
+html.theme-light {
+  color-scheme: light;
+
+  --background: oklch(0.975 0.006 150);
+  --foreground: oklch(0.22 0.02 160);
+
+  --card: oklch(0.995 0.002 150);
+  --card-foreground: oklch(0.22 0.02 160);
+  --popover: oklch(0.995 0.002 150);
+  --popover-foreground: oklch(0.22 0.02 160);
+
+  --primary: oklch(0.52 0.14 150);
+  --primary-foreground: oklch(0.99 0.005 150);
+
+  --secondary: oklch(0.93 0.012 155);
+  --secondary-foreground: oklch(0.28 0.025 160);
+  --muted: oklch(0.94 0.01 155);
+  --muted-foreground: oklch(0.48 0.02 158);
+
+  --accent: oklch(0.9 0.03 190);
+  --accent-foreground: oklch(0.25 0.03 190);
+
+  --destructive: oklch(0.55 0.19 22);
+  --destructive-foreground: oklch(0.99 0.005 150);
+
+  --border: oklch(0.87 0.012 158);
+  --input: oklch(0.9 0.012 158);
+  --ring: oklch(0.52 0.14 150 / 45%);
+
+  --neon: oklch(0.5 0.14 150);
+  --cyan: oklch(0.52 0.1 205);
+  --violet: oklch(0.5 0.14 300);
+  --danger: oklch(0.55 0.19 22);
+  --chart-1: oklch(0.5 0.14 150);
+  --chart-2: oklch(0.52 0.1 205);
+  --chart-3: oklch(0.5 0.14 300);
+  --chart-4: oklch(0.55 0.09 165);
+  --chart-5: oklch(0.55 0.19 22);
+
+  --sidebar: oklch(0.99 0.004 150);
+  --sidebar-foreground: oklch(0.25 0.02 160);
+  --sidebar-primary: oklch(0.52 0.14 150);
+  --sidebar-primary-foreground: oklch(0.99 0.005 150);
+  --sidebar-accent: oklch(0.94 0.01 155);
+  --sidebar-accent-foreground: oklch(0.25 0.02 160);
+  --sidebar-border: oklch(0.88 0.012 158);
+  --sidebar-ring: oklch(0.52 0.14 150 / 45%);
+}
+
+html.theme-light body {
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -10%, oklch(0.75 0.1 150 / 0.18), transparent 62%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.78 0.08 200 / 0.14), transparent 60%),
+    linear-gradient(to right, oklch(0.5 0.14 150 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.5 0.14 150 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.975 0.006 150), oklch(0.955 0.008 155));
+}
+
+html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.5 0.14 150 / 0.18); }
+html.theme-light .glow-cyan { box-shadow: 0 0 18px oklch(0.52 0.1 205 / 0.18); }
+html.theme-light .glow-violet { box-shadow: 0 0 18px oklch(0.5 0.14 300 / 0.18); }
+html.theme-light .glow-neon-soft { box-shadow: 0 10px 30px -18px oklch(0.4 0.06 160 / 0.35); }
+html.theme-light .price-card {
+  background: oklch(0.995 0.002 150);
+  border-color: oklch(0.88 0.012 158);
+}
+html.theme-light .price-card-popular {
+  border-color: oklch(0.6 0.12 150 / 0.5);
+  background: oklch(0.98 0.012 150);
+}
+html.theme-light .paper-shadow { box-shadow: 0 20px 60px -28px oklch(0.4 0.03 160 / 0.35); }
+html.theme-light .crt::after { display: none; }
+
 @layer base {
   html, body {
     background: var(--color-background);
@@ -283,6 +357,32 @@
 /* ===== OSINT / HUD surfaces (admin console) ===== */
 @layer utilities {
   .admin-enterprise {
+    --background: oklch(0.16 0.012 255);
+    --foreground: oklch(0.94 0.008 255);
+    --card: oklch(0.2 0.014 255);
+    --card-foreground: oklch(0.94 0.008 255);
+    --popover: oklch(0.2 0.014 255);
+    --popover-foreground: oklch(0.94 0.008 255);
+    --primary: oklch(0.72 0.09 255);
+    --primary-foreground: oklch(0.16 0.012 255);
+    --secondary: oklch(0.24 0.016 255);
+    --secondary-foreground: oklch(0.92 0.01 255);
+    --muted: oklch(0.24 0.016 255);
+    --muted-foreground: oklch(0.7 0.02 255);
+    --accent: oklch(0.28 0.02 255);
+    --accent-foreground: oklch(0.94 0.008 255);
+    --border: oklch(0.31 0.02 255);
+    --input: oklch(0.28 0.018 255);
+    --ring: oklch(0.72 0.09 255 / 45%);
+    --neon: oklch(0.75 0.08 255);
+    --cyan: oklch(0.78 0.07 235);
+    --violet: oklch(0.72 0.09 285);
+    color-scheme: dark;
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  html.theme-light .admin-enterprise {
     --background: oklch(0.96 0.008 255);
     --foreground: oklch(0.25 0.025 255);
     --card: oklch(0.995 0.002 255);
@@ -304,9 +404,8 @@
     --cyan: oklch(0.52 0.045 235);
     --violet: oklch(0.5 0.05 285);
     color-scheme: light;
-    background: var(--background);
-    color: var(--foreground);
   }
+
 
   .enterprise-surface {
     border: 1px solid var(--border);
