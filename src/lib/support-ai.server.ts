@@ -2,6 +2,7 @@ import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { decrypt, yaarsaExtend, yaarsaSetPassword } from "./yaarsa.server";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", um sistema automatizado de suporte técnico da Shadow.
 Sua missão é detectar e CORRIGIR problemas de login dos clientes de forma proativa.
@@ -10,17 +11,20 @@ COMPORTAMENTO:
 1. Analise a mensagem do cliente. Se ele relatar problemas como "senha inválida", "erro ao logar", "minha licença expirou mas eu paguei", "painel não abre", ou similares, você deve agir.
 2. Use a ferramenta 'checkCustomerStatus' para entender o que está acontecendo com a licença dele.
 3. Se identificar uma inconsistência (ex: licença válida mas cliente relata erro), use a ferramenta 'fixLogin' para aplicar o procedimento técnico (sacudir registro no Yaarsa).
-4. Informe ao cliente o que você encontrou e o que fez. Se corrigiu, confirme. Se o problema for falta de pagamento ou licença expirada de verdade, explique educadamente.
-5. Seja breve, técnico e prestativo. Use emojis operacionais (🎧, ⚡, ✅).
+4. Informe ao cliente o que você encontrou e o que fez de forma clara e profissional.
+5. Se corrigiu, confirme. Se o problema for falta de pagamento ou licença expirada de verdade, explique educadamente e aponte para a aba de compras.
+6. Se o cliente perguntar algo fora do escopo técnico de login, responda que você é um assistente de reparo rápido e que um humano do suporte assumirá a conversa em breve.
+7. Use emojis operacionais de forma moderada (🎧, ⚡, ✅, 🛡️).
 
 PROCEDIMENTO DE CORREÇÃO (fixLogin):
 - Empurra a validade em 1 dia no Yaarsa.
 - Re-aplica a mesma senha criptografada que está no banco.
 - Retorna a validade ao normal.
-Isso resolve 90% dos problemas de sincronização entre o Shadow e o painel Yaarsa.
+Isso resolve problemas de sincronização e permissão no painel Yaarsa/BTMob.
 
-REGRAS:
-- Se o cliente estiver apenas conversando ou o assunto não for erro técnico de login, não faça nada.
+REGRAS CRÍTICAS:
+- Se o cliente estiver apenas conversando (ex: "oi", "bom dia") sem relatar erro, NÃO envie mensagem.
+- Nunca invente status de pagamento; confie apenas nos dados da ferramenta 'checkCustomerStatus'.
 - Sempre responda em Português do Brasil.`;
 
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
@@ -57,7 +61,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           inputSchema: z.object({ licenseId: z.string().uuid() }),
           execute: async ({ licenseId }) => {
             try {
-              const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
+              // Helper methods are now imported at top level to ensure clarity and professional code structure.
               const { data: lic } = await supabaseAdmin.from("licenses").select("*").eq("id", licenseId).maybeSingle();
               if (!lic) return { error: "Licença não encontrada" };
               if (lic.disabled_at) return { error: "Licença desativada" };
@@ -88,13 +92,21 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           description: "Envia uma mensagem de resposta da IA para o chat do suporte.",
           inputSchema: z.object({ body: z.string() }),
           execute: async ({ body }) => {
-            const { error } = await supabaseAdmin.from("support_messages").insert({
+            const { data: msg, error } = await supabaseAdmin.from("support_messages").insert({
               thread_id: threadId,
               sender_id: "00000000-0000-0000-0000-000000000000",
               is_admin: true,
               is_system: true,
               body: `🤖 **Assistente Shadow:** ${body}`
-            });
+            }).select("id").single();
+
+            if (!error && msg) {
+              // Mark thread as unread for the customer so they see the AI notification
+              await supabaseAdmin
+                .from("support_threads")
+                .update({ unread_by_customer: 1 })
+                .eq("id", threadId);
+            }
             return { success: !error };
           }
         })
@@ -102,6 +114,6 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
       stopWhen: stepCountIs(5)
     });
   } catch (err) {
-    console.error("[support-ai] execution error:", err);
+    console.error(`[support-ai] execution error for thread ${threadId}:`, err);
   }
 }
