@@ -3565,6 +3565,29 @@ function AdminChatPanel() {
                 })}
               </div>
               <div className="border-t border-border/40 bg-background/40 p-3">
+                {replyTo && (
+                  <div className="mb-2 flex items-start gap-2 rounded-md border-l-2 border-neon bg-muted/30 px-2.5 py-1.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-mono text-[9px] uppercase tracking-wider text-neon">
+                        respondendo{" "}
+                        {replyTo.is_admin
+                          ? "suporte"
+                          : activeThread.profile?.display_name || "cliente"}
+                      </div>
+                      <div className="line-clamp-2 text-[11px] text-muted-foreground">
+                        {replyTo.body ?? "[anexo]"}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReplyTo(null)}
+                      className="rounded p-1 text-muted-foreground transition hover:text-destructive"
+                      title="Cancelar resposta"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
                     enter envia · shift+enter quebra linha
