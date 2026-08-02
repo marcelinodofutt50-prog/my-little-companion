@@ -129,7 +129,10 @@ export function SiteHeader() {
                   ))}
                 </nav>
                 <div className="mt-auto space-y-3 px-4 pb-6">
-                  <LanguageToggle />
+                  <div className="flex items-center gap-2">
+                    <LanguageToggle />
+                    <ThemeToggle />
+                  </div>
                   {!user && (
                     <Link to="/auth" onClick={() => setOpen(false)} className="block">
                       <Button variant="outline" className="w-full rounded-none border-foreground font-mono text-[10px] uppercase tracking-[0.2em]">
