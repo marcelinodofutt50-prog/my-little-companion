@@ -208,9 +208,14 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           messages: await convertToModelMessages(messages),
           tools,
           stopWhen: stepCountIs(50),
+          onError: ({ error }) => {
+            console.error("[LicenseAI Server Error]:", error);
+          }
         });
 
-        return result.toUIMessageStreamResponse({ originalMessages: messages });
+        return result.toUIMessageStreamResponse({ 
+          originalMessages: messages,
+        });
       },
     },
   },
