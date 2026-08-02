@@ -243,7 +243,7 @@ function DashboardPage() {
             <SidebarTrigger className="text-muted-foreground hover:text-primary" />
             <div className="h-6 w-px bg-border/60" />
             <div className="min-w-0 flex-1">
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// dashboard</div>
+              <div className="osint-label text-primary/80">Painel do cliente</div>
               <div className="truncate font-display text-sm text-foreground">{displayIdentity(displayName, email)}</div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
