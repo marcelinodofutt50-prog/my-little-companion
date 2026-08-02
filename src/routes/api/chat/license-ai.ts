@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, tool, stepCountIs, type UIMessage } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createGeminiProvider } from "@/lib/gemini-provider.server";
 
 const SYSTEM_PROMPT = `Você é o "Shadow Ops", assistente operacional do painel admin da Shadow (plataforma de licenças BTMOB/Shadow via API Yaarsa).
 
@@ -46,8 +46,6 @@ export const Route = createFileRoute("/api/chat/license-ai")({
         if (gate.error) return gate.error;
 
         const { messages } = (await request.json()) as { messages: UIMessage[] };
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const yaarsa = await import("@/lib/yaarsa.server");
@@ -204,9 +202,8 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           }),
         };
 
-        const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
-          model: gateway("google/gemini-2.5-flash"),
+          model: createGeminiProvider("gemini-1.5-flash"),
           system: SYSTEM_PROMPT,
           messages: await convertToModelMessages(messages),
           tools,

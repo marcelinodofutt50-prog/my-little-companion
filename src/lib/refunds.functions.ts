@@ -390,7 +390,7 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
     let analysis = "";
     try {
       const res = await generateText({
-        model: gw("google/gemini-3.6-flash"),
+        model: createGeminiProvider("gemini-1.5-flash"),
         prompt,
       });
       analysis = res.text.trim();
@@ -409,7 +409,7 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
       toStatus: r.status ?? null,
       aiVerdict: verdict,
       aiConfidence: Number.isFinite(confidence) ? confidence : null,
-      notes: `Checagens reprovadas: ${checks.filter((c) => !c.ok).length}/${checks.length} · modelo google/gemini-3.6-flash`,
+      notes: `Checagens reprovadas: ${checks.filter((c) => !c.ok).length}/${checks.length} · modelo Gemini`,
     });
 
 
@@ -451,7 +451,7 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
             : null,
           userSupport: r.user_id ? `/admin?user=${r.user_id}` : null,
         },
-        model: "google/gemini-3.6-flash",
+        model: "gemini-1.5-flash",
         verifiedAt: new Date().toISOString(),
       },
     };

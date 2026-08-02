@@ -227,11 +227,9 @@ ${recentFailures.map((l: any) => `- ${new Date(l.created_at).toISOString().slice
 
 Instrução final: Dê um diagnóstico com 3 fatores numerados (ex: 1. Vencimento não refletiu após pagamento, 2. Senha desincronizada, 3. Possível revogação/desativação) e uma conclusão dizendo se a correção automática (empurrar validade + reaplicar senha) é adequada ou se precisa de ação manual. Máximo 300 palavras.`;
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("LOVABLE_API_KEY não configurada no servidor");
-    const gateway = createLovableAiGatewayProvider(key);
+    const model = createGeminiProvider("gemini-1.5-flash");
     const { text } = await generateText({
-      model: gateway("google/gemini-3.6-flash"),
+      model,
       prompt,
       temperature: 0.2,
     });
