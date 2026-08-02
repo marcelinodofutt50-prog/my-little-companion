@@ -218,14 +218,12 @@ export const validateCoupon = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: coupon } = await context.supabase
       .from("coupons").select("*").eq("code", data.code.toUpperCase()).eq("active", true).maybeSingle();
-    if (!coupon) return { coupon: null as null };
-    const anyC = coupon as any;
-    if (anyC.user_id && anyC.user_id !== context.userId) return { coupon: null as null };
-    if (anyC.expires_at && new Date(anyC.expires_at).getTime() <= Date.now()) return { coupon: null as null };
-    if (anyC.plan_slug && data.planSlug && anyC.plan_slug !== data.planSlug) return { coupon: null as null };
-    if (coupon.uses_left !== null && coupon.uses_left !== undefined && Number(coupon.uses_left) <= 0) {
-      return { coupon: null as null };
-    }
+    const { evaluateCoupon } = await import("./coupon-rules");
+    const verdict = evaluateCoupon(coupon as any, {
+      userId: context.userId,
+      planSlug: data.planSlug ?? null,
+    });
+    if (!verdict.ok) return { coupon: null as null };
     return { coupon };
   });
 
