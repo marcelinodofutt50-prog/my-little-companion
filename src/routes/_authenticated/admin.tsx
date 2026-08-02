@@ -3449,13 +3449,29 @@ function AdminChatPanel() {
                           </div>
                         </div>
                       ) : (
-                        <div className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
+                        <div
+                          id={`admin-msg-${m.id}`}
+                          className={`group flex items-end gap-1.5 ${m.is_admin ? "justify-end" : "justify-start"}`}
+                        >
+                          {m.is_admin && (
+                            <button
+                              type="button"
+                              title="Responder esta mensagem"
+                              onClick={() => {
+                                setReplyTo(m);
+                                inputRef.current?.focus();
+                              }}
+                              className="mb-1 rounded-full border border-border/60 bg-background/80 p-1.5 text-muted-foreground opacity-0 transition hover:text-neon focus:opacity-100 group-hover:opacity-100"
+                            >
+                              <Reply className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                           <div
-                            className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
+                            className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm transition-colors ${
                               m.is_admin
                                 ? "rounded-br-sm border border-violet/40 bg-violet/10"
                                 : "rounded-bl-sm border border-border bg-card"
-                            }`}
+                            } ${highlightId === m.id ? "ring-2 ring-neon/70" : ""}`}
                           >
                             {!sameSender && (
                               <div
@@ -3468,11 +3484,34 @@ function AdminChatPanel() {
                                   : activeThread.profile?.display_name || "cliente"}
                               </div>
                             )}
+                            {m.reply_to_id && (
+                              <button
+                                type="button"
+                                onClick={() => jumpToMessage(m.reply_to_id!)}
+                                className="mb-1.5 flex w-full gap-2 rounded-md border-l-2 border-neon/70 bg-background/60 px-2 py-1 text-left transition hover:bg-background/90"
+                              >
+                                <span className="min-w-0 flex-1">
+                                  <span className="block font-mono text-[9px] uppercase tracking-wider text-neon">
+                                    {quoted
+                                      ? quoted.is_admin
+                                        ? "suporte"
+                                        : activeThread.profile?.display_name || "cliente"
+                                      : "mensagem citada"}
+                                  </span>
+                                  <span className="line-clamp-2 block text-[11px] text-muted-foreground">
+                                    {quoted
+                                      ? (quoted.body ?? "[anexo]")
+                                      : "ver mensagem original"}
+                                  </span>
+                                </span>
+                              </button>
+                            )}
                             {m.body && (
                               <div className="whitespace-pre-wrap break-words leading-relaxed">
                                 {m.body}
                               </div>
                             )}
+
                             {m.attachment_url &&
                               (m.attachment_type?.startsWith("image/") ? (
                                 <img
