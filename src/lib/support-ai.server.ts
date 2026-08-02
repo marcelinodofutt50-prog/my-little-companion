@@ -2,6 +2,7 @@ import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { decrypt, yaarsaExtend, yaarsaSetPassword } from "./yaarsa.server";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", um sistema automatizado de suporte técnico da Shadow.
 Sua missão é detectar e CORRIGIR problemas de login dos clientes de forma proativa.
