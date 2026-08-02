@@ -502,7 +502,54 @@ html.theme-light .crt::after { display: none; }
   @media (prefers-reduced-motion: reduce) {
     .osint-sweep::after { animation: none; opacity: .25; }
   }
+
+  /* ===== Painel do cliente — visual corporativo (padrão) =====
+     Neutraliza os efeitos "gamer" no painel logado. Continua tudo
+     disponível quando o cliente liga o modo RGB no cabeçalho. */
+  html:not(.rgb-mode) .client-enterprise .osint-panel,
+  html:not(.rgb-mode) .client-enterprise .terminal-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    backdrop-filter: none;
+    box-shadow: 0 10px 30px -24px oklch(0.2 0.02 255 / 0.55);
+  }
+  html:not(.rgb-mode) .client-enterprise .osint-panel:hover,
+  html:not(.rgb-mode) .client-enterprise .terminal-card:hover {
+    border-color: color-mix(in oklab, var(--border) 55%, var(--foreground) 12%);
+  }
+  html:not(.rgb-mode) .client-enterprise .osint-corners::before,
+  html:not(.rgb-mode) .client-enterprise .osint-corners::after,
+  html:not(.rgb-mode) .client-enterprise .osint-sweep::after,
+  html:not(.rgb-mode) .client-enterprise .osint-ticker,
+  html:not(.rgb-mode) .client-enterprise .scanlines::before,
+  html:not(.rgb-mode) .client-enterprise .rgb-border::after,
+  html:not(.rgb-mode) .client-enterprise .rainbow-ring::before {
+    display: none;
+  }
+  html:not(.rgb-mode) .client-enterprise .rainbow-text {
+    background-image: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: var(--foreground);
+    animation: none;
+  }
+  html:not(.rgb-mode) .client-enterprise .rainbow-bar {
+    background-image: linear-gradient(90deg, transparent, var(--border), transparent);
+    animation: none;
+  }
+  html:not(.rgb-mode) .client-enterprise .osint-label {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+  html:not(.rgb-mode) .client-enterprise .glow-neon,
+  html:not(.rgb-mode) .client-enterprise .glow-cyan,
+  html:not(.rgb-mode) .client-enterprise .glow-violet {
+    box-shadow: none;
+  }
 }
+
 
 
 /* ===== Rainbow / RGB mode ===== */
