@@ -3428,6 +3428,9 @@ function AdminChatPanel() {
                       new Date(m.created_at).toDateString();
                   const sameSender =
                     !!prev && !prev.is_system && !m.is_system && prev.is_admin === m.is_admin;
+                  const quoted = m.reply_to_id
+                    ? (msgs.find((x) => x.id === m.reply_to_id) ?? null)
+                    : null;
                   return (
                     <div key={m.id} className={showDay ? "space-y-3" : sameSender ? "!mt-1" : ""}>
                       {showDay && (
