@@ -333,5 +333,3 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
     </div>
   );
 }
-
-}
