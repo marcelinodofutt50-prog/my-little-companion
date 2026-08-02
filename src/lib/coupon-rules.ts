@@ -45,5 +45,7 @@ export function clampDiscountPct(pct: unknown): number {
 }
 
 export function applyDiscount(amount: number, pct: unknown): number {
-  return Math.max(MIN_CHARGE_BRL, amount * (1 - clampDiscountPct(pct) / 100));
+  const discounted = amount * (1 - clampDiscountPct(pct) / 100);
+  // Arredonda em centavos: evita 44.99999999 virar cobrança diferente da exibida.
+  return Math.max(MIN_CHARGE_BRL, Math.round(discounted * 100) / 100);
 }
