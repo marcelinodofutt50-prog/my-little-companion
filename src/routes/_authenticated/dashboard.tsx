@@ -236,7 +236,7 @@ function DashboardPage() {
   return (
     <SidebarProvider>
       <WinbackOffer onUseCoupon={(code) => void startUpgrade(code)} />
-      <div className="flex min-h-screen w-full">
+      <div className="client-enterprise flex min-h-screen w-full">
         <AppSidebar isAdmin={isAdmin} />
         <SidebarInset className="min-w-0 flex-1">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md">
