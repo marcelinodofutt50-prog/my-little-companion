@@ -317,6 +317,8 @@ function PlansPage() {
     <div className="relative min-h-screen">
       <SiteHeader />
       <FlashPromoBar />
+      <WinbackOffer onUseCoupon={(code, slug) => { setCoupon(code); void buy(slug, code); }} />
+
 
       {/* HERO ================================================= */}
       <section className="relative overflow-hidden border-b border-border/40">
