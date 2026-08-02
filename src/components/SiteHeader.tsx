@@ -11,6 +11,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import shadowMark from "@/assets/shadow-mask.png";
 import type { User } from "@supabase/supabase-js";
 
