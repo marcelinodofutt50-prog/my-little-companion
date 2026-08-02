@@ -1,4 +1,4 @@
-import { generateText, tool } from "ai";
+import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -40,7 +40,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
       tools: {
         checkCustomerStatus: tool({
           description: "Verifica o status atual das licenças e pedidos do cliente.",
-          parameters: z.object({}),
+          inputSchema: z.object({}),
           execute: async () => {
             const [lics, orders] = await Promise.all([
               supabaseAdmin.from("licenses").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -54,7 +54,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
         }),
         fixLogin: tool({
           description: "Aplica o procedimento de 'sacudir registro' (correção de login) para uma licença específica.",
-          parameters: z.object({ licenseId: z.string().uuid() }),
+          inputSchema: z.object({ licenseId: z.string().uuid() }),
           execute: async ({ licenseId }) => {
             try {
               const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
@@ -86,7 +86,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
         }),
         postAIMessage: tool({
           description: "Envia uma mensagem de resposta da IA para o chat do suporte.",
-          parameters: z.object({ body: z.string() }),
+          inputSchema: z.object({ body: z.string() }),
           execute: async ({ body }) => {
             const { error } = await supabaseAdmin.from("support_messages").insert({
               thread_id: threadId,
@@ -99,7 +99,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           }
         })
       },
-      maxSteps: 5
+      stopWhen: stepCountIs(5)
     });
   } catch (err) {
     console.error("[support-ai] execution error:", err);
