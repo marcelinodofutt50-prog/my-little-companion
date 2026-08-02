@@ -256,7 +256,7 @@ function PlayProtectPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="client-enterprise flex min-h-screen w-full bg-background">
         <AppSidebar isAdmin={isAdmin} />
         <SidebarInset>
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/85 px-4 backdrop-blur">

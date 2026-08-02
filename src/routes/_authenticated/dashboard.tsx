@@ -236,14 +236,14 @@ function DashboardPage() {
   return (
     <SidebarProvider>
       <WinbackOffer onUseCoupon={(code) => void startUpgrade(code)} />
-      <div className="flex min-h-screen w-full">
+      <div className="client-enterprise flex min-h-screen w-full">
         <AppSidebar isAdmin={isAdmin} />
         <SidebarInset className="min-w-0 flex-1">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md">
             <SidebarTrigger className="text-muted-foreground hover:text-primary" />
             <div className="h-6 w-px bg-border/60" />
             <div className="min-w-0 flex-1">
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// dashboard</div>
+              <div className="osint-label text-primary/80">Painel do cliente</div>
               <div className="truncate font-display text-sm text-foreground">{displayIdentity(displayName, email)}</div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
@@ -291,7 +291,7 @@ function DashboardPage() {
                         <img src={shadowMark} alt="Shadow" className="h-12 w-12 object-contain drop-shadow-[0_0_18px_rgba(201,168,76,0.55)] md:h-14 md:w-14" />
                       </div>
                       <div className="min-w-0">
-                        <div className="osint-label text-neon/80">// operator</div>
+                        <div className="osint-label text-muted-foreground">Conta</div>
                         <h1 className="rainbow-text mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{displayIdentity(displayName, email)}</h1>
                         <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                           sessão · {new Date().toLocaleDateString("pt-BR")} · {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}

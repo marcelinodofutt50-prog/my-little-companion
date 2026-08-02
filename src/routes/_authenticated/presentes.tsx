@@ -64,7 +64,7 @@ function GiftsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="client-enterprise min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
         <div className="osint-panel osint-corners osint-sweep relative flex flex-wrap items-end justify-between gap-4 overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "120px" }}>

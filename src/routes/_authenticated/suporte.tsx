@@ -293,7 +293,7 @@ function SupportPage() {
   const empty = msgs.length === 0 && pending.length === 0;
 
   return (
-    <div className="min-h-screen">
+    <div className="client-enterprise min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="osint-panel osint-corners osint-sweep relative overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "120px" }}>

@@ -79,7 +79,7 @@ function ReferralsPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="client-enterprise min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-[1100px] px-4 py-8">
         <div className="osint-panel osint-corners osint-sweep relative mb-6 flex items-center gap-3 overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "110px" }}>
