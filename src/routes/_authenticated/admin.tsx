@@ -2719,6 +2719,7 @@ function SupportOverviewCards({
 function AdminChatPanel() {
   const [threads, setThreads] = useState<Thread[]>(() => threadsCache["open"] ?? []);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [fichaUser, setFichaUser] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chatHasMore, setChatHasMore] = useState(false);
   const [chatLoadingOlder, setChatLoadingOlder] = useState(false);
