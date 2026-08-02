@@ -213,12 +213,11 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           }
         });
 
-        return result.toUIMessageStreamResponse({
+        // Use toDataStreamResponse for better error details to UI if needed,
+        // but since we need UIMessage format for the existing client-side useChat, 
+        // we keep toUIMessageStreamResponse and rely on onError logging for server-side diagnosis.
+        return result.toUIMessageStreamResponse({ 
           originalMessages: messages,
-          getErrorMessage: (error) => {
-            if (error instanceof Error) return error.message;
-            return String(error) || "An unexpected error occurred in Shadow Ops IA";
-          }
         });
       },
     },
