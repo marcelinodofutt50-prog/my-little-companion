@@ -387,7 +387,7 @@ function PlayProtectPage() {
                   href={ppConfigAsset.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="group relative block overflow-hidden rounded-lg border border-border/70 bg-black/40"
+                  className="group relative block overflow-hidden rounded-lg border border-border/70 bg-muted/50"
                 >
                   <img
                     loading="lazy"

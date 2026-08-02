@@ -306,8 +306,8 @@ function LandingPage() {
                     key={p.slug}
                     className={`relative flex flex-col rounded-lg p-8 transition-all duration-300 ${
                       p.highlight
-                        ? "z-10 scale-[1.03] border-2 border-cyan bg-[#0d0d0d] shadow-[0_0_40px_rgba(6,182,212,0.12)]"
-                        : `bg-[#0a0a0a] border ${borderClass}`
+                        ? "z-10 scale-[1.03] border-2 border-cyan bg-card shadow-[0_0_40px_rgba(6,182,212,0.12)]"
+                        : `bg-card border ${borderClass}`
                     }`}
                   >
                     {p.highlight && (

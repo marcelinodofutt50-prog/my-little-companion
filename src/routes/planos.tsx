@@ -48,7 +48,7 @@ export const Route = createFileRoute("/planos")({
 });
 
 type Plan = { slug: string; name: string; description: string | null; price_brl: number; category: string; sort_order: number | null };
-type Coupon = { code: string; discount_pct: number; cashback_pct: number };
+type Coupon = { code: string; discount_pct: number; cashback_pct: number; plan_slug?: string | null };
 
 const CASHBACK_MAX_PCT = 0.5;
 const CODE_RE = /^[A-Z0-9_-]{2,16}$/;
@@ -281,7 +281,11 @@ function PlansPage() {
     try {
       const r = await checkoutFn({ data: {
         planSlug: slug,
-        couponCode: couponOverride || couponValid?.code,
+        couponCode:
+          couponOverride ||
+          (couponValid && (!couponValid.plan_slug || couponValid.plan_slug === slug)
+            ? couponValid.code
+            : undefined),
         useCashback: useCash && cashbackBalance > 0,
         referralCode: referralValid ? referral : undefined,
         returnOrigin: window.location.origin,
@@ -761,7 +765,12 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   featured?: boolean;
 }) {
   const price = Number(plan.price_brl);
-  const b = useMemo(() => computeBreakdown(price, coupon, cashback, useCash), [price, coupon, cashback, useCash]);
+  // Cupom pessoal travado em outro plano não vale aqui — não mostramos desconto falso.
+  const appliedCoupon = coupon && (!coupon.plan_slug || coupon.plan_slug === plan.slug) ? coupon : null;
+  const b = useMemo(
+    () => computeBreakdown(price, appliedCoupon, cashback, useCash),
+    [price, appliedCoupon, cashback, useCash]
+  );
   const hasBenefit = b.discount > 0 || b.cashbackApplied > 0 || b.cashbackEarn > 0;
   const meta = useMemo(() => metaFor(plan), [plan]);
   const Icon = meta.icon;
