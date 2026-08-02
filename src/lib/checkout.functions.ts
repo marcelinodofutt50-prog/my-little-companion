@@ -53,14 +53,12 @@ export const createCheckout = createServerFn({ method: "POST" })
     let couponRow: { code: string; discount_pct: number; cashback_pct: number } | null = null;
     if (data.couponCode) {
       const { data: c } = await supabase.from("coupons").select("*").eq("code", data.couponCode.toUpperCase()).eq("active", true).maybeSingle();
-      const anyC = c as any;
-      const ownerOk = !anyC?.user_id || anyC.user_id === userId;
-      const notExpired = !anyC?.expires_at || new Date(anyC.expires_at).getTime() > Date.now();
-      const planOk = !anyC?.plan_slug || anyC.plan_slug === plan.slug;
-      const usesOk = c && (c.uses_left === null || c.uses_left === undefined || Number(c.uses_left) > 0);
-      if (!c || !usesOk || !ownerOk || !notExpired || !planOk) {
+      const { evaluateCoupon, applyDiscount } = await import("./coupon-rules");
+      const verdict = evaluateCoupon(c as any, { userId, planSlug: plan.slug });
+      if (!c || !verdict.ok) {
         throw new Error("Cupom inválido, expirado ou não aplicável a este plano.");
       }
+
       // Cupom de uso limitado só é debitado quando o pagamento confirma.
       // Sem esta trava, o cliente poderia abrir vários pedidos pendentes com o
       // mesmo cupom de uso único e pagar todos com desconto.
