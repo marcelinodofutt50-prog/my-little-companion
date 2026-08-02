@@ -75,7 +75,9 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <LanguageToggle className="hidden sm:inline-flex" />
+
           {user ? (
             <Link to="/dashboard">
               <Button size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
