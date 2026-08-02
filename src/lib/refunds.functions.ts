@@ -280,95 +280,14 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada no ambiente.");
-
+    // O provedor híbrido já gerencia GEMINI_API_KEY e LOVABLE_API_KEY automaticamente.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: refund } = await supabaseAdmin
-      .from("refund_requests")
-      .select("*")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (!refund) throw new Error("Pedido de reembolso não encontrado.");
-
-    const r = refund as any;
-
-    const { data: order } = await supabaseAdmin
-      .from("orders")
-      .select("*")
-      .eq("id", r.order_id)
-      .maybeSingle();
-
-    const o = (order ?? {}) as any;
-
-    // Confere o pagamento direto na fonte (Mercado Pago), quando houver id.
-    let gateway: any = null;
-    const paymentId = o.payment_id ?? o.mp_payment_id ?? o.external_id ?? null;
-    if (paymentId) {
-      try {
-        const { getMpPayment } = await import("@/lib/mercadopago.server");
-        const p: any = await getMpPayment(String(paymentId));
-        gateway = {
-          status: p?.status ?? null,
-          status_detail: p?.status_detail ?? null,
-          amount: p?.transaction_amount ?? null,
-          date_approved: p?.date_approved ?? null,
-          payer_email: p?.payer?.email ?? null,
-          refunded: Number(p?.transaction_amount_refunded ?? 0) > 0,
-        };
-      } catch {
-        gateway = { error: "não foi possível consultar o gateway" };
-      }
-    }
-
-    // Checagens determinísticas (a IA só interpreta, não inventa).
-    const checks: { label: string; ok: boolean; detail: string }[] = [];
-    const paidAt = o.paid_at ?? o.created_at ?? null;
-    const withinWindow = paidAt
-      ? Date.now() - new Date(paidAt).getTime() <= REFUND_WINDOW_DAYS * 86400000
-      : false;
-
-    checks.push({
-      label: "Pedido pago",
-      ok: o.status === "paid",
-      detail: `status do pedido: ${o.status ?? "desconhecido"}`,
-    });
-    checks.push({
-      label: `Dentro da janela de ${REFUND_WINDOW_DAYS} dias`,
-      ok: withinWindow,
-      detail: paidAt ? `pago em ${new Date(paidAt).toLocaleString("pt-BR")}` : "sem data de pagamento",
-    });
-    checks.push({
-      label: "Valor confere",
-      ok: Number(r.amount) === Number(o.amount ?? -1),
-      detail: `reembolso ${r.amount} vs pedido ${o.amount ?? "?"}`,
-    });
-    if (gateway && !gateway.error) {
-      checks.push({
-        label: "Pagamento aprovado no gateway",
-        ok: gateway.status === "approved",
-        detail: `gateway: ${gateway.status ?? "?"} / ${gateway.status_detail ?? "-"}`,
-      });
-      checks.push({
-        label: "Ainda não estornado",
-        ok: !gateway.refunded,
-        detail: gateway.refunded ? "já existe estorno registrado" : "sem estorno anterior",
-      });
-      if (gateway.amount != null) {
-        checks.push({
-          label: "Valor bate com o gateway",
-          ok: Math.abs(Number(gateway.amount) - Number(r.amount)) < 0.01,
-          detail: `gateway ${gateway.amount} vs pedido de reembolso ${r.amount}`,
-        });
-      }
-    }
-
+...
     const failed = checks.filter((c) => !c.ok);
 
     const { generateText } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const gw = createLovableAiGatewayProvider(apiKey);
+    const model = createGeminiProvider("gemini-1.5-flash");
+
 
     const prompt = [
       "Você é um analista antifraude de uma loja digital brasileira. Avalie se este pedido de reembolso é legítimo.",
