@@ -61,10 +61,26 @@ export const createCheckout = createServerFn({ method: "POST" })
       if (!c || !usesOk || !ownerOk || !notExpired || !planOk) {
         throw new Error("Cupom inválido, expirado ou não aplicável a este plano.");
       }
+      // Cupom de uso limitado só é debitado quando o pagamento confirma.
+      // Sem esta trava, o cliente poderia abrir vários pedidos pendentes com o
+      // mesmo cupom de uso único e pagar todos com desconto.
+      if (c.uses_left !== null && c.uses_left !== undefined) {
+        const { data: reservedOrders } = await supabase
+          .from("orders")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("coupon_code", c.code)
+          .in("status", ["pending", "created", "processing"])
+          .limit(1);
+        if ((reservedOrders ?? []).length > 0) {
+          throw new Error("Você já tem um pedido em aberto usando este cupom. Conclua ou cancele esse pagamento antes de gerar outro.");
+        }
+      }
       const pct = Math.min(90, Math.max(0, Number(c.discount_pct ?? 0)));
       couponRow = c;
       amount = Math.max(1, amount * (1 - pct / 100));
     }
+
 
 
     // Resolve referral code -> referrer_id (via admin client, needs cross-user lookup)
