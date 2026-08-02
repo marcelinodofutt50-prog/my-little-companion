@@ -41,6 +41,9 @@ export function AdminDailyReport() {
     { label: "APKs na fila", value: report?.pendingApk ?? 0, icon: <Package className="h-4 w-4" />, tone: "info" },
   ] as const;
 
+  const iaSettingHint = "Ative a correção automática quando o sistema detectar login falho ou licença expirada, com confirmação no chat antes de executar diagnósticos.";
+
+
   return (
     <Card className="border border-border/60 bg-background/60 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -80,6 +83,11 @@ export function AdminDailyReport() {
           </div>
         </CardContent>
       )}
+      <div className="border-t border-border/40 bg-muted/20 p-3">
+        <p className="font-mono text-[10px] leading-relaxed text-muted-foreground/80">
+          <span className="text-neon">ℹ INFO:</span> {iaSettingHint}
+        </p>
+      </div>
     </Card>
   );
 }
