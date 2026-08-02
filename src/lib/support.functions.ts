@@ -110,6 +110,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     body: z.string().trim().min(1).max(4000).optional(),
     attachmentPath: z.string().min(1).max(512).optional(),
     attachmentType: z.string().max(100).optional(),
+    replyToId: z.string().uuid().optional().nullable(),
   }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i))
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
@@ -158,6 +159,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       body: data.body ?? null,
       attachment_url: url,
       attachment_type: data.attachmentType ?? null,
+      reply_to_id: data.replyToId ?? null,
     }).select("*").single();
     if (error) throw error;
     

@@ -202,24 +202,29 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           }),
         };
 
-        const result = streamText({
-          model: createGeminiProvider("gemini-1.5-flash"),
-          system: SYSTEM_PROMPT,
-          messages: await convertToModelMessages(messages),
-          tools,
-          // @ts-ignore
-          maxSteps: 10,
-          onFinish: ({ text, toolCalls, toolResults }) => {
-            console.log("[LicenseAI] finished turn.", { toolCount: toolCalls?.length });
-          },
-          onError: ({ error }) => {
-            console.error("[LicenseAI Server Error]:", error);
-          }
-        });
+        try {
+          const result = streamText({
+            model: createGeminiProvider("gemini-3.6-flash"),
+            system: SYSTEM_PROMPT,
+            messages: await convertToModelMessages(messages),
+            tools,
+            // @ts-ignore
+            maxSteps: 10,
+            onError: ({ error }) => {
+              console.error("[LicenseAI Server Error]:", error);
+            },
+          });
 
-        return result.toUIMessageStreamResponse({ 
-          originalMessages: messages,
-        });
+          return result.toUIMessageStreamResponse({
+            originalMessages: messages,
+          });
+        } catch (e: any) {
+          console.error("[LicenseAI] fatal:", e);
+          return new Response(
+            JSON.stringify({ error: e?.message ?? "Falha ao iniciar o agente" }),
+            { status: 500, headers: { "content-type": "application/json" } },
+          );
+        }
       },
     },
   },

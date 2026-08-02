@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   LifeBuoy,
   MessageSquare,
+  Reply,
+  X,
   Send,
   Loader2,
   Search,
@@ -2617,6 +2619,7 @@ type Msg = {
   is_system?: boolean;
   created_at: string;
   sender_id: string;
+  reply_to_id?: string | null;
 };
 
 /** Cache em memória por filtro: evita tela branca ao alternar abas/voltar pro chat. */
@@ -2725,6 +2728,8 @@ function AdminChatPanel() {
   const [chatLoadingOlder, setChatLoadingOlder] = useState(false);
 
   const [body, setBody] = useState("");
+  const [replyTo, setReplyTo] = useState<Msg | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(() => !threadsCache["open"]);
@@ -2926,15 +2931,31 @@ function AdminChatPanel() {
   }, [lastMsgId]);
   useEffect(() => {
     inputRef.current?.focus();
+    setReplyTo(null);
   }, [activeId]);
+
+  /** Rola até a mensagem citada e destaca por 1.5s (estilo WhatsApp). */
+  function jumpToMessage(id: string) {
+    const node = document.getElementById(`admin-msg-${id}`);
+    if (!node) {
+      toast.info("Mensagem original está em um trecho antigo — carregue mensagens antigas.");
+      return;
+    }
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(id);
+    setTimeout(() => setHighlightId((cur) => (cur === id ? null : cur)), 1500);
+  }
 
   async function send() {
     if (!activeId || !body.trim()) return;
     unlockNotifySound();
     setSending(true);
     try {
-      const res: any = await sendFn({ data: { threadId: activeId, body: body.trim() } });
+      const res: any = await sendFn({
+        data: { threadId: activeId, body: body.trim(), replyToId: replyTo?.id ?? null },
+      });
       setBody("");
+      setReplyTo(null);
       if (res?.id)
         setMsgs((prev) => (prev.some((x) => x.id === res.id) ? prev : [...prev, res as Msg]));
     } catch (e: any) {
@@ -3409,6 +3430,9 @@ function AdminChatPanel() {
                       new Date(m.created_at).toDateString();
                   const sameSender =
                     !!prev && !prev.is_system && !m.is_system && prev.is_admin === m.is_admin;
+                  const quoted = m.reply_to_id
+                    ? (msgs.find((x) => x.id === m.reply_to_id) ?? null)
+                    : null;
                   return (
                     <div key={m.id} className={showDay ? "space-y-3" : sameSender ? "!mt-1" : ""}>
                       {showDay && (
@@ -3427,13 +3451,29 @@ function AdminChatPanel() {
                           </div>
                         </div>
                       ) : (
-                        <div className={`flex ${m.is_admin ? "justify-end" : "justify-start"}`}>
+                        <div
+                          id={`admin-msg-${m.id}`}
+                          className={`group flex items-end gap-1.5 ${m.is_admin ? "justify-end" : "justify-start"}`}
+                        >
+                          {m.is_admin && (
+                            <button
+                              type="button"
+                              title="Responder esta mensagem"
+                              onClick={() => {
+                                setReplyTo(m);
+                                inputRef.current?.focus();
+                              }}
+                              className="mb-1 rounded-full border border-border/60 bg-background/80 p-1.5 text-muted-foreground opacity-0 transition hover:text-neon focus:opacity-100 group-hover:opacity-100"
+                            >
+                              <Reply className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                           <div
-                            className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
+                            className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm transition-colors ${
                               m.is_admin
                                 ? "rounded-br-sm border border-violet/40 bg-violet/10"
                                 : "rounded-bl-sm border border-border bg-card"
-                            }`}
+                            } ${highlightId === m.id ? "ring-2 ring-neon/70" : ""}`}
                           >
                             {!sameSender && (
                               <div
@@ -3446,11 +3486,34 @@ function AdminChatPanel() {
                                   : activeThread.profile?.display_name || "cliente"}
                               </div>
                             )}
+                            {m.reply_to_id && (
+                              <button
+                                type="button"
+                                onClick={() => jumpToMessage(m.reply_to_id!)}
+                                className="mb-1.5 flex w-full gap-2 rounded-md border-l-2 border-neon/70 bg-background/60 px-2 py-1 text-left transition hover:bg-background/90"
+                              >
+                                <span className="min-w-0 flex-1">
+                                  <span className="block font-mono text-[9px] uppercase tracking-wider text-neon">
+                                    {quoted
+                                      ? quoted.is_admin
+                                        ? "suporte"
+                                        : activeThread.profile?.display_name || "cliente"
+                                      : "mensagem citada"}
+                                  </span>
+                                  <span className="line-clamp-2 block text-[11px] text-muted-foreground">
+                                    {quoted
+                                      ? (quoted.body ?? "[anexo]")
+                                      : "ver mensagem original"}
+                                  </span>
+                                </span>
+                              </button>
+                            )}
                             {m.body && (
                               <div className="whitespace-pre-wrap break-words leading-relaxed">
                                 {m.body}
                               </div>
                             )}
+
                             {m.attachment_url &&
                               (m.attachment_type?.startsWith("image/") ? (
                                 <img
@@ -3483,6 +3546,19 @@ function AdminChatPanel() {
                               })}
                             </div>
                           </div>
+                          {!m.is_admin && (
+                            <button
+                              type="button"
+                              title="Responder esta mensagem"
+                              onClick={() => {
+                                setReplyTo(m);
+                                inputRef.current?.focus();
+                              }}
+                              className="mb-1 rounded-full border border-border/60 bg-background/80 p-1.5 text-muted-foreground opacity-0 transition hover:text-neon focus:opacity-100 group-hover:opacity-100"
+                            >
+                              <Reply className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -3490,6 +3566,29 @@ function AdminChatPanel() {
                 })}
               </div>
               <div className="border-t border-border/40 bg-background/40 p-3">
+                {replyTo && (
+                  <div className="mb-2 flex items-start gap-2 rounded-md border-l-2 border-neon bg-muted/30 px-2.5 py-1.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-mono text-[9px] uppercase tracking-wider text-neon">
+                        respondendo{" "}
+                        {replyTo.is_admin
+                          ? "suporte"
+                          : activeThread.profile?.display_name || "cliente"}
+                      </div>
+                      <div className="line-clamp-2 text-[11px] text-muted-foreground">
+                        {replyTo.body ?? "[anexo]"}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReplyTo(null)}
+                      className="rounded p-1 text-muted-foreground transition hover:text-destructive"
+                      title="Cancelar resposta"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
                     enter envia · shift+enter quebra linha

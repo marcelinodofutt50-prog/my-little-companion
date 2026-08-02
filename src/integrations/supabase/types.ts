@@ -1277,6 +1277,7 @@ export type Database = {
           id: string
           is_admin: boolean
           is_system: boolean
+          reply_to_id: string | null
           sender_id: string
           thread_id: string
         }
@@ -1288,6 +1289,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           is_system?: boolean
+          reply_to_id?: string | null
           sender_id: string
           thread_id: string
         }
@@ -1299,10 +1301,18 @@ export type Database = {
           id?: string
           is_admin?: boolean
           is_system?: boolean
+          reply_to_id?: string | null
           sender_id?: string
           thread_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "support_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "support_messages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "support_messages_thread_id_fkey"
             columns: ["thread_id"]
