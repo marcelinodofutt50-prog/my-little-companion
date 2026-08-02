@@ -138,10 +138,20 @@ export const generateTrial = createServerFn({ method: "POST" })
       };
     }
 
+    // 1.5) Antifraude: trial é por pessoa (conexão/aparelho), não por conta.
+    const { evaluateTrial } = await import("./trial-guard.server");
+    const guard = await evaluateTrial({ userId });
+    if (!guard.allowed) {
+      throw new Error(
+        `${guard.reason ?? "Teste indisponível para esta conta."} Se você acha que é um engano, fale com o suporte.`,
+      );
+    }
+
     // 2) trials.user_id is PK — atomic single-shot claim per user. Two parallel
     //    tabs / retries can only claim once; the loser reads back the winner.
     const { error: claimErr } = await supabaseAdmin
-      .from("trials").insert({ user_id: userId, license_id: null });
+      .from("trials")
+      .insert({ user_id: userId, license_id: null, ip_hash: guard.ipHash, user_agent: guard.userAgent });
     if (claimErr && !/duplicate key|unique/i.test(claimErr.message)) {
       throw new Error(claimErr.message);
     }

@@ -1360,20 +1360,53 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_blocks: {
+        Row: {
+          created_at: string
+          email_masked: string | null
+          id: string
+          ip_hash: string | null
+          reason: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_masked?: string | null
+          id?: string
+          ip_hash?: string | null
+          reason: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_masked?: string | null
+          id?: string
+          ip_hash?: string | null
+          reason?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       trials: {
         Row: {
+          ip_hash: string | null
           license_id: string | null
           used_at: string
+          user_agent: string | null
           user_id: string
         }
         Insert: {
+          ip_hash?: string | null
           license_id?: string | null
           used_at?: string
+          user_agent?: string | null
           user_id: string
         }
         Update: {
+          ip_hash?: string | null
           license_id?: string | null
           used_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: [
