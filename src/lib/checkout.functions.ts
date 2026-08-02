@@ -58,10 +58,12 @@ export const createCheckout = createServerFn({ method: "POST" })
       const notExpired = !anyC?.expires_at || new Date(anyC.expires_at).getTime() > Date.now();
       const planOk = !anyC?.plan_slug || anyC.plan_slug === plan.slug;
       const usesOk = c && (c.uses_left === null || c.uses_left === undefined || Number(c.uses_left) > 0);
-      if (c && usesOk && ownerOk && notExpired && planOk) {
-        couponRow = c;
-        amount = amount * (1 - (c.discount_pct ?? 0) / 100);
+      if (!c || !usesOk || !ownerOk || !notExpired || !planOk) {
+        throw new Error("Cupom inválido, expirado ou não aplicável a este plano.");
       }
+      const pct = Math.min(90, Math.max(0, Number(c.discount_pct ?? 0)));
+      couponRow = c;
+      amount = Math.max(1, amount * (1 - pct / 100));
     }
 
 

@@ -212,7 +212,9 @@ export const getMyCashbackBalance = createServerFn({ method: "GET" })
 
 export const validateCoupon = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ code: z.string().trim().min(1).max(64) }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ code: z.string().trim().min(1).max(64), planSlug: z.string().trim().max(64).optional() }).parse(input)
+  )
   .handler(async ({ data, context }) => {
     const { data: coupon } = await context.supabase
       .from("coupons").select("*").eq("code", data.code.toUpperCase()).eq("active", true).maybeSingle();
@@ -220,6 +222,7 @@ export const validateCoupon = createServerFn({ method: "POST" })
     const anyC = coupon as any;
     if (anyC.user_id && anyC.user_id !== context.userId) return { coupon: null as null };
     if (anyC.expires_at && new Date(anyC.expires_at).getTime() <= Date.now()) return { coupon: null as null };
+    if (anyC.plan_slug && data.planSlug && anyC.plan_slug !== data.planSlug) return { coupon: null as null };
     if (coupon.uses_left !== null && coupon.uses_left !== undefined && Number(coupon.uses_left) <= 0) {
       return { coupon: null as null };
     }
