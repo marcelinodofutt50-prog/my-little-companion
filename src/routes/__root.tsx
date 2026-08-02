@@ -97,7 +97,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+        {/* Aplica o tema (sistema/claro/escuro) antes da primeira pintura */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=localStorage.getItem('shadow-theme')||'system';var l=(m==='light')||(m==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);var r=document.documentElement;r.classList.toggle('theme-light',l);r.classList.toggle('dark',!l);r.style.colorScheme=l?'light':'dark';}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body>
         {children}
         <Scripts />
