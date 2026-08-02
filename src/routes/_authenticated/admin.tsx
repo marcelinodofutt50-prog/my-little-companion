@@ -2617,6 +2617,7 @@ type Msg = {
   is_system?: boolean;
   created_at: string;
   sender_id: string;
+  reply_to_id?: string | null;
 };
 
 /** Cache em memória por filtro: evita tela branca ao alternar abas/voltar pro chat. */
