@@ -377,6 +377,7 @@ export const adminSendMessage = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({
     threadId: z.string().uuid(),
     body: z.string().trim().min(1).max(4000),
+    replyToId: z.string().uuid().optional().nullable(),
   }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
@@ -390,7 +391,9 @@ export const adminSendMessage = createServerFn({ method: "POST" })
       sender_id: context.userId,
       is_admin: true,
       body: data.body,
+      reply_to_id: data.replyToId ?? null,
     }).select("*").single();
+
     if (error) throw new Error(error.message);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("support_threads").update({ updated_at: new Date().toISOString() }).eq("id", data.threadId);
