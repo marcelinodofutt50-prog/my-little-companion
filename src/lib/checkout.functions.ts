@@ -44,7 +44,7 @@ export const createCheckout = createServerFn({ method: "POST" })
       if (existingLic) {
         // Se a licença ainda não expirou ou é um trial que o cliente quer manter,
         // ele deveria estar comprando a Renovação Servidor (server-*).
-        const expires = new Date(existingLic.expires_at);
+        const expires = new Date(existingLic.expires_at || 0);
         const now = new Date();
         const isExpired = expires < now;
 
