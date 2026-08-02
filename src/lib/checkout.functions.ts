@@ -26,6 +26,38 @@ export const createCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { createMpPreference } = await import("./mercadopago.server");
     const { supabase, userId } = context;
+    const isLoginPlan = data.planSlug.startsWith("login-") || data.planSlug === "trial";
+    const isServerPlan = data.planSlug.startsWith("server-");
+
+    // Validação Anti-Confusão: Se o usuário já tem uma licença ativa/trial e tenta
+    // comprar um NOVO LOGIN em vez de renovar o servidor, nós bloqueamos com aviso.
+    if (isLoginPlan && !data.gift) {
+      const { data: existingLic } = await supabase
+        .from("licenses")
+        .select("id, is_trial, expires_at")
+        .eq("user_id", userId)
+        .is("disabled_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingLic) {
+        // Se a licença ainda não expirou ou é um trial que o cliente quer manter,
+        // ele deveria estar comprando a Renovação Servidor (server-*).
+        const expires = new Date(existingLic.expires_at);
+        const now = new Date();
+        const isExpired = expires < now;
+
+        if (existingLic.is_trial || !isExpired) {
+          throw new Error(
+            `Você já possui uma licença (${existingLic.is_trial ? "Trial" : "Ativa"}). ` +
+            `Para manter seu usuário e senha atuais, escolha "Renovação Servidor" no final da página. ` +
+            `Se você realmente deseja criar um NOVO usuário e descartar o antigo, use a opção de presente ou contate o suporte.`
+          );
+        }
+      }
+    }
+
 
 
     const { data: plan, error: planErr } = await supabase
