@@ -70,8 +70,10 @@ function SuccessPage() {
   };
 
   useEffect(() => {
+    clearCheckoutIntent();
     if (!order) return;
     startPolling();
+
     return () => {
       stopped.current = true;
       if (timerRef.current) clearTimeout(timerRef.current);
