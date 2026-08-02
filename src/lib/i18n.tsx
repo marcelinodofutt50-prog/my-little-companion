@@ -248,25 +248,62 @@ const DICT: Dict = {
   "contact.chat.cta": { pt: "Acessar painel", en: "Open dashboard" },
 };
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof typeof DICT) => string };
+export type LangMode = Lang | "system";
 
-const I18nContext = createContext<Ctx>({ lang: "pt", setLang: () => {}, t: (k) => DICT[k]?.pt ?? String(k) });
+type Ctx = {
+  lang: Lang;
+  mode: LangMode;
+  setLang: (l: LangMode) => void;
+  t: (k: keyof typeof DICT) => string;
+};
+
+const I18nContext = createContext<Ctx>({
+  lang: "pt",
+  mode: "system",
+  setLang: () => {},
+  t: (k) => DICT[k]?.pt ?? String(k),
+});
+
+function systemLang(): Lang {
+  if (typeof navigator === "undefined") return "pt";
+  const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
+  const first = (langs[0] || "pt").toLowerCase();
+  return first.startsWith("pt") ? "pt" : "en";
+}
 
 export function I18nProvider({ children }: { children: ReactNode }) {
+  const [mode, setMode] = useState<LangMode>("system");
   const [lang, setLangState] = useState<Lang>("pt");
+
+  // Preferência salva (ou idioma do sistema/navegador) após a hidratação
   useEffect(() => {
-    const saved = (typeof window !== "undefined" && (localStorage.getItem("shadow.lang") as Lang | null)) || null;
-    if (saved === "pt" || saved === "en") setLangState(saved);
+    let saved: LangMode | null = null;
+    try {
+      saved = localStorage.getItem("shadow.lang") as LangMode | null;
+    } catch {
+      /* storage bloqueado */
+    }
+    const next: LangMode = saved === "pt" || saved === "en" || saved === "system" ? saved : "system";
+    setMode(next);
+    setLangState(next === "system" ? systemLang() : next);
   }, []);
+
   useEffect(() => {
     if (typeof document !== "undefined") document.documentElement.lang = lang === "en" ? "en" : "pt-BR";
   }, [lang]);
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    try { localStorage.setItem("shadow.lang", l); } catch {}
+
+  const setLang = (l: LangMode) => {
+    setMode(l);
+    setLangState(l === "system" ? systemLang() : l);
+    try {
+      localStorage.setItem("shadow.lang", l);
+    } catch {
+      /* storage bloqueado */
+    }
   };
+
   const t = (k: keyof typeof DICT) => DICT[k]?.[lang] ?? String(k);
-  return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
+  return <I18nContext.Provider value={{ lang, mode, setLang, t }}>{children}</I18nContext.Provider>;
 }
 
 export function useI18n() {
@@ -274,21 +311,27 @@ export function useI18n() {
 }
 
 export function LanguageToggle({ className = "" }: { className?: string }) {
-  const { lang, setLang } = useI18n();
+  const { mode, setLang } = useI18n();
+  const btn = (value: LangMode, label: string) => (
+    <button
+      type="button"
+      onClick={() => setLang(value)}
+      className={`px-2 py-1 transition-colors ${
+        mode === value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+      }`}
+      aria-pressed={mode === value}
+      title={value === "system" ? "Usar o idioma do sistema" : label}
+    >
+      {label}
+    </button>
+  );
   return (
     <div className={`inline-flex items-center rounded-none border border-border font-mono text-[10px] uppercase tracking-[0.2em] ${className}`}>
-      <button
-        type="button"
-        onClick={() => setLang("pt")}
-        className={`px-2 py-1 transition-colors ${lang === "pt" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
-        aria-pressed={lang === "pt"}
-      >PT</button>
-      <button
-        type="button"
-        onClick={() => setLang("en")}
-        className={`px-2 py-1 transition-colors ${lang === "en" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
-        aria-pressed={lang === "en"}
-      >EN</button>
+      {btn("system", "Auto")}
+      {btn("pt", "PT")}
+      {btn("en", "EN")}
     </div>
   );
+}
+
 }
