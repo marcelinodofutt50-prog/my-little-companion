@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { createCheckout } from "@/lib/checkout.functions";
+import { markCheckoutIntent } from "@/components/WinbackOffer";
 import { checkLegacyEmail } from "@/lib/license.functions";
 import { formatBrl } from "@/lib/plans";
 
@@ -95,6 +96,7 @@ function LegacyRenewalPage() {
           legacyClaim: { email: cleanEmail, password: cleanPass, ip: cleanIp, panel },
         },
       });
+      markCheckoutIntent("server-monthly-legacy");
       window.location.href = r.initPoint;
     } catch (e: any) {
       setErr(e?.message || "Falha ao iniciar checkout");

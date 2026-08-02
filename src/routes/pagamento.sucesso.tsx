@@ -1,3 +1,4 @@
+import { clearCheckoutIntent } from "@/components/WinbackOffer";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
