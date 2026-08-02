@@ -96,7 +96,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    // O script inline abaixo aplica tema/color-scheme no <html> antes da
+    // hidratação; sem isto o React reclama de mismatch e descarta a classe.
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* Aplica o tema (sistema/claro/escuro) antes da primeira pintura */}
