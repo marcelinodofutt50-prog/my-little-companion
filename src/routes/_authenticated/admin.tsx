@@ -3521,6 +3521,14 @@ function AdminChatPanel() {
           )}
         </section>
       </div>
+      <AdminCustomer360
+        userId={fichaUser}
+        onClose={() => setFichaUser(null)}
+        onOpenThread={(tid) => {
+          setFichaUser(null);
+          setActiveId(tid);
+        }}
+      />
     </div>
   );
 }
