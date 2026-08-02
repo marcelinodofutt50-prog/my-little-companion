@@ -51,8 +51,8 @@ export const createCheckout = createServerFn({ method: "POST" })
         if (existingLic.is_trial || !isExpired) {
           throw new Error(
             `Você já possui uma licença (${existingLic.is_trial ? "Trial" : "Ativa"}). ` +
-            `Para manter seu usuário e senha atuais, escolha "Renovação Servidor" no final da página. ` +
-            `Se você realmente deseja criar um NOVO usuário e descartar o antigo, use a opção de presente ou contate o suporte.`
+            `Para manter seu usuário e senha atuais e evitar criar um novo login por engano, escolha "Renovação Servidor" no final da página de planos. ` +
+            `Se você realmente deseja descartar o antigo e criar um novo, use a opção de presente ou contate o suporte.`
           );
         }
       }

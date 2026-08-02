@@ -99,7 +99,7 @@ function metaFor(plan: Plan): PlanMeta {
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
     ],
-    note: "Atenção: Este plano libera o LOGIN. Se você já tem um login e só quer pagar a manutenção mensal do seu servidor, escolha 'Renovação Servidor' mais abaixo nesta página.",
+    note: "Atenção: Este plano libera o LOGIN. Se você já tem um login ativo (incluindo Trial) e só quer pagar a manutenção, use 'Renovação Servidor'.",
   };
   if (s.includes("7d") || s.includes("week") || s === "trial") return {
     tagline: "Ideal para validar a ferramenta em um ciclo curto.",
