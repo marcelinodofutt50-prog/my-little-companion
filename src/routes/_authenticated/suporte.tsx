@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertCircle, Check, CheckCheck, Clock, Loader2, Paperclip, RotateCw, Send } from "lucide-react";
+import { AlertCircle, Check, CheckCheck, Clock, Loader2, Paperclip, RotateCw, Send, Sparkles, Wrench } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +78,13 @@ function SupportPage() {
     });
     openFn()
       .then((t) => { if (!cancelled) setThread(t); })
-      .catch((e: any) => toast.error(e?.message ?? "Não foi possível abrir o atendimento"));
+      .catch((e: any) => {
+        // Se for admin, o servidor retorna null em vez de criar automático.
+        // Não mostramos erro nesse caso, apenas deixamos a thread como null.
+        if (e?.message !== "Thread não encontrada" && !isAdminRef.current) {
+          toast.error(e?.message ?? "Não foi possível abrir o atendimento");
+        }
+      });
     return () => { cancelled = true; };
   }, [openFn]);
 
@@ -397,11 +403,17 @@ function SupportPage() {
               </div>
             )}
 
-            {msgs.length === 0 && pending.length === 0 && <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
+            {msgs.length === 0 && pending.length === 0 && (
+              <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
                 <div className="text-3xl" aria-hidden>{active.emoji}</div>
                 <div className="text-sm font-medium">{active.label}</div>
-                <div className="text-xs text-muted-foreground">Descreva o que aconteceu ou toque em uma mensagem rápida acima.</div>
-              </div>}
+                <div className="text-xs text-muted-foreground">
+                  {isAdminRef.current 
+                    ? "Como administrador, você não possui um ticket de suporte ativo. Use o Painel Admin para responder clientes."
+                    : "Descreva o que aconteceu ou toque em uma mensagem rápida acima."}
+                </div>
+              </div>
+            )}
             {msgs.map((m) => {
               if (m.is_system) {
                 return (
