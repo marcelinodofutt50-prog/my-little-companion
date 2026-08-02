@@ -148,6 +148,16 @@ export const sendMessage = createServerFn({ method: "POST" })
       attachment_type: data.attachmentType ?? null,
     }).select("*").single();
     if (error) throw error;
+    
+    // Inicia análise por IA se não for staff e a mensagem contiver gatilhos de erro de login
+    if (!isStaff && data.body) {
+      const { triggerSupportAI } = await import("./support-ai.server");
+      // Rodamos em background sem dar await para não travar a resposta do usuário
+      triggerSupportAI(effectiveThreadId, context.userId, data.body).catch(e => {
+        console.error("[support-ai] background trigger failed:", e);
+      });
+    }
+
     return { ...msg, thread_id: effectiveThreadId };
   });
 
