@@ -11,30 +11,41 @@ vi.mock("ai", () => ({
   stepCountIs: vi.fn((n) => (steps: any) => steps.length >= n),
 }));
 
-vi.mock("./gemini-provider.server", () => ({
+vi.mock("../gemini-provider.server", () => ({
   createGeminiProvider: vi.fn(() => ({})),
 }));
 
-vi.mock("@/integrations/supabase/client.server", () => ({
+// Criando o mock do Supabase com todas as funções encadeadas
+const mockSupabaseQuery = {
+  select: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  neq: vi.fn().mockReturnThis(),
+  order: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
+  lt: vi.fn().mockReturnThis(),
+  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+  single: vi.fn().mockResolvedValue({ data: { id: "mock-id" }, error: null }),
+  then: vi.fn((onFulfilled) => Promise.resolve({ data: [], error: null }).then(onFulfilled)),
+};
+
+vi.mock("../../../src/integrations/supabase/client.server", () => ({
   supabaseAdmin: {
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      neq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: null }),
-      single: vi.fn().mockResolvedValue({ data: { id: "msg-1" } }),
-    })),
+    from: vi.fn(() => mockSupabaseQuery),
+    storage: {
+      from: vi.fn(() => ({
+        createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: "http://url" }, error: null }),
+      })),
+    },
   },
 }));
 
-vi.mock("./yaarsa.server", () => ({
+vi.mock("../yaarsa.server", () => ({
   decrypt: vi.fn(() => "plain-password"),
   yaarsaExtend: vi.fn().mockResolvedValue({ ok: true }),
   yaarsaSetPassword: vi.fn().mockResolvedValue({ ok: true }),
+  persistLog: vi.fn().mockResolvedValue({ ok: true }),
 }));
 
 describe("Support AI Proactive Flow", () => {
@@ -43,6 +54,9 @@ describe("Support AI Proactive Flow", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset defaults for maybeSingle/single
+    mockSupabaseQuery.maybeSingle.mockResolvedValue({ data: null, error: null });
+    mockSupabaseQuery.single.mockResolvedValue({ data: { id: "mock-id" }, error: null });
   });
 
   it("should ignore messages without triggers", async () => {
@@ -78,14 +92,11 @@ describe("Support AI Proactive Flow", () => {
       yaarsa_email: "test@test.com",
       yaarsa_password_enc: "encrypted",
       expires_at: new Date().toISOString(),
-      panel: "v46"
+      panel: "v46",
+      yaarsa_username: "user1"
     };
 
-    (supabaseAdmin.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: mockLicense })
-    });
+    mockSupabaseQuery.maybeSingle.mockResolvedValueOnce({ data: mockLicense, error: null });
 
     await triggerSupportAI(threadId, userId, "senha invalida");
     const tools = (generateText as any).mock.calls[0][0].tools;
@@ -102,8 +113,6 @@ describe("Support AI Proactive Flow", () => {
     
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_messages");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_threads");
-    // Verify update was called to mark as unread
-    const updateMock = (supabaseAdmin.from("support_threads") as any).update;
-    expect(updateMock).toHaveBeenCalledWith({ unread_by_customer: 1 });
+    expect(mockSupabaseQuery.update).toHaveBeenCalledWith({ unread_by_customer: 1 });
   });
 });
