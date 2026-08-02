@@ -92,13 +92,18 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           description: "Envia uma mensagem de resposta da IA para o chat do suporte.",
           inputSchema: z.object({ body: z.string() }),
           execute: async ({ body }) => {
-            const { error } = await supabaseAdmin.from("support_messages").insert({
+            const { data: msg, error } = await supabaseAdmin.from("support_messages").insert({
               thread_id: threadId,
               sender_id: "00000000-0000-0000-0000-000000000000",
               is_admin: true,
               is_system: true,
               body: `🤖 **Assistente Shadow:** ${body}`
-            });
+            }).select("id").single();
+
+            if (!error && msg) {
+              // Mark thread as unread for the customer so they see the AI notification
+              await supabaseAdmin.rpc("increment_thread_unread_customer", { t_id: threadId });
+            }
             return { success: !error };
           }
         })
