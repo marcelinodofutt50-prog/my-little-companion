@@ -207,8 +207,11 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           system: SYSTEM_PROMPT,
           messages: await convertToModelMessages(messages),
           tools,
-          // @ts-ignore - maxSteps exists but causes typing issues in some SDK versions
+          // @ts-ignore
           maxSteps: 10,
+          onFinish: ({ text, toolCalls, toolResults }) => {
+            console.log("[LicenseAI] finished turn.", { toolCount: toolCalls?.length });
+          },
           onError: ({ error }) => {
             console.error("[LicenseAI Server Error]:", error);
           }
