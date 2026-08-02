@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, tool, stepCountIs, type UIMessage } from "ai";
+import { convertToModelMessages, streamText, tool, type UIMessage } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "@/lib/gemini-provider.server";
 
