@@ -209,13 +209,10 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           tools,
           stopWhen: stepCountIs(50),
           onError: ({ error }) => {
-            console.error("[LicenseAI Error]:", error);
+            console.error("[LicenseAI Server Error]:", error);
           }
         });
 
-        // Use toDataStreamResponse for better error details to UI if needed,
-        // but since we need UIMessage format for the existing client-side useChat, 
-        // we keep toUIMessageStreamResponse and rely on onError logging for server-side diagnosis.
         return result.toUIMessageStreamResponse({ 
           originalMessages: messages,
         });
