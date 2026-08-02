@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { generateText } from "ai";
+import { createGeminiProvider } from "./gemini-provider.server";
 
 // Janela em que o cliente pode pedir reembolso (a partir do pagamento).
 export const REFUND_WINDOW_DAYS = 7;

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { tierFromPlanSlug, type VersionTier } from "@/lib/plans";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createGeminiProvider } from "./gemini-provider.server";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { assertAdminRole } = await import("@/lib/roles.server");
