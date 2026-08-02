@@ -3341,6 +3341,12 @@ function AdminChatPanel() {
                   </div>
                 </div>
               </div>
+              <SupportCustomerContext
+                key={activeThread.user_id}
+                userId={activeThread.user_id}
+                email={activeThread.profile?.email}
+                onOpenFicha={() => setFichaUser(activeThread.user_id)}
+              />
               <div
                 ref={listRef}
                 onScroll={() => {
