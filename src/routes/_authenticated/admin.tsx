@@ -14,6 +14,7 @@ import {
   LifeBuoy,
   MessageSquare,
   Reply,
+  X,
   Send,
   Loader2,
   Search,
