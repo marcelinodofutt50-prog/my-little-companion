@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   LifeBuoy,
   MessageSquare,
+  Reply,
   Send,
   Loader2,
   Search,
