@@ -130,8 +130,13 @@ export function LicenseAiPanel() {
         )}
 
         {error && (
-          <div className="flex items-center gap-2 rounded border border-destructive/40 bg-destructive/10 p-2 font-mono text-[10px] text-destructive">
-            <AlertTriangle className="h-3 w-3" /> {error.message}
+          <div className="flex flex-col gap-2 rounded border border-destructive/40 bg-destructive/10 p-2 font-mono text-[10px] text-destructive">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-3 w-3" /> Erro na comunicação com Shadow Ops IA
+            </div>
+            <pre className="whitespace-pre-wrap opacity-70">
+              {error.message || "Erro desconhecido"}
+            </pre>
           </div>
         )}
 

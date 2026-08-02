@@ -27,7 +27,7 @@ async function requireAdmin(request: Request) {
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
   if (!token) return { error: new Response("Unauthorized", { status: 401 }) };
   const { createClient } = await import("@supabase/supabase-js");
-  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
