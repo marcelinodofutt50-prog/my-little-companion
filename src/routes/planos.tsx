@@ -86,7 +86,6 @@ function metaFor(plan: Plan): PlanMeta {
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
-
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
@@ -100,8 +99,7 @@ function metaFor(plan: Plan): PlanMeta {
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
     ],
-    note: "O bypass incluso é o nativo da BTmob: a assinatura do aplicativo vale só 1 dia, então é preciso gerar APK novo todo dia. O Play Protect Cloak do site (à parte) entrega assinatura de 2 a 3 semanas — menos rebuild e muito menos perda de cliente.",
-
+    note: "Atenção: Este plano libera o LOGIN. Se você já tem um login e só quer pagar a manutenção mensal do seu servidor, escolha 'Renovação Servidor' mais abaixo nesta página.",
   };
   if (s.includes("7d") || s.includes("week") || s === "trial") return {
     tagline: "Ideal para validar a ferramenta em um ciclo curto.",
