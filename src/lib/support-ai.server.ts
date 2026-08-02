@@ -58,7 +58,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           inputSchema: z.object({ licenseId: z.string().uuid() }),
           execute: async ({ licenseId }) => {
             try {
-              const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
+              // Helper methods are now imported at top level to ensure clarity and professional code structure.
               const { data: lic } = await supabaseAdmin.from("licenses").select("*").eq("id", licenseId).maybeSingle();
               if (!lic) return { error: "Licença não encontrada" };
               if (lic.disabled_at) return { error: "Licença desativada" };
