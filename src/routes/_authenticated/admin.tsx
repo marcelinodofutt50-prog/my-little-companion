@@ -2929,15 +2929,31 @@ function AdminChatPanel() {
   }, [lastMsgId]);
   useEffect(() => {
     inputRef.current?.focus();
+    setReplyTo(null);
   }, [activeId]);
+
+  /** Rola até a mensagem citada e destaca por 1.5s (estilo WhatsApp). */
+  function jumpToMessage(id: string) {
+    const node = document.getElementById(`admin-msg-${id}`);
+    if (!node) {
+      toast.info("Mensagem original está em um trecho antigo — carregue mensagens antigas.");
+      return;
+    }
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(id);
+    setTimeout(() => setHighlightId((cur) => (cur === id ? null : cur)), 1500);
+  }
 
   async function send() {
     if (!activeId || !body.trim()) return;
     unlockNotifySound();
     setSending(true);
     try {
-      const res: any = await sendFn({ data: { threadId: activeId, body: body.trim() } });
+      const res: any = await sendFn({
+        data: { threadId: activeId, body: body.trim(), replyToId: replyTo?.id ?? null },
+      });
       setBody("");
+      setReplyTo(null);
       if (res?.id)
         setMsgs((prev) => (prev.some((x) => x.id === res.id) ? prev : [...prev, res as Msg]));
     } catch (e: any) {
