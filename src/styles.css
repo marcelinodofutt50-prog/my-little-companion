@@ -357,6 +357,32 @@ html.theme-light .crt::after { display: none; }
 /* ===== OSINT / HUD surfaces (admin console) ===== */
 @layer utilities {
   .admin-enterprise {
+    --background: oklch(0.16 0.012 255);
+    --foreground: oklch(0.94 0.008 255);
+    --card: oklch(0.2 0.014 255);
+    --card-foreground: oklch(0.94 0.008 255);
+    --popover: oklch(0.2 0.014 255);
+    --popover-foreground: oklch(0.94 0.008 255);
+    --primary: oklch(0.72 0.09 255);
+    --primary-foreground: oklch(0.16 0.012 255);
+    --secondary: oklch(0.24 0.016 255);
+    --secondary-foreground: oklch(0.92 0.01 255);
+    --muted: oklch(0.24 0.016 255);
+    --muted-foreground: oklch(0.7 0.02 255);
+    --accent: oklch(0.28 0.02 255);
+    --accent-foreground: oklch(0.94 0.008 255);
+    --border: oklch(0.31 0.02 255);
+    --input: oklch(0.28 0.018 255);
+    --ring: oklch(0.72 0.09 255 / 45%);
+    --neon: oklch(0.75 0.08 255);
+    --cyan: oklch(0.78 0.07 235);
+    --violet: oklch(0.72 0.09 285);
+    color-scheme: dark;
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  html.theme-light .admin-enterprise {
     --background: oklch(0.96 0.008 255);
     --foreground: oklch(0.25 0.025 255);
     --card: oklch(0.995 0.002 255);
@@ -378,9 +404,8 @@ html.theme-light .crt::after { display: none; }
     --cyan: oklch(0.52 0.045 235);
     --violet: oklch(0.5 0.05 285);
     color-scheme: light;
-    background: var(--background);
-    color: var(--foreground);
   }
+
 
   .enterprise-surface {
     border: 1px solid var(--border);
