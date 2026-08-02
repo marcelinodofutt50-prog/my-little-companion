@@ -2726,6 +2726,8 @@ function AdminChatPanel() {
   const [chatLoadingOlder, setChatLoadingOlder] = useState(false);
 
   const [body, setBody] = useState("");
+  const [replyTo, setReplyTo] = useState<Msg | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(() => !threadsCache["open"]);
