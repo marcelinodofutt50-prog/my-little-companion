@@ -1,4 +1,4 @@
-import { generateText, tool, stepCountIs } from "ai";
+import { generateText, tool } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -111,7 +111,8 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           }
         })
       },
-      stopWhen: stepCountIs(5)
+      // @ts-ignore
+      maxSteps: 10
     });
   } catch (err) {
     console.error(`[support-ai] execution error for thread ${threadId}:`, err);
