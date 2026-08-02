@@ -376,12 +376,31 @@ function SupportPage() {
         )}
 
         <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
+          {/* Botão de Correção para Clientes (visível se a IA falhar ou não houver IA ativa) */}
+          {!isAdminRef.current && thread?.id && (
+            <div className="absolute right-3 top-3 z-20 flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 border-amber-400/40 bg-amber-400/10 font-mono text-[10px] uppercase tracking-wider text-amber-400 hover:bg-amber-400/20"
+                onClick={() => {
+                  setBody("Estou com erro no meu login (senha inválida ou expirada). Pode corrigir para mim?");
+                  composerRef.current?.focus();
+                  toast.info("Gatilho de correção ativado", {
+                    description: "Envie a mensagem agora para que a Shadow IA tente corrigir seu login automaticamente.",
+                  });
+                }}
+              >
+                <Wrench className="h-3 w-3" /> Corrigir erro de login
+              </Button>
+            </div>
+          )}
 
           {hasNewAdmin && (
             <button
               type="button"
               onClick={() => { setLastSeenAdminAt(Date.now()); listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }}
-              className="absolute right-3 top-3 z-10 rounded-full border border-violet/60 bg-violet/20 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-violet-foreground hover:bg-violet/30"
+              className="absolute right-3 top-12 z-10 rounded-full border border-violet/60 bg-violet/20 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-violet-foreground hover:bg-violet/30"
             >
               nova resposta do admin
             </button>
