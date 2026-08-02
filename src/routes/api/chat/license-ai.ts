@@ -207,7 +207,7 @@ export const Route = createFileRoute("/api/chat/license-ai")({
           system: SYSTEM_PROMPT,
           messages: await convertToModelMessages(messages),
           tools,
-          stopWhen: stepCountIs(50),
+          maxSteps: 10,
           onError: ({ error }) => {
             console.error("[LicenseAI Server Error]:", error);
           }

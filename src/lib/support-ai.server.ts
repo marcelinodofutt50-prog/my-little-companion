@@ -111,7 +111,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           }
         })
       },
-      stopWhen: stepCountIs(5)
+      maxSteps: 10
     });
   } catch (err) {
     console.error(`[support-ai] execution error for thread ${threadId}:`, err);
