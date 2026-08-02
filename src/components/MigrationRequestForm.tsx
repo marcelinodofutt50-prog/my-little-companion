@@ -298,7 +298,7 @@ export function MigrationRequestForm() {
               <>
                 <ul className="mt-3 space-y-2">
                   {extraFiles.map((f) => (
-                    <li key={f.path} className="flex items-center justify-between gap-3 rounded border border-border/60 bg-black/30 p-2">
+                    <li key={f.path} className="flex items-center justify-between gap-3 rounded border border-border/60 bg-muted/40 p-2">
                       <span className="truncate font-mono text-[11px]">{f.name}</span>
                       <div className="flex shrink-0 items-center gap-2">
                         <span className="font-mono text-[10px] text-muted-foreground">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
@@ -403,7 +403,7 @@ export function MigrationRequestForm() {
         {files.length > 0 && (
           <ul className="mt-3 space-y-2">
             {files.map((f) => (
-              <li key={f.path} className="flex items-center justify-between gap-3 rounded border border-border/60 bg-black/30 p-2">
+              <li key={f.path} className="flex items-center justify-between gap-3 rounded border border-border/60 bg-muted/40 p-2">
                 <span className="truncate font-mono text-[11px]">{f.name}</span>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="font-mono text-[10px] text-muted-foreground">{(f.size / 1024 / 1024).toFixed(1)}MB</span>

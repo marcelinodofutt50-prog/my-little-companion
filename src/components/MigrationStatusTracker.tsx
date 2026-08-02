@@ -301,7 +301,7 @@ export function MigrationStatusTracker() {
                 className={`max-w-[85%] rounded-md border p-2.5 text-[12px] ${
                   m.is_admin || m.is_system
                     ? "border-neon/30 bg-neon/5"
-                    : "ml-auto border-border/60 bg-black/30"
+                    : "ml-auto border-border/60 bg-muted/40"
                 }`}
               >
                 <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

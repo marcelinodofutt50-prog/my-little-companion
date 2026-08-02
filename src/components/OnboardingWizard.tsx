@@ -255,7 +255,7 @@ export function OnboardingWizard({ onDone, onDisplayName }: Props) {
                 </p>
               </div>
             </div>
-            <div className="rounded-md border border-border/60 bg-black/30 p-3 font-mono text-[11px]">
+            <div className="rounded-md border border-border/60 bg-muted/40 p-3 font-mono text-[11px]">
               <div className="text-muted-foreground">// perfil</div>
               <div className="text-neon">apelido: {nick.trim() || "não definido"}</div>
               {QUESTIONS.map((q) => (

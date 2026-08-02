@@ -419,7 +419,7 @@ export function SecurityWelcomeDialog() {
                   : "Salve agora: esta é a única vez que eles aparecem."}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-black/40 p-3 font-mono text-xs">
+            <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-muted/50 p-3 font-mono text-xs">
               {codes?.map((c) => (
                 <div key={c} className="tracking-wider text-neon">{c}</div>
               ))}

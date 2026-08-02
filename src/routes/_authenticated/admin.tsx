@@ -2410,7 +2410,7 @@ function AdminLogsPanel() {
                             <div className="mb-1 font-mono text-[10px] uppercase text-cyan">
                               // payload enviado
                             </div>
-                            <pre className="max-h-64 overflow-auto rounded border border-border/40 bg-black/40 p-2 font-mono text-[10px] text-foreground/80">
+                            <pre className="max-h-64 overflow-auto rounded border border-border/40 bg-muted/50 p-2 font-mono text-[10px] text-foreground/80">
                               {JSON.stringify(l.payload, null, 2)}
                             </pre>
                           </div>
@@ -2418,7 +2418,7 @@ function AdminLogsPanel() {
                             <div className="mb-1 font-mono text-[10px] uppercase text-cyan">
                               // resposta bruta
                             </div>
-                            <pre className="max-h-64 overflow-auto rounded border border-border/40 bg-black/40 p-2 font-mono text-[10px] text-foreground/80">
+                            <pre className="max-h-64 overflow-auto rounded border border-border/40 bg-muted/50 p-2 font-mono text-[10px] text-foreground/80">
                               {l.response_body || "(vazio)"}
                             </pre>
                             {l.context && (
@@ -2426,7 +2426,7 @@ function AdminLogsPanel() {
                                 <div className="mb-1 mt-2 font-mono text-[10px] uppercase text-violet">
                                   // contexto
                                 </div>
-                                <pre className="max-h-40 overflow-auto rounded border border-border/40 bg-black/40 p-2 font-mono text-[10px] text-foreground/70">
+                                <pre className="max-h-40 overflow-auto rounded border border-border/40 bg-muted/50 p-2 font-mono text-[10px] text-foreground/70">
                                   {JSON.stringify(l.context, null, 2)}
                                 </pre>
                               </>
