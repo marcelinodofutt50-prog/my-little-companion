@@ -2,40 +2,42 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
 /**
- * Provedor Híbrido: Tenta usar a chave direta do Google (GEMINI_API_KEY)
- * Caso não exista ou falhe, cai para o Lovable AI Gateway como fallback.
+ * Provedor Gemini. Prioriza o Lovable AI Gateway (sempre disponível e com os
+ * modelos Gemini atuais). Só usa a chave direta do Google quando existir.
+ *
+ * Importante: nomes antigos como "gemini-1.5-flash" foram descontinuados e
+ * retornavam 404 (o chat quebrava com uma página de erro HTML). Normalizamos
+ * qualquer nome legado para o modelo atual.
  */
-export function createGeminiProvider(modelName: string = "gemini-1.5-flash") {
+const DEFAULT_MODEL = "gemini-3.6-flash";
+
+function normalize(modelName: string) {
+  const bare = (modelName || "").replace(/^google\//, "").trim();
+  if (!bare || /^gemini-(1\.5|1\.0|pro|2\.0)/.test(bare)) return DEFAULT_MODEL;
+  return bare;
+}
+
+export function createGeminiProvider(modelName: string = DEFAULT_MODEL) {
+  const bare = normalize(modelName);
   const geminiKey = process.env.GEMINI_API_KEY;
   const lovableKey = process.env.LOVABLE_API_KEY;
-
-  if (geminiKey) {
-    const google = createGoogleGenerativeAI({
-      apiKey: geminiKey,
-    });
-    // Mapeamento de nomes se necessário (ex: 2.5/3.6 -> 1.5/2.0 pro SDK oficial)
-    const normalizedName = modelName.includes("gemini") 
-      ? modelName.replace("google/", "").replace("3.6-", "1.5-").replace("2.5-", "1.5-")
-      : modelName;
-    
-    return google(normalizedName);
-  }
-
-  console.warn("[GeminiProvider] Missing GEMINI_API_KEY, falling back to Lovable AI Gateway.");
 
   if (lovableKey) {
     const lovable = createOpenAICompatible({
       name: "lovable",
       baseURL: "https://ai.gateway.lovable.dev/v1",
       headers: {
-        "Lovable-API-Key": lovableKey,
+        Authorization: `Bearer ${lovableKey}`,
         "X-Lovable-AIG-SDK": "vercel-ai-sdk",
       },
     });
-    // O gateway espera o formato "google/gemini-..."
-    const gatewayName = modelName.startsWith("google/") ? modelName : `google/${modelName}`;
-    return lovable(gatewayName);
+    return lovable(`google/${bare}`);
   }
 
-  throw new Error("Nem GEMINI_API_KEY nem LOVABLE_API_KEY configuradas no servidor.");
+  if (geminiKey) {
+    const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+    return google(bare);
+  }
+
+  throw new Error("Nem LOVABLE_API_KEY nem GEMINI_API_KEY configuradas no servidor.");
 }
