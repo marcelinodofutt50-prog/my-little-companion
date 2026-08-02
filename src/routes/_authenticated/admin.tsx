@@ -3339,6 +3339,26 @@ function AdminChatPanel() {
                     <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-neon" /> ao
                     vivo
                   </div>
+                  {/* Botão de Correção via IA para o Admin forçar o gatilho */}
+                  {activeThread.status !== "closed" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title="Forçar correção automática de login para este cliente"
+                      onClick={() => {
+                        adminSendMessage({ 
+                          data: { 
+                            threadId: activeThread.id, 
+                            body: "Shadow IA: Iniciando procedimento de correção automática de login/licença para este cliente..." 
+                          } 
+                        }).catch(() => {});
+                        toast.info("Gatilho de correção enviado");
+                      }}
+                      className="h-7 border-amber-400/40 bg-amber-400/10 font-mono text-[10px] uppercase text-amber-400 hover:bg-amber-400/20"
+                    >
+                      <Wrench className="h-3 w-3" /> Corrigir Bug
+                    </Button>
+                  )}
                 </div>
               </div>
               <SupportCustomerContext

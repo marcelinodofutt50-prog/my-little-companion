@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertCircle, Check, CheckCheck, Clock, Loader2, Paperclip, RotateCw, Send } from "lucide-react";
+import { AlertCircle, Check, CheckCheck, Clock, Loader2, Paperclip, RotateCw, Send, Sparkles, Wrench } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +78,13 @@ function SupportPage() {
     });
     openFn()
       .then((t) => { if (!cancelled) setThread(t); })
-      .catch((e: any) => toast.error(e?.message ?? "Não foi possível abrir o atendimento"));
+      .catch((e: any) => {
+        // Se for admin, o servidor retorna null em vez de criar automático.
+        // Não mostramos erro nesse caso, apenas deixamos a thread como null.
+        if (e?.message !== "Thread não encontrada" && !isAdminRef.current) {
+          toast.error(e?.message ?? "Não foi possível abrir o atendimento");
+        }
+      });
     return () => { cancelled = true; };
   }, [openFn]);
 
@@ -370,12 +376,31 @@ function SupportPage() {
         )}
 
         <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
+          {/* Botão de Correção para Clientes (visível se a IA falhar ou não houver IA ativa) */}
+          {!isAdminRef.current && thread?.id && (
+            <div className="absolute right-3 top-3 z-20 flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 border-amber-400/40 bg-amber-400/10 font-mono text-[10px] uppercase tracking-wider text-amber-400 hover:bg-amber-400/20"
+                onClick={() => {
+                  setBody("Estou com erro no meu login (senha inválida ou expirada). Pode corrigir para mim?");
+                  composerRef.current?.focus();
+                  toast.info("Gatilho de correção ativado", {
+                    description: "Envie a mensagem agora para que a Shadow IA tente corrigir seu login automaticamente.",
+                  });
+                }}
+              >
+                <Wrench className="h-3 w-3" /> Corrigir erro de login
+              </Button>
+            </div>
+          )}
 
           {hasNewAdmin && (
             <button
               type="button"
               onClick={() => { setLastSeenAdminAt(Date.now()); listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }}
-              className="absolute right-3 top-3 z-10 rounded-full border border-violet/60 bg-violet/20 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-violet-foreground hover:bg-violet/30"
+              className="absolute right-3 top-12 z-10 rounded-full border border-violet/60 bg-violet/20 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-violet-foreground hover:bg-violet/30"
             >
               nova resposta do admin
             </button>
@@ -397,11 +422,17 @@ function SupportPage() {
               </div>
             )}
 
-            {msgs.length === 0 && pending.length === 0 && <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
+            {msgs.length === 0 && pending.length === 0 && (
+              <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
                 <div className="text-3xl" aria-hidden>{active.emoji}</div>
                 <div className="text-sm font-medium">{active.label}</div>
-                <div className="text-xs text-muted-foreground">Descreva o que aconteceu ou toque em uma mensagem rápida acima.</div>
-              </div>}
+                <div className="text-xs text-muted-foreground">
+                  {isAdminRef.current 
+                    ? "Como administrador, você não possui um ticket de suporte ativo. Use o Painel Admin para responder clientes."
+                    : "Descreva o que aconteceu ou toque em uma mensagem rápida acima."}
+                </div>
+              </div>
+            )}
             {msgs.map((m) => {
               if (m.is_system) {
                 return (
