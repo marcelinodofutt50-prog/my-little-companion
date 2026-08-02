@@ -7,10 +7,16 @@ import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
  * Retorna a thread aberta do usuário. Se a última thread estiver fechada
  * (status = 'closed'), cria uma nova automaticamente. Assim o cliente sempre
  * enxerga um "novo ticket" pronto para conversar após um atendimento encerrado.
+ * 
+ * Correção: Se for STAFF, não deve criar thread automaticamente apenas ao abrir a aba,
+ * para evitar tickets fantasmas de administradores testando o painel.
  */
 export const getOrCreateThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { resolveRoles } = await import("@/lib/roles.server");
+    const { isStaff } = await resolveRoles(context);
+
     const { data: existing } = await context.supabase
       .from("support_threads")
       .select("*")
@@ -19,7 +25,13 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
     if (existing) return existing;
+
+    // Se for admin/suporte e não tem thread, não cria uma nova automaticamente.
+    // Retorna null para sinalizar que não há atendimento ativo.
+    if (isStaff) return null;
+
     const { data, error } = await context.supabase
       .from("support_threads")
       .insert({ user_id: context.userId, subject: "Suporte Shadow", status: "open" })
