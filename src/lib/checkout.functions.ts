@@ -53,11 +53,17 @@ export const createCheckout = createServerFn({ method: "POST" })
     let couponRow: { code: string; discount_pct: number; cashback_pct: number } | null = null;
     if (data.couponCode) {
       const { data: c } = await supabase.from("coupons").select("*").eq("code", data.couponCode.toUpperCase()).eq("active", true).maybeSingle();
-      if (c && (c.uses_left === null || c.uses_left === undefined || Number(c.uses_left) > 0)) {
+      const anyC = c as any;
+      const ownerOk = !anyC?.user_id || anyC.user_id === userId;
+      const notExpired = !anyC?.expires_at || new Date(anyC.expires_at).getTime() > Date.now();
+      const planOk = !anyC?.plan_slug || anyC.plan_slug === plan.slug;
+      const usesOk = c && (c.uses_left === null || c.uses_left === undefined || Number(c.uses_left) > 0);
+      if (c && usesOk && ownerOk && notExpired && planOk) {
         couponRow = c;
         amount = amount * (1 - (c.discount_pct ?? 0) / 100);
       }
     }
+
 
     // Resolve referral code -> referrer_id (via admin client, needs cross-user lookup)
     let referrerId: string | null = null;

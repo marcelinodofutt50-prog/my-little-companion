@@ -217,8 +217,15 @@ export const validateCoupon = createServerFn({ method: "POST" })
     const { data: coupon } = await context.supabase
       .from("coupons").select("*").eq("code", data.code.toUpperCase()).eq("active", true).maybeSingle();
     if (!coupon) return { coupon: null as null };
+    const anyC = coupon as any;
+    if (anyC.user_id && anyC.user_id !== context.userId) return { coupon: null as null };
+    if (anyC.expires_at && new Date(anyC.expires_at).getTime() <= Date.now()) return { coupon: null as null };
+    if (coupon.uses_left !== null && coupon.uses_left !== undefined && Number(coupon.uses_left) <= 0) {
+      return { coupon: null as null };
+    }
     return { coupon };
   });
+
 
 // Whether the current user has ever been marked as a legacy client.
 // Drives visibility of the R$ 250 server-renewal card on /planos.

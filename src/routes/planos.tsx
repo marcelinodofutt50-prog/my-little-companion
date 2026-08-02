@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
+import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
+
 import { GuaranteeStrip } from "@/components/GuaranteeStrip";
 import { Testimonials } from "@/components/Testimonials";
 import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
@@ -273,13 +275,13 @@ function PlansPage() {
 
   function clearReferral() { setReferral(""); setReferralValid(null); setReferralError(null); }
 
-  const buy = useCallback(async (slug: string) => {
+  const buy = useCallback(async (slug: string, couponOverride?: string) => {
     if (!loggedIn) { navigate({ to: "/auth", search: { next: "/planos" } as any }); return; }
     setLoadingPlan(slug);
     try {
       const r = await checkoutFn({ data: {
         planSlug: slug,
-        couponCode: couponValid?.code,
+        couponCode: couponOverride || couponValid?.code,
         useCashback: useCash && cashbackBalance > 0,
         referralCode: referralValid ? referral : undefined,
         returnOrigin: window.location.origin,
@@ -287,12 +289,14 @@ function PlansPage() {
           ? { email: giftEmail.trim(), message: giftMessage.trim() || undefined }
           : undefined,
       } });
+      markCheckoutIntent(slug);
       window.location.href = r.initPoint;
     } catch (e: any) {
       toast.error(e?.message?.includes("Plano") ? e.message : "Não foi possível iniciar o checkout. Tente novamente.");
       setLoadingPlan(null);
     }
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
+
 
   const { licenses, servers, sources, upgrades } = useMemo(() => {
     const serverAll = plans.filter((p) => p.category === "server");
@@ -313,6 +317,8 @@ function PlansPage() {
     <div className="relative min-h-screen">
       <SiteHeader />
       <FlashPromoBar />
+      <WinbackOffer onUseCoupon={(code, slug) => { setCoupon(code); void buy(slug, code); }} />
+
 
       {/* HERO ================================================= */}
       <section className="relative overflow-hidden border-b border-border/40">

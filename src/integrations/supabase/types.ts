@@ -243,7 +243,12 @@ export type Database = {
           code: string
           created_at: string
           discount_pct: number
+          expires_at: string | null
           first_deposit_only: boolean
+          label: string | null
+          plan_slug: string | null
+          source: string
+          user_id: string | null
           uses_left: number | null
         }
         Insert: {
@@ -252,7 +257,12 @@ export type Database = {
           code: string
           created_at?: string
           discount_pct?: number
+          expires_at?: string | null
           first_deposit_only?: boolean
+          label?: string | null
+          plan_slug?: string | null
+          source?: string
+          user_id?: string | null
           uses_left?: number | null
         }
         Update: {
@@ -261,7 +271,12 @@ export type Database = {
           code?: string
           created_at?: string
           discount_pct?: number
+          expires_at?: string | null
           first_deposit_only?: boolean
+          label?: string | null
+          plan_slug?: string | null
+          source?: string
+          user_id?: string | null
           uses_left?: number | null
         }
         Relationships: []

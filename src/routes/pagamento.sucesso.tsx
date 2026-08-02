@@ -1,3 +1,4 @@
+import { clearCheckoutIntent } from "@/components/WinbackOffer";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -69,8 +70,10 @@ function SuccessPage() {
   };
 
   useEffect(() => {
+    clearCheckoutIntent();
     if (!order) return;
     startPolling();
+
     return () => {
       stopped.current = true;
       if (timerRef.current) clearTimeout(timerRef.current);

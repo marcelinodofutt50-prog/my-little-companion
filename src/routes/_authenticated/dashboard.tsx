@@ -19,6 +19,7 @@ import { formatBrl, tierFromPlanSlug, tierLabel, tierAccent, getTierFeatures, se
 import { listMyLicenses, generateTrial, getMyCashbackBalance, suspendMyLicense, reactivateMyLicense, disableMyLicense } from "@/lib/license.functions";
 import { detectLegacyForCurrentUser, getMyLegacyStatus } from "@/lib/legacy-detect.functions";
 import { createCheckout } from "@/lib/checkout.functions";
+import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
 import { listMyUpdates, getUpdateDownloadUrl } from "@/lib/updates.functions";
 import { daysUntil, severityFromDays, severityColor, type ExpirySeverity } from "@/lib/expiry";
 import { NicknameDialog } from "@/components/NicknameDialog";
@@ -191,18 +192,20 @@ function DashboardPage() {
     return () => clearInterval(id);
   }, [orders, ordersFn]);
 
-  async function startUpgrade() {
+  async function startUpgrade(couponOverride?: string) {
     setUpgradeLoading(true);
     try {
-      const res = await checkoutFn({ data: { planSlug: "upgrade-457-to-46", returnOrigin: window.location.origin } });
+      const res = await checkoutFn({ data: { planSlug: "upgrade-457-to-46", returnOrigin: window.location.origin, couponCode: couponOverride } });
       const url = res.initPoint || res.sandboxInitPoint;
       if (!url) throw new Error("Não foi possível iniciar o checkout");
+      markCheckoutIntent("upgrade-457-to-46");
       window.location.href = url;
     } catch (e: any) {
       toast.error(e?.message ?? "Falha ao iniciar upgrade");
       setUpgradeLoading(false);
     }
   }
+
 
   async function generate() {
     setTrialLoading(true);
@@ -232,6 +235,7 @@ function DashboardPage() {
 
   return (
     <SidebarProvider>
+      <WinbackOffer onUseCoupon={(code) => void startUpgrade(code)} />
       <div className="flex min-h-screen w-full">
         <AppSidebar isAdmin={isAdmin} />
         <SidebarInset className="min-w-0 flex-1">
@@ -451,7 +455,7 @@ function DashboardPage() {
                 </div>
               </div>
             </div>
-            <Button onClick={startUpgrade} disabled={upgradeLoading} className="font-mono uppercase tracking-wider md:shrink-0">
+            <Button onClick={() => void startUpgrade()} disabled={upgradeLoading} className="font-mono uppercase tracking-wider md:shrink-0">
               {upgradeLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Atualizar para v4.6
             </Button>

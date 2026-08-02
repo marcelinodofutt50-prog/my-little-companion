@@ -4,6 +4,7 @@ import { AlertTriangle, Clock, Loader2, RefreshCw, Sparkles } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createCheckout } from "@/lib/checkout.functions";
+import { markCheckoutIntent } from "@/components/WinbackOffer";
 import { toast } from "sonner";
 
 export function LicenseRenewCard({
@@ -30,6 +31,7 @@ export function LicenseRenewCard({
       const res = await checkoutFn({ data: { planSlug, returnOrigin: window.location.origin } });
       const url = res.initPoint || res.sandboxInitPoint;
       if (!url) throw new Error("Não foi possível iniciar renovação");
+      markCheckoutIntent(planSlug);
       window.location.href = url;
     } catch (e: any) {
       toast.error(e?.message ?? "Falha ao iniciar renovação");
