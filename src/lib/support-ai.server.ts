@@ -102,7 +102,10 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 
             if (!error && msg) {
               // Mark thread as unread for the customer so they see the AI notification
-              await supabaseAdmin.rpc("increment_thread_unread_customer", { t_id: threadId });
+              await supabaseAdmin
+                .from("support_threads")
+                .update({ unread_by_customer: 1 })
+                .eq("id", threadId);
             }
             return { success: !error };
           }
