@@ -330,6 +330,8 @@ async function fulfillOrderInner(orderId: string) {
   } as any);
 
   // Auto-deliver credentials in the customer's support chat as a system message.
+  // Warning: If user already had a trial login and bought a weekly/monthly login,
+  // we are creating a SECOND login (new credentials). 
   try {
     const { data: openThread } = await supabaseAdmin
       .from("support_threads")

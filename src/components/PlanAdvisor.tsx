@@ -41,8 +41,7 @@ export function PlanAdvisor({ className = "" }: { className?: string }) {
         ))}
       </div>
       <p className="mt-4 text-xs text-muted-foreground">
-        Precisa do <b className="text-foreground">servidor</b>? Ele é a mensalidade que mantém seu login ligado (vence todo dia 20)
-        e aparece mais abaixo nesta página.
+        ⚠️ <b className="text-primary uppercase">Diferença Importante:</b> Os planos acima criam um <b className="text-foreground">NOVO LOGIN</b> (usuário e senha novos). Se você já tem um login ativo e só precisa pagar a manutenção mensal, use a <b className="text-foreground italic">Renovação Servidor</b> logo abaixo.
       </p>
     </section>
   );
