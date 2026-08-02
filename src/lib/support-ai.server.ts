@@ -1,7 +1,7 @@
 import { generateText, tool } from "ai";
+import { z } from "zod";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { adminFixLoginBug } from "./admin.functions";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", um sistema automatizado de suporte técnico da Shadow.
 Sua missão é detectar e CORRIGIR problemas de login dos clientes de forma proativa.
@@ -24,8 +24,7 @@ REGRAS:
 - Sempre responda em Português do Brasil.`;
 
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
-  // Filtro rápido de palavras-chave para evitar invocar a IA em toda mensagem (economia de tokens)
-  const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar"];
+  const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar", "btmob"];
   const msgLower = userMessage.toLowerCase();
   const hasTrigger = triggers.some(t => msgLower.includes(t));
   
@@ -41,7 +40,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
       tools: {
         checkCustomerStatus: tool({
           description: "Verifica o status atual das licenças e pedidos do cliente.",
-          inputSchema: Buffer.alloc(0), // No input needed, uses context userId
+          parameters: z.object({}),
           execute: async () => {
             const [lics, orders] = await Promise.all([
               supabaseAdmin.from("licenses").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -55,16 +54,31 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
         }),
         fixLogin: tool({
           description: "Aplica o procedimento de 'sacudir registro' (correção de login) para uma licença específica.",
-          inputSchema: import("zod").then(z => z.z.object({ licenseId: z.z.string().uuid() })),
+          parameters: z.object({ licenseId: z.string().uuid() }),
           execute: async ({ licenseId }) => {
             try {
-              // Reutiliza a lógica admin já existente que faz exatamente o que o usuário pediu
-              // Note: adminFixLoginBug exige context com auth, aqui simulamos o contexto admin
-              const result = await adminFixLoginBug.handler({ 
-                data: { licenseId }, 
-                context: { userId: "system-ai", supabase: supabaseAdmin } as any 
-              });
-              return result;
+              const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
+              const { data: lic } = await supabaseAdmin.from("licenses").select("*").eq("id", licenseId).maybeSingle();
+              if (!lic) return { error: "Licença não encontrada" };
+              if (lic.disabled_at) return { error: "Licença desativada" };
+
+              const panel = ((lic as any).panel ?? "v457") as "v457" | "v46";
+              const ymd = (d: Date) => d.toISOString().slice(0, 10);
+              const original = lic.expires_at ? new Date(lic.expires_at) : null;
+              const bumped = original ? new Date(original.getTime() + 24 * 60 * 60 * 1000) : null;
+
+              if (original && bumped) {
+                await yaarsaExtend(lic.yaarsa_email, ymd(bumped), panel);
+              }
+              
+              const plain = decrypt(lic.yaarsa_password_enc);
+              await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username ?? undefined);
+
+              if (original) {
+                await yaarsaExtend(lic.yaarsa_email, ymd(original), panel);
+              }
+
+              return { ok: true, message: "Login corrigido com sucesso via Yaarsa API" };
             } catch (e: any) {
               return { error: e.message };
             }
@@ -72,11 +86,11 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
         }),
         postAIMessage: tool({
           description: "Envia uma mensagem de resposta da IA para o chat do suporte.",
-          inputSchema: import("zod").then(z => z.z.object({ body: z.z.string() })),
+          parameters: z.object({ body: z.string() }),
           execute: async ({ body }) => {
-            const { data, error } = await supabaseAdmin.from("support_messages").insert({
+            const { error } = await supabaseAdmin.from("support_messages").insert({
               thread_id: threadId,
-              sender_id: "00000000-0000-0000-0000-000000000000", // UUID reservado para Sistema/IA
+              sender_id: "00000000-0000-0000-0000-000000000000",
               is_admin: true,
               is_system: true,
               body: `🤖 **Assistente Shadow:** ${body}`
@@ -85,7 +99,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           }
         })
       },
-      maxSteps: 5 // Permite que ela verifique, corrija e poste
+      maxSteps: 5
     });
   } catch (err) {
     console.error("[support-ai] execution error:", err);
