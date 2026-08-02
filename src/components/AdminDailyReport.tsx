@@ -15,6 +15,7 @@ export function AdminDailyReport() {
     pendingApk: number;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const fn = useServerFn(getAdminDailyReport);
 
   const load = async () => {
@@ -43,32 +44,42 @@ export function AdminDailyReport() {
   return (
     <Card className="border border-border/60 bg-background/60 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div className="flex items-center gap-2">
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="flex items-center gap-2 transition-opacity hover:opacity-80"
+        >
           <div className="rounded-md bg-neon/10 p-1.5 text-neon">
             <Activity className="h-4 w-4" />
           </div>
-          <CardTitle className="font-display text-sm tracking-tight">Relatório diário</CardTitle>
-        </div>
+          <CardTitle className="font-display text-sm tracking-tight">
+            Relatório diário
+            <span className="ml-2 font-mono text-[10px] text-muted-foreground opacity-50">
+              {isCollapsed ? "[+]" : "[-]"}
+            </span>
+          </CardTitle>
+        </button>
         <Button size="icon" variant="ghost" onClick={load} disabled={loading} className="h-7 w-7">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
         </Button>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {items.map((it) => (
-            <div
-              key={it.label}
-              className="rounded-md border border-border/40 bg-background/40 p-3"
-            >
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                {it.icon}
-                <span className="font-mono text-[10px] uppercase tracking-wider">{it.label}</span>
+      {!isCollapsed && (
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {items.map((it) => (
+              <div
+                key={it.label}
+                className="rounded-md border border-border/40 bg-background/40 p-3"
+              >
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  {it.icon}
+                  <span className="font-mono text-[10px] uppercase tracking-wider">{it.label}</span>
+                </div>
+                <div className="mt-1 font-display text-lg font-semibold text-foreground">{it.value}</div>
               </div>
-              <div className="mt-1 font-display text-lg font-semibold text-foreground">{it.value}</div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
+            ))}
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }

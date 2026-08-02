@@ -31,6 +31,7 @@ export function AdminAntifraudPanel() {
   const [minAccounts, setMinAccounts] = useState(1);
   const [onlySuspicious, setOnlySuspicious] = useState(false);
   const [search, setSearch] = useState("");
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["admin-antifraud", days, minAccounts, onlySuspicious, search],
@@ -63,23 +64,31 @@ export function AdminAntifraudPanel() {
   return (
     <div className="terminal-card scanlines relative p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-neon">
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-neon transition-opacity hover:opacity-80"
+        >
           <ShieldAlert className="h-3.5 w-3.5" /> Antifraude · cadastros por conexão
-        </h3>
+          <span className="ml-1 text-[10px] text-muted-foreground opacity-50">
+            {isCollapsed ? "[+]" : "[-]"}
+          </span>
+        </button>
         <Button size="sm" variant="ghost" onClick={() => refetch()} disabled={isFetching}>
           <RefreshCw className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-3">
-        <Stat label="Registros" value={data?.total ?? 0} />
-        <Stat
-          label="Suspeitos"
-          value={data?.suspiciousCount ?? 0}
-          tone={(data?.suspiciousCount ?? 0) > 0 ? "text-amber-400" : "text-neon"}
-        />
-        <Stat label="Conexões únicas" value={data?.uniqueIps ?? 0} />
-      </div>
+      {!isCollapsed && (
+        <>
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            <Stat label="Registros" value={data?.total ?? 0} />
+            <Stat
+              label="Suspeitos"
+              value={data?.suspiciousCount ?? 0}
+              tone={(data?.suspiciousCount ?? 0) > 0 ? "text-amber-400" : "text-neon"}
+            />
+            <Stat label="Conexões únicas" value={data?.uniqueIps ?? 0} />
+          </div>
 
       {/* Filtros */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -199,6 +208,8 @@ export function AdminAntifraudPanel() {
           {data.config.windowHours}h · marca suspeito acima de {data.config.suspiciousThreshold}.
           Ajustável por variável de ambiente, sem recompilar.
         </p>
+      )}
+        </>
       )}
     </div>
   );
