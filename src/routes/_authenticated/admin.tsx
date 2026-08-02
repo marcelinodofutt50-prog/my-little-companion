@@ -66,6 +66,7 @@ import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
 import { AdminCustomer360 } from "@/components/AdminCustomer360";
+import { SupportCustomerContext } from "@/components/SupportCustomerContext";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { AdminDailyReport } from "@/components/AdminDailyReport";
@@ -2718,6 +2719,7 @@ function SupportOverviewCards({
 function AdminChatPanel() {
   const [threads, setThreads] = useState<Thread[]>(() => threadsCache["open"] ?? []);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [fichaUser, setFichaUser] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chatHasMore, setChatHasMore] = useState(false);
   const [chatLoadingOlder, setChatLoadingOlder] = useState(false);
@@ -3339,6 +3341,12 @@ function AdminChatPanel() {
                   </div>
                 </div>
               </div>
+              <SupportCustomerContext
+                key={activeThread.user_id}
+                userId={activeThread.user_id}
+                email={activeThread.profile?.email}
+                onOpenFicha={() => setFichaUser(activeThread.user_id)}
+              />
               <div
                 ref={listRef}
                 onScroll={() => {
@@ -3520,6 +3528,14 @@ function AdminChatPanel() {
           )}
         </section>
       </div>
+      <AdminCustomer360
+        userId={fichaUser}
+        onClose={() => setFichaUser(null)}
+        onOpenThread={(tid) => {
+          setFichaUser(null);
+          setActiveId(tid);
+        }}
+      />
     </div>
   );
 }
