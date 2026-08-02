@@ -26,7 +26,10 @@ const ThemeContext = createContext<Ctx>({ mode: "system", resolved: "dark", setM
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>("system");
-  const [resolved, setResolved] = useState<ResolvedTheme>("dark");
+  const [resolved, setResolved] = useState<ResolvedTheme>(() => {
+    if (typeof document === "undefined") return "dark";
+    return document.documentElement.classList.contains("theme-light") ? "light" : "dark";
+  });
 
   // Lê preferência salva depois da hidratação (evita mismatch de SSR)
   useEffect(() => {
