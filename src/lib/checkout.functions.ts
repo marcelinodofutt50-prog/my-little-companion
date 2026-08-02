@@ -74,9 +74,8 @@ export const createCheckout = createServerFn({ method: "POST" })
           throw new Error("Você já tem um pedido em aberto usando este cupom. Conclua ou cancele esse pagamento antes de gerar outro.");
         }
       }
-      const pct = Math.min(90, Math.max(0, Number(c.discount_pct ?? 0)));
       couponRow = c;
-      amount = Math.max(1, amount * (1 - pct / 100));
+      amount = applyDiscount(amount, c.discount_pct);
     }
 
 
