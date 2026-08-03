@@ -1230,7 +1230,7 @@ function PublishedUpdatesList() {
   );
 }
 
-function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin: boolean }) {
+function DownloadsSection({ licenses, isAdmin, themeParam }: { licenses: License[]; isAdmin: boolean; themeParam?: string }) {
   const now = Date.now();
   const activeLicenses = licenses.filter((l) => {
     if (l.disabled_at || l.revoked || l.suspended_at) return false;
@@ -1274,7 +1274,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
     if (disabled) return {
       code: "disabled", title: "Licença desativada", short: "desativada",
       detail: `Desativada em ${fmt(disabled.disabled_at)} — a conta foi removida do servidor e não pode ser reativada. Compre um novo plano para receber credenciais e liberar os arquivos.`,
-      cta: { label: "Ver planos", to: "/planos" as const },
+      cta: { label: "Ver planos", to: "/planos" as const, search: { theme: themeParam } } },
     };
     const revoked = sorted.find((l) => l.revoked);
     if (revoked) return {
@@ -1324,7 +1324,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
           )}
         </>
       ) : (() => {
-        const r = diagnose(search?.theme);
+        const r = diagnose(themeParam);
         const accent = r.code === "suspended" ? "text-amber-400" : r.code === "expired" ? "text-amber-400" : "text-danger";
         return (
           <>
