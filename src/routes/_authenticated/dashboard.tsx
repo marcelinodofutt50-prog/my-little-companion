@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Copy, Zap, Server, Ticket, Clock, ShieldAlert, Loader2, LifeBuoy, LogOut, Eye, EyeOff, Sparkles, Terminal as TerminalIcon, Pause, Play, PowerOff, Check, X, Crown, Shield, AlertTriangle, BellRing, Download, Archive, ChevronDown } from "lucide-react";
+import { Copy, Zap, Server, Ticket, Clock, ShieldAlert, Loader2, LifeBuoy, LogOut, Eye, EyeOff, Sparkles, Terminal as TerminalIcon, Pause, Play, PowerOff, Check, X, Crown, Shield, AlertTriangle, BellRing, Download, Archive, ChevronDown, ArrowUpRight, Activity } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ReferralsWidget } from "@/components/ReferralsWidget";
