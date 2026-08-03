@@ -841,7 +841,7 @@ function OrderCalculator() {
             </div>
           </div>
           <p className="mt-4 text-[10px] text-center text-muted-foreground italic leading-relaxed">
-            * Valores baseados nas regras atuais de membros antigos (histórico > 48h ou licença prévia) e novos.
+            * Valores baseados nas regras atuais de membros antigos (histórico {">"} 48h ou licença prévia) e novos.
           </p>
         </div>
       </div>
