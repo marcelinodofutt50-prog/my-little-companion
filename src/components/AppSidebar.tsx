@@ -17,21 +17,23 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import shadowMark from "@/assets/shadow-mask.png";
 import { secureSignOut } from "@/lib/session";
+import { useI18n } from "@/lib/i18n";
 
-type Item = { title: string; url: string; icon: any; hash?: string };
+type Item = { title: string; url: string; icon: any; hash?: string; tKey?: any };
 
 const primary: Item[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, tKey: "nav.panel" as const },
   { title: "Shadow Signer", url: "/play-protect", icon: ShieldCheck },
-  { title: "Planos", url: "/planos", icon: Sparkles },
-  { title: "Mercado", url: "/mercado", icon: Store },
-  { title: "Indicações", url: "/indicacoes", icon: Users },
-  { title: "Presentes", url: "/presentes", icon: Gift },
-  { title: "Suporte", url: "/suporte", icon: LifeBuoy },
+  { title: "Planos", url: "/planos", icon: Sparkles, tKey: "nav.plans" as const },
+  { title: "Mercado", url: "/mercado", icon: Store, tKey: "nav.market" as const },
+  { title: "Indicações", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
+  { title: "Presentes", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
+  { title: "Suporte", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
 ];
 
 
 export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
+  const { t } = useI18n();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
@@ -56,24 +58,24 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
 
       <SidebarContent>
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.22em]">Navegação</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.22em]">{t("nav.navigation") as string}</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {primary.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.tKey ? t(item.tKey) : item.title}>
                     <Link to={item.url} className="flex items-center gap-2.5">
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <span className="text-sm">{item.title}</span>}
+                      {!collapsed && <span className="text-sm">{item.tKey ? t(item.tKey) : item.title}</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Downloads">
+                <SidebarMenuButton asChild tooltip={t("nav.downloads") as string}>
                   <a href="/dashboard#downloads" className="flex items-center gap-2.5">
                     <Download className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">Downloads</span>}
+                    {!collapsed && <span className="text-sm">{t("nav.downloads") as string}</span>}
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -83,14 +85,14 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
 
         {isAdmin && (
           <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary/80">Admin</SidebarGroupLabel>}
+            {!collapsed && <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary/80">{t("nav.admin") as string}</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/admin")} tooltip="Painel Admin">
+                  <SidebarMenuButton asChild isActive={isActive("/admin")} tooltip={t("nav.admin") as string}>
                     <Link to="/admin" className="flex items-center gap-2.5">
                       <ShieldAlert className="h-4 w-4 text-primary" />
-                      {!collapsed && <span className="text-sm">Painel Admin</span>}
+                      {!collapsed && <span className="text-sm">{t("nav.admin") as string}</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -103,9 +105,9 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
       <SidebarFooter className="border-t border-sidebar-border/60">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => { void secureSignOut(); }} tooltip="Sair">
+            <SidebarMenuButton onClick={() => { void secureSignOut(); }} tooltip={t("nav.signout") as string}>
               <LogOut className="h-4 w-4" />
-              {!collapsed && <span className="text-sm">Sair</span>}
+              {!collapsed && <span className="text-sm">{t("nav.signout") as string}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
