@@ -859,7 +859,7 @@ function OrderCalculator() {
               {[
                 { id: "455", label: "Shadow 4.5.5", p: "R$ 450" },
                 { id: "mensal", label: "30 Dias (4.5.7)", p: "R$ 750" },
-                { id: "vitalicio", label: "Vitalício (4.6)", p: "R$ 1.490" },
+                { id: "vitalicio", label: "Vitalício (4.6)", p: "R$ 1.600" },
               ].map((p) => (
                 <button
                   key={p.id}
