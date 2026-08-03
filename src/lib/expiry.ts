@@ -24,3 +24,87 @@ export function severityColor(sev: ExpirySeverity): { text: string; border: stri
   if (sev === "warning") return { text: "text-amber-400", border: "border-amber-400/50", bg: "bg-amber-400/10", dot: "bg-amber-400" };
   return { text: "text-muted-foreground", border: "border-border/50", bg: "bg-background/40", dot: "bg-muted-foreground" };
 }
+
+// ===== Regras de renovação (fonte única para painel e avisos) =====
+
+export type LicenseKind = "trial" | "monthly" | "lifetime";
+
+type LicenseLike = {
+  plan_slug?: string | null;
+  is_trial?: boolean | null;
+  expires_at?: string | null;
+  server_paid_until?: string | null;
+  revoked?: boolean | null;
+  disabled_at?: string | null;
+  suspended_at?: string | null;
+};
+
+export function licenseKind(l: LicenseLike): LicenseKind {
+  if (l.is_trial) return "trial";
+  const s = (l.plan_slug ?? "").toLowerCase();
+  if (s.includes("lifetime") || s.includes("vitalicio")) return "lifetime";
+  return "monthly";
+}
+
+/** Próximo dia 20 (corte da mensalidade do servidor) a partir de `now`. */
+export function nextServerDueDate(now = Date.now()): Date {
+  const d = new Date(now);
+  const due = new Date(d.getFullYear(), d.getMonth(), 20, 23, 59, 59, 999);
+  if (d.getTime() > due.getTime()) due.setMonth(due.getMonth() + 1);
+  return due;
+}
+
+export type LicenseExpiryState = {
+  kind: LicenseKind;
+  active: boolean;
+  /** Dias até o vencimento que realmente derruba o acesso (null = sem data). */
+  daysLeft: number | null;
+  /** Data que define o countdown principal. */
+  countdownAt: string | null;
+  /** Só para vitalício: vencimento da mensalidade do servidor. */
+  serverDueAt: string | null;
+  serverDaysLeft: number | null;
+  severity: ExpirySeverity;
+  renewalNote: string;
+};
+
+/**
+ * Estado de expiração usando o relógio do servidor (`now`).
+ * - mensal/trial: expira somente quando `expires_at` chega ao fim.
+ * - vitalício: licença não expira; o corte é a mensalidade do servidor (dia 20).
+ */
+export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExpiryState {
+  const kind = licenseKind(l);
+  const active =
+    !l.revoked && !l.disabled_at && !l.suspended_at &&
+    (!l.expires_at || new Date(l.expires_at).getTime() > now);
+
+  const serverDueAt = l.server_paid_until
+    ? `${String(l.server_paid_until).slice(0, 10)}T23:59:59`
+    : kind === "lifetime"
+      ? nextServerDueDate(now).toISOString()
+      : null;
+  const serverDaysLeft = kind === "lifetime" ? daysUntil(serverDueAt, now) : null;
+
+  const countdownAt = kind === "lifetime" ? serverDueAt : (l.expires_at ?? null);
+  const daysLeft = daysUntil(countdownAt, now);
+
+  const renewalNote =
+    kind === "lifetime"
+      ? "Sua licença é vitalícia. Só a mensalidade do servidor precisa ser paga até o dia 20 de cada mês para manter o acesso."
+      : kind === "trial"
+        ? "Este é um teste grátis: ele acaba assim que os dias terminarem."
+        : "Sua licença mensal só expira quando os dias acabarem. O corte do dia 20 do servidor não afeta o plano mensal — ele vale só para vitalícios.";
+
+  return {
+    kind,
+    active,
+    daysLeft,
+    countdownAt,
+    serverDueAt,
+    serverDaysLeft,
+    severity: severityFromDays(daysLeft),
+    renewalNote,
+  };
+}
+
