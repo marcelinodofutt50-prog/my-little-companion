@@ -76,9 +76,11 @@ function DashboardPage() {
     if (isLight) {
       html.classList.add('theme-light');
       html.classList.remove('dark');
+      html.style.colorScheme = 'light';
     } else {
       html.classList.remove('theme-light');
       html.classList.add('dark');
+      html.style.colorScheme = 'dark';
     }
   }, [search?.theme]);
 
