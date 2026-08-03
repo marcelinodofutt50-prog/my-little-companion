@@ -394,8 +394,9 @@ function PlansPage() {
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px divider-glow" />
-        <div className="mx-auto max-w-7xl px-4 pt-16 pb-14 md:pt-24 md:pb-20">
-          <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-7xl px-4 pt-12 pb-10 md:pt-24 md:pb-20">
+          <div className="mx-auto max-w-3xl text-center px-2">
+
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -408,7 +409,7 @@ function PlansPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mt-6 font-display text-4xl leading-[1.05] tracking-tight md:text-6xl"
+              className="mt-6 font-display text-4xl leading-[1.05] tracking-tight md:text-6xl sm:text-5xl"
             >
               Planos <span className="italic text-primary drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]">Shadow</span>.<br className="hidden md:block" />
               <span className="text-muted-foreground/80">Provisionamento instantâneo.</span>
@@ -792,6 +793,7 @@ function OrderCalculator() {
           <div>
             <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Escolha o Plano</label>
             <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+
               {[
                 { id: "455", label: "Shadow 4.5.5", p: "R$ 450" },
                 { id: "mensal", label: "30 Dias (4.5.7)", p: "R$ 750" },
