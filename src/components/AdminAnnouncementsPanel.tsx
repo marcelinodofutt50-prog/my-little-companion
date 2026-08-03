@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Megaphone, Loader2, RefreshCw, Trash2, Eye, EyeOff, PlusCircle, Clock, Pencil, Tag, X } from "lucide-react";
@@ -11,7 +11,11 @@ import {
   adminDeleteAnnouncement,
   type Announcement,
   type AnnouncementSeverity,
+  type AnnouncementStatus,
 } from "@/lib/announcements.functions";
+import { can, type Role } from "@/lib/permissions";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchMyRole } from "@/lib/roles";
 import { tierLabel, type VersionTier } from "@/lib/plans";
 
 /** ISO -> valor de <input type="datetime-local"> no fuso do navegador. */
@@ -46,6 +50,7 @@ const emptyForm = {
   starts_at: "",
   ends_at: "",
   is_active: true,
+  status: "draft" as AnnouncementStatus,
   tags: [] as string[],
 };
 
@@ -61,6 +66,15 @@ export function AdminAnnouncementsPanel() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [tagInput, setTagInput] = useState("");
+  const [myRole, setMyRole] = useState<Role | null>(null);
+
+  useEffect(() => {
+    fetchMyRole().then(setMyRole);
+  }, []);
+
+  const canCreate = useMemo(() => can(myRole, "announcements.create"), [myRole]);
+  const canApprove = useMemo(() => can(myRole, "announcements.approve"), [myRole]);
+  const canPublish = useMemo(() => can(myRole, "announcements.publish"), [myRole]);
 
   async function refresh() {
     setLoading(true);
@@ -78,6 +92,10 @@ export function AdminAnnouncementsPanel() {
   }, []);
 
   function edit(row: Announcement) {
+    if (!canCreate && !canApprove && !canPublish) {
+      toast.error("Sem permissão para editar");
+      return;
+    }
     setForm({
       id: row.id,
       title: row.title,
@@ -88,6 +106,7 @@ export function AdminAnnouncementsPanel() {
       starts_at: toLocalInput(row.starts_at),
       ends_at: toLocalInput(row.ends_at),
       is_active: row.is_active,
+      status: row.status,
       tags: row.tags || [],
     });
     setShowForm(true);
@@ -111,10 +130,13 @@ export function AdminAnnouncementsPanel() {
           starts_at: fromLocalInput(form.starts_at),
           ends_at: fromLocalInput(form.ends_at),
           is_active: form.is_active,
+          status: form.status,
           tags: form.tags,
         },
       });
-      toast.success(form.id ? "Anúncio atualizado" : "Anúncio publicado");
+      const msg = form.status === "published" ? "Anúncio publicado" : 
+                 form.status === "review" ? "Enviado para revisão" : "Salvo como rascunho";
+      toast.success(msg);
       setForm(emptyForm);
       setShowForm(false);
       await refresh();
@@ -248,7 +270,19 @@ export function AdminAnnouncementsPanel() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+            <div>
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">Status do Fluxo</label>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value as AnnouncementStatus })}
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-2 font-mono text-xs"
+              >
+                <option value="draft">Rascunho</option>
+                <option value="review" disabled={!canCreate && !canApprove}>Revisão</option>
+                <option value="published" disabled={!canPublish}>Publicado</option>
+              </select>
+            </div>
             <div>
               <label className="font-mono text-[10px] uppercase text-muted-foreground">Plano mínimo</label>
               <select
@@ -343,6 +377,13 @@ export function AdminAnnouncementsPanel() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="truncate text-sm font-medium">{r.title}</div>
+                      <span className={`rounded border px-1.5 py-0.5 font-mono text-[9px] uppercase ${
+                        r.status === 'published' ? 'border-neon/40 bg-neon/10 text-neon' :
+                        r.status === 'review' ? 'border-amber-500/40 bg-amber-500/10 text-amber-500' :
+                        'border-muted-foreground/40 bg-muted/40 text-muted-foreground'
+                      }`}>
+                        {r.status === 'published' ? 'Publicado' : r.status === 'review' ? 'Em Revisão' : 'Rascunho'}
+                      </span>
                       <span className="rounded border border-violet/40 bg-violet/10 px-1.5 py-0.5 font-mono text-[9px] uppercase text-violet">
                         ≥ {tierLabel(r.min_tier)}
                       </span>

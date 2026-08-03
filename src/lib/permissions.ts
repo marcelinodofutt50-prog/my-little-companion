@@ -34,11 +34,13 @@ export type Capability =
   | "refund.decide"
   | "referral.pay"
   | "market.edit" | "updates.publish"
+  | "announcements.create" | "announcements.approve" | "announcements.publish"
   | "staff.manage" | "system.selftest";
 
 const SUPPORT_CAPS: Capability[] = [
   "view.overview", "view.chat", "view.apk", "view.users", "view.orders", "view.licenses",
   "chat.reply", "chat.assume", "chat.close", "apk.manage",
+  "announcements.create",
 ];
 
 const ALL_CAPS: Capability[] = [
@@ -47,6 +49,7 @@ const ALL_CAPS: Capability[] = [
   "view.system", "view.audit",
   "license.issue", "license.extend", "license.revoke", "order.reconcile",
   "refund.decide", "referral.pay", "market.edit", "updates.publish",
+  "announcements.approve", "announcements.publish",
   "staff.manage", "system.selftest",
 ];
 
@@ -128,6 +131,14 @@ export const MATRIX_ROWS: { group: string; items: { cap: Capability; label: stri
       { cap: "updates.publish", label: "Publicar update do app" },
       { cap: "system.selftest", label: "Rodar autoteste de compra" },
       { cap: "staff.manage", label: "Definir cargos da equipe", note: "só o dono" },
+    ],
+  },
+  {
+    group: "Comunicados",
+    items: [
+      { cap: "announcements.create", label: "Criar rascunhos de comunicados" },
+      { cap: "announcements.approve", label: "Revisar e aprovar comunicados" },
+      { cap: "announcements.publish", label: "Publicar comunicados (site-wide)" },
     ],
   },
 ];
