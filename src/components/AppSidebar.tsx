@@ -30,6 +30,7 @@ const primary: Item[] = [
   { title: "Suporte", url: "/suporte", icon: LifeBuoy },
 ];
 
+
 export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
