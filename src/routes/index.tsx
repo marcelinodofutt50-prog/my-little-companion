@@ -149,7 +149,7 @@ function LandingPage() {
         </div>
 
         <div className="mx-auto max-w-6xl px-6 pb-20">
-          <div className="grid grid-cols-2 gap-4 border-t border-[#1a1a1a] pt-12 opacity-40 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 border-t border-border pt-12 opacity-40 md:grid-cols-4">
             {[
               "4.5.7 OPS READY",
               "AES-256 SECURED",
