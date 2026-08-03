@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const performHealthCheck = createServerFn({ method: "POST" })
-  .handler(async ({ context }) => {
+  .handler(async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const results = {
-      database: { status: "healthy" as "healthy" | "degraded" | "critical", message: "Connectado" },
+      database: { status: "healthy" as "healthy" | "degraded" | "critical", message: "Conectado" },
       tables: {
         support_threads: { accessible: false },
         support_messages: { accessible: false },
@@ -16,25 +16,24 @@ export const performHealthCheck = createServerFn({ method: "POST" })
     };
 
     try {
-      // Check for reply_to_id specifically via a direct query that would fail if missing
       const { error: schemaError } = await supabaseAdmin
         .from("support_messages")
         .select("reply_to_id")
         .limit(1);
-      
+
       results.schema.reply_to_id = !schemaError;
-      
-      // If missing, trigger a validation run in the background
+
       if (schemaError && schemaError.message.includes("reply_to_id")) {
-         const { validateAndFixSchema } = await import("./schema-validator.server");
-         validateAndFixSchema();
+        const { validateAndFixSchema } = await import("./schema-validator.server");
+        validateAndFixSchema();
       }
-      // Test basic connectivity and table permissions for service_role
+
+      // Use head+count so we don't depend on any specific column (trials has no `id`)
       const [threads, messages, apks, trials] = await Promise.all([
-        supabaseAdmin.from("support_threads").select("id").limit(1),
-        supabaseAdmin.from("support_messages").select("id").limit(1),
-        supabaseAdmin.from("apk_build_jobs").select("id").limit(1),
-        supabaseAdmin.from("trials").select("id").limit(1),
+        supabaseAdmin.from("support_threads").select("*", { count: "exact", head: true }),
+        supabaseAdmin.from("support_messages").select("*", { count: "exact", head: true }),
+        supabaseAdmin.from("apk_build_jobs").select("*", { count: "exact", head: true }),
+        supabaseAdmin.from("trials").select("*", { count: "exact", head: true }),
       ]);
 
       results.tables.support_threads.accessible = !threads.error;
@@ -42,9 +41,16 @@ export const performHealthCheck = createServerFn({ method: "POST" })
       results.tables.apk_build_jobs.accessible = !apks.error;
       results.tables.trials.accessible = !trials.error;
 
-      if (threads.error || messages.error || apks.error || trials.error) {
+      const failed = [
+        threads.error && `support_threads: ${threads.error.message}`,
+        messages.error && `support_messages: ${messages.error.message}`,
+        apks.error && `apk_build_jobs: ${apks.error.message}`,
+        trials.error && `trials: ${trials.error.message}`,
+      ].filter(Boolean);
+
+      if (failed.length > 0) {
         results.database.status = "degraded";
-        results.database.message = "Algumas tabelas estão inacessíveis (Service Role)";
+        results.database.message = `Tabelas inacessíveis: ${failed.join(" | ")}`;
       }
     } catch (e: any) {
       results.database.status = "critical";
@@ -53,3 +59,4 @@ export const performHealthCheck = createServerFn({ method: "POST" })
 
     return results;
   });
+
