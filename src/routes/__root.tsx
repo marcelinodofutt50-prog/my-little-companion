@@ -46,6 +46,17 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    
+    // Auto-fix for ChunkLoadErrors / Failed to fetch module
+    const msg = error.message?.toLowerCase() || "";
+    if (msg.includes('failed to fetch dynamically imported module') || 
+        msg.includes('chunkloaderror')) {
+      console.warn("Detected chunk load error in boundary, performing auto-refresh...");
+      // Forçamos o reload se for erro de chunk
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
   }, [error]);
 
   return (
