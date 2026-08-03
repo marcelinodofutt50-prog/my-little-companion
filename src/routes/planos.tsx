@@ -1239,20 +1239,6 @@ function LegacyLookup() {
     } finally { setIsVerifying(false); }
   }
 
-  const panelLabel = (p: string) => (p === "v46" ? "Shadow 4.6 (Vitalício)" : "Shadow 4.5.7 (Mensal)");
-
-  async function run() {
-    if (!email.trim()) return setErr("Informe seu email antigo");
-    setBusy(true); setErr(null); setResult(null); setDone(false);
-    try {
-      const { checkLegacyEmail } = await import("@/lib/license.functions");
-      const r = await checkLegacyEmail({ data: { email: email.trim().toLowerCase() } });
-      setResult({ found: r.found, panels: r.panels as ("v457" | "v46")[] });
-      if (r.found && r.panels.length === 1) setSelectedPanel(r.panels[0] as "v457" | "v46");
-    } catch (e: any) {
-      setErr(e?.message || "Falha ao verificar");
-    } finally { setBusy(false); }
-  }
 
   async function claim() {
     if (!selectedPanel) return setErr("Escolha o painel");
