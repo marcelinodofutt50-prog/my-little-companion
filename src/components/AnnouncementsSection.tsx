@@ -5,18 +5,47 @@ import { Badge } from "@/components/ui/badge";
 import { Megaphone, Calendar, Tag, ChevronRight, Search, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function AnnouncementsSection() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { data: announcements, isLoading } = useQuery({
+  const { data: announcements, isLoading, refetch } = useQuery({
     queryKey: ["announcements"],
     queryFn: () => listMyAnnouncements(),
   });
+
+  // Real-time subscription for new announcements
+  useEffect(() => {
+    const channel = supabase
+      .channel('announcements-live')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'announcements' }, 
+        (payload) => {
+          const newAnn = payload.new as any;
+          if (newAnn.is_active) {
+            refetch();
+            toast.info(`Novo Comunicado: ${newAnn.title}`, {
+              description: "Um novo aviso corporativo foi publicado.",
+              action: {
+                label: "Ver",
+                onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' })
+              }
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   const categories = Array.from(new Set(announcements?.map((a: any) => a.severity) || [])) as string[];
 
