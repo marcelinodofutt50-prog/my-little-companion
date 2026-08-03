@@ -6,9 +6,10 @@ export type ResolvedTheme = "dark" | "light";
 const KEY = "shadow-theme";
 
 function readSaved(): ThemeMode {
+  if (typeof window === "undefined") return "system";
   try {
     const v = localStorage.getItem(KEY);
-    if (v === "light" || v === "dark" || v === "system") return v;
+    if (v === "light" || v === "dark" || v === "system") return v as ThemeMode;
   } catch {
     /* storage bloqueado */
   }
@@ -51,9 +52,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
-    root.classList.toggle("theme-light", resolved === "light");
-    root.classList.toggle("dark", resolved === "dark");
-    root.style.colorScheme = resolved;
+    
+    // Sincroniza classes e CSS variables
+    const isLight = resolved === "light";
+    root.classList.toggle("theme-light", isLight);
+    root.classList.toggle("dark", !isLight);
+    root.style.setProperty('color-scheme', resolved);
+    
+    // Força o body a seguir o background do tema para evitar flashes
+    document.body.style.backgroundColor = isLight ? "#ffffff" : "var(--background)";
   }, [resolved]);
 
   const setMode = useCallback((m: ThemeMode) => {
