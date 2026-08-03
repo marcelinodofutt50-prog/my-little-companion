@@ -42,6 +42,7 @@ import {
   Wrench,
   Bot,
   Server,
+  Megaphone,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
@@ -122,6 +123,12 @@ import {
   adminListReferrals,
   adminMarkReferralPaid,
 } from "@/lib/admin.functions";
+
+import {
+  adminListAnnouncements,
+  adminSaveAnnouncement,
+  adminDeleteAnnouncement,
+} from "@/lib/announcements.functions";
 import {
   playNotifyDing,
   unlockNotifySound,
@@ -161,6 +168,7 @@ type Tab =
   | "audit"
   | "apk"
   | "market"
+  | "announcements"
   | "updates"
   | "refunds"
   | "selftest";
@@ -177,6 +185,7 @@ const TAB_DESC: Record<Tab, string> = {
   licenses: "Todos os logins criados: ativos, vencendo, expirados e revogados.",
   orders: "Todas as compras: quem pagou, quanto, quando e se foi entregue.",
   market: "Produtos do Mercado: cadastrar, editar preço, imagem e ativar/desativar.",
+  announcements: "Comunicados Corporativos: criar, editar e publicar avisos no dashboard dos clientes.",
   referrals: "Indicações e cashback: quem indicou quem e quanto tem a receber.",
   refunds: "Pedidos de reembolso. Você tem 2 dias para aprovar ou recusar cada um.",
   staff: "Quem é admin ou moderador. Cuidado: admin vê e altera tudo.",
@@ -488,6 +497,7 @@ function AdminPage() {
     }
   }
   async function recreate(id: string) {
+
     if (!confirm("Recriar credenciais do login? A senha anterior será substituída.")) return;
     try {
       const r: any = await recreateFn({ data: { licenseId: id } });
@@ -588,6 +598,7 @@ function AdminPage() {
         { id: "overview", label: "Visão Geral", icon: BarChart3, hint: "resumo executivo" },
         { id: "ia", label: "Shadow Ops IA", icon: Sparkles, hint: "diagnóstico automático" },
         { id: "chat", label: "Chat ao Vivo", icon: MessageSquare, hint: "responder clientes" },
+        { id: "announcements", label: "Comunicados", icon: Megaphone, hint: "avisos corporativos" },
         { id: "apk", label: "Fila Play Protect", icon: Download, hint: "APKs pendentes" },
         { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
       ],
@@ -2111,6 +2122,7 @@ function AdminPage() {
               </div>
             )}
             {tab === "ia" && <LicenseAiPanel />}
+            {tab === "announcements" && <AdminAnnouncementsPanel />}
             {tab === "apk" && <AdminApkPanel />}
             {tab === "market" && <AdminMarketPanel />}
             {tab === "updates" && (

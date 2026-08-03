@@ -11,6 +11,7 @@ import { AppSidebar } from '@/components/AppSidebar'
 import { SecurityWelcomeDialog } from '@/components/SecurityWelcomeDialog'
 import { TutorialHintDialog } from '@/components/TutorialHintDialog'
 import { InAppNotifications } from '@/components/InAppNotifications'
+import { AnnouncementsSection } from '@/components/AnnouncementsSection'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -207,6 +208,9 @@ function DashboardPage() {
                       </Card>
                     ))}
                   </div>
+                  
+                  {/* Corporate Announcements Section */}
+                  <AnnouncementsSection />
 
                   {/* Infrastructure Status */}
                   <Card className="border-border/40 bg-card/30 backdrop-blur-md overflow-hidden">

@@ -15,6 +15,7 @@ export type Announcement = {
   starts_at: string;
   ends_at: string | null;
   is_active: boolean;
+  tags: string[];
   created_at: string;
 };
 
@@ -51,7 +52,7 @@ export const listMyAnnouncements = createServerFn({ method: "GET" })
     const nowIso = new Date().toISOString();
     const { data, error } = await supabaseAdmin
       .from("announcements")
-      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, created_at")
+      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, tags, created_at")
       .eq("is_active", true)
       .lte("starts_at", nowIso)
       .order("created_at", { ascending: false })
@@ -72,7 +73,7 @@ export const adminListAnnouncements = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("announcements")
-      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, created_at")
+      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, tags, created_at")
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
@@ -89,6 +90,7 @@ const upsertSchema = z.object({
   starts_at: z.string().datetime({ offset: true }).nullable().optional(),
   ends_at: z.string().datetime({ offset: true }).nullable().optional(),
   is_active: z.boolean().default(true),
+  tags: z.array(z.string()).default([]),
 });
 
 export const adminSaveAnnouncement = createServerFn({ method: "POST" })
@@ -106,6 +108,7 @@ export const adminSaveAnnouncement = createServerFn({ method: "POST" })
       starts_at: data.starts_at ?? new Date().toISOString(),
       ends_at: data.ends_at ?? null,
       is_active: data.is_active,
+      tags: data.tags,
     };
     if (data.id) {
       const { error } = await supabaseAdmin.from("announcements").update(payload as any).eq("id", data.id);
