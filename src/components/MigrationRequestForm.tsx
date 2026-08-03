@@ -290,7 +290,7 @@ export function MigrationRequestForm() {
                 {uploading ? "Enviando..." : "Escolher arquivos"}
               </Button>
               <Button asChild size="sm" variant="ghost" className="font-mono uppercase">
-                <Link to="/suporte">Acompanhar no suporte</Link>
+                <Link to="/suporte" search={{}}>Acompanhar no suporte</Link>
               </Button>
             </div>
 
@@ -330,7 +330,7 @@ export function MigrationRequestForm() {
 
         {!pending && (
           <Button asChild size="sm" className="mt-4 font-mono uppercase">
-            <Link to="/suporte">Acompanhar no suporte</Link>
+            <Link to="/suporte" search={{}}>Acompanhar no suporte</Link>
           </Button>
         )}
       </div>

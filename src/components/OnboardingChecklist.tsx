@@ -116,7 +116,7 @@ export function OnboardingChecklist({
       return;
     }
     markOnboardingStep(ONBOARDING_STEP.SUPPORT);
-    navigate({ to: "/suporte" });
+    navigate({ to: "/suporte", search: {} as any });
   }
 
   const doneCount = STEPS.filter((s) => completed.includes(s.id)).length;
