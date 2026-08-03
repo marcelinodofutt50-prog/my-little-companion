@@ -435,6 +435,12 @@ function AdminTipsSection() {
       category: "technical",
       title: "Variação de Dropper",
       text: "Alterne o tipo de dropper a cada 5 builds para dificultar o reconhecimento de padrão por heurísticas."
+    },
+    {
+      id: "06",
+      category: "technical",
+      title: "Verificação de Assinatura",
+      text: "O novo bypass é assinado automaticamente durante a compilação. Confirmamos que cada APK gerado passa pela verificação de integridade antes do download."
     }
   ];
 
