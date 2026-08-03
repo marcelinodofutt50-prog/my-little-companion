@@ -1414,72 +1414,7 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
     };
   });
 
-export const adminListAnnouncements = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertStaff(context);
-    const { data, error } = await context.supabase
-      .from("announcements")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  });
+// Announcements are handled via src/lib/announcements.functions.ts
 
-export const adminSaveAnnouncement = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    id: z.string().uuid().optional(),
-    title: z.string().min(3),
-    body: z.string().min(10),
-    severity: z.string().default("info"),
-    is_active: z.boolean().default(true),
-  }).parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const payload = {
-      ...data,
-      created_by: context.userId,
-      updated_at: new Date().toISOString(),
-    };
-    if (data.id) {
-      const { error } = await context.supabase
-        .from("announcements")
-        .update(payload)
-        .eq("id", data.id);
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await context.supabase
-        .from("announcements")
-        .insert(payload);
-      if (error) throw new Error(error.message);
-    }
-    return { ok: true };
-  });
-
-export const adminDeleteAnnouncement = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const { error } = await context.supabase
-      .from("announcements")
-      .delete()
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-export const getAnnouncements = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("announcements")
-      .select("*")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  });
 
 
