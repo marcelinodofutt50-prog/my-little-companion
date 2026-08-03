@@ -156,7 +156,7 @@ function LandingPage() {
               "~24H SUPP RESPONSE",
               "RELIABLE DATA"
             ].map((stat) => (
-              <div key={stat} className="text-center font-mono text-[9px] tracking-[0.3em] text-[#888888]">
+              <div key={stat} className="text-center font-mono text-[9px] tracking-[0.3em] text-muted-foreground">
                 // {stat}
               </div>
             ))}
