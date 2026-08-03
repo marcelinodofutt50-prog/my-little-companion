@@ -153,9 +153,16 @@ function PlayProtectPage() {
             >
               <h1 className="rainbow-text font-display text-3xl font-bold tracking-tight">APK Builder & Play Protect Bypass</h1>
               <p className="mt-2 text-muted-foreground">Sistema automatizado para injeção de payload e bypass de antivírus móvel.</p>
+              {!hasAccess && (
+                <div className="mt-4 flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200/90">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  Este recurso está disponível apenas para clientes com plano Mensal (4.5.7) ou Vitalício (4.6).
+                </div>
+              )}
             </motion.div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className={`grid gap-6 md:grid-cols-2 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
+
               {/* Build Section */}
               <div className="osint-panel p-6">
                 <div className="mb-6 flex items-center gap-3">
