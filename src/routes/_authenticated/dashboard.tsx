@@ -452,7 +452,7 @@ function DashboardPage() {
                   <div className="font-display text-4xl font-black text-amber-500 drop-shadow-[0_0_15px_oklch(0.7_0.2_60/0.3)]">100%</div>
                   <div className="mt-4 flex items-center justify-between">
                     <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">shadow protocol v4.6</div>
-                      <Lock className="h-3 w-3 text-amber-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+                      <LockIcon className="h-3 w-3 text-amber-500 opacity-50 group-hover:opacity-100 transition-opacity" />
 
                   </div>
                 </div>
