@@ -838,7 +838,7 @@ function DashboardPage() {
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-4">
                   <h3 className="font-mono text-xs uppercase tracking-widest text-primary">// public builder</h3>
-                  <p className="text-muted-foreground text-sm">O sistema automatizado para injeção de dropper (Risada KL) e bypass em tempo real disponível para seu plano.</p>
+                  <p className="text-muted-foreground text-sm">O sistema automatizado para injeção de dropper (Shadow Bypass) e bypass em tempo real disponível para seu plano.</p>
                   <Link to="/play-protect">
                     <Button className="w-full font-mono uppercase tracking-widest">
                       Abrir Shadow Signer <Zap className="ml-2 h-4 w-4" />
