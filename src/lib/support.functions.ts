@@ -122,13 +122,15 @@ export const markThreadReadByCustomer = createServerFn({ method: "POST" })
 
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    threadId: z.string().uuid(),
-    body: z.string().trim().min(1).max(4000).optional(),
-    attachmentPath: z.string().min(1).max(512).optional(),
-    attachmentType: z.string().max(100).optional(),
-    replyToId: z.string().uuid().optional().nullable(),
-  }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i))
+  .inputValidator((i: unknown) => {
+    return z.object({
+      threadId: z.string().uuid(),
+      body: z.string().trim().min(1).max(4000).optional(),
+      attachmentPath: z.string().min(1).max(512).optional(),
+      attachmentType: z.string().max(100).optional(),
+      replyToId: z.string().uuid().optional().nullable(),
+    }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
     const { isStaff } = await resolveRoles(context);
