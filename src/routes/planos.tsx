@@ -394,8 +394,9 @@ function PlansPage() {
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px divider-glow" />
-        <div className="mx-auto max-w-7xl px-4 pt-16 pb-14 md:pt-24 md:pb-20">
-          <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-7xl px-4 pt-12 pb-10 md:pt-24 md:pb-20">
+          <div className="mx-auto max-w-3xl text-center px-2">
+
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -408,7 +409,7 @@ function PlansPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mt-6 font-display text-4xl leading-[1.05] tracking-tight md:text-6xl"
+              className="mt-6 font-display text-4xl leading-[1.05] tracking-tight md:text-6xl sm:text-5xl"
             >
               Planos <span className="italic text-primary drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]">Shadow</span>.<br className="hidden md:block" />
               <span className="text-muted-foreground/80">Provisionamento instantâneo.</span>
@@ -438,7 +439,7 @@ function PlansPage() {
 
       <GuaranteeStrip />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 py-12 pb-28 md:pb-12">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-24 sm:px-6">
         <HowItWorksSteps variant="checkout" />
         <PlanAdvisor className="mt-5" />
         <ConversionBoosters />
@@ -605,32 +606,35 @@ function PlansPage() {
         <PreCheckoutFaq />
 
         {/* PLAN GROUPS ====================================== */}
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// filtrar por uso</div>
-            <p className="mt-1 text-sm text-muted-foreground">Mostre só o tipo de plano que faz sentido pra você.</p>
-          </div>
-          <div className="inline-flex rounded-full border border-border/60 bg-card/50 p-1" role="tablist" aria-label="Filtrar planos por uso">
-            {([
-              { id: "all", label: "Todos" },
-              { id: "monthly", label: "Mensal" },
-              { id: "lifetime", label: "Vitalício" },
-            ] as { id: UsageFilter; label: string }[]).map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                role="tab"
-                aria-selected={usage === opt.id}
-                onClick={() => setUsage(opt.id)}
-                className={`rounded-full px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors ${
-                  usage === opt.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+        <div className="sticky top-16 z-40 -mx-4 mb-8 bg-background/80 px-4 py-4 backdrop-blur-md border-b border-border/40 sm:static sm:top-0 sm:mx-0 sm:mb-12 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:border-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="hidden sm:block">
+              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// filtrar por uso</div>
+              <p className="mt-1 text-sm text-muted-foreground">Mostre só o tipo de plano que faz sentido pra você.</p>
+            </div>
+            <div className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card/50 p-1 sm:w-auto" role="tablist" aria-label="Filtrar planos por uso">
+              {([
+                { id: "all", label: "Todos" },
+                { id: "monthly", label: "Mensal" },
+                { id: "lifetime", label: "Vitalício" },
+              ] as { id: UsageFilter; label: string }[]).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={usage === opt.id}
+                  onClick={() => setUsage(opt.id)}
+                  className={`flex-1 rounded-full px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-all sm:flex-none sm:px-6 sm:py-2.5 ${
+                    usage === opt.id ? "bg-primary text-primary-foreground shadow-[0_0_15px_oklch(0.78_0.13_82/0.4)]" : "text-muted-foreground hover:bg-white/5"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
 
         <PlanGroup
           title="Licenças de acesso"
@@ -792,6 +796,7 @@ function OrderCalculator() {
           <div>
             <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Escolha o Plano</label>
             <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+
               {[
                 { id: "455", label: "Shadow 4.5.5", p: "R$ 450" },
                 { id: "mensal", label: "30 Dias (4.5.7)", p: "R$ 750" },
@@ -1079,9 +1084,9 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
   return (
     <div className={[
-      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-6 transition-all duration-500",
+      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-500",
       featured
-        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)] scale-[1.02] z-10"
+        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)] sm:scale-[1.02] z-10"
         : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70 hover:translate-y-[-4px]",
       isLifetime ? "ring-1 ring-primary/30 shadow-[0_0_45px_-10px_oklch(0.78_0.13_82/0.45)]" : "",
     ].join(" ")}>
@@ -1171,7 +1176,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       <Button
         className={[
-          "w-full font-mono uppercase tracking-widest text-xs h-12 transition-all duration-300 active:scale-95",
+          "w-full font-mono uppercase tracking-widest text-xs h-11 sm:h-12 transition-all duration-300 active:scale-95",
           featured 
             ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_30px_oklch(0.78_0.13_82/0.6)]" 
             : "border-2 hover:bg-primary/5 hover:border-primary/50",
