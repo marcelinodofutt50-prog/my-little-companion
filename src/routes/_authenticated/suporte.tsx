@@ -80,8 +80,7 @@ function SupportPage() {
       .then((t) => { if (!cancelled) setThread(t); })
       .catch((e: any) => {
         // Se for admin, o servidor retorna null em vez de criar automático.
-        // Não mostramos erro nesse caso, apenas deixamos a thread como null.
-        if (e?.message !== "Thread não encontrada" && !isAdminRef.current) {
+        if (e?.message !== "Conversa não encontrada" && !isAdminRef.current) {
           toast.error(e?.message ?? "Não foi possível abrir o atendimento");
         }
       });
