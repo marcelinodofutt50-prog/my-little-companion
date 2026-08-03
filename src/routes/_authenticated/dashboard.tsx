@@ -198,8 +198,16 @@ function DashboardPage() {
                   <KeyRound className="h-5 w-5 text-primary" />
                 </div>
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
-                  {(licenses ?? []).length === 0 ? (
+                  {licensesLoading ? (
+                    <p className="text-sm text-muted-foreground">Carregando licenças…</p>
+                  ) : licensesError ? (
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-destructive">
+                      <span>Não foi possível carregar suas licenças.</span>
+                      <Button size="sm" variant="outline" onClick={() => void refetchLicenses()}>Tentar novamente</Button>
+                    </div>
+                  ) : (licenses ?? []).length === 0 ? (
                     <p className="text-sm text-muted-foreground">Nenhuma licença encontrada.</p>
+
                   ) : (licenses ?? []).map((license: any) => {
                     const active = !license.revoked && !license.disabled_at && (!license.expires_at || new Date(license.expires_at) > new Date())
                     return (
