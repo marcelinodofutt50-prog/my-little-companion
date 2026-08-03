@@ -60,7 +60,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
       .select("id")
       .maybeSingle();
 
-    if (error) throw error;
+    if (error || !job) throw error || new Error("Falha ao criar job de build");
 
     await context.supabase.from("apk_dropper_configs").insert({
       job_id: job.id,
