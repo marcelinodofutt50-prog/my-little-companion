@@ -220,12 +220,15 @@ export function ProofWall() {
             className="flex max-h-[90vh] w-full max-w-md flex-col items-center gap-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              loading="lazy"
-              src={shots[open].src}
-              alt={shots[open].caption}
-              className="max-h-[75vh] w-auto rounded-lg border border-border object-contain shadow-2xl"
-            />
+            <picture>
+              <source srcSet={shots[open].src} type="image/webp" />
+              <img
+                loading="lazy"
+                src={shots[open].fallback}
+                alt={shots[open].caption}
+                className="max-h-[75vh] w-auto rounded-lg border border-border object-contain shadow-2xl"
+              />
+            </picture>
             <div className="w-full rounded-md border border-border bg-card/60 p-3 text-center backdrop-blur">
               <div className="flex items-center justify-center gap-1.5">
                 <span className="rounded border border-border/60 bg-background/70 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
