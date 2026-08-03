@@ -155,11 +155,31 @@ export const generateTrial = createServerFn({ method: "POST" })
 
     // 2) trials.user_id is PK — atomic single-shot claim per user. Two parallel
     //    tabs / retries can only claim once; the loser reads back the winner.
-    const { error: claimErr } = await supabaseAdmin
-      .from("trials")
-      .insert({ user_id: userId, license_id: null, ip_hash: guard.ipHash, user_agent: guard.userAgent });
+    //    Validamos se a coluna ip_hash existe através do log de erro PGRST204 se falhar.
+    const trialPayload = { 
+      user_id: userId, 
+      license_id: null, 
+      ip_hash: guard.ipHash, 
+      user_agent: guard.userAgent 
+    };
+    
+    async function doClaim(p: any) {
+      return supabaseAdmin.from("trials").insert(p);
+    }
+
+    let { error: claimErr } = await doClaim(trialPayload);
+    
+    // Fallback: Se o PostgREST reclamar que a coluna ip_hash não existe (cache antigo)
+    if (claimErr && (claimErr as any).code === "PGRST204") {
+      console.warn("[generateTrial] ip_hash column missing in schema cache, retrying without it...");
+      const { ip_hash, user_agent, ...fallback } = trialPayload;
+      const retry = await doClaim(fallback);
+      claimErr = retry.error;
+    }
+
     if (claimErr && !/duplicate key|unique/i.test(claimErr.message)) {
-      throw new Error(claimErr.message);
+      console.error("[generateTrial] Claim error:", claimErr);
+      throw new Error("Erro ao registrar intenção de teste: " + claimErr.message);
     }
     // 3) Call Yaarsa. Deterministic creds mean "1004 already exists" on retry
     //    is a previous successful create — treat as success.
