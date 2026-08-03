@@ -252,7 +252,7 @@ function PlayProtectPage() {
                     jobs.map((job) => (
                       <div key={job.id} className="osint-corners border border-border/40 bg-background/40 p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-display text-sm font-bold text-foreground">{job.app_name}</span>
+                          <span className="font-display text-sm font-bold text-foreground">{job.source_filename || "APK enviado"}</span>
                           <span className={`font-mono text-[9px] uppercase tracking-tighter ${
                             job.status === 'done' ? 'text-neon' : 
                             job.status === 'failed' ? 'text-danger' : 'text-amber-400'
