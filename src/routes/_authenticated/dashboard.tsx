@@ -401,21 +401,64 @@ function DashboardPage() {
 
         {(() => {
           const activeList = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
-          if (activeList.length >= 2) return null;
-          const primaryLic = activeList.find((l) => !l.is_trial) ?? activeList[0];
+          const activeCount = activeList.length;
+          
           return (
-            <OnboardingChecklist
-              hasActiveLicense={activeList.length > 0}
-              onGoToLicense={() => document.getElementById("minhas-licencas")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              onCopyCredentials={() => {
-                if (!primaryLic) return false;
-                navigator.clipboard.writeText(
-                  `user: ${primaryLic.yaarsa_username}\nemail: ${primaryLic.yaarsa_email}\npass: ${primaryLic.password}\nserver: ${primaryLic.server_ip}`
-                );
-                toast.success("Credenciais copiadas");
-                return true;
-              }}
-            />
+            <>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-primary/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <Zap className="h-20 w-20 text-neon" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">CRÉDITO OPERACIONAL</div>
+                  <div className="font-mono text-3xl font-black text-neon">{formatBrl(cashback)}</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
+                </div>
+                
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-cyan/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <Server className="h-20 w-20 text-cyan" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">TERMINAIS ATIVOS</div>
+                  <div className="font-mono text-3xl font-black text-cyan">{activeCount}</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">NODES EM SINCRONIZAÇÃO</div>
+                </div>
+
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-violet-500/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <Ticket className="h-20 w-20 text-violet-400" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">TICKETS SUPORTE</div>
+                  <div className="font-mono text-3xl font-black text-violet-400">0</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">SEM ALERTAS PENDENTES</div>
+                </div>
+
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-amber-500/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <ShieldAlert className="h-20 w-20 text-amber-500" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">INTEGRIDADE OPS</div>
+                  <div className="font-mono text-3xl font-black text-amber-500">100%</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">PROTOCOLO AES-256 ATIVO</div>
+                </div>
+              </div>
+
+              {activeCount < 2 && (
+                <OnboardingChecklist
+                  hasActiveLicense={activeCount > 0}
+                  onGoToLicense={() => document.getElementById("minhas-licencas")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  onCopyCredentials={() => {
+                    const primaryLic = activeList.find((l) => !l.is_trial) ?? activeList[0];
+                    if (!primaryLic) return false;
+                    navigator.clipboard.writeText(
+                      `user: ${primaryLic.yaarsa_username}\nemail: ${primaryLic.yaarsa_email}\npass: ${primaryLic.password}\nserver: ${primaryLic.server_ip}`
+                    );
+                    toast.success("Credenciais copiadas");
+                    return true;
+                  }}
+                />
+              )}
+            </>
           );
         })()}
 
