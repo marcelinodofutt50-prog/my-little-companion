@@ -48,7 +48,14 @@ export const Route = createFileRoute("/planos")({
   component: PlansPage,
 });
 
-type Plan = { slug: string; name: string; description: string | null; price_brl: number; category: string; sort_order: number | null };
+type Plan = { slug: string; name: string; description: string | null; price_brl: number; days: number | null; category: string; sort_order: number | null };
+
+type UsageFilter = "all" | "monthly" | "lifetime";
+
+/** Classifica o plano pelo tipo de uso: recorrente (tem duração) ou vitalício. */
+function usageOf(p: Plan): "monthly" | "lifetime" {
+  return p.days == null ? "lifetime" : "monthly";
+}
 type Coupon = { code: string; discount_pct: number; cashback_pct: number; plan_slug?: string | null };
 
 const CASHBACK_MAX_PCT = 0.5;
@@ -332,6 +339,9 @@ function PlansPage() {
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
 
 
+  const [usage, setUsage] = useState<UsageFilter>("all");
+  const [showMore, setShowMore] = useState(false);
+
   const { licenses, servers, sources, upgrades } = useMemo(() => {
     // Remove planos repetidos (mesmo preço + mesma duração + nome equivalente)
     const seen = new Set<string>();
@@ -349,13 +359,17 @@ function PlansPage() {
     
     const upgradeList = unique.filter((p) => p.category === "upgrade");
     
+    const byUsage = (list: Plan[]) => (usage === "all" ? list : list.filter((p) => usageOf(p) === usage));
+
     return {
-      licenses: unique.filter((p) => p.category === "license"),
-      servers: serverFiltered,
-      sources: unique.filter((p) => p.category === "source"),
-      upgrades: isLegacy ? upgradeList : [],
+      licenses: byUsage(unique.filter((p) => p.category === "license")),
+      servers: byUsage(serverFiltered),
+      sources: byUsage(unique.filter((p) => p.category === "source")),
+      upgrades: isLegacy ? byUsage(upgradeList) : [],
     };
-  }, [plans, isLegacy]);
+  }, [plans, isLegacy, usage]);
+
+  const secondaryCount = servers.length + sources.length + upgrades.length;
 
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
