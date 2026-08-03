@@ -185,8 +185,9 @@ function RootComponent() {
       
       if (msgLower.includes('failed to fetch dynamically imported module') || 
           msgLower.includes('error loading dynamically imported module') ||
+          msgLower.includes('failed to fetch') ||
           msgLower.includes('chunkloaderror')) {
-        console.warn('Chunk loading failed. Force refreshing page...');
+        console.warn('Chunk loading or module fetch failed. Force refreshing page...');
         window.location.reload();
       }
     };

@@ -57,7 +57,7 @@ export function renderErrorPage(): string {
       <h1>System Error</h1>
       <p>Ocorreu uma falha crítica na inicialização dos módulos. Isso geralmente acontece devido ao cache do navegador ou instabilidade na rede.</p>
       <div class="actions">
-        <button class="primary" onclick="location.reload(true)">Forçar Recarregamento</button>
+        <button class="primary" onclick="caches.keys().then(names => { for (let name of names) caches.delete(name); }).finally(() => { location.reload(true); })">Limpar Cache & Recarregar</button>
         <a class="secondary" href="/">Voltar ao Início</a>
       </div>
       <div class="code">// runtime_exception_caught</div>
