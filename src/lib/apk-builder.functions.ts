@@ -16,16 +16,19 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
 
 export const createBuildJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: any) => z.object({
-    appName: z.string().min(2).max(50),
-    originalApkUrl: z.string().url(),
-    originalIconUrl: z.string().url().optional(),
-    dropperType: z.string().default('risada_kl'),
-    config: z.record(z.any()).optional(),
-  }).parse(input))
+  .inputValidator((i: unknown) => {
+    const schema = z.object({
+      appName: z.string().min(2).max(50),
+      originalApkUrl: z.string().url(),
+      originalIconUrl: z.string().url().optional(),
+      dropperType: z.string().default('risada_kl'),
+      config: z.record(z.any()).optional(),
+    });
+    return schema.parse(i);
+  })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
-    const roles = await resolveRoles(context);
+    const roles = await resolveRoles(context as { supabase: any; userId: string });
     
     if (!roles.isStaff) {
       const { data: license } = await context.supabase
@@ -34,7 +37,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
         .eq("user_id", context.userId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
       
       const { tierFromPlanSlug, getTierFeatures } = await import("@/lib/plans");
       const tier = tierFromPlanSlug(license?.plan_slug);
