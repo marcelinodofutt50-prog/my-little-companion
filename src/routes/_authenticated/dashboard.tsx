@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink } from 'lucide-react'
 
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,7 @@ import { useI18n } from '@/lib/i18n'
 import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
 import { triggerDownload, friendlyDownloadError } from '@/lib/download'
 import shadowMark from '@/assets/shadow-mask.png'
+import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
@@ -41,13 +42,23 @@ function DashboardPage() {
   const { t } = useI18n()
   const { resolved } = useTheme()
   const [tutorialOpen, setTutorialOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(undefined)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }: any) => setUser(data.user))
+    let mounted = true
+    supabase.auth.getSession().then(({ data }: any) => {
+      if (mounted) setUser(data.session?.user ?? null)
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setUser(session?.user ?? null)
+    })
+    return () => {
+      mounted = false
+      listener.subscription.unsubscribe()
+    }
   }, [])
 
   const { data: profile } = useQuery({
@@ -100,7 +111,15 @@ function DashboardPage() {
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
-  const activeLicense = licenses?.find((l: any) => !l.revoked && (!l.expires_at || new Date(l.expires_at) > new Date()))
+  const isLicenseActive = (license: any) =>
+    !license.revoked &&
+    !license.disabled_at &&
+    !license.suspended_at &&
+    (!license.expires_at || new Date(license.expires_at) > new Date())
+  const activeLicense = licenses?.find(isLicenseActive)
+  const fallbackDownloads = activeLicense
+    ? downloadsForTier((activeLicense.version_tier as VersionTier | null) ?? tierFromPlanSlug(activeLicense.plan_slug))
+    : []
   const daysLeft = activeLicense?.expires_at ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : (activeLicense ? 99 : null)
   const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
@@ -199,7 +218,7 @@ function DashboardPage() {
                   <KeyRound className="h-5 w-5 text-primary" />
                 </div>
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
-                  {licensesLoading ? (
+                  {user === undefined || licensesLoading ? (
                     <p className="text-sm text-muted-foreground">Carregando licenças…</p>
                   ) : licensesError ? (
                     <div className="flex flex-wrap items-center gap-3 text-sm text-destructive">
@@ -217,7 +236,10 @@ function DashboardPage() {
                       />
                     </div>
                   ) : (licenses ?? []).map((license: any) => {
-                    const active = !license.revoked && !license.disabled_at && (!license.expires_at || new Date(license.expires_at) > new Date())
+                    const active = isLicenseActive(license)
+                    const licenseDownloads = active
+                      ? downloadsForTier((license.version_tier as VersionTier | null) ?? tierFromPlanSlug(license.plan_slug))
+                      : []
                     return (
                       <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
                         <CardContent className="space-y-3 p-4">
@@ -229,6 +251,17 @@ function DashboardPage() {
                             <span>Servidor: {license.server_ip || '—'}</span>
                             <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleDateString('pt-BR') : 'Vitalícia'}</span>
                           </div>
+                          {licenseDownloads.length > 0 && (
+                            <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
+                              {licenseDownloads.map((file) => (
+                                <Button key={file.url} size="sm" variant="outline" asChild>
+                                  <a href={file.url} target="_blank" rel="noreferrer">
+                                    <Download className="mr-2 h-4 w-4" />{file.label}<ExternalLink className="ml-2 h-3 w-3" />
+                                  </a>
+                                </Button>
+                              ))}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     )
@@ -249,7 +282,7 @@ function DashboardPage() {
                       <span>Não foi possível carregar os downloads.</span>
                       <Button size="sm" variant="outline" onClick={() => void refetchUpdates()}>Tentar novamente</Button>
                     </div>
-                  ) : updates.length === 0 ? (
+                  ) : updates.length === 0 && fallbackDownloads.length === 0 ? (
                     <div className="p-5">
                       <EmptyState
                         icon={Inbox}
@@ -259,11 +292,21 @@ function DashboardPage() {
                         secondary={{ label: 'Abrir suporte', to: '/suporte' }}
                       />
                     </div>
-                  ) : updates.map((update: any) => (
+                  ) : updates.length > 0 ? updates.map((update: any) => (
                     <div key={update.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
 
                       <div><div className="font-semibold">{update.title}</div><div className="font-mono text-xs text-muted-foreground">v{update.version} · {update.filename}</div></div>
                       <Button size="sm" variant="outline" disabled={downloadingId === update.id} onClick={() => void downloadUpdate(update.id)}><Download className="mr-2 h-4 w-4" />{downloadingId === update.id ? 'Preparando…' : 'Baixar'}</Button>
+                    </div>
+                  )) : fallbackDownloads.map((file) => (
+                    <div key={file.url} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="font-semibold">{file.label}</div>
+                        <div className="font-mono text-xs text-muted-foreground">Liberado pela sua licença{file.note ? ` · ${file.note}` : ''}</div>
+                      </div>
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={file.url} target="_blank" rel="noreferrer"><Download className="mr-2 h-4 w-4" />Baixar <ExternalLink className="ml-2 h-3 w-3" /></a>
+                      </Button>
                     </div>
                   ))}
                 </div>
