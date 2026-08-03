@@ -17,20 +17,18 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
 export const createBuildJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => {
-    const schema = z.object({
+    return z.object({
       appName: z.string().min(2).max(50),
       originalApkUrl: z.string().url(),
       originalIconUrl: z.string().url().optional(),
       dropperType: z.string().default('risada_kl'),
       config: z.record(z.any()).optional(),
-    });
-    return schema.parse(i);
+    }).parse(i);
   })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
     const roles = await resolveRoles(context);
     
-    // Validar acesso (Tier mensal 4.5.7+, vitalício 4.6, Shadow Signer ou Staff)
     if (!roles.isStaff) {
       const { data: license } = await context.supabase
         .from("licenses")
@@ -64,7 +62,6 @@ export const createBuildJob = createServerFn({ method: "POST" })
 
     if (error) throw error;
 
-    // Salvar configuração do dropper
     await context.supabase.from("apk_dropper_configs").insert({
       job_id: job.id,
       dropper_type: data.dropperType,
