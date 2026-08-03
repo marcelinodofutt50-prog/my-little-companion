@@ -89,16 +89,23 @@ export function AnnouncementsSection() {
                   <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
                     {item.body}
                   </p>
-                  <div className="flex items-center gap-4 text-[9px] font-mono text-muted-foreground/60 uppercase">
+                  <div className="flex flex-wrap items-center gap-4 text-[9px] font-mono text-muted-foreground/60 uppercase">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-3 w-3" />
                       {format(new Date(item.created_at), "dd MMM yyyy", { locale: ptBR })}
                     </span>
-                    {/* In a real app we'd map tags if we had them in the DB */}
-                    <span className="flex items-center gap-1.5">
-                      <Tag className="h-3 w-3" />
-                      {item.severity}
-                    </span>
+                    {item.tags && item.tags.length > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <Tag className="h-3 w-3" />
+                        <div className="flex gap-1">
+                          {item.tags.map((tag: string) => (
+                            <span key={tag} className="border border-border/40 px-1 rounded-sm">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity self-end md:self-center">
