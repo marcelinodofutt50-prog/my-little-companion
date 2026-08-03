@@ -117,27 +117,18 @@ function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
             className="mb-4 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5"
           >
             <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">Mirror Industries • Est. 2023</span>
           </motion.div>
 
-          <motion.h1 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.4 }}
-            className="font-display text-7xl font-extrabold tracking-[-0.04em] sm:text-9xl text-foreground mb-6"
-          >
+          {/* LCP text: painted immediately, no opacity/scale animation */}
+          <h1 className="font-display text-7xl font-extrabold tracking-[-0.04em] sm:text-9xl text-foreground mb-6">
             SHADOW
-          </motion.h1>
+          </h1>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.6 }}
-            className="mb-12 space-y-4"
-          >
+          <div className="mb-12 space-y-4">
             <p className="text-xl font-medium tracking-tight text-muted-foreground">
               Your shadow, <span className="text-foreground italic">everywhere.</span>
             </p>
@@ -145,12 +136,12 @@ function LandingPage() {
               Infraestrutura de alta performance para monitoramento e análise de dados.
               Privacidade absoluta, velocidade máxima.
             </p>
-          </motion.div>
+          </div>
 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
             className="flex flex-col items-center gap-8 sm:flex-row"
           >
             <Link to="/planos" search={{ theme: search?.theme }}>
