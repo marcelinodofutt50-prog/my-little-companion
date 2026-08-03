@@ -50,9 +50,10 @@ export function SystemHealthIndicator() {
             <div className="max-h-24 space-y-1 overflow-auto">
               {health.errors.map((err, i) => (
                 <div key={i} className="font-mono text-[9px] leading-tight text-destructive/80">
-                  > {err}
+                  {">"} {err}
                 </div>
               ))}
+
             </div>
           </div>
         )}
