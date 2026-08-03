@@ -17,6 +17,7 @@ const shots: Shot[] = [
 
   {
     src: pPhones.url,
+    fallback: pPhones.fallback,
     caption: '"Deu bom" · "finalmente 🔥🔥" — 3 dispositivos espelhados no PC operando em tempo real.',
     tag: "Operação real",
     source: "WhatsApp · captura de tela",
@@ -26,6 +27,7 @@ const shots: Shot[] = [
 
   {
     src: p2.url,
+    fallback: p2.fallback,
     caption: 'PIX de R$ 1.800 recebido · cliente confirma "meu login ai · ta rodando ag ainda"',
     tag: "Pagamento + entrega",
     source: "Mercado Pago · comprovante PIX",
@@ -34,6 +36,7 @@ const shots: Shot[] = [
   },
   {
     src: p4.url,
+    fallback: p4.fallback,
     caption: 'PIX de R$ 900 do "cliente btmob" — "Brigado pela confiança 🔥"',
     tag: "Cliente recorrente",
     source: "Mercado Pago · comprovante PIX",
@@ -42,6 +45,7 @@ const shots: Shot[] = [
   },
   {
     src: pPix300.url,
+    fallback: pPix300.fallback,
     caption: 'Renovação de R$ 300 · painel responde "Expire Date updated successfully!" em segundos.',
     tag: "Renovação automática",
     source: "Painel Shadow · log de renovação",
@@ -50,6 +54,7 @@ const shots: Shot[] = [
   },
   {
     src: p3.url,
+    fallback: p3.fallback,
     caption: 'Entrega do BTMOB 4.0 FULL SRC (912 MB) · "Obrigado pela confiança 🔥🔥🔥"',
     tag: "Código-fonte entregue",
     source: "WhatsApp · envio de arquivo",
@@ -58,6 +63,7 @@ const shots: Shot[] = [
   },
   {
     src: pDouglas.url,
+    fallback: pDouglas.fallback,
     caption: '"Se eu for precisando de suporte só acionar né?" · "sim claro" — suporte pós-venda ativo.',
     tag: "Suporte contínuo",
     source: "Telegram · atendimento",
@@ -66,6 +72,7 @@ const shots: Shot[] = [
   },
   {
     src: p1.url,
+    fallback: p1.fallback,
     caption: '"criar seu login e ja era" · "ja ta tudo pronto" — ativação instantânea confirmada pelo cliente.',
     tag: "Ativação em minutos",
     source: "WhatsApp · conversa com cliente",
