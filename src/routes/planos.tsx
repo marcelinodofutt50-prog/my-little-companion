@@ -1054,15 +1054,25 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
   return (
     <div className={[
-      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-6 transition-all",
+      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-6 transition-all duration-500",
       featured
-        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)]"
-        : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70",
+        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)] scale-[1.02] z-10"
+        : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70 hover:translate-y-[-4px]",
       isLifetime ? "ring-1 ring-primary/30 shadow-[0_0_45px_-10px_oklch(0.78_0.13_82/0.45)]" : "",
     ].join(" ")}>
+      {/* Glow Effect */}
+      <div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
+           style={{ background: `radial-gradient(600px circle at var(--x) var(--y), oklch(0.78 0.13 82 / 0.1), transparent 40%)` }} 
+           onMouseMove={(e) => {
+             const rect = e.currentTarget.getBoundingClientRect();
+             e.currentTarget.style.setProperty("--x", `${e.clientX - rect.left}px`);
+             e.currentTarget.style.setProperty("--y", `${e.clientY - rect.top}px`);
+           }}
+      />
+
       {badgeLabel && (
-        <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary">
-          <Crown className="h-3 w-3" /> {badgeLabel}
+        <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/20 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary shadow-[0_0_10px_oklch(0.78_0.13_82/0.2)]">
+          <Crown className="h-3 w-3 animate-pulse" /> {badgeLabel}
         </div>
       )}
 
