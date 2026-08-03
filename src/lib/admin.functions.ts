@@ -386,15 +386,34 @@ export const adminSendMessage = createServerFn({ method: "POST" })
     // preserves is_admin=true. When inserted via service_role, auth.uid()
     // is NULL and the trigger forces is_admin=false, making replies appear
     // as if the client sent them.
-    const { data: msg, error } = await context.supabase.from("support_messages").insert({
+    const payload = {
       thread_id: data.threadId,
       sender_id: context.userId,
       is_admin: true,
       body: data.body,
       reply_to_id: data.replyToId ?? null,
-    }).select("*").single();
+    };
+    let { data: msg, error } = await context.supabase
+      .from("support_messages")
+      .insert(payload)
+      .select("*")
+      .single();
+
+    // A cache de esquema pode ainda não conhecer reply_to_id logo após uma
+    // migração. A resposta do suporte não deve falhar por uma coluna opcional.
+    if (error && error.code === "PGRST204") {
+      const { reply_to_id: _replyToId, ...fallbackPayload } = payload;
+      const retry = await context.supabase
+        .from("support_messages")
+        .insert(fallbackPayload)
+        .select("*")
+        .single();
+      msg = retry.data;
+      error = retry.error;
+    }
 
     if (error) throw new Error(error.message);
+    if (!msg) throw new Error("Não foi possível enviar a resposta");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("support_threads").update({ updated_at: new Date().toISOString() }).eq("id", data.threadId);
     return msg;

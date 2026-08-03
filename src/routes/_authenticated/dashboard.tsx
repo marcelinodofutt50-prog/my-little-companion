@@ -21,6 +21,16 @@ import { useI18n } from '@/lib/i18n'
 const shadowMark = "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/assets/shadow_mark.png"
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
+  head: () => ({
+    meta: [
+      { title: 'Dashboard — Shadow' },
+      { name: 'description', content: 'Painel do cliente Shadow para gerenciar licenças, acessos e suporte.' },
+      { property: 'og:title', content: 'Dashboard — Shadow' },
+      { property: 'og:description', content: 'Gerencie suas licenças, acessos e suporte Shadow.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+  }),
   component: DashboardPage,
 })
 
