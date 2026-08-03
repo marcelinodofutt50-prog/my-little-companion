@@ -81,7 +81,7 @@ function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [licFilter, setLicFilter] = useState<"all" | "active" | "trial" | "archived">("active");
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
-  const [extraTab, setExtraTab] = useState<"downloads" | "historico" | "resumo" | "beneficios" | "ajuda">("downloads");
+  const [extraTab, setExtraTab] = useState<"downloads" | "historico" | "resumo" | "beneficios" | "ajuda" | "play-protect">("downloads");
   const [orders, setOrders] = useState<MyOrder[]>([]);
   const [orderLastSync, setOrderLastSync] = useState<Date | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
