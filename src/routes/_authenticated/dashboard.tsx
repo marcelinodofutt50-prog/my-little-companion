@@ -246,9 +246,7 @@ function DashboardPage() {
                     </div>
                   ) : (licenses ?? []).map((license: any) => {
                     const active = isLicenseActive(license)
-                    const licenseDownloads = active
-                      ? downloadsForTier((license.version_tier as VersionTier | null) ?? tierFromPlanSlug(license.plan_slug))
-                      : []
+                    const licenseDownloads = active ? downloadsForLicense(license) : []
                     return (
                       <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
                         <CardContent className="space-y-3 p-4">
