@@ -13,6 +13,8 @@ import { ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChec
 import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer, setThreadCategory } from "@/lib/support.functions";
 import { SUPPORT_CATEGORY_META, categoryMeta, type SupportCategory } from "@/lib/support-categories";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
+import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
+
 
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
@@ -331,9 +333,11 @@ function SupportPage() {
 
         {/* Status do atendimento */}
         <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-mono uppercase tracking-wider">
+          <SystemHealthIndicator />
           <span className="flex items-center gap-1.5 rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-neon">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neon" /> online agora
           </span>
+
           <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-muted-foreground">
             ticket {thread ? `#${thread.id.slice(0, 8)}` : "abrindo..."}
           </span>

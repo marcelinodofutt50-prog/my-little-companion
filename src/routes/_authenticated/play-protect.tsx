@@ -15,8 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { getMyBuildJobs, createBuildJob } from "@/lib/apk-builder.functions";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
-import { supabase as supabaseClient } from "@/integrations/supabase/client";
 import { tierFromPlanSlug, getTierFeatures } from "@/lib/plans";
+import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
+
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
   head: () => ({ meta: [{ title: "Shadow Play Protect — APK Builder" }] }),
@@ -169,9 +170,11 @@ function PlayProtectPage() {
       <div className="admin-enterprise flex min-h-screen w-full">
         <AppSidebar isAdmin={isAdmin} />
         <SidebarInset className="min-w-0 flex-1">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md">
+            <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md">
             <div className="osint-label text-primary/80">{t("pp.title" as any)}</div>
+            <SystemHealthIndicator />
           </header>
+
 
           <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
             <motion.div
