@@ -1153,14 +1153,18 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
 
 function Field({ label, value, onCopy, right }: { label: string; value: string; onCopy: () => void; right?: React.ReactNode }) {
   return (
-    <div className="group flex items-center justify-between gap-2 rounded-md border border-border/50 bg-background/60 px-3 py-3 transition-colors hover:border-neon/40 hover:bg-background/80 sm:gap-3 sm:py-2.5">
+    <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/40 bg-background/30 px-4 py-4 transition-all duration-300 hover:border-primary/40 hover:bg-background/60 hover:shadow-lg sm:py-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-0.5">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 sm:text-[9px]">{label}</span>
-        <span className="truncate font-mono text-sm text-foreground sm:text-[13px]">{value}</span>
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.25em] text-muted-foreground/60">{label}</span>
+        <span className="truncate font-mono text-sm font-medium text-foreground tracking-tight">{value}</span>
       </div>
-      <div className="flex shrink-0 items-center gap-1">
-        {right && <div className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-background hover:text-neon sm:h-7 sm:w-7">{right}</div>}
-        <button onClick={onCopy} title="Copiar" className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-background hover:text-neon sm:h-7 sm:w-7">
+      <div className="flex shrink-0 items-center gap-2">
+        {right && <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-background/50 text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary sm:h-8 sm:w-8">{right}</div>}
+        <button 
+          onClick={onCopy} 
+          title="Copiar" 
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-background/50 text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary sm:h-8 sm:w-8"
+        >
           <Copy className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
         </button>
       </div>
