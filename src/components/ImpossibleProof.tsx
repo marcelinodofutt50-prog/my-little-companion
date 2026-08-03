@@ -2,12 +2,14 @@ import { ShieldCheck, Zap } from "lucide-react";
 
 const shots = [
   {
-    src: "/img/proof-itau-10k.png",
+    src: "/img/proof-itau-10k.webp",
+    fallback: "/img/proof-itau-10k.png",
     tag: "Itaú · R$ 10.000",
     caption: '"Pagamento concluído" — R$ 10.000,00 confirmados direto no app do banco.',
   },
   {
-    src: "/img/proof-caixa-990.png",
+    src: "/img/proof-caixa-990.webp",
+    fallback: "/img/proof-caixa-990.png",
     tag: "Caixa · R$ 990",
     caption: '"Pix enviado com sucesso" — R$ 990,00 rodando ao vivo na mesma tela.',
   },
