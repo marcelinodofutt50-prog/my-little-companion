@@ -1276,7 +1276,6 @@ function DownloadsSection({ licenses, isAdmin, themeParam }: { licenses: License
       detail: `Desativada em ${fmt(disabled.disabled_at)} — a conta foi removida do servidor e não pode ser reativada. Compre um novo plano para receber credenciais e liberar os arquivos.`,
       cta: { label: "Ver planos", to: "/planos" as const, search: { theme: themeParam } } 
     };
-    };
     const revoked = sorted.find((l) => l.revoked);
     if (revoked) return {
       code: "revoked", title: "Licença revogada", short: "revogada",
