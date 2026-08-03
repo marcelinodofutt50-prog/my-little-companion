@@ -54,7 +54,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
         {/* Brand */}
         <Link to="/" search={{ theme: search?.theme }} className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-70">
-          <img src={shadowMark} alt="" className="h-6 w-6 object-contain drop-shadow-[0_0_8px_var(--color-primary)]" />
+          <img src={shadowMark} alt="" width={24} height={24} decoding="async" className="h-6 w-6 object-contain drop-shadow-[0_0_8px_var(--color-primary)]" />
           <span className="font-display text-xl leading-none tracking-tight">Shadow</span>
         </Link>
 
@@ -116,7 +116,7 @@ export function SiteHeader() {
               <div className="flex h-full flex-col">
                 <div className="hairline-b px-6 py-5">
                   <div className="flex items-center gap-2">
-                    <img src={shadowMark} alt="" className="h-6 w-6 object-contain" />
+                    <img src={shadowMark} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain" />
                     <span className="font-display text-xl tracking-tight">Shadow</span>
                   </div>
                 </div>

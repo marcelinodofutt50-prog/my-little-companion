@@ -324,7 +324,7 @@ function DashboardPage() {
                         <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-30 blur-2xl" />
                         <div className="rounded-full border border-border/60 p-0.5 shadow-inner">
                           <div className="rounded-full bg-background p-1">
-                            <img src={shadowMark} alt="Shadow" className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(201,168,76,0.6)] md:h-16 md:w-16" />
+                            <img src={shadowMark} alt="Shadow" width={64} height={64} decoding="async" className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(201,168,76,0.6)] md:h-16 md:w-16" />
                           </div>
                         </div>
                       </div>

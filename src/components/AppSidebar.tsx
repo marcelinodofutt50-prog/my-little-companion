@@ -47,7 +47,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
         <Link to="/dashboard" search={{ theme: search?.theme }} className="flex items-center gap-2.5 px-1">
           <div className="relative grid h-9 w-9 shrink-0 place-items-center">
             <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-25 blur-lg" />
-            <img src={shadowMark} alt="Shadow" className="h-8 w-8 object-contain drop-shadow-[0_0_10px_rgba(201,168,76,0.55)]" />
+            <img src={shadowMark} alt="Shadow" width={32} height={32} decoding="async" className="h-8 w-8 object-contain drop-shadow-[0_0_10px_rgba(201,168,76,0.55)]" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
