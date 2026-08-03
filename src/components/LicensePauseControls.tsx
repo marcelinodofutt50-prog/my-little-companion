@@ -5,6 +5,7 @@ import { useServerFn } from '@tanstack/react-start'
 import { Button } from '@/components/ui/button'
 import { suspendMyLicense, reactivateMyLicense } from '@/lib/license.functions'
 import type { LicenseExpiryState } from '@/lib/expiry'
+import { canPauseLicense, canResumeLicense } from '@/lib/license-pause-rules'
 
 type Props = {
   license: any
@@ -32,8 +33,11 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
   const [busy, setBusy] = useState(false)
   const [confirming, setConfirming] = useState(false)
 
-  if (license.disabled_at || license.revoked) return null
   const paused = state.paused
+  const pauseGate = canPauseLicense(license)
+  const resumeGate = canResumeLicense(license)
+  if (license.disabled_at) return null
+  if (license.revoked && !paused) return null
 
   const run = async (fn: () => Promise<any>, ok: string) => {
     setBusy(true)
@@ -58,10 +62,13 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
           <span className="font-semibold text-foreground">{humanLeft(state.pausedMsLeft)}</span> de acesso
           para quando você despausar. O login está bloqueado no servidor até lá.
         </p>
+        {!resumeGate.ok && (
+          <p className="text-[11px] font-medium text-amber-500">{resumeGate.message}</p>
+        )}
         <Button
           size="sm"
           className="font-mono text-[10px] uppercase"
-          disabled={busy}
+          disabled={busy || !resumeGate.ok}
           onClick={() => void run(() => resume({ data: { licenseId: license.id } }), 'Licença despausada — sua senha original voltou a funcionar')}
         >
           {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="mr-1.5 h-3.5 w-3.5" />}
@@ -71,7 +78,15 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
     )
   }
 
-  if (!state.active) return null
+  if (!state.active && !pauseGate.ok) return null
+
+  if (!pauseGate.ok) {
+    return (
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        <span className="font-semibold text-foreground">Pausa indisponível:</span> {pauseGate.message}
+      </p>
+    )
+  }
 
   return (
     <div className="space-y-2">
