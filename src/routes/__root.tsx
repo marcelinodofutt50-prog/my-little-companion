@@ -131,8 +131,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Shadow — Advanced Intelligence & OSINT Infrastructure" },
       { name: "twitter:description", content: "Shadow BTMOB: uma plataforma editorial de OSINT e cybersegurança." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/4b727f34-aaae-47c7-993e-3c321c416e45" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/4b727f34-aaae-47c7-993e-3c321c416e45" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -142,6 +140,40 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Shadow",
+          url: "https://www.shadowdashstore.com",
+          logo: "https://www.shadowdashstore.com/icon-512.png",
+          sameAs: [
+            "https://www.shadowdashstore.com",
+          ],
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            url: "https://www.shadowdashstore.com/contato",
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Shadow",
+          url: "https://www.shadowdashstore.com",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://www.shadowdashstore.com/mercado?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
