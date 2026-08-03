@@ -828,9 +828,9 @@ function OrderCalculator() {
   const prices = {
     "455": 450,
     mensal: 750,
-    vitalicio: 1490,
+    vitalicio: 1600,
     serverNew: 450,
-    serverOld: 250,
+    serverOld: 450,
     signer: 450,
   };
 
