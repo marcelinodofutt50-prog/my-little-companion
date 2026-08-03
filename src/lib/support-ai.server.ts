@@ -1,4 +1,4 @@
-import { generateText, tool } from "ai";
+import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -27,6 +27,26 @@ REGRAS CRÍTICAS:
 - Nunca invente status de pagamento; confie apenas nos dados da ferramenta 'checkCustomerStatus'.
 - Sempre responda em Português do Brasil.`;
 
+/**
+ * O remetente das mensagens automáticas precisa existir em auth.users (há uma
+ * chave estrangeira em support_messages.sender_id). Usamos a conta de um admin
+ * real como "remetente do sistema"; antes usávamos um UUID zerado e TODA
+ * resposta da IA falhava silenciosamente ao ser gravada.
+ */
+let systemSenderCache: string | null = null;
+async function resolveSystemSender(): Promise<string | null> {
+  if (systemSenderCache) return systemSenderCache;
+  const { data } = await supabaseAdmin
+    .from("user_roles")
+    .select("user_id")
+    .eq("role", "admin")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  systemSenderCache = data?.user_id ?? null;
+  return systemSenderCache;
+}
+
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
   const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar", "btmob"];
@@ -36,7 +56,8 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   if (!hasTrigger) return;
 
   try {
-    const model = createGeminiProvider("gemini-1.5-flash");
+    const model = createGeminiProvider();
+
     
     await generateText({
       model,
@@ -93,28 +114,39 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           description: "Envia uma mensagem de resposta da IA para o chat do suporte.",
           inputSchema: z.object({ body: z.string() }),
           execute: async ({ body }) => {
+            const senderId = await resolveSystemSender();
+            if (!senderId) {
+              console.error("[support-ai] nenhum admin cadastrado para assinar a mensagem automática");
+              return { success: false, error: "sem remetente de sistema" };
+            }
             const { data: msg, error } = await supabaseAdmin.from("support_messages").insert({
               thread_id: threadId,
-              sender_id: "00000000-0000-0000-0000-000000000000",
+              sender_id: senderId,
               is_admin: true,
               is_system: true,
               body: `🤖 **Assistente Shadow:** ${body}`
             }).select("id").single();
 
-            if (!error && msg) {
+            if (error) {
+              console.error("[support-ai] falha ao gravar resposta automática:", error);
+              return { success: false, error: error.message };
+            }
+
+            if (msg) {
               // Mark thread as unread for the customer so they see the AI notification
               await supabaseAdmin
                 .from("support_threads")
-                .update({ unread_by_customer: 1 })
+                .update({ unread_by_customer: 1, last_staff_message_at: new Date().toISOString() })
                 .eq("id", threadId);
             }
-            return { success: !error };
+            return { success: true };
           }
         })
       },
-      // @ts-ignore
-      maxSteps: 10
+      // Sem isso o modelo para logo após a 1ª ferramenta e nunca responde ao cliente.
+      stopWhen: stepCountIs(8)
     });
+
   } catch (err) {
     console.error(`[support-ai] execution error for thread ${threadId}:`, err);
   }
