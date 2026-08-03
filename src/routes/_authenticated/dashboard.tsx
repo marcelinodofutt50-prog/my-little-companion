@@ -257,18 +257,37 @@ function DashboardPage() {
                         </li>
                       ))}
                     </ol>
-                    <LicenseCountdown
-                      target={expiry?.countdownAt ?? null}
-                      serverNow={serverNow}
-                      title={expiry?.kind === 'lifetime' ? 'Mensalidade do servidor' : 'Tempo restante'}
-                      note={
-                        expiry?.kind === 'trial'
-                          ? 'Seu teste dura 24 horas cheias a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
-                          : expiry?.kind === 'lifetime'
-                            ? 'Pague a mensalidade do servidor até o dia 20 para manter o acesso ativo.'
-                            : 'Quando o contador zerar, o login é encerrado automaticamente. Renove antes para não perder o acesso.'
-                      }
-                    />
+                    <div className="flex flex-col items-center gap-2">
+                      {expiry?.countdownAt ? (
+                        <LicenseCountdown
+                          target={expiry.countdownAt}
+                          serverNow={serverNow}
+                          title="Sua licença vence em"
+                          note={
+                            expiry?.kind === 'trial'
+                              ? 'Seu teste dura 24 horas cheias a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
+                              : 'Contador dos dias que você comprou. Quando zerar, o login é encerrado — renove antes para não perder o acesso.'
+                          }
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-primary/30 bg-primary/5 px-6 py-5 font-mono text-primary">
+                          <div className="text-[10px] font-bold uppercase">Sua licença</div>
+                          <div className="mt-1 text-3xl font-black uppercase">Vitalícia</div>
+                          <div className="mt-2 max-w-[16rem] text-center text-[10px] normal-case leading-relaxed text-muted-foreground">
+                            Não expira. Só a mensalidade do servidor precisa estar em dia.
+                          </div>
+                        </div>
+                      )}
+                      {expiry?.serverDueAt && (
+                        <div className="max-w-[16rem] rounded-md border border-border/60 bg-background/50 px-3 py-2 text-center font-mono text-[10px] leading-relaxed text-muted-foreground">
+                          Mensalidade do servidor (cobrança separada): vence em{' '}
+                          <span className="text-foreground">
+                            {new Date(expiry.serverDueAt).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
 
                   </div>
                 </section>
