@@ -342,10 +342,10 @@ function PlansPage() {
 
 
   const [usage, setUsage] = useState<UsageFilter>("all");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showMore, setShowMore] = useState(false);
 
   const { licenses, servers, sources, upgrades } = useMemo(() => {
-    // Remove planos repetidos (mesmo preço + mesma duração + nome equivalente)
     const seen = new Set<string>();
     const unique = plans.filter((p) => {
       const key = `${p.category}|${p.price_brl}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
@@ -361,15 +361,34 @@ function PlansPage() {
     
     const upgradeList = unique.filter((p) => p.category === "upgrade");
     
-    const byUsage = (list: Plan[]) => (usage === "all" ? list : list.filter((p) => usageOf(p) === usage));
+    // Simulate yearly discount (20% off) for licenses if yearly is selected
+    const applyBillingFilter = (list: Plan[]) => {
+      let filtered = list;
+      if (usage !== "all") {
+        filtered = filtered.filter((p) => usageOf(p) === usage);
+      }
+      
+      return filtered.map(p => {
+        if (billingCycle === "yearly" && usageOf(p) === "monthly") {
+          return {
+            ...p,
+            name: p.name.replace("Mensal", "Anual").replace("30 Dias", "1 Ano"),
+            price_brl: Math.round(p.price_brl * 12 * 0.8), // 20% discount
+            days: 365
+          };
+        }
+        return p;
+      });
+    };
 
     return {
-      licenses: byUsage(unique.filter((p) => p.category === "license")),
-      servers: byUsage(serverFiltered),
-      sources: byUsage(unique.filter((p) => p.category === "source")),
-      upgrades: isLegacy ? byUsage(upgradeList) : [],
+      licenses: applyBillingFilter(unique.filter((p) => p.category === "license")),
+      servers: applyBillingFilter(serverFiltered),
+      sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
+      upgrades: isLegacy ? applyBillingFilter(upgradeList) : [],
     };
-  }, [plans, isLegacy, usage]);
+  }, [plans, isLegacy, usage, billingCycle]);
+
 
   const secondaryCount = servers.length + sources.length + upgrades.length;
 
@@ -607,33 +626,61 @@ function PlansPage() {
 
         {/* PLAN GROUPS ====================================== */}
         <div className="sticky top-16 z-40 -mx-4 mb-8 bg-background/80 px-4 py-4 backdrop-blur-md border-b border-border/40 sm:static sm:top-0 sm:mx-0 sm:mb-12 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:border-0">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="hidden sm:block">
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// filtrar por uso</div>
-              <p className="mt-1 text-sm text-muted-foreground">Mostre só o tipo de plano que faz sentido pra você.</p>
+              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// configurar acesso</div>
+              <p className="mt-1 text-sm text-muted-foreground">Personalize seu ciclo de cobrança e tipo de plano.</p>
             </div>
-            <div className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card/50 p-1 sm:w-auto" role="tablist" aria-label="Filtrar planos por uso">
-              {([
-                { id: "all", label: "Todos" },
-                { id: "monthly", label: "Mensal" },
-                { id: "lifetime", label: "Vitalício" },
-              ] as { id: UsageFilter; label: string }[]).map((opt) => (
+            
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              {/* Billing Cycle Toggle */}
+              <div className="flex items-center justify-center gap-1 rounded-full border border-border/60 bg-card/50 p-1" role="tablist">
                 <button
-                  key={opt.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={usage === opt.id}
-                  onClick={() => setUsage(opt.id)}
-                  className={`flex-1 rounded-full px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-all sm:flex-none sm:px-6 sm:py-2.5 ${
-                    usage === opt.id ? "bg-primary text-primary-foreground shadow-[0_0_15px_oklch(0.78_0.13_82/0.4)]" : "text-muted-foreground hover:bg-white/5"
+                  onClick={() => setBillingCycle("monthly")}
+                  className={`rounded-full px-4 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition-all ${
+                    billingCycle === "monthly" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-white/5"
                   }`}
                 >
-                  {opt.label}
+                  Mensal
                 </button>
-              ))}
+                <button
+                  onClick={() => setBillingCycle("yearly")}
+                  className={`relative rounded-full px-4 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition-all ${
+                    billingCycle === "yearly" ? "bg-primary text-primary-foreground shadow-[0_0_10px_oklch(0.78_0.13_82/0.3)]" : "text-muted-foreground hover:bg-white/5"
+                  }`}
+                >
+                  Anual
+                  <span className="absolute -top-2 -right-2 rounded-full bg-neon px-1.5 py-0.5 text-[8px] text-black ring-1 ring-black/20">
+                    -20%
+                  </span>
+                </button>
+              </div>
+
+              {/* Usage Filter */}
+              <div className="flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card/50 p-1" role="tablist">
+                {([
+                  { id: "all", label: "Todos" },
+                  { id: "monthly", label: "Recorrente" },
+                  { id: "lifetime", label: "Vitalício" },
+                ] as { id: UsageFilter; label: string }[]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={usage === opt.id}
+                    onClick={() => setUsage(opt.id)}
+                    className={`rounded-full px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-all ${
+                      usage === opt.id ? "bg-primary/20 text-primary border border-primary/20" : "text-muted-foreground hover:bg-white/5"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+
 
 
         <PlanGroup
@@ -896,8 +943,10 @@ function TierComparison() {
     { label: "Bypass Play Protect (BTmob nativo)", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
     { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: "R$ 250 (Exclusivo)", lifetime: "Grátis" },
     { label: "Duração", weekly: "7 dias", monthly: "30 dias", serverOld: "Até dia 20", lifetime: "Vitalícia" },
+    { label: "Opção Anual (-20%)", weekly: "N/A", monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: "N/A", lifetime: "Pagam. Único" },
     { label: "Upgrade v4.6", weekly: "Não", monthly: "R$ 600", serverOld: "Incluso", lifetime: "Nativo" },
   ];
+
 
   return (
     <section className="mt-16">
