@@ -31,9 +31,11 @@ export const getNotificationSettings = createServerFn({ method: "GET" })
       webhook_url: "",
       notify_on_approval: true,
       notify_on_pending: true,
-      notify_on_denial: true
+      notify_on_denial: true,
+      notify_on_server_release: true
     };
   });
+
 
 export const updateNotificationSettings = createServerFn({ method: "POST" })
   .inputValidator((d: any) => z.object({
