@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff } from 'lucide-react'
 
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/lib/i18n'
 import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
+import { listMyLicenses } from '@/lib/license.functions'
 import { triggerDownload, friendlyDownloadError } from '@/lib/download'
 import shadowMark from '@/assets/shadow-mask.png'
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
@@ -44,8 +45,12 @@ function DashboardPage() {
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [user, setUser] = useState<any>(undefined)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
+  const fetchMyLicenses = useServerFn(listMyLicenses)
+
+
 
   useEffect(() => {
     let mounted = true
@@ -83,13 +88,17 @@ function DashboardPage() {
   } = useQuery({
     queryKey: ['licenses', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('licenses')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      return data ?? []
+      try {
+        return (await fetchMyLicenses()) ?? []
+      } catch {
+        const { data, error } = await supabase
+          .from('licenses')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+        if (error) throw error
+        return data ?? []
+      }
     },
     enabled: !!user?.id,
     retry: 1,
@@ -250,6 +259,42 @@ function DashboardPage() {
                           <div className="grid grid-cols-2 gap-2 font-mono text-xs text-muted-foreground">
                             <span>Servidor: {license.server_ip || '—'}</span>
                             <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleDateString('pt-BR') : 'Vitalícia'}</span>
+                          </div>
+                          <div className="space-y-2 border-t border-border/50 pt-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="font-mono text-[10px] uppercase"
+                              onClick={() => setRevealed((prev) => ({ ...prev, [license.id]: !prev[license.id] }))}
+                            >
+                              {revealed[license.id] ? <EyeOff className="mr-1.5 h-3.5 w-3.5" /> : <Eye className="mr-1.5 h-3.5 w-3.5" />}
+                              {revealed[license.id] ? 'Ocultar dados' : 'Mostrar dados da licença'}
+                            </Button>
+                            {revealed[license.id] && (
+                              <div className="space-y-1.5 rounded-md border border-border/60 bg-background/60 p-3 font-mono text-xs">
+                                {[
+                                  { label: 'Usuário', value: license.yaarsa_username || license.yaarsa_email },
+                                  { label: 'E-mail', value: license.yaarsa_email },
+                                  { label: 'Senha', value: license.password ?? '••••••' },
+                                  { label: 'Servidor', value: license.server_ip || '—' },
+                                ].map((row) => (
+                                  <div key={row.label} className="flex items-center justify-between gap-2">
+                                    <span className="text-muted-foreground">{row.label}</span>
+                                    <button
+                                      type="button"
+                                      className="flex items-center gap-1.5 truncate text-foreground hover:text-primary"
+                                      onClick={() => { navigator.clipboard.writeText(String(row.value ?? '')); toast.success('Copiado!') }}
+                                    >
+                                      <span className="truncate">{row.value}</span>
+                                      <Copy className="h-3 w-3 shrink-0" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <p className="pt-1 text-[10px] normal-case text-muted-foreground">
+                                  Use estes dados para entrar no painel Shadow. Nunca compartilhe sua senha.
+                                </p>
+                              </div>
+                            )}
                           </div>
                           {licenseDownloads.length > 0 && (
                             <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
