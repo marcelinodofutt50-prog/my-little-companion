@@ -15,12 +15,8 @@ export type SupportTestStep = {
  * de RLS, o índice único de thread ativa, o trigger que preserva is_admin e a
  * leitura paginada das mensagens. Tudo que é criado é removido no final.
  */
-export const runSupportE2ETest = createServerFn({ method: "POST" })
-  .handler(async () => {
-    return { steps: [] as SupportTestStep[], finishedAt: new Date().toISOString() };
-  });
-
 export const runSupportE2E = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const steps: SupportTestStep[] = [];
