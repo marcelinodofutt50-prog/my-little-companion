@@ -110,9 +110,14 @@ function DashboardPage() {
     enabled: !!user?.id,
     retry: 2,
     retryDelay: (attempt) => Math.min(1500 * (attempt + 1), 4000),
-    staleTime: 30_000,
+    // Expiração precisa ser sempre em tempo real: nada de cache "fresco".
+    staleTime: 0,
+    gcTime: 60_000,
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: 'always',
+    refetchOnReconnect: 'always',
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
     placeholderData: (prev: any) => prev,
   })
 
