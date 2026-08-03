@@ -10,6 +10,8 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { redirectLocalhostAuthToCanonical } from "@/lib/site-url";
 import { Toaster } from "sonner";
+import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
+
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -264,11 +266,13 @@ function RootComponent() {
         <I18nProvider>
           <Outlet />
           <ThemedToaster />
+          <PaymentSuccessOverlay />
         </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
+
 
 function ThemedToaster() {
   const { resolved } = useTheme();
