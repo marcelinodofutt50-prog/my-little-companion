@@ -49,12 +49,21 @@ export const performHealthCheck = createServerFn({ method: "POST" })
       results.schema.reply_to_id = !schemaError;
 
       if (schemaError) {
-        record("Schema", "support_messages", schemaQuery, schemaError);
-        if (schemaError.message.includes("reply_to_id")) {
+        // reply_to_id é um recurso opcional (citação de mensagem). Se o cache de
+        // esquema do PostgREST estiver desatualizado (42703/PGRST204), o chat
+        // continua funcionando normalmente — não é uma falha de saúde.
+        const optional =
+          schemaError.code === "42703" ||
+          schemaError.code === "PGRST204" ||
+          schemaError.message.includes("reply_to_id");
+        if (!optional) {
+          record("Schema", "support_messages", schemaQuery, schemaError);
+        } else {
           const { validateAndFixSchema } = await import("./schema-validator.server");
           validateAndFixSchema();
         }
       }
+
 
       // Use head+count so we don't depend on any specific column (trials has no `id`)
       const probes = [

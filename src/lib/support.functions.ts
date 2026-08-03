@@ -242,14 +242,18 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     let { data: msg, error } = await doInsert(payload);
 
-    // Fallback: se o cache de schema do PostgREST estiver desatualizado
-    if (error && (error as any).code === "PGRST204") {
-      console.warn("[sendMessage] Schema cache mismatch (PGRST204), retrying without reply_to_id...");
+    // Fallback: se o cache de schema do PostgREST estiver desatualizado ou a
+    // coluna opcional reply_to_id não existir, reenvia sem ela.
+    const replyColMissing = (e: any) =>
+      e && (e.code === "PGRST204" || e.code === "42703" || String(e.message ?? "").includes("reply_to_id"));
+    if (replyColMissing(error) && payload.reply_to_id) {
+      console.warn("[sendMessage] reply_to_id indisponível, reenviando sem citação...");
       const { reply_to_id, ...fallback } = payload;
       const retry = await doInsert(fallback);
       msg = retry.data;
       error = retry.error;
     }
+
 
     if (error) {
       console.error("[sendMessage] Insertion failed after fallback:", error);
