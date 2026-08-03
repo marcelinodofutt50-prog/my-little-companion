@@ -39,6 +39,7 @@ type PendingMsg = {
 const PAGE_SIZE = 30;
 
 function SupportPage() {
+  const { t } = useI18n();
   const { reabrir, erro, lic } = Route.useSearch();
   const [thread, setThread] = useState<Thread | null>(null);
 
@@ -303,9 +304,9 @@ function SupportPage() {
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="osint-panel osint-corners osint-sweep relative overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "120px" }}>
           <div className="osint-label text-neon">// support channel</div>
-          <h1 className="mt-1 text-2xl font-bold">Suporte Shadow</h1>
+          <h1 className="mt-1 text-2xl font-bold">{t("chat.title" as any)}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Escolha o assunto, descreva o problema e anexe prints se precisar. Respondemos em minutos.
+            {t("contact.lead" as any)}
           </p>
           <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
         </div>

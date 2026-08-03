@@ -23,7 +23,7 @@ type Item = { title: string; url: string; icon: any; hash?: string; tKey?: any }
 
 const primary: Item[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, tKey: "nav.panel" as const },
-  { title: "Shadow Signer", url: "/play-protect", icon: ShieldCheck },
+  { title: "Shadow Signer", url: "/play-protect", icon: ShieldCheck, tKey: "nav.playprotect" as const },
   { title: "Planos", url: "/planos", icon: Sparkles, tKey: "nav.plans" as const },
   { title: "Mercado", url: "/mercado", icon: Store, tKey: "nav.market" as const },
   { title: "Indicações", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },

