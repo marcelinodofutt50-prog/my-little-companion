@@ -16,12 +16,15 @@ export type Database = {
     Tables: {
       announcements: {
         Row: {
+          attachment_name: string | null
+          attachment_url: string | null
           body: string
           created_at: string
           created_by: string | null
           ends_at: string | null
           event_at: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           min_tier: string
           severity: string
@@ -32,12 +35,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           body: string
           created_at?: string
           created_by?: string | null
           ends_at?: string | null
           event_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           min_tier?: string
           severity?: string
@@ -48,12 +54,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           body?: string
           created_at?: string
           created_by?: string | null
           ends_at?: string | null
           event_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           min_tier?: string
           severity?: string
