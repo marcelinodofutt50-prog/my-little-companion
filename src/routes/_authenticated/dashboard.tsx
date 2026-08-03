@@ -1235,10 +1235,10 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
 
   // Diagnose the blocking reason from the "best" license (most recent, least broken).
   const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
-  type Reason = { code: "none" | "disabled" | "revoked" | "suspended" | "expired"; title: string; short: string; detail: string; cta: { label: string; to: string } };
+  type Reason = { code: "none" | "disabled" | "revoked" | "suspended" | "expired"; title: string; short: string; detail: string; cta: { label: string; to: string; search?: any } };
   function diagnose(): Reason {
     if (licenses.length === 0) {
-      return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Você ainda não possui uma licença. Compre um plano para liberar os downloads.", cta: { label: "Ver planos", to: "/planos" } };
+      return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Você ainda não possui uma licença. Compre um plano para liberar os downloads.", cta: { label: "Ver planos", to: "/planos" as const } };
     }
     // Priority: suspended (recoverable) > expired > disabled > revoked
     const sorted = [...licenses].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
@@ -1330,7 +1330,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
               ))}
               {r.cta.to === "#"
                 ? null
-                : <Link to={r.cta.to as any} search={(r.cta as any).search}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
+                : <Link to={r.cta.to as any} search={r.cta.search}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
             </div>
           </>
         );
