@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { zodValidator } from "@tanstack/zod-adapter";
 
 export const getMyBuildJobs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
