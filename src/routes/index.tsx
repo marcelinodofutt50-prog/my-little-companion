@@ -33,7 +33,10 @@ export const Route = createFileRoute("/")({
       { property: "og:url", content: siteUrl("/") },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: siteUrl("/") }],
+    links: [
+      { rel: "canonical", href: siteUrl("/") },
+      { rel: "preload", as: "image", href: shadowMark, fetchpriority: "high" },
+    ],
   }),
   component: LandingPage,
   errorComponent: ({ error }: { error: Error }) => <div className="p-8 text-destructive">{error.message}</div>,
