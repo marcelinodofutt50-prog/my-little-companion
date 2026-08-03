@@ -1296,7 +1296,7 @@ function LegacyLookup() {
             >
               <span className="flex items-center gap-2">
                 <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-primary" />
-                Sou cliente antigo — vincular meu login existente
+                Vincular elegibilidade ao Checkout (Membro Antigo)
                 <span className="hidden rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold sm:inline-block">CLIQUE AQUI</span>
               </span>
               <ChevronRight className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-90" : ""}`} />
@@ -1305,7 +1305,7 @@ function LegacyLookup() {
           <TooltipContent side="top" className="max-w-xs text-center leading-relaxed">
             <div className="flex flex-col items-center gap-1.5">
               <Info className="h-3.5 w-3.5" />
-              <span>Adicione a verificação por e-mail para o meu login de “Membros Antigos”, para eu garantir que o endereço esteja confirmado antes da ativação.</span>
+              <span>Vincule a ativação do servidor ao meu pagamento no checkout, para eu ter o servidor liberado automaticamente apenas quando minha elegibilidade e compra forem confirmadas.</span>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -1425,10 +1425,10 @@ function LegacyLookup() {
               <button
                 type="button"
                 onClick={claim}
-                disabled={claiming || !selectedPanel || !password.trim()}
+                disabled={claiming || !selectedPanel || !password.trim() || needsVerification}
                 className="w-full rounded border border-primary/50 bg-primary/15 px-4 py-3 font-mono text-xs uppercase text-primary hover:bg-primary/25 disabled:opacity-50 transition-all shadow-sm"
               >
-                {claiming ? "Processando Upgrade..." : "→ Ativar Acesso Legacy (R$ 250/mês)"}
+                {claiming ? "Processando..." : "→ Ir para Pagamento Legacy (Confirmar Checkout)"}
               </button>
 
               <div className="text-[9px] text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-2">
