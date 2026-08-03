@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cancelApkJob, createApkJob, getApkResultDownload, getPlayProtectStatus, listApkJobs } from "@/lib/apk-jobs.functions";
+import { getMyBuildJobs } from "@/lib/apk-builder.functions";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
@@ -186,8 +187,14 @@ function PlayProtectPage() {
               )}
             </motion.div>
 
-            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 md:grid-cols-[240px_1fr]">
-              <a href={playProtectConfig.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-border/60 bg-background/40">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="h-px flex-1 bg-amber-500/30" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-500">Método clássico — você envia, a equipe assina</span>
+              <span className="h-px flex-1 bg-amber-500/30" />
+            </div>
+
+            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5 md:grid-cols-[280px_1fr]">
+              <a href={playProtectConfig.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
                 <img src={playProtectConfig.url} alt="Configuração do Play Protect — quais opções desativar" className="h-full w-full object-contain" loading="lazy" />
               </a>
               <div className="space-y-3">
@@ -212,10 +219,11 @@ function PlayProtectPage() {
                   ))}
                 </ul>
                 <div className="rounded border border-primary/30 bg-primary/5 p-3 text-xs">
-                  <strong className="text-primary">Como funciona:</strong> você envia seu APK aqui, nossa equipe faz o bypass e assina o arquivo. Assim que ficar pronto, o botão de <em>Download</em> aparece na sua build abaixo. Tempo médio: 2 a 5 min.
+                  <strong className="text-primary">Como funciona (método clássico):</strong> você envia seu APK aqui, nossa equipe faz o bypass e assina o arquivo pelo bot. Assim que ficar pronto, o botão de <em>Download</em> aparece na sua build abaixo. Tempo médio: 2 a 5 min.
                 </div>
               </div>
             </div>
+
 
 
             <div className={`grid gap-6 md:grid-cols-2 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
@@ -379,10 +387,78 @@ function PlayProtectPage() {
                 </Link>
               )}
             </div>
+
+            <div className="mt-12">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="h-px flex-1 bg-violet/30" />
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Método público — Shadow Bypass self-service (beta)</span>
+                <span className="h-px flex-1 bg-violet/30" />
+              </div>
+              <PublicBuilderSection />
+            </div>
           </main>
         </SidebarInset>
       </div>
     </SidebarProvider>
+  );
+}
+
+function PublicBuilderSection() {
+  const getBuilds = useServerFn(getMyBuildJobs);
+  const { data: builds, isLoading, error, refetch } = useQuery({
+    queryKey: ["public-build-jobs"],
+    queryFn: () => getBuilds(),
+    retry: 1,
+  });
+
+  return (
+    <div className="rounded-lg border border-violet/40 bg-violet/5 p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <ShieldCheck className="h-6 w-6 text-violet" />
+        <div>
+          <h2 className="text-xl font-bold font-display">Shadow Bypass Builder (público)</h2>
+          <p className="text-xs text-muted-foreground">Autoatendimento com dropper Shadow Bypass — em beta. Requer plano Play Protect ativo.</p>
+        </div>
+      </div>
+      <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-3 mb-4">
+        <div className="rounded border border-border/40 bg-background/40 p-3">
+          <div className="font-mono text-[9px] uppercase tracking-widest text-violet/70 mb-1">1. Configure</div>
+          Escolha nome, ícone e opções do dropper Shadow Bypass.
+        </div>
+        <div className="rounded border border-border/40 bg-background/40 p-3">
+          <div className="font-mono text-[9px] uppercase tracking-widest text-violet/70 mb-1">2. Compile</div>
+          A build acontece automaticamente sem passar pela equipe.
+        </div>
+        <div className="rounded border border-border/40 bg-background/40 p-3">
+          <div className="font-mono text-[9px] uppercase tracking-widest text-violet/70 mb-1">3. Baixe</div>
+          O APK assinado fica disponível assim que a build termina.
+        </div>
+      </div>
+      <div className="rounded border border-border/40 bg-background/40 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Suas builds públicas</span>
+          <Button variant="ghost" size="sm" className="h-7 rounded-none px-2 font-mono text-[9px]" onClick={() => void refetch()}>
+            <RefreshCcw className="mr-1 h-3 w-3" /> Atualizar
+          </Button>
+        </div>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Carregando…</div>
+        ) : error ? (
+          <div className="text-xs text-danger">Erro ao carregar builds públicas.</div>
+        ) : !builds || builds.length === 0 ? (
+          <div className="py-3 text-center font-mono text-[10px] uppercase text-muted-foreground/50">Nenhuma build pública ainda</div>
+        ) : (
+          <ul className="space-y-2">
+            {builds.slice(0, 5).map((b: any) => (
+              <li key={b.id} className="flex items-center justify-between border border-border/30 bg-background/30 px-2 py-1.5 text-xs">
+                <span className="truncate font-display">{b.app_name || "Build"}</span>
+                <span className="font-mono text-[9px] uppercase text-violet/80">{b.status}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
 

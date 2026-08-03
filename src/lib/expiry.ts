@@ -93,7 +93,7 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
     kind === "lifetime"
       ? "Sua licença é vitalícia. Só a mensalidade do servidor precisa ser paga até o dia 20 de cada mês para manter o acesso."
       : kind === "trial"
-        ? "Teste grátis de 24 horas: quando o contador zerar, o login é encerrado automaticamente (a conta no painel tem 2 dias só por causa do corte de meia-noite)."
+        ? "Teste grátis de 24 horas exatas contadas a partir da ativação. O contador não depende de meia-noite — quando zerar, o login é encerrado automaticamente."
         : "Sua licença mensal só expira quando os dias acabarem. O corte do dia 20 do servidor não afeta o plano mensal — ele vale só para vitalícios.";
 
   return {
