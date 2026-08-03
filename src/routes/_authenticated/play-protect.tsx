@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -31,6 +31,20 @@ export const Route = createFileRoute("/_authenticated/play-protect")({
 
 function PlayProtectPage() {
   const { t } = useI18n();
+  const search = useSearch({ from: "/_authenticated/play-protect" }) as any;
+  
+  useEffect(() => {
+    const html = document.documentElement;
+    const isLight = search?.theme === 'light';
+    if (isLight) {
+      html.classList.add('theme-light');
+      html.classList.remove('dark');
+    } else {
+      html.classList.remove('theme-light');
+      html.classList.add('dark');
+    }
+  }, [search?.theme]);
+
   const queryClient = useQueryClient();
   const getJobs = useServerFn(getMyBuildJobs);
   const createJob = useServerFn(createBuildJob);
