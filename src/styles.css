@@ -589,6 +589,13 @@ html.theme-light .crt::after { display: none; }
     0% { background-position: 0% 50%; }
     100% { background-position: 300% 50%; }
   }
+  .animate-marquee {
+    animation: marquee 40s linear infinite;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
 }
 
 /* Global RGB mode: cycles the whole palette */

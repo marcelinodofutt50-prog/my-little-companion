@@ -22,14 +22,14 @@ import { useI18n } from "@/lib/i18n";
 type Item = { title: string; url: string; icon: any; hash?: string; tKey?: any };
 
 const primary: Item[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, tKey: "nav.panel" as const },
-  { title: "Shadow Signer", url: "/play-protect", icon: ShieldCheck, tKey: "nav.playprotect" as const },
-  { title: "Planos", url: "/planos", icon: Sparkles, tKey: "nav.plans" as const },
-  { title: "Mercado", url: "/mercado", icon: Store, tKey: "nav.market" as const },
-  { title: "Indicações", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
-  { title: "Presentes", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
-  { title: "Suporte", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
-  { title: "Status", url: "/servidor/status", icon: Server },
+  { title: "Enterprise Console", url: "/dashboard", icon: LayoutDashboard, tKey: "nav.panel" as const },
+  { title: "Asset Provisioning", url: "/play-protect", icon: ShieldCheck, tKey: "nav.playprotect" as const },
+  { title: "Service Agreements", url: "/planos", icon: Sparkles, tKey: "nav.plans" as const },
+  { title: "Strategic Assets", url: "/mercado", icon: Store, tKey: "nav.market" as const },
+  { title: "Affiliate Network", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
+  { title: "Token Redemption", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
+  { title: "Executive Support", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
+  { title: "Global Infrastructure", url: "/servidor/status", icon: Server },
 ];
 
 
@@ -53,7 +53,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
           {!collapsed && (
             <div className="min-w-0">
               <div className="truncate font-display text-sm font-semibold tracking-tight">SHADOW</div>
-              <div className="truncate font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">operator console</div>
+              <div className="truncate font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">enterprise console</div>
             </div>
           )}
         </Link>
