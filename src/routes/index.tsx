@@ -96,23 +96,23 @@ function LandingPage() {
       
       <main className="relative z-10">
         <div className="mx-auto flex min-h-[90vh] max-w-5xl flex-col items-center justify-center px-6 py-20 text-center">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="mb-12"
-          >
-            <div className="relative inline-block">
-              <div className="absolute inset-0 animate-pulse blur-2xl bg-primary/20" />
-            <img
-              src={shadowMark}
-              alt="Shadow Mark"
-              width={128}
-              height={128}
-              className="relative mx-auto h-32 w-32 object-contain drop-shadow-[0_0_25px_var(--color-primary)]"
-            />
+          {/* LCP element: rendered immediately (no opacity fade) so paint isn't delayed */}
+          <div className="mb-12">
+            <div className="relative inline-block h-32 w-32">
+              <div className="pointer-events-none absolute inset-0 animate-pulse blur-2xl bg-primary/20" aria-hidden />
+              <img
+                src={shadowMark}
+                alt="Shadow Mark"
+                width={128}
+                height={128}
+                loading="eager"
+                decoding="sync"
+                // @ts-expect-error fetchpriority is a valid HTML attribute
+                fetchpriority="high"
+                className="relative mx-auto h-32 w-32 object-contain drop-shadow-[0_0_25px_var(--color-primary)]"
+              />
             </div>
-          </motion.div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
