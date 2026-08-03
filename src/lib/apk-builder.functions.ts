@@ -16,7 +16,7 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
 
 export const createBuildJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: any) => {
+  .inputValidator((i: unknown) => {
     const schema = z.object({
       appName: z.string().min(2).max(50),
       originalApkUrl: z.string().url(),
@@ -24,7 +24,6 @@ export const createBuildJob = createServerFn({ method: "POST" })
       dropperType: z.string().default('risada_kl'),
       config: z.record(z.any()).optional(),
     });
-    // @ts-ignore
     return schema.parse(i);
   })
   .handler(async ({ data, context }) => {
