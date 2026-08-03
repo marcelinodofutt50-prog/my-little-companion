@@ -58,7 +58,25 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
       error = retry.error;
     }
 
+    // Duas chamadas simultâneas (ex.: StrictMode/HMR) podem tentar abrir o
+    // mesmo atendimento. O índice do banco preserva apenas uma thread ativa;
+    // nesse caso devolvemos a que venceu a corrida em vez de deixar a tela
+    // presa em "abrindo...".
+    if (error && (error as any).code === "23505") {
+      const { data: winner, error: winnerError } = await context.supabase
+        .from("support_threads")
+        .select("*")
+        .eq("user_id", context.userId)
+        .neq("status", "closed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (winnerError) throw winnerError;
+      if (winner) return winner;
+    }
+
     if (error) throw error;
+    if (!data) throw new Error("Não foi possível abrir o atendimento");
     return data;
   });
 
