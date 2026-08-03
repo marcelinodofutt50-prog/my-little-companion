@@ -45,8 +45,12 @@ function DashboardPage() {
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [user, setUser] = useState<any>(undefined)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
+  const fetchMyLicenses = useServerFn(listMyLicenses)
+
+
 
   useEffect(() => {
     let mounted = true
