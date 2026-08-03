@@ -19,6 +19,9 @@ export type Announcement = {
   is_active: boolean;
   status: AnnouncementStatus;
   tags: string[];
+  image_url?: string | null;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
   created_at: string;
 };
 
@@ -55,7 +58,7 @@ export const listMyAnnouncements = createServerFn({ method: "GET" })
     const nowIso = new Date().toISOString();
     const { data, error } = await supabaseAdmin
       .from("announcements")
-      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, status, tags, created_at")
+      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, status, tags, created_at, image_url, attachment_url, attachment_name")
       .eq("is_active", true)
       .eq("status", "published")
       .lte("starts_at", nowIso)
@@ -77,7 +80,7 @@ export const adminListAnnouncements = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("announcements")
-      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, status, tags, created_at")
+      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, status, tags, created_at, image_url, attachment_url, attachment_name")
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
@@ -96,6 +99,9 @@ const upsertSchema = z.object({
   is_active: z.boolean().default(true),
   status: z.enum(["draft", "review", "published"]).default("draft"),
   tags: z.array(z.string()).default([]),
+  image_url: z.string().url().nullable().optional(),
+  attachment_url: z.string().url().nullable().optional(),
+  attachment_name: z.string().nullable().optional(),
 });
 
 export const adminSaveAnnouncement = createServerFn({ method: "POST" })
@@ -115,6 +121,9 @@ export const adminSaveAnnouncement = createServerFn({ method: "POST" })
       is_active: data.is_active,
       status: data.status,
       tags: data.tags,
+      image_url: data.image_url ?? null,
+      attachment_url: data.attachment_url ?? null,
+      attachment_name: data.attachment_name ?? null,
     };
     if (data.id) {
       const { error } = await supabaseAdmin.from("announcements").update(payload as any).eq("id", data.id);

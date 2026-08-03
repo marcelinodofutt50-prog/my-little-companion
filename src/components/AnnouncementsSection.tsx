@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listMyAnnouncements } from "@/lib/announcements.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Megaphone, Calendar, Tag, ChevronRight, Search, Filter } from "lucide-react";
+import { Megaphone, Calendar, Tag, ChevronRight, Search, Filter, Image as ImageIcon, Paperclip, Download } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState, useEffect } from "react";
@@ -136,6 +136,30 @@ export function AnnouncementsSection() {
                       </div>
                     )}
                   </div>
+
+                  {item.image_url && (
+                    <div className="mt-3 relative w-full aspect-video md:aspect-[21/9] rounded-lg border border-border/40 overflow-hidden bg-black/20">
+                      <img 
+                        src={item.image_url} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
+                  {item.attachment_url && (
+                    <a 
+                      href={item.attachment_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors text-[10px] font-mono uppercase tracking-widest text-primary"
+                    >
+                      <Paperclip className="h-3 w-3" />
+                      {item.attachment_name || "Baixar Anexo"}
+                      <Download className="h-3 w-3 ml-1" />
+                    </a>
+                  )}
                 </div>
                 <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity self-end md:self-center">
                   Detalhes <ChevronRight className="ml-1 h-3.5 w-3.5" />
