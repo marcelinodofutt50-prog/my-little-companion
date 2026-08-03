@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import { formatBrl, tierFromPlanSlug, tierLabel, tierAccent, getTierFeatures, serverFeeFor, downloadsForTier, type VersionTier } from "@/lib/plans";
+import { useI18n } from "@/lib/i18n";
 import { listMyLicenses, generateTrial, getMyCashbackBalance, suspendMyLicense, reactivateMyLicense, disableMyLicense } from "@/lib/license.functions";
 import { detectLegacyForCurrentUser, getMyLegacyStatus } from "@/lib/legacy-detect.functions";
 import { createCheckout } from "@/lib/checkout.functions";
