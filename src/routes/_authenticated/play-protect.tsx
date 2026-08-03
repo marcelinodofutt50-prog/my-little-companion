@@ -189,7 +189,7 @@ function PlayProtectPage() {
 
             <div className="mb-4 flex items-center gap-2">
               <span className="h-px flex-1 bg-amber-500/30" />
-              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-500">Método clássico — você envia, a equipe assina</span>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-500">Método clássico (Premium) — você envia, a equipe assina · R$ 450 vitalício</span>
               <span className="h-px flex-1 bg-amber-500/30" />
             </div>
 
