@@ -122,10 +122,10 @@ function metaFor(plan: Plan): PlanMeta {
       "Realinhamento automático da mensalidade",
     ],
   };
-  if (s.includes("upgrade")) return {
+  if (s.includes("upgrade") || s.includes("migracao")) return {
     tagline: "Migração assistida de v4.5.7 para vitalício v4.6.",
     icon: ArrowUpRight,
-    cadence: "cobrança única",
+    cadence: "cobrança única (R$ 600)",
     features: [
       "Migração automática do login",
       "Vira Vitalício v4.6 imediatamente",
@@ -305,11 +305,15 @@ function PlansPage() {
     const serverFiltered = isLegacy
       ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
+    
+    // O upgrade de R$ 600 deve aparecer para quem é legacy (v457)
+    const upgradeList = plans.filter((p) => p.category === "upgrade");
+    
     return {
       licenses: plans.filter((p) => p.category === "license"),
       servers: serverFiltered,
       sources: plans.filter((p) => p.category === "source"),
-      upgrades: isLegacy ? plans.filter((p) => p.category === "upgrade") : [],
+      upgrades: isLegacy ? upgradeList : [],
     };
   }, [plans, isLegacy]);
 

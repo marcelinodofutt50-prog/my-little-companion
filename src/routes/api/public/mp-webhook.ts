@@ -297,10 +297,10 @@ async function fulfillOrderInner(orderId: string) {
   let expiresAt: Date;
   if (order.plan_slug === "login-7d") {
     expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7);
-  } else if (order.plan_slug === "login-lifetime") {
-    expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20);
+  } else if (order.plan_slug === "login-lifetime" || order.plan_slug === "login-30d") {
+    // 30-day and Lifetime plans expire 30 days from now, but align renewal cycle for the server
+    expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
   } else {
-    // 30-day and default login plans expire on the next day 20 renewal.
     expiresAt = nextDay20;
   }
 
