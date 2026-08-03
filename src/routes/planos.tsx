@@ -634,10 +634,7 @@ function PlansPage() {
             </div>
           </div>
         </div>
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         <PlanGroup
           title="Licenças de acesso"
