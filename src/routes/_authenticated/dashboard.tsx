@@ -345,7 +345,7 @@ function DashboardPage() {
                     <Button size="sm" variant="outline" onClick={() => setTutorialOpen(true)} className="font-mono text-[11px] uppercase tracking-wider">
                       <Sparkles className="mr-1.5 h-3 w-3 text-neon" /> Tutorial
                     </Button>
-                    <Link to="/suporte">
+                    <Link to="/suporte" search={{}}>
                       <Button size="sm" variant="outline" className="font-mono text-[11px] uppercase tracking-wider">
                         <LifeBuoy className="mr-1.5 h-3 w-3" /> Suporte
                       </Button>
@@ -1235,10 +1235,10 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
 
   // Diagnose the blocking reason from the "best" license (most recent, least broken).
   const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
-  type Reason = { code: "none" | "disabled" | "revoked" | "suspended" | "expired"; title: string; short: string; detail: string; cta: { label: string; to: string } };
+  type Reason = { code: "none" | "disabled" | "revoked" | "suspended" | "expired"; title: string; short: string; detail: string; cta: { label: string; to: string; search?: any } };
   function diagnose(): Reason {
     if (licenses.length === 0) {
-      return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Você ainda não possui uma licença. Compre um plano para liberar os downloads.", cta: { label: "Ver planos", to: "/planos" } };
+      return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Você ainda não possui uma licença. Compre um plano para liberar os downloads.", cta: { label: "Ver planos", to: "/planos" as const } };
     }
     // Priority: suspended (recoverable) > expired > disabled > revoked
     const sorted = [...licenses].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
@@ -1252,21 +1252,21 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
     if (expired) return {
       code: "expired", title: "Licença expirada", short: "expirada",
       detail: `Expirou em ${fmt(expired.expires_at)}. Renove o plano — os downloads liberam assim que o pagamento é aprovado (geralmente < 1 min).`,
-      cta: { label: "Renovar plano", to: "/planos" },
+      cta: { label: "Renovar plano", to: "/planos" as const },
     };
     const disabled = sorted.find((l) => l.disabled_at);
     if (disabled) return {
       code: "disabled", title: "Licença desativada", short: "desativada",
       detail: `Desativada em ${fmt(disabled.disabled_at)} — a conta foi removida do servidor e não pode ser reativada. Compre um novo plano para receber credenciais e liberar os arquivos.`,
-      cta: { label: "Ver planos", to: "/planos" },
+      cta: { label: "Ver planos", to: "/planos" as const },
     };
     const revoked = sorted.find((l) => l.revoked);
     if (revoked) return {
       code: "revoked", title: "Licença revogada", short: "revogada",
       detail: "Sua licença foi revogada pelo admin. Fale com o suporte ou compre um novo plano.",
-      cta: { label: "Falar com suporte", to: "/suporte" },
+      cta: { label: "Falar com suporte", to: "/suporte" as const, search: {} },
     };
-    return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" } };
+    return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" as const } };
   }
 
   return (
@@ -1330,7 +1330,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
               ))}
               {r.cta.to === "#"
                 ? null
-                : <Link to={r.cta.to}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
+                : <Link to={r.cta.to as any} search={r.cta.search}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
             </div>
           </>
         );
