@@ -153,19 +153,21 @@ function SupportPage() {
 
     const ch = supabase.channel(`t-${threadId}`).on("postgres_changes",
       { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
-      (payload) => setMsgs((prev) => {
+      (payload) => {
         const next = payload.new as Msg;
-        if (prev.some((x) => x.id === next.id)) return prev;
-        
-        // Som de notificação para todos, mas alerta desktop só se admin
-        playNotifyDing();
-        
-        if (next.is_admin && !next.is_system) {
-          if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
-          markReadFn({ data: { threadId } }).catch(() => {});
-        }
-        return [...prev, next];
-      })
+        setMsgs((prev) => {
+          if (prev.some((x) => x.id === next.id)) return prev;
+          
+          // Som de notificação e alerta
+          playNotifyDing();
+          
+          if (next.is_admin && !next.is_system) {
+            if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
+            markReadFn({ data: { threadId } }).catch(() => {});
+          }
+          return [...prev, next];
+        });
+      }
     ).subscribe();
 
     return () => { cancelled = true; supabase.removeChannel(ch); };
