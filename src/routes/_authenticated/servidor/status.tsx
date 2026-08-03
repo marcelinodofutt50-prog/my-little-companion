@@ -13,10 +13,13 @@ import {
   ChevronRight,
   Info,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  FileSearch,
+  History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getServerStatus, type ServerStatus } from "@/lib/server-status.functions";
+import { getAuditLogs } from "@/lib/audit.functions";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { toast } from "sonner";
