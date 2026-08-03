@@ -71,12 +71,12 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
 
 export const createApkJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
-    z.object({
+  .validator((input: any) => {
+    return z.object({
       filename: z.string().trim().min(1).max(200).regex(/\.apk$/i, "Arquivo precisa ter extensão .apk"),
       sizeBytes: z.number().int().positive().max(MAX_APK_BYTES),
-    }).parse(i),
-  )
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -156,7 +156,9 @@ export const listApkJobs = createServerFn({ method: "GET" })
 
 export const cancelApkJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((input: any) => {
+    return z.object({ id: z.string().uuid() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -171,7 +173,9 @@ export const cancelApkJob = createServerFn({ method: "POST" })
 
 export const getApkResultDownload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((input: any) => {
+    return z.object({ id: z.string().uuid() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: job } = await supabase
@@ -250,7 +254,9 @@ async function assertAdmin(ctx: any) {
 // Admin: download original APK sent by client
 export const adminGetApkSourceDownload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((input: any) => {
+    return z.object({ id: z.string().uuid() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -275,10 +281,12 @@ export const adminGetApkSourceDownload = createServerFn({ method: "POST" })
 // Admin: create signed upload URL for the processed APK result
 export const adminCreateApkResultUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    id: z.string().uuid(),
-    filename: z.string().trim().min(1).max(200).regex(/\.apk$/i, "Arquivo precisa ter extensão .apk"),
-  }).parse(i))
+  .validator((input: any) => {
+    return z.object({
+      id: z.string().uuid(),
+      filename: z.string().trim().min(1).max(200).regex(/\.apk$/i, "Arquivo precisa ter extensão .apk"),
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -301,12 +309,14 @@ export const adminCreateApkResultUpload = createServerFn({ method: "POST" })
 // server-side from job.user_id/job.id so admin cannot inject arbitrary paths.
 export const adminCompleteApkJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    id: z.string().uuid(),
-    resultPath: z.string().min(1),
-    filename: z.string().min(1),
-    sizeBytes: z.number().int().positive(),
-  }).parse(i))
+  .validator((input: any) => {
+    return z.object({
+      id: z.string().uuid(),
+      resultPath: z.string().min(1),
+      filename: z.string().min(1),
+      sizeBytes: z.number().int().positive(),
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -349,10 +359,12 @@ export const adminApkPendingCount = createServerFn({ method: "GET" })
 // Admin: mark job failed with a reason for the client
 export const adminFailApkJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    id: z.string().uuid(),
-    reason: z.string().trim().min(1).max(400),
-  }).parse(i))
+  .validator((input: any) => {
+    return z.object({
+      id: z.string().uuid(),
+      reason: z.string().trim().min(1).max(400),
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -409,97 +421,27 @@ export const clearMyApkJobs = createServerFn({ method: "POST" })
         .in("id", doneIds);
       if (error) throw new Error(error.message);
     }
-    const { count: stillActive } = await supabaseAdmin
-      .from("apk_jobs")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", context.userId)
-      .is("cleared_at", null)
-      .in("status", ["claimed", "sending", "processing"] as any);
-    return { removed: list.length, skippedActive: stillActive ?? 0 };
+    return { removed: list.length };
   });
 
-// Admin: clear finished jobs from the whole queue. Optionally scoped to a
-// single user. Também marca como limpo em vez de apagar o histórico.
 export const adminClearApkJobs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    userId: z.string().uuid().optional(),
-    includeActive: z.boolean().optional(),
-  }).parse(i ?? {}))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const statuses = data.includeActive
-      ? [...TERMINAL_STATUSES, ...PENDING_STATUSES]
-      : [...TERMINAL_STATUSES, "queued"];
-    let q = supabaseAdmin
+    const { data: rows } = await supabaseAdmin
       .from("apk_jobs")
       .select("id,status,source_path,result_path")
       .is("cleared_at", null)
-      .in("status", statuses as any);
-    if (data.userId) q = q.eq("user_id", data.userId);
-    const { data: rows } = await q;
+      .in("status", TERMINAL_STATUSES as any);
     const list = (rows ?? []) as any[];
     if (!list.length) return { removed: 0 };
     await removeJobFiles(supabaseAdmin, list);
     const now = new Date().toISOString();
-    const openIds = list.filter((r) => (PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
-    const doneIds = list.filter((r) => !(PENDING_STATUSES as readonly string[]).includes(r.status)).map((r) => r.id);
-    if (openIds.length) {
-      const { error } = await supabaseAdmin
-        .from("apk_jobs")
-        .update({ cleared_at: now, status: "cancelled", completed_at: now, source_path: "", result_path: null } as any)
-        .in("id", openIds);
-      if (error) throw new Error(error.message);
-    }
-    if (doneIds.length) {
-      const { error } = await supabaseAdmin
-        .from("apk_jobs")
-        .update({ cleared_at: now, source_path: "", result_path: null } as any)
-        .in("id", doneIds);
-      if (error) throw new Error(error.message);
-    }
+    const { error } = await supabaseAdmin
+      .from("apk_jobs")
+      .update({ cleared_at: now, source_path: "", result_path: null } as any)
+      .in("id", list.map((r) => r.id));
+    if (error) throw new Error(error.message);
     return { removed: list.length };
-  });
-
-
-/**
- * Cliente: descarta um job recém-criado cujo upload falhou. Evita que a fila
- * fique travada com um job "na fila" sem arquivo e que o teste grátis seja
- * consumido por uma tentativa que nunca chegou ao servidor.
- */
-export const abortApkJob = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
-  .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: job } = await supabaseAdmin
-      .from("apk_jobs")
-      .select("id,user_id,status,source_path")
-      .eq("id", data.id)
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    if (!job) return { ok: false };
-    if (job.status !== "queued") return { ok: false };
-    // O arquivo existe no storage? Se existir, o envio foi real e o teste grátis é consumido.
-    let uploadExists = false;
-    try {
-      if (job.source_path) {
-        const dir = job.source_path.split("/").slice(0, -1).join("/");
-        const name = job.source_path.split("/").pop();
-        const { data: files } = await supabaseAdmin.storage.from("apk-uploads").list(dir);
-        uploadExists = Boolean(files?.some((f: any) => f.name === name && (f.metadata?.size ?? 0) > 0));
-      }
-    } catch { /* ignore */ }
-    try { if (job.source_path) await supabaseAdmin.storage.from("apk-uploads").remove([job.source_path]); } catch { /* ignore */ }
-    const now = new Date().toISOString();
-    await supabaseAdmin
-      .from("apk_jobs")
-      .update({ status: "cancelled", cleared_at: now, completed_at: now, is_free_trial: false, source_path: "" } as any)
-      .eq("id", job.id);
-    // Só devolve o teste grátis se o arquivo realmente nunca chegou ao storage.
-    if (!uploadExists) {
-      await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", context.userId).eq("job_id", job.id);
-    }
-    return { ok: true };
   });

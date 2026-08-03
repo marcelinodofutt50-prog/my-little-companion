@@ -48,8 +48,8 @@ const slugRe = /^[a-z0-9-]{3,48}$/;
 
 export const adminUpsertMarketProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({
+  .validator((input: any) => {
+    return z.object({
       slug: z.string().trim().toLowerCase().regex(slugRe, "slug: minúsculas, números e hífen, 3-48 caracteres"),
       name: z.string().trim().min(2).max(120),
       description: z.string().trim().max(2000).optional().nullable(),
@@ -58,8 +58,8 @@ export const adminUpsertMarketProduct = createServerFn({ method: "POST" })
       sort_order: z.number().int().min(0).max(9999).optional(),
       active: z.boolean().optional(),
       original_slug: z.string().trim().optional(), // for updates that rename
-    }).parse(input),
-  )
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Forbidden");
@@ -89,7 +89,9 @@ export const adminUpsertMarketProduct = createServerFn({ method: "POST" })
 
 export const adminDeleteMarketProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ slug: z.string() }).parse(input))
+  .validator((input: any) => {
+    return z.object({ slug: z.string() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Forbidden");
@@ -108,13 +110,13 @@ export const adminDeleteMarketProduct = createServerFn({ method: "POST" })
 
 export const adminUploadMarketImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({
+  .validator((input: any) => {
+    return z.object({
       slug: z.string().regex(slugRe),
       contentType: z.string().max(80),
       dataBase64: z.string().min(10).max(6_500_000), // ~5MB after b64 overhead
-    }).parse(input),
-  )
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Forbidden");
@@ -132,12 +134,12 @@ export const adminUploadMarketImage = createServerFn({ method: "POST" })
 
 export const createMarketCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({
+  .validator((input: any) => {
+    return z.object({
       slug: z.string(),
       returnOrigin: z.string().url(),
-    }).parse(input),
-  )
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { createMpPreference } = await import("./mercadopago.server");
     const { supabase, userId, claims } = context;
@@ -178,7 +180,9 @@ export const createMarketCheckout = createServerFn({ method: "POST" })
 
 export const getMarketOrderState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ orderId: z.string().uuid() }).parse(input))
+  .validator((input: any) => {
+    return z.object({ orderId: z.string().uuid() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { data: order } = await context.supabase
       .from("orders").select("id, status, plan_slug, amount, paid_at, metadata")

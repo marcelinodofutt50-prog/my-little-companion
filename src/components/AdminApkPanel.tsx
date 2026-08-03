@@ -73,7 +73,7 @@ export function AdminApkPanel() {
     if (!confirm("Limpar todos os jobs finalizados (prontos, falhos, expirados e cancelados)? Os arquivos serão apagados do storage. Jobs em andamento e testes grátis são preservados.")) return;
     setClearing(true);
     try {
-      const r = await clearAllFn({ data: {} });
+      const r = await clearAllFn();
       toast.success(r.removed ? `${r.removed} job(s) removido(s)` : "Nada para limpar");
       await refresh();
     } catch (e: any) {

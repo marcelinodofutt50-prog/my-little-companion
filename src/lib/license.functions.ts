@@ -16,7 +16,9 @@ function yesterdayYMD(): string {
 
 export const suspendMyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
+  .validator((input: any) => {
+    return z.object({ licenseId: z.string().uuid() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
@@ -41,7 +43,9 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
 
 export const reactivateMyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
+  .validator((input: any) => {
+    return z.object({ licenseId: z.string().uuid() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
@@ -71,7 +75,9 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
 
 export const disableMyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid(), confirm: z.literal(true) }).parse(input))
+  .validator((input: any) => {
+    return z.object({ licenseId: z.string().uuid(), confirm: z.literal(true) }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
@@ -216,9 +222,9 @@ export const getMyCashbackBalance = createServerFn({ method: "GET" })
 
 export const validateCoupon = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ code: z.string().trim().min(1).max(64), planSlug: z.string().trim().max(64).optional() }).parse(input)
-  )
+  .validator((input: any) => {
+    return z.object({ code: z.string().trim().min(1).max(64), planSlug: z.string().trim().max(64).optional() }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { data: coupon } = await context.supabase
       .from("coupons").select("*").eq("code", data.code.toUpperCase()).eq("active", true).maybeSingle();
@@ -249,7 +255,9 @@ export const getMyLegacyStatus = createServerFn({ method: "GET" })
 // Autenticado para evitar enumeração de emails por bots anônimos.
 export const checkLegacyEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ email: z.string().trim().email().max(255) }).parse(input))
+  .validator((input: any) => {
+    return z.object({ email: z.string().trim().email().max(255) }).parse(input);
+  })
   .handler(async ({ data }) => {
     const { yaarsaLookupEmailAllPanels } = await import("./yaarsa.server");
     let r: Awaited<ReturnType<typeof yaarsaLookupEmailAllPanels>>;
@@ -273,13 +281,13 @@ export const checkLegacyEmail = createServerFn({ method: "POST" })
 // taxa R$250/mês) e realinhamos o expire_date no Yaarsa para o próximo dia 20.
 export const claimLegacyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({
+  .validator((input: any) => {
+    return z.object({
       email: z.string().trim().email().max(255),
       password: z.string().min(1).max(64),
       panel: z.enum(["v457", "v46"]),
-    }).parse(input),
-  )
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const email = data.email.toLowerCase();
