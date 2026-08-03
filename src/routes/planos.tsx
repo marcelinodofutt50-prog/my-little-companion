@@ -619,7 +619,7 @@ function PlansPage() {
           featuredSlug="lifetime_46"
         />
         {licenses.length === 0 && (
-          <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground">
+          <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
             Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
             <button type="button" onClick={() => setUsage("all")} className="text-primary underline underline-offset-4">
               Ver todos os planos
