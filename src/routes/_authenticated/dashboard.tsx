@@ -28,6 +28,7 @@ import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { EmailConfirmBanner } from "@/components/EmailConfirmBanner";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
+import { playNotifyDing } from "@/lib/notify-sound";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
 import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
