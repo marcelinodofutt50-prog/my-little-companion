@@ -347,8 +347,10 @@ function DashboardPage() {
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
                               </span>
                             </button>
-                          </div>
-                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                       </div>
                     </div>
                     <div className={`shrink-0 rounded-lg border-2 px-4 py-3 text-right font-mono shadow-lg transition-all ${statusRing}`}>
