@@ -1252,9 +1252,9 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
   // Diagnose the blocking reason from the "best" license (most recent, least broken).
   const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
   type Reason = { code: "none" | "disabled" | "revoked" | "suspended" | "expired"; title: string; short: string; detail: string; cta: { label: string; to: string; search?: any } };
-  function diagnose(): Reason {
+  function diagnose(themeParam?: string): Reason {
     if (licenses.length === 0) {
-      return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Você ainda não possui uma licença. Compre um plano para liberar os downloads.", cta: { label: "Ver planos", to: "/planos" as const, search: { theme: search?.theme } } };
+      return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Você ainda não possui uma licença. Compre um plano para liberar os downloads.", cta: { label: "Ver planos", to: "/planos" as const, search: { theme: themeParam } } };
     }
     // Priority: suspended (recoverable) > expired > disabled > revoked
     const sorted = [...licenses].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
@@ -1268,7 +1268,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
     if (expired) return {
       code: "expired", title: "Licença expirada", short: "expirada",
       detail: `Expirou em ${fmt(expired.expires_at)}. Renove o plano — os downloads liberam assim que o pagamento é aprovado (geralmente < 1 min).`,
-      cta: { label: "Renovar plano", to: "/planos" as const, search: { theme: search?.theme } },
+      cta: { label: "Renovar plano", to: "/planos" as const, search: { theme: themeParam } },
     };
     const disabled = sorted.find((l) => l.disabled_at);
     if (disabled) return {
@@ -1280,9 +1280,9 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
     if (revoked) return {
       code: "revoked", title: "Licença revogada", short: "revogada",
       detail: "Sua licença foi revogada pelo admin. Fale com o suporte ou compre um novo plano.",
-      cta: { label: "Falar com suporte", to: "/suporte" as const, search: { theme: search?.theme } },
+      cta: { label: "Falar com suporte", to: "/suporte" as const, search: { theme: themeParam } },
     };
-    return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" as const, search: { theme: search?.theme } } };
+    return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" as const, search: { theme: themeParam } } };
   }
 
   return (
@@ -1324,7 +1324,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
           )}
         </>
       ) : (() => {
-        const r = diagnose();
+        const r = diagnose(search?.theme);
         const accent = r.code === "suspended" ? "text-amber-400" : r.code === "expired" ? "text-amber-400" : "text-danger";
         return (
           <>
