@@ -23,7 +23,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
       originalIconUrl: z.string().url().optional(),
       dropperType: z.string().default('risada_kl'),
       config: z.record(z.any()).optional(),
-    }).parse(input);
+    }).parse(input) as any;
   })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
