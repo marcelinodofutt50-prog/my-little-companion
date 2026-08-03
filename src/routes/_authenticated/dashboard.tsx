@@ -394,14 +394,16 @@ function DashboardPage() {
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
                 </div>
                 
-                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-cyan/50 shadow-sm">
-                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                    <Server className="h-20 w-20 text-cyan" />
+                <Link to="/servidor/status" className="block outline-none">
+                  <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-cyan/50 shadow-sm h-full">
+                    <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                      <Server className="h-20 w-20 text-cyan" />
+                    </div>
+                    <div className="osint-label mb-2 text-muted-foreground uppercase tracking-widest">STATUS INFRAESTRUTURA</div>
+                    <div className="font-mono text-3xl font-black text-cyan">ONLINE</div>
+                    <div className="mt-2 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">{activeCount} TERMINAIS EM SINCRONIZAÇÃO</div>
                   </div>
-                  <div className="osint-label mb-2 text-muted-foreground">TERMINAIS ATIVOS</div>
-                  <div className="font-mono text-3xl font-black text-cyan">{activeCount}</div>
-                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">NODES EM SINCRONIZAÇÃO</div>
-                </div>
+                </Link>
 
                 <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-violet-500/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
