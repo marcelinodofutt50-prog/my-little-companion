@@ -56,7 +56,8 @@ export function tierAccent(tier: VersionTier): "neon" | "cyan" | "violet" {
 
 export function serverFeeFor(isLegacy: boolean, override?: number | null): number {
   if (override && override > 0) return Number(override);
-  return isLegacy ? 250 : 450;
+  // User specified: Servidor para mensal e vitalicio custa 450
+  return 450;
 }
 
 // Downloads catalog filtered by tier
