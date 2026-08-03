@@ -108,7 +108,8 @@
 .dark { color-scheme: dark; }
 
 /* ===== Tema claro (segue o tema do sistema por padrão) ===== */
-html.theme-light {
+html.theme-light, 
+html.theme-light body {
   color-scheme: light;
 
   /* Pure white background for a clean light theme */
@@ -160,15 +161,15 @@ html.theme-light {
 }
 
 html.theme-light body {
-  background:
+  background-color: #ffffff !important;
+  background-image:
     radial-gradient(ellipse 90% 60% at 50% -10%, rgba(37, 99, 235, 0.05), transparent 62%),
     radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.03), transparent 60%),
     linear-gradient(to right, rgba(226, 232, 240, 0.3) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(226, 232, 240, 0.3) 1px, transparent 1px),
-    #ffffff;
-  background-size: auto, auto, 44px 44px, 44px 44px, auto;
-  background-attachment: fixed;
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.3) 1px, transparent 1px) !important;
 }
+
+/* Removido duplicata */
 
 html.theme-light .glow-neon { box-shadow: 0 0 18px rgba(37, 99, 235, 0.1); }
 html.theme-light .glow-cyan { box-shadow: 0 0 18px rgba(14, 165, 233, 0.1); }
@@ -203,7 +204,7 @@ html.theme-light .crt::after { display: none; }
       radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.28 0.1 195 / 0.16), transparent 60%),
       linear-gradient(to right, oklch(0.84 0.2 148 / 0.035) 1px, transparent 1px),
       linear-gradient(to bottom, oklch(0.84 0.2 148 / 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(0.12 0.012 160), oklch(0.1 0.012 160));
+      linear-gradient(to bottom, var(--background), var(--background));
     background-size: auto, auto, 44px 44px, 44px 44px, auto;
     background-attachment: fixed;
   }
