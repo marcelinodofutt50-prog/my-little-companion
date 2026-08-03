@@ -350,9 +350,13 @@ function DashboardPage() {
                         <Sparkles className="mr-1.5 h-3 w-3" /> {daysLeft !== null && daysLeft <= 5 ? "Renovar agora" : "Comprar"}
                       </Button>
                     </Link>
+                    <Button size="sm" variant="outline" onClick={() => setExtraTab("play-protect")} className="font-mono text-[11px] uppercase tracking-wider">
+                      <Shield className="mr-1.5 h-3 w-3 text-neon" /> Play Protect
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => setExtraTab("ajuda")} className="font-mono text-[11px] uppercase tracking-wider">
                       <LifeBuoy className="mr-1.5 h-3 w-3 text-cyan" /> Ajuda
                     </Button>
+
                     <Button size="sm" variant="ghost" onClick={refresh} disabled={refreshing} className="ml-auto font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                       {refreshing && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
                       Atualizar
