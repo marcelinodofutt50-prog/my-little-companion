@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrl } from "@/lib/plans";
+import { siteUrl } from "@/lib/site-url";
 import { listMarketProducts, createMarketCheckout } from "@/lib/market.functions";
 
 export const Route = createFileRoute("/mercado")({
@@ -14,11 +15,13 @@ export const Route = createFileRoute("/mercado")({
     meta: [
       { title: "Mercado Shadow — Produtos e ferramentas" },
       { name: "description", content: "Catálogo oficial de produtos Shadow. Pagamento via Mercado Pago com liberação após confirmação." },
-      { property: "og:title", content: "Mercado Shadow" },
-      { property: "og:description", content: "Catálogo oficial de produtos Shadow." },
+      { property: "og:title", content: "Mercado Shadow — Produtos e ferramentas" },
+      { property: "og:description", content: "Catálogo oficial de produtos Shadow. Pagamento via Mercado Pago com liberação após confirmação." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: siteUrl("/mercado") },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: siteUrl("/mercado") }],
   }),
   component: MarketPage,
 });

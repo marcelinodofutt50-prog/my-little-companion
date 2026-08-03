@@ -3,6 +3,7 @@ import { Youtube, Download } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { siteUrl } from "@/lib/site-url";
 
 function TutorialPage() {
   const { t } = useI18n();
