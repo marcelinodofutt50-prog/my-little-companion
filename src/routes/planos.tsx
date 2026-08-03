@@ -917,7 +917,11 @@ function OrderCalculator() {
               <span className="font-mono">{addSigner ? "R$ 450" : "R$ 0"}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Impostos & Taxas Gateway:</span>
+              <span className="text-muted-foreground">Renovação Servidor (Todo dia 20):</span>
+              <span className="font-mono text-neon">R$ 450</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Taxas do Gateway:</span>
               <span className="font-mono text-neon">Incluso</span>
             </div>
             <div className="my-4 h-px bg-border/50" />
