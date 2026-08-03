@@ -82,11 +82,13 @@ export const listMyThreads = createServerFn({ method: "GET" })
  */
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .validator((i: any) => z.object({
-    threadId: z.string().uuid(),
-    limit: z.number().int().min(5).max(100).optional(),
-    before: z.string().optional(),
-  }).parse(i))
+  .validator((i: any) => 
+    z.object({
+      threadId: z.string().uuid(),
+      limit: z.number().int().min(5).max(100).optional(),
+      before: z.string().optional(),
+    }).parse(i)
+  )
   .handler(async ({ data, context }) => {
     const limit = data.limit ?? 30;
     let q = context.supabase
