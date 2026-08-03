@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
@@ -384,29 +386,52 @@ function PlansPage() {
       <section className="relative overflow-hidden border-b border-border/40">
         <div className="pointer-events-none absolute inset-0 -z-0 opacity-70"
              style={{ background: "radial-gradient(ellipse 70% 55% at 50% 0%, oklch(0.28 0.09 82 / 0.28), transparent 65%)" }} />
+        
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse" />
+          <div className="absolute top-[20%] -right-[10%] h-[30%] w-[30%] rounded-full bg-primary/10 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px divider-glow" />
         <div className="mx-auto max-w-7xl px-4 pt-16 pb-14 md:pt-24 md:pb-20">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.3em] text-primary"
+            >
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary pulse-dot" />
-              Pricing · Edição 2026
-            </div>
-            <h1 className="mt-6 font-display text-4xl leading-[1.05] tracking-tight md:text-6xl">
-              Planos <span className="italic text-primary">Shadow</span>.<br className="hidden md:block" />
-              <span className="text-muted-foreground">Provisionamento instantâneo, cobrança transparente.</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-              Cada plano é liberado em menos de 1 minuto após a confirmação do PIX. Sem burocracia, sem intermediário, sem cobrança escondida — sua licença aparece direto no dashboard.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Mercado Pago oficial</span>
-              <span className="text-border">•</span>
-              <span className="inline-flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-primary" /> Ativação &lt; 1 min</span>
-              <span className="text-border">•</span>
-              <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-primary" /> Credencial única por conta</span>
-              <span className="text-border">•</span>
-              <span className="inline-flex items-center gap-1.5"><HeadphonesIcon className="h-3.5 w-3.5 text-primary" /> Suporte humano 24/7</span>
-            </div>
+              Mirror Pricing · Edição 2026
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mt-6 font-display text-4xl leading-[1.05] tracking-tight md:text-6xl"
+            >
+              Planos <span className="italic text-primary drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]">Shadow</span>.<br className="hidden md:block" />
+              <span className="text-muted-foreground/80">Provisionamento instantâneo.</span>
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground md:text-lg leading-relaxed"
+            >
+              Cada plano é liberado em menos de 1 minuto após a confirmação do PIX. 
+              <span className="text-foreground"> Sem burocracia, ativação direta no dashboard.</span>
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-10 flex flex-wrap items-center justify-center gap-6 text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70"
+            >
+              <span className="flex items-center gap-2 hover:text-primary transition-colors"><ShieldCheck className="h-4 w-4 text-primary" /> Mercado Pago</span>
+              <span className="flex items-center gap-2 hover:text-primary transition-colors"><Zap className="h-4 w-4 text-primary" /> Ativação &lt; 1 min</span>
+              <span className="flex items-center gap-2 hover:text-primary transition-colors"><HeadphonesIcon className="h-4 w-4 text-primary" /> Suporte 24/7</span>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -1054,15 +1079,25 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
   return (
     <div className={[
-      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-6 transition-all",
+      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-6 transition-all duration-500",
       featured
-        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)]"
-        : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70",
+        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)] scale-[1.02] z-10"
+        : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70 hover:translate-y-[-4px]",
       isLifetime ? "ring-1 ring-primary/30 shadow-[0_0_45px_-10px_oklch(0.78_0.13_82/0.45)]" : "",
     ].join(" ")}>
+      {/* Glow Effect */}
+      <div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
+           style={{ background: `radial-gradient(600px circle at var(--x) var(--y), oklch(0.78 0.13 82 / 0.1), transparent 40%)` }} 
+           onMouseMove={(e) => {
+             const rect = e.currentTarget.getBoundingClientRect();
+             e.currentTarget.style.setProperty("--x", `${e.clientX - rect.left}px`);
+             e.currentTarget.style.setProperty("--y", `${e.clientY - rect.top}px`);
+           }}
+      />
+
       {badgeLabel && (
-        <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary">
-          <Crown className="h-3 w-3" /> {badgeLabel}
+        <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/20 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary shadow-[0_0_10px_oklch(0.78_0.13_82/0.2)]">
+          <Crown className="h-3 w-3 animate-pulse" /> {badgeLabel}
         </div>
       )}
 
@@ -1136,18 +1171,21 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       <Button
         className={[
-          "w-full font-mono uppercase tracking-widest text-xs h-12",
-          featured ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]" : "border-2",
+          "w-full font-mono uppercase tracking-widest text-xs h-12 transition-all duration-300 active:scale-95",
+          featured 
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_30px_oklch(0.78_0.13_82/0.6)]" 
+            : "border-2 hover:bg-primary/5 hover:border-primary/50",
         ].join(" ")}
         variant={featured ? "default" : "outline"}
         onClick={handleClick}
         disabled={isLoading}
         aria-label={`Comprar plano ${plan.name} via PIX`}
       >
-        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
         Comprar via PIX
       </Button>
-      <div className="mt-2 text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+        <Shield className="h-3 w-3 text-primary/60" />
         {hasBenefit ? "valor final confirmado no checkout" : "pagamento oficial mercado pago"}
       </div>
     </div>
