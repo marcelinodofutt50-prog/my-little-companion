@@ -26,6 +26,7 @@ export type Database = {
           min_tier: string
           severity: string
           starts_at: string
+          status: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -41,6 +42,7 @@ export type Database = {
           min_tier?: string
           severity?: string
           starts_at?: string
+          status?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -56,6 +58,7 @@ export type Database = {
           min_tier?: string
           severity?: string
           starts_at?: string
+          status?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
