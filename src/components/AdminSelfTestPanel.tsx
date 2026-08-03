@@ -1,16 +1,38 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Loader2, PlayCircle, ShieldAlert } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, PlayCircle, ShieldAlert, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { runPurchaseSelfTest, type SelfTestStep } from "@/lib/selftest.functions";
+import { runSupportE2E, type SupportTestStep } from "@/lib/support-selftest.functions";
 
 export function AdminSelfTestPanel() {
   const run = useServerFn(runPurchaseSelfTest);
+  const runSupport = useServerFn(runSupportE2E);
   const [loading, setLoading] = useState<"safe" | "full" | null>(null);
   const [steps, setSteps] = useState<SelfTestStep[] | null>(null);
   const [mode, setMode] = useState<string>("");
   const [confirmFull, setConfirmFull] = useState(false);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportSteps, setSupportSteps] = useState<SupportTestStep[] | null>(null);
+
+  async function executeSupport() {
+    if (supportLoading) return;
+    setSupportLoading(true);
+    setSupportSteps(null);
+    try {
+      const res = await runSupport();
+      setSupportSteps(res.steps);
+      const failed = res.steps.filter((s) => !s.ok).length;
+      if (failed === 0) toast.success("Suporte: fluxo ponta a ponta funcionando");
+      else toast.error(`Suporte: ${failed} etapa(s) com problema`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao executar o teste de suporte");
+    } finally {
+      setSupportLoading(false);
+    }
+  }
+
 
   async function execute(m: "safe" | "full") {
     if (loading) return;
@@ -66,6 +88,44 @@ export function AdminSelfTestPanel() {
           )}
         </div>
       </div>
+
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="font-mono text-sm font-semibold">Teste ponta a ponta do suporte</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Abre um ticket de teste (inclusive simulando duas aberturas simultâneas), envia mensagem como cliente, responde
+          como suporte, confere o histórico, encerra e reabre o atendimento — usando exatamente o mesmo caminho do
+          navegador. Tudo que for criado é apagado no final.
+        </p>
+        <div className="mt-3">
+          <Button size="sm" variant="outline" onClick={executeSupport} disabled={supportLoading}>
+            {supportLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <MessagesSquare className="mr-2 h-4 w-4" />
+            )}
+            Rodar teste do suporte
+          </Button>
+        </div>
+        {supportSteps && (
+          <ul className="mt-4 space-y-2">
+            {supportSteps.map((s, i) => (
+              <li key={i} className="flex items-start gap-3 rounded border border-border/60 p-3">
+                {s.ok ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                ) : (
+                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                )}
+                <div className="min-w-0">
+                  <p className="font-mono text-sm">{s.step}</p>
+                  <p className="break-words text-xs text-muted-foreground">{s.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+
 
       {steps && (
         <div className="rounded-lg border border-border bg-card p-4">
