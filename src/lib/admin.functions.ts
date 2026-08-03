@@ -365,10 +365,12 @@ export const adminListThreadMessages = createServerFn({ method: "GET" })
     if (data.before) q = q.lt("created_at", data.before);
     const { data: rows, error } = await q;
     if (error) throw new Error(`Não foi possível carregar as mensagens: ${error.message}`);
-    const list = rows ?? [];
+    const { normalizeSupportMessages } = await import("./support-message");
+    const list = normalizeSupportMessages(rows, data.threadId);
     const hasMore = list.length > limit;
     const page = hasMore ? list.slice(0, limit) : list;
     return { messages: page.reverse(), hasMore };
+
   });
 
 
@@ -420,7 +422,9 @@ export const adminSendMessage = createServerFn({ method: "POST" })
     if (!msg) throw new Error("Não foi possível enviar a resposta");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("support_threads").update({ updated_at: new Date().toISOString() }).eq("id", data.threadId);
-    return msg;
+    const { normalizeSupportMessage } = await import("./support-message");
+    return normalizeSupportMessage(msg, data.threadId);
+
   });
 
 
