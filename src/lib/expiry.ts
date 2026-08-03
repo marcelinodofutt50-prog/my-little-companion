@@ -108,3 +108,53 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
   };
 }
 
+// ===== Countdown em horas/minutos (trial e planos curtos) =====
+
+export type Remaining = {
+  totalMs: number;
+  expired: boolean;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  /** Valor grande do card. */
+  primary: string;
+  /** Unidade do valor grande. */
+  unit: string;
+  /** Linha secundária detalhada. */
+  detail: string;
+};
+
+/** Quebra o tempo restante até `iso`. Abaixo de 48h mostra horas (BMob corta na virada). */
+export function remainingUntil(iso: string | null | undefined, now = Date.now()): Remaining | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return null;
+  const totalMs = Math.max(0, t - now);
+  const secs = Math.floor(totalMs / 1000);
+  const days = Math.floor(secs / 86400);
+  const hours = Math.floor((secs % 86400) / 3600);
+  const minutes = Math.floor((secs % 3600) / 60);
+  const seconds = secs % 60;
+  const expired = t - now <= 0;
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (expired) {
+    return { totalMs: 0, expired, days: 0, hours: 0, minutes: 0, seconds: 0, primary: "00:00:00", unit: "encerrado", detail: "O tempo desta licença acabou." };
+  }
+  if (totalMs < 48 * 3600_000) {
+    const totalHours = Math.floor(secs / 3600);
+    return {
+      totalMs, expired, days, hours, minutes, seconds,
+      primary: `${pad(totalHours)}:${pad(minutes)}:${pad(seconds)}`,
+      unit: "horas restantes",
+      detail: `${totalHours}h ${minutes}min até o encerramento automático.`,
+    };
+  }
+  return {
+    totalMs, expired, days, hours, minutes, seconds,
+    primary: pad(days),
+    unit: days === 1 ? "dia restante" : "dias restantes",
+    detail: `${days}d ${pad(hours)}h ${pad(minutes)}min restantes.`,
+  };
+}
