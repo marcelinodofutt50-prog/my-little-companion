@@ -1237,11 +1237,14 @@ function LegacyLookup() {
       // Simulação de verificação
       if (verificationCode === "123456" || verificationCode.length >= 4) {
         setNeedsVerification(false);
+        setVerificationLogs(prev => [...prev, { status: 'confirmed', time: new Date().toLocaleTimeString() }]);
         toast.success("E-mail confirmado com sucesso!");
       } else {
+        setVerificationLogs(prev => [...prev, { status: 'invalid', time: new Date().toLocaleTimeString() }]);
         setErr("Código de verificação inválido.");
       }
     } catch (e: any) {
+      setVerificationLogs(prev => [...prev, { status: 'expired', time: new Date().toLocaleTimeString() }]);
       setErr("Erro na verificação do e-mail.");
     } finally { setIsVerifying(false); }
   }
