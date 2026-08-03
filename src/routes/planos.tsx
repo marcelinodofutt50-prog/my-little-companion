@@ -139,6 +139,20 @@ function metaFor(plan: Plan): PlanMeta {
     ],
   };
 
+  if (s.includes("cloak") || s.includes("bypass")) return {
+    tagline: "O bypass de longa duração mais estável do mercado.",
+    badge: "Shadow Signer",
+    icon: ShieldCheck,
+    cadence: "renovação em 30 dias",
+    features: [
+      "Assinatura V2/V3 com bypass Play Protect",
+      "APK Cloaking (Dropper Risada KL inclusa)",
+      "Proteção anti-decompile",
+      "Garantia de bypass ativo no ciclo",
+      "Fila dedicada no builder",
+    ],
+  };
+
   if (s.includes("source") || s.includes("code")) return {
     tagline: "Código-fonte auditável, entrega assistida por engenheiro.",
     icon: Code2,
