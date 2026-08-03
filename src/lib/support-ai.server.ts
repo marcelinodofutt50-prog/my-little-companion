@@ -27,6 +27,26 @@ REGRAS CRÍTICAS:
 - Nunca invente status de pagamento; confie apenas nos dados da ferramenta 'checkCustomerStatus'.
 - Sempre responda em Português do Brasil.`;
 
+/**
+ * O remetente das mensagens automáticas precisa existir em auth.users (há uma
+ * chave estrangeira em support_messages.sender_id). Usamos a conta de um admin
+ * real como "remetente do sistema"; antes usávamos um UUID zerado e TODA
+ * resposta da IA falhava silenciosamente ao ser gravada.
+ */
+let systemSenderCache: string | null = null;
+async function resolveSystemSender(): Promise<string | null> {
+  if (systemSenderCache) return systemSenderCache;
+  const { data } = await supabaseAdmin
+    .from("user_roles")
+    .select("user_id")
+    .eq("role", "admin")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  systemSenderCache = data?.user_id ?? null;
+  return systemSenderCache;
+}
+
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
   const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar", "btmob"];
@@ -36,7 +56,8 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   if (!hasTrigger) return;
 
   try {
-    const model = createGeminiProvider("gemini-1.5-flash");
+    const model = createGeminiProvider();
+
     
     await generateText({
       model,
