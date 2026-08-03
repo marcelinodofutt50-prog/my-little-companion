@@ -730,6 +730,117 @@ function Metric({ value, label }: { value: string; label: string }) {
   );
 }
 
+function OrderCalculator() {
+  const [selectedPlan, setSelectedPlan] = useState<"455" | "mensal" | "vitalicio" | "none">("none");
+  const [isOldMember, setIsOldMember] = useState(false);
+  const [addSigner, setAddSigner] = useState(false);
+
+  const prices = {
+    "455": 450,
+    mensal: 750,
+    vitalicio: 1490,
+    serverNew: 450,
+    serverOld: 250,
+    signer: 450,
+  };
+
+  const planPrice = selectedPlan === "none" ? 0 : prices[selectedPlan === "vitalicio" ? "vitalicio" : selectedPlan === "mensal" ? "mensal" : "455"];
+  const serverPrice = selectedPlan === "none" ? 0 : isOldMember ? prices.serverOld : prices.serverNew;
+  const signerPrice = addSigner ? prices.signer : 0;
+  const total = planPrice + serverPrice + signerPrice;
+
+  return (
+    <section className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-sm">
+      <div className="mb-6">
+        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// simulador de custo</div>
+        <h2 className="mt-2 font-display text-2xl">Calculadora de Checkout</h2>
+        <p className="text-sm text-muted-foreground">Estime o valor final da sua infraestrutura completa.</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Escolha o Plano</label>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {[
+                { id: "455", label: "Shadow 4.5.5", p: "R$ 450" },
+                { id: "mensal", label: "30 Dias (4.5.7)", p: "R$ 750" },
+                { id: "vitalicio", label: "Vitalício (4.6)", p: "R$ 1.490" },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPlan(p.id as any)}
+                  className={`rounded-lg border p-3 text-left transition-all ${
+                    selectedPlan === p.id ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border/50 bg-background/50 hover:border-primary/30"
+                  }`}
+                >
+                  <div className="text-xs font-bold">{p.label}</div>
+                  <div className="text-[10px] text-muted-foreground">{p.p}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
+            <div>
+              <div className="text-xs font-bold">Sou Membro Antigo</div>
+              <div className="text-[10px] text-muted-foreground">Desconto de R$ 200 no servidor</div>
+            </div>
+            <button
+              onClick={() => setIsOldMember(!isOldMember)}
+              className={`h-5 w-10 rounded-full transition-colors ${isOldMember ? "bg-primary" : "bg-muted"}`}
+            >
+              <div className={`h-3 w-3 rounded-full bg-white transition-transform ${isOldMember ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
+            <div>
+              <div className="text-xs font-bold">Shadow Play Protect (Signer)</div>
+              <div className="text-[10px] text-muted-foreground">+ R$ 450 (Pagamento Único)</div>
+            </div>
+            <button
+              onClick={() => setAddSigner(!addSigner)}
+              className={`h-5 w-10 rounded-full transition-colors ${addSigner ? "bg-primary" : "bg-muted"}`}
+            >
+              <div className={`h-3 w-3 rounded-full bg-white transition-transform ${addSigner ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-between rounded-xl bg-background/40 p-6 border border-border/50">
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Plano Selecionado:</span>
+              <span>{selectedPlan === "none" ? "---" : `R$ ${planPrice}`}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Servidor (Setup + Infra):</span>
+              <span>{selectedPlan === "none" ? "---" : `R$ ${serverPrice}`}</span>
+            </div>
+            {addSigner && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Shadow Signer:</span>
+                <span>R$ 450</span>
+              </div>
+            )}
+            <div className="my-4 h-px bg-border/50" />
+            <div className="flex justify-between items-end">
+              <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">Total Estimado</span>
+              <span className="font-display text-3xl font-bold text-primary">R$ {total}</span>
+            </div>
+          </div>
+          <p className="mt-4 text-[10px] text-center text-muted-foreground italic">
+            * Valores baseados nas regras atuais de membros antigos e novos.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+
 function TierComparison() {
   const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; serverOld: React.ReactNode; lifetime: React.ReactNode }[] = [
     { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", serverOld: "Infra v4.6", lifetime: "Shadow 4.6+" },
