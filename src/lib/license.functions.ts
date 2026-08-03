@@ -175,7 +175,7 @@ export const generateTrial = createServerFn({ method: "POST" })
     }
 
     const expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 1);
-    const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert({
+    const licPayload = {
       user_id: userId,
       plan_slug: "trial",
       yaarsa_username: creds.username,
@@ -183,7 +183,10 @@ export const generateTrial = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: expiresAt.toISOString(),
       is_trial: true,
-    }).select("*").single();
+      panel: panelFromPlanSlug("trial"), // Ensure panel is set correctly for trial
+    };
+
+    const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").single();
     if (licErr || !lic) {
       // Leave the claim in place; the Yaarsa account is safe and the next
       // retry will short-circuit via step (1) once the row does land.

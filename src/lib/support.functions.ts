@@ -152,7 +152,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       url = signed?.signedUrl ?? null;
     }
 
-    const { data: msg, error } = await context.supabase.from("support_messages").insert({
+    const payload: any = {
       thread_id: effectiveThreadId,
       sender_id: context.userId,
       is_admin: isStaff,
@@ -160,7 +160,23 @@ export const sendMessage = createServerFn({ method: "POST" })
       attachment_url: url,
       attachment_type: data.attachmentType ?? null,
       reply_to_id: data.replyToId ?? null,
-    }).select("*").single();
+    };
+
+    async function doInsert(p: any) {
+      return context.supabase.from("support_messages").insert(p).select("*").single();
+    }
+
+    let { data: msg, error } = await doInsert(payload);
+
+    // Fallback: se o cache de schema do PostgREST estiver desatualizado
+    // (PGRST204 "Could not find the 'reply_to_id' column"), tentamos sem o reply.
+    if (error && (error as any).code === "PGRST204") {
+      const { reply_to_id, ...fallback } = payload;
+      const retry = await doInsert(fallback);
+      msg = retry.data;
+      error = retry.error;
+    }
+
     if (error) throw error;
     
     // Inicia análise por IA se não for staff e a mensagem contiver gatilhos de erro de login
