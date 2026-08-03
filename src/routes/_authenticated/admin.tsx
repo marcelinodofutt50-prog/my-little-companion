@@ -43,6 +43,7 @@ import {
   Bot,
   Server,
   Megaphone,
+  Building2,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
@@ -673,20 +674,21 @@ function AdminPage() {
         >
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Central de operações
-                <span className="hidden h-3 w-px bg-border sm:inline-block" />
-                <span className="hidden sm:inline">Shadow Dash</span>
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
+                <Building2 className="h-3.5 w-3.5 text-primary" /> Mirror Executive Console
+                <span className="hidden h-3 w-px bg-border/50 sm:inline-block" />
                 <span
-                  className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] uppercase text-primary"
+                  className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] uppercase tracking-wider text-primary"
                 >
                   {ROLE_LABEL[role]}
                 </span>
               </div>
-              <h1 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">
-                {isAdminUser ? "Painel Administrativo" : "Painel de Suporte"}
+              <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                Shadow Ops Command
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">Gerencie clientes, receita, suporte e infraestrutura em um só lugar.</p>
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                Strategic Assets & Infrastructure Management • v4.6.2-PRO
+              </p>
 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-primary">
