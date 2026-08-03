@@ -402,6 +402,65 @@ function PlayProtectPage() {
   );
 }
 
+function PublicBuilderSection() {
+  const getBuilds = useServerFn(getMyBuildJobs);
+  const { data: builds, isLoading, error, refetch } = useQuery({
+    queryKey: ["public-build-jobs"],
+    queryFn: () => getBuilds(),
+    retry: 1,
+  });
+
+  return (
+    <div className="rounded-lg border border-violet/40 bg-violet/5 p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <ShieldCheck className="h-6 w-6 text-violet" />
+        <div>
+          <h2 className="text-xl font-bold font-display">Shadow Bypass Builder (público)</h2>
+          <p className="text-xs text-muted-foreground">Autoatendimento com dropper Shadow Bypass — em beta. Requer plano Play Protect ativo.</p>
+        </div>
+      </div>
+      <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-3 mb-4">
+        <div className="rounded border border-border/40 bg-background/40 p-3">
+          <div className="font-mono text-[9px] uppercase tracking-widest text-violet/70 mb-1">1. Configure</div>
+          Escolha nome, ícone e opções do dropper Shadow Bypass.
+        </div>
+        <div className="rounded border border-border/40 bg-background/40 p-3">
+          <div className="font-mono text-[9px] uppercase tracking-widest text-violet/70 mb-1">2. Compile</div>
+          A build acontece automaticamente sem passar pela equipe.
+        </div>
+        <div className="rounded border border-border/40 bg-background/40 p-3">
+          <div className="font-mono text-[9px] uppercase tracking-widest text-violet/70 mb-1">3. Baixe</div>
+          O APK assinado fica disponível assim que a build termina.
+        </div>
+      </div>
+      <div className="rounded border border-border/40 bg-background/40 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Suas builds públicas</span>
+          <Button variant="ghost" size="sm" className="h-7 rounded-none px-2 font-mono text-[9px]" onClick={() => void refetch()}>
+            <RefreshCcw className="mr-1 h-3 w-3" /> Atualizar
+          </Button>
+        </div>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Carregando…</div>
+        ) : error ? (
+          <div className="text-xs text-danger">Erro ao carregar builds públicas.</div>
+        ) : !builds || builds.length === 0 ? (
+          <div className="py-3 text-center font-mono text-[10px] uppercase text-muted-foreground/50">Nenhuma build pública ainda</div>
+        ) : (
+          <ul className="space-y-2">
+            {builds.slice(0, 5).map((b: any) => (
+              <li key={b.id} className="flex items-center justify-between border border-border/30 bg-background/30 px-2 py-1.5 text-xs">
+                <span className="truncate font-display">{b.app_name || "Build"}</span>
+                <span className="font-mono text-[9px] uppercase text-violet/80">{b.status}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AdminTipsSection() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"all" | "social" | "technical" | "naming">("all");
