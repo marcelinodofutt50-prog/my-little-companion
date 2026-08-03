@@ -88,13 +88,25 @@ function SupportPage() {
     });
     setOpening(true);
     setOpenError(null);
-    openFn()
+    const openWithRetry = async () => {
+      let lastError: any;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          return await openFn();
+        } catch (error) {
+          lastError = error;
+          if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 400 * (attempt + 1)));
+        }
+      }
+      throw lastError;
+    };
+    openWithRetry()
       .then((t) => { if (!cancelled) setThread(t); })
       .catch((e: any) => {
-        // Se for admin, o servidor retorna null em vez de criar automático.
-        if (e?.message !== "Conversa não encontrada" && !isAdminRef.current) {
-          toast.error(e?.message ?? "Não foi possível abrir o atendimento");
-          setOpenError(e?.message ?? "Não foi possível abrir o atendimento");
+        if (!cancelled) {
+          const message = e?.message ?? "Não foi possível abrir o atendimento";
+          toast.error(message);
+          setOpenError(message);
         }
       })
       .finally(() => { if (!cancelled) setOpening(false); });
@@ -145,7 +157,9 @@ function SupportPage() {
         setMsgs((r?.messages ?? []) as Msg[]);
         setHasMore(!!r?.hasMore);
       })
-      .catch(() => {});
+       .catch((error: any) => {
+         if (!cancelled) toast.error(error?.message ?? "Não foi possível carregar as mensagens");
+       });
     markReadFn({ data: { threadId } }).catch(() => {});
 
     const ch = supabase.channel(`t-${threadId}`).on("postgres_changes",
