@@ -1221,8 +1221,8 @@ function LegacyLookup() {
       setResult({ found: r.found, panels: r.panels as ("v457" | "v46")[] });
       if (r.found) {
         if (r.panels.length === 1) setSelectedPanel(r.panels[0] as "v457" | "v46");
-        // Em um cenário real, isso dispararia o e-mail
         setNeedsVerification(true);
+        setVerificationLogs([{ status: 'pending', time: new Date().toLocaleTimeString() }]);
         toast.success("Código de verificação enviado para " + email.trim());
       }
     } catch (e: any) {
