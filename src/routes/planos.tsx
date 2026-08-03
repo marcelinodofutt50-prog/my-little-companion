@@ -1207,6 +1207,8 @@ function LegacyLookup() {
   const [needsVerification, setNeedsVerification] = React.useState(false);
   const [verificationCode, setVerificationCode] = React.useState("");
   const [isVerifying, setIsVerifying] = React.useState(false);
+  const [verificationLogs, setVerificationLogs] = React.useState<{status: 'pending' | 'confirmed' | 'invalid' | 'expired', time: string}[]>([]);
+
 
   const panelLabel = (p: string) => (p === "v46" ? "Shadow 4.6 (Vitalício)" : "Shadow 4.5.7 (Mensal)");
 
