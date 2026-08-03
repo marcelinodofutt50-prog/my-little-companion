@@ -16,6 +16,7 @@ import { AnnouncementsSection } from '@/components/AnnouncementsSection'
 import { EmptyState } from '@/components/EmptyState'
 import { SupportDiagnosticButton } from '@/components/SupportDiagnosticButton'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
+import { TrialActivationCard } from '@/components/TrialActivationCard'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -143,11 +144,13 @@ function DashboardPage() {
   }
   const fallbackDownloads = activeLicense ? downloadsForLicense(activeLicense) : []
   const daysLeft = expiry ? expiry.daysLeft : null
+  const lifetimeActive = !!expiry && expiry.active && expiry.countdownAt === null
   const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
 
-  const statusColor = daysLeft === null ? "text-red-500" : daysLeft <= 3 ? "text-amber-500" : "text-neon"
-  const statusRing = daysLeft === null ? "border-red-500/30 bg-red-500/5 shadow-red-500/10" : daysLeft <= 3 ? "border-amber-500/30 bg-amber-500/5 shadow-amber-500/10" : "border-neon/30 bg-neon/5 shadow-neon/10"
+  const statusColor = lifetimeActive ? "text-neon" : daysLeft === null ? "text-red-500" : daysLeft <= 3 ? "text-amber-500" : "text-neon"
+  const statusRing = lifetimeActive ? "border-neon/30 bg-neon/5 shadow-neon/10" : daysLeft === null ? "border-red-500/30 bg-red-500/5 shadow-red-500/10" : daysLeft <= 3 ? "border-amber-500/30 bg-amber-500/5 shadow-amber-500/10" : "border-neon/30 bg-neon/5 shadow-neon/10"
+
 
   const copyPrimary = () => {
     if (primary) {
@@ -194,8 +197,9 @@ function DashboardPage() {
                     </div>
                   </div>
                   <div className={`shrink-0 rounded-md border-2 px-5 py-3 text-right font-mono shadow-sm ${statusRing}`}>
-                    <div className={`text-[10px] font-bold uppercase ${statusColor}`}>Dias de licença</div>
-                    <div className={`mt-1 text-3xl font-black ${statusColor}`}>{daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
+                    <div className={`text-[10px] font-bold uppercase ${statusColor}`}>{lifetimeActive ? 'Licença' : 'Dias de licença'}</div>
+                    <div className={`mt-1 text-3xl font-black ${statusColor}`}>{lifetimeActive ? '∞' : daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
+
                     <div className="text-[10px] text-muted-foreground">{licenses?.length || 0} terminais ativos</div>
                   </div>
                 </div>
@@ -224,6 +228,10 @@ function DashboardPage() {
                   </Card>
                 ))}
               </div>
+
+              {!licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
+                <TrialActivationCard onDone={() => void refetchLicenses()} />
+              )}
 
               <OnboardingChecklist
                 hasActiveLicense={!!activeLicense}
@@ -257,18 +265,37 @@ function DashboardPage() {
                         </li>
                       ))}
                     </ol>
-                    <LicenseCountdown
-                      target={expiry?.countdownAt ?? null}
-                      serverNow={serverNow}
-                      title={expiry?.kind === 'lifetime' ? 'Mensalidade do servidor' : 'Tempo restante'}
-                      note={
-                        expiry?.kind === 'trial'
-                          ? 'Seu teste dura 24 horas cheias a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
-                          : expiry?.kind === 'lifetime'
-                            ? 'Pague a mensalidade do servidor até o dia 20 para manter o acesso ativo.'
-                            : 'Quando o contador zerar, o login é encerrado automaticamente. Renove antes para não perder o acesso.'
-                      }
-                    />
+                    <div className="flex flex-col items-center gap-2">
+                      {expiry?.countdownAt ? (
+                        <LicenseCountdown
+                          target={expiry.countdownAt}
+                          serverNow={serverNow}
+                          title="Sua licença vence em"
+                          note={
+                            expiry?.kind === 'trial'
+                              ? 'Seu teste dura 24 horas cheias a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
+                              : 'Contador dos dias que você comprou. Quando zerar, o login é encerrado — renove antes para não perder o acesso.'
+                          }
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-primary/30 bg-primary/5 px-6 py-5 font-mono text-primary">
+                          <div className="text-[10px] font-bold uppercase">Sua licença</div>
+                          <div className="mt-1 text-3xl font-black uppercase">Vitalícia</div>
+                          <div className="mt-2 max-w-[16rem] text-center text-[10px] normal-case leading-relaxed text-muted-foreground">
+                            Não expira. Só a mensalidade do servidor precisa estar em dia.
+                          </div>
+                        </div>
+                      )}
+                      {expiry?.serverDueAt && (
+                        <div className="max-w-[16rem] rounded-md border border-border/60 bg-background/50 px-3 py-2 text-center font-mono text-[10px] leading-relaxed text-muted-foreground">
+                          Mensalidade do servidor (cobrança separada): vence em{' '}
+                          <span className="text-foreground">
+                            {new Date(expiry.serverDueAt).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
 
                   </div>
                 </section>

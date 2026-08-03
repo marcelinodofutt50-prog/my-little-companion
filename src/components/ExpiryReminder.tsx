@@ -36,13 +36,14 @@ export function ExpiryReminder() {
     const st = licenseExpiryState(l, serverNow);
     if (!st.active) continue;
     if (st.severity && st.daysLeft !== null) {
-      const label =
-        st.kind === "lifetime"
-          ? "Mensalidade do servidor"
-          : `${st.kind === "trial" ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim();
+      const label = `${st.kind === "trial" ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim();
       items.push({ label, days: st.daysLeft, sev: st.severity, trial: st.kind === "trial" });
+    } else if (st.countdownAt === null && st.serverSeverity && st.serverDaysLeft !== null) {
+      // Vitalício: a licença não vence, mas a mensalidade do servidor sim.
+      items.push({ label: "Mensalidade do servidor", days: st.serverDaysLeft, sev: st.serverSeverity, trial: false });
     }
   }
+
   items.sort((a, b) => a.days - b.days);
   items.splice(3);
 

@@ -94,7 +94,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
     let expiresAt: Date;
     if (claimed.plan_slug === "login-7d") { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7); }
     else if (claimed.plan_slug === "login-lifetime") { expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20); }
-    else expiresAt = nextDay20;
+    else { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30); }
 
     try { await yaarsaExtend(creds.email, expiresAt.toISOString().slice(0, 10), targetPanel); } catch { /* best-effort */ }
 

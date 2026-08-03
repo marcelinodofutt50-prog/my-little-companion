@@ -28,7 +28,10 @@ function computeExpiries(planSlug: string, customExpire?: string | null) {
   if (customExpire) expiresAt = new Date(customExpire);
   else if (planSlug === "login-7d") { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7); }
   else if (planSlug === "login-lifetime") { expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20); }
-  else expiresAt = next20;
+  else if (planSlug === "trial") { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 1); }
+  // Mensal (e qualquer plano por dias): conta os dias comprados a partir de
+  // hoje. O corte do dia 20 é a mensalidade do servidor, cobrança separada.
+  else { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30); }
   return { expiresAt, serverPaidUntil: next20 };
 }
 

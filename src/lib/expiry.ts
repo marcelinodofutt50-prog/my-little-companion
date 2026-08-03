@@ -57,21 +57,25 @@ export function nextServerDueDate(now = Date.now()): Date {
 export type LicenseExpiryState = {
   kind: LicenseKind;
   active: boolean;
-  /** Dias até o vencimento que realmente derruba o acesso (null = sem data). */
+  /** Dias até o FIM DA LICENÇA (null = licença sem data / vitalícia). */
   daysLeft: number | null;
-  /** Data que define o countdown principal. */
+  /** Data do countdown principal = sempre o fim da licença do cliente. */
   countdownAt: string | null;
-  /** Só para vitalício: vencimento da mensalidade do servidor. */
+  /** Mensalidade do servidor (informativo, nunca é o countdown da licença). */
   serverDueAt: string | null;
   serverDaysLeft: number | null;
   severity: ExpirySeverity;
+  /** Severidade só da mensalidade do servidor. */
+  serverSeverity: ExpirySeverity;
   renewalNote: string;
 };
 
 /**
  * Estado de expiração usando o relógio do servidor (`now`).
- * - mensal/trial: expira somente quando `expires_at` chega ao fim.
- * - vitalício: licença não expira; o corte é a mensalidade do servidor (dia 20).
+ * - mensal/trial: countdown = `expires_at` (dias comprados). O dia 20 do
+ *   servidor NUNCA entra nesse contador.
+ * - vitalício: a licença não expira (countdown nulo); a mensalidade do
+ *   servidor aparece separada, apenas como informação.
  */
 export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExpiryState {
   const kind = licenseKind(l);
@@ -81,20 +85,24 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
 
   const serverDueAt = l.server_paid_until
     ? `${String(l.server_paid_until).slice(0, 10)}T23:59:59`
-    : kind === "lifetime"
-      ? nextServerDueDate(now).toISOString()
-      : null;
-  const serverDaysLeft = kind === "lifetime" ? daysUntil(serverDueAt, now) : null;
+    : nextServerDueDate(now).toISOString();
+  const serverDaysLeft = daysUntil(serverDueAt, now);
 
-  const countdownAt = kind === "lifetime" ? serverDueAt : (l.expires_at ?? null);
+  // Vitalício: 20 anos no banco — não faz sentido mostrar contador.
+  const licenseEnd = l.expires_at ?? null;
+  const isEffectivelyLifetime =
+    kind === "lifetime" ||
+    (licenseEnd ? new Date(licenseEnd).getTime() - now > 5 * 365 * MS_DAY : false);
+
+  const countdownAt = isEffectivelyLifetime ? null : licenseEnd;
   const daysLeft = daysUntil(countdownAt, now);
 
   const renewalNote =
-    kind === "lifetime"
-      ? "Sua licença é vitalícia. Só a mensalidade do servidor precisa ser paga até o dia 20 de cada mês para manter o acesso."
+    isEffectivelyLifetime
+      ? "Sua licença é vitalícia e não expira. Só a mensalidade do servidor precisa ser paga até o dia 20 de cada mês para manter o acesso."
       : kind === "trial"
         ? "Teste grátis de 24 horas exatas contadas a partir da ativação. O contador não depende de meia-noite — quando zerar, o login é encerrado automaticamente."
-        : "Sua licença mensal só expira quando os dias acabarem. O corte do dia 20 do servidor não afeta o plano mensal — ele vale só para vitalícios.";
+        : "Sua licença mensal expira quando os dias comprados acabarem. O dia 20 do servidor é uma cobrança separada e não muda esse contador.";
 
   return {
     kind,
@@ -104,9 +112,11 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
     serverDueAt,
     serverDaysLeft,
     severity: severityFromDays(daysLeft),
+    serverSeverity: severityFromDays(serverDaysLeft),
     renewalNote,
   };
 }
+
 
 // ===== Countdown em horas/minutos (trial e planos curtos) =====
 
