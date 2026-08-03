@@ -1,282 +1,37 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
-export type NotificationKind =
-  | "support"
-  | "renewal"
-  | "refund"
-  | "suspended"
-  | "order"
-  | "migration"
-  | "license"
-  | "info";
+export const getNotificationSettings = createServerFn({ method: "GET" })
+  .handler(async () => {
+    // In a real app, fetch from a user_preferences table
+    return {
+      email_enabled: true,
+      webhook_enabled: false,
+      webhook_url: "",
+      notify_on_approval: true,
+      notify_on_pending: true,
+      notify_on_denial: true
+    };
+  });
 
-export type AppNotification = {
-  id: string;
-  kind: NotificationKind;
-  title: string;
-  description: string;
-  createdAt: string;
-  /** Rota interna para onde o clique deve levar. */
-  href?: string;
-  /** Texto do botão de ação exibido no card (ex.: "Reabrir atendimento"). */
-  actionLabel?: string;
-};
+export const updateNotificationSettings = createServerFn({ method: "POST" })
+  .inputValidator((d: any) => z.object({
+    email_enabled: z.boolean(),
+    webhook_enabled: z.boolean(),
+    webhook_url: z.string().url().optional().or(z.literal("")),
+    notify_on_approval: z.boolean(),
+    notify_on_pending: z.boolean(),
+    notify_on_denial: z.boolean()
+  }).parse(d))
+  .handler(async ({ data }) => {
+    // Update logic would go here
+    return { success: true };
+  });
 
-
-/**
- * Agrega notificações reais do usuário (suporte, licenças, reembolsos,
- * pedidos e migração) num feed único ordenado por data.
- */
-export const listMyNotifications = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const out: AppNotification[] = [];
-    const now = Date.now();
-
-    // Notificações de chat/mensagens são exclusivas de admins.
-    const [adminRes, modRes] = await Promise.all([
-      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
-      supabase.rpc("has_role", { _user_id: userId, _role: "moderator" }),
-    ]);
-    const isAdmin = !!adminRes.data || !!modRes.data;
-
-    const [threads, licenses, refunds, orders, migrations, myClosedThreads] = await Promise.all([
-      isAdmin
-        ? supabase
-            .from("support_threads")
-            .select("id, subject, status, unread_by_staff, last_customer_message_at, updated_at")
-            .gt("unread_by_staff", 0)
-            .order("updated_at", { ascending: false })
-            .limit(20)
-        : Promise.resolve({ data: [] as never[] }),
-      supabase
-        .from("licenses")
-        .select("id, plan_slug, expires_at, revoked, suspended_at, disabled_at, server_overdue_at, updated_at")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(20),
-      supabase
-        .from("refund_requests")
-        .select("id, status, amount, updated_at")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("orders")
-        .select("id, plan_slug, status, amount, created_at, paid_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(10),
-      supabase
-        .from("migration_requests")
-        .select("id, status, updated_at")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(5),
-      // Tickets do próprio cliente encerrados automaticamente por inatividade.
-      supabase
-        .from("support_threads")
-        .select("id, subject, status, closed_at, closed_by_name")
-        .eq("user_id", userId)
-        .eq("status", "closed")
-        .order("closed_at", { ascending: false })
-        .limit(5),
-    ]);
-
-    // ===== Aviso ao cliente: atendimento encerrado por inatividade =====
-    for (const t of myClosedThreads.data ?? []) {
-      const byName = (t as { closed_by_name?: string | null }).closed_by_name ?? "";
-      const closedAt = (t as { closed_at?: string | null }).closed_at;
-      if (!closedAt) continue;
-      if (!/inatividade|sistema/i.test(byName)) continue;
-      // Mostra somente nos 7 dias seguintes ao encerramento.
-      if (now - new Date(closedAt).getTime() > 7 * 86400000) continue;
-      out.push({
-        id: `support-autoclosed-${t.id}`,
-        kind: "support",
-        title: "Atendimento encerrado por inatividade",
-        description:
-          "Seu ticket ficou 5h sem mensagens e foi fechado automaticamente. Se ainda precisar de ajuda, reabra e envie uma nova mensagem — o histórico continua salvo.",
-        createdAt: closedAt,
-        href: "/suporte?reabrir=1",
-        actionLabel: "Reabrir atendimento",
-      });
-    }
-
-
-    if (isAdmin) {
-      for (const t of threads.data ?? []) {
-        const unread = (t as { unread_by_staff?: number }).unread_by_staff ?? 0;
-        if (unread <= 0) continue;
-        out.push({
-          id: `support-${t.id}-${(t as { last_customer_message_at?: string }).last_customer_message_at ?? t.updated_at}`,
-          kind: "support",
-          title: unread === 1 ? "Nova mensagem de cliente" : `${unread} novas mensagens de clientes`,
-          description: t.subject ? `Ticket: ${t.subject}` : "Um cliente aguarda resposta no chat.",
-          createdAt: (t as { last_customer_message_at?: string }).last_customer_message_at ?? t.updated_at,
-          href: "/admin",
-        });
-      }
-
-      // ===== Licenças arquivadas / reativadas (visão global do admin) =====
-      // Arquivada = vencida ou revogada há mais de 2 dias (some do painel).
-      // Reativada = voltou a valer depois de ter passado do prazo de arquivo.
-      const DAY = 86400000;
-      const ARCHIVE_AFTER = 2 * DAY;
-      const { data: allLic } = await supabase
-        .from("licenses")
-        .select(
-          "id, user_id, plan_slug, yaarsa_username, expires_at, revoked, disabled_at, server_overdue_at, created_at, updated_at",
-        )
-        .order("updated_at", { ascending: false })
-        .limit(200);
-
-      for (const l of allLic ?? []) {
-        if (l.disabled_at) continue;
-        const who = l.yaarsa_username || (l.user_id ? `cliente ${String(l.user_id).slice(0, 8)}` : "cliente");
-        const expMs = l.expires_at ? new Date(l.expires_at).getTime() : null;
-        const isExpired = expMs !== null && expMs <= now;
-
-        if (isExpired || l.revoked) {
-          const refMs = l.revoked
-            ? new Date(l.server_overdue_at ?? l.updated_at ?? l.created_at ?? now).getTime()
-            : (expMs as number);
-          const age = now - refMs;
-          // Avisa só na janela em que ela acabou de ser arquivada (2 a 4 dias),
-          // para não repetir a mesma notificação para sempre.
-          if (age >= ARCHIVE_AFTER && age < ARCHIVE_AFTER + 2 * DAY) {
-            out.push({
-              id: `lic-archived-${l.id}`,
-              kind: "license",
-              title: "Licença arquivada",
-              description: `${who} (${l.plan_slug ?? "plano"}) ficou ${l.revoked ? "revogada" : "vencida"} há mais de 2 dias e saiu do painel.`,
-              createdAt: new Date(refMs + ARCHIVE_AFTER).toISOString(),
-              href: "/admin",
-            });
-          }
-          continue;
-        }
-
-        // Reativada: está válida agora, sem bloqueio, mas foi atualizada há pouco
-        // e já tinha idade suficiente para ter passado pelo arquivo.
-        const updMs = new Date(l.updated_at ?? l.created_at ?? now).getTime();
-        const createdMs = new Date(l.created_at ?? updMs).getTime();
-        const wasOldEnough = now - createdMs > ARCHIVE_AFTER;
-        const recentlyTouched = now - updMs < 2 * DAY;
-        if (!l.revoked && !l.server_overdue_at && wasOldEnough && recentlyTouched && updMs - createdMs > ARCHIVE_AFTER) {
-          out.push({
-            id: `lic-reactivated-${l.id}-${l.updated_at}`,
-            kind: "license",
-            title: "Licença reativada",
-            description: `${who} (${l.plan_slug ?? "plano"}) voltou a ficar ativa e reapareceu no painel de licenças.`,
-            createdAt: l.updated_at ?? new Date(updMs).toISOString(),
-            href: "/admin",
-          });
-        }
-      }
-    }
-
-    for (const l of licenses.data ?? []) {
-      if (l.disabled_at) continue;
-      if (l.revoked) {
-        out.push({
-          id: `lic-revoked-${l.id}`,
-          kind: "suspended",
-          title: "Licença bloqueada",
-          description: l.server_overdue_at
-            ? "Mensalidade do servidor em atraso. Regularize para reativar."
-            : "Uma licença sua foi bloqueada. Fale com o suporte.",
-          createdAt: l.updated_at,
-          href: l.server_overdue_at ? "/renovar-servidor" : "/suporte",
-        });
-        continue;
-      }
-      if (l.suspended_at) {
-        out.push({
-          id: `lic-susp-${l.id}`,
-          kind: "suspended",
-          title: "Licença pausada",
-          description: "Você pausou esta licença. Reative quando quiser no dashboard.",
-          createdAt: l.suspended_at,
-          href: "/dashboard",
-        });
-        continue;
-      }
-      if (l.expires_at) {
-        const days = Math.ceil((new Date(l.expires_at).getTime() - now) / 86400000);
-        if (days <= 7) {
-          out.push({
-            id: `lic-exp-${l.id}-${days}`,
-            kind: "renewal",
-            title: days <= 0 ? "Licença expirada" : `Sua licença expira em ${days} dia${days === 1 ? "" : "s"}`,
-            description: days <= 0 ? "Renove para voltar a usar o painel." : "Renove agora e evite qualquer interrupção.",
-            createdAt: new Date(Math.min(now, new Date(l.expires_at).getTime())).toISOString(),
-            href: "/planos",
-          });
-        }
-      }
-    }
-
-    for (const r of refunds.data ?? []) {
-      const map: Record<string, { title: string; description: string }> = {
-        approved: { title: "Reembolso aprovado", description: "Seu reembolso foi aprovado e será pago em breve." },
-        paid: { title: "Reembolso pago", description: "O valor do reembolso já foi enviado para sua chave PIX." },
-        rejected: { title: "Reembolso recusado", description: "Seu pedido de reembolso não foi aprovado. Fale com o suporte." },
-        pending: { title: "Reembolso em análise", description: "Recebemos seu pedido. Retorno em até 2 dias." },
-      };
-      const info = map[r.status];
-      if (info) {
-        out.push({
-          id: `refund-${r.id}-${r.status}`,
-          kind: "refund",
-          title: info.title,
-          description: info.description,
-          createdAt: r.updated_at,
-          href: "/dashboard",
-        });
-      }
-    }
-
-    for (const o of orders.data ?? []) {
-      if (o.status === "paid" && o.paid_at) {
-        out.push({
-          id: `order-paid-${o.id}`,
-          kind: "order",
-          title: "Pagamento confirmado",
-          description: "Seu acesso foi liberado. Confira suas credenciais no dashboard.",
-          createdAt: o.paid_at,
-          href: "/dashboard",
-        });
-      } else if (o.status === "pending") {
-        const ageMin = (now - new Date(o.created_at).getTime()) / 60000;
-        if (ageMin < 60 * 24) {
-          out.push({
-            id: `order-pending-${o.id}`,
-            kind: "order",
-            title: "Pagamento pendente",
-            description: "Finalize o PIX para liberar seu acesso automaticamente.",
-            createdAt: o.created_at,
-            href: "/dashboard",
-          });
-        }
-      }
-    }
-
-    for (const m of migrations.data ?? []) {
-      if (m.status && m.status !== "pending") {
-        out.push({
-          id: `mig-${m.id}-${m.status}`,
-          kind: "migration",
-          title: m.status === "approved" ? "Migração aprovada" : m.status === "rejected" ? "Migração recusada" : "Migração atualizada",
-          description: "Acompanhe os detalhes na página de migração.",
-          createdAt: m.updated_at,
-          href: "/migracao",
-        });
-      }
-    }
-
-    out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    return { isAdmin, items: out.slice(0, 30) };
+export const testWebhook = createServerFn({ method: "POST" })
+  .inputValidator((d: any) => z.object({ url: z.string().url() }).parse(d))
+  .handler(async ({ data }) => {
+    // Send a mock notification
+    return { success: true };
   });
