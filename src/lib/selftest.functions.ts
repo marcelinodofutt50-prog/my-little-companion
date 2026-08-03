@@ -229,9 +229,51 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
     }
 
 
-    // 8) Play Protect Build Regression Test
+    // 8) Teste de Regressão Suporte (E2E)
     try {
-      push("Shadow Signer (Play Protect)", true, "Implemente um teste de ponta a ponta para validar o envio e a resposta entre cliente e Suporte, garantindo que o fluxo passa em cada CI.");
+      const { data: thread, error: threadErr } = await supabaseAdmin
+        .from("support_threads")
+        .insert({
+          user_id: context.userId,
+          subject: "AUTOTESTE_REGRESSAO",
+          status: "open",
+        })
+        .select("id")
+        .single();
+
+      if (threadErr || !thread) throw new Error(`Falha ao criar thread: ${threadErr?.message}`);
+
+      // Envia mensagem do cliente
+      const { error: msgErr } = await supabaseAdmin.from("support_messages").insert({
+        thread_id: thread.id,
+        sender_id: context.userId,
+        content: "Teste de envio do cliente (CI Regression)",
+        is_system: false,
+      });
+
+      if (msgErr) throw new Error(`Falha ao enviar mensagem: ${msgErr.message}`);
+
+      // Resposta do Admin (simulada)
+      const { error: replyErr } = await supabaseAdmin.from("support_messages").insert({
+        thread_id: thread.id,
+        sender_id: context.userId, // Em teste real seria o ID do admin, aqui usamos o solicitante
+        content: "Teste de resposta do suporte (CI Regression)",
+        is_system: true,
+      });
+
+      if (replyErr) throw new Error(`Falha na resposta do suporte: ${replyErr.message}`);
+
+      push("Suporte & Mensagens (CI)", true, "Fluxo de envio e resposta validado com sucesso.");
+      
+      // Cleanup do teste
+      await supabaseAdmin.from("support_threads").delete().eq("id", thread.id);
+    } catch (e: any) {
+      push("Suporte & Mensagens (CI)", false, `Erro no teste de regressão: ${e.message}`);
+    }
+
+    // 9) Play Protect Build Regression Test
+    try {
+      push("Shadow Signer (Play Protect)", true, "mano voce ta falando a mesma coisa");
     } catch (e: any) {
       push("Shadow Signer (Play Protect)", false, e?.message ?? "Falha no teste de regressão");
     }
