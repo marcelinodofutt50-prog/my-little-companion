@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { Activity, ArrowRight, ChevronDown, Copy, Cpu, Fingerprint, Lock, ShieldCheck, Zap, Clock } from "lucide-react";
+import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -46,28 +47,16 @@ function LandingPage() {
   const { t } = useI18n();
   const search = useSearch({ from: "/" }) as any;
 
+  useThemeSearchParam(search?.theme);
+
   useEffect(() => {
-    const html = document.documentElement;
-    const isLight = search?.theme === 'light';
-    
-    // Check for explicit cache clearing request
     if (search?.clear_cache === 'true') {
       const url = new URL(window.location.href);
       url.searchParams.delete('clear_cache');
       window.history.replaceState({}, '', url.toString());
       toast.success("Cache do sistema limpo com sucesso");
     }
-
-    if (isLight) {
-      html.classList.add('theme-light');
-      html.classList.remove('dark');
-      html.style.colorScheme = 'light';
-    } else {
-      html.classList.remove('theme-light');
-      html.classList.add('dark');
-      html.style.colorScheme = 'dark';
-    }
-  }, [search?.theme, search?.clear_cache]);
+  }, [search?.clear_cache]);
 
 
   useEffect(() => {
@@ -144,13 +133,13 @@ function LandingPage() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="flex flex-col items-center gap-8 sm:flex-row"
           >
-            <Link to="/planos" search={{ theme: search?.theme }}>
+            <Link to="/planos">
               <Button size="lg" className="h-14 rounded-full bg-primary px-10 font-mono text-xs uppercase tracking-[0.2em] text-primary-foreground hover:opacity-90 transition-all duration-500 shadow-[0_0_20px_var(--color-primary)]">
                 Conhecer Planos +
               </Button>
             </Link>
             
-            <Link to="/auth" search={{ theme: search?.theme }} className="group flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/auth" className="group flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
               <span>Testar Acesso Por 24H —</span>
               <div className="h-px w-8 bg-border group-hover:bg-primary group-hover:w-12 transition-all" />
             </Link>

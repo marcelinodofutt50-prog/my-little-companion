@@ -53,7 +53,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 hairline-b bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
         {/* Brand */}
-        <Link to="/" search={{ theme: search?.theme }} className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-70">
+        <Link to="/" className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-70">
           <img src={shadowMark} alt="" width={24} height={24} decoding="async" className="h-6 w-6 object-contain drop-shadow-[0_0_8px_var(--color-primary)]" />
           <span className="font-display text-xl leading-none tracking-tight">Shadow</span>
         </Link>
@@ -61,7 +61,7 @@ export function SiteHeader() {
         {/* Desktop nav */}
         <nav className="ml-6 hidden flex-1 items-center gap-7 md:flex">
           {primary.map((l) => (
-            <Link key={l.to} to={l.to} search={{ theme: search?.theme }} className={linkCls(path === l.to)}>
+            <Link key={l.to} to={l.to} className={linkCls(path === l.to)}>
               {l.label}
             </Link>
           ))}
@@ -72,7 +72,7 @@ export function SiteHeader() {
             <DropdownMenuContent align="start" className="rounded-none font-mono text-[11px] uppercase tracking-[0.2em]">
               {more.map((l) => (
                 <DropdownMenuItem key={l.to} asChild>
-                  <Link to={l.to} search={{ theme: search?.theme }}>{l.label}</Link>
+                  <Link to={l.to}>{l.label}</Link>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -88,13 +88,13 @@ export function SiteHeader() {
           <LanguageToggle className="hidden sm:inline-flex" />
 
           {user ? (
-            <Link to="/dashboard" search={{ theme: search?.theme }}>
+            <Link to="/dashboard">
               <Button size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
                 {t("nav.panel")}
               </Button>
             </Link>
           ) : (
-            <Link to="/auth" search={{ theme: search?.theme }} className="hidden sm:block">
+            <Link to="/auth" className="hidden sm:block">
               <Button
                 size="sm"
                 variant="outline"
@@ -125,7 +125,6 @@ export function SiteHeader() {
                     <Link
                       key={l.to}
                       to={l.to}
-                      search={{ theme: search?.theme }}
                       onClick={() => setOpen(false)}
                       className={`rounded-sm px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors ${
                         path === l.to
@@ -143,7 +142,7 @@ export function SiteHeader() {
                     <ThemeToggle />
                   </div>
                   {!user && (
-                    <Link to="/auth" search={{ theme: search?.theme }} onClick={() => setOpen(false)} className="block">
+                    <Link to="/auth" onClick={() => setOpen(false)} className="block">
                       <Button variant="outline" className="w-full rounded-none border-foreground font-mono text-[10px] uppercase tracking-[0.2em]">
                         {t("nav.signin")}
                       </Button>

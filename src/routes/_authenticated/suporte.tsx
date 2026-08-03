@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -18,7 +19,7 @@ import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { reabrir?: boolean; erro?: boolean; lic?: string } => ({
     reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : false,
     erro: s.erro === "1" || s.erro === 1 || s.erro === true ? true : false,
     lic: typeof s.lic === "string" && s.lic ? s.lic.slice(0, 60) : "",
@@ -46,19 +47,7 @@ function SupportPage() {
   const { reabrir, erro, lic } = Route.useSearch();
   const search = useSearch({ from: "/_authenticated/suporte" }) as any;
 
-  useEffect(() => {
-    const html = document.documentElement;
-    const isLight = search?.theme === 'light';
-    if (isLight) {
-      html.classList.add('theme-light');
-      html.classList.remove('dark');
-      html.style.colorScheme = 'light';
-    } else {
-      html.classList.remove('theme-light');
-      html.classList.add('dark');
-      html.style.colorScheme = 'dark';
-    }
-  }, [search?.theme]);
+  useThemeSearchParam(search?.theme);
   const [thread, setThread] = useState<Thread | null>(null);
 
   const [savingCat, setSavingCat] = useState(false);
