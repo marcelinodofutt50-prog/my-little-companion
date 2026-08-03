@@ -162,6 +162,7 @@ function LandingPage() {
         </div>
 
         <div className="mx-auto max-w-6xl space-y-24 px-6 pb-24">
+          <DashboardPreview />
           <SocialProofStrip />
           <BeforeAfter />
           <ImpossibleProof />
