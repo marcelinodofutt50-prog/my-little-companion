@@ -63,24 +63,38 @@ function DashboardPage() {
     enabled: !!user?.id
   })
 
-  const { data: licenses } = useQuery({
+  const {
+    data: licenses,
+    isPending: licensesLoading,
+    error: licensesError,
+    refetch: refetchLicenses,
+  } = useQuery({
     queryKey: ['licenses', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('licenses')
         .select('*')
         .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
       if (error) throw error
-      return data
+      return data ?? []
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    retry: 1,
   })
 
-  const { data: updates = [] } = useQuery({
+  const {
+    data: updates = [],
+    isPending: updatesLoading,
+    error: updatesError,
+    refetch: refetchUpdates,
+  } = useQuery({
     queryKey: ['my-updates', user?.id],
-    queryFn: () => listUpdates(),
+    queryFn: async () => (await listUpdates()) ?? [],
     enabled: !!user?.id,
+    retry: 1,
   })
+
 
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
@@ -184,8 +198,16 @@ function DashboardPage() {
                   <KeyRound className="h-5 w-5 text-primary" />
                 </div>
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
-                  {(licenses ?? []).length === 0 ? (
+                  {licensesLoading ? (
+                    <p className="text-sm text-muted-foreground">Carregando licenças…</p>
+                  ) : licensesError ? (
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-destructive">
+                      <span>Não foi possível carregar suas licenças.</span>
+                      <Button size="sm" variant="outline" onClick={() => void refetchLicenses()}>Tentar novamente</Button>
+                    </div>
+                  ) : (licenses ?? []).length === 0 ? (
                     <p className="text-sm text-muted-foreground">Nenhuma licença encontrada.</p>
+
                   ) : (licenses ?? []).map((license: any) => {
                     const active = !license.revoked && !license.disabled_at && (!license.expires_at || new Date(license.expires_at) > new Date())
                     return (
@@ -212,8 +234,18 @@ function DashboardPage() {
                   <Download className="h-5 w-5 text-primary" />
                 </div>
                 <div className="divide-y divide-border/50">
-                  {updates.length === 0 ? <p className="p-5 text-sm text-muted-foreground">Nenhum download disponível para este plano.</p> : updates.map((update: any) => (
+                  {updatesLoading ? (
+                    <p className="p-5 text-sm text-muted-foreground">Carregando downloads…</p>
+                  ) : updatesError ? (
+                    <div className="flex flex-wrap items-center gap-3 p-5 text-sm text-destructive">
+                      <span>Não foi possível carregar os downloads.</span>
+                      <Button size="sm" variant="outline" onClick={() => void refetchUpdates()}>Tentar novamente</Button>
+                    </div>
+                  ) : updates.length === 0 ? (
+                    <p className="p-5 text-sm text-muted-foreground">Nenhum download disponível para este plano.</p>
+                  ) : updates.map((update: any) => (
                     <div key={update.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+
                       <div><div className="font-semibold">{update.title}</div><div className="font-mono text-xs text-muted-foreground">v{update.version} · {update.filename}</div></div>
                       <Button size="sm" variant="outline" disabled={downloadingId === update.id} onClick={() => void downloadUpdate(update.id)}><Download className="mr-2 h-4 w-4" />{downloadingId === update.id ? 'Preparando…' : 'Baixar'}</Button>
                     </div>
