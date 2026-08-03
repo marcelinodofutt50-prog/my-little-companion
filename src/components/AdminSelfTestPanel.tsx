@@ -21,7 +21,7 @@ export function AdminSelfTestPanel() {
     setSupportLoading(true);
     setSupportSteps(null);
     try {
-      const res = await runSupport({ data: {} });
+      const res = await runSupport();
       setSupportSteps(res.steps);
       const failed = res.steps.filter((s) => !s.ok).length;
       if (failed === 0) toast.success("Suporte: fluxo ponta a ponta funcionando");
