@@ -496,6 +496,105 @@ function AdminPage() {
     }
   }
   async function recreate(id: string) {
+    if (!confirm("Recriar esta licença?")) return;
+    try {
+      await recreateFn({ data: { licenseId: id } });
+      toast.success("Recriada");
+      setLicenses(await licensesFn());
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
+      <SiteHeader />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div>
+            <h1 className="text-4xl font-extrabold tracking-tight mb-2">Painel de Operações</h1>
+            <AdminTagline />
+          </div>
+          <AdminGlobalSearch onSelectCustomer={setCustomer360} />
+        </div>
+
+        <AdminKpiCards stats={stats} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-8">
+          <aside className="lg:col-span-1 space-y-2">
+            {[
+              { id: "overview", label: "Visão Geral", icon: BarChart3 },
+              { id: "ia", label: "Suporte AI", icon: Bot, badge: sectionCounts.issue },
+              { id: "chat", label: "Atendimento", icon: MessageSquare, badge: navBadges.chat },
+              { id: "announcements", label: "Comunicados", icon: Megaphone },
+              { id: "users", label: "Usuários", icon: Users },
+              { id: "licenses", label: "Licenças", icon: KeyRound },
+              { id: "orders", label: "Pedidos", icon: DollarSign, badge: navBadges.orders },
+              { id: "apk", label: "Shadow Signer", icon: Download, badge: navBadges.apk },
+              { id: "refunds", label: "Reembolsos", icon: RotateCcw, badge: navBadges.refunds },
+              { id: "market", label: "Mercado", icon: Store },
+              { id: "updates", label: "Atualizações", icon: Zap },
+              { id: "servers", label: "VPS / Painéis", icon: Server },
+              { id: "referrals", label: "Indicações", icon: Gift },
+              { id: "staff", label: "Equipe / Permissões", icon: ShieldCheck },
+              { id: "audit", label: "Auditoria", icon: ScrollText },
+              { id: "health", label: "Saúde / Erros", icon: Activity },
+              { id: "selftest", label: "Self-Test", icon: Wrench },
+            ].map((item) => (
+              <Button
+                key={item.id}
+                variant={tab === item.id ? "secondary" : "ghost"}
+                className={`w-full justify-between font-mono text-xs uppercase tracking-widest ${
+                  tab === item.id ? "bg-primary/10 text-primary" : ""
+                }`}
+                onClick={() => setTab(item.id as Tab)}
+              >
+                <span className="flex items-center gap-3">
+                  <item.icon className="h-4 w-4" /> {item.label}
+                </span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full text-[10px] animate-pulse">
+                    {item.badge}
+                  </span>
+                )}
+              </Button>
+            ))}
+          </aside>
+
+          <main className="lg:col-span-3 space-y-6">
+            <div className="terminal-card p-6 bg-card/50 backdrop-blur-sm border-primary/20">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <h2 className="text-xl font-bold tracking-tight uppercase font-mono">{tab}</h2>
+              </div>
+              
+              {tab === "overview" && (
+                <div className="space-y-8">
+                  <AdminActiveProblems />
+                  <AdminDailyReport stats={stats} />
+                  <AdminAlertsBanner />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <RevenueSparkline />
+                    <AdminEmailMetrics />
+                  </div>
+                </div>
+              )}
+
+              {tab === "announcements" && <AdminAnnouncementsPanel />}
+              
+              {/* ... rest of the tabs ... */}
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {customer360 && (
+        <AdminCustomer360 userId={customer360} onClose={() => setCustomer360(null)} />
+      )}
+    </div>
+  );
+}
+
     if (!confirm("Recriar credenciais do login? A senha anterior será substituída.")) return;
     try {
       const r: any = await recreateFn({ data: { licenseId: id } });
