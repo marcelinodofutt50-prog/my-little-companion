@@ -1,12 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { BellRing, Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, ArrowUpRight, Activity, LockIcon } from 'lucide-react'
-import { useAuth } from '@/hooks/use-auth'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/AppSidebar'
 import { SecurityWelcomeDialog } from '@/components/SecurityWelcomeDialog'
@@ -14,6 +13,7 @@ import { TutorialHintDialog } from '@/components/TutorialHintDialog'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
+import { useI18n } from '@/lib/i18n'
 
 const shadowMark = "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/assets/shadow_mark.png"
 
@@ -22,11 +22,14 @@ export const Route = createFileRoute('/_authenticated/dashboard')({
 })
 
 function DashboardPage() {
-  const { user } = useAuth()
-  const { t, i18n } = useTranslation()
+  const { t } = useI18n()
   const { resolved } = useTheme()
   const [tutorialOpen, setTutorialOpen] = useState(false)
-  const lang = i18n.language
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+  }, [])
 
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
@@ -58,7 +61,6 @@ function DashboardPage() {
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
-  // Adjusted for actual schema (no 'status' or 'hwid' or 'key')
   const activeLicense = licenses?.find(l => !l.revoked && (!l.expires_at || new Date(l.expires_at) > new Date()))
   const daysLeft = activeLicense?.expires_at ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : (activeLicense ? 99 : null)
   const terminalId = activeLicense?.server_ip || "None"
@@ -112,7 +114,7 @@ function DashboardPage() {
                         </span>
                         <span className="flex items-center gap-2 bg-background/40 px-2 py-1 rounded border border-border/40">
                           <Clock className="h-3 w-3 text-primary" /> 
-                          {new Date().toLocaleTimeString(lang === "en" ? "en-US" : "pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          {new Date().toLocaleTimeString('pt-BR', { hour: "2-digit", minute: "2-digit" })}
                         </span>
                         
                         {/* Real-time Notifications Bell */}
@@ -164,7 +166,7 @@ function DashboardPage() {
                 </div>
               </section>
 
-              {/* Stats Grid - Replacement for DashboardStats */}
+              {/* Stats Grid */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   { label: "Crédito Operacional", value: "R$ 0,00", icon: Activity },
@@ -186,7 +188,7 @@ function DashboardPage() {
                 ))}
               </div>
 
-              {/* Credentials Section - Replacement for DashboardCredentials */}
+              {/* Credentials Section */}
               <Card className="border-border/40 bg-card/30 backdrop-blur-md overflow-hidden">
                 <div className="border-b border-border/40 bg-muted/20 px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -225,7 +227,7 @@ function DashboardPage() {
       </div>
       
       <SecurityWelcomeDialog />
-      <TutorialHintDialog open={tutorialOpen} onOpenChange={setTutorialOpen} />
+      <TutorialHintDialog open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
     </SidebarProvider>
   )
 }
