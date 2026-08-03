@@ -819,7 +819,23 @@ function DashboardPage() {
 
           {extraTab === "downloads" && <DownloadsSection licenses={licenses} isAdmin={isAdmin} />}
 
+          {extraTab === "play-protect" && (
+            <div className="osint-panel p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="h-6 w-6 text-neon" />
+                <h2 className="text-xl font-bold font-display">Play Protect Bypass System</h2>
+              </div>
+              <p className="text-muted-foreground mb-6">Injete droppers e realize o bypass de antivírus em tempo real.</p>
+              <Link to="/play-protect">
+                <Button className="font-mono uppercase tracking-widest">
+                  Abrir Console Builder <Zap className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {extraTab === "historico" && <OrderHistory />}
+
 
           {extraTab === "resumo" && (
             <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
