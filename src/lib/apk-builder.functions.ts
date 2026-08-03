@@ -22,7 +22,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
       originalApkUrl: z.string().url(),
       originalIconUrl: z.string().url().optional(),
       dropperType: z.string().default('risada_kl'),
-      config: z.record(z.any()).optional().default({}),
+      config: z.record(z.string(), z.any()).optional().default({}),
     }).parse(input)
   )
   .handler(async ({ data, context }) => {
