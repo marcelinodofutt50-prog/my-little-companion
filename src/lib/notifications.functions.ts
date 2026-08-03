@@ -44,7 +44,8 @@ export const updateNotificationSettings = createServerFn({ method: "POST" })
     webhook_url: z.string().url().optional().or(z.literal("")),
     notify_on_approval: z.boolean(),
     notify_on_pending: z.boolean(),
-    notify_on_denial: z.boolean()
+    notify_on_denial: z.boolean(),
+    notify_on_server_release: z.boolean()
   }).parse(d))
   .handler(async ({ data }) => {
     return { success: true };
