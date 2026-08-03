@@ -248,7 +248,7 @@ function DashboardPage() {
   return (
     <SidebarProvider>
       <WinbackOffer onUseCoupon={(code) => void startUpgrade(code)} />
-      <div className="client-enterprise flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full">
         <AppSidebar isAdmin={isAdmin} />
         <SidebarInset className="min-w-0 flex-1">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md">
@@ -295,13 +295,13 @@ function DashboardPage() {
               const statusColor = statusTone === "danger" ? "text-danger" : statusTone === "amber" ? "text-amber-400" : statusTone === "neon" ? "text-neon" : "text-muted-foreground";
               const statusRing = statusTone === "danger" ? "border-danger/50 bg-danger/5" : statusTone === "amber" ? "border-amber-400/40 bg-amber-400/5" : statusTone === "neon" ? "border-neon/40 bg-neon/5" : "border-border/50 bg-background/40";
               return (
-                <div className="osint-panel osint-corners osint-sweep rainbow-ring relative overflow-hidden p-5 sm:p-6" style={{ ["--osint-sweep-h" as any]: "170px" }}>
+                <div className="enterprise-surface relative overflow-hidden p-5 sm:p-6 shadow-sm">
                   <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[var(--neon)] opacity-[0.08] blur-3xl" />
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
                       <div className="relative shrink-0">
                         <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-30 blur-2xl" />
-                        <div className="rainbow-ring rounded-full p-0.5">
+                        <div className="rounded-full border border-border/60 p-0.5 shadow-inner">
                           <div className="rounded-full bg-background p-1">
                             <img src={shadowMark} alt="Shadow" className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(201,168,76,0.6)] md:h-16 md:w-16" />
                           </div>
@@ -309,10 +309,10 @@ function DashboardPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <div className="osint-label text-neon">Nível de Acesso</div>
+                          <div className="osint-label text-primary/80">Nível de Acesso</div>
                           <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-primary border border-primary/20">Alpha-Ops</span>
                         </div>
-                        <h1 className="rainbow-text mt-1 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl">{displayIdentity(displayName, email)}</h1>
+                        <h1 className="mt-1 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl text-foreground">{displayIdentity(displayName, email)}</h1>
                         <div className="mt-1.5 flex flex-wrap items-center gap-3 font-mono text-[10px] text-muted-foreground">
                           <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-neon animate-pulse" /> {new Date().toLocaleDateString("pt-BR")}</span>
                           <span className="hidden sm:inline text-border/40">|</span>
@@ -375,7 +375,7 @@ function DashboardPage() {
           return (
             <>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-primary/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-primary/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <Zap className="h-20 w-20 text-neon" />
                   </div>
@@ -384,7 +384,7 @@ function DashboardPage() {
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
                 </div>
                 
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-cyan/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-cyan/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <Server className="h-20 w-20 text-cyan" />
                   </div>
@@ -393,7 +393,7 @@ function DashboardPage() {
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">NODES EM SINCRONIZAÇÃO</div>
                 </div>
 
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-violet-500/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-violet-500/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <Ticket className="h-20 w-20 text-violet-400" />
                   </div>
@@ -402,7 +402,7 @@ function DashboardPage() {
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">SEM ALERTAS PENDENTES</div>
                 </div>
 
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-amber-500/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-amber-500/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <ShieldAlert className="h-20 w-20 text-amber-500" />
                   </div>
