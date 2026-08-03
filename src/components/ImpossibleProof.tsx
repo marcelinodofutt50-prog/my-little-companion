@@ -39,12 +39,15 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
         {shots.map((s) => (
           <figure key={s.src} className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
             <div className="flex aspect-video w-full items-center justify-center bg-background/60">
-              <img
-                src={s.src}
-                alt={s.tag}
-                loading="lazy"
-                className="max-h-full max-w-full object-contain"
-              />
+              <picture>
+                <source srcSet={s.src} type="image/webp" />
+                <img
+                  src={s.fallback}
+                  alt={s.tag}
+                  loading="lazy"
+                  className="max-h-full max-w-full object-contain"
+                />
+              </picture>
             </div>
 
             <figcaption className="space-y-1 p-3">
