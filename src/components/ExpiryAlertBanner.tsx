@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { AlertTriangle, Clock } from 'lucide-react'
 import { licenseExpiryState, remainingUntil, severityColor, type ExpirySeverity } from '@/lib/expiry'
@@ -24,7 +25,18 @@ const DAY = 86400000
  * Aviso fixo no dashboard quando alguma licença (ou a mensalidade do servidor)
  * está prestes a vencer. Abaixo de 24h vira contagem regressiva ao vivo.
  */
-export function ExpiryAlertBanner({ licenses, serverNow }: Props) {
+export function ExpiryAlertBanner({ licenses, serverNow: baseNow }: Props) {
+  // Tick local de 1s para o contador ficar vivo abaixo de 24h, ancorado no
+  // relógio do servidor (que re-sincroniza sozinho).
+  const [drift, setDrift] = useState(0)
+  useEffect(() => {
+    setDrift(0)
+    const anchor = Date.now()
+    const id = setInterval(() => setDrift(Date.now() - anchor), 1000)
+    return () => clearInterval(id)
+  }, [baseNow])
+  const serverNow = baseNow + drift
+
   const alerts: Alert[] = []
 
   for (const l of licenses ?? []) {

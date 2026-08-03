@@ -29,6 +29,7 @@ import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plan
 import { useServerNow } from '@/hooks/use-server-now'
 import { licenseExpiryState } from '@/lib/expiry'
 import { LicenseCountdown } from '@/components/LicenseCountdown'
+import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
 import { planLabel } from '@/lib/license-display'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
@@ -215,6 +216,8 @@ function DashboardPage() {
                   <Link to="/planos"><Button size="sm" className="font-mono text-[10px] uppercase"><ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Renovar agora</Button></Link>
                 </div>
               </section>
+
+              <ExpiryAlertBanner licenses={licenses} serverNow={serverNow} />
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
