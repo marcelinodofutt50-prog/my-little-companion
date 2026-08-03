@@ -121,6 +121,9 @@ import {
   adminRegisterLegacyLicense,
   adminListReferrals,
   adminMarkReferralPaid,
+  adminListAnnouncements,
+  adminSaveAnnouncement,
+  adminDeleteAnnouncement,
 } from "@/lib/admin.functions";
 import {
   playNotifyDing,
@@ -161,6 +164,7 @@ type Tab =
   | "audit"
   | "apk"
   | "market"
+  | "announcements"
   | "updates"
   | "refunds"
   | "selftest";
@@ -177,6 +181,7 @@ const TAB_DESC: Record<Tab, string> = {
   licenses: "Todos os logins criados: ativos, vencendo, expirados e revogados.",
   orders: "Todas as compras: quem pagou, quanto, quando e se foi entregue.",
   market: "Produtos do Mercado: cadastrar, editar preço, imagem e ativar/desativar.",
+  announcements: "Comunicados Corporativos: criar, editar e publicar avisos no dashboard dos clientes.",
   referrals: "Indicações e cashback: quem indicou quem e quanto tem a receber.",
   refunds: "Pedidos de reembolso. Você tem 2 dias para aprovar ou recusar cada um.",
   staff: "Quem é admin ou moderador. Cuidado: admin vê e altera tudo.",
