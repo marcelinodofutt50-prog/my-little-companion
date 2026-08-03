@@ -208,6 +208,9 @@ function DashboardPage() {
                       </Card>
                     ))}
                   </div>
+                  
+                  {/* Corporate Announcements Section */}
+                  <AnnouncementsSection />
 
                   {/* Infrastructure Status */}
                   <Card className="border-border/40 bg-card/30 backdrop-blur-md overflow-hidden">
