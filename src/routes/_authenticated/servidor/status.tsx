@@ -34,16 +34,23 @@ function ServerStatusPage() {
   const [statuses, setStatuses] = useState<ServerStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  
   const fetchStatus = useServerFn(getServerStatus);
+  const fetchAudit = useServerFn(getAuditLogs);
 
   async function refresh() {
     setLoading(true);
     try {
-      const data = await fetchStatus();
-      setStatuses(data);
+      const [statusData, auditData] = await Promise.all([
+        fetchStatus(),
+        fetchAudit()
+      ]);
+      setStatuses(statusData);
+      setAuditLogs(auditData);
       setLastUpdate(new Date());
     } catch (e: any) {
-      toast.error("Falha ao consultar status dos servidores");
+      toast.error("Falha ao consultar dados da infraestrutura");
     } finally {
       setLoading(false);
     }
