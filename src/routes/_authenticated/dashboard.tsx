@@ -62,7 +62,7 @@ function DashboardPage() {
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
-  const activeLicense = licenses?.find(l => !l.revoked && (!l.expires_at || new Date(l.expires_at) > new Date()))
+  const activeLicense = licenses?.find((l: any) => !l.revoked && (!l.expires_at || new Date(l.expires_at) > new Date()))
   const daysLeft = activeLicense?.expires_at ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : (activeLicense ? 99 : null)
   const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
