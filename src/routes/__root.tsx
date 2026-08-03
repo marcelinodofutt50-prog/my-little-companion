@@ -192,7 +192,7 @@ function RootShell({ children }: { children: ReactNode }) {
         {/* Aplica o tema (sistema/claro/escuro) antes da primeira pintura */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('shadow-theme')||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var l=(m==='light')||(m==='system'&&!d);var r=document.documentElement;r.classList.toggle('theme-light',l);r.classList.toggle('dark',!l);r.style.colorScheme=l?'light':'dark';}catch(e){}})();`,
+            __html: `(function(){try{var m=localStorage.getItem('shadow-theme')||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var l=(m==='light')||(m==='system'&&!d);var r=document.documentElement;r.classList.toggle('theme-light',l);r.classList.toggle('dark',!l);r.style.colorScheme=l?'light':'dark';var tc=l?'#f9f7f2':'#0a0a0b';var mm=document.querySelector('meta[name="theme-color"]');if(mm)mm.setAttribute('content',tc);}catch(e){}})();`,
           }}
         />
       </head>
