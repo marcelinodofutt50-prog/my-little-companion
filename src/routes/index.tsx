@@ -1,4 +1,3 @@
-/* Verifique se o tema dark/luxo está aplicado de forma consistente em todas as rotas do app e no dashboard. */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, ArrowRight, ChevronDown, Copy, Cpu, Fingerprint, Lock, ShieldCheck, Zap, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
