@@ -953,7 +953,7 @@ function TierComparison() {
   const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; serverOld: React.ReactNode; lifetime: React.ReactNode }[] = [
     { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", serverOld: "Infra v4.6", lifetime: "Shadow 4.6+" },
     { label: "Bypass Play Protect (BTmob nativo)", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
-    { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: "R$ 250 (Exclusivo)", lifetime: "Grátis" },
+    { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "R$ 450", serverOld: "R$ 450", lifetime: "R$ 450" },
     { label: "Duração", weekly: "7 dias", monthly: "30 dias", serverOld: "Até dia 20", lifetime: "Vitalícia" },
     { label: "Opção Anual (-20%)", weekly: "N/A", monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: "N/A", lifetime: "Pagam. Único" },
     { label: "Upgrade v4.6", weekly: "Não", monthly: "R$ 600", serverOld: "Incluso", lifetime: "Nativo" },
