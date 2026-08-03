@@ -432,7 +432,7 @@ function PublicBuilderSection() {
         <ShieldCheck className="h-6 w-6 text-violet" />
         <div>
           <h2 className="text-xl font-bold font-display">Shadow Bypass Builder (público)</h2>
-          <p className="text-xs text-muted-foreground">Autoatendimento com dropper Shadow Bypass — em beta. Requer plano Play Protect ativo.</p>
+          <p className="text-xs text-muted-foreground">Autoatendimento com dropper Shadow Bypass — grátis e em beta. Não requer plano.</p>
         </div>
       </div>
       <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-3 mb-4">
