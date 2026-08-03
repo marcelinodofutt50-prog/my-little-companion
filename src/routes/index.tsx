@@ -100,9 +100,9 @@ function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="mb-4 inline-flex items-center rounded-full border border-[#c9a84c]/20 bg-[#c9a84c]/5 px-4 py-1.5"
+            className="mb-4 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5"
           >
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#c9a84c]">Mirror Industries • Est. 2023</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">Mirror Industries • Est. 2023</span>
           </motion.div>
 
           <motion.h1 
