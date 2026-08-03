@@ -51,6 +51,7 @@ vi.mock("../yaarsa.server", () => ({
 describe("Support AI Proactive Flow", () => {
   const threadId = "00000000-0000-0000-0000-000000000001";
   const userId = "00000000-0000-0000-0000-000000000002";
+  const adminId = "00000000-0000-0000-0000-000000000003";
 
   beforeEach(() => {
     vi.clearAllMocks();
