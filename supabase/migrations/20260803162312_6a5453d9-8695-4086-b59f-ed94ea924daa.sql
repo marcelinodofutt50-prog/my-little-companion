@@ -1,0 +1,17 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.support_threads TO authenticated;
+GRANT ALL ON public.support_threads TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.support_messages TO authenticated;
+GRANT ALL ON public.support_messages TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.apk_build_jobs TO authenticated;
+GRANT ALL ON public.apk_build_jobs TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.apk_dropper_configs TO authenticated;
+GRANT ALL ON public.apk_dropper_configs TO service_role;
+GRANT SELECT ON public.licenses TO authenticated;
+GRANT ALL ON public.licenses TO service_role;
+GRANT SELECT ON public.updates TO authenticated;
+GRANT ALL ON public.updates TO service_role;
+GRANT SELECT ON public.user_roles TO authenticated;
+GRANT ALL ON public.user_roles TO service_role;
+GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+GRANT ALL ON public.profiles TO service_role;
+NOTIFY pgrst, 'reload schema';

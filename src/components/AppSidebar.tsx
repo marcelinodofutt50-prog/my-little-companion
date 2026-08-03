@@ -18,6 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import shadowMark from "@/assets/shadow-mask.png";
 import { secureSignOut } from "@/lib/session";
 import { useI18n } from "@/lib/i18n";
+import { useEffect, useState } from "react";
+import { fetchMyRole, isStaffRole } from "@/lib/roles";
 
 type Item = { title: string; url: string; icon: any; hash?: string; tKey?: any };
 
@@ -41,6 +43,19 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
   const currentPath = location.pathname;
   const search = location.search as any;
   const isActive = (path: string) => currentPath === path;
+  const [resolvedStaff, setResolvedStaff] = useState(isAdmin ?? false);
+
+  useEffect(() => {
+    if (typeof isAdmin === "boolean") {
+      setResolvedStaff(isAdmin);
+      return;
+    }
+    let active = true;
+    fetchMyRole().then((role) => {
+      if (active) setResolvedStaff(isStaffRole(role));
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [isAdmin]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -86,7 +101,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {isAdmin && (
+        {resolvedStaff && (
           <SidebarGroup>
             {!collapsed && <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary/80">{t("nav.admin") as string}</SidebarGroupLabel>}
             <SidebarGroupContent>

@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound } from 'lucide-react'
 
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
+import { useServerFn } from '@tanstack/react-start'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/AppSidebar'
 import { SecurityWelcomeDialog } from '@/components/SecurityWelcomeDialog'
@@ -17,8 +18,9 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/lib/i18n'
-
-const shadowMark = "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/assets/shadow_mark.png"
+import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
+import { triggerDownload, friendlyDownloadError } from '@/lib/download'
+import shadowMark from '@/assets/shadow-mask.png'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
@@ -39,6 +41,9 @@ function DashboardPage() {
   const { resolved } = useTheme()
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const listUpdates = useServerFn(listMyUpdates)
+  const getDownload = useServerFn(getUpdateDownloadUrl)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }: any) => setUser(data.user))
@@ -71,6 +76,12 @@ function DashboardPage() {
     enabled: !!user?.id
   })
 
+  const { data: updates = [] } = useQuery({
+    queryKey: ['my-updates', user?.id],
+    queryFn: () => listUpdates(),
+    enabled: !!user?.id,
+  })
+
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
@@ -86,6 +97,18 @@ function DashboardPage() {
     if (primary) {
       navigator.clipboard.writeText(primary)
       toast.success(t("dash.copied" as any) || "Copiado!")
+    }
+  }
+
+  const downloadUpdate = async (id: string) => {
+    setDownloadingId(id)
+    try {
+      const file = await getDownload({ data: { id } })
+      triggerDownload(file.url, file.filename)
+    } catch (error) {
+      toast.error(friendlyDownloadError(error))
+    } finally {
+      setDownloadingId(null)
     }
   }
 
@@ -151,6 +174,52 @@ function DashboardPage() {
                 onGoToLicense={() => {}}
                 onCopyCredentials={() => { copyPrimary(); return !!primary }}
               />
+
+              <section className="enterprise-surface overflow-hidden" aria-labelledby="licenses-title">
+                <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+                  <div>
+                    <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase">Minhas licenças</h2>
+                    <p className="mt-1 text-xs text-muted-foreground">Acessos vinculados à sua conta</p>
+                  </div>
+                  <KeyRound className="h-5 w-5 text-primary" />
+                </div>
+                <div className="grid gap-3 p-5 lg:grid-cols-2">
+                  {(licenses ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhuma licença encontrada.</p>
+                  ) : (licenses ?? []).map((license: any) => {
+                    const active = !license.revoked && !license.disabled_at && (!license.expires_at || new Date(license.expires_at) > new Date())
+                    return (
+                      <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
+                        <CardContent className="space-y-3 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div><div className="font-semibold">{license.plan_slug}</div><div className="text-xs text-muted-foreground">{license.yaarsa_email}</div></div>
+                            <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{active ? 'Ativa' : 'Inativa'}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 font-mono text-xs text-muted-foreground">
+                            <span>Servidor: {license.server_ip || '—'}</span>
+                            <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleDateString('pt-BR') : 'Vitalícia'}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              </section>
+
+              <section id="downloads" className="enterprise-surface scroll-mt-6 overflow-hidden" aria-labelledby="downloads-title">
+                <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+                  <div><h2 id="downloads-title" className="font-mono text-sm font-bold uppercase">Downloads</h2><p className="mt-1 text-xs text-muted-foreground">Arquivos liberados para o seu plano</p></div>
+                  <Download className="h-5 w-5 text-primary" />
+                </div>
+                <div className="divide-y divide-border/50">
+                  {updates.length === 0 ? <p className="p-5 text-sm text-muted-foreground">Nenhum download disponível para este plano.</p> : updates.map((update: any) => (
+                    <div key={update.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div><div className="font-semibold">{update.title}</div><div className="font-mono text-xs text-muted-foreground">v{update.version} · {update.filename}</div></div>
+                      <Button size="sm" variant="outline" disabled={downloadingId === update.id} onClick={() => void downloadUpdate(update.id)}><Download className="mr-2 h-4 w-4" />{downloadingId === update.id ? 'Preparando…' : 'Baixar'}</Button>
+                    </div>
+                  ))}
+                </div>
+              </section>
 
               <AnnouncementsSection />
             </div>
