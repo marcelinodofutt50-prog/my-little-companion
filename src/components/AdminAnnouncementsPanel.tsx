@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Megaphone, Loader2, RefreshCw, Trash2, Eye, EyeOff, PlusCircle, Clock, Pencil, Tag, X } from "lucide-react";
+import { Megaphone, Loader2, RefreshCw, Trash2, Eye, EyeOff, PlusCircle, Clock, Pencil, Tag, X, Image as ImageIcon, Paperclip, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,6 +52,9 @@ const emptyForm = {
   is_active: true,
   status: "draft" as AnnouncementStatus,
   tags: [] as string[],
+  image_url: "" as string | undefined,
+  attachment_url: "" as string | undefined,
+  attachment_name: "" as string | undefined,
 };
 
 export function AdminAnnouncementsPanel() {
@@ -67,6 +70,9 @@ export function AdminAnnouncementsPanel() {
   const [form, setForm] = useState(emptyForm);
   const [tagInput, setTagInput] = useState("");
   const [myRole, setMyRole] = useState<Role | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchMyRole().then(setMyRole);
@@ -108,6 +114,9 @@ export function AdminAnnouncementsPanel() {
       is_active: row.is_active,
       status: row.status,
       tags: row.tags || [],
+      image_url: row.image_url || "",
+      attachment_url: row.attachment_url || "",
+      attachment_name: row.attachment_name || "",
     });
     setShowForm(true);
   }
@@ -132,6 +141,9 @@ export function AdminAnnouncementsPanel() {
           is_active: form.is_active,
           status: form.status,
           tags: form.tags,
+          image_url: form.image_url || null,
+          attachment_url: form.attachment_url || null,
+          attachment_name: form.attachment_name || null,
         },
       });
       const msg = form.status === "published" ? "Anúncio publicado" : 
@@ -178,6 +190,39 @@ export function AdminAnnouncementsPanel() {
   const removeTag = (tag: string) => {
     setForm({ ...form, tags: form.tags.filter((x) => x !== tag) });
   };
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const bucket = type === 'image' ? 'announcement-images' : 'announcement-files';
+      
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      if (type === 'image') {
+        setForm(prev => ({ ...prev, image_url: publicUrl }));
+      } else {
+        setForm(prev => ({ ...prev, attachment_url: publicUrl, attachment_name: file.name }));
+      }
+      toast.success("Upload concluído");
+    } catch (err: any) {
+      toast.error(`Erro no upload: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -234,6 +279,54 @@ export function AdminAnnouncementsPanel() {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">Imagem de Destaque</label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  value={form.image_url}
+                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                  placeholder="URL da imagem..."
+                  className="font-mono text-xs"
+                />
+                <input type="file" hidden ref={imageInputRef} accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} />
+                <Button size="sm" variant="outline" onClick={() => imageInputRef.current?.click()} disabled={uploading}>
+                  <Upload className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              {form.image_url && (
+                <div className="relative mt-2 w-32 h-20 rounded border border-border/40 overflow-hidden">
+                  <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                  <Button size="icon" variant="destructive" className="absolute top-0 right-0 h-5 w-5 rounded-none" onClick={() => setForm({ ...form, image_url: "" })}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">Anexo / Arquivo</label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  value={form.attachment_name || form.attachment_url}
+                  readOnly
+                  placeholder="Nenhum arquivo..."
+                  className="font-mono text-xs"
+                />
+                <input type="file" hidden ref={fileInputRef} onChange={(e) => handleFileUpload(e, 'file')} />
+                <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                  <Upload className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              {form.attachment_url && (
+                <div className="flex items-center gap-2 mt-2 px-2 py-1 rounded border border-border/40 bg-background/50 text-[10px] font-mono">
+                  <Paperclip className="h-3 w-3" />
+                  <span className="truncate flex-1">{form.attachment_name || "Arquivo anexo"}</span>
+                  <X className="h-3 w-3 cursor-pointer text-red-400" onClick={() => setForm({ ...prev => ({ ...prev, attachment_url: "", attachment_name: "" }) })} />
+                </div>
+              )}
             </div>
           </div>
 
