@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -42,6 +42,21 @@ const PAGE_SIZE = 30;
 function SupportPage() {
   const { t } = useI18n();
   const { reabrir, erro, lic } = Route.useSearch();
+  const search = useSearch({ from: "/_authenticated/suporte" }) as any;
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const isLight = search?.theme === 'light';
+    if (isLight) {
+      html.classList.add('theme-light');
+      html.classList.remove('dark');
+      html.style.colorScheme = 'light';
+    } else {
+      html.classList.remove('theme-light');
+      html.classList.add('dark');
+      html.style.colorScheme = 'dark';
+    }
+  }, [search?.theme]);
   const [thread, setThread] = useState<Thread | null>(null);
 
   const [savingCat, setSavingCat] = useState(false);

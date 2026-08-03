@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -168,6 +168,21 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
 }
 
 function PlansPage() {
+  const search = useSearch({ from: "/planos" }) as any;
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const isLight = search?.theme === 'light';
+    if (isLight) {
+      html.classList.add('theme-light');
+      html.classList.remove('dark');
+      html.style.colorScheme = 'light';
+    } else {
+      html.classList.remove('theme-light');
+      html.classList.add('dark');
+      html.style.colorScheme = 'dark';
+    }
+  }, [search?.theme]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [isLegacy, setIsLegacy] = useState(false);
