@@ -135,8 +135,10 @@ function metaFor(plan: Plan): PlanMeta {
       "Vira Vitalício v4.6 imediatamente",
       "Mantém seu histórico e servidor",
       "Prioridade no suporte após upgrade",
+      "Libera Shadow Play Protect Builder",
     ],
   };
+
   if (s.includes("source") || s.includes("code")) return {
     tagline: "Código-fonte auditável, entrega assistida por engenheiro.",
     icon: Code2,
