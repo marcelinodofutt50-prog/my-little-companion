@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
