@@ -420,7 +420,9 @@ export const adminSendMessage = createServerFn({ method: "POST" })
     if (!msg) throw new Error("Não foi possível enviar a resposta");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("support_threads").update({ updated_at: new Date().toISOString() }).eq("id", data.threadId);
-    return msg;
+    const { normalizeSupportMessage } = await import("./support-message");
+    return normalizeSupportMessage(msg, data.threadId);
+
   });
 
 
