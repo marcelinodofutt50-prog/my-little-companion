@@ -84,13 +84,17 @@ function DashboardPage() {
   } = useQuery({
     queryKey: ['licenses', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('licenses')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      return data ?? []
+      try {
+        return (await fetchMyLicenses()) ?? []
+      } catch {
+        const { data, error } = await supabase
+          .from('licenses')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+        if (error) throw error
+        return data ?? []
+      }
     },
     enabled: !!user?.id,
     retry: 1,
