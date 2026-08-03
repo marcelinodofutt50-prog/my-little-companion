@@ -336,7 +336,7 @@ function PlansPage() {
     // Remove planos repetidos (mesmo preço + mesma duração + nome equivalente)
     const seen = new Set<string>();
     const unique = plans.filter((p) => {
-      const key = `${p.category}|${p.price_brl}|${p.days ?? "vital"}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+      const key = `${p.category}|${p.price_brl}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
