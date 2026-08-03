@@ -305,28 +305,37 @@ function DashboardPage() {
               const statusColor = statusTone === "danger" ? "text-danger" : statusTone === "amber" ? "text-amber-400" : statusTone === "neon" ? "text-neon" : "text-muted-foreground";
               const statusRing = statusTone === "danger" ? "border-danger/50 bg-danger/5" : statusTone === "amber" ? "border-amber-400/40 bg-amber-400/5" : statusTone === "neon" ? "border-neon/40 bg-neon/5" : "border-border/50 bg-background/40";
               return (
-                <div className="enterprise-surface relative overflow-hidden p-5 sm:p-6 shadow-sm">
-                  <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[var(--neon)] opacity-[0.08] blur-3xl" />
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-                    <div className="flex min-w-0 items-center gap-4">
+                <div className="enterprise-surface relative overflow-hidden p-6 sm:p-8 shadow-2xl transition-all duration-500 hover:shadow-primary/10">
+                  {/* Atmospheric Glow */}
+                  <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-[100px] animate-pulse" />
+                  <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-cyan/10 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+                  
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between relative z-10">
+                    <div className="flex items-center gap-5">
                       <div className="relative shrink-0">
-                        <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-30 blur-2xl" />
-                        <div className="rounded-full border border-border/60 p-0.5 shadow-inner">
-                          <div className="rounded-full bg-background p-1">
-                            <img src={shadowMark} alt="Shadow" width={64} height={64} decoding="async" className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(201,168,76,0.6)] md:h-16 md:w-16" />
-                          </div>
+                        <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-primary/30 blur-2xl animate-pulse" />
+                        <div className="rounded-full border-2 border-primary/20 p-1 bg-background/50 backdrop-blur-sm shadow-2xl">
+                          <img src={shadowMark} alt="Shadow" width={80} height={80} decoding="async" className="h-16 w-16 object-contain drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.5)] md:h-20 md:w-20" />
                         </div>
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div className="osint-label text-primary/80">{t("dash.access_level" as any)}</div>
-                          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-primary border border-primary/20">Alpha-Ops</span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-primary border border-primary/20 shadow-[0_0_10px_oklch(0.78_0.13_82/0.1)]">
+                            {t("dash.access_level" as any)}: Alpha-Ops
+                          </span>
                         </div>
-                        <h1 className="mt-1 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl text-foreground">{displayIdentity(displayName, email)}</h1>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-3 font-mono text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-neon animate-pulse" /> {new Date().toLocaleDateString(lang === "en" ? "en-US" : "pt-BR")}</span>
-                          <span className="hidden sm:inline text-border/40">|</span>
-                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date().toLocaleTimeString(lang === "en" ? "en-US" : "pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <h1 className="truncate font-display text-3xl font-bold tracking-tight sm:text-4xl text-foreground drop-shadow-sm">
+                          {displayName || email.split('@')[0]}
+                        </h1>
+                        <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground/80">
+                          <span className="flex items-center gap-2 bg-background/40 px-2 py-1 rounded border border-border/40">
+                            <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulse shadow-[0_0_5px_var(--neon)]" /> 
+                            SYSTEM ONLINE
+                          </span>
+                          <span className="flex items-center gap-2 bg-background/40 px-2 py-1 rounded border border-border/40">
+                            <Clock className="h-3 w-3 text-primary" /> 
+                            {new Date().toLocaleTimeString(lang === "en" ? "en-US" : "pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
                         </div>
                       </div>
                     </div>
