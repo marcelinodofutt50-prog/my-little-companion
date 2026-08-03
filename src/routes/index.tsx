@@ -147,7 +147,16 @@ function LandingPage() {
             ))}
           </div>
         </div>
+
+        <div className="mx-auto max-w-6xl space-y-24 px-6 pb-24">
+          <SocialProofStrip />
+          <BeforeAfter />
+          <ImpossibleProof />
+          <ProofWall />
+          <Testimonials />
+        </div>
       </main>
+      <MobileStickyCTA />
     </div>
   );
 }
