@@ -71,7 +71,10 @@ function PlayProtectPage() {
     }
   });
 
+  const tier = tierFromPlanSlug(license?.plan_slug);
+  const features = getTierFeatures(tier);
   const hasAccess = features.bypass_play_protect || isAdmin;
+
 
 
 
