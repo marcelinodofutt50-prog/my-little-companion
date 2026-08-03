@@ -14,6 +14,12 @@ const DICT: Dict = {
   "nav.referrals": { pt: "Indicações", en: "Referrals" },
   "nav.panel": { pt: "Painel", en: "Dashboard" },
   "nav.signin": { pt: "Entrar", en: "Sign in" },
+  "nav.signout": { pt: "Sair", en: "Sign out" },
+  "nav.navigation": { pt: "Navegação", en: "Navigation" },
+  "nav.market": { pt: "Mercado", en: "Market" },
+  "nav.gifts": { pt: "Presentes", en: "Gifts" },
+  "nav.support": { pt: "Suporte", en: "Support" },
+  "nav.admin": { pt: "Painel Admin", en: "Admin Panel" },
 
   "crypto.title": { pt: "Pagamento em Cripto", en: "Crypto Payment" },
   "crypto.kicker": { pt: "// alternative rail", en: "// alternative rail" },
