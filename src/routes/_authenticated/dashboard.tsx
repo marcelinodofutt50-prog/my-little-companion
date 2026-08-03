@@ -101,7 +101,12 @@ function DashboardPage() {
       }
     },
     enabled: !!user?.id,
-    retry: 1,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1500 * (attempt + 1), 4000),
+    staleTime: 30_000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    placeholderData: (prev: any) => prev,
   })
 
   const {
@@ -126,9 +131,14 @@ function DashboardPage() {
     !license.suspended_at &&
     (!license.expires_at || new Date(license.expires_at) > new Date())
   const activeLicense = licenses?.find(isLicenseActive)
-  const fallbackDownloads = activeLicense
-    ? downloadsForTier((activeLicense.version_tier as VersionTier | null) ?? tierFromPlanSlug(activeLicense.plan_slug))
-    : []
+  // Sempre resolve um tier válido: version_tier -> plan_slug -> mensal (padrão),
+  // garantindo que os downloads apareçam em todo recarregamento.
+  const downloadsForLicense = (license: any) => {
+    const tier = (license?.version_tier as VersionTier | null) ?? tierFromPlanSlug(license?.plan_slug)
+    const files = downloadsForTier(tier)
+    return files.length > 0 ? files : downloadsForTier('monthly_457')
+  }
+  const fallbackDownloads = activeLicense ? downloadsForLicense(activeLicense) : []
   const daysLeft = activeLicense?.expires_at ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : (activeLicense ? 99 : null)
   const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
@@ -246,9 +256,7 @@ function DashboardPage() {
                     </div>
                   ) : (licenses ?? []).map((license: any) => {
                     const active = isLicenseActive(license)
-                    const licenseDownloads = active
-                      ? downloadsForTier((license.version_tier as VersionTier | null) ?? tierFromPlanSlug(license.plan_slug))
-                      : []
+                    const licenseDownloads = active ? downloadsForLicense(license) : []
                     return (
                       <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
                         <CardContent className="space-y-3 p-4">
@@ -298,7 +306,7 @@ function DashboardPage() {
                           </div>
                           {licenseDownloads.length > 0 && (
                             <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
-                              {licenseDownloads.map((file) => (
+                              {licenseDownloads.map((file: { url: string; label: string }) => (
                                 <Button key={file.url} size="sm" variant="outline" asChild>
                                   <a href={file.url} target="_blank" rel="noreferrer">
                                     <Download className="mr-2 h-4 w-4" />{file.label}<ExternalLink className="ml-2 h-3 w-3" />
