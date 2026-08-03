@@ -2122,6 +2122,7 @@ function AdminPage() {
               </div>
             )}
             {tab === "ia" && <LicenseAiPanel />}
+            {tab === "announcements" && <AdminAnnouncementsPanel />}
             {tab === "apk" && <AdminApkPanel />}
             {tab === "market" && <AdminMarketPanel />}
             {tab === "updates" && (
