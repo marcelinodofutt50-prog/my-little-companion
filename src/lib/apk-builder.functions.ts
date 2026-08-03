@@ -25,7 +25,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
   }).parse(i))
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
-    const { isStaff } = await resolveRoles(context);
+    const { isStaff } = await resolveRoles(context.supabase, context.userId);
     
     // Validar acesso (Tier mensal 4.5.7+, vitalício 4.6 ou Staff)
     if (!isStaff) {
@@ -65,7 +65,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
     await context.supabase.from("apk_dropper_configs").insert({
       job_id: job.id,
       dropper_type: data.dropperType,
-      config_json: data.config ?? {}
+      config_json: (data.config ?? {}) as any
     });
 
     return job;
