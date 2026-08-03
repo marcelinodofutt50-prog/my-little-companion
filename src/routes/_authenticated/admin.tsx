@@ -597,6 +597,7 @@ function AdminPage() {
         { id: "overview", label: "Visão Geral", icon: BarChart3, hint: "resumo executivo" },
         { id: "ia", label: "Shadow Ops IA", icon: Sparkles, hint: "diagnóstico automático" },
         { id: "chat", label: "Chat ao Vivo", icon: MessageSquare, hint: "responder clientes" },
+        { id: "announcements", label: "Comunicados", icon: Megaphone, hint: "avisos corporativos" },
         { id: "apk", label: "Fila Play Protect", icon: Download, hint: "APKs pendentes" },
         { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
       ],
