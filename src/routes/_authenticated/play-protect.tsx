@@ -21,7 +21,16 @@ import { triggerDownload } from "@/lib/download";
 
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
-  head: () => ({ meta: [{ title: "Shadow Play Protect — APK Builder" }] }),
+  head: () => ({
+    meta: [
+      { title: "Shadow Signer — APK Builder" },
+      { name: "description", content: "Envie, acompanhe e baixe seus APKs assinados pelo painel Shadow." },
+      { property: "og:title", content: "Shadow Signer — APK Builder" },
+      { property: "og:description", content: "Envie, acompanhe e baixe seus APKs assinados pelo painel Shadow." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData({
       queryKey: ["apk-jobs"],
@@ -167,7 +176,7 @@ function PlayProtectPage() {
               className="mb-8"
             >
               <h1 className="rainbow-text font-display text-3xl font-bold tracking-tight">{t("pp.header" as any)}</h1>
-              <p className="mt-2 text-muted-foreground">{t("pp.desc" as any)}</p>
+              <p className="mt-2 text-muted-foreground">Envie seu APK, acompanhe o processamento e baixe o arquivo assinado.</p>
               {!hasAccess && (
                 <div className="mt-4 flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200/90">
                   <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -226,7 +235,7 @@ function PlayProtectPage() {
                   <div className="flex gap-3 rounded bg-amber-500/5 p-3 border border-amber-500/20">
                     <Info className="h-5 w-5 shrink-0 text-amber-500" />
                     <p className="text-[11px] leading-relaxed text-amber-200/70">
-                      O APK Tool processa os arquivos em servidores remotos. O tempo estimado de build é de 2 a 5 minutos.
+                      O processamento e a assinatura são feitos em servidores remotos. O tempo estimado é de 2 a 5 minutos.
                     </p>
                   </div>
                 </div>
@@ -313,11 +322,10 @@ function PlayProtectPage() {
             <div className="mt-12 rounded-lg border border-violet/40 bg-violet/5 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <ShieldAlert className="h-6 w-6 text-violet" />
-                <h2 className="text-xl font-bold font-display">Serviço Gerenciado (Play Protect Cloak)</h2>
+                <h2 className="text-xl font-bold font-display">Serviço gerenciado de assinatura</h2>
               </div>
               <p className="text-muted-foreground text-sm mb-6">
-                Precisa de um bypass manual persistente ou suporte para APKs complexos? 
-                O serviço gerenciado permite que você envie o arquivo para nossa equipe processar.
+                Precisa de suporte para um APK complexo? O serviço gerenciado permite enviar o arquivo para análise da equipe.
               </p>
               <Link to="/dashboard" search={{ tab: "play-protect" }}>
                 <Button variant="outline" className="font-mono uppercase tracking-widest border-violet/40 hover:bg-violet/10">
