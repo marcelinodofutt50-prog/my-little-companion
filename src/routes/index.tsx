@@ -76,9 +76,9 @@ function LandingPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-[#e0e0e0] selection:bg-[#c9a84c]/30 selection:text-white">
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(201,168,76,0.1),transparent_50%)]" />
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10" />
+    <div className="relative min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-foreground">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,var(--color-primary),transparent_50%)] opacity-[0.05]" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.05] mix-blend-overlay" />
       
       <SiteHeader />
       
