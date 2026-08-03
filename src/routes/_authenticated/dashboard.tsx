@@ -276,7 +276,8 @@ function DashboardPage() {
             <ExpiryReminder />
 
             {(() => {
-              const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
+              const activeLicenses = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
+              const active = activeLicenses;
               const nextExp = active
                 .map((l) => (l.expires_at ? new Date(l.expires_at).getTime() : Infinity))
                 .sort((a, b) => a - b)[0];
@@ -411,7 +412,7 @@ function DashboardPage() {
                     <Zap className="h-20 w-20 text-neon" />
                   </div>
                   <div className="osint-label mb-2 text-muted-foreground">CRÉDITO OPERACIONAL</div>
-                  <div className="font-mono text-3xl font-black text-neon">{formatBrl(cashback)}</div>
+                  <div className="font-mono text-3xl font-black text-neon">{formatBrl(balance)}</div>
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
                 </div>
                 
