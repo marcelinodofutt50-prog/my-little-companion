@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAnnouncements } from "@/lib/admin.functions";
+import { listMyAnnouncements } from "@/lib/announcements.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Megaphone, Calendar, Tag, ChevronRight, Search, Filter } from "lucide-react";
@@ -15,12 +15,12 @@ export function AnnouncementsSection() {
 
   const { data: announcements, isLoading } = useQuery({
     queryKey: ["announcements"],
-    queryFn: () => getAnnouncements(),
+    queryFn: () => listMyAnnouncements(),
   });
 
-  const categories = Array.from(new Set(announcements?.map(a => a.severity) || []));
+  const categories = Array.from(new Set(announcements?.map((a: any) => a.severity) || [])) as string[];
 
-  const filtered = announcements?.filter(a => {
+  const filtered = announcements?.filter((a: any) => {
     const matchesSearch = a.title.toLowerCase().includes(search.toLowerCase()) || 
                          a.body.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = !selectedCategory || a.severity === selectedCategory;

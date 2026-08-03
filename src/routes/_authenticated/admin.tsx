@@ -121,10 +121,13 @@ import {
   adminRegisterLegacyLicense,
   adminListReferrals,
   adminMarkReferralPaid,
+} from "@/lib/admin.functions";
+
+import {
   adminListAnnouncements,
   adminSaveAnnouncement,
   adminDeleteAnnouncement,
-} from "@/lib/admin.functions";
+} from "@/lib/announcements.functions";
 import {
   playNotifyDing,
   unlockNotifySound,
