@@ -27,6 +27,7 @@ export const Route = createFileRoute("/api/public/hooks/expire-licenses")({
           .from("licenses")
           .select("id, user_id, plan_slug, is_trial, yaarsa_email, panel, disabled_at, revoked, expires_at")
           .is("disabled_at", null)
+          .is("revoked", false)
           .neq("plan_slug", "login-lifetime")
           .lt("expires_at", nowIso)
           .limit(200);
