@@ -823,14 +823,26 @@ function DashboardPage() {
             <div className="osint-panel p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="h-6 w-6 text-neon" />
-                <h2 className="text-xl font-bold font-display">Play Protect Bypass System</h2>
+                <h2 className="text-xl font-bold font-display">Shadow Signer & Play Protect Cloak</h2>
               </div>
-              <p className="text-muted-foreground mb-6">Injete droppers e realize o bypass de antivírus em tempo real.</p>
-              <Link to="/play-protect">
-                <Button className="font-mono uppercase tracking-widest">
-                  Abrir Console Builder <Zap className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-primary">// public builder</h3>
+                  <p className="text-muted-foreground text-sm">O sistema automatizado para injeção de dropper (Risada KL) e bypass em tempo real disponível para seu plano.</p>
+                  <Link to="/play-protect">
+                    <Button className="w-full font-mono uppercase tracking-widest">
+                      Abrir Shadow Signer <Zap className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="space-y-4 border-l border-border/40 pl-6">
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400">// managed bypass</h3>
+                  <p className="text-muted-foreground text-sm">O serviço clássico de assinatura manual por nossos especialistas. Envie seu APK e receba o resultado processado.</p>
+                  <Button variant="outline" className="w-full font-mono uppercase tracking-widest" onClick={() => setExtraTab("downloads")}>
+                    Ver Fila de Envios <ShieldAlert className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
 
