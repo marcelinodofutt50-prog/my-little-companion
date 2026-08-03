@@ -461,10 +461,11 @@ function SupportPage() {
                 <div className="text-3xl" aria-hidden>{active.emoji}</div>
                 <div className="text-sm font-medium">{active.label}</div>
                 <div className="text-xs text-muted-foreground">
-                  {isAdminRef.current 
+                  {!thread && isAdminRef.current
                     ? "Como administrador, você não possui um ticket de suporte ativo. Use o Painel Admin para responder clientes."
                     : "Descreva o que aconteceu ou toque em uma mensagem rápida acima."}
                 </div>
+
               </div>
             )}
             {msgs.map((m) => {
