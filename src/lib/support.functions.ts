@@ -122,10 +122,12 @@ export const listMessages = createServerFn({ method: "GET" })
     if (data.before) q = q.lt("created_at", data.before);
     const { data: rows, error } = await q;
     if (error) throw error;
-    const list = rows ?? [];
+    const { normalizeSupportMessages } = await import("./support-message");
+    const list = normalizeSupportMessages(rows, data.threadId);
     const hasMore = list.length > limit;
     const page = hasMore ? list.slice(0, limit) : list;
     return { messages: page.reverse(), hasMore };
+
   });
 
 
