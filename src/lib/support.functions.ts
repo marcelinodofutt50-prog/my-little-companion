@@ -238,11 +238,13 @@ export const sendMessage = createServerFn({ method: "POST" })
  */
 export const setThreadCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    threadId: z.string().uuid(),
-    category: z.enum(SUPPORT_CATEGORIES),
-    subject: z.string().trim().min(2).max(120).optional(),
-  }).parse(i))
+  .inputValidator((i: unknown) => {
+    return z.object({
+      threadId: z.string().uuid(),
+      category: z.enum(SUPPORT_CATEGORIES),
+      subject: z.string().trim().min(2).max(120).optional(),
+    }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     const priority = data.category === "servidor" || data.category === "pagamento" ? "alta" : "normal";
     const patch = {
