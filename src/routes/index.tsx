@@ -91,8 +91,8 @@ function LandingPage() {
             className="mb-12"
           >
             <div className="relative inline-block">
-              <div className="absolute inset-0 animate-pulse blur-2xl bg-[#c9a84c]/20" />
-              <img src={shadowMark} alt="Shadow Mask" className="relative mx-auto h-32 w-32 object-contain drop-shadow-[0_0_25px_rgba(201,168,76,0.4)]" />
+              <div className="absolute inset-0 animate-pulse blur-2xl bg-primary/20" />
+              <img src={shadowMark} alt="Shadow Mask" className="relative mx-auto h-32 w-32 object-contain drop-shadow-[0_0_25px_var(--color-primary)]" />
             </div>
           </motion.div>
 
