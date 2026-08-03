@@ -51,6 +51,7 @@ vi.mock("../yaarsa.server", () => ({
 describe("Support AI Proactive Flow", () => {
   const threadId = "00000000-0000-0000-0000-000000000001";
   const userId = "00000000-0000-0000-0000-000000000002";
+  const adminId = "00000000-0000-0000-0000-000000000003";
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -106,13 +107,16 @@ describe("Support AI Proactive Flow", () => {
   });
 
   it("should execute postAIMessage and mark thread as unread", async () => {
+    mockSupabaseQuery.maybeSingle.mockResolvedValueOnce({ data: { user_id: adminId }, error: null });
+
     await triggerSupportAI(threadId, userId, "bug no login");
     const tools = (generateText as any).mock.calls[0][0].tools;
-    
+
     await tools.postAIMessage.execute({ body: "Test message" });
-    
+
+    expect(supabaseAdmin.from).toHaveBeenCalledWith("user_roles");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_messages");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_threads");
-    expect(mockSupabaseQuery.update).toHaveBeenCalledWith({ unread_by_customer: 1 });
+    expect(mockSupabaseQuery.update).toHaveBeenCalledWith({ unread_by_customer: 1, last_staff_message_at: expect.any(String) });
   });
 });
