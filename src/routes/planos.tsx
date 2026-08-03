@@ -321,23 +321,20 @@ function PlansPage() {
 
 
   const { licenses, servers, sources, upgrades } = useMemo(() => {
-    const tFunc = t; // helper for nested function
-    const serverAll = plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "server");
+    const serverAll = plans.filter((p) => p.category === "server");
     const serverFiltered = isLegacy
       ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
-    // O upgrade de R$ 600 deve aparecer para quem é legacy (v457)
-    // E agora também garantimos que o plano mensal apareça para upgrades
-    const upgradeList = plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "upgrade");
+    const upgradeList = plans.filter((p) => p.category === "upgrade");
     
     return {
-      licenses: plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "license"),
+      licenses: plans.filter((p) => p.category === "license"),
       servers: serverFiltered,
-      sources: plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "source"),
+      sources: plans.filter((p) => p.category === "source"),
       upgrades: isLegacy ? upgradeList : [],
     };
-  }, [plans, isLegacy, t]);
+  }, [plans, isLegacy]);
 
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
@@ -833,6 +830,11 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       </div>
 
       <p className="mt-4 min-h-[2.5rem] text-sm text-muted-foreground">{meta.tagline || plan.description}</p>
+      {meta.note && (
+        <p className="mt-2 text-[10px] leading-relaxed text-amber-500/80 italic border-l border-amber-500/30 pl-2">
+          {meta.note}
+        </p>
+      )}
 
       <div className="mt-5">
         {hasBenefit && b.final < price ? (
