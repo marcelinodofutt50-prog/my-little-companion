@@ -114,7 +114,8 @@ function DashboardPage() {
     try {
       const [l, c, o] = await Promise.all([listFn(), cashFn(), ordersFn().catch(() => [] as MyOrder[])]);
       const list = l as License[];
-      setLicenses(list); setBalance(c.balance);
+      const balance = c.balance;
+      setLicenses(list); setBalance(balance);
       setOrders((o ?? []) as MyOrder[]);
       setOrderLastSync(new Date());
       // Hydrate trial credentials card from server-stored (encrypted) license
