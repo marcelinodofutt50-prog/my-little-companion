@@ -111,7 +111,7 @@
 html.theme-light {
   color-scheme: light;
 
-  --background: #f9fbf9;
+  --background: #ffffff;
   --foreground: #1a1a1a;
 
   --card: #ffffff;
@@ -127,7 +127,7 @@ html.theme-light {
   --muted: #f4f4f4;
   --muted-foreground: #555555;
 
-  --accent: #f9fbf9;
+  --accent: #f4f4f4;
   --accent-foreground: #006a4e;
 
   --destructive: #cc0000;
