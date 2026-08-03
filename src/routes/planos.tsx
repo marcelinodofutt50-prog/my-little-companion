@@ -154,7 +154,7 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
     cadence: "renovação em 30 dias",
     features: [
       "Assinatura V2/V3 com bypass Play Protect",
-      "APK Cloaking (Dropper Risada KL inclusa)",
+      "APK Cloaking (Shadow Bypass Dropper inclusa)",
       "Proteção anti-decompile",
       "Garantia de bypass ativo no ciclo",
       "Fila dedicada no builder",
