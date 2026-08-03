@@ -163,7 +163,10 @@ export const sendMessage = createServerFn({ method: "POST" })
         };
         
         async function doCreate(p: any) {
-          return context.supabase.from("support_threads").insert(p).select("id").maybeSingle();
+          // Utiliza console.error para capturar falhas de inserção silenciosas
+          const result = await context.supabase.from("support_threads").insert(p).select("id").maybeSingle();
+          if (result.error) console.error("[support.functions] Thread creation error:", result.error);
+          return result;
         }
         
         let { data: nt, error: nErr } = await doCreate(ntPayload);
@@ -202,7 +205,9 @@ export const sendMessage = createServerFn({ method: "POST" })
     };
 
     async function doInsert(p: any) {
-      return context.supabase.from("support_messages").insert(p).select("*").maybeSingle();
+      const result = await context.supabase.from("support_messages").insert(p).select("*").maybeSingle();
+      if (result.error) console.error("[support.functions] Message insertion error:", result.error);
+      return result;
     }
 
     let { data: msg, error } = await doInsert(payload);
