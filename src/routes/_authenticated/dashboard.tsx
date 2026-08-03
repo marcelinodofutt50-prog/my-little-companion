@@ -838,7 +838,7 @@ function DashboardPage() {
             ))}
           </div>
 
-          {extraTab === "downloads" && <DownloadsSection licenses={licenses} isAdmin={isAdmin} />}
+          {extraTab === "downloads" && <DownloadsSection licenses={licenses} isAdmin={isAdmin} themeParam={search?.theme} />}
 
           {extraTab === "play-protect" && (
             <div className="osint-panel p-6">
