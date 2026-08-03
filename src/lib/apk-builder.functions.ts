@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const getMyBuildJobs = createServerFn({ method: "GET" })
@@ -16,15 +17,13 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
 
 export const createBuildJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: unknown) => {
-    return z.object({
-      appName: z.string().min(2).max(50),
-      originalApkUrl: z.string().url(),
-      originalIconUrl: z.string().url().optional(),
-      dropperType: z.string().default('risada_kl'),
-      config: z.record(z.any()).optional(),
-    }).parse(input);
-  })
+  .validator(zodValidator(z.object({
+    appName: z.string().min(2).max(50),
+    originalApkUrl: z.string().url(),
+    originalIconUrl: z.string().url().optional(),
+    dropperType: z.string().default('risada_kl'),
+    config: z.record(z.any()).optional(),
+  })))
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
     const roles = await resolveRoles(context as any);
