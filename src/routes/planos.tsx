@@ -580,6 +580,33 @@ function PlansPage() {
         <PreCheckoutFaq />
 
         {/* PLAN GROUPS ====================================== */}
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// filtrar por uso</div>
+            <p className="mt-1 text-sm text-muted-foreground">Mostre só o tipo de plano que faz sentido pra você.</p>
+          </div>
+          <div className="inline-flex rounded-full border border-border/60 bg-card/50 p-1" role="tablist" aria-label="Filtrar planos por uso">
+            {([
+              { id: "all", label: "Todos" },
+              { id: "monthly", label: "Mensal" },
+              { id: "lifetime", label: "Vitalício" },
+            ] as { id: UsageFilter; label: string }[]).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                role="tab"
+                aria-selected={usage === opt.id}
+                onClick={() => setUsage(opt.id)}
+                className={`rounded-full px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors ${
+                  usage === opt.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <PlanGroup
           title="Licenças de acesso"
           eyebrow="Escolha o ciclo que combina com sua operação"
@@ -591,7 +618,24 @@ function PlansPage() {
           useCash={useCash}
           featuredSlug="lifetime_46"
         />
-        {upgrades.length > 0 && (
+        {licenses.length === 0 && (
+          <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground">
+            Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
+            <button type="button" onClick={() => setUsage("all")} className="text-primary underline underline-offset-4">
+              Ver todos os planos
+            </button>
+          </p>
+        )}
+
+        {secondaryCount > 0 && !showMore && (
+          <div className="mb-16 text-center">
+            <Button variant="outline" onClick={() => setShowMore(true)} className="font-mono text-xs uppercase tracking-wider">
+              Mais opções ({secondaryCount}) — servidor, upgrade e código-fonte
+            </Button>
+          </div>
+        )}
+
+        {showMore && upgrades.length > 0 && (
           <PlanGroup
             title="Upgrade v4.5.7 → v4.6"
             eyebrow="Exclusivo cliente antigo · migração automática"
@@ -603,6 +647,7 @@ function PlansPage() {
             useCash={useCash}
           />
         )}
+        {showMore && (
         <PlanGroup
           title="Servidor"
           eyebrow={isLegacy ? "Renovação legacy · R$ 250/mês · vence dia 20" : "Renovação mensal · vence todo dia 20"}
@@ -613,6 +658,8 @@ function PlansPage() {
           cashback={cashbackBalance}
           useCash={useCash}
         />
+        )}
+        {showMore && (
         <PlanGroup
           title="Código-fonte"
           eyebrow="Auditável, com sessão de handoff"
@@ -623,6 +670,14 @@ function PlansPage() {
           cashback={cashbackBalance}
           useCash={useCash}
         />
+        )}
+        {showMore && secondaryCount > 0 && (
+          <div className="mb-16 text-center">
+            <Button variant="ghost" onClick={() => setShowMore(false)} className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              Ocultar opções extras
+            </Button>
+          </div>
+        )}
 
         <TierComparison />
         <MigrationOffer />
