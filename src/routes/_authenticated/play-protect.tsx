@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cancelApkJob, createApkJob, getApkResultDownload, getPlayProtectStatus, listApkJobs } from "@/lib/apk-jobs.functions";
+import { getMyBuildJobs } from "@/lib/apk-builder.functions";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
