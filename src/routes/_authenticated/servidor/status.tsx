@@ -13,10 +13,13 @@ import {
   ChevronRight,
   Info,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  FileSearch,
+  History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getServerStatus, type ServerStatus } from "@/lib/server-status.functions";
+import { getAuditLogs } from "@/lib/audit.functions";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { toast } from "sonner";
@@ -31,16 +34,23 @@ function ServerStatusPage() {
   const [statuses, setStatuses] = useState<ServerStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  
   const fetchStatus = useServerFn(getServerStatus);
+  const fetchAudit = useServerFn(getAuditLogs);
 
   async function refresh() {
     setLoading(true);
     try {
-      const data = await fetchStatus();
-      setStatuses(data);
+      const [statusData, auditData] = await Promise.all([
+        fetchStatus(),
+        fetchAudit()
+      ]);
+      setStatuses(statusData);
+      setAuditLogs(auditData);
       setLastUpdate(new Date());
     } catch (e: any) {
-      toast.error("Falha ao consultar status dos servidores");
+      toast.error("Falha ao consultar dados da infraestrutura");
     } finally {
       setLoading(false);
     }
@@ -103,6 +113,61 @@ function ServerStatusPage() {
                 </div>
               )}
             </div>
+
+            <section className="mt-12">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="flex items-center gap-2 font-display text-lg font-bold">
+                    <FileSearch className="h-4 w-4 text-primary" /> Auditoria de Decisões
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-mono mt-1">
+                    Histórico de verificações e elegibilidade
+                  </p>
+                </div>
+                <History className="h-5 w-5 text-muted-foreground/30" />
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-border/40 bg-card/20">
+                <div className="grid grid-cols-4 border-b border-border/40 bg-background/40 p-3 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                  <div>Evento</div>
+                  <div>Decisão</div>
+                  <div>Justificativa</div>
+                  <div className="text-right">Horário</div>
+                </div>
+                <div className="divide-y divide-border/20">
+                  {auditLogs.map((log) => (
+                    <div key={log.id} className="grid grid-cols-4 items-center p-3 text-[11px] transition-colors hover:bg-primary/5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                        <span className="font-bold">{log.event}</span>
+                      </div>
+                      <div>
+                        <span className={`rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                          log.decision === 'APPROVED' || log.decision === 'SUCCESS' 
+                            ? 'bg-neon/20 text-neon' 
+                            : log.decision === 'PENDING' 
+                            ? 'bg-amber-400/20 text-amber-400' 
+                            : 'bg-destructive/20 text-destructive'
+                        }`}>
+                          {log.decision}
+                        </span>
+                      </div>
+                      <div className="text-muted-foreground italic">
+                        {log.reason}
+                      </div>
+                      <div className="text-right font-mono text-[10px] text-muted-foreground">
+                        {new Date(log.timestamp).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  ))}
+                  {auditLogs.length === 0 && !loading && (
+                    <div className="p-8 text-center text-xs text-muted-foreground">
+                      Nenhum registro de auditoria encontrado para esta conta.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
 
             <section className="mt-12 space-y-6">
               <div className="border-t border-border/40 pt-8">
