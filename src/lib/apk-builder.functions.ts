@@ -24,6 +24,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
       dropperType: z.string().default('risada_kl'),
       config: z.record(z.any()).optional(),
     });
+    // @ts-ignore
     return schema.parse(i);
   })
   .handler(async ({ data, context }) => {
