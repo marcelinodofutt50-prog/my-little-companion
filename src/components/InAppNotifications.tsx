@@ -75,12 +75,11 @@ export function InAppNotifications() {
       const known = knownRef.current;
       if (known && announce) {
         const fresh = data.filter((n) => !known.has(n.id));
-        // Alertas sonoros/desktop de chat são apenas para admins.
-        const support = res.isAdmin ? fresh.find((n) => n.kind === "support") : undefined;
-        if (support) {
+        const important = fresh.find((n) => n.kind === "support" || n.kind === "order" || n.kind === "suspended");
+        if (important) {
           playNotifyDing();
-          toast.message(support.title, { description: support.description });
-          showDesktopNotification(support.title, support.description);
+          toast.message(important.title, { description: important.description });
+          if (res.isAdmin) showDesktopNotification(important.title, important.description);
         } else if (fresh.length > 0) {
           toast.message(fresh[0].title, { description: fresh[0].description });
         }
@@ -137,16 +136,8 @@ export function InAppNotifications() {
   }
 
   // Sem permissão: sino e opções de chat ficam ocultos, com aviso claro.
-  if (adminChecked && !isAdmin) {
-    return (
-      <div
-        title="Notificações e chat de suporte são exclusivos da equipe administrativa."
-        className="flex items-center gap-1.5 rounded-md border border-border/40 bg-background/40 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground"
-      >
-        <BellOff className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">sem permissão</span>
-      </div>
-    );
+  if (adminChecked && !isAdmin && !items.some(n => n.kind !== 'support')) {
+    return null;
   }
 
   if (!adminChecked) return null;

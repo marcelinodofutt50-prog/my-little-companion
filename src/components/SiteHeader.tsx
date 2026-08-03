@@ -12,7 +12,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import shadowMark from "@/assets/shadow-mask.png";
+import { InAppNotifications } from "@/components/InAppNotifications";
+import shadowMark from "@/assets/shadow-mark.png";
 import type { User } from "@supabase/supabase-js";
 
 export function SiteHeader() {
@@ -76,6 +77,7 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          {user && <InAppNotifications />}
           <ThemeToggle />
           <LanguageToggle className="hidden sm:inline-flex" />
 

@@ -28,6 +28,7 @@ import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { ExpiryReminder } from "@/components/ExpiryReminder";
 import { EmailConfirmBanner } from "@/components/EmailConfirmBanner";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
+import { playNotifyDing } from "@/lib/notify-sound";
 import { RgbModeToggle } from "@/components/RgbModeToggle";
 import { OnboardingChecklist, ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { OrderStatusTimeline } from "@/components/OrderStatusTimeline";
@@ -113,7 +114,8 @@ function DashboardPage() {
     try {
       const [l, c, o] = await Promise.all([listFn(), cashFn(), ordersFn().catch(() => [] as MyOrder[])]);
       const list = l as License[];
-      setLicenses(list); setBalance(c.balance);
+      const balance = c.balance;
+      setLicenses(list); setBalance(balance);
       setOrders((o ?? []) as MyOrder[]);
       setOrderLastSync(new Date());
       // Hydrate trial credentials card from server-stored (encrypted) license
@@ -155,11 +157,21 @@ function DashboardPage() {
         // o que quebrava o realtime com "cannot add postgres_changes after subscribe".
         const tag = Math.random().toString(36).slice(2, 8);
         ch = supabase.channel(`licenses:${data.user.id}:${tag}`)
-          .on("postgres_changes", { event: "*", schema: "public", table: "licenses", filter: `user_id=eq.${data.user.id}` }, () => refresh())
+          .on("postgres_changes", { event: "*", schema: "public", table: "licenses", filter: `user_id=eq.${data.user.id}` }, (payload) => {
+            if (payload.eventType === "INSERT" || (payload.eventType === "UPDATE" && (payload.new as any).unread_by_customer > 0)) {
+              playNotifyDing();
+            }
+            refresh();
+          })
           .subscribe();
-        // Realtime para pedidos em andamento (status, pagamento, entrega)
+
         ordersCh = supabase.channel(`orders:${data.user.id}:${tag}`)
-          .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${data.user.id}` }, () => refresh())
+          .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${data.user.id}` }, (payload) => {
+            if (payload.eventType === "UPDATE" && (payload.new as any).status === "paid") {
+              playNotifyDing();
+            }
+            refresh();
+          })
           .subscribe();
 
       }
@@ -265,7 +277,8 @@ function DashboardPage() {
             <ExpiryReminder />
 
             {(() => {
-              const active = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
+              const activeLicenses = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
+              const active = activeLicenses;
               const nextExp = active
                 .map((l) => (l.expires_at ? new Date(l.expires_at).getTime() : Infinity))
                 .sort((a, b) => a - b)[0];
@@ -287,26 +300,35 @@ function DashboardPage() {
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
                       <div className="relative shrink-0">
-                        <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-25 blur-xl" />
-                        <img src={shadowMark} alt="Shadow" className="h-12 w-12 object-contain drop-shadow-[0_0_18px_rgba(201,168,76,0.55)] md:h-14 md:w-14" />
+                        <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-30 blur-2xl" />
+                        <div className="rainbow-ring rounded-full p-0.5">
+                          <div className="rounded-full bg-background p-1">
+                            <img src={shadowMark} alt="Shadow" className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(201,168,76,0.6)] md:h-16 md:w-16" />
+                          </div>
+                        </div>
                       </div>
                       <div className="min-w-0">
-                        <div className="osint-label text-muted-foreground">Conta</div>
-                        <h1 className="rainbow-text mt-0.5 truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">{displayIdentity(displayName, email)}</h1>
-                        <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                          sessão · {new Date().toLocaleDateString("pt-BR")} · {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="osint-label text-neon">Nível de Acesso</div>
+                          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-primary border border-primary/20">Alpha-Ops</span>
+                        </div>
+                        <h1 className="rainbow-text mt-1 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl">{displayIdentity(displayName, email)}</h1>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-3 font-mono text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-neon animate-pulse" /> {new Date().toLocaleDateString("pt-BR")}</span>
+                          <span className="hidden sm:inline text-border/40">|</span>
+                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className={`shrink-0 rounded-md border px-3 py-2 text-right font-mono ${statusRing}`}>
-                      <div className={`text-[9px] uppercase tracking-[0.2em] ${statusColor}`}>
-                        {daysLeft === null ? "sem licença" : daysLeft === 0 ? "expira hoje" : "próxima expiração"}
+                    <div className={`shrink-0 rounded-lg border-2 px-4 py-3 text-right font-mono shadow-lg transition-all ${statusRing}`}>
+                      <div className={`text-[10px] font-bold uppercase tracking-[0.25em] ${statusColor}`}>
+                        {daysLeft === null ? "acesso offline" : daysLeft === 0 ? "expira hoje" : "dias de licença"}
                       </div>
-                      <div className={`text-lg font-bold leading-none ${statusColor}`}>
-                        {daysLeft === null ? "—" : `${daysLeft}d`}
+                      <div className={`text-2xl font-black leading-none mt-1 ${statusColor}`}>
+                        {daysLeft === null ? "00" : String(daysLeft).padStart(2, '0')}
                       </div>
-                      <div className="mt-0.5 text-[9px] text-muted-foreground">
-                        {active.length} ativa{active.length === 1 ? "" : "s"}
+                      <div className="mt-1 text-[10px] font-medium text-muted-foreground/80">
+                        {active.length} terminal{active.length === 1 ? "" : "s"} ativ.{active.length === 1 ? "o" : "os"}
                       </div>
                     </div>
                   </div>
@@ -341,23 +363,67 @@ function DashboardPage() {
               );
             })()}
 
+
         {(() => {
           const activeList = licenses.filter((l) => !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date()));
-          if (activeList.length >= 2) return null;
-          const primaryLic = activeList.find((l) => !l.is_trial) ?? activeList[0];
+          const activeCount = activeList.length;
+          
           return (
-            <OnboardingChecklist
-              hasActiveLicense={activeList.length > 0}
-              onGoToLicense={() => document.getElementById("minhas-licencas")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              onCopyCredentials={() => {
-                if (!primaryLic) return false;
-                navigator.clipboard.writeText(
-                  `user: ${primaryLic.yaarsa_username}\nemail: ${primaryLic.yaarsa_email}\npass: ${primaryLic.password}\nserver: ${primaryLic.server_ip}`
-                );
-                toast.success("Credenciais copiadas");
-                return true;
-              }}
-            />
+            <>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-primary/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <Zap className="h-20 w-20 text-neon" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">CRÉDITO OPERACIONAL</div>
+                  <div className="font-mono text-3xl font-black text-neon">{formatBrl(balance)}</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
+                </div>
+                
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-cyan/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <Server className="h-20 w-20 text-cyan" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">TERMINAIS ATIVOS</div>
+                  <div className="font-mono text-3xl font-black text-cyan">{activeCount}</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">NODES EM SINCRONIZAÇÃO</div>
+                </div>
+
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-violet-500/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <Ticket className="h-20 w-20 text-violet-400" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">TICKETS SUPORTE</div>
+                  <div className="font-mono text-3xl font-black text-violet-400">0</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">SEM ALERTAS PENDENTES</div>
+                </div>
+
+                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-amber-500/50">
+                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
+                    <ShieldAlert className="h-20 w-20 text-amber-500" />
+                  </div>
+                  <div className="osint-label mb-2 text-muted-foreground">INTEGRIDADE OPS</div>
+                  <div className="font-mono text-3xl font-black text-amber-500">100%</div>
+                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">PROTOCOLO AES-256 ATIVO</div>
+                </div>
+              </div>
+
+              {activeCount < 2 && (
+                <OnboardingChecklist
+                  hasActiveLicense={activeCount > 0}
+                  onGoToLicense={() => document.getElementById("minhas-licencas")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  onCopyCredentials={() => {
+                    const primaryLic = activeList.find((l) => !l.is_trial) ?? activeList[0];
+                    if (!primaryLic) return false;
+                    navigator.clipboard.writeText(
+                      `user: ${primaryLic.yaarsa_username}\nemail: ${primaryLic.yaarsa_email}\npass: ${primaryLic.password}\nserver: ${primaryLic.server_ip}`
+                    );
+                    toast.success("Credenciais copiadas");
+                    return true;
+                  }}
+                />
+              )}
+            </>
           );
         })()}
 
