@@ -1431,16 +1431,15 @@ export const adminSaveAnnouncement = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({
     id: z.string().uuid().optional(),
     title: z.string().min(3),
-    content: z.string().min(10),
-    category: z.string(),
-    tags: z.array(z.string()),
-    is_published: z.boolean(),
+    body: z.string().min(10),
+    severity: z.string().default("info"),
+    is_active: z.boolean().default(true),
   }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const payload = {
       ...data,
-      author_id: context.userId,
+      created_by: context.userId,
       updated_at: new Date().toISOString(),
     };
     if (data.id) {
@@ -1477,9 +1476,10 @@ export const getAnnouncements = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("announcements")
       .select("*")
-      .eq("is_published", true)
+      .eq("is_active", true)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
 
