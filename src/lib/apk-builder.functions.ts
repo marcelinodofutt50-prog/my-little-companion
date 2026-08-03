@@ -16,15 +16,14 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
 
 export const createBuildJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => {
-    const schema = z.object({
+  .inputValidator((input: any) => {
+    return z.object({
       appName: z.string().min(2).max(50),
       originalApkUrl: z.string().url(),
       originalIconUrl: z.string().url().optional(),
       dropperType: z.string().default('risada_kl'),
       config: z.record(z.any()).optional(),
-    });
-    return schema.parse(input);
+    }).parse(input);
   })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
