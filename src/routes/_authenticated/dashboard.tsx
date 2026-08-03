@@ -139,7 +139,10 @@ function DashboardPage() {
           retried: true,
         });
       }
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) { 
+      console.error("Dashboard refresh error:", e);
+      toast.error(friendlyPanelError(e) || e.message); 
+    }
     setRefreshing(false);
   }
 
