@@ -41,22 +41,51 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  console.error("Root Error Boundary caught:", error);
   const router = useRouter();
+  
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="font-mono text-xl text-danger">// system_error</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Algo falhou no processo. Tente novamente.</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className="enterprise-surface max-w-md p-8 shadow-2xl text-center">
+        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-danger/10 text-danger">
+          <span className="font-mono text-xl font-bold">!</span>
+        </div>
+        <h1 className="font-mono text-xl text-danger uppercase tracking-[0.3em]">// system_error</h1>
+        <p className="mt-4 text-sm text-muted-foreground">Algo falhou no processo. Tente novamente.</p>
+        
+        {/* Mostra detalhes do erro apenas em desenvolvimento ou se for um erro conhecido */}
+        <div className="mt-4 p-3 bg-black/40 text-[10px] text-left font-mono overflow-auto max-h-40 rounded border border-danger/20 text-muted-foreground/80">
+          <div className="text-danger/60 mb-1 uppercase tracking-tighter">Stack Trace / Details:</div>
+          {error.message || "Unknown error occurred"}
+          {error.stack && (
+            <div className="mt-2 opacity-50 whitespace-pre-wrap">
+              {error.stack.split('\n').slice(0, 3).join('\n')}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-          >Tentar novamente</button>
-          <a href="/" className="rounded-md border border-input bg-background px-4 py-2 text-sm">Início</a>
+            onClick={() => { 
+              router.invalidate(); 
+              reset(); 
+              // Se o reset do router não bastar, um reload limpa o estado global do React
+              window.location.reload();
+            }}
+            className="w-full rounded-md bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-all font-mono uppercase tracking-widest"
+          >
+            Tentar novamente
+          </button>
+          <a 
+            href="/" 
+            className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Voltar ao Início
+          </a>
         </div>
       </div>
     </div>
