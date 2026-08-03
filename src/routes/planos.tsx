@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
   HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight, ArrowLeftRight,
-  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket,
+  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
@@ -1207,6 +1207,8 @@ function LegacyLookup() {
   const [needsVerification, setNeedsVerification] = React.useState(false);
   const [verificationCode, setVerificationCode] = React.useState("");
   const [isVerifying, setIsVerifying] = React.useState(false);
+  const [verificationLogs, setVerificationLogs] = React.useState<{status: 'pending' | 'confirmed' | 'invalid' | 'expired', time: string}[]>([]);
+
 
   const panelLabel = (p: string) => (p === "v46" ? "Shadow 4.6 (Vitalício)" : "Shadow 4.5.7 (Mensal)");
 
@@ -1219,8 +1221,8 @@ function LegacyLookup() {
       setResult({ found: r.found, panels: r.panels as ("v457" | "v46")[] });
       if (r.found) {
         if (r.panels.length === 1) setSelectedPanel(r.panels[0] as "v457" | "v46");
-        // Em um cenário real, isso dispararia o e-mail
         setNeedsVerification(true);
+        setVerificationLogs([{ status: 'pending', time: new Date().toLocaleTimeString() }]);
         toast.success("Código de verificação enviado para " + email.trim());
       }
     } catch (e: any) {
@@ -1235,11 +1237,14 @@ function LegacyLookup() {
       // Simulação de verificação
       if (verificationCode === "123456" || verificationCode.length >= 4) {
         setNeedsVerification(false);
+        setVerificationLogs(prev => [...prev, { status: 'confirmed', time: new Date().toLocaleTimeString() }]);
         toast.success("E-mail confirmado com sucesso!");
       } else {
+        setVerificationLogs(prev => [...prev, { status: 'invalid', time: new Date().toLocaleTimeString() }]);
         setErr("Código de verificação inválido.");
       }
     } catch (e: any) {
+      setVerificationLogs(prev => [...prev, { status: 'expired', time: new Date().toLocaleTimeString() }]);
       setErr("Erro na verificação do e-mail.");
     } finally { setIsVerifying(false); }
   }
@@ -1371,6 +1376,37 @@ function LegacyLookup() {
               </div>
               <div className="text-[9px] text-muted-foreground">
                 Não recebeu? Verifique o spam ou tente novamente em alguns minutos.
+              </div>
+            </div>
+          )}
+
+          {verificationLogs.length > 0 && (
+            <div className="mt-4 p-4 rounded-lg bg-black/40 border border-[#daa520]/20 font-mono">
+              <h4 className="text-[#daa520] text-[10px] font-bold mb-3 uppercase tracking-widest flex items-center gap-2">
+                <Shield className="h-3 w-3" /> Auditoria de Verificação
+              </h4>
+              <div className="space-y-2">
+                {verificationLogs.map((log, i) => (
+                  <div key={i} className="flex items-center justify-between text-[9px] border-b border-white/5 pb-1.5 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${
+                        log.status === 'confirmed' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 
+                        log.status === 'pending' ? 'bg-yellow-500 animate-pulse' : 
+                        'bg-red-500'
+                      }`} />
+                      <span className="text-white/40">{log.time}</span>
+                    </div>
+                    <span className={`uppercase font-bold tracking-tighter ${
+                      log.status === 'confirmed' ? 'text-green-500' : 
+                      log.status === 'pending' ? 'text-yellow-500' : 
+                      'text-red-500'
+                    }`}>
+                      {log.status === 'confirmed' ? 'Confirmado' : 
+                       log.status === 'pending' ? 'Pendente' : 
+                       log.status === 'expired' ? 'Expirado' : 'Inválido'}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
