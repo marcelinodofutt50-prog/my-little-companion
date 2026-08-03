@@ -226,96 +226,111 @@ function PlayProtectPage() {
 
 
 
-            <div className={`grid gap-6 md:grid-cols-2 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
+            <div className={`space-y-6 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
 
-              {/* Build Section */}
+              {/* Build Section — grande zona de upload estilo clássico */}
               <div id="nova-operacao" className="osint-panel p-6 scroll-mt-24">
-                <div className="mb-6 flex items-center gap-3">
-                  <Settings className="h-5 w-5 text-primary" />
-                  <h2 className="font-mono text-sm font-bold uppercase tracking-wider text-foreground">Nova Operação</h2>
-                </div>
-
-                <div className="space-y-4">
+                <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <label className="mb-2 block font-mono text-[10px] uppercase text-muted-foreground">Arquivo APK Original</label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept=".apk"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                        className="hidden"
-                        id="apk-upload"
-                      />
-                      <label
-                        htmlFor="apk-upload"
-                        className="flex cursor-pointer items-center justify-between border border-dashed border-border/60 bg-background/50 p-3 transition-colors hover:bg-background/80"
-                      >
-                        <span className="truncate text-sm text-muted-foreground">
-                          {selectedFile ? selectedFile.name : "Selecionar APK..."}
-                        </span>
-                        <Upload className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      </label>
-                    </div>
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Enviar APK</div>
+                    <h2 className="font-display text-2xl font-bold text-foreground">Bypass Play Protect</h2>
                   </div>
-
-                  <Button
-                    onClick={handleBuild}
-                    disabled={uploading || !selectedFile || !hasAccess}
-                    className="w-full rounded-none font-mono uppercase tracking-widest"
-                  >
-                    {uploading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCcw className="mr-2 h-4 w-4" />
-                    )}
-                    Iniciar Compilação
-                  </Button>
+                  <span className="font-mono text-[10px] uppercase text-muted-foreground">máx {MAX_APK_MB}MB · .apk</span>
                 </div>
 
-                <div className="mt-6 border-t border-border/40 pt-6">
-                  <div className="flex gap-3 rounded bg-amber-500/5 p-3 border border-amber-500/20">
-                    <Info className="h-5 w-5 shrink-0 text-amber-500" />
-                    <p className="text-[11px] leading-relaxed text-amber-200/70">
-                      O processamento e a assinatura são feitos em servidores remotos. O tempo estimado é de 2 a 5 minutos.
-                    </p>
+                <input
+                  type="file"
+                  accept=".apk"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="hidden"
+                  id="apk-upload"
+                />
+                <label
+                  htmlFor="apk-upload"
+                  onDragOver={(e) => { e.preventDefault(); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const f = e.dataTransfer.files?.[0];
+                    if (f) setSelectedFile(f);
+                  }}
+                  className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-primary/40 bg-background/40 p-6 text-center transition-colors hover:border-primary hover:bg-primary/5"
+                >
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-primary/50 bg-primary/10">
+                    <Upload className="h-6 w-6 text-primary" />
                   </div>
+                  {selectedFile ? (
+                    <>
+                      <span className="font-display text-sm text-foreground">{selectedFile.name}</span>
+                      <span className="font-mono text-[10px] uppercase text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB · clique para trocar</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-sm">
+                        <span className="font-bold text-primary">Clique para selecionar</span>
+                        <span className="text-muted-foreground"> ou arraste o APK aqui</span>
+                      </span>
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">1 APK por vez · processado por fila</span>
+                    </>
+                  )}
+                </label>
+
+                <Button
+                  onClick={handleBuild}
+                  disabled={uploading || !selectedFile || !hasAccess}
+                  className="mt-4 w-full rounded-none font-mono uppercase tracking-widest"
+                >
+                  {uploading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando…</>) : (<><RefreshCcw className="mr-2 h-4 w-4" /> Enviar para a fila</>)}
+                </Button>
+
+                <div className="mt-4 flex gap-3 rounded bg-amber-500/5 p-3 border border-amber-500/20">
+                  <Info className="h-5 w-5 shrink-0 text-amber-500" />
+                  <p className="text-[11px] leading-relaxed text-amber-200/70">
+                    Seu APK entra na <strong>Fila Play Protect</strong>. O admin recebe, envia ao bot e o arquivo assinado volta aqui automaticamente. Tempo médio 2–5 min.
+                  </p>
                 </div>
               </div>
 
-              {/* Dicas do Admin / Bypass Messages */}
-              <div className="md:col-span-2 space-y-4">
-                <AdminTipsSection />
-              </div>
+              {/* Dicas do Admin */}
+              <AdminTipsSection />
 
               {/* Jobs Section */}
               <div className="osint-panel flex flex-col p-6">
                 <div className="mb-6 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Smartphone className="h-5 w-5 text-primary" />
-                    <h2 className="font-mono text-sm font-bold uppercase tracking-wider text-foreground">Operações Recentes</h2>
+                    <h2 className="font-mono text-sm font-bold uppercase tracking-wider text-foreground">Suas builds — Fila Play Protect</h2>
                   </div>
                   <span className="font-mono text-[10px] text-muted-foreground">{jobs?.length || 0} builds</span>
                 </div>
 
                 <div className="flex-1 space-y-3 overflow-y-auto pr-1">
                   {jobs && jobs.length > 0 ? (
-                    jobs.map((job) => (
+                    jobs.map((job) => {
+                      const statusLabel = {
+                        queued: "Aguardando na fila",
+                        claimed: "Admin reservou",
+                        sending: "Enviando ao bot",
+                        processing: "Bot assinando",
+                        done: "Pronto",
+                        failed: "Falhou",
+                      }[job.status as string] ?? job.status;
+                      return (
                       <div key={job.id} className="osint-corners border border-border/40 bg-background/40 p-3">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-display text-sm font-bold text-foreground">{job.source_filename || "APK enviado"}</span>
                           <span className={`font-mono text-[9px] uppercase tracking-tighter ${
-                            job.status === 'done' ? 'text-neon' : 
+                            job.status === 'done' ? 'text-neon' :
                             job.status === 'failed' ? 'text-danger' : 'text-amber-400'
                           }`}>
-                            {job.status}
+                            {statusLabel}
                           </span>
                         </div>
-                        
+
                         {['queued', 'claimed', 'sending', 'processing'].includes(job.status) && (
                           <div className="space-y-1.5">
                             <Progress value={job.status === 'processing' ? 70 : job.status === 'sending' ? 45 : job.status === 'claimed' ? 25 : 10} className="h-1" />
                             <div className="flex justify-between font-mono text-[8px] text-muted-foreground/60">
-                              <span>Processando em cluster...</span>
+                              <span>{statusLabel}…</span>
                               <span>{job.status === 'processing' ? '70%' : job.status === 'sending' ? '45%' : job.status === 'claimed' ? '25%' : '10%'}</span>
                             </div>
                           </div>
@@ -325,7 +340,7 @@ function PlayProtectPage() {
                           <div className="flex items-center justify-between gap-2 mt-2">
                             <div className="flex items-center gap-1.5 text-neon/80">
                               <CheckCircle2 className="h-3 w-3" />
-                              <span className="font-mono text-[9px] uppercase">Pronto para implantação</span>
+                              <span className="font-mono text-[9px] uppercase">Pronto para download</span>
                             </div>
                             <Button
                               variant="ghost"
@@ -344,12 +359,12 @@ function PlayProtectPage() {
                             <span className="font-mono text-[9px]">{job.error_message || "Erro desconhecido"}</span>
                           </div>
                         )}
-                        
+
                         <div className="mt-2 text-[9px] text-muted-foreground/40 font-mono">
                           ID: {job.id.slice(0, 8)} • {new Date(job.created_at).toLocaleString()}
                         </div>
                       </div>
-                    ))
+                    );})
                   ) : (
                     <div className="flex h-40 flex-col items-center justify-center text-center">
                       <Smartphone className="mb-2 h-8 w-8 text-border/20" />
