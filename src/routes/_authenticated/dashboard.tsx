@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox } from 'lucide-react'
 
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import { SecurityWelcomeDialog } from '@/components/SecurityWelcomeDialog'
 import { TutorialHintDialog } from '@/components/TutorialHintDialog'
 import { InAppNotifications } from '@/components/InAppNotifications'
 import { AnnouncementsSection } from '@/components/AnnouncementsSection'
+import { EmptyState } from '@/components/EmptyState'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
@@ -206,8 +207,15 @@ function DashboardPage() {
                       <Button size="sm" variant="outline" onClick={() => void refetchLicenses()}>Tentar novamente</Button>
                     </div>
                   ) : (licenses ?? []).length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhuma licença encontrada.</p>
-
+                    <div className="lg:col-span-2">
+                      <EmptyState
+                        icon={PackageOpen}
+                        title="Nenhuma licença ativa"
+                        description="Assine um plano para liberar seu acesso ao servidor e aos downloads exclusivos."
+                        action={{ label: 'Ver planos', to: '/planos' }}
+                        secondary={{ label: 'Abrir suporte', to: '/suporte' }}
+                      />
+                    </div>
                   ) : (licenses ?? []).map((license: any) => {
                     const active = !license.revoked && !license.disabled_at && (!license.expires_at || new Date(license.expires_at) > new Date())
                     return (
@@ -242,7 +250,15 @@ function DashboardPage() {
                       <Button size="sm" variant="outline" onClick={() => void refetchUpdates()}>Tentar novamente</Button>
                     </div>
                   ) : updates.length === 0 ? (
-                    <p className="p-5 text-sm text-muted-foreground">Nenhum download disponível para este plano.</p>
+                    <div className="p-5">
+                      <EmptyState
+                        icon={Inbox}
+                        title="Nenhum download disponível"
+                        description="Os arquivos do seu plano aparecerão aqui assim que a liberação for confirmada."
+                        action={{ label: 'Ver planos', to: '/planos' }}
+                        secondary={{ label: 'Abrir suporte', to: '/suporte' }}
+                      />
+                    </div>
                   ) : updates.map((update: any) => (
                     <div key={update.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
 
