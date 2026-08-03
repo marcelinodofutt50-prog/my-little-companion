@@ -823,12 +823,14 @@ function OrderCalculator() {
               <span className="text-muted-foreground">Servidor (Setup + Infra):</span>
               <span className="font-mono">{selectedPlan === "none" ? "---" : `R$ ${serverPrice}`}</span>
             </div>
-            {addSigner && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Shadow Signer:</span>
-                <span className="font-mono text-primary">R$ 450</span>
-              </div>
-            )}
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Shadow Signer:</span>
+              <span className="font-mono">{addSigner ? "R$ 450" : "R$ 0"}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Impostos & Taxas Gateway:</span>
+              <span className="font-mono text-neon">Incluso</span>
+            </div>
             <div className="my-4 h-px bg-border/50" />
             <div className="flex justify-between items-end">
               <div>
