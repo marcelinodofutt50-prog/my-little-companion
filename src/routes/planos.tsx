@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
   HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight, ArrowLeftRight,
-  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket,
+  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
