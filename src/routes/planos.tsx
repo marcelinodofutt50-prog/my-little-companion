@@ -100,6 +100,8 @@ function metaFor(plan: Plan): PlanMeta {
       "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
+      "Acesso ao Shadow Play Protect Builder (Bypass Automático)",
+
     ],
     note: "Atenção: Este plano libera o LOGIN. Se você já tem um login ativo (incluindo Trial) e só quer pagar a manutenção, use 'Renovação Servidor'.",
   };
