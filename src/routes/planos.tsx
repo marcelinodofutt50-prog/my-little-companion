@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -170,26 +171,15 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
 function PlansPage() {
   const search = useSearch({ from: "/planos" }) as any;
 
+  useThemeSearchParam(search?.theme);
+
   useEffect(() => {
-    const html = document.documentElement;
-    const isLight = search?.theme === 'light';
-    
     if (search?.clear_cache === 'true') {
       const url = new URL(window.location.href);
       url.searchParams.delete('clear_cache');
       window.history.replaceState({}, '', url.toString());
     }
-
-    if (isLight) {
-      html.classList.add('theme-light');
-      html.classList.remove('dark');
-      html.style.colorScheme = 'light';
-    } else {
-      html.classList.remove('theme-light');
-      html.classList.add('dark');
-      html.style.colorScheme = 'dark';
-    }
-  }, [search?.theme, search?.clear_cache]);
+  }, [search?.clear_cache]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [isLegacy, setIsLegacy] = useState(false);

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { Activity, ArrowRight, ChevronDown, Copy, Cpu, Fingerprint, Lock, ShieldCheck, Zap, Clock } from "lucide-react";
+import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -46,28 +47,16 @@ function LandingPage() {
   const { t } = useI18n();
   const search = useSearch({ from: "/" }) as any;
 
+  useThemeSearchParam(search?.theme);
+
   useEffect(() => {
-    const html = document.documentElement;
-    const isLight = search?.theme === 'light';
-    
-    // Check for explicit cache clearing request
     if (search?.clear_cache === 'true') {
       const url = new URL(window.location.href);
       url.searchParams.delete('clear_cache');
       window.history.replaceState({}, '', url.toString());
       toast.success("Cache do sistema limpo com sucesso");
     }
-
-    if (isLight) {
-      html.classList.add('theme-light');
-      html.classList.remove('dark');
-      html.style.colorScheme = 'light';
-    } else {
-      html.classList.remove('theme-light');
-      html.classList.add('dark');
-      html.style.colorScheme = 'dark';
-    }
-  }, [search?.theme, search?.clear_cache]);
+  }, [search?.clear_cache]);
 
 
   useEffect(() => {

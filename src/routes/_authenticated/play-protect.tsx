@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { useState, useEffect } from "react";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,19 +35,7 @@ function PlayProtectPage() {
   const { t } = useI18n();
   const search = useSearch({ from: "/_authenticated/play-protect" }) as any;
   
-  useEffect(() => {
-    const html = document.documentElement;
-    const isLight = search?.theme === 'light';
-    if (isLight) {
-      html.classList.add('theme-light');
-      html.classList.remove('dark');
-      html.style.colorScheme = 'light';
-    } else {
-      html.classList.remove('theme-light');
-      html.classList.add('dark');
-      html.style.colorScheme = 'dark';
-    }
-  }, [search?.theme]);
+  useThemeSearchParam(search?.theme);
 
   const queryClient = useQueryClient();
   const getJobs = useServerFn(getMyBuildJobs);
