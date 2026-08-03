@@ -400,7 +400,9 @@ function NotificationSettings() {
             {[
               { id: 'notify_on_approval', label: 'Acesso Aprovado', desc: 'Alertar quando a elegibilidade for confirmada.' },
               { id: 'notify_on_pending', label: 'Acesso Pendente', desc: 'Alertar sobre necessidade de ação manual.' },
-              { id: 'notify_on_denial', label: 'Acesso Negado', desc: 'Alertar com justificativa do sistema.' }
+              { id: 'notify_on_denial', label: 'Acesso Negado', desc: 'Alertar com justificativa do sistema.' },
+              { id: 'notify_on_server_release', label: 'Servidor Liberado', desc: 'Notificar após liberação (Pagamento + Elegibilidade), incluindo data e Ref.' }
+
             ].map((event) => (
               <div key={event.id} className="flex items-center justify-between gap-4 rounded-lg border border-border/20 bg-background/20 p-2.5">
                 <div className="space-y-0.5">
