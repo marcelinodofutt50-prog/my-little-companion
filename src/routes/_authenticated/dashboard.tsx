@@ -16,6 +16,7 @@ import { AnnouncementsSection } from '@/components/AnnouncementsSection'
 import { EmptyState } from '@/components/EmptyState'
 import { SupportDiagnosticButton } from '@/components/SupportDiagnosticButton'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
+import { TrialActivationCard } from '@/components/TrialActivationCard'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -227,6 +228,10 @@ function DashboardPage() {
                   </Card>
                 ))}
               </div>
+
+              {!licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
+                <TrialActivationCard onDone={() => void refetchLicenses()} />
+              )}
 
               <OnboardingChecklist
                 hasActiveLicense={!!activeLicense}
