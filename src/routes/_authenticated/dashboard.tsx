@@ -25,6 +25,8 @@ import { listMyLicenses } from '@/lib/license.functions'
 import { triggerDownload, friendlyDownloadError } from '@/lib/download'
 import shadowMark from '@/assets/shadow-mask.png'
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
+import { useServerNow } from '@/hooks/use-server-now'
+import { licenseExpiryState } from '@/lib/expiry'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
@@ -46,6 +48,7 @@ function DashboardPage() {
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [user, setUser] = useState<any>(undefined)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const serverNow = useServerNow()
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
@@ -126,12 +129,9 @@ function DashboardPage() {
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
-  const isLicenseActive = (license: any) =>
-    !license.revoked &&
-    !license.disabled_at &&
-    !license.suspended_at &&
-    (!license.expires_at || new Date(license.expires_at) > new Date())
+  const isLicenseActive = (license: any) => licenseExpiryState(license, serverNow).active
   const activeLicense = licenses?.find(isLicenseActive)
+  const expiry = activeLicense ? licenseExpiryState(activeLicense, serverNow) : null
   // Sempre resolve um tier válido: version_tier -> plan_slug -> mensal (padrão),
   // garantindo que os downloads apareçam em todo recarregamento.
   const downloadsForLicense = (license: any) => {
@@ -140,7 +140,7 @@ function DashboardPage() {
     return files.length > 0 ? files : downloadsForTier('monthly_457')
   }
   const fallbackDownloads = activeLicense ? downloadsForLicense(activeLicense) : []
-  const daysLeft = activeLicense?.expires_at ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : (activeLicense ? 99 : null)
+  const daysLeft = expiry ? expiry.daysLeft : null
   const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
 
@@ -244,9 +244,7 @@ function DashboardPage() {
                         { t: 'Baixe o Shadow', d: 'Use os botões na seção "Downloads" abaixo para pegar o APK correto para o seu plano.' },
                         { t: 'Instale no Android', d: 'Desative o Play Protect antes de instalar (Play Store → Menu → Play Protect → Configurações).' },
                         { t: 'Faça login no app', d: 'Use o botão "Mostrar dados da licença" ao lado para revelar usuário, e-mail e senha, e cole no Shadow.' },
-                        { t: 'Renovação', d: activeLicense.plan_slug?.toLowerCase().includes('lifetime') || activeLicense.plan_slug?.toLowerCase().includes('vitalicio')
-                          ? 'Sua licença é vitalícia. Só a mensalidade do servidor precisa ser paga todo dia 20 para manter o acesso.'
-                          : 'Sua licença mensal só expira quando os dias acabarem. O corte do dia 20 do servidor não afeta o plano mensal — ele vale só para vitalícios.' },
+                        { t: 'Renovação', d: expiry?.renewalNote ?? '' },
                       ].map((step, i) => (
                         <li key={i} className="flex gap-3">
                           <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/10 font-mono text-[10px] font-bold text-primary">{i + 1}</span>
@@ -261,8 +259,11 @@ function DashboardPage() {
                       <div className={`text-[10px] font-bold uppercase ${statusColor}`}>Tempo restante</div>
                       <div className={`mt-1 text-5xl font-black tabular-nums ${statusColor}`}>{daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
                       <div className="text-[10px] uppercase text-muted-foreground">{daysLeft === 1 ? 'dia' : 'dias'}</div>
-                      {activeLicense.expires_at && (
-                        <div className="mt-2 text-[10px] text-muted-foreground">Expira {new Date(activeLicense.expires_at).toLocaleDateString('pt-BR')}</div>
+                      {expiry?.countdownAt && (
+                        <div className="mt-2 text-center text-[10px] text-muted-foreground">
+                          {expiry.kind === 'lifetime' ? 'Mensalidade do servidor vence ' : 'Expira '}
+                          {new Date(expiry.countdownAt).toLocaleDateString('pt-BR')}
+                        </div>
                       )}
                     </div>
                   </div>
