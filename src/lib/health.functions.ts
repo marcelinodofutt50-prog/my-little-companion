@@ -12,9 +12,23 @@ export const performHealthCheck = createServerFn({ method: "POST" })
         trials: { accessible: false },
       },
       timestamp: new Date().toISOString(),
+      schema: { reply_to_id: false }
     };
 
     try {
+      // Check for reply_to_id specifically via a direct query that would fail if missing
+      const { error: schemaError } = await supabaseAdmin
+        .from("support_messages")
+        .select("reply_to_id")
+        .limit(1);
+      
+      results.schema.reply_to_id = !schemaError;
+      
+      // If missing, trigger a validation run in the background
+      if (schemaError && schemaError.message.includes("reply_to_id")) {
+         const { validateAndFixSchema } = await import("./schema-validator.server");
+         validateAndFixSchema();
+      }
       // Test basic connectivity and table permissions for service_role
       const [threads, messages, apks, trials] = await Promise.all([
         supabaseAdmin.from("support_threads").select("id").limit(1),

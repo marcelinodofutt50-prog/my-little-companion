@@ -11,6 +11,13 @@ import { validateServerEnv } from "./lib/env-validation";
 // user's console.
 if (import.meta.env.SSR && typeof process !== "undefined" && process.env) {
   validateServerEnv();
+  
+  // Background schema validation to detect and fix missing columns (like reply_to_id)
+  import("./lib/schema-validator.server").then(({ validateAndFixSchema }) => {
+    validateAndFixSchema().catch(err => {
+      console.error("[startup] Schema validation failed:", err);
+    });
+  });
 }
 
 
