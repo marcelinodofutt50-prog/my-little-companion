@@ -1280,7 +1280,7 @@ function LegacyLookup() {
           <TooltipContent side="top" className="max-w-xs text-center leading-relaxed">
             <div className="flex flex-col items-center gap-1.5">
               <Info className="h-3.5 w-3.5" />
-              <span>Implemente um login no fluxo de verificação de “membros antigos” para eu comprovar minha elegibilidade com segurança antes de ativar o servidor.</span>
+              <span>Implemente a recuperação de senha no fluxo de verificação de “Membros Antigos”, para eu redefinir meu acesso com segurança.</span>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -1353,8 +1353,17 @@ function LegacyLookup() {
                     autoComplete="off"
                   />
                 </div>
-                <div className="text-[10px] text-muted-foreground">
-                  Guardamos criptografada. Se você não lembra a senha, abra um chamado em <span className="text-primary underline">/suporte</span>.
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>Guardamos criptografada.</span>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      toast.info("Para recuperar sua senha de membro antigo, entre em contato com o suporte em /suporte enviando seu email e comprovante de compra.");
+                    }}
+                    className="text-primary underline hover:text-primary/80 transition-colors"
+                  >
+                    Esqueceu a senha?
+                  </button>
                 </div>
               </div>
 
