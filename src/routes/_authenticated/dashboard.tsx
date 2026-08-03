@@ -126,9 +126,14 @@ function DashboardPage() {
     !license.suspended_at &&
     (!license.expires_at || new Date(license.expires_at) > new Date())
   const activeLicense = licenses?.find(isLicenseActive)
-  const fallbackDownloads = activeLicense
-    ? downloadsForTier((activeLicense.version_tier as VersionTier | null) ?? tierFromPlanSlug(activeLicense.plan_slug))
-    : []
+  // Sempre resolve um tier válido: version_tier -> plan_slug -> mensal (padrão),
+  // garantindo que os downloads apareçam em todo recarregamento.
+  const downloadsForLicense = (license: any) => {
+    const tier = (license?.version_tier as VersionTier | null) ?? tierFromPlanSlug(license?.plan_slug)
+    const files = downloadsForTier(tier)
+    return files.length > 0 ? files : downloadsForTier('monthly_457')
+  }
+  const fallbackDownloads = activeLicense ? downloadsForLicense(activeLicense) : []
   const daysLeft = activeLicense?.expires_at ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : (activeLicense ? 99 : null)
   const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
