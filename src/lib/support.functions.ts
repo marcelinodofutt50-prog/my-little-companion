@@ -32,7 +32,13 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
     // Retorna null para sinalizar que não há atendimento ativo.
     if (isStaff) return null;
 
-    const threadPayload = { user_id: context.userId, subject: "Suporte Shadow", status: "open", category: "outro", priority: "normal" };
+    const threadPayload = {
+      user_id: context.userId,
+      subject: "Suporte Shadow",
+      status: "open",
+      category: "outro",
+      priority: "normal"
+    };
     
     async function doCreate(p: any) {
       return context.supabase.from("support_threads").insert(p).select("*").single();
