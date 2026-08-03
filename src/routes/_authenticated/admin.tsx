@@ -43,6 +43,7 @@ import {
   Bot,
   Server,
   Megaphone,
+  Building2,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
