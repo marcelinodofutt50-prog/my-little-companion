@@ -46,6 +46,17 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    
+    // Auto-fix for ChunkLoadErrors / Failed to fetch module
+    const msg = error.message?.toLowerCase() || "";
+    if (msg.includes('failed to fetch dynamically imported module') || 
+        msg.includes('chunkloaderror')) {
+      console.warn("Detected chunk load error in boundary, performing auto-refresh...");
+      // Forçamos o reload se for erro de chunk
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
   }, [error]);
 
   return (
@@ -185,8 +196,9 @@ function RootComponent() {
       
       if (msgLower.includes('failed to fetch dynamically imported module') || 
           msgLower.includes('error loading dynamically imported module') ||
+          msgLower.includes('failed to fetch') ||
           msgLower.includes('chunkloaderror')) {
-        console.warn('Chunk loading failed. Force refreshing page...');
+        console.warn('Chunk loading or module fetch failed. Force refreshing page...');
         window.location.reload();
       }
     };
