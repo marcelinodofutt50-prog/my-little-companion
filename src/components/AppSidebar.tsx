@@ -44,7 +44,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border/60 py-3">
-        <Link to="/dashboard" search={{ theme: search?.theme }} className="flex items-center gap-2.5 px-1">
+        <Link to="/dashboard" className="flex items-center gap-2.5 px-1">
           <div className="relative grid h-9 w-9 shrink-0 place-items-center">
             <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-25 blur-lg" />
             <img src={shadowMark} alt="Shadow" width={32} height={32} decoding="async" className="h-8 w-8 object-contain drop-shadow-[0_0_10px_rgba(201,168,76,0.55)]" />
@@ -66,7 +66,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
               {primary.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.tKey ? t(item.tKey) : item.title}>
-                    <Link to={item.url} search={{ theme: search?.theme }} className="flex items-center gap-2.5">
+                    <Link to={item.url} className="flex items-center gap-2.5">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span className="text-sm">{item.tKey ? t(item.tKey) : item.title}</span>}
                     </Link>
@@ -75,7 +75,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
               ))}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip={t("nav.downloads") as string}>
-                  <Link to="/dashboard" hash="downloads" search={{ theme: search?.theme }} className="flex items-center gap-2.5">
+                  <Link to="/dashboard" hash="downloads" className="flex items-center gap-2.5">
                     <Download className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">{t("nav.downloads") as string}</span>}
                   </Link>
@@ -92,7 +92,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/admin")} tooltip={t("nav.admin") as string}>
-                    <Link to="/admin" search={{ theme: search?.theme }} className="flex items-center gap-2.5">
+                    <Link to="/admin" className="flex items-center gap-2.5">
                       <ShieldAlert className="h-4 w-4 text-primary" />
                       {!collapsed && <span className="text-sm">{t("nav.admin") as string}</span>}
                     </Link>

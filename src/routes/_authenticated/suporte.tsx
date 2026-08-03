@@ -19,7 +19,7 @@ import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { reabrir?: boolean; erro?: boolean; lic?: string } => ({
     reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : false,
     erro: s.erro === "1" || s.erro === 1 || s.erro === true ? true : false,
     lic: typeof s.lic === "string" && s.lic ? s.lic.slice(0, 60) : "",
