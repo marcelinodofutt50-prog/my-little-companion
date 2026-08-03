@@ -131,15 +131,51 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Shadow — Advanced Intelligence & OSINT Infrastructure" },
       { name: "twitter:description", content: "Shadow BTMOB: uma plataforma editorial de OSINT e cybersegurança." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/4b727f34-aaae-47c7-993e-3c321c416e45" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/4b727f34-aaae-47c7-993e-3c321c416e45" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "dns-prefetch", href: "https://fonts.googleapis.com" },
+      { rel: "dns-prefetch", href: "https://fonts.gstatic.com" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Shadow",
+          url: "https://www.shadowdashstore.com",
+          logo: "https://www.shadowdashstore.com/icon-512.png",
+          sameAs: [
+            "https://www.shadowdashstore.com",
+          ],
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            url: "https://www.shadowdashstore.com/contato",
+          },
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Shadow",
+          url: "https://www.shadowdashstore.com",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://www.shadowdashstore.com/mercado?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -158,7 +194,7 @@ function RootShell({ children }: { children: ReactNode }) {
         {/* Aplica o tema (sistema/claro/escuro) antes da primeira pintura */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('shadow-theme')||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var l=(m==='light')||(m==='system'&&!d);var r=document.documentElement;r.classList.toggle('theme-light',l);r.classList.toggle('dark',!l);r.style.colorScheme=l?'light':'dark';}catch(e){}})();`,
+            __html: `(function(){try{var m=localStorage.getItem('shadow-theme')||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var l=(m==='light')||(m==='system'&&!d);var r=document.documentElement;r.classList.toggle('theme-light',l);r.classList.toggle('dark',!l);r.style.colorScheme=l?'light':'dark';var tc=l?'#f9f7f2':'#0a0a0b';var mm=document.querySelector('meta[name="theme-color"]');if(mm)mm.setAttribute('content',tc);}catch(e){}})();`,
           }}
         />
       </head>

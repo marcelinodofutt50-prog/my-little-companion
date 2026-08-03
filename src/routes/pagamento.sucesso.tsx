@@ -136,9 +136,9 @@ function SuccessPage() {
           ) : (
             <>
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-neon" />
-              <h1 className="mt-4 text-center font-mono text-xl">
+              <h2 className="mt-4 text-center font-mono text-xl">
                 {exhausted ? "Ainda processando" : "Confirmando pagamento..."}
-              </h1>
+              </h2>
               <p className="mt-2 text-center text-sm text-muted-foreground">
                 Status: <span className="font-mono text-cyan">{status}</span>
                 {!exhausted && <span className="ml-2 text-xs opacity-70">tentativa {tries}/{MAX_TRIES}</span>}

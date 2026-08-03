@@ -2,12 +2,14 @@ import { ShieldCheck, Zap } from "lucide-react";
 
 const shots = [
   {
-    src: "/img/proof-itau-10k.png",
+    src: "/img/proof-itau-10k.webp",
+    fallback: "/img/proof-itau-10k.png",
     tag: "Itaú · R$ 10.000",
     caption: '"Pagamento concluído" — R$ 10.000,00 confirmados direto no app do banco.',
   },
   {
-    src: "/img/proof-caixa-990.png",
+    src: "/img/proof-caixa-990.webp",
+    fallback: "/img/proof-caixa-990.png",
     tag: "Caixa · R$ 990",
     caption: '"Pix enviado com sucesso" — R$ 990,00 rodando ao vivo na mesma tela.',
   },
@@ -37,12 +39,15 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
         {shots.map((s) => (
           <figure key={s.src} className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
             <div className="flex aspect-video w-full items-center justify-center bg-background/60">
-              <img
-                src={s.src}
-                alt={s.tag}
-                loading="lazy"
-                className="max-h-full max-w-full object-contain"
-              />
+              <picture>
+                <source srcSet={s.src} type="image/webp" />
+                <img
+                  src={s.fallback}
+                  alt={s.tag}
+                  loading="lazy"
+                  className="max-h-full max-w-full object-contain"
+                />
+              </picture>
             </div>
 
             <figcaption className="space-y-1 p-3">

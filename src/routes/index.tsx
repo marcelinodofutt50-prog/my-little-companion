@@ -16,7 +16,7 @@ import { siteUrl } from "@/lib/site-url";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMark from "@/assets/shadow-mask.png";
+import shadowMark from "@/assets/shadow-mask.png?format=webp";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,7 +33,10 @@ export const Route = createFileRoute("/")({
       { property: "og:url", content: siteUrl("/") },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: siteUrl("/") }],
+    links: [
+      { rel: "canonical", href: siteUrl("/") },
+      { rel: "preload", as: "image", href: shadowMark, fetchpriority: "high" },
+    ],
   }),
   component: LandingPage,
   errorComponent: ({ error }: { error: Error }) => <div className="p-8 text-destructive">{error.message}</div>,
@@ -101,7 +104,13 @@ function LandingPage() {
           >
             <div className="relative inline-block">
               <div className="absolute inset-0 animate-pulse blur-2xl bg-primary/20" />
-              <img src={shadowMark} alt="Shadow Mask" className="relative mx-auto h-32 w-32 object-contain drop-shadow-[0_0_25px_var(--color-primary)]" />
+            <img
+              src={shadowMark}
+              alt="Shadow Mark"
+              width={128}
+              height={128}
+              className="relative mx-auto h-32 w-32 object-contain drop-shadow-[0_0_25px_var(--color-primary)]"
+            />
             </div>
           </motion.div>
 

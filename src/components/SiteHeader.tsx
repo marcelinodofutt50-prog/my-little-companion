@@ -15,7 +15,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 
-import shadowMark from "@/assets/shadow-mark.png";
+import shadowMark from "@/assets/shadow-mark.png?format=webp";
 import type { User } from "@supabase/supabase-js";
 
 export function SiteHeader() {

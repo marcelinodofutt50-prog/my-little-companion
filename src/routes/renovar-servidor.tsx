@@ -11,13 +11,20 @@ import { createCheckout } from "@/lib/checkout.functions";
 import { markCheckoutIntent } from "@/components/WinbackOffer";
 import { checkLegacyEmail } from "@/lib/license.functions";
 import { formatBrl } from "@/lib/plans";
+import { siteUrl } from "@/lib/site-url";
 
 export const Route = createFileRoute("/renovar-servidor")({
   head: () => ({
     meta: [
       { title: "Renovar Servidor · Cliente Antigo — Shadow" },
       { name: "description", content: "Renove seu servidor Shadow por R$ 250/mês. Vinculamos seu login existente e realinhamos o vencimento para o próximo dia 20." },
+      { property: "og:title", content: "Renovar Servidor · Cliente Antigo — Shadow" },
+      { property: "og:description", content: "Renovação de servidor Shadow para clientes antigos: mantenha seu login e vencimento alinhado." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: siteUrl("/renovar-servidor") },
+      { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: siteUrl("/renovar-servidor") }],
   }),
   component: LegacyRenewalPage,
 });

@@ -477,7 +477,7 @@ function SupportPage() {
                     </div>
                     {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
                     {m.attachment_url && (
-                      m.attachment_type?.startsWith("image/") ? <img src={m.attachment_url} alt="anexo" className="mt-2 max-h-64 rounded" />
+                      m.attachment_type?.startsWith("image/") ? <img loading="lazy" src={m.attachment_url} alt="anexo" className="mt-2 max-h-64 rounded" />
                       : m.attachment_type?.startsWith("video/") ? <video src={m.attachment_url} controls className="mt-2 max-h-64 rounded" />
                       : <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-2 block text-cyan underline">Baixar anexo</a>
                     )}

@@ -9,4 +9,4 @@ Disallow: /indicacoes
 Disallow: /play-protect
 Disallow: /pagamento/
 
-Sitemap: https://www.shadowstore.com/sitemap.xml
+Sitemap: https://www.shadowdashstore.com/sitemap.xml
