@@ -1215,7 +1215,7 @@ function LegacyLookup() {
                 {s.step}
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] font-bold uppercase">{s.label}</div>
+                <div className="text-[10px] font-bold uppercase text-foreground">{s.label}</div>
                 <div className="truncate text-[9px] text-muted-foreground">{s.desc}</div>
               </div>
             </div>
@@ -1349,4 +1349,5 @@ function LegacyLookup() {
     </div>
   );
 }
+
 
