@@ -2,19 +2,18 @@ import { createFileRoute } from '@tanstack/react-router'
 import { BellRing, Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, ArrowUpRight, Activity, LockIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useTranslation } from 'react-i18next'
-import { useTheme } from '@/hooks/use-theme'
+import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/dashboard/sidebar'
-import { DashboardStats } from '@/components/dashboard/stats'
-import { DashboardCredentials } from '@/components/dashboard/credentials'
-import { SecurityWelcomeDialog } from '@/components/dashboard/security-welcome-dialog'
-import { TutorialDialog } from '@/components/dashboard/tutorial-dialog'
+import { AppSidebar } from '@/components/AppSidebar'
+import { SecurityWelcomeDialog } from '@/components/SecurityWelcomeDialog'
+import { TutorialHintDialog } from '@/components/TutorialHintDialog'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
+import { Card, CardContent } from '@/components/ui/card'
 
 const shadowMark = "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/assets/shadow_mark.png"
 
@@ -25,7 +24,7 @@ export const Route = createFileRoute('/_authenticated/dashboard')({
 function DashboardPage() {
   const { user } = useAuth()
   const { t, i18n } = useTranslation()
-  const { theme } = useTheme()
+  const { resolved } = useTheme()
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const lang = i18n.language
 
@@ -56,13 +55,14 @@ function DashboardPage() {
     enabled: !!user?.id
   })
 
-  const displayName = profile?.full_name || user?.email?.split('@')[0]
+  const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
-  const activeLicense = licenses?.find(l => l.status === 'active')
-  const daysLeft = activeLicense ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null
-  const active = activeLicense?.hwid ? [activeLicense.hwid] : []
-  const primary = activeLicense?.key || ''
+  // Adjusted for actual schema (no 'status' or 'hwid' or 'key')
+  const activeLicense = licenses?.find(l => !l.revoked && (!l.expires_at || new Date(l.expires_at) > new Date()))
+  const daysLeft = activeLicense?.expires_at ? Math.ceil((new Date(activeLicense.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : (activeLicense ? 99 : null)
+  const terminalId = activeLicense?.server_ip || "None"
+  const primary = activeLicense?.yaarsa_email || ''
 
   const statusColor = daysLeft === null ? "text-red-500" : daysLeft <= 3 ? "text-amber-500" : "text-neon"
   const statusRing = daysLeft === null ? "border-red-500/30 bg-red-500/5 shadow-red-500/10" : daysLeft <= 3 ? "border-amber-500/30 bg-amber-500/5 shadow-amber-500/10" : "border-neon/30 bg-neon/5 shadow-neon/10"
@@ -70,7 +70,7 @@ function DashboardPage() {
   const copyPrimary = () => {
     if (primary) {
       navigator.clipboard.writeText(primary)
-      toast.success(t("dash.copied" as any))
+      toast.success(t("dash.copied" as any) || "Copiado!")
     }
   }
 
@@ -99,7 +99,7 @@ function DashboardPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-primary border border-primary/20 shadow-[0_0_10px_oklch(0.78_0.13_82/0.1)]">
-                          {t("dash.access_level" as any)}: Alpha-Ops
+                          {t("dash.access_level" as any) || "Nível de Acesso"}: Alpha-Ops
                         </span>
                       </div>
                       <h1 className="truncate font-display text-3xl font-bold tracking-tight sm:text-4xl text-foreground drop-shadow-sm">
@@ -132,13 +132,13 @@ function DashboardPage() {
 
                   <div className={`shrink-0 rounded-lg border-2 px-4 py-3 text-right font-mono shadow-lg transition-all ${statusRing}`}>
                     <div className={`text-[10px] font-bold uppercase tracking-[0.25em] ${statusColor}`}>
-                      {daysLeft === null ? t("dash.offline" as any) : daysLeft === 0 ? t("dash.expires_today" as any) : t("dash.license_days" as any)}
+                      {daysLeft === null ? (t("dash.offline" as any) || "OFFLINE") : daysLeft === 0 ? (t("dash.expires_today" as any) || "EXPIRA HOJE") : (t("dash.license_days" as any) || "DIAS RESTANTES")}
                     </div>
                     <div className={`text-2xl font-black leading-none mt-1 ${statusColor}`}>
                       {daysLeft === null ? "00" : String(daysLeft).padStart(2, '0')}
                     </div>
                     <div className="mt-1 text-[10px] font-medium text-muted-foreground/80">
-                      {active.length} {t("dash.active_terminals" as any)}
+                      {licenses?.length || 0} {t("dash.active_terminals" as any) || "Terminais"}
                     </div>
                   </div>
                 </div>
@@ -158,26 +158,66 @@ function DashboardPage() {
                   </Link>
                   <Link to="/planos">
                     <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-[11px] uppercase tracking-wider shadow-lg shadow-primary/20">
-                      <ShoppingBag className="mr-1.5 h-3 w-3" /> {t("dash.renew" as any)}
+                      <ShoppingBag className="mr-1.5 h-3 w-3" /> {t("dash.renew" as any) || "Renovar"}
                     </Button>
                   </Link>
                 </div>
               </section>
 
-              {/* Stats Grid */}
-              <DashboardStats 
-                operationalCredit={profile?.balance || 0}
-                infraStatus="Optimal"
-                opsIntegrity="99.9%"
-                supportStatus="Online"
-              />
+              {/* Stats Grid - Replacement for DashboardStats */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { label: "Crédito Operacional", value: "R$ 0,00", icon: Activity },
+                  { label: "Infra Status", value: "Optimal", icon: ArrowUpRight },
+                  { label: "Integridade Ops", value: "99.9%", icon: Activity },
+                  { label: "Suporte", value: "Online", icon: LifeBuoy },
+                ].map((stat, i) => (
+                  <Card key={i} className="border-border/40 bg-card/30 backdrop-blur-md transition-all hover:bg-card/50">
+                    <CardContent className="flex items-center gap-4 p-5">
+                      <div className="rounded-lg bg-primary/10 p-2 border border-primary/20">
+                        <stat.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</div>
+                        <div className="text-lg font-bold tracking-tight">{stat.value}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-              {/* Credentials Section */}
-              <DashboardCredentials 
-                primaryKey={primary}
-                secondaryKey={profile?.secondary_key || "Locked"}
-                terminalId={active[0] || "None"}
-              />
+              {/* Credentials Section - Replacement for DashboardCredentials */}
+              <Card className="border-border/40 bg-card/30 backdrop-blur-md overflow-hidden">
+                <div className="border-b border-border/40 bg-muted/20 px-6 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <LockIcon className="h-4 w-4 text-primary" />
+                    <span className="font-mono text-xs font-bold uppercase tracking-[0.2em]">Diretório de Acesso</span>
+                  </div>
+                  <div className="h-1.5 w-1.5 rounded-full bg-neon animate-pulse" />
+                </div>
+                <CardContent className="p-6">
+                  <div className="grid gap-6 md:grid-cols-3">
+                    {[
+                      { label: "Primary Access", value: primary || "N/A" },
+                      { label: "Secondary Vector", value: "Locked" },
+                      { label: "Terminal Node", value: terminalId },
+                    ].map((item, i) => (
+                      <div key={i} className="space-y-2">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">{item.label}</div>
+                        <div className="flex items-center justify-between rounded border border-border/40 bg-background/40 px-3 py-2 font-mono text-sm group transition-all hover:border-primary/40">
+                          <span className="truncate">{item.value}</span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={() => {
+                            navigator.clipboard.writeText(item.value);
+                            toast.success("Copiado!");
+                          }}>
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
             </div>
           </main>
@@ -185,7 +225,7 @@ function DashboardPage() {
       </div>
       
       <SecurityWelcomeDialog />
-      <TutorialDialog open={tutorialOpen} onOpenChange={setTutorialOpen} />
+      <TutorialHintDialog open={tutorialOpen} onOpenChange={setTutorialOpen} />
     </SidebarProvider>
   )
 }
