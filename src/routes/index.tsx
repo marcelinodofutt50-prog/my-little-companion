@@ -135,13 +135,13 @@ function LandingPage() {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex flex-col items-center gap-8 sm:flex-row"
           >
-            <Link to="/planos">
+            <Link to="/planos" search={{ theme: search?.theme }}>
               <Button size="lg" className="h-14 rounded-full bg-white px-10 font-mono text-xs uppercase tracking-[0.2em] text-black hover:bg-[#c9a84c] hover:text-white transition-all duration-500 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                 Conhecer Planos +
               </Button>
             </Link>
             
-            <Link to="/auth" className="group flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-[#888888] hover:text-white transition-colors">
+            <Link to="/auth" search={{ theme: search?.theme }} className="group flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-[#888888] hover:text-white transition-colors">
               <span>Testar Acesso Por 24H —</span>
               <div className="h-px w-8 bg-[#333333] group-hover:bg-[#c9a84c] group-hover:w-12 transition-all" />
             </Link>
