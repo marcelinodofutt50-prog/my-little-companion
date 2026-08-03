@@ -1146,18 +1146,21 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       <Button
         className={[
-          "w-full font-mono uppercase tracking-widest text-xs h-12",
-          featured ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]" : "border-2",
+          "w-full font-mono uppercase tracking-widest text-xs h-12 transition-all duration-300 active:scale-95",
+          featured 
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_30px_oklch(0.78_0.13_82/0.6)]" 
+            : "border-2 hover:bg-primary/5 hover:border-primary/50",
         ].join(" ")}
         variant={featured ? "default" : "outline"}
         onClick={handleClick}
         disabled={isLoading}
         aria-label={`Comprar plano ${plan.name} via PIX`}
       >
-        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
         Comprar via PIX
       </Button>
-      <div className="mt-2 text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+        <Shield className="h-3 w-3 text-primary/60" />
         {hasBenefit ? "valor final confirmado no checkout" : "pagamento oficial mercado pago"}
       </div>
     </div>
