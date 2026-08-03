@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
 
@@ -83,11 +82,11 @@ export const listMyThreads = createServerFn({ method: "GET" })
  */
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .validator(zodValidator(z.object({
+  .validator((i: any) => z.object({
     threadId: z.string().uuid(),
     limit: z.number().int().min(5).max(100).optional(),
     before: z.string().optional(),
-  })))
+  }).parse(i))
   .handler(async ({ data, context }) => {
     const limit = data.limit ?? 30;
     let q = context.supabase
@@ -111,7 +110,7 @@ export const listMessages = createServerFn({ method: "GET" })
  */
 export const markThreadReadByCustomer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(zodValidator(z.object({ threadId: z.string().uuid() })))
+  .validator((i: any) => z.object({ threadId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await context.supabase
       .from("support_threads")
@@ -123,13 +122,15 @@ export const markThreadReadByCustomer = createServerFn({ method: "POST" })
 
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(zodValidator(z.object({
-    threadId: z.string().uuid(),
-    body: z.string().trim().min(1).max(4000).optional(),
-    attachmentPath: z.string().min(1).max(512).optional(),
-    attachmentType: z.string().max(100).optional(),
-    replyToId: z.string().uuid().optional().nullable(),
-  }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" })))
+  .validator((i: any) => {
+    return z.object({
+      threadId: z.string().uuid(),
+      body: z.string().trim().min(1).max(4000).optional(),
+      attachmentPath: z.string().min(1).max(512).optional(),
+      attachmentType: z.string().max(100).optional(),
+      replyToId: z.string().uuid().optional().nullable(),
+    }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
     const { isStaff } = await resolveRoles(context);
@@ -237,11 +238,13 @@ export const sendMessage = createServerFn({ method: "POST" })
  */
 export const setThreadCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(zodValidator(z.object({
-    threadId: z.string().uuid(),
-    category: z.enum(SUPPORT_CATEGORIES),
-    subject: z.string().trim().min(2).max(120).optional(),
-  })))
+  .validator((i: any) => {
+    return z.object({
+      threadId: z.string().uuid(),
+      category: z.enum(SUPPORT_CATEGORIES),
+      subject: z.string().trim().min(2).max(120).optional(),
+    }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     const priority = data.category === "servidor" || data.category === "pagamento" ? "alta" : "normal";
     const patch = {
