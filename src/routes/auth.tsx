@@ -27,7 +27,18 @@ export const Route = createFileRoute("/auth")({
     type: typeof s.type === "string" ? s.type : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
   }),
-  head: () => ({ meta: [{ title: "Login — Shadow" }] }),
+  head: () => ({
+    meta: [
+      { title: "Login — Shadow" },
+      { name: "description", content: "Acesse sua conta Shadow ou crie uma nova. Painel de licenças, downloads, suporte e renovação." },
+      { property: "og:title", content: "Login — Shadow" },
+      { property: "og:description", content: "Acesse sua conta Shadow ou crie uma nova para gerenciar licenças e suporte." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: siteUrl("/auth") },
+      { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: siteUrl("/auth") }],
+  }),
   component: AuthPage,
 });
 
