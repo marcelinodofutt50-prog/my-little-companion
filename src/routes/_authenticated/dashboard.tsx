@@ -234,7 +234,11 @@ function DashboardPage() {
                   <Download className="h-5 w-5 text-primary" />
                 </div>
                 <div className="divide-y divide-border/50">
-                  {updates.length === 0 ? <p className="p-5 text-sm text-muted-foreground">Nenhum download disponível para este plano.</p> : updates.map((update: any) => (
+                  {updatesLoading ? (
+                    <p className="p-5 text-sm text-muted-foreground">Carregando downloads…</p>
+                  ) : updatesError ? (
+                    <div className="flex flex-wrap items-center gap-3 p-5 text-sm text-destructive">
+                      <span>Não foi poss
                     <div key={update.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                       <div><div className="font-semibold">{update.title}</div><div className="font-mono text-xs text-muted-foreground">v{update.version} · {update.filename}</div></div>
                       <Button size="sm" variant="outline" disabled={downloadingId === update.id} onClick={() => void downloadUpdate(update.id)}><Download className="mr-2 h-4 w-4" />{downloadingId === update.id ? 'Preparando…' : 'Baixar'}</Button>
