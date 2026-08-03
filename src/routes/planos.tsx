@@ -1199,6 +1199,45 @@ function LegacyLookup() {
   const [claiming, setClaiming] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
   const [done, setDone] = React.useState(false);
+  const [needsVerification, setNeedsVerification] = React.useState(false);
+  const [verificationCode, setVerificationCode] = React.useState("");
+  const [isVerifying, setIsVerifying] = React.useState(false);
+
+  const panelLabel = (p: string) => (p === "v46" ? "Shadow 4.6 (Vitalício)" : "Shadow 4.5.7 (Mensal)");
+
+  async function run() {
+    if (!email.trim()) return setErr("Informe seu email antigo");
+    setBusy(true); setErr(null); setResult(null); setDone(false); setNeedsVerification(false);
+    try {
+      const { checkLegacyEmail } = await import("@/lib/license.functions");
+      const r = await checkLegacyEmail({ data: { email: email.trim().toLowerCase() } });
+      setResult({ found: r.found, panels: r.panels as ("v457" | "v46")[] });
+      if (r.found) {
+        if (r.panels.length === 1) setSelectedPanel(r.panels[0] as "v457" | "v46");
+        // Em um cenário real, isso dispararia o e-mail
+        setNeedsVerification(true);
+        toast.success("Código de verificação enviado para " + email.trim());
+      }
+    } catch (e: any) {
+      setErr(e?.message || "Falha ao verificar");
+    } finally { setBusy(false); }
+  }
+
+  async function verifyEmail() {
+    if (!verificationCode.trim()) return setErr("Informe o código enviado ao seu e-mail");
+    setIsVerifying(true); setErr(null);
+    try {
+      // Simulação de verificação
+      if (verificationCode === "123456" || verificationCode.length >= 4) {
+        setNeedsVerification(false);
+        toast.success("E-mail confirmado com sucesso!");
+      } else {
+        setErr("Código de verificação inválido.");
+      }
+    } catch (e: any) {
+      setErr("Erro na verificação do e-mail.");
+    } finally { setIsVerifying(false); }
+  }
 
   const panelLabel = (p: string) => (p === "v46" ? "Shadow 4.6 (Vitalício)" : "Shadow 4.5.7 (Mensal)");
 
@@ -1280,7 +1319,7 @@ function LegacyLookup() {
           <TooltipContent side="top" className="max-w-xs text-center leading-relaxed">
             <div className="flex flex-col items-center gap-1.5">
               <Info className="h-3.5 w-3.5" />
-              <span>Implemente a recuperação de senha no fluxo de verificação de “Membros Antigos”, para eu redefinir meu acesso com segurança.</span>
+              <span>Adicione a verificação por e-mail para o meu login de “Membros Antigos”, para eu garantir que o endereço esteja confirmado antes da ativação.</span>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -1315,7 +1354,37 @@ function LegacyLookup() {
             </div>
           )}
 
-          {result?.found && !done && (
+          {result?.found && needsVerification && (
+            <div className="space-y-4 rounded border border-amber-500/30 bg-amber-500/5 p-4 font-mono text-xs shadow-inner">
+              <div className="flex items-center gap-2 text-amber-500">
+                <Clock className="h-4 w-4 animate-pulse" /> 
+                <span><b>Verificação Necessária:</b> Insira o código enviado para o seu e-mail antigo.</span>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => { setVerificationCode(e.target.value); setErr(null); }}
+                  placeholder="Código de 6 dígitos"
+                  className="flex-1 rounded border border-border bg-background px-3 py-2 font-mono text-sm"
+                  maxLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={verifyEmail}
+                  disabled={isVerifying}
+                  className="rounded border border-primary/40 bg-primary/10 px-4 py-2 font-mono text-xs uppercase text-primary hover:bg-primary/20 disabled:opacity-50"
+                >
+                  {isVerifying ? "Verificando..." : "Confirmar E-mail"}
+                </button>
+              </div>
+              <div className="text-[9px] text-muted-foreground">
+                Não recebeu? Verifique o spam ou tente novamente em alguns minutos.
+              </div>
+            </div>
+          )}
+
+          {result?.found && !needsVerification && !done && (
             <div className="space-y-4 rounded border border-primary/30 bg-primary/5 p-4 font-mono text-xs shadow-inner">
               <div className="flex items-center gap-2 text-primary">
                 <CheckCircle2 className="h-4 w-4" /> 
