@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { performHealthCheck } from "@/lib/health.functions";
+import { performHealthCheck, type HealthFailure } from "@/lib/health.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 export type HealthStatus = "healthy" | "degraded" | "critical" | "loading";
@@ -14,6 +14,7 @@ export interface SystemHealth {
   modules: HealthStatus;
   lastCheck: string;
   errors: string[];
+  failures: HealthFailure[];
 }
 
 export function useHealthMonitor() {
@@ -27,10 +28,12 @@ export function useHealthMonitor() {
     modules: "healthy",
     lastCheck: new Date().toISOString(),
     errors: [],
+    failures: [],
   });
 
   const runCheck = useCallback(async () => {
     const errors: string[] = [];
+    const failures: HealthFailure[] = [];
     let dbStatus: HealthStatus = "healthy";
     let supportStatus: HealthStatus = "healthy";
     let ppStatus: HealthStatus = "healthy";
@@ -40,6 +43,7 @@ export function useHealthMonitor() {
     try {
       // 1. Server-side check
       const serverResult = await checkFn();
+      failures.push(...(serverResult.failures ?? []));
       if (serverResult.database.status !== "healthy") {
         dbStatus = serverResult.database.status;
         errors.push(`DB: ${serverResult.database.message}`);
@@ -47,12 +51,16 @@ export function useHealthMonitor() {
 
       if (!serverResult.tables.support_threads.accessible || !serverResult.tables.support_messages.accessible) {
         supportStatus = "degraded";
-        errors.push("Suporte: Tabelas de mensagens ou threads inacessíveis");
+        if (!failures.some((f) => f.scope === "Suporte")) {
+          errors.push("Suporte: Tabelas de mensagens ou threads inacessíveis");
+        }
       }
 
       if (!serverResult.tables.apk_build_jobs.accessible) {
         ppStatus = "degraded";
-        errors.push("Play Protect: Tabela de jobs inacessível");
+        if (!failures.some((f) => f.scope === "Play Protect")) {
+          errors.push("Play Protect: Tabela de jobs inacessível");
+        }
       }
 
       // 2. Client-side checks
@@ -62,6 +70,12 @@ export function useHealthMonitor() {
       if (savedTheme && savedTheme !== "system" && savedTheme !== currentTheme) {
         themeStatus = "degraded";
         errors.push("Tema: Inconsistência entre preferência e renderização");
+        failures.push({
+          scope: "Tema",
+          table: "localStorage:shadow-theme",
+          query: `savedTheme="${savedTheme}" vs rendered="${currentTheme}"`,
+          message: "Inconsistência entre preferência e renderização",
+        });
       }
 
       // Check for module/chunk load errors (via global indicator if possible)
@@ -82,6 +96,7 @@ export function useHealthMonitor() {
         modules: modStatus,
         lastCheck: new Date().toISOString(),
         errors,
+        failures,
       });
     } catch (e: any) {
       setHealth(prev => ({
@@ -89,6 +104,10 @@ export function useHealthMonitor() {
         overall: "critical",
         database: "critical",
         errors: [...prev.errors, `Check failed: ${e.message}`],
+        failures: [
+          ...prev.failures,
+          { scope: "Health Monitor", table: "—", query: "performHealthCheck()", message: e?.message || "Erro desconhecido" },
+        ],
         lastCheck: new Date().toISOString(),
       }));
     }
@@ -107,6 +126,10 @@ export function useHealthMonitor() {
           overall: "degraded",
           modules: "critical",
           errors: [...prev.errors, "Falha ao carregar módulo do sistema"],
+          failures: [
+            ...prev.failures,
+            { scope: "Módulos", table: "—", query: e.filename || "dynamic import", message: e.message },
+          ],
         }));
       }
     };
