@@ -71,7 +71,10 @@ function PlayProtectPage() {
           .limit(1)
           .maybeSingle();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase license query error:", error);
+          return null;
+        }
         return data;
       } catch (err) {
         console.error("Error fetching license:", err);

@@ -332,7 +332,7 @@ export function MigrationStatusTracker() {
       </div>
 
       <Button asChild size="sm" variant="outline" className="font-mono uppercase">
-        <Link to="/suporte">Abrir chamado completo</Link>
+        <Link to="/suporte" search={{}}>Abrir chamado completo</Link>
       </Button>
     </div>
   );

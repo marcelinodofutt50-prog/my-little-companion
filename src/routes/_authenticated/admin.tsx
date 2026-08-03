@@ -862,6 +862,7 @@ function AdminPage() {
               <div className="mt-3 border-t border-border/40 pt-2">
                 <Link
                   to="/suporte"
+                  search={{}}
                   className="flex items-center gap-2.5 rounded-md py-2 pl-3 pr-2 font-mono text-[11px] uppercase tracking-wider text-cyan transition-colors hover:bg-cyan/5"
                 >
                   <LifeBuoy className="h-3.5 w-3.5" /> Ver Suporte

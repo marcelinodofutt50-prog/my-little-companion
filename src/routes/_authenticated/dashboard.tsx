@@ -139,7 +139,10 @@ function DashboardPage() {
           retried: true,
         });
       }
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) { 
+      console.error("Dashboard refresh error:", e);
+      toast.error(friendlyPanelError(e) || e.message); 
+    }
     setRefreshing(false);
   }
 
@@ -1261,7 +1264,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
     if (revoked) return {
       code: "revoked", title: "Licença revogada", short: "revogada",
       detail: "Sua licença foi revogada pelo admin. Fale com o suporte ou compre um novo plano.",
-      cta: { label: "Falar com suporte", to: "/suporte" },
+      cta: { label: "Falar com suporte", to: "/suporte", search: {} as any },
     };
     return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" } };
   }

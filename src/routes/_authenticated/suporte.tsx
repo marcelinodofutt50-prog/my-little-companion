@@ -17,9 +17,9 @@ import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unloc
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
-    reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : undefined,
-    erro: s.erro === "1" || s.erro === 1 || s.erro === true ? true : undefined,
-    lic: typeof s.lic === "string" && s.lic ? s.lic.slice(0, 60) : undefined,
+    reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : false,
+    erro: s.erro === "1" || s.erro === 1 || s.erro === true ? true : false,
+    lic: typeof s.lic === "string" && s.lic ? s.lic.slice(0, 60) : "",
   }),
   component: SupportPage,
 });

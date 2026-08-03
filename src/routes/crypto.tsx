@@ -162,7 +162,7 @@ function CryptoPage() {
             </div>
           ))}
           <div className="md:col-span-3">
-            <Link to="/suporte">
+            <Link to="/suporte" search={{}}>
               <Button size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
                 {t("crypto.openSupport")} <ExternalLink className="ml-2 h-3.5 w-3.5" />
               </Button>

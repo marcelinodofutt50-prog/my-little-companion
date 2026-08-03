@@ -67,7 +67,7 @@ export function MigrationOffer() {
         <p className="mt-3 text-[11px] text-muted-foreground">
           Quer ver o checklist do que enviar, os prazos do suporte e as dúvidas mais comuns?{" "}
           <Link to="/migracao" className="text-primary hover:underline">Detalhes do programa de migração</Link>. Ou abra
-          um chamado direto em <Link to="/suporte" className="text-primary hover:underline">/suporte</Link> que a
+          um chamado direto em <Link to="/suporte" search={{}} className="text-primary hover:underline">/suporte</Link> que a
           equipe acompanha a migração com você, passo a passo.
         </p>
 

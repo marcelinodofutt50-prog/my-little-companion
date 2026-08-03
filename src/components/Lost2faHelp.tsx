@@ -26,7 +26,7 @@ export function Lost2faHelp({ className = "" }: { className?: string }) {
         <li>4. Configure o autenticador de novo e guarde o QR/segredo em local seguro.</li>
       </ol>
       <div className="mt-3 flex flex-wrap gap-3 text-[11px]">
-        <Link to="/suporte" className="inline-flex items-center gap-1 text-primary hover:underline">
+        <Link to="/suporte" search={{}} className="inline-flex items-center gap-1 text-primary hover:underline">
           <LifeBuoy className="h-3.5 w-3.5" /> Abrir chamado no suporte
         </Link>
         <Link to="/recuperar" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
