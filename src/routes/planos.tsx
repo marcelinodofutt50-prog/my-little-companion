@@ -731,35 +731,34 @@ function Metric({ value, label }: { value: string; label: string }) {
 }
 
 function TierComparison() {
-  const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; lifetime: React.ReactNode }[] = [
-    { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", lifetime: "Shadow 4.6+" },
-    { label: "Bypass Play Protect (BTmob nativo) — assinatura ~1 dia", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
-    { label: "Play Protect Cloak do site — assinatura 2 a 3 semanas", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "à parte", lifetime: "à parte" },
-    { label: "Recursos completos", weekly: "básico", monthly: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
-
-    { label: "Atualizações grátis", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "pagas", lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
-    { label: "Suporte prioritário", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
-    { label: "Duração", weekly: "7 dias", monthly: "30 dias", lifetime: "vitalícia" },
+  const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; serverOld: React.ReactNode; lifetime: React.ReactNode }[] = [
+    { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", serverOld: "Infra v4.6", lifetime: "Shadow 4.6+" },
+    { label: "Bypass Play Protect (BTmob nativo)", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
+    { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: "R$ 250 (Exclusivo)", lifetime: "Grátis" },
+    { label: "Duração", weekly: "7 dias", monthly: "30 dias", serverOld: "Até dia 20", lifetime: "Vitalícia" },
+    { label: "Upgrade v4.6", weekly: "Não", monthly: "R$ 600", serverOld: "Incluso", lifetime: "Nativo" },
   ];
   return (
     <section className="mt-16">
       <div className="mb-6 text-center">
-        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">// comparativo</div>
-        <h2 className="mt-2 font-display text-2xl md:text-3xl">O que cada plano libera</h2>
+        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">// comparativo detalhado</div>
+        <h2 className="mt-2 font-display text-2xl md:text-3xl">Shadow 4.5.5 vs Mensal vs Servidor</h2>
       </div>
       <div className="overflow-hidden rounded-xl border border-border/50 bg-card/40">
-        <div className="grid grid-cols-4 border-b border-border/50 bg-background/40 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-          <div className="px-4 py-3.5">Recurso</div>
-          <div className="px-2 py-3.5 text-center md:px-4">Semanal</div>
-          <div className="px-2 py-3.5 text-center md:px-4">Mensal</div>
-          <div className="px-2 py-3.5 text-center text-primary md:px-4">Vitalício</div>
+        <div className="grid grid-cols-5 border-b border-border/50 bg-background/40 font-mono text-[8px] uppercase tracking-[0.15em] text-muted-foreground md:text-[10px]">
+          <div className="px-2 py-3.5 md:px-4">Recurso</div>
+          <div className="px-1 py-3.5 text-center md:px-4">4.5.5</div>
+          <div className="px-1 py-3.5 text-center md:px-4">30 dias</div>
+          <div className="px-1 py-3.5 text-center text-primary md:px-4">Membro Antigo</div>
+          <div className="px-1 py-3.5 text-center text-primary md:px-4 font-bold">Vitalício</div>
         </div>
         {rows.map((r, i) => (
-          <div key={r.label} className={`grid grid-cols-4 text-xs md:text-sm ${i % 2 ? "bg-background/20" : ""}`}>
-            <div className="px-4 py-3 text-muted-foreground">{r.label}</div>
-            <div className="px-2 py-3 text-center font-mono md:px-4">{r.weekly}</div>
-            <div className="px-2 py-3 text-center font-mono md:px-4">{r.monthly}</div>
-            <div className="px-2 py-3 text-center font-mono text-foreground md:px-4">{r.lifetime}</div>
+          <div key={r.label} className={`grid grid-cols-5 text-[10px] md:text-sm ${i % 2 ? "bg-background/20" : ""}`}>
+            <div className="px-2 py-3 text-muted-foreground md:px-4">{r.label}</div>
+            <div className="px-1 py-3 text-center font-mono md:px-4">{r.weekly}</div>
+            <div className="px-1 py-3 text-center font-mono md:px-4">{r.monthly}</div>
+            <div className="px-1 py-3 text-center font-mono text-primary md:px-4">{r.serverOld}</div>
+            <div className="px-1 py-3 text-center font-mono text-foreground font-semibold md:px-4">{r.lifetime}</div>
           </div>
         ))}
       </div>
