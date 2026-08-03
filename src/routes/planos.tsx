@@ -630,6 +630,18 @@ function PlansPage() {
             <div className="hidden sm:block">
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// configurar acesso</div>
               <p className="mt-1 text-sm text-muted-foreground">Personalize seu ciclo de cobrança e tipo de plano.</p>
+              {billingCycle === "yearly" && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="mt-2 flex items-center gap-2 rounded-md border border-neon/20 bg-neon/5 px-2 py-1"
+                >
+                  <Tag className="h-3 w-3 text-neon" />
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-tight text-neon">
+                    Economia Anual Detectada: 20% OFF (Diferença aplicada no valor total)
+                  </span>
+                </motion.div>
+              )}
             </div>
             
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
