@@ -63,24 +63,38 @@ function DashboardPage() {
     enabled: !!user?.id
   })
 
-  const { data: licenses } = useQuery({
+  const {
+    data: licenses,
+    isPending: licensesLoading,
+    error: licensesError,
+    refetch: refetchLicenses,
+  } = useQuery({
     queryKey: ['licenses', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('licenses')
         .select('*')
         .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
       if (error) throw error
-      return data
+      return data ?? []
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    retry: 1,
   })
 
-  const { data: updates = [] } = useQuery({
+  const {
+    data: updates = [],
+    isPending: updatesLoading,
+    error: updatesError,
+    refetch: refetchUpdates,
+  } = useQuery({
     queryKey: ['my-updates', user?.id],
-    queryFn: () => listUpdates(),
+    queryFn: async () => (await listUpdates()) ?? [],
     enabled: !!user?.id,
+    retry: 1,
   })
+
 
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
