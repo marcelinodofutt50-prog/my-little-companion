@@ -73,7 +73,7 @@ type PlanMeta = {
 
 };
 
-function metaFor(plan: Plan): PlanMeta {
+function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
   const s = plan.slug.toLowerCase();
   if (s.includes("lifetime")) return {
     tagline: "Acesso perpétuo à linha 4.6+ com atualizações inclusas.",
@@ -103,7 +103,7 @@ function metaFor(plan: Plan): PlanMeta {
       "Acesso ao Shadow Signer (Bypass Automático & Dropper)",
 
     ],
-    note: "Atenção: Este plano libera o LOGIN. Se você já tem um login ativo (incluindo Trial) e só quer pagar a manutenção, use 'Renovação Servidor'.",
+    note: t("plan.monthly.note"),
   };
   if (s.includes("7d") || s.includes("week") || s === "trial") return {
     tagline: "Ideal para validar a ferramenta em um ciclo curto.",
@@ -326,8 +326,6 @@ function PlansPage() {
       ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
-    // O upgrade de R$ 600 deve aparecer para quem é legacy (v457)
-    // E agora também garantimos que o plano mensal apareça para upgrades
     const upgradeList = plans.filter((p) => p.category === "upgrade");
     
     return {
@@ -787,6 +785,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   onBuy: (s: string) => void;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const price = Number(plan.price_brl);
   // Cupom pessoal travado em outro plano não vale aqui — não mostramos desconto falso.
   const appliedCoupon = coupon && (!coupon.plan_slug || coupon.plan_slug === plan.slug) ? coupon : null;
@@ -795,7 +794,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
     [price, appliedCoupon, cashback, useCash]
   );
   const hasBenefit = b.discount > 0 || b.cashbackApplied > 0 || b.cashbackEarn > 0;
-  const meta = useMemo(() => metaFor(plan), [plan]);
+  const meta = useMemo(() => metaFor(plan, t), [plan, t]);
   const Icon = meta.icon;
   const handleClick = useCallback(() => onBuy(plan.slug), [onBuy, plan.slug]);
   const isLifetime = plan.slug.toLowerCase().includes("lifetime");
@@ -831,6 +830,11 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       </div>
 
       <p className="mt-4 min-h-[2.5rem] text-sm text-muted-foreground">{meta.tagline || plan.description}</p>
+      {meta.note && (
+        <p className="mt-2 text-[10px] leading-relaxed text-amber-500/80 italic border-l border-amber-500/30 pl-2">
+          {meta.note}
+        </p>
+      )}
 
       <div className="mt-5">
         {hasBenefit && b.final < price ? (

@@ -82,7 +82,7 @@ export const listMyThreads = createServerFn({ method: "GET" })
  */
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     threadId: z.string().uuid(),
     limit: z.number().int().min(5).max(100).optional(),
     before: z.string().optional(),
@@ -110,7 +110,7 @@ export const listMessages = createServerFn({ method: "GET" })
  */
 export const markThreadReadByCustomer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await context.supabase
       .from("support_threads")
@@ -122,7 +122,7 @@ export const markThreadReadByCustomer = createServerFn({ method: "POST" })
 
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => {
+  .validator((i: unknown) => {
     return z.object({
       threadId: z.string().uuid(),
       body: z.string().trim().min(1).max(4000).optional(),
@@ -238,7 +238,7 @@ export const sendMessage = createServerFn({ method: "POST" })
  */
 export const setThreadCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => {
+  .validator((i: unknown) => {
     return z.object({
       threadId: z.string().uuid(),
       category: z.enum(SUPPORT_CATEGORIES),

@@ -16,7 +16,7 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
 
 export const createBuildJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: any) => {
+  .validator((input: any) => {
     return z.object({
       appName: z.string().min(2).max(50),
       originalApkUrl: z.string().url(),
