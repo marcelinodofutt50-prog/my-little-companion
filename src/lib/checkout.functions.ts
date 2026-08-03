@@ -150,11 +150,11 @@ export const createCheckout = createServerFn({ method: "POST" })
 
     // Upgrade v4.5.7 → v4.6 (R$600): must be flagged as legacy on v457.
     let upgradeMeta: { from_license_id: string | null; legacy_status: string } | null = null;
-    if (plan.category === "upgrade" && plan.slug === "upgrade-457-to-46") {
+    if (plan.category === "upgrade") {
       const { data: prof } = await supabase.from("profiles").select("legacy_status").eq("id", userId).maybeSingle();
       const st = (prof?.legacy_status ?? "unchecked") as string;
       if (st !== "v457" && st !== "both") {
-        throw new Error("Upgrade disponível apenas para clientes antigos da v4.5.7. Faça login novamente para revalidarmos sua conta.");
+        throw new Error("Upgrade disponível apenas para clientes antigos da v4.5.7.");
       }
       const { data: existing } = await supabase
         .from("licenses").select("id, panel")

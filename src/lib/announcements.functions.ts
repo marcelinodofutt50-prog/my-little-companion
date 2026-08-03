@@ -18,7 +18,7 @@ export type Announcement = {
   created_at: string;
 };
 
-const tierRank: Record<VersionTier, number> = { weekly: 0, monthly_457: 1, lifetime_46: 2 };
+const tierRank: Record<VersionTier, number> = { weekly: 0, monthly_457: 1, lifetime_46: 2, upgrade: 2 };
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
@@ -84,7 +84,7 @@ const upsertSchema = z.object({
   title: z.string().trim().min(2).max(140),
   body: z.string().trim().min(2).max(2000),
   severity: z.enum(["info", "warning", "critical"]).default("info"),
-  min_tier: z.enum(["weekly", "monthly_457", "lifetime_46"]).default("weekly"),
+  min_tier: z.enum(["weekly", "monthly_457", "lifetime_46", "upgrade"]).default("weekly"),
   event_at: z.string().datetime({ offset: true }).nullable().optional(),
   starts_at: z.string().datetime({ offset: true }).nullable().optional(),
   ends_at: z.string().datetime({ offset: true }).nullable().optional(),

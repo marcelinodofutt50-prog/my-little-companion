@@ -1120,7 +1120,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
   const unlocked = hasActive || isAdmin;
 
   // Pick the highest available tier — lifetime_46 > monthly_457 > weekly.
-  const tierRank: Record<VersionTier, number> = { weekly: 0, monthly_457: 1, lifetime_46: 2 };
+  const tierRank: Record<VersionTier, number> = { weekly: 0, monthly_457: 1, lifetime_46: 2, upgrade: 2 };
   const bestTier: VersionTier = activeLicenses.length
     ? (activeLicenses.map((l) => l.version_tier ?? tierFromPlanSlug(l.plan_slug))
         .sort((a, b) => tierRank[b] - tierRank[a])[0] as VersionTier)

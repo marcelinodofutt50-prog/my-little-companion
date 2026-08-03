@@ -15,7 +15,7 @@ export function formatBrl(v: number) {
 }
 
 // ============ Version tiers ============
-export type VersionTier = "weekly" | "monthly_457" | "lifetime_46";
+export type VersionTier = "weekly" | "monthly_457" | "lifetime_46" | "upgrade";
 
 export type TierFeatures = {
   version: string;
@@ -41,15 +41,17 @@ export function getTierFeatures(tier: VersionTier): TierFeatures {
       return { version: "Shadow 4.5.7", bypass_play_protect: true, free_updates: false, priority_support: false, full_features: true };
     case "weekly":
       return { version: "Shadow 4.5.5", bypass_play_protect: false, free_updates: false, priority_support: false, full_features: false };
+    case "upgrade":
+      return { version: "Upgrade v4.6", bypass_play_protect: true, free_updates: true, priority_support: true, full_features: true };
   }
 }
 
 export function tierLabel(tier: VersionTier): string {
-  return tier === "lifetime_46" ? "VITALÍCIO · 4.6" : tier === "monthly_457" ? "MENSAL · 4.5.7" : "SEMANAL · 4.5.5";
+  return tier === "lifetime_46" ? "VITALÍCIO · 4.6" : tier === "monthly_457" ? "MENSAL · 4.5.7" : tier === "upgrade" ? "UPGRADE · 4.6" : "SEMANAL · 4.5.5";
 }
 
 export function tierAccent(tier: VersionTier): "neon" | "cyan" | "violet" {
-  return tier === "lifetime_46" ? "violet" : tier === "monthly_457" ? "neon" : "cyan";
+  return tier === "lifetime_46" ? "violet" : tier === "monthly_457" ? "neon" : tier === "upgrade" ? "violet" : "cyan";
 }
 
 export function serverFeeFor(isLegacy: boolean, override?: number | null): number {

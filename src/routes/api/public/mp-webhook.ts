@@ -298,9 +298,12 @@ async function fulfillOrderInner(orderId: string) {
   if (order.plan_slug === "login-7d") {
     expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7);
   } else if (order.plan_slug === "login-lifetime") {
+    // Vitalício real: 20 anos
     expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20);
+  } else if (order.plan_slug === "login-30d") {
+    // Mensal: 30 dias exatos para não haver perda de dias na ativação
+    expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
   } else {
-    // 30-day and default login plans expire on the next day 20 renewal.
     expiresAt = nextDay20;
   }
 

@@ -455,6 +455,41 @@ export type Database = {
         }
         Relationships: []
       }
+      license_monitoring_logs: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          id: string
+          issue_type: string
+          license_id: string | null
+          resolved: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          issue_type: string
+          license_id?: string | null
+          resolved?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          issue_type?: string
+          license_id?: string | null
+          resolved?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "license_monitoring_logs_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licenses: {
         Row: {
           created_at: string
@@ -1560,6 +1595,7 @@ export type Database = {
       }
     }
     Functions: {
+      check_license_consistency: { Args: never; Returns: undefined }
       expire_stale_apk_jobs: { Args: never; Returns: number }
       gen_referral_code: { Args: never; Returns: string }
       generate_my_recovery_codes: {
