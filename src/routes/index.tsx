@@ -120,10 +120,10 @@ function LandingPage() {
             transition={{ duration: 1, delay: 0.6 }}
             className="mb-12 space-y-4"
           >
-            <p className="text-xl font-medium tracking-tight text-[#a0a0a0]">
-              Your shadow, <span className="text-white italic">everywhere.</span>
+            <p className="text-xl font-medium tracking-tight text-muted-foreground">
+              Your shadow, <span className="text-foreground italic">everywhere.</span>
             </p>
-            <p className="mx-auto max-w-xl text-sm leading-relaxed text-[#666666]">
+            <p className="mx-auto max-w-xl text-sm leading-relaxed text-muted-foreground/80">
               Infraestrutura de alta performance para monitoramento e análise de dados.
               Privacidade absoluta, velocidade máxima.
             </p>
