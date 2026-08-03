@@ -73,16 +73,30 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             onClick={() => { 
               router.invalidate(); 
               reset(); 
-              // Se o reset do router não bastar, um reload limpa o estado global do React
+              // Se o reset do router não bastar, um reload com 'true' tenta forçar o bypass do cache
               window.location.reload();
             }}
             className="w-full rounded-md bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-all font-mono uppercase tracking-widest"
           >
             Tentar novamente
           </button>
+          <button
+            onClick={() => {
+              // Limpa caches e força reload completo
+              if ('caches' in window) {
+                caches.keys().then(names => {
+                  for (let name of names) caches.delete(name);
+                });
+              }
+              window.location.href = '/?clear_cache=true';
+            }}
+            className="w-full rounded-md border border-border py-2.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
+          >
+            Limpar Cache & Reiniciar
+          </button>
           <a 
             href="/" 
-            className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+            className="mt-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
           >
             Voltar ao Início
           </a>

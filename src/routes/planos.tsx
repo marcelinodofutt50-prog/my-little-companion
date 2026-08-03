@@ -173,6 +173,13 @@ function PlansPage() {
   useEffect(() => {
     const html = document.documentElement;
     const isLight = search?.theme === 'light';
+    
+    if (search?.clear_cache === 'true') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('clear_cache');
+      window.history.replaceState({}, '', url.toString());
+    }
+
     if (isLight) {
       html.classList.add('theme-light');
       html.classList.remove('dark');
@@ -182,7 +189,7 @@ function PlansPage() {
       html.classList.add('dark');
       html.style.colorScheme = 'dark';
     }
-  }, [search?.theme]);
+  }, [search?.theme, search?.clear_cache]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [isLegacy, setIsLegacy] = useState(false);

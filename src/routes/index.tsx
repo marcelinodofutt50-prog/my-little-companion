@@ -46,6 +46,15 @@ function LandingPage() {
   useEffect(() => {
     const html = document.documentElement;
     const isLight = search?.theme === 'light';
+    
+    // Check for explicit cache clearing request
+    if (search?.clear_cache === 'true') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('clear_cache');
+      window.history.replaceState({}, '', url.toString());
+      toast.success("Cache do sistema limpo com sucesso");
+    }
+
     if (isLight) {
       html.classList.add('theme-light');
       html.classList.remove('dark');
@@ -55,7 +64,7 @@ function LandingPage() {
       html.classList.add('dark');
       html.style.colorScheme = 'dark';
     }
-  }, [search?.theme]);
+  }, [search?.theme, search?.clear_cache]);
 
 
   useEffect(() => {
