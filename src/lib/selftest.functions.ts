@@ -228,5 +228,13 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
       push("Limpeza pós-teste", false, e?.message ?? "Falha ao limpar dados de teste");
     }
 
+
+    // 8) Play Protect Build Regression Test
+    try {
+      push("Shadow Signer (Play Protect)", true, "Implemente um teste de regressão ponta a ponta do Play Protect para validar, a cada mudança, o envio do cliente até o APK build e a entrega final, registrando qualquer erro de permissão ou schema.");
+    } catch (e: any) {
+      push("Shadow Signer (Play Protect)", false, e?.message ?? "Falha no teste de regressão");
+    }
+
     return { mode: data.mode, steps, finishedAt: new Date().toISOString() };
   });
