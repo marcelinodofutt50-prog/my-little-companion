@@ -48,19 +48,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", apply);
   }, [mode]);
 
-  // Aplica no <html>
+  // Aplica no <html> e atualiza meta theme-color
   useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
-    
+
     // Sincroniza classes e CSS variables
     const isLight = resolved === "light";
     root.classList.toggle("theme-light", isLight);
     root.classList.toggle("dark", !isLight);
     root.style.setProperty('color-scheme', resolved);
-    
+
     // Força o body a seguir o background do tema para evitar flashes
     document.body.style.backgroundColor = isLight ? "#ffffff" : "var(--background)";
+
+    // Atualiza meta theme-color para acompanhar o tema
+    const themeColor = isLight ? "#f9f7f2" : "#0a0a0b";
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && meta.getAttribute('content') !== themeColor) {
+      meta.setAttribute('content', themeColor);
+    }
   }, [resolved]);
 
   const setMode = useCallback((m: ThemeMode) => {
