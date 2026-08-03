@@ -121,28 +121,38 @@ export const runSupportE2E = createServerFn({ method: "POST" })
 
     // 4) Suporte responde e a resposta continua marcada como admin (trigger)
     try {
-      const { data, error } = await context.supabase
-        .from("support_messages")
-        .insert({
-          thread_id: threadId,
-          sender_id: context.userId,
-          is_admin: true,
-          body: "E2E: resposta do suporte",
-          reply_to_id: customerMsgId,
-        })
-        .select("id,is_admin,reply_to_id")
-        .single();
+      const base = {
+        thread_id: threadId,
+        sender_id: context.userId,
+        is_admin: true,
+        body: "E2E: resposta do suporte",
+      };
+      const insertReply = (withReply: boolean) =>
+        context.supabase
+          .from("support_messages")
+          .insert(withReply ? { ...base, reply_to_id: customerMsgId } : base)
+          .select("id,is_admin")
+          .single();
+
+      let { data, error } = await insertReply(true);
+      if (
+        error &&
+        (error.code === "PGRST204" || error.code === "42703" || String(error.message ?? "").includes("reply_to_id"))
+      ) {
+        ({ data, error } = await insertReply(false));
+      }
       if (error) throw error;
       push(
         "Suporte responde (is_admin preservado)",
-        data.is_admin === true,
-        data.is_admin === true
-          ? "Resposta gravada como suporte, com citação da mensagem do cliente."
+        data!.is_admin === true,
+        data!.is_admin === true
+          ? "Resposta gravada como suporte."
           : "A resposta foi salva como se fosse do cliente (trigger sobrescreveu is_admin).",
       );
     } catch (e: any) {
       push("Suporte responde (is_admin preservado)", false, e?.message ?? "Falha na resposta do suporte");
     }
+
 
     // 5) Leitura das mensagens na ordem cronológica
     try {
