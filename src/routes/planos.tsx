@@ -1380,6 +1380,37 @@ function LegacyLookup() {
             </div>
           )}
 
+          {verificationLogs.length > 0 && (
+            <div className="mt-4 p-4 rounded-lg bg-black/40 border border-[#daa520]/20 font-mono">
+              <h4 className="text-[#daa520] text-[10px] font-bold mb-3 uppercase tracking-widest flex items-center gap-2">
+                <Shield className="h-3 w-3" /> Auditoria de Verificação
+              </h4>
+              <div className="space-y-2">
+                {verificationLogs.map((log, i) => (
+                  <div key={i} className="flex items-center justify-between text-[9px] border-b border-white/5 pb-1.5 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${
+                        log.status === 'confirmed' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 
+                        log.status === 'pending' ? 'bg-yellow-500 animate-pulse' : 
+                        'bg-red-500'
+                      }`} />
+                      <span className="text-white/40">{log.time}</span>
+                    </div>
+                    <span className={`uppercase font-bold tracking-tighter ${
+                      log.status === 'confirmed' ? 'text-green-500' : 
+                      log.status === 'pending' ? 'text-yellow-500' : 
+                      'text-red-500'
+                    }`}>
+                      {log.status === 'confirmed' ? 'Confirmado' : 
+                       log.status === 'pending' ? 'Pendente' : 
+                       log.status === 'expired' ? 'Expirado' : 'Inválido'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {result?.found && !needsVerification && !done && (
             <div className="space-y-4 rounded border border-primary/30 bg-primary/5 p-4 font-mono text-xs shadow-inner">
               <div className="flex items-center gap-2 text-primary">
