@@ -85,13 +85,16 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
-    if (error || !lic) throw new Error("Licença não encontrada");
-    if (lic.disabled_at) throw new Error("Licença desativada não pode ser reativada");
-    if (!lic.suspended_at) throw new Error("Licença não está pausada");
+    if (error) throw new Error("Não foi possível carregar a licença. Tente novamente.");
+    const { canResumeLicense } = await import("./license-pause-rules");
+    const gate = canResumeLicense(lic as any);
+    if (!gate.ok) throw new Error(gate.message);
+    if (!lic || !lic.suspended_at) throw new Error("Licença não encontrada");
 
     const panel = (lic as any).panel ?? "v457";
     const baseline = lic.expires_at_before_suspend ?? lic.expires_at;
     if (!baseline) throw new Error("Sem data de expiração para restaurar");
+
 
     // Tempo que faltava NO MOMENTO DA PAUSA — os dias parados não contam.
     const msLeft = Math.max(
