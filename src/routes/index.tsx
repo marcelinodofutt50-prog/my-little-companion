@@ -16,7 +16,7 @@ import { siteUrl } from "@/lib/site-url";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMark from "@/assets/shadow-mask.png";
+import shadowMark from "@/assets/shadow-mask.png?format=webp";
 
 export const Route = createFileRoute("/")({
   head: () => ({
