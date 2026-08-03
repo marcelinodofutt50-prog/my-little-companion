@@ -118,16 +118,8 @@ function DashboardPage() {
                         </span>
                         
                         {/* Real-time Notifications Bell */}
-                        <div className="relative">
-                          <button className="flex items-center gap-2 bg-background/40 px-2 py-1 rounded border border-border/40 hover:bg-primary/10 transition-colors group">
-                            <BellRing className="h-3 w-3 text-primary group-hover:animate-ring" />
-                            <span className="hidden sm:inline">NOTIFICAÇÕES</span>
-                            <span className="absolute -right-1 -top-1 flex h-2 w-2">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
-                            </span>
-                          </button>
-                        </div>
+                        <InAppNotifications />
+
                       </div>
                     </div>
                   </div>
