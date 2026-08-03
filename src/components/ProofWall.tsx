@@ -137,12 +137,15 @@ export function ProofWall() {
             onClick={() => setOpen(i)}
             className="group relative aspect-[9/16] overflow-hidden rounded-lg border border-border bg-card/40 transition-all hover:border-neon/40 hover:shadow-lg hover:shadow-neon/10"
           >
-            <img
-              loading="lazy"
-              src={s.src}
-              alt={s.caption}
-              className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-            />
+            <picture>
+              <source srcSet={s.src} type="image/webp" />
+              <img
+                loading="lazy"
+                src={s.fallback}
+                alt={s.caption}
+                className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              />
+            </picture>
             <div className="absolute inset-x-0 top-0 flex flex-wrap items-center justify-start gap-1 p-2">
               <span className="rounded border border-border/60 bg-background/75 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground backdrop-blur-sm">
                 {refCode(i)}
