@@ -347,12 +347,11 @@ function DashboardPage() {
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
                               </span>
                             </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-                      </div>
-                    </div>
+
                     <div className={`shrink-0 rounded-lg border-2 px-4 py-3 text-right font-mono shadow-lg transition-all ${statusRing}`}>
                       <div className={`text-[10px] font-bold uppercase tracking-[0.25em] ${statusColor}`}>
                         {daysLeft === null ? t("dash.offline" as any) : daysLeft === 0 ? t("dash.expires_today" as any) : t("dash.license_days" as any)}
