@@ -13,14 +13,14 @@ function KpiCard({
   const color =
     accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : accent === "violet" ? "text-violet" : "text-amber-400";
   return (
-    <div className="osint-panel osint-corners group relative overflow-hidden p-4 transition-colors hover:border-foreground/25">
-      <div className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50 ${color}`} />
-      <div className="flex items-center justify-between pl-2.5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+      <div className={`absolute left-0 top-0 h-full w-1 opacity-20 ${color.replace('text-', 'bg-')}`} />
+      <div className="flex items-center justify-between font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
         <span className="truncate">{label}</span>
-        <Icon className={`h-3.5 w-3.5 shrink-0 opacity-80 ${color}`} />
+        <Icon className={`h-3.5 w-3.5 shrink-0 opacity-70 ${color}`} />
       </div>
-      <div className={`mt-2.5 pl-2.5 font-mono text-[26px] leading-none font-bold tabular-nums ${color}`}>{value}</div>
-      {sub && <div className="mt-2 pl-2.5 font-mono text-[10px] uppercase text-muted-foreground/60">{sub}</div>}
+      <div className={`mt-3 font-display text-3xl font-extrabold leading-none tracking-tight tabular-nums ${color}`}>{value}</div>
+      {sub && <div className="mt-2.5 font-mono text-[9px] font-medium uppercase tracking-wider text-muted-foreground/40">{sub}</div>}
     </div>
 
   );
