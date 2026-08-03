@@ -19,7 +19,7 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
-import playProtectConfig from "@/assets/play-protect-config.png.asset.json";
+import playProtectConfig from "@/assets/play-protect-config.png";
 
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
@@ -189,13 +189,13 @@ function PlayProtectPage() {
 
             <div className="mb-4 flex items-center gap-2">
               <span className="h-px flex-1 bg-amber-500/30" />
-              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-500">Método clássico — você envia, a equipe assina</span>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-500">Método clássico (Premium) — você envia, a equipe assina · R$ 450 vitalício</span>
               <span className="h-px flex-1 bg-amber-500/30" />
             </div>
 
             <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5 md:grid-cols-[280px_1fr]">
-              <a href={playProtectConfig.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
-                <img src={playProtectConfig.url} alt="Configuração do Play Protect — quais opções desativar" className="h-full w-full object-contain" loading="lazy" />
+              <a href={playProtectConfig} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
+                <img src={playProtectConfig} alt="Configuração do Play Protect — quais opções desativar" width={720} height={1280} className="h-full w-full object-contain" loading="lazy" />
               </a>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -406,7 +406,7 @@ function PlayProtectPage() {
             <div className="mt-12">
               <div className="mb-4 flex items-center gap-2">
                 <span className="h-px flex-1 bg-violet/30" />
-                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Método público — Shadow Bypass self-service (beta)</span>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Método público — Shadow Bypass self-service · GRÁTIS (beta)</span>
                 <span className="h-px flex-1 bg-violet/30" />
               </div>
               <PublicBuilderSection />
@@ -432,7 +432,7 @@ function PublicBuilderSection() {
         <ShieldCheck className="h-6 w-6 text-violet" />
         <div>
           <h2 className="text-xl font-bold font-display">Shadow Bypass Builder (público)</h2>
-          <p className="text-xs text-muted-foreground">Autoatendimento com dropper Shadow Bypass — em beta. Requer plano Play Protect ativo.</p>
+          <p className="text-xs text-muted-foreground">Autoatendimento com dropper Shadow Bypass — grátis e em beta. Não requer plano.</p>
         </div>
       </div>
       <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-3 mb-4">
