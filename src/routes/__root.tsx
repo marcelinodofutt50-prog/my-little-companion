@@ -171,8 +171,32 @@ function RootComponent() {
   // app renderizar `null` até um efeito rodar, qualquer falha de hidratação
   // deixa a página totalmente preta.
   useEffect(() => {
+    // 1. Redireciona de localhost se necessário
     const canonicalUrl = redirectLocalhostAuthToCanonical();
-    if (canonicalUrl) window.location.replace(canonicalUrl);
+    if (canonicalUrl) {
+      window.location.replace(canonicalUrl);
+      return;
+    }
+
+    // 2. Captura erros de carregamento de chunk (Vite / TanStack Start)
+    const handleChunkError = (e: ErrorEvent | PromiseRejectionEvent) => {
+      const message = 'reason' in e ? (e.reason?.message || '') : e.message;
+      const msgLower = (typeof message === 'string' ? message : '').toLowerCase();
+      
+      if (msgLower.includes('failed to fetch dynamically imported module') || 
+          msgLower.includes('error loading dynamically imported module') ||
+          msgLower.includes('chunkloaderror')) {
+        console.warn('Chunk loading failed. Force refreshing page...');
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('error', handleChunkError);
+    window.addEventListener('unhandledrejection', handleChunkError);
+    return () => {
+      window.removeEventListener('error', handleChunkError);
+      window.removeEventListener('unhandledrejection', handleChunkError);
+    };
   }, []);
 
   useEffect(() => {
