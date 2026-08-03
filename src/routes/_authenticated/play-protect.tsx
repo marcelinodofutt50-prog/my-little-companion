@@ -19,7 +19,7 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
-import playProtectConfig from "@/assets/play-protect-config.png.asset.json";
+import playProtectConfig from "@/assets/play-protect-config.png";
 
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
