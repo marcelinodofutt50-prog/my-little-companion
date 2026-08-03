@@ -186,8 +186,14 @@ function PlayProtectPage() {
               )}
             </motion.div>
 
-            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 md:grid-cols-[240px_1fr]">
-              <a href={playProtectConfig.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-border/60 bg-background/40">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="h-px flex-1 bg-amber-500/30" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-500">Método clássico — você envia, a equipe assina</span>
+              <span className="h-px flex-1 bg-amber-500/30" />
+            </div>
+
+            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5 md:grid-cols-[280px_1fr]">
+              <a href={playProtectConfig.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
                 <img src={playProtectConfig.url} alt="Configuração do Play Protect — quais opções desativar" className="h-full w-full object-contain" loading="lazy" />
               </a>
               <div className="space-y-3">
@@ -212,10 +218,11 @@ function PlayProtectPage() {
                   ))}
                 </ul>
                 <div className="rounded border border-primary/30 bg-primary/5 p-3 text-xs">
-                  <strong className="text-primary">Como funciona:</strong> você envia seu APK aqui, nossa equipe faz o bypass e assina o arquivo. Assim que ficar pronto, o botão de <em>Download</em> aparece na sua build abaixo. Tempo médio: 2 a 5 min.
+                  <strong className="text-primary">Como funciona (método clássico):</strong> você envia seu APK aqui, nossa equipe faz o bypass e assina o arquivo pelo bot. Assim que ficar pronto, o botão de <em>Download</em> aparece na sua build abaixo. Tempo médio: 2 a 5 min.
                 </div>
               </div>
             </div>
+
 
 
             <div className={`grid gap-6 md:grid-cols-2 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
