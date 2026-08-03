@@ -416,10 +416,20 @@ function AdminPage() {
           if (loadedRef.current.roles) loadRoles();
         }),
       )
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, (payload) => {
+        if (!(payload.new as any).is_admin) {
+          playNotifyDing();
+        }
+        debounce(() => {
+          if (loadedRef.current.licenses) loadLicenses();
+          loadThreadsCount();
+        });
+      })
       .subscribe();
 
     const poll = setInterval(() => {
       loadStats();
+      loadThreadsCount();
       if (loadedRef.current.orders) loadOrders();
       if (loadedRef.current.licenses) loadLicenses();
       if (loadedRef.current.users) loadUsers();

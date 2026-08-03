@@ -107,6 +107,24 @@ const features = [
 
 function LandingPage() {
   const { t } = useI18n();
+  
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid) return;
+      
+      const channel = supabase.channel(`landing-notif-${uid}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `sender_id=neq.${uid}` }, (payload) => {
+          if ((payload.new as any).is_admin) {
+            playNotifyDing();
+          }
+        })
+        .subscribe();
+      
+      return () => { supabase.removeChannel(channel); };
+    });
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
       {/* Ambient background */}
