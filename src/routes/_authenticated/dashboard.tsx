@@ -42,13 +42,23 @@ function DashboardPage() {
   const { t } = useI18n()
   const { resolved } = useTheme()
   const [tutorialOpen, setTutorialOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(undefined)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }: any) => setUser(data.user))
+    let mounted = true
+    supabase.auth.getSession().then(({ data }: any) => {
+      if (mounted) setUser(data.session?.user ?? null)
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setUser(session?.user ?? null)
+    })
+    return () => {
+      mounted = false
+      listener.subscription.unsubscribe()
+    }
   }, [])
 
   const { data: profile } = useQuery({
@@ -101,7 +111,12 @@ function DashboardPage() {
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
-  const activeLicense = licenses?.find((l: any) => !l.revoked && (!l.expires_at || new Date(l.expires_at) > new Date()))
+  const isLicenseActive = (license: any) =>
+    !license.revoked &&
+    !license.disabled_at &&
+    !license.suspended_at &&
+    (!license.expires_at || new Date(license.expires_at) > new Date())
+  const activeLicense = licenses?.find(isLicenseActive)
   const fallbackDownloads = activeLicense
     ? downloadsForTier((activeLicense.version_tier as VersionTier | null) ?? tierFromPlanSlug(activeLicense.plan_slug))
     : []
@@ -203,7 +218,7 @@ function DashboardPage() {
                   <KeyRound className="h-5 w-5 text-primary" />
                 </div>
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
-                  {licensesLoading ? (
+                  {user === undefined || licensesLoading ? (
                     <p className="text-sm text-muted-foreground">Carregando licenças…</p>
                   ) : licensesError ? (
                     <div className="flex flex-wrap items-center gap-3 text-sm text-destructive">
@@ -221,7 +236,10 @@ function DashboardPage() {
                       />
                     </div>
                   ) : (licenses ?? []).map((license: any) => {
-                    const active = !license.revoked && !license.disabled_at && (!license.expires_at || new Date(license.expires_at) > new Date())
+                    const active = isLicenseActive(license)
+                    const licenseDownloads = active
+                      ? downloadsForTier((license.version_tier as VersionTier | null) ?? tierFromPlanSlug(license.plan_slug))
+                      : []
                     return (
                       <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
                         <CardContent className="space-y-3 p-4">
@@ -233,6 +251,17 @@ function DashboardPage() {
                             <span>Servidor: {license.server_ip || '—'}</span>
                             <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleDateString('pt-BR') : 'Vitalícia'}</span>
                           </div>
+                          {licenseDownloads.length > 0 && (
+                            <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
+                              {licenseDownloads.map((file) => (
+                                <Button key={file.url} size="sm" variant="outline" asChild>
+                                  <a href={file.url} target="_blank" rel="noreferrer">
+                                    <Download className="mr-2 h-4 w-4" />{file.label}<ExternalLink className="ml-2 h-3 w-3" />
+                                  </a>
+                                </Button>
+                              ))}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     )
