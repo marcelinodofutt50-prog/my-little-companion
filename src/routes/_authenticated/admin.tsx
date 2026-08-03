@@ -417,12 +417,14 @@ function AdminPage() {
         }),
       )
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, (payload) => {
-        if (!(payload.new as any).is_admin) {
+        const next = payload.new as any;
+        if (!next.is_admin) {
           playNotifyDing();
+          showDesktopNotification("Novo Ticket / Mensagem", next.body ?? "Um cliente enviada uma mensagem.");
         }
         debounce(() => {
-          if (loadedRef.current.licenses) loadLicenses();
           loadThreadsCount();
+          // Se o admin estiver com uma thread aberta, as mensagens dela são recarregadas pelo componente interno ou via listRef
         });
       })
       .subscribe();
