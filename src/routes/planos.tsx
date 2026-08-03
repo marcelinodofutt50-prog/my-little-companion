@@ -606,28 +606,34 @@ function PlansPage() {
         <PreCheckoutFaq />
 
         {/* PLAN GROUPS ====================================== */}
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// filtrar por uso</div>
-            <p className="mt-1 text-sm text-muted-foreground">Mostre só o tipo de plano que faz sentido pra você.</p>
+        <div className="sticky top-16 z-40 -mx-4 mb-8 bg-background/80 px-4 py-4 backdrop-blur-md border-b border-border/40 sm:static sm:top-0 sm:mx-0 sm:mb-12 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:border-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="hidden sm:block">
+              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// filtrar por uso</div>
+              <p className="mt-1 text-sm text-muted-foreground">Mostre só o tipo de plano que faz sentido pra você.</p>
+            </div>
+            <div className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border/60 bg-card/50 p-1 sm:w-auto" role="tablist" aria-label="Filtrar planos por uso">
+              {([
+                { id: "all", label: "Todos" },
+                { id: "monthly", label: "Mensal" },
+                { id: "lifetime", label: "Vitalício" },
+              ] as { id: UsageFilter; label: string }[]).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={usage === opt.id}
+                  onClick={() => setUsage(opt.id)}
+                  className={`flex-1 rounded-full px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-all sm:flex-none sm:px-6 sm:py-2.5 ${
+                    usage === opt.id ? "bg-primary text-primary-foreground shadow-[0_0_15px_oklch(0.78_0.13_82/0.4)]" : "text-muted-foreground hover:bg-white/5"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="inline-flex rounded-full border border-border/60 bg-card/50 p-1" role="tablist" aria-label="Filtrar planos por uso">
-            {([
-              { id: "all", label: "Todos" },
-              { id: "monthly", label: "Mensal" },
-              { id: "lifetime", label: "Vitalício" },
-            ] as { id: UsageFilter; label: string }[]).map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                role="tab"
-                aria-selected={usage === opt.id}
-                onClick={() => setUsage(opt.id)}
-                className={`rounded-full px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors ${
-                  usage === opt.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {opt.label}
+        </div>
               </button>
             ))}
           </div>
