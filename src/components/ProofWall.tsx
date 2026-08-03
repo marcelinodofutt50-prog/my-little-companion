@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ShieldCheck } from "lucide-react";
-const p1 = { url: "/img/proof-1.jpg" };
-const p2 = { url: "/img/proof-2.jpg" };
-const p3 = { url: "/img/proof-3.jpg" };
-const p4 = { url: "/img/proof-4.jpg" };
-const pPhones = { url: "/img/proof-phones.jpg" };
-const pPix300 = { url: "/img/proof-pix-300.jpg" };
-const pDouglas = { url: "/img/proof-telegram-douglas.jpg" };
+const p1 = { url: "/img/proof-1.webp", fallback: "/img/proof-1.jpg" };
+const p2 = { url: "/img/proof-2.webp", fallback: "/img/proof-2.jpg" };
+const p3 = { url: "/img/proof-3.webp", fallback: "/img/proof-3.jpg" };
+const p4 = { url: "/img/proof-4.webp", fallback: "/img/proof-4.jpg" };
+const pPhones = { url: "/img/proof-phones.webp", fallback: "/img/proof-phones.jpg" };
+const pPix300 = { url: "/img/proof-pix-300.webp", fallback: "/img/proof-pix-300.jpg" };
+const pDouglas = { url: "/img/proof-telegram-douglas.webp", fallback: "/img/proof-telegram-douglas.jpg" };
 
 type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet"; ref?: string; source?: string; date?: string };
 
