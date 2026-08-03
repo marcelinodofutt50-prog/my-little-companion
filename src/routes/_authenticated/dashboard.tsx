@@ -315,17 +315,28 @@ function DashboardPage() {
                   ) : (licenses ?? []).map((license: any) => {
                     const active = isLicenseActive(license)
                     const licenseDownloads = active ? downloadsForLicense(license) : []
+                    const state = licenseExpiryState(license, serverNow)
                     return (
                       <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
                         <CardContent className="space-y-3 p-4">
                           <div className="flex items-start justify-between gap-3">
-                            <div><div className="font-semibold">{license.plan_slug}</div><div className="text-xs text-muted-foreground">{license.yaarsa_email}</div></div>
-                            <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{active ? 'Ativa' : 'Inativa'}</span>
+                            <div>
+                              <div className="font-semibold">{planLabel(license.plan_slug, license.is_trial)}</div>
+                              <div className="text-xs text-muted-foreground">{license.yaarsa_email}</div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5">
+                              <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{active ? 'Ativa' : 'Inativa'}</span>
+                              {active && state.countdownAt && (
+                                <LicenseCountdown compact target={state.countdownAt} serverNow={serverNow} />
+                              )}
+                            </div>
                           </div>
                           <div className="grid grid-cols-2 gap-2 font-mono text-xs text-muted-foreground">
                             <span>Servidor: {license.server_ip || '—'}</span>
-                            <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleDateString('pt-BR') : 'Vitalícia'}</span>
+                            <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Vitalícia'}</span>
                           </div>
+                          <p className="text-[11px] leading-relaxed text-muted-foreground">{state.renewalNote}</p>
+
                           <div className="space-y-2 border-t border-border/50 pt-3">
                             <Button
                               size="sm"
