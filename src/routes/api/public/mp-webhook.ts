@@ -304,7 +304,8 @@ async function fulfillOrderInner(orderId: string) {
     // Mensal: 30 dias exatos para não haver perda de dias na ativação
     expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
   } else {
-    expiresAt = nextDay20;
+    // Qualquer outro plano pago por dias: 30 dias a partir da compra.
+    expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
   }
 
   // Re-align Yaarsa expire_date to match our billing cycle
