@@ -221,7 +221,7 @@ function PlayProtectPage() {
             <div className={`grid gap-6 md:grid-cols-2 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
 
               {/* Build Section */}
-              <div className="osint-panel p-6">
+              <div id="nova-operacao" className="osint-panel p-6 scroll-mt-24">
                 <div className="mb-6 flex items-center gap-3">
                   <Settings className="h-5 w-5 text-primary" />
                   <h2 className="font-mono text-sm font-bold uppercase tracking-wider text-foreground">Nova Operação</h2>
@@ -360,11 +360,24 @@ function PlayProtectPage() {
               <p className="text-muted-foreground text-sm mb-6">
                 Precisa de suporte para um APK complexo? O serviço gerenciado permite enviar o arquivo para análise da equipe.
               </p>
-              <Link to="/dashboard" search={{ tab: "play-protect" }}>
-                <Button variant="outline" className="font-mono uppercase tracking-widest border-violet/40 hover:bg-violet/10">
-                  Acessar Fila de Envios <ArrowRight className="ml-2 h-4 w-4" />
+              {hasAccess ? (
+                <Button
+                  variant="outline"
+                  className="font-mono uppercase tracking-widest border-violet/40 hover:bg-violet/10"
+                  onClick={() => {
+                    document.getElementById("nova-operacao")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    setTimeout(() => document.getElementById("apk-upload")?.click(), 450);
+                  }}
+                >
+                  Enviar APK para a equipe <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-              </Link>
+              ) : (
+                <Link to="/planos">
+                  <Button variant="outline" className="font-mono uppercase tracking-widest border-violet/40 hover:bg-violet/10">
+                    Liberar acesso <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
             </div>
           </main>
         </SidebarInset>
