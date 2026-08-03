@@ -63,7 +63,7 @@ const DICT: Dict = {
   // ===== Play Protect / Shadow Signer =====
   "pp.title": { pt: "Shadow Signer (Play Protect Bypass)", en: "Shadow Signer (Play Protect Bypass)" },
   "pp.header": { pt: "Shadow Signer (Public Builder)", en: "Shadow Signer (Public Builder)" },
-  "pp.desc": { pt: "O console automatizado para injeção de dropper (Risada KL) e bypass total do Play Protect.", en: "The automated console for dropper injection and total Play Protect bypass." },
+  "pp.desc": { pt: "O console automatizado para injeção de dropper (Shadow Bypass) e bypass total do Play Protect.", en: "The automated console for Shadow Bypass dropper injection and total Play Protect bypass." },
   "pp.no_access": { pt: "Este recurso está disponível apenas para clientes com plano Mensal (4.5.7) ou Vitalício (4.6).", en: "This feature is available only for Monthly (4.5.7) or Lifetime (4.6) customers." },
   "pp.new_op": { pt: "Nova Operação", en: "New Operation" },
   "pp.app_name": { pt: "Nome do Aplicativo", en: "App Name" },
