@@ -89,6 +89,48 @@ export type Database = {
         }
         Relationships: []
       }
+      apk_build_jobs: {
+        Row: {
+          app_name: string
+          created_at: string
+          error_message: string | null
+          id: string
+          original_apk_url: string | null
+          original_icon_url: string | null
+          output_apk_url: string | null
+          progress: number
+          status: Database["public"]["Enums"]["apk_build_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_name: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          original_apk_url?: string | null
+          original_icon_url?: string | null
+          output_apk_url?: string | null
+          progress?: number
+          status?: Database["public"]["Enums"]["apk_build_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_name?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          original_apk_url?: string | null
+          original_icon_url?: string | null
+          output_apk_url?: string | null
+          progress?: number
+          status?: Database["public"]["Enums"]["apk_build_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       apk_free_trials: {
         Row: {
           job_id: string | null
@@ -1664,6 +1706,7 @@ export type Database = {
       }
     }
     Enums: {
+      apk_build_status: "pending" | "processing" | "completed" | "failed"
       apk_job_status:
         | "queued"
         | "claimed"
@@ -1801,6 +1844,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      apk_build_status: ["pending", "processing", "completed", "failed"],
       apk_job_status: [
         "queued",
         "claimed",

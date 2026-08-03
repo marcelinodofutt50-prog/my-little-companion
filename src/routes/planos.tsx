@@ -86,6 +86,8 @@ function metaFor(plan: Plan): PlanMeta {
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
+      "Acesso ao Shadow Play Protect Builder (Bypass Automático Público)",
+
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
@@ -98,6 +100,8 @@ function metaFor(plan: Plan): PlanMeta {
       "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
+      "Acesso ao Shadow Play Protect Builder (Bypass Automático)",
+
     ],
     note: "Atenção: Este plano libera o LOGIN. Se você já tem um login ativo (incluindo Trial) e só quer pagar a manutenção, use 'Renovação Servidor'.",
   };
@@ -131,8 +135,10 @@ function metaFor(plan: Plan): PlanMeta {
       "Vira Vitalício v4.6 imediatamente",
       "Mantém seu histórico e servidor",
       "Prioridade no suporte após upgrade",
+      "Libera Shadow Play Protect Builder",
     ],
   };
+
   if (s.includes("source") || s.includes("code")) return {
     tagline: "Código-fonte auditável, entrega assistida por engenheiro.",
     icon: Code2,

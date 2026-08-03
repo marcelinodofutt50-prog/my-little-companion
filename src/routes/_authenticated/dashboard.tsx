@@ -81,7 +81,7 @@ function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [licFilter, setLicFilter] = useState<"all" | "active" | "trial" | "archived">("active");
   const [licSort, setLicSort] = useState<"expires_asc" | "expires_desc" | "created_desc" | "created_asc">("expires_asc");
-  const [extraTab, setExtraTab] = useState<"downloads" | "historico" | "resumo" | "beneficios" | "ajuda">("downloads");
+  const [extraTab, setExtraTab] = useState<"downloads" | "historico" | "resumo" | "beneficios" | "ajuda" | "play-protect">("downloads");
   const [orders, setOrders] = useState<MyOrder[]>([]);
   const [orderLastSync, setOrderLastSync] = useState<Date | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
@@ -350,9 +350,13 @@ function DashboardPage() {
                         <Sparkles className="mr-1.5 h-3 w-3" /> {daysLeft !== null && daysLeft <= 5 ? "Renovar agora" : "Comprar"}
                       </Button>
                     </Link>
+                    <Button size="sm" variant="outline" onClick={() => setExtraTab("play-protect")} className="font-mono text-[11px] uppercase tracking-wider">
+                      <Shield className="mr-1.5 h-3 w-3 text-neon" /> Play Protect
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => setExtraTab("ajuda")} className="font-mono text-[11px] uppercase tracking-wider">
                       <LifeBuoy className="mr-1.5 h-3 w-3 text-cyan" /> Ajuda
                     </Button>
+
                     <Button size="sm" variant="ghost" onClick={refresh} disabled={refreshing} className="ml-auto font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                       {refreshing && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
                       Atualizar
@@ -796,11 +800,13 @@ function DashboardPage() {
           <div className="mb-4 flex w-full overflow-x-auto rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
             {([
               { k: "downloads", label: "downloads" },
+              { k: "play-protect", label: "play protect" },
               { k: "historico", label: "histórico" },
               { k: "resumo", label: "resumo" },
               { k: "beneficios", label: "benefícios" },
               { k: "ajuda", label: "ajuda" },
             ] as const).map((t) => (
+
               <button
                 key={t.k}
                 onClick={() => setExtraTab(t.k)}
@@ -813,7 +819,23 @@ function DashboardPage() {
 
           {extraTab === "downloads" && <DownloadsSection licenses={licenses} isAdmin={isAdmin} />}
 
+          {extraTab === "play-protect" && (
+            <div className="osint-panel p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="h-6 w-6 text-neon" />
+                <h2 className="text-xl font-bold font-display">Play Protect Bypass System</h2>
+              </div>
+              <p className="text-muted-foreground mb-6">Injete droppers e realize o bypass de antivírus em tempo real.</p>
+              <Link to="/play-protect">
+                <Button className="font-mono uppercase tracking-widest">
+                  Abrir Console Builder <Zap className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {extraTab === "historico" && <OrderHistory />}
+
 
           {extraTab === "resumo" && (
             <BusinessBriefing licenses={licenses} balance={balance} legacyStatus={legacyStatus} />
