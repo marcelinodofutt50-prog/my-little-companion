@@ -43,6 +43,127 @@ export const Route = createFileRoute("/")({
   errorComponent: ({ error }: { error: Error }) => <div className="p-8 text-destructive">{error.message}</div>,
 });
 
+function DashboardPreview() {
+  const { t } = useI18n();
+  return (
+    <section className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/20 p-8 md:p-12">
+      <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+        <Cpu className="h-64 w-64" />
+      </div>
+      
+      <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+        <div className="space-y-8 text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
+            <Activity className="h-3 w-3" /> Alpha-Ops Console v4.6
+          </div>
+          
+          <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-foreground">
+            Gestão Empresarial <br />
+            <span className="text-primary italic">De Alto Nível.</span>
+          </h2>
+          
+          <p className="max-w-md text-muted-foreground leading-relaxed">
+            Painel OSINT redesenhado para transparência absoluta. Visualize a saúde da sua infraestrutura, 
+            status de nós globais e compliance de segurança em uma única interface táctica.
+          </p>
+          
+          <ul className="space-y-4 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/80">
+            {[
+              "Monitoramento em Tempo Real de SLA",
+              "Gestão de Credenciais com AES-256",
+              "Status de Nodes Globais (EUA, Europa, Ásia)",
+              "Audit Log de Acessos e Decisões",
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-3">
+                <ShieldCheck className="h-3.5 w-3.5 text-neon" /> {item}
+              </li>
+            ))}
+          </ul>
+          
+          <div className="flex flex-wrap gap-4 pt-4">
+            <Link to="/auth">
+              <Button className="h-12 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 font-mono text-[10px] uppercase tracking-widest px-8">
+                Ver Demo Painel
+              </Button>
+            </Link>
+          </div>
+        </div>
+        
+        <div className="relative">
+          {/* Dashboard UI Mockup */}
+          <div className="relative rounded-2xl border border-border/60 bg-background/80 shadow-2xl overflow-hidden backdrop-blur-sm group hover:scale-[1.02] transition-all duration-700">
+            <div className="border-b border-border px-4 py-2 bg-muted/30 flex items-center justify-between">
+              <div className="flex gap-1.5">
+                <div className="h-2 w-2 rounded-full bg-red-500/50" />
+                <div className="h-2 w-2 rounded-full bg-amber-500/50" />
+                <div className="h-2 w-2 rounded-full bg-neon/50" />
+              </div>
+              <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-widest">Enterprise Dashboard • ID: 7710-AX</div>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="h-8 w-1/2 bg-muted/40 rounded animate-pulse" />
+                <div className="h-8 w-1/4 bg-primary/10 rounded animate-pulse border border-primary/20" />
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-16 bg-muted/20 rounded-lg border border-border/40 p-2 space-y-2">
+                    <div className="h-2 w-full bg-muted/40 rounded" />
+                    <div className="h-3 w-2/3 bg-muted/60 rounded" />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="h-32 bg-muted/10 rounded-xl border border-border/40 p-4 relative overflow-hidden">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="h-4 w-1/3 bg-muted/40 rounded" />
+                  <div className="h-4 w-4 bg-neon/20 rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-2 w-full bg-muted/20 rounded" />
+                  <div className="h-2 w-full bg-muted/20 rounded" />
+                  <div className="h-2 w-2/3 bg-muted/20 rounded" />
+                </div>
+                {/* Decorative map dots */}
+                <div className="absolute bottom-4 right-4 flex gap-1">
+                  <div className="h-1 w-1 rounded-full bg-neon animate-ping" />
+                  <div className="h-1 w-1 rounded-full bg-cyan opacity-50" />
+                  <div className="h-1 w-1 rounded-full bg-white opacity-20" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Gloss overlay */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
+          </div>
+          
+          {/* Floating elements */}
+          <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-xl flex flex-col items-center justify-center p-2 text-center animate-bounce-slow">
+            <Lock className="h-4 w-4 text-primary mb-1" />
+            <span className="text-[8px] font-mono font-bold text-primary uppercase leading-tight">AES-256 <br />Secure</span>
+          </div>
+          
+          <div className="absolute -bottom-10 -left-6 h-32 w-48 rounded-xl border border-neon/20 bg-neon/5 backdrop-blur-xl p-4 hidden md:block">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="h-3 w-3 text-neon" />
+              <span className="text-[9px] font-mono font-bold text-neon uppercase tracking-widest">SLA Status</span>
+            </div>
+            <div className="flex items-baseline gap-1 mb-2">
+              <span className="text-2xl font-black text-neon tracking-tighter">99.98</span>
+              <span className="text-[9px] font-bold text-neon/60 uppercase">%</span>
+            </div>
+            <div className="h-1 w-full bg-neon/10 rounded-full overflow-hidden">
+              <div className="h-full bg-neon w-[99.9%]" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function LandingPage() {
   const { t } = useI18n();
   const search = useSearch({ from: "/" }) as any;
