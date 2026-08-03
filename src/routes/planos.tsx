@@ -14,6 +14,7 @@ import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
 import { GuaranteeStrip } from "@/components/GuaranteeStrip";
 import { Testimonials } from "@/components/Testimonials";
 import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
+import { useI18n } from "@/lib/i18n";
 import { VersionCompare } from "@/components/VersionCompare";
 import { MigrationOffer } from "@/components/MigrationOffer";
 
