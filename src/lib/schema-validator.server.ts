@@ -8,42 +8,29 @@ export async function validateAndFixSchema() {
   console.log("[schema-validator] Starting validation...");
 
   try {
-    // 1. Ensure support_messages has reply_to_id
-    const { data: cols, error: colError } = await supabaseAdmin
-      .from("information_schema.columns" as any)
-      .select("column_name")
-      .eq("table_schema", "public")
-      .eq("table_name", "support_messages")
-      .eq("column_name", "reply_to_id");
+    // 1. Check for reply_to_id on support_messages
+    // We use a query that will fail if the column is missing
+    const { error: colError } = await supabaseAdmin
+      .from("support_messages")
+      .select("reply_to_id" as any)
+      .limit(1);
 
-    if (colError) {
-      console.warn("[schema-validator] Failed to read information_schema:", colError.message);
-    } else if (!cols || cols.length === 0) {
-      console.info("[schema-validator] Column 'reply_to_id' missing on 'support_messages'. Applying fix...");
-      const { error: fixError } = await supabaseAdmin.rpc("exec_sql", {
-        sql: `ALTER TABLE public.support_messages ADD COLUMN IF NOT EXISTS reply_to_id uuid REFERENCES public.support_messages(id);`
-      } as any).catch(async () => {
-        // Fallback to raw query if RPC not available (unlikely for admin client but good to have)
-        return { error: { message: "exec_sql RPC not found" } };
-      });
-
-      if (fixError) {
-        console.error("[schema-validator] Failed to add column via RPC:", fixError.message);
-      } else {
-        console.info("[schema-validator] Column 'reply_to_id' added successfully.");
-      }
+    if (colError && colError.message.includes("column \"reply_to_id\" does not exist")) {
+      console.info("[schema-validator] Column 'reply_to_id' missing on 'support_messages'.");
+      // Since exec_sql RPC isn't available/typed, we log and expect the migration tool or next user message to handle DDL
+      // In a real environment, we'd trigger a migration script or alert the admin
+      console.warn("[schema-validator] ACTION REQUIRED: Run migration to add 'reply_to_id' to 'support_messages'");
     }
 
-    // 2. Ensure basic tables exist and are granted correctly
-    // We touch comments to trigger a cache refresh in PostgREST
-    const touchTables = ["support_messages", "support_threads", "apk_build_jobs"];
-    for (const table of touchTables) {
-      await supabaseAdmin.rpc("exec_sql", {
-        sql: `
-          GRANT ALL ON public.${table} TO authenticated, service_role;
-          COMMENT ON TABLE public.${table} IS 'Shadow Store System Table (Updated: ${new Date().toISOString()})';
-        `
-      } as any).catch(() => {});
+    // 2. Health check of critical tables
+    const tables = ["support_messages", "support_threads", "apk_build_jobs"];
+    for (const table of tables) {
+      const { error } = await supabaseAdmin.from(table as any).select("id" as any).limit(1);
+      if (error) {
+        console.error(`[schema-validator] Table '${table}' health check failed:`, error.message);
+      } else {
+        console.log(`[schema-validator] Table '${table}' is healthy.`);
+      }
     }
 
     console.log("[schema-validator] Validation complete.");
