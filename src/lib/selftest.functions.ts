@@ -282,5 +282,33 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
       push("Shadow Signer (Play Protect)", false, e?.message ?? "Falha no teste de regressão");
     }
 
+    // 10) Validação de Integridade de Preços (UI vs DB)
+    try {
+      const { data: dbPlans } = await supabaseAdmin
+        .from("plans")
+        .select("slug, price_brl")
+        .eq("active", true);
+      
+      const mismatch = (dbPlans ?? []).filter(p => {
+        // Shadow 4.5.5 (trial) deve ser 450
+        if (p.slug === 'trial' && Number(p.price_brl) !== 450) return true;
+        // Shadow 4.5.7 (monthly_457) deve ser 250
+        if (p.slug === 'monthly_457' && Number(p.price_brl) !== 250) return true;
+        // Shadow 4.6 (lifetime_46) deve ser 1800
+        if (p.slug === 'lifetime_46' && Number(p.price_brl) !== 1800) return true;
+        return false;
+      });
+
+      push(
+        "Validação de Preços (Integridade)",
+        mismatch.length === 0,
+        mismatch.length === 0 
+          ? "Preços no banco de dados conferem com os valores oficiais da interface." 
+          : `Discrepância detectada nos planos: ${mismatch.map(m => m.slug).join(", ")}`
+      );
+    } catch (e: any) {
+      push("Validação de Preços (Integridade)", false, `Erro na auditoria: ${e.message}`);
+    }
+
     return { mode: data.mode, steps, finishedAt: new Date().toISOString() };
   });

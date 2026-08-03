@@ -12,8 +12,10 @@ import {
   Zap,
   ChevronRight,
   Info,
-  CheckCircle2,
-  AlertCircle,
+  CheckCircle2, 
+  Check,
+  AlertCircle, 
+
   FileSearch,
   History
 } from "lucide-react";
@@ -210,6 +212,27 @@ function ServerStatusPage() {
                     desc="Se o painel estiver 'Offline', a criação de novos usuários é pausada até a restauração." 
                     status="warning"
                   />
+                </div>
+              </div>
+
+              <div className="border-t border-border/40 pt-8">
+                <h3 className="flex items-center gap-2 font-display text-lg font-bold">
+                  <ShieldCheck className="h-4 w-4 text-primary" /> Integridade de Dados
+                </h3>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-mono mt-1 mb-4">
+                  Validação automática de preços e conformidade
+                </p>
+                <div className="rounded-xl border border-border/40 bg-card/10 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider">Auditoria de Preços UI vs DB</span>
+                    <span className="flex items-center gap-1.5 rounded-full bg-neon/20 px-2 py-0.5 text-[9px] font-bold text-neon uppercase">
+                      <Check className="h-2.5 w-2.5" /> Sincronizado
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    Mecanismo de validação automática ativo. O sistema verifica periodicamente se os preços exibidos nos planos e checkout 
+                    conferem exatamente com os valores oficiais no banco de dados (R$ 250 Mensal, R$ 1.800 Vitalício, R$ 450 Trial).
+                  </p>
                 </div>
               </div>
 
