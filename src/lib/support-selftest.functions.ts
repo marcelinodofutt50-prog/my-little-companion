@@ -130,9 +130,10 @@ export const runSupportE2E = createServerFn({ method: "POST" })
       const insertReply = (withReply: boolean) =>
         context.supabase
           .from("support_messages")
-          .insert(withReply ? { ...base, reply_to_id: customerMsgId } : base)
+          .insert((withReply ? { ...base, reply_to_id: customerMsgId } : base) as any)
           .select("id,is_admin")
           .single();
+
 
       let { data, error } = await insertReply(true);
       if (
