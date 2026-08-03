@@ -14,6 +14,7 @@ import { TutorialHintDialog } from '@/components/TutorialHintDialog'
 import { InAppNotifications } from '@/components/InAppNotifications'
 import { AnnouncementsSection } from '@/components/AnnouncementsSection'
 import { EmptyState } from '@/components/EmptyState'
+import { SupportDiagnosticButton } from '@/components/SupportDiagnosticButton'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
@@ -229,12 +230,20 @@ function DashboardPage() {
               />
 
               <section className="enterprise-surface overflow-hidden" aria-labelledby="licenses-title">
-                <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
                   <div>
                     <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase">Minhas licenças</h2>
                     <p className="mt-1 text-xs text-muted-foreground">Acessos vinculados à sua conta</p>
                   </div>
-                  <KeyRound className="h-5 w-5 text-primary" />
+                  <div className="flex items-center gap-3">
+                    <SupportDiagnosticButton
+                      licenses={licenses as any[]}
+                      error={licensesError}
+                      context="Painel do cliente — seção Minhas licenças"
+                      label="Reportar problema"
+                    />
+                    <KeyRound className="h-5 w-5 text-primary" />
+                  </div>
                 </div>
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
                   {user === undefined || licensesLoading ? (
@@ -243,6 +252,11 @@ function DashboardPage() {
                     <div className="flex flex-wrap items-center gap-3 text-sm text-destructive">
                       <span>Não foi possível carregar suas licenças.</span>
                       <Button size="sm" variant="outline" onClick={() => void refetchLicenses()}>Tentar novamente</Button>
+                      <SupportDiagnosticButton
+                        licenses={licenses as any[]}
+                        error={licensesError}
+                        context="Falha ao carregar licenças no painel"
+                      />
                     </div>
                   ) : (licenses ?? []).length === 0 ? (
                     <div className="lg:col-span-2">
