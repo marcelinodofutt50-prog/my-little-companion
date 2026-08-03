@@ -18,11 +18,13 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
   });
 
 export const createBuildJob = createServerFn({ method: "POST" })
-  .input(z.object({
-    appName: z.string().min(1),
-    originalApkUrl: z.string().url(),
-    originalIconUrl: z.string().url().optional(),
-  }))
+  .validator((data: { appName: string; originalApkUrl: string; originalIconUrl?: string }) => {
+    return z.object({
+      appName: z.string().min(1),
+      originalApkUrl: z.string().url(),
+      originalIconUrl: z.string().url().optional(),
+    }).parse(data);
+  })
   .handler(async ({ data }) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
@@ -43,3 +45,4 @@ export const createBuildJob = createServerFn({ method: "POST" })
     if (error) throw error;
     return job;
   });
+
