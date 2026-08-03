@@ -27,6 +27,7 @@ import shadowMark from '@/assets/shadow-mask.png'
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
 import { useServerNow } from '@/hooks/use-server-now'
 import { licenseExpiryState } from '@/lib/expiry'
+import { LicenseCountdown } from '@/components/LicenseCountdown'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
