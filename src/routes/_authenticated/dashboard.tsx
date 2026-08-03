@@ -375,7 +375,7 @@ function DashboardPage() {
           return (
             <>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-primary/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-primary/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <Zap className="h-20 w-20 text-neon" />
                   </div>
@@ -384,7 +384,7 @@ function DashboardPage() {
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
                 </div>
                 
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-cyan/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-cyan/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <Server className="h-20 w-20 text-cyan" />
                   </div>
@@ -393,7 +393,7 @@ function DashboardPage() {
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">NODES EM SINCRONIZAÇÃO</div>
                 </div>
 
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-violet-500/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-violet-500/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <Ticket className="h-20 w-20 text-violet-400" />
                   </div>
@@ -402,7 +402,7 @@ function DashboardPage() {
                   <div className="mt-2 font-mono text-[10px] text-muted-foreground">SEM ALERTAS PENDENTES</div>
                 </div>
 
-                <div className="terminal-card scanlines group relative overflow-hidden p-5 transition-all hover:border-amber-500/50">
+                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-amber-500/50 shadow-sm">
                   <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
                     <ShieldAlert className="h-20 w-20 text-amber-500" />
                   </div>
