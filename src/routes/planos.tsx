@@ -1176,7 +1176,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       <Button
         className={[
-          "w-full font-mono uppercase tracking-widest text-xs h-12 transition-all duration-300 active:scale-95",
+          "w-full font-mono uppercase tracking-widest text-xs h-11 sm:h-12 transition-all duration-300 active:scale-95",
           featured 
             ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_30px_oklch(0.78_0.13_82/0.6)]" 
             : "border-2 hover:bg-primary/5 hover:border-primary/50",
