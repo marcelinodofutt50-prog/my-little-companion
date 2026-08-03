@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type NotificationKind = 'support' | 'renewal' | 'refund' | 'suspended' | 'order' | 'migration' | 'license' | 'info';
 
