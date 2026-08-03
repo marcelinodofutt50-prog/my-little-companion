@@ -65,11 +65,14 @@ function LandingPage() {
       <main>
         {/* Rest of the content would go here, preserved in real scenario */}
         <div className="flex min-h-[80vh] flex-col items-center justify-center p-4">
-           <h1 className="text-center font-display text-5xl font-bold tracking-tight sm:text-7xl text-[#006a4e]">Shadow BTMOB</h1>
-           <p className="mt-6 max-w-2xl text-center text-[#556b2f] font-medium">Infraestrutura OSINT de alto nível para operações cibernéticas avançadas.</p>
+           <h1 className="text-center font-display text-5xl font-bold tracking-tight sm:text-7xl">
+             <span className="text-[#006a4e]">Shadow</span>{" "}
+             <span className="text-[#006a4e]">BTMOB</span>
+           </h1>
+           <p className="mt-6 max-w-2xl text-center text-[#555555] font-medium">Infraestrutura OSINT de alto nível para operações cibernéticas avançadas.</p>
            <div className="mt-10 flex gap-4">
-             <Link to="/auth"><Button size="lg" className="rounded-none font-mono tracking-widest uppercase bg-[#006a4e] text-white hover:bg-[#005a3e]">Acessar Painel</Button></Link>
-             <Link to="/planos"><Button size="lg" variant="outline" className="rounded-none font-mono tracking-widest uppercase border-[#d4d4d4] text-[#1a1a1a] hover:bg-gray-50">Ver Planos</Button></Link>
+             <Link to="/auth"><Button size="lg" className="rounded-none font-mono tracking-widest uppercase bg-[#006a4e] text-white hover:bg-[#005a3e] px-8">Acessar Painel</Button></Link>
+             <Link to="/planos"><Button size="lg" variant="outline" className="rounded-none font-mono tracking-widest uppercase border-[#e2e2e2] text-[#1a1a1a] hover:bg-gray-50 px-8">Ver Planos</Button></Link>
            </div>
         </div>
       </main>
