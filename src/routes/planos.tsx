@@ -168,6 +168,21 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
 }
 
 function PlansPage() {
+  const search = useSearch({ from: "/planos" }) as any;
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const isLight = search?.theme === 'light';
+    if (isLight) {
+      html.classList.add('theme-light');
+      html.classList.remove('dark');
+      html.style.colorScheme = 'light';
+    } else {
+      html.classList.remove('theme-light');
+      html.classList.add('dark');
+      html.style.colorScheme = 'dark';
+    }
+  }, [search?.theme]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [isLegacy, setIsLegacy] = useState(false);
