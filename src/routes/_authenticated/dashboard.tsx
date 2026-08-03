@@ -28,6 +28,7 @@ import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plan
 import { useServerNow } from '@/hooks/use-server-now'
 import { licenseExpiryState } from '@/lib/expiry'
 import { LicenseCountdown } from '@/components/LicenseCountdown'
+import { planLabel } from '@/lib/license-display'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
