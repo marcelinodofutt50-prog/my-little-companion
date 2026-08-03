@@ -324,7 +324,7 @@ export function AdminAnnouncementsPanel() {
                 <div className="flex items-center gap-2 mt-2 px-2 py-1 rounded border border-border/40 bg-background/50 text-[10px] font-mono">
                   <Paperclip className="h-3 w-3" />
                   <span className="truncate flex-1">{form.attachment_name || "Arquivo anexo"}</span>
-                  <X className="h-3 w-3 cursor-pointer text-red-400" onClick={() => setForm({ ...prev => ({ ...prev, attachment_url: "", attachment_name: "" }) })} />
+                  <X className="h-3 w-3 cursor-pointer text-red-400" onClick={() => setForm(prev => ({ ...prev, attachment_url: "", attachment_name: "" }))} />
                 </div>
               )}
             </div>
