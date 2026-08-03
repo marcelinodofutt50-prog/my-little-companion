@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Copy, Zap, Server, Ticket, Clock, ShieldAlert, Loader2, LifeBuoy, LogOut, Eye, EyeOff, Sparkles, Terminal as TerminalIcon, Pause, Play, PowerOff, Check, X, Crown, Shield, AlertTriangle, BellRing, Download, Archive, ChevronDown } from "lucide-react";
+import { Copy, Zap, Server, Ticket, Clock, ShieldAlert, Loader2, LifeBuoy, LogOut, Eye, EyeOff, Sparkles, Terminal as TerminalIcon, Pause, Play, PowerOff, Check, X, Crown, Shield, AlertTriangle, BellRing, Download, Archive, ChevronDown, ArrowUpRight, Activity, LockIcon } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ReferralsWidget } from "@/components/ReferralsWidget";
@@ -305,28 +305,37 @@ function DashboardPage() {
               const statusColor = statusTone === "danger" ? "text-danger" : statusTone === "amber" ? "text-amber-400" : statusTone === "neon" ? "text-neon" : "text-muted-foreground";
               const statusRing = statusTone === "danger" ? "border-danger/50 bg-danger/5" : statusTone === "amber" ? "border-amber-400/40 bg-amber-400/5" : statusTone === "neon" ? "border-neon/40 bg-neon/5" : "border-border/50 bg-background/40";
               return (
-                <div className="enterprise-surface relative overflow-hidden p-5 sm:p-6 shadow-sm">
-                  <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[var(--neon)] opacity-[0.08] blur-3xl" />
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-                    <div className="flex min-w-0 items-center gap-4">
+                <div className="enterprise-surface relative overflow-hidden p-6 sm:p-8 shadow-2xl transition-all duration-500 hover:shadow-primary/10">
+                  {/* Atmospheric Glow */}
+                  <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-[100px] animate-pulse" />
+                  <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-cyan/10 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+                  
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between relative z-10">
+                    <div className="flex items-center gap-5">
                       <div className="relative shrink-0">
-                        <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-30 blur-2xl" />
-                        <div className="rounded-full border border-border/60 p-0.5 shadow-inner">
-                          <div className="rounded-full bg-background p-1">
-                            <img src={shadowMark} alt="Shadow" width={64} height={64} decoding="async" className="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(201,168,76,0.6)] md:h-16 md:w-16" />
-                          </div>
+                        <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-primary/30 blur-2xl animate-pulse" />
+                        <div className="rounded-full border-2 border-primary/20 p-1 bg-background/50 backdrop-blur-sm shadow-2xl">
+                          <img src={shadowMark} alt="Shadow" width={80} height={80} decoding="async" className="h-16 w-16 object-contain drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.5)] md:h-20 md:w-20" />
                         </div>
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div className="osint-label text-primary/80">{t("dash.access_level" as any)}</div>
-                          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-primary border border-primary/20">Alpha-Ops</span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-primary border border-primary/20 shadow-[0_0_10px_oklch(0.78_0.13_82/0.1)]">
+                            {t("dash.access_level" as any)}: Alpha-Ops
+                          </span>
                         </div>
-                        <h1 className="mt-1 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl text-foreground">{displayIdentity(displayName, email)}</h1>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-3 font-mono text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-neon animate-pulse" /> {new Date().toLocaleDateString(lang === "en" ? "en-US" : "pt-BR")}</span>
-                          <span className="hidden sm:inline text-border/40">|</span>
-                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date().toLocaleTimeString(lang === "en" ? "en-US" : "pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <h1 className="truncate font-display text-3xl font-bold tracking-tight sm:text-4xl text-foreground drop-shadow-sm">
+                          {displayName || email.split('@')[0]}
+                        </h1>
+                        <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-muted-foreground/80">
+                          <span className="flex items-center gap-2 bg-background/40 px-2 py-1 rounded border border-border/40">
+                            <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulse shadow-[0_0_5px_var(--neon)]" /> 
+                            SYSTEM ONLINE
+                          </span>
+                          <span className="flex items-center gap-2 bg-background/40 px-2 py-1 rounded border border-border/40">
+                            <Clock className="h-3 w-3 text-primary" /> 
+                            {new Date().toLocaleTimeString(lang === "en" ? "en-US" : "pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -385,42 +394,67 @@ function DashboardPage() {
           return (
             <>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-primary/50 shadow-sm">
-                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                    <Zap className="h-20 w-20 text-neon" />
+                <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-primary/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40">
+                  <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                    <Zap className="h-24 w-24 text-primary" />
                   </div>
-                  <div className="osint-label mb-2 text-muted-foreground">CRÉDITO OPERACIONAL</div>
-                  <div className="font-mono text-3xl font-black text-neon">{formatBrl(balance)}</div>
-                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    <div className="osint-label text-muted-foreground tracking-[0.2em]">SALDO OPERACIONAL</div>
+                  </div>
+                  <div className="font-display text-4xl font-black text-primary drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]">{formatBrl(balance)}</div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">disponível para saque</div>
+                    <ArrowUpRight className="h-3 w-3 text-primary opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
                 
                 <Link to="/servidor/status" className="block outline-none">
-                  <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-cyan/50 shadow-sm h-full">
-                    <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                      <Server className="h-20 w-20 text-cyan" />
+                  <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-cyan/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40 h-full">
+                    <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                      <Server className="h-24 w-24 text-cyan" />
                     </div>
-                    <div className="osint-label mb-2 text-muted-foreground uppercase tracking-widest">STATUS INFRAESTRUTURA</div>
-                    <div className="font-mono text-3xl font-black text-cyan">ONLINE</div>
-                    <div className="mt-2 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">{activeCount} TERMINAIS EM SINCRONIZAÇÃO</div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-1.5 w-1.5 rounded-full bg-cyan animate-pulse" />
+                      <div className="osint-label text-muted-foreground tracking-[0.2em]">STATUS INFRA</div>
+                    </div>
+                    <div className="font-display text-4xl font-black text-cyan drop-shadow-[0_0_15px_oklch(0.6_0.1_200/0.3)] uppercase">Online</div>
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">{activeCount} terminais sincronizados</div>
+                      <Activity className="h-3 w-3 text-cyan opacity-50 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   </div>
                 </Link>
 
-                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-violet-500/50 shadow-sm">
-                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                    <Ticket className="h-20 w-20 text-violet-400" />
+                <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-violet-500/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40">
+                  <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                    <Ticket className="h-24 w-24 text-violet-400" />
                   </div>
-                  <div className="osint-label mb-2 text-muted-foreground">TICKETS SUPORTE</div>
-                  <div className="font-mono text-3xl font-black text-violet-400">0</div>
-                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">SEM ALERTAS PENDENTES</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                    <div className="osint-label text-muted-foreground tracking-[0.2em]">CHAMADOS SUPORTE</div>
+                  </div>
+                  <div className="font-display text-4xl font-black text-violet-400 drop-shadow-[0_0_15px_oklch(0.6_0.1_270/0.3)]">0</div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">sem incidentes críticos</div>
+                    <LifeBuoy className="h-3 w-3 text-violet-400 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
 
-                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-amber-500/50 shadow-sm">
-                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                    <ShieldAlert className="h-20 w-20 text-amber-500" />
+                <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-amber-500/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40">
+                  <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                    <ShieldAlert className="h-24 w-24 text-amber-500" />
                   </div>
-                  <div className="osint-label mb-2 text-muted-foreground">INTEGRIDADE OPS</div>
-                  <div className="font-mono text-3xl font-black text-amber-500">100%</div>
-                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">PROTOCOLO AES-256 ATIVO</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <div className="osint-label text-muted-foreground tracking-[0.2em]">INTEGRIDADE OPS</div>
+                  </div>
+                  <div className="font-display text-4xl font-black text-amber-500 drop-shadow-[0_0_15px_oklch(0.7_0.2_60/0.3)]">100%</div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">shadow protocol v4.6</div>
+                      <LockIcon className="h-3 w-3 text-amber-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+
+                  </div>
                 </div>
               </div>
 
@@ -1119,14 +1153,18 @@ function LicenseCard({ lic, onChanged, defaultOpen = false }: { lic: License; on
 
 function Field({ label, value, onCopy, right }: { label: string; value: string; onCopy: () => void; right?: React.ReactNode }) {
   return (
-    <div className="group flex items-center justify-between gap-2 rounded-md border border-border/50 bg-background/60 px-3 py-3 transition-colors hover:border-neon/40 hover:bg-background/80 sm:gap-3 sm:py-2.5">
+    <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/40 bg-background/30 px-4 py-4 transition-all duration-300 hover:border-primary/40 hover:bg-background/60 hover:shadow-lg sm:py-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-0.5">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 sm:text-[9px]">{label}</span>
-        <span className="truncate font-mono text-sm text-foreground sm:text-[13px]">{value}</span>
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.25em] text-muted-foreground/60">{label}</span>
+        <span className="truncate font-mono text-sm font-medium text-foreground tracking-tight">{value}</span>
       </div>
-      <div className="flex shrink-0 items-center gap-1">
-        {right && <div className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-background hover:text-neon sm:h-7 sm:w-7">{right}</div>}
-        <button onClick={onCopy} title="Copiar" className="inline-flex h-9 w-9 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-background hover:text-neon sm:h-7 sm:w-7">
+      <div className="flex shrink-0 items-center gap-2">
+        {right && <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-background/50 text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary sm:h-8 sm:w-8">{right}</div>}
+        <button 
+          onClick={onCopy} 
+          title="Copiar" 
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-background/50 text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary sm:h-8 sm:w-8"
+        >
           <Copy className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
         </button>
       </div>
