@@ -255,17 +255,19 @@ function DashboardPage() {
                         </li>
                       ))}
                     </ol>
-                    <div className={`flex flex-col items-center justify-center rounded-lg border-2 px-6 py-5 font-mono ${statusRing}`}>
-                      <div className={`text-[10px] font-bold uppercase ${statusColor}`}>Tempo restante</div>
-                      <div className={`mt-1 text-5xl font-black tabular-nums ${statusColor}`}>{daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
-                      <div className="text-[10px] uppercase text-muted-foreground">{daysLeft === 1 ? 'dia' : 'dias'}</div>
-                      {expiry?.countdownAt && (
-                        <div className="mt-2 text-center text-[10px] text-muted-foreground">
-                          {expiry.kind === 'lifetime' ? 'Mensalidade do servidor vence ' : 'Expira '}
-                          {new Date(expiry.countdownAt).toLocaleDateString('pt-BR')}
-                        </div>
-                      )}
-                    </div>
+                    <LicenseCountdown
+                      target={expiry?.countdownAt ?? null}
+                      serverNow={serverNow}
+                      title={expiry?.kind === 'lifetime' ? 'Mensalidade do servidor' : 'Tempo restante'}
+                      note={
+                        expiry?.kind === 'trial'
+                          ? 'Seu teste dura 24 horas cheias a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
+                          : expiry?.kind === 'lifetime'
+                            ? 'Pague a mensalidade do servidor até o dia 20 para manter o acesso ativo.'
+                            : 'Quando o contador zerar, o login é encerrado automaticamente. Renove antes para não perder o acesso.'
+                      }
+                    />
+
                   </div>
                 </section>
               )}
