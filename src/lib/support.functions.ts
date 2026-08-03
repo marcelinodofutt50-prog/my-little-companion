@@ -82,13 +82,13 @@ export const listMyThreads = createServerFn({ method: "GET" })
  */
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .validator((i: any) => 
-    z.object({
+  .validator((i: any) => {
+    return z.object({
       threadId: z.string().uuid(),
       limit: z.number().int().min(5).max(100).optional(),
       before: z.string().optional(),
-    }).parse(i)
-  )
+    }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     const limit = data.limit ?? 30;
     let q = context.supabase
@@ -112,7 +112,9 @@ export const listMessages = createServerFn({ method: "GET" })
  */
 export const markThreadReadByCustomer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((i: any) => z.object({ threadId: z.string().uuid() }).parse(i))
+  .validator((i: any) => {
+    return z.object({ threadId: z.string().uuid() }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     await context.supabase
       .from("support_threads")
@@ -243,7 +245,7 @@ export const setThreadCategory = createServerFn({ method: "POST" })
   .validator((i: any) => {
     return z.object({
       threadId: z.string().uuid(),
-      category: z.enum(SUPPORT_CATEGORIES),
+      category: z.enum(SUPPORT_CATEGORIES as any),
       subject: z.string().trim().min(2).max(120).optional(),
     }).parse(i);
   })
@@ -280,4 +282,3 @@ export const setThreadCategory = createServerFn({ method: "POST" })
     if (!updated) throw new Error("Conversa não encontrada");
     return updated;
   });
-
