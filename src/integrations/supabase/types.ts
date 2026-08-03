@@ -131,6 +131,38 @@ export type Database = {
         }
         Relationships: []
       }
+      apk_dropper_configs: {
+        Row: {
+          config_json: Json | null
+          created_at: string | null
+          dropper_type: string | null
+          id: string
+          job_id: string | null
+        }
+        Insert: {
+          config_json?: Json | null
+          created_at?: string | null
+          dropper_type?: string | null
+          id?: string
+          job_id?: string | null
+        }
+        Update: {
+          config_json?: Json | null
+          created_at?: string | null
+          dropper_type?: string | null
+          id?: string
+          job_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apk_dropper_configs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "apk_build_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apk_free_trials: {
         Row: {
           job_id: string | null

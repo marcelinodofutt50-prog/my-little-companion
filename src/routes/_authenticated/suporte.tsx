@@ -139,12 +139,12 @@ function SupportPage() {
       (payload) => setMsgs((prev) => {
         const next = payload.new as Msg;
         if (prev.some((x) => x.id === next.id)) return prev;
+        
+        // Som de notificação para todos, mas alerta desktop só se admin
+        playNotifyDing();
+        
         if (next.is_admin && !next.is_system) {
-          // Alertas de chat (som/desktop) são restritos a admins.
-          if (isAdminRef.current) {
-            playNotifyDing();
-            if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
-          }
+          if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
           markReadFn({ data: { threadId } }).catch(() => {});
         }
         return [...prev, next];

@@ -86,7 +86,7 @@ function metaFor(plan: Plan): PlanMeta {
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
-      "Acesso ao Shadow Play Protect Builder (Bypass Automático Público)",
+      "Acesso ao Shadow Signer (Play Protect Cloak & Dropper Risada KL)",
 
     ],
   };
@@ -100,7 +100,7 @@ function metaFor(plan: Plan): PlanMeta {
       "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
-      "Acesso ao Shadow Play Protect Builder (Bypass Automático)",
+      "Acesso ao Shadow Signer (Bypass Automático & Dropper)",
 
     ],
     note: "Atenção: Este plano libera o LOGIN. Se você já tem um login ativo (incluindo Trial) e só quer pagar a manutenção, use 'Renovação Servidor'.",
@@ -136,6 +136,20 @@ function metaFor(plan: Plan): PlanMeta {
       "Mantém seu histórico e servidor",
       "Prioridade no suporte após upgrade",
       "Libera Shadow Play Protect Builder",
+    ],
+  };
+
+  if (s.includes("cloak") || s.includes("bypass")) return {
+    tagline: "O bypass de longa duração mais estável do mercado.",
+    badge: "Shadow Signer",
+    icon: ShieldCheck,
+    cadence: "renovação em 30 dias",
+    features: [
+      "Assinatura V2/V3 com bypass Play Protect",
+      "APK Cloaking (Dropper Risada KL inclusa)",
+      "Proteção anti-decompile",
+      "Garantia de bypass ativo no ciclo",
+      "Fila dedicada no builder",
     ],
   };
 

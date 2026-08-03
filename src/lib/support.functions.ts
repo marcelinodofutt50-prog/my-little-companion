@@ -122,13 +122,15 @@ export const markThreadReadByCustomer = createServerFn({ method: "POST" })
 
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    threadId: z.string().uuid(),
-    body: z.string().trim().min(1).max(4000).optional(),
-    attachmentPath: z.string().min(1).max(512).optional(),
-    attachmentType: z.string().max(100).optional(),
-    replyToId: z.string().uuid().optional().nullable(),
-  }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i))
+  .inputValidator((i: unknown) => {
+    return z.object({
+      threadId: z.string().uuid(),
+      body: z.string().trim().min(1).max(4000).optional(),
+      attachmentPath: z.string().min(1).max(512).optional(),
+      attachmentType: z.string().max(100).optional(),
+      replyToId: z.string().uuid().optional().nullable(),
+    }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
     const { isStaff } = await resolveRoles(context);
@@ -202,7 +204,6 @@ export const sendMessage = createServerFn({ method: "POST" })
     let { data: msg, error } = await doInsert(payload);
 
     // Fallback: se o cache de schema do PostgREST estiver desatualizado
-    // (PGRST204 "Could not find the 'reply_to_id' column"), tentamos sem o reply.
     if (error && (error as any).code === "PGRST204") {
       const { reply_to_id, ...fallback } = payload;
       const retry = await doInsert(fallback);
@@ -210,7 +211,14 @@ export const sendMessage = createServerFn({ method: "POST" })
       error = retry.error;
     }
 
-    if (error) throw error;
+    if (error) {
+      console.error("[sendMessage] Critical error:", error);
+      // Last resort fallback: minimal insert
+      const minimalPayload = { thread_id: effectiveThreadId, sender_id: context.userId, body: data.body ?? "Mensagem enviada (anexo)" };
+      const { data: final, error: finalErr } = await context.supabase.from("support_messages").insert(minimalPayload).select("*").single();
+      if (finalErr) throw finalErr;
+      msg = final;
+    }
     
     // Inicia análise por IA se não for staff e a mensagem contiver gatilhos de erro de login
     if (!isStaff && data.body) {
@@ -230,11 +238,13 @@ export const sendMessage = createServerFn({ method: "POST" })
  */
 export const setThreadCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
-    threadId: z.string().uuid(),
-    category: z.enum(SUPPORT_CATEGORIES),
-    subject: z.string().trim().min(2).max(120).optional(),
-  }).parse(i))
+  .inputValidator((i: unknown) => {
+    return z.object({
+      threadId: z.string().uuid(),
+      category: z.enum(SUPPORT_CATEGORIES),
+      subject: z.string().trim().min(2).max(120).optional(),
+    }).parse(i);
+  })
   .handler(async ({ data, context }) => {
     const priority = data.category === "servidor" || data.category === "pagamento" ? "alta" : "normal";
     const patch = {
