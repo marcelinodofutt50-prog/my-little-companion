@@ -1279,7 +1279,7 @@ function LegacyLookup() {
           <TooltipContent side="top" className="max-w-xs text-center leading-relaxed">
             <div className="flex flex-col items-center gap-1.5">
               <Info className="h-3.5 w-3.5" />
-              <span>Se você já comprou antes na Shadow 4.5.7 ou 4.6, clique para sincronizar seu login antigo com esta conta. Seus dados e licença aparecem no dashboard em segundos.</span>
+              <span>Implemente um login no fluxo de verificação de “membros antigos” para eu comprovar minha elegibilidade com segurança antes de ativar o servidor.</span>
             </div>
           </TooltipContent>
         </Tooltip>
