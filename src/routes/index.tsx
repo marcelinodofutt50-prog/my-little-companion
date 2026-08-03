@@ -141,9 +141,9 @@ function LandingPage() {
               </Button>
             </Link>
             
-            <Link to="/auth" search={{ theme: search?.theme }} className="group flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-[#888888] hover:text-white transition-colors">
+            <Link to="/auth" search={{ theme: search?.theme }} className="group flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
               <span>Testar Acesso Por 24H —</span>
-              <div className="h-px w-8 bg-[#333333] group-hover:bg-[#c9a84c] group-hover:w-12 transition-all" />
+              <div className="h-px w-8 bg-border group-hover:bg-primary group-hover:w-12 transition-all" />
             </Link>
           </motion.div>
         </div>
