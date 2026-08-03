@@ -424,7 +424,6 @@ function SupportPage() {
               nova resposta do suporte
             </button>
           )}
-          )}
           <div ref={listRef} onScroll={onListScroll} className="flex-1 space-y-3 overflow-y-auto p-4">
             {(hasMore || loadingOlder) && (
               <div className="flex justify-center pb-1">
