@@ -16,7 +16,6 @@ import { GuaranteeStrip } from "@/components/GuaranteeStrip";
 import { Testimonials } from "@/components/Testimonials";
 import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { useI18n } from "@/lib/i18n";
-import { VersionCompare } from "@/components/VersionCompare";
 import { MigrationOffer } from "@/components/MigrationOffer";
 
 import { TrustBadges } from "@/components/TrustBadges";
@@ -334,17 +333,26 @@ function PlansPage() {
 
 
   const { licenses, servers, sources, upgrades } = useMemo(() => {
-    const serverAll = plans.filter((p) => p.category === "server");
+    // Remove planos repetidos (mesmo preço + mesma duração + nome equivalente)
+    const seen = new Set<string>();
+    const unique = plans.filter((p) => {
+      const key = `${p.category}|${p.price_brl}|${p.days ?? "vital"}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const serverAll = unique.filter((p) => p.category === "server");
     const serverFiltered = isLegacy
       ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
-    const upgradeList = plans.filter((p) => p.category === "upgrade");
+    const upgradeList = unique.filter((p) => p.category === "upgrade");
     
     return {
-      licenses: plans.filter((p) => p.category === "license"),
+      licenses: unique.filter((p) => p.category === "license"),
       servers: serverFiltered,
-      sources: plans.filter((p) => p.category === "source"),
+      sources: unique.filter((p) => p.category === "source"),
       upgrades: isLegacy ? upgradeList : [],
     };
   }, [plans, isLegacy]);
@@ -567,7 +575,7 @@ function PlansPage() {
           coupon={couponValid}
           cashback={cashbackBalance}
           useCash={useCash}
-          featuredSlug="login-lifetime"
+          featuredSlug="lifetime_46"
         />
         {upgrades.length > 0 && (
           <PlanGroup
@@ -604,7 +612,6 @@ function PlansPage() {
 
         <TierComparison />
         <MigrationOffer />
-        <VersionCompare />
 
 
         {/* METRICS BAR ================================= */}
