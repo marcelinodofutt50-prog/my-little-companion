@@ -73,7 +73,16 @@ function PlayProtectPage() {
 
   const tier = tierFromPlanSlug(license?.plan_slug);
   const features = getTierFeatures(tier);
+  
+  // Define states first
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [appName, setAppName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedIcon, setSelectedIcon] = useState<File | null>(null);
+
   const hasAccess = features.bypass_play_protect || isAdmin;
+
 
   const { data: jobs } = useSuspenseQuery({
     queryKey: ["build-jobs"],

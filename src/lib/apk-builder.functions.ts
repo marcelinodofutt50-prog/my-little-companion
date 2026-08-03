@@ -18,7 +18,7 @@ export const getMyBuildJobs = createServerFn({ method: "GET" })
   });
 
 export const createBuildJob = createServerFn({ method: "POST" })
-  .validator((data: { appName: string; originalApkUrl: string; originalIconUrl?: string }) => {
+  .validator((data: unknown) => {
     return z.object({
       appName: z.string().min(1),
       originalApkUrl: z.string().url(),
@@ -45,4 +45,3 @@ export const createBuildJob = createServerFn({ method: "POST" })
     if (error) throw error;
     return job;
   });
-
