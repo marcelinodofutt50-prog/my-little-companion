@@ -42,6 +42,7 @@ import {
   Wrench,
   Bot,
   Server,
+  Megaphone,
 } from "lucide-react";
 
 import { categoryMeta } from "@/lib/support-categories";
