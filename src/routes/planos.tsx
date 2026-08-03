@@ -86,6 +86,8 @@ function metaFor(plan: Plan): PlanMeta {
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
+      "Acesso ao Shadow Play Protect Builder (Bypass Automático Público)",
+
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
