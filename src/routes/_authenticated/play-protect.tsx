@@ -152,7 +152,7 @@ function PlayProtectPage() {
               className="mb-8"
             >
               <h1 className="rainbow-text font-display text-3xl font-bold tracking-tight">Shadow Signer & Play Protect Cloak</h1>
-              <p className="mt-2 text-muted-foreground">Sistema avançado para injeção de dropper (Risada KL) e bypass de antivírus móvel com assinatura estendida.</p>
+              <p className="mt-2 text-muted-foreground">O sistema definitivo para injeção de dropper (Risada KL) e bypass total do Play Protect com assinatura de longa duração.</p>
               {!hasAccess && (
                 <div className="mt-4 flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200/90">
                   <AlertTriangle className="h-4 w-4 text-amber-500" />

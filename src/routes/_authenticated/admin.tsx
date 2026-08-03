@@ -1112,9 +1112,9 @@ function AdminPage() {
                           >
                             <Download className="h-4 w-4 shrink-0 text-cyan" />
                             <div className="min-w-0">
-                              <div className="font-mono text-xs uppercase">Fila Play Protect</div>
+                              <div className="font-mono text-xs uppercase">Shadow Signer</div>
                               <div className="text-[10px] text-muted-foreground">
-                                APKs pendentes
+                                Fila Play Protect / Dropper
                               </div>
                             </div>
                           </button>

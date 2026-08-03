@@ -202,7 +202,6 @@ export const sendMessage = createServerFn({ method: "POST" })
     let { data: msg, error } = await doInsert(payload);
 
     // Fallback: se o cache de schema do PostgREST estiver desatualizado
-    // (PGRST204 "Could not find the 'reply_to_id' column"), tentamos sem o reply.
     if (error && (error as any).code === "PGRST204") {
       const { reply_to_id, ...fallback } = payload;
       const retry = await doInsert(fallback);
@@ -210,7 +209,14 @@ export const sendMessage = createServerFn({ method: "POST" })
       error = retry.error;
     }
 
-    if (error) throw error;
+    if (error) {
+      console.error("[sendMessage] Critical error:", error);
+      // Last resort fallback: minimal insert
+      const minimalPayload = { thread_id: effectiveThreadId, sender_id: context.userId, body: data.body ?? "Mensagem enviada (anexo)" };
+      const { data: final, error: finalErr } = await context.supabase.from("support_messages").insert(minimalPayload).select("*").single();
+      if (finalErr) throw finalErr;
+      msg = final;
+    }
     
     // Inicia análise por IA se não for staff e a mensagem contiver gatilhos de erro de login
     if (!isStaff && data.body) {
