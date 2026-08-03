@@ -910,8 +910,8 @@ function TierComparison() {
             <div className="space-y-2.5">
               {rows.map((r) => (
                 <div key={r.label} className="flex items-center justify-between gap-2 border-b border-border/20 pb-2 last:border-0 last:pb-0">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{r.label}</span>
-                  <span className={`font-mono text-xs ${p.id === 'lifetime' || p.id === 'serverOld' ? 'text-primary' : 'text-foreground'}`}>
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/90">{r.label}</span>
+                  <span className={`font-mono text-sm font-semibold ${p.id === 'lifetime' || p.id === 'serverOld' ? 'text-primary' : 'text-foreground'}`}>
                     {(r as any)[p.id]}
                   </span>
                 </div>
@@ -1131,12 +1131,13 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       <Button
         className={[
-          "w-full font-mono uppercase tracking-wider",
-          featured ? "bg-primary text-primary-foreground hover:bg-primary/90" : "",
+          "w-full font-mono uppercase tracking-widest text-xs h-12",
+          featured ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]" : "border-2",
         ].join(" ")}
         variant={featured ? "default" : "outline"}
         onClick={handleClick}
         disabled={isLoading}
+        aria-label={`Comprar plano ${plan.name} via PIX`}
       >
         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Comprar via PIX
