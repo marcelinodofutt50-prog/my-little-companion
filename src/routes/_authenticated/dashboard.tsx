@@ -27,6 +27,8 @@ import shadowMark from '@/assets/shadow-mask.png'
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
 import { useServerNow } from '@/hooks/use-server-now'
 import { licenseExpiryState } from '@/lib/expiry'
+import { LicenseCountdown } from '@/components/LicenseCountdown'
+import { planLabel } from '@/lib/license-display'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
@@ -255,17 +257,19 @@ function DashboardPage() {
                         </li>
                       ))}
                     </ol>
-                    <div className={`flex flex-col items-center justify-center rounded-lg border-2 px-6 py-5 font-mono ${statusRing}`}>
-                      <div className={`text-[10px] font-bold uppercase ${statusColor}`}>Tempo restante</div>
-                      <div className={`mt-1 text-5xl font-black tabular-nums ${statusColor}`}>{daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
-                      <div className="text-[10px] uppercase text-muted-foreground">{daysLeft === 1 ? 'dia' : 'dias'}</div>
-                      {expiry?.countdownAt && (
-                        <div className="mt-2 text-center text-[10px] text-muted-foreground">
-                          {expiry.kind === 'lifetime' ? 'Mensalidade do servidor vence ' : 'Expira '}
-                          {new Date(expiry.countdownAt).toLocaleDateString('pt-BR')}
-                        </div>
-                      )}
-                    </div>
+                    <LicenseCountdown
+                      target={expiry?.countdownAt ?? null}
+                      serverNow={serverNow}
+                      title={expiry?.kind === 'lifetime' ? 'Mensalidade do servidor' : 'Tempo restante'}
+                      note={
+                        expiry?.kind === 'trial'
+                          ? 'Seu teste dura 24 horas cheias a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
+                          : expiry?.kind === 'lifetime'
+                            ? 'Pague a mensalidade do servidor até o dia 20 para manter o acesso ativo.'
+                            : 'Quando o contador zerar, o login é encerrado automaticamente. Renove antes para não perder o acesso.'
+                      }
+                    />
+
                   </div>
                 </section>
               )}
@@ -287,6 +291,21 @@ function DashboardPage() {
                   </div>
                 </div>
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
+                  <div className="grid gap-2 sm:grid-cols-3 lg:col-span-2">
+                    {[
+                      { icon: Clock, t: 'O contador manda', d: 'Quando o tempo zerar, o login é encerrado automaticamente — mesmo que o app mostre outra data.' },
+                      { icon: Sparkles, t: 'Como usar seu login', d: 'Abra o Tutorial no topo do painel: instalação, Play Protect e primeiro acesso.' },
+                      { icon: LifeBuoy, t: 'Ficou com dúvida?', d: 'Fale com o suporte pelo chat — a gente resolve login, senha e renovação.' },
+                    ].map((tip) => (
+                      <div key={tip.t} className="flex gap-2.5 rounded-md border border-border/50 bg-background/50 p-3">
+                        <tip.icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <div>
+                          <div className="text-xs font-semibold">{tip.t}</div>
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{tip.d}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                   {user === undefined || licensesLoading ? (
                     <p className="text-sm text-muted-foreground">Carregando licenças…</p>
                   ) : licensesError ? (
@@ -312,17 +331,28 @@ function DashboardPage() {
                   ) : (licenses ?? []).map((license: any) => {
                     const active = isLicenseActive(license)
                     const licenseDownloads = active ? downloadsForLicense(license) : []
+                    const state = licenseExpiryState(license, serverNow)
                     return (
                       <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
                         <CardContent className="space-y-3 p-4">
                           <div className="flex items-start justify-between gap-3">
-                            <div><div className="font-semibold">{license.plan_slug}</div><div className="text-xs text-muted-foreground">{license.yaarsa_email}</div></div>
-                            <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{active ? 'Ativa' : 'Inativa'}</span>
+                            <div>
+                              <div className="font-semibold">{planLabel(license.plan_slug, license.is_trial)}</div>
+                              <div className="text-xs text-muted-foreground">{license.yaarsa_email}</div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5">
+                              <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{active ? 'Ativa' : 'Inativa'}</span>
+                              {active && state.countdownAt && (
+                                <LicenseCountdown compact target={state.countdownAt} serverNow={serverNow} />
+                              )}
+                            </div>
                           </div>
                           <div className="grid grid-cols-2 gap-2 font-mono text-xs text-muted-foreground">
                             <span>Servidor: {license.server_ip || '—'}</span>
-                            <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleDateString('pt-BR') : 'Vitalícia'}</span>
+                            <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Vitalícia'}</span>
                           </div>
+                          <p className="text-[11px] leading-relaxed text-muted-foreground">{state.renewalNote}</p>
+
                           <div className="space-y-2 border-t border-border/50 pt-3">
                             <Button
                               size="sm"
