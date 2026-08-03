@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { BellRing, Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, ArrowUpRight, Activity, LockIcon } from 'lucide-react'
+import { BellRing, Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, ArrowUpRight, Activity, LockIcon, Building2, Globe, ShieldCheck as ShieldIcon, ChevronRight } from 'lucide-react'
 
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
