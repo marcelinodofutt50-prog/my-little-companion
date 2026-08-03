@@ -60,20 +60,91 @@ function LandingPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="relative min-h-screen bg-[#050505] text-[#e0e0e0] selection:bg-[#c9a84c]/30 selection:text-white">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(201,168,76,0.1),transparent_50%)]" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10" />
+      
       <SiteHeader />
-      <main>
-        {/* Rest of the content would go here, preserved in real scenario */}
-        <div className="flex min-h-[80vh] flex-col items-center justify-center p-4">
-           <h1 className="text-center font-display text-5xl font-bold tracking-tight sm:text-7xl">
-             <span className="text-[#006a4e]">Shadow</span>{" "}
-             <span className="text-[#006a4e]">BTMOB</span>
-           </h1>
-           <p className="mt-6 max-w-2xl text-center text-[#555555] font-medium">Infraestrutura OSINT de alto nível para operações cibernéticas avançadas.</p>
-           <div className="mt-10 flex gap-4">
-             <Link to="/auth"><Button size="lg" className="rounded-none font-mono tracking-widest uppercase bg-[#006a4e] text-white hover:bg-[#005a3e] px-8">Acessar Painel</Button></Link>
-             <Link to="/planos"><Button size="lg" variant="outline" className="rounded-none font-mono tracking-widest uppercase border-[#e2e2e2] text-[#1a1a1a] hover:bg-gray-50 px-8">Ver Planos</Button></Link>
-           </div>
+      
+      <main className="relative z-10">
+        <div className="mx-auto flex min-h-[90vh] max-w-5xl flex-col items-center justify-center px-6 py-20 text-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-12"
+          >
+            <div className="relative inline-block">
+              <div className="absolute inset-0 animate-pulse blur-2xl bg-[#c9a84c]/20" />
+              <img src={shadowMark} alt="Shadow Mask" className="relative mx-auto h-32 w-32 object-contain drop-shadow-[0_0_25px_rgba(201,168,76,0.4)]" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="mb-4 inline-flex items-center rounded-full border border-[#c9a84c]/20 bg-[#c9a84c]/5 px-4 py-1.5"
+          >
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#c9a84c]">Mirror Industries • Est. 2023</span>
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.4 }}
+            className="font-display text-7xl font-extrabold tracking-[-0.04em] sm:text-9xl text-white mb-6"
+          >
+            SHADOW
+          </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="mb-12 space-y-4"
+          >
+            <p className="text-xl font-medium tracking-tight text-[#a0a0a0]">
+              Your shadow, <span className="text-white italic">everywhere.</span>
+            </p>
+            <p className="mx-auto max-w-xl text-sm leading-relaxed text-[#666666]">
+              Infraestrutura de alta performance para monitoramento e análise de dados.
+              Privacidade absoluta, velocidade máxima.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="flex flex-col items-center gap-8 sm:flex-row"
+          >
+            <Link to="/planos">
+              <Button size="lg" className="h-14 rounded-full bg-white px-10 font-mono text-xs uppercase tracking-[0.2em] text-black hover:bg-[#c9a84c] hover:text-white transition-all duration-500 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                Conhecer Planos +
+              </Button>
+            </Link>
+            
+            <Link to="/auth" className="group flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-[#888888] hover:text-white transition-colors">
+              <span>Testar Acesso Por 24H —</span>
+              <div className="h-px w-8 bg-[#333333] group-hover:bg-[#c9a84c] group-hover:w-12 transition-all" />
+            </Link>
+          </motion.div>
+        </div>
+
+        <div className="mx-auto max-w-6xl px-6 pb-20">
+          <div className="grid grid-cols-2 gap-4 border-t border-[#1a1a1a] pt-12 opacity-40 md:grid-cols-4">
+            {[
+              "4.5.7 OPS READY",
+              "AES-256 SECURED",
+              "~24H SUPP RESPONSE",
+              "RELIABLE DATA"
+            ].map((stat) => (
+              <div key={stat} className="text-center font-mono text-[9px] tracking-[0.3em] text-[#888888]">
+                // {stat}
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </div>
