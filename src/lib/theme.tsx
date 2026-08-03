@@ -6,9 +6,10 @@ export type ResolvedTheme = "dark" | "light";
 const KEY = "shadow-theme";
 
 function readSaved(): ThemeMode {
+  if (typeof window === "undefined") return "system";
   try {
     const v = localStorage.getItem(KEY);
-    if (v === "light" || v === "dark" || v === "system") return v;
+    if (v === "light" || v === "dark" || v === "system") return v as ThemeMode;
   } catch {
     /* storage bloqueado */
   }

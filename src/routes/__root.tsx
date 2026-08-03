@@ -158,7 +158,7 @@ function RootShell({ children }: { children: ReactNode }) {
         {/* Aplica o tema (sistema/claro/escuro) antes da primeira pintura */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('shadow-theme')||'system';var l=(m==='light')||(m==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);var r=document.documentElement;r.classList.toggle('theme-light',l);r.classList.toggle('dark',!l);r.style.colorScheme=l?'light':'dark';}catch(e){}})();`,
+            __html: `(function(){try{var m=localStorage.getItem('shadow-theme')||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var l=(m==='light')||(m==='system'&&!d);var r=document.documentElement;r.classList.toggle('theme-light',l);r.classList.toggle('dark',!l);r.style.colorScheme=l?'light':'dark';}catch(e){}})();`,
           }}
         />
       </head>
