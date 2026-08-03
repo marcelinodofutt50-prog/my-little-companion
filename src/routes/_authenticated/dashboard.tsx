@@ -30,6 +30,7 @@ import { useServerNow } from '@/hooks/use-server-now'
 import { licenseExpiryState } from '@/lib/expiry'
 import { LicenseCountdown } from '@/components/LicenseCountdown'
 import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
+import { LicensePauseControls } from '@/components/LicensePauseControls'
 import { planLabel } from '@/lib/license-display'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
@@ -376,7 +377,7 @@ function DashboardPage() {
                               <div className="text-xs text-muted-foreground">{license.yaarsa_email}</div>
                             </div>
                             <div className="flex flex-col items-end gap-1.5">
-                              <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{active ? 'Ativa' : 'Inativa'}</span>
+                              <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${state.paused ? 'border-amber-400/40 bg-amber-400/10 text-amber-500' : active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{state.paused ? 'Pausada' : active ? 'Ativa' : 'Inativa'}</span>
                               {active && state.countdownAt && (
                                 <LicenseCountdown compact target={state.countdownAt} serverNow={serverNow} />
                               )}
@@ -387,6 +388,10 @@ function DashboardPage() {
                             <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Vitalícia'}</span>
                           </div>
                           <p className="text-[11px] leading-relaxed text-muted-foreground">{state.renewalNote}</p>
+
+                          <div className="border-t border-border/50 pt-3">
+                            <LicensePauseControls license={license} state={state} onDone={() => void refetchLicenses()} />
+                          </div>
 
                           <div className="space-y-2 border-t border-border/50 pt-3">
                             <Button

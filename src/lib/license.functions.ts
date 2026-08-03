@@ -14,6 +14,13 @@ function yesterdayYMD(): string {
 // scopes with an explicit `.eq("user_id", userId)` filter, so admin bypass
 // never lets one user touch another user's rows.
 
+/**
+ * PAUSAR a licença (cliente).
+ * - Congela os dias: guardamos `expires_at_before_suspend` e o instante da
+ *   pausa, então o tempo restante é recalculado no despause.
+ * - Bloqueia o acesso de verdade: expire_date = ontem no painel E a senha é
+ *   trocada por uma senha aleatória (a original continua guardada cifrada).
+ */
 export const suspendMyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: any) => {
@@ -25,22 +32,51 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
     if (error || !lic) throw new Error("Licença não encontrada");
     if (lic.disabled_at) throw new Error("Licença já foi desativada");
-    if (lic.suspended_at) throw new Error("Licença já está suspensa");
+    if (lic.revoked) throw new Error("Licença revogada não pode ser pausada");
+    if (lic.suspended_at) throw new Error("Licença já está pausada");
+    if (lic.expires_at && new Date(lic.expires_at).getTime() <= Date.now()) {
+      throw new Error("Licença já expirada — renove antes de pausar");
+    }
 
-    const { yaarsaExtend } = await import("./yaarsa.server");
-    const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), (lic as any).panel ?? "v457");
+    const panel = (lic as any).panel ?? "v457";
+    const { yaarsaExtend, yaarsaSetPassword, generateCredentials } = await import("./yaarsa.server");
+
+    // 1) trava a data no painel
+    const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
     if (yr.Fail) throw new Error(`Painel: ${yr.Fail}`);
 
+    // 2) troca a senha por uma aleatória (bloqueio real do login)
+    const tempPassword = generateCredentials().password;
+    const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
+    if (pr.Fail) {
+      // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
+      const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : null;
+      if (back) await yaarsaExtend(lic.yaarsa_email, back, panel);
+      throw new Error(`Painel (senha): ${pr.Fail}`);
+    }
+
+    const now = new Date();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("licenses").update({
-      suspended_at: new Date().toISOString(),
+      suspended_at: now.toISOString(),
       suspended_by: "user",
       expires_at_before_suspend: lic.expires_at,
     }).eq("id", lic.id).eq("user_id", userId);
     if (upErr) throw new Error(upErr.message);
-    return { ok: true };
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${panel}`, action: "license_pause", outcome: "success",
+      context: { license_id: lic.id, expires_at: lic.expires_at } as any,
+    } as any);
+
+    const msLeft = lic.expires_at ? Math.max(0, new Date(lic.expires_at).getTime() - now.getTime()) : null;
+    return { ok: true, paused_at: now.toISOString(), ms_left: msLeft };
   });
 
+/**
+ * DESPAUSAR: devolve exatamente o tempo que faltava quando pausou e restaura
+ * a senha original do cliente no painel.
+ */
 export const reactivateMyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: any) => {
@@ -52,25 +88,50 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
     if (error || !lic) throw new Error("Licença não encontrada");
     if (lic.disabled_at) throw new Error("Licença desativada não pode ser reativada");
-    if (!lic.suspended_at) throw new Error("Licença não está suspensa");
+    if (!lic.suspended_at) throw new Error("Licença não está pausada");
 
-    const restore = lic.expires_at_before_suspend ?? lic.expires_at;
-    if (!restore) throw new Error("Sem data de expiração para restaurar");
-    const ymd = new Date(restore).toISOString().slice(0, 10);
-    if (new Date(restore) < new Date()) throw new Error("Licença expirada — renove o plano");
+    const panel = (lic as any).panel ?? "v457";
+    const baseline = lic.expires_at_before_suspend ?? lic.expires_at;
+    if (!baseline) throw new Error("Sem data de expiração para restaurar");
 
-    const { yaarsaExtend } = await import("./yaarsa.server");
-    const yr = await yaarsaExtend(lic.yaarsa_email, ymd, (lic as any).panel ?? "v457");
+    // Tempo que faltava NO MOMENTO DA PAUSA — os dias parados não contam.
+    const msLeft = Math.max(
+      0,
+      new Date(baseline).getTime() - new Date(lic.suspended_at).getTime(),
+    );
+    if (msLeft <= 0) throw new Error("A licença já estava expirada quando foi pausada — renove o plano");
+
+    const newExpires = new Date(Date.now() + msLeft);
+    const ymd = newExpires.toISOString().slice(0, 10);
+
+    const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
+
+    // 1) devolve os dias
+    const yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
     if (yr.Fail) throw new Error(`Painel: ${yr.Fail}`);
+
+    // 2) restaura a senha original (a mesma entregue na compra)
+    let original: string | null = null;
+    try { original = decrypt(lic.yaarsa_password_enc); } catch { original = null; }
+    if (!original) throw new Error("Não foi possível recuperar a senha original — fale com o suporte");
+    const pr = await yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username);
+    if (pr.Fail) throw new Error(`Painel (senha): ${pr.Fail}`);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("licenses").update({
       suspended_at: null,
       suspended_by: null,
       expires_at_before_suspend: null,
+      expires_at: newExpires.toISOString(),
     }).eq("id", lic.id).eq("user_id", userId);
     if (upErr) throw new Error(upErr.message);
-    return { ok: true };
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${panel}`, action: "license_resume", outcome: "success",
+      context: { license_id: lic.id, new_expires_at: newExpires.toISOString() } as any,
+    } as any);
+
+    return { ok: true, expires_at: newExpires.toISOString() };
   });
 
 export const disableMyLicense = createServerFn({ method: "POST" })

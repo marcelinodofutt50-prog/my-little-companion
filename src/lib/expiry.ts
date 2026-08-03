@@ -37,6 +37,7 @@ type LicenseLike = {
   revoked?: boolean | null;
   disabled_at?: string | null;
   suspended_at?: string | null;
+  expires_at_before_suspend?: string | null;
 };
 
 export function licenseKind(l: LicenseLike): LicenseKind {
@@ -57,6 +58,10 @@ export function nextServerDueDate(now = Date.now()): Date {
 export type LicenseExpiryState = {
   kind: LicenseKind;
   active: boolean;
+  /** Cliente pausou a licença: os dias ficam congelados. */
+  paused: boolean;
+  /** Tempo (ms) que faltava quando pausou — restaurado no despause. */
+  pausedMsLeft: number | null;
   /** Dias até o FIM DA LICENÇA (null = licença sem data / vitalícia). */
   daysLeft: number | null;
   /** Data do countdown principal = sempre o fim da licença do cliente. */
@@ -79,6 +84,11 @@ export type LicenseExpiryState = {
  */
 export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExpiryState {
   const kind = licenseKind(l);
+  const paused = !!l.suspended_at && !l.revoked && !l.disabled_at;
+  const pausedBaseline = paused ? (l.expires_at_before_suspend ?? l.expires_at ?? null) : null;
+  const pausedMsLeft = pausedBaseline
+    ? Math.max(0, new Date(pausedBaseline).getTime() - new Date(l.suspended_at as string).getTime())
+    : null;
   const active =
     !l.revoked && !l.disabled_at && !l.suspended_at &&
     (!l.expires_at || new Date(l.expires_at).getTime() > now);
@@ -104,9 +114,28 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
         ? "Teste grátis de 24 horas exatas contadas a partir da ativação. O contador não depende de meia-noite — quando zerar, o login é encerrado automaticamente."
         : "Sua licença mensal expira quando os dias comprados acabarem. O dia 20 do servidor é uma cobrança separada e não muda esse contador.";
 
+  if (paused) {
+    return {
+      kind,
+      active: false,
+      paused: true,
+      pausedMsLeft,
+      daysLeft: pausedMsLeft === null ? null : Math.ceil(pausedMsLeft / MS_DAY),
+      countdownAt: null,
+      serverDueAt,
+      serverDaysLeft,
+      severity: null,
+      serverSeverity: null,
+      renewalNote:
+        "Licença pausada: nenhum dia está sendo contado. Ao despausar, você recebe de volta exatamente o tempo que faltava e a senha original volta a funcionar.",
+    };
+  }
+
   return {
     kind,
     active,
+    paused: false,
+    pausedMsLeft: null,
     daysLeft,
     countdownAt,
     serverDueAt,
