@@ -1,4 +1,4 @@
-import { generateText, tool } from "ai";
+import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
