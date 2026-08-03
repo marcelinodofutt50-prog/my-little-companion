@@ -44,16 +44,45 @@ export function SystemHealthIndicator() {
           <HealthRow icon={Cpu} label="Modules" status={health.modules} />
         </div>
         
-        {health.errors.length > 0 && (
+        {(health.failures.length > 0 || health.errors.length > 0) && (
           <div className="mt-2 border-t border-border/40 bg-destructive/5 p-3">
-            <div className="mb-1 font-mono text-[9px] uppercase text-destructive">Recent Failures:</div>
-            <div className="max-h-24 space-y-1 overflow-auto">
-              {health.errors.map((err, i) => (
-                <div key={i} className="font-mono text-[9px] leading-tight text-destructive/80">
-                  {">"} {err}
+            <div className="mb-1.5 font-mono text-[9px] uppercase text-destructive">Recent Failures:</div>
+            <div className="max-h-48 space-y-2 overflow-auto">
+              {health.failures.map((f, i) => (
+                <div key={`f-${i}`} className="rounded-sm border border-destructive/20 bg-destructive/5 p-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-destructive">
+                      {f.scope} · {f.table}
+                    </span>
+                    {f.code && (
+                      <span className="font-mono text-[8px] text-destructive/70">#{f.code}</span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 break-all font-mono text-[8px] leading-tight text-muted-foreground">
+                    query: {f.query}
+                  </div>
+                  <div className="mt-0.5 break-words font-mono text-[9px] leading-tight text-destructive/90">
+                    {f.message}
+                  </div>
+                  {f.details && (
+                    <div className="mt-0.5 break-words font-mono text-[8px] leading-tight text-muted-foreground">
+                      details: {f.details}
+                    </div>
+                  )}
+                  {f.hint && (
+                    <div className="mt-0.5 break-words font-mono text-[8px] leading-tight text-amber-400/80">
+                      hint: {f.hint}
+                    </div>
+                  )}
                 </div>
               ))}
-
+              {health.errors
+                .filter((e) => !health.failures.some((f) => e.includes(f.message)))
+                .map((err, i) => (
+                  <div key={`e-${i}`} className="font-mono text-[9px] leading-tight text-destructive/80">
+                    {">"} {err}
+                  </div>
+                ))}
             </div>
           </div>
         )}
