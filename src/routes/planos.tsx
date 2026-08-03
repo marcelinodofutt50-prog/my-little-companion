@@ -746,17 +746,20 @@ function OrderCalculator() {
     signer: 450,
   };
 
-  const planPrice = selectedPlan === "none" ? 0 : prices[selectedPlan === "vitalicio" ? "vitalicio" : selectedPlan === "mensal" ? "mensal" : "455"];
+  const planPrice = selectedPlan === "none" ? 0 : prices[selectedPlan];
   const serverPrice = selectedPlan === "none" ? 0 : isOldMember ? prices.serverOld : prices.serverNew;
   const signerPrice = addSigner ? prices.signer : 0;
   const total = planPrice + serverPrice + signerPrice;
 
   return (
-    <section className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-sm">
-      <div className="mb-6">
-        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// simulador de custo</div>
-        <h2 className="mt-2 font-display text-2xl">Calculadora de Checkout</h2>
-        <p className="text-sm text-muted-foreground">Estime o valor final da sua infraestrutura completa.</p>
+    <section className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-sm shadow-[0_0_50px_-12px_oklch(0.78_0.13_82/0.2)]">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// simulador de custo</div>
+          <h2 className="mt-2 font-display text-2xl">Calculadora de Checkout</h2>
+          <p className="text-sm text-muted-foreground">Estime o valor final da sua infraestrutura completa.</p>
+        </div>
+        <Rocket className="h-8 w-8 text-primary opacity-50 hidden sm:block" />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -790,9 +793,9 @@ function OrderCalculator() {
             </div>
             <button
               onClick={() => setIsOldMember(!isOldMember)}
-              className={`h-5 w-10 rounded-full transition-colors ${isOldMember ? "bg-primary" : "bg-muted"}`}
+              className={`h-5 w-10 rounded-full transition-colors relative ${isOldMember ? "bg-primary" : "bg-muted"}`}
             >
-              <div className={`h-3 w-3 rounded-full bg-white transition-transform ${isOldMember ? "translate-x-6" : "translate-x-1"}`} />
+              <div className={`absolute top-1 h-3 w-3 rounded-full bg-white transition-transform ${isOldMember ? "left-6" : "left-1"}`} />
             </button>
           </div>
 
@@ -803,9 +806,9 @@ function OrderCalculator() {
             </div>
             <button
               onClick={() => setAddSigner(!addSigner)}
-              className={`h-5 w-10 rounded-full transition-colors ${addSigner ? "bg-primary" : "bg-muted"}`}
+              className={`h-5 w-10 rounded-full transition-colors relative ${addSigner ? "bg-primary" : "bg-muted"}`}
             >
-              <div className={`h-3 w-3 rounded-full bg-white transition-transform ${addSigner ? "translate-x-6" : "translate-x-1"}`} />
+              <div className={`absolute top-1 h-3 w-3 rounded-full bg-white transition-transform ${addSigner ? "left-6" : "left-1"}`} />
             </button>
           </div>
         </div>
@@ -814,26 +817,31 @@ function OrderCalculator() {
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Plano Selecionado:</span>
-              <span>{selectedPlan === "none" ? "---" : `R$ ${planPrice}`}</span>
+              <span className="font-mono">{selectedPlan === "none" ? "---" : `R$ ${planPrice}`}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Servidor (Setup + Infra):</span>
-              <span>{selectedPlan === "none" ? "---" : `R$ ${serverPrice}`}</span>
+              <span className="font-mono">{selectedPlan === "none" ? "---" : `R$ ${serverPrice}`}</span>
             </div>
             {addSigner && (
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Shadow Signer:</span>
-                <span>R$ 450</span>
+                <span className="font-mono text-primary">R$ 450</span>
               </div>
             )}
             <div className="my-4 h-px bg-border/50" />
             <div className="flex justify-between items-end">
-              <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">Total Estimado</span>
+              <div>
+                <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">Total Estimado</span>
+                <div className="flex items-center gap-1.5 text-[10px] text-primary/80">
+                  <CreditCard className="h-3 w-3" /> PIX Automático
+                </div>
+              </div>
               <span className="font-display text-3xl font-bold text-primary">R$ {total}</span>
             </div>
           </div>
-          <p className="mt-4 text-[10px] text-center text-muted-foreground italic">
-            * Valores baseados nas regras atuais de membros antigos e novos.
+          <p className="mt-4 text-[10px] text-center text-muted-foreground italic leading-relaxed">
+            * Valores baseados nas regras atuais de membros antigos (histórico > 48h ou licença prévia) e novos.
           </p>
         </div>
       </div>
