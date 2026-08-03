@@ -1264,7 +1264,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
     if (revoked) return {
       code: "revoked", title: "Licença revogada", short: "revogada",
       detail: "Sua licença foi revogada pelo admin. Fale com o suporte ou compre um novo plano.",
-      cta: { label: "Falar com suporte", to: "/suporte" as const },
+      cta: { label: "Falar com suporte", to: "/suporte" as const, search: {} },
     };
     return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" as const } };
   }
@@ -1330,7 +1330,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
               ))}
               {r.cta.to === "#"
                 ? null
-                : <Link to={r.cta.to as any}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
+                : <Link to={r.cta.to as any} search={(r.cta as any).search}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
             </div>
           </>
         );
