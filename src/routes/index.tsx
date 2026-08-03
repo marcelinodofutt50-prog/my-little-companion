@@ -136,7 +136,7 @@ function LandingPage() {
             className="flex flex-col items-center gap-8 sm:flex-row"
           >
             <Link to="/planos" search={{ theme: search?.theme }}>
-              <Button size="lg" className="h-14 rounded-full bg-white px-10 font-mono text-xs uppercase tracking-[0.2em] text-black hover:bg-[#c9a84c] hover:text-white transition-all duration-500 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+              <Button size="lg" className="h-14 rounded-full bg-primary px-10 font-mono text-xs uppercase tracking-[0.2em] text-primary-foreground hover:opacity-90 transition-all duration-500 shadow-[0_0_20px_var(--color-primary)]">
                 Conhecer Planos +
               </Button>
             </Link>
