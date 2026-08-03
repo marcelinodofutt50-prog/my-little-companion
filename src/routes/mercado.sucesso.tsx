@@ -53,7 +53,7 @@ function MarketSuccess() {
           ) : (
             <>
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-neon" />
-              <h1 className="mt-4 font-mono text-xl">Confirmando pagamento...</h1>
+              <h2 className="mt-4 font-mono text-xl">Confirmando pagamento...</h2>
               <p className="mt-2 text-sm text-muted-foreground">Status atual: <span className="font-mono text-cyan">{status}</span></p>
               <Link to="/dashboard"><Button variant="outline" className="mt-6 font-mono uppercase">Ir para o painel</Button></Link>
             </>
