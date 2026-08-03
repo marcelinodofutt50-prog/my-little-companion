@@ -800,11 +800,13 @@ function DashboardPage() {
           <div className="mb-4 flex w-full overflow-x-auto rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
             {([
               { k: "downloads", label: "downloads" },
+              { k: "play-protect", label: "play protect" },
               { k: "historico", label: "histórico" },
               { k: "resumo", label: "resumo" },
               { k: "beneficios", label: "benefícios" },
               { k: "ajuda", label: "ajuda" },
             ] as const).map((t) => (
+
               <button
                 key={t.k}
                 onClick={() => setExtraTab(t.k)}
