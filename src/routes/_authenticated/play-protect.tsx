@@ -181,10 +181,11 @@ function PlayProtectPage() {
                         <span className="truncate text-sm text-muted-foreground">
                           {selectedIcon ? selectedIcon.name : "Selecionar Ícone..."}
                         </span>
-                        < स्मार्टफोन className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <Smartphone className="h-4 w-4 shrink-0 text-muted-foreground" />
                       </label>
                     </div>
                   </div>
+
 
                   <Button
                     onClick={handleBuild}
