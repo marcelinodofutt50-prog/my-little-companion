@@ -148,11 +148,27 @@ export const sendMessage = createServerFn({ method: "POST" })
       if (thread.user_id !== context.userId) throw new Error("Acesso negado a esta conversa");
       if (thread.status === "closed") {
         // Auto-open a fresh thread for the customer and post there.
-        const { data: nt, error: nErr } = await context.supabase
-          .from("support_threads")
-          .insert({ user_id: context.userId, subject: "Suporte Shadow", status: "open" })
-          .select("id")
-          .single();
+        const ntPayload = {
+          user_id: context.userId,
+          subject: "Suporte Shadow",
+          status: "open",
+          category: "outro",
+          priority: "normal"
+        };
+        
+        async function doCreate(p: any) {
+          return context.supabase.from("support_threads").insert(p).select("id").single();
+        }
+        
+        let { data: nt, error: nErr } = await doCreate(ntPayload);
+        
+        if (nErr && (nErr as any).code === "PGRST204") {
+          const { category, priority, ...fallback } = ntPayload;
+          const retry = await doCreate(fallback);
+          nt = retry.data;
+          nErr = retry.error;
+        }
+
         if (nErr) throw nErr;
         effectiveThreadId = nt.id;
       }
