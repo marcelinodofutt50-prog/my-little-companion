@@ -159,7 +159,7 @@ html.theme-light {
 
 html.theme-light body {
   background-image: none;
-  background-color: #f9fbf9;
+  background-color: var(--background);
 }
 
 html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.5 0.14 150 / 0.18); }
