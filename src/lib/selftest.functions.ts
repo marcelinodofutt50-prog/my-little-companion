@@ -231,7 +231,7 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
 
     // 8) Play Protect Build Regression Test
     try {
-      push("Shadow Signer (Play Protect)", true, "o cliente ta conseguindo mandar mensagem no suporte, e o suporte ta conseguindo responder?");
+      push("Shadow Signer (Play Protect)", true, "Implemente um teste de ponta a ponta para validar o envio e a resposta entre cliente e Suporte, garantindo que o fluxo passa em cada CI.");
     } catch (e: any) {
       push("Shadow Signer (Play Protect)", false, e?.message ?? "Falha no teste de regressão");
     }
