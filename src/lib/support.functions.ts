@@ -14,10 +14,7 @@ import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
 export const getOrCreateThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { resolveRoles } = await import("@/lib/roles.server");
-    const { isStaff } = await resolveRoles(context);
-
-    const { data: existing } = await context.supabase
+    const { data: existing, error: existingError } = await context.supabase
       .from("support_threads")
       .select("*")
       .eq("user_id", context.userId)
@@ -26,15 +23,13 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
 
+    if (existingError) {
+      console.error("[getOrCreateThread] falha ao buscar atendimento:", existingError);
+    }
+
     if (existing) return existing;
 
-    // Se for admin/suporte e não tem thread, não cria uma nova automaticamente.
-    // Retorna null para sinalizar que não há atendimento ativo.
-    if (isStaff) {
-      // Admins podem querer ver a própria thread de teste se já existir
-      if (existing) return existing;
-      return null;
-    }
+
 
     const threadPayload = {
       user_id: context.userId,
