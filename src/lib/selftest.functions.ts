@@ -237,6 +237,8 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
           user_id: context.userId,
           subject: "AUTOTESTE_REGRESSAO",
           status: "open",
+          category: "outro",
+          priority: "normal"
         })
         .select("id")
         .single();
@@ -247,7 +249,8 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
       const { error: msgErr } = await supabaseAdmin.from("support_messages").insert({
         thread_id: thread.id,
         sender_id: context.userId,
-        content: "Teste de envio do cliente (CI Regression)",
+        body: "Teste de envio do cliente (CI Regression)",
+        is_admin: false,
         is_system: false,
       });
 
@@ -256,8 +259,9 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
       // Resposta do Admin (simulada)
       const { error: replyErr } = await supabaseAdmin.from("support_messages").insert({
         thread_id: thread.id,
-        sender_id: context.userId, // Em teste real seria o ID do admin, aqui usamos o solicitante
-        content: "Teste de resposta do suporte (CI Regression)",
+        sender_id: context.userId, 
+        body: "Teste de resposta do suporte (CI Regression)",
+        is_admin: true,
         is_system: true,
       });
 
