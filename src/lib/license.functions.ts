@@ -164,11 +164,12 @@ export const generateTrial = createServerFn({ method: "POST" })
       planSlug: "trial",
       totalPaid: 0,
       additionalInfo: "shadow-trial",
+      panel: panelFromPlanSlug("trial"),
     });
+    
     const alreadyExists = yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
     if (yr.Fail && !alreadyExists) {
       // Yaarsa really failed: release the claim so the user can try again.
-      // Only delete rows that haven't been linked to a license yet.
       await supabaseAdmin.from("trials").delete()
         .eq("user_id", userId).is("license_id", null);
       throw new Error(`Painel: ${yr.Fail}`);

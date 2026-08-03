@@ -32,11 +32,22 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
     // Retorna null para sinalizar que não há atendimento ativo.
     if (isStaff) return null;
 
-    const { data, error } = await context.supabase
-      .from("support_threads")
-      .insert({ user_id: context.userId, subject: "Suporte Shadow", status: "open" })
-      .select("*")
-      .single();
+    const threadPayload = { user_id: context.userId, subject: "Suporte Shadow", status: "open", category: "outro", priority: "normal" };
+    
+    async function doCreate(p: any) {
+      return context.supabase.from("support_threads").insert(p).select("*").single();
+    }
+
+    let { data, error } = await doCreate(threadPayload);
+    
+    // Fallback para colunas novas (category/priority) se o cache falhar
+    if (error && (error as any).code === "PGRST204") {
+      const { category, priority, ...fallback } = threadPayload;
+      const retry = await doCreate(fallback);
+      data = retry.data;
+      error = retry.error;
+    }
+
     if (error) throw error;
     return data;
   });
