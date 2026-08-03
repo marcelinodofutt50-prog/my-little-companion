@@ -37,6 +37,7 @@ import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
+import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authenticated/servidor/status'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
@@ -188,6 +189,12 @@ const ApiChatLicenseAiRoute = ApiChatLicenseAiRouteImport.update({
   path: '/api/chat/license-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedServidorStatusRoute =
+  AuthenticatedServidorStatusRouteImport.update({
+    id: '/servidor/status',
+    path: '/servidor/status',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicHooksVerifyExternalPayersRoute =
   ApiPublicHooksVerifyExternalPayersRouteImport.update({
     id: '/api/public/hooks/verify-external-payers',
@@ -272,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -311,6 +319,7 @@ export interface FileRoutesByTo {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -352,6 +361,7 @@ export interface FileRoutesById {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/_authenticated/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
@@ -472,6 +484,7 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/_authenticated/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
@@ -720,6 +733,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatLicenseAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/servidor/status': {
+      id: '/_authenticated/servidor/status'
+      path: '/servidor/status'
+      fullPath: '/servidor/status'
+      preLoaderRoute: typeof AuthenticatedServidorStatusRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/hooks/verify-external-payers': {
       id: '/api/public/hooks/verify-external-payers'
       path: '/api/public/hooks/verify-external-payers'
@@ -800,6 +820,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
   AuthenticatedPresentesRoute: typeof AuthenticatedPresentesRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
+  AuthenticatedServidorStatusRoute: typeof AuthenticatedServidorStatusRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -809,6 +830,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
   AuthenticatedPresentesRoute: AuthenticatedPresentesRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
+  AuthenticatedServidorStatusRoute: AuthenticatedServidorStatusRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -864,13 +886,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
