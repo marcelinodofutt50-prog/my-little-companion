@@ -394,42 +394,66 @@ function DashboardPage() {
           return (
             <>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-primary/50 shadow-sm">
-                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                    <Zap className="h-20 w-20 text-neon" />
+                <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-primary/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40">
+                  <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                    <Zap className="h-24 w-24 text-primary" />
                   </div>
-                  <div className="osint-label mb-2 text-muted-foreground">CRÉDITO OPERACIONAL</div>
-                  <div className="font-mono text-3xl font-black text-neon">{formatBrl(balance)}</div>
-                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">RESGATE DISPONÍVEL EM PIX</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    <div className="osint-label text-muted-foreground tracking-[0.2em]">SALDO OPERACIONAL</div>
+                  </div>
+                  <div className="font-display text-4xl font-black text-primary drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]">{formatBrl(balance)}</div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">disponível para saque</div>
+                    <ArrowUpRight className="h-3 w-3 text-primary opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
                 
                 <Link to="/servidor/status" className="block outline-none">
-                  <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-cyan/50 shadow-sm h-full">
-                    <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                      <Server className="h-20 w-20 text-cyan" />
+                  <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-cyan/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40 h-full">
+                    <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                      <Server className="h-24 w-24 text-cyan" />
                     </div>
-                    <div className="osint-label mb-2 text-muted-foreground uppercase tracking-widest">STATUS INFRAESTRUTURA</div>
-                    <div className="font-mono text-3xl font-black text-cyan">ONLINE</div>
-                    <div className="mt-2 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">{activeCount} TERMINAIS EM SINCRONIZAÇÃO</div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-1.5 w-1.5 rounded-full bg-cyan animate-pulse" />
+                      <div className="osint-label text-muted-foreground tracking-[0.2em]">STATUS INFRA</div>
+                    </div>
+                    <div className="font-display text-4xl font-black text-cyan drop-shadow-[0_0_15px_oklch(0.6_0.1_200/0.3)] uppercase">Online</div>
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">{activeCount} terminais sincronizados</div>
+                      <Activity className="h-3 w-3 text-cyan opacity-50 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   </div>
                 </Link>
 
-                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-violet-500/50 shadow-sm">
-                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                    <Ticket className="h-20 w-20 text-violet-400" />
+                <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-violet-500/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40">
+                  <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                    <Ticket className="h-24 w-24 text-violet-400" />
                   </div>
-                  <div className="osint-label mb-2 text-muted-foreground">TICKETS SUPORTE</div>
-                  <div className="font-mono text-3xl font-black text-violet-400">0</div>
-                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">SEM ALERTAS PENDENTES</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                    <div className="osint-label text-muted-foreground tracking-[0.2em]">CHAMADOS SUPORTE</div>
+                  </div>
+                  <div className="font-display text-4xl font-black text-violet-400 drop-shadow-[0_0_15px_oklch(0.6_0.1_270/0.3)]">0</div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">sem incidentes críticos</div>
+                    <LifeBuoy className="h-3 w-3 text-violet-400 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
 
-                <div className="enterprise-surface group relative overflow-hidden p-5 transition-all hover:border-amber-500/50 shadow-sm">
-                  <div className="absolute -right-2 -top-2 opacity-5 transition-transform group-hover:scale-110">
-                    <ShieldAlert className="h-20 w-20 text-amber-500" />
+                <div className="enterprise-surface group relative overflow-hidden p-6 transition-all duration-500 hover:border-amber-500/50 hover:shadow-2xl hover:translate-y-[-4px] bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-border/40">
+                  <div className="absolute -right-4 -top-4 opacity-10 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12">
+                    <ShieldAlert className="h-24 w-24 text-amber-500" />
                   </div>
-                  <div className="osint-label mb-2 text-muted-foreground">INTEGRIDADE OPS</div>
-                  <div className="font-mono text-3xl font-black text-amber-500">100%</div>
-                  <div className="mt-2 font-mono text-[10px] text-muted-foreground">PROTOCOLO AES-256 ATIVO</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    <div className="osint-label text-muted-foreground tracking-[0.2em]">INTEGRIDADE OPS</div>
+                  </div>
+                  <div className="font-display text-4xl font-black text-amber-500 drop-shadow-[0_0_15px_oklch(0.7_0.2_60/0.3)]">100%</div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="font-mono text-[9px] text-muted-foreground tracking-widest uppercase">shadow protocol v4.6</div>
+                    <Lock className="h-3 w-3 text-amber-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
               </div>
 
