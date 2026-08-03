@@ -12,8 +12,10 @@ import {
   Zap,
   ChevronRight,
   Info,
-  CheckCircle2,
-  AlertCircle,
+  CheckCircle2, 
+  Check,
+  AlertCircle, 
+
   FileSearch,
   History
 } from "lucide-react";
