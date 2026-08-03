@@ -214,6 +214,7 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     // Fallback: se o cache de schema do PostgREST estiver desatualizado
     if (error && (error as any).code === "PGRST204") {
+      console.warn("[sendMessage] Schema cache mismatch (PGRST204), retrying without reply_to_id...");
       const { reply_to_id, ...fallback } = payload;
       const retry = await doInsert(fallback);
       msg = retry.data;
@@ -221,9 +222,14 @@ export const sendMessage = createServerFn({ method: "POST" })
     }
 
     if (error) {
-      console.error("[sendMessage] Critical error:", error);
-      // Last resort fallback: minimal insert
-      const minimalPayload = { thread_id: effectiveThreadId, sender_id: context.userId, body: data.body ?? "Mensagem enviada (anexo)" };
+      console.error("[sendMessage] Insertion failed after fallback:", error);
+      // Last resort fallback: minimal insert to ensure message is not lost
+      const minimalPayload = { 
+        thread_id: effectiveThreadId, 
+        sender_id: context.userId, 
+        is_admin: isStaff,
+        body: data.body ?? "Mensagem enviada (anexo)" 
+      };
       const { data: final, error: finalErr } = await context.supabase.from("support_messages").insert(minimalPayload).select("*").maybeSingle();
       if (finalErr) throw finalErr;
       msg = final;
