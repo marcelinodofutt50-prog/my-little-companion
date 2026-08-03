@@ -423,3 +423,25 @@ export const clearMyApkJobs = createServerFn({ method: "POST" })
     }
     return { removed: list.length };
   });
+
+export const adminClearApkJobs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("apk_jobs")
+      .select("id,status,source_path,result_path")
+      .is("cleared_at", null)
+      .in("status", TERMINAL_STATUSES as any);
+    const list = (rows ?? []) as any[];
+    if (!list.length) return { removed: 0 };
+    await removeJobFiles(supabaseAdmin, list);
+    const now = new Date().toISOString();
+    const { error } = await supabaseAdmin
+      .from("apk_jobs")
+      .update({ cleared_at: now, source_path: "", result_path: null } as any)
+      .in("id", list.map((r) => r.id));
+    if (error) throw new Error(error.message);
+    return { removed: list.length };
+  });
