@@ -194,8 +194,8 @@ function PlayProtectPage() {
             </div>
 
             <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5 md:grid-cols-[280px_1fr]">
-              <a href={playProtectConfig.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
-                <img src={playProtectConfig.url} alt="Configuração do Play Protect — quais opções desativar" className="h-full w-full object-contain" loading="lazy" />
+              <a href={playProtectConfig} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
+                <img src={playProtectConfig} alt="Configuração do Play Protect — quais opções desativar" width={720} height={1280} className="h-full w-full object-contain" loading="lazy" />
               </a>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
