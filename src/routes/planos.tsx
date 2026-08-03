@@ -1117,6 +1117,8 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   featured?: boolean;
 }) {
   const { t } = useI18n();
+  const [showUpgradeConfirm, setShowUpgradeConfirm] = useState<string | null>(null);
+  
   const price = Number(plan.price_brl);
   // Cupom pessoal travado em outro plano não vale aqui — não mostramos desconto falso.
   const appliedCoupon = coupon && (!coupon.plan_slug || coupon.plan_slug === plan.slug) ? coupon : null;
@@ -1127,7 +1129,15 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   const hasBenefit = b.discount > 0 || b.cashbackApplied > 0 || b.cashbackEarn > 0;
   const meta = useMemo(() => metaFor(plan, t), [plan, t]);
   const Icon = meta.icon;
-  const handleClick = useCallback(() => onBuy(plan.slug), [onBuy, plan.slug]);
+  
+  const handleClick = useCallback(() => {
+    if (plan.category === "upgrade") {
+      setShowUpgradeConfirm(plan.slug);
+    } else {
+      onBuy(plan.slug);
+    }
+  }, [onBuy, plan.slug, plan.category]);
+
   const isLifetime = plan.slug.toLowerCase().includes("lifetime");
   const badgeLabel = meta.badge ?? (featured ? "Popular" : undefined);
 
@@ -1139,6 +1149,33 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70 hover:translate-y-[-4px]",
       isLifetime ? "ring-1 ring-primary/30 shadow-[0_0_45px_-10px_oklch(0.78_0.13_82/0.45)]" : "",
     ].join(" ")}>
+      {showUpgradeConfirm && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+          <div className="mb-4 rounded-full bg-primary/10 p-3">
+            <Rocket className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="mb-2 font-display text-lg uppercase tracking-wider">Confirmar Upgrade?</h3>
+          <p className="mb-6 text-[10px] text-muted-foreground leading-relaxed">
+            Você está prestes a elevar sua licença para a <b>versão vitalícia 4.6</b>. O processo é imediato e preserva todos os seus dados.
+          </p>
+          <div className="flex w-full flex-col gap-2">
+            <Button 
+              className="w-full font-mono text-[9px] uppercase tracking-widest shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+              onClick={() => { onBuy(plan.slug); setShowUpgradeConfirm(null); }}
+            >
+              Confirmar & Pagar
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full font-mono text-[9px] uppercase tracking-widest text-muted-foreground"
+              onClick={() => setShowUpgradeConfirm(null)}
+            >
+              Voltar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Glow Effect */}
       <div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
            style={{ background: `radial-gradient(600px circle at var(--x) var(--y), oklch(0.78 0.13 82 / 0.1), transparent 40%)` }} 
@@ -1148,6 +1185,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
              e.currentTarget.style.setProperty("--y", `${e.clientY - rect.top}px`);
            }}
       />
+
 
       {badgeLabel && (
         <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/20 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary shadow-[0_0_10px_oklch(0.78_0.13_82/0.2)]">
