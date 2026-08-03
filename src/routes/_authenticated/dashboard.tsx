@@ -229,6 +229,46 @@ function DashboardPage() {
                 onCopyCredentials={() => { copyPrimary(); return !!primary }}
               />
 
+              {activeLicense && (
+                <section className="enterprise-surface overflow-hidden" aria-labelledby="usage-title">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
+                    <div>
+                      <h2 id="usage-title" className="font-mono text-sm font-bold uppercase">Como usar sua licença</h2>
+                      <p className="mt-1 text-xs text-muted-foreground">Passo a passo rápido + tempo restante</p>
+                    </div>
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="grid gap-5 p-5 md:grid-cols-[1fr_auto]">
+                    <ol className="space-y-3 text-sm">
+                      {[
+                        { t: 'Baixe o Shadow', d: 'Use os botões na seção "Downloads" abaixo para pegar o APK correto para o seu plano.' },
+                        { t: 'Instale no Android', d: 'Desative o Play Protect antes de instalar (Play Store → Menu → Play Protect → Configurações).' },
+                        { t: 'Faça login no app', d: 'Use o botão "Mostrar dados da licença" ao lado para revelar usuário, e-mail e senha, e cole no Shadow.' },
+                        { t: 'Renovação', d: activeLicense.plan_slug?.toLowerCase().includes('lifetime') || activeLicense.plan_slug?.toLowerCase().includes('vitalicio')
+                          ? 'Sua licença é vitalícia. Só a mensalidade do servidor precisa ser paga todo dia 20 para manter o acesso.'
+                          : 'Sua licença mensal só expira quando os dias acabarem. O corte do dia 20 do servidor não afeta o plano mensal — ele vale só para vitalícios.' },
+                      ].map((step, i) => (
+                        <li key={i} className="flex gap-3">
+                          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/10 font-mono text-[10px] font-bold text-primary">{i + 1}</span>
+                          <div>
+                            <div className="font-semibold">{step.t}</div>
+                            <div className="text-xs text-muted-foreground">{step.d}</div>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                    <div className={`flex flex-col items-center justify-center rounded-lg border-2 px-6 py-5 font-mono ${statusRing}`}>
+                      <div className={`text-[10px] font-bold uppercase ${statusColor}`}>Tempo restante</div>
+                      <div className={`mt-1 text-5xl font-black tabular-nums ${statusColor}`}>{daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
+                      <div className="text-[10px] uppercase text-muted-foreground">{daysLeft === 1 ? 'dia' : 'dias'}</div>
+                      {activeLicense.expires_at && (
+                        <div className="mt-2 text-[10px] text-muted-foreground">Expira {new Date(activeLicense.expires_at).toLocaleDateString('pt-BR')}</div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              )}
+
               <section className="enterprise-surface overflow-hidden" aria-labelledby="licenses-title">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
                   <div>
