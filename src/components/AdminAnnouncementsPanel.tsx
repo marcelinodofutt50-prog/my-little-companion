@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Megaphone, Loader2, RefreshCw, Trash2, Eye, EyeOff, PlusCircle, Clock, Pencil } from "lucide-react";
+import { Megaphone, Loader2, RefreshCw, Trash2, Eye, EyeOff, PlusCircle, Clock, Pencil, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +46,7 @@ const emptyForm = {
   starts_at: "",
   ends_at: "",
   is_active: true,
+  tags: [] as string[],
 };
 
 export function AdminAnnouncementsPanel() {
@@ -59,6 +60,7 @@ export function AdminAnnouncementsPanel() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [tagInput, setTagInput] = useState("");
 
   async function refresh() {
     setLoading(true);
@@ -86,6 +88,7 @@ export function AdminAnnouncementsPanel() {
       starts_at: toLocalInput(row.starts_at),
       ends_at: toLocalInput(row.ends_at),
       is_active: row.is_active,
+      tags: row.tags || [],
     });
     setShowForm(true);
   }
@@ -108,6 +111,7 @@ export function AdminAnnouncementsPanel() {
           starts_at: fromLocalInput(form.starts_at),
           ends_at: fromLocalInput(form.ends_at),
           is_active: form.is_active,
+          tags: form.tags,
         },
       });
       toast.success(form.id ? "Anúncio atualizado" : "Anúncio publicado");
@@ -140,6 +144,18 @@ export function AdminAnnouncementsPanel() {
       toast.error(e?.message || "Falha");
     }
   }
+
+  const addTag = () => {
+    const t = tagInput.trim().toLowerCase();
+    if (t && !form.tags.includes(t)) {
+      setForm({ ...form, tags: [...form.tags, t] });
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setForm({ ...form, tags: form.tags.filter((x) => x !== tag) });
+  };
 
   return (
     <div className="space-y-4">
@@ -208,6 +224,28 @@ export function AdminAnnouncementsPanel() {
               placeholder="Usuários do server 4.6 receberão a atualização hoje à meia-noite. Pode haver instabilidade por alguns minutos."
               className="mt-1 w-full rounded-md border border-input bg-background p-2 font-mono text-xs"
             />
+          </div>
+
+          <div>
+            <label className="font-mono text-[10px] uppercase text-muted-foreground">Tags</label>
+            <div className="mt-1 flex flex-wrap gap-2 mb-2">
+              {form.tags.map((tag) => (
+                <span key={tag} className="inline-flex items-center gap-1 border border-border/50 bg-background/50 px-2 py-0.5 rounded text-[10px] font-mono text-primary uppercase">
+                  {tag}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                placeholder="Adicionar tag..."
+                className="h-8 font-mono text-xs"
+              />
+              <Button size="sm" variant="outline" onClick={addTag} className="h-8">Add</Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -326,6 +364,11 @@ export function AdminAnnouncementsPanel() {
                           encerrado
                         </span>
                       )}
+                      {r.tags && r.tags.map((tag) => (
+                        <span key={tag} className="rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[8px] uppercase text-primary/80 flex items-center gap-1">
+                          <Tag className="h-2 w-2" /> {tag}
+                        </span>
+                      ))}
                     </div>
                     <div className="mt-1 whitespace-pre-wrap text-[11px] text-muted-foreground">{r.body}</div>
                     <div className="mt-1 flex flex-wrap gap-3 font-mono text-[10px] text-muted-foreground">
