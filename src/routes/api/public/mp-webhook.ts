@@ -297,8 +297,11 @@ async function fulfillOrderInner(orderId: string) {
   let expiresAt: Date;
   if (order.plan_slug === "login-7d") {
     expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7);
-  } else if (order.plan_slug === "login-lifetime" || order.plan_slug === "login-30d") {
-    // 30-day and Lifetime plans expire 30 days from now, but align renewal cycle for the server
+  } else if (order.plan_slug === "login-lifetime") {
+    // Vitalício real: 20 anos
+    expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20);
+  } else if (order.plan_slug === "login-30d") {
+    // Mensal: 30 dias exatos para não haver perda de dias na ativação
     expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
   } else {
     expiresAt = nextDay20;

@@ -104,13 +104,13 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
   });
 
 /**
- * "Corrigir bug de erro" — procedimento manual usado quando o cliente não
- * consegue logar no BMob mesmo com a licença válida:
- *   1) empurra a data de expiração 1 dia para frente no painel;
- *   2) reaplica a MESMA senha da conta (força o painel a regravar o registro);
- *   3) volta a data para o valor original.
- * Não altera nada no banco — só "sacode" o registro no painel Yaarsa.
- */
+  * "Corrigir bug de erro" — procedimento manual usado quando o cliente não
+  * consegue logar no BMob mesmo com a licença válida:
+  *   1) Sincroniza a data de expiração real do banco para o painel Yaarsa;
+  *   2) Reaplica a MESMA senha da conta (força o painel a regravar o registro);
+  *   3) Garante que o painel e o banco estejam com a mesma data final.
+  * Agora com verificação de integridade inclusa.
+  */
 export const adminFixLoginBug = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))

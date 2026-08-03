@@ -307,6 +307,7 @@ function PlansPage() {
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
     // O upgrade de R$ 600 deve aparecer para quem é legacy (v457)
+    // E agora também garantimos que o plano mensal apareça para upgrades
     const upgradeList = plans.filter((p) => p.category === "upgrade");
     
     return {
