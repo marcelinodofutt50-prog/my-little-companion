@@ -13,6 +13,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyBuildJobs, createBuildJob } from "@/lib/apk-builder.functions";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
+import { useQuery } from "@tanstack/react-query";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
+import { tierFromPlanSlug, getTierFeatures } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
   head: () => ({ meta: [{ title: "Shadow Play Protect — APK Builder" }] }),
@@ -29,6 +32,34 @@ function PlayProtectPage() {
   const queryClient = useQueryClient();
   const getJobs = useServerFn(getMyBuildJobs);
   const createJob = useServerFn(createBuildJob);
+
+  const { data: user } = useQuery({
+    queryKey: ['auth-user'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    }
+  });
+
+  const { data: license } = useQuery({
+    queryKey: ['my-license', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('licenses')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      return data;
+    }
+  });
+
+  const tier = tierFromPlanSlug(license?.plan_slug);
+  const features = getTierFeatures(tier);
+  const hasAccess = features.bypass_play_protect || isAdmin;
+
   const { data: jobs } = useSuspenseQuery({
     queryKey: ["build-jobs"],
     queryFn: () => getJobs(),
@@ -37,6 +68,7 @@ function PlayProtectPage() {
       return anyProcessing ? 3000 : false;
     }
   });
+
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [uploading, setUploading] = useState(false);
