@@ -58,7 +58,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
         progress: 0
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
 

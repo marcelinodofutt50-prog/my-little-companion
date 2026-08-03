@@ -41,7 +41,7 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
     };
     
     async function doCreate(p: any) {
-      return context.supabase.from("support_threads").insert(p).select("*").single();
+      return context.supabase.from("support_threads").insert(p).select("*").maybeSingle();
     }
 
     let { data, error } = await doCreate(threadPayload);
@@ -163,7 +163,7 @@ export const sendMessage = createServerFn({ method: "POST" })
         };
         
         async function doCreate(p: any) {
-          return context.supabase.from("support_threads").insert(p).select("id").single();
+          return context.supabase.from("support_threads").insert(p).select("id").maybeSingle();
         }
         
         let { data: nt, error: nErr } = await doCreate(ntPayload);
@@ -202,7 +202,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     };
 
     async function doInsert(p: any) {
-      return context.supabase.from("support_messages").insert(p).select("*").single();
+      return context.supabase.from("support_messages").insert(p).select("*").maybeSingle();
     }
 
     let { data: msg, error } = await doInsert(payload);
@@ -219,7 +219,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       console.error("[sendMessage] Critical error:", error);
       // Last resort fallback: minimal insert
       const minimalPayload = { thread_id: effectiveThreadId, sender_id: context.userId, body: data.body ?? "Mensagem enviada (anexo)" };
-      const { data: final, error: finalErr } = await context.supabase.from("support_messages").insert(minimalPayload).select("*").single();
+      const { data: final, error: finalErr } = await context.supabase.from("support_messages").insert(minimalPayload).select("*").maybeSingle();
       if (finalErr) throw finalErr;
       msg = final;
     }
