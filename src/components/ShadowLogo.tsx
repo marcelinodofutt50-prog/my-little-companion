@@ -1,4 +1,4 @@
-import shadowMask from "@/assets/shadow-mask.png";
+import shadowMask from "@/assets/shadow-mask.png?format=webp";
 
 /** Anonymous-style mascot: masked gentleman in a top hat with a single glowing eye.
  *  Evokes the "your shadow everywhere" tagline — mysterious, elegant, thief-gentleman. */

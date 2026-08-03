@@ -3530,6 +3530,7 @@ function AdminChatPanel() {
                             {m.attachment_url &&
                               (m.attachment_type?.startsWith("image/") ? (
                                 <img
+                                  loading="lazy"
                                   src={m.attachment_url}
                                   alt="anexo"
                                   className="mt-2 max-h-64 rounded"
