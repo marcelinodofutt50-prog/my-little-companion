@@ -8,7 +8,7 @@ const pPhones = { url: "/img/proof-phones.webp", fallback: "/img/proof-phones.jp
 const pPix300 = { url: "/img/proof-pix-300.webp", fallback: "/img/proof-pix-300.jpg" };
 const pDouglas = { url: "/img/proof-telegram-douglas.webp", fallback: "/img/proof-telegram-douglas.jpg" };
 
-type Shot = { src: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet"; ref?: string; source?: string; date?: string };
+type Shot = { src: string; fallback: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet"; ref?: string; source?: string; date?: string };
 
 /** Código de referência estável de cada prova (REF-01, REF-02, ...). */
 const refCode = (i: number) => `REF-${String(i + 1).padStart(2, "0")}`;
