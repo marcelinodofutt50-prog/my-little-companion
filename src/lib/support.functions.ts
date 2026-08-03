@@ -169,7 +169,7 @@ export const sendMessage = createServerFn({ method: "POST" })
           nErr = retry.error;
         }
 
-        if (nErr) throw nErr;
+        if (nErr || !nt) throw nErr || new Error("Falha ao criar atendimento");
         effectiveThreadId = nt.id;
       }
     } else {
