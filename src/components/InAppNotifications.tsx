@@ -110,11 +110,16 @@ export function InAppNotifications() {
 
         .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${uid}` }, () => void refresh())
         .on("postgres_changes", { event: "*", schema: "public", table: "refund_requests", filter: `user_id=eq.${uid}` }, () => void refresh());
-      // Somente admins assinam eventos de chat/suporte.
       if (admin) {
+        // Equipe: qualquer novo ticket, mensagem ou mudança de status
+        channel = channel
+          .on("postgres_changes", { event: "*", schema: "public", table: "support_threads" }, () => void refresh())
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, () => void refresh());
+      } else {
+        // Cliente: respostas e mudanças de status nos próprios tickets
         channel = channel.on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "support_threads" },
+          { event: "*", schema: "public", table: "support_threads", filter: `user_id=eq.${uid}` },
           () => void refresh(),
         );
       }
@@ -135,12 +140,8 @@ export function InAppNotifications() {
     try { localStorage.setItem(READ_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
   }
 
-  // Sem permissão: sino e opções de chat ficam ocultos, com aviso claro.
-  if (adminChecked && !isAdmin && !items.some(n => n.kind !== 'support')) {
-    return null;
-  }
-
   if (!adminChecked) return null;
+
 
   return (
     <DropdownMenu onOpenChange={(open) => { if (open) { unlockNotifySound(); void refresh(false); } }}>
