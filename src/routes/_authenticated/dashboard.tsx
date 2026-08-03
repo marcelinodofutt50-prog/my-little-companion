@@ -101,7 +101,12 @@ function DashboardPage() {
       }
     },
     enabled: !!user?.id,
-    retry: 1,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1500 * (attempt + 1), 4000),
+    staleTime: 30_000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    placeholderData: (prev: any) => prev,
   })
 
   const {
