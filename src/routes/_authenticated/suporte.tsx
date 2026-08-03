@@ -153,8 +153,11 @@ function SupportPage() {
           playNotifyDing();
           
           if (next.is_admin && !next.is_system) {
-            if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
-            markReadFn({ data: { threadId } }).catch(() => {});
+            // Se o usuário atual NÃO for o admin que enviou a mensagem (ou seja, é o cliente)
+            if (next.sender_id !== uid) {
+              if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
+              markReadFn({ data: { threadId } }).catch(() => {});
+            }
           }
           return [...prev, next];
         });
@@ -389,11 +392,11 @@ function SupportPage() {
         <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
           {/* Botão de Correção para Clientes (visível se a IA falhar ou não houver IA ativa) */}
           {!isAdminRef.current && thread?.id && (
-            <div className="absolute right-3 top-3 z-20 flex gap-2">
+            <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-2">
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 gap-1.5 border-amber-400/40 bg-amber-400/10 font-mono text-[10px] uppercase tracking-wider text-amber-400 hover:bg-amber-400/20"
+                className="h-8 gap-1.5 border-primary/40 bg-primary/10 font-mono text-[10px] uppercase tracking-wider text-primary shadow-sm backdrop-blur-md transition-all hover:bg-primary/20"
                 onClick={() => {
                   setBody("Estou com erro no meu login (senha inválida ou expirada). Pode corrigir para mim?");
                   composerRef.current?.focus();
@@ -402,7 +405,8 @@ function SupportPage() {
                   });
                 }}
               >
-                <Wrench className="h-3 w-3" /> Corrigir erro de login
+                <Sparkles className="h-3 w-3 animate-pulse" /> 
+                Reparar Acesso
               </Button>
             </div>
           )}
@@ -410,11 +414,16 @@ function SupportPage() {
           {hasNewAdmin && (
             <button
               type="button"
-              onClick={() => { setLastSeenAdminAt(Date.now()); listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }}
-              className="absolute right-3 top-12 z-10 rounded-full border border-violet/60 bg-violet/20 px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-violet-foreground hover:bg-violet/30"
+              onClick={() => { 
+                setLastSeenAdminAt(Date.now()); 
+                listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); 
+              }}
+              className="absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-full border border-primary/40 bg-primary/20 px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-primary shadow-lg backdrop-blur-md transition-all hover:bg-primary/30"
             >
-              nova resposta do admin
+              <Sparkles className="mr-2 inline-block h-3.5 w-3.5 animate-pulse" />
+              nova resposta do suporte
             </button>
+          )}
           )}
           <div ref={listRef} onScroll={onListScroll} className="flex-1 space-y-3 overflow-y-auto p-4">
             {(hasMore || loadingOlder) && (

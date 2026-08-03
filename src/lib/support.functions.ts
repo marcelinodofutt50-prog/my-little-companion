@@ -30,7 +30,11 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
 
     // Se for admin/suporte e não tem thread, não cria uma nova automaticamente.
     // Retorna null para sinalizar que não há atendimento ativo.
-    if (isStaff) return null;
+    if (isStaff) {
+      // Admins podem querer ver a própria thread de teste se já existir
+      if (existing) return existing;
+      return null;
+    }
 
     const threadPayload = {
       user_id: context.userId,
@@ -151,7 +155,10 @@ export const sendMessage = createServerFn({ method: "POST" })
     // Non-staff can only post in their own non-closed thread.
     let effectiveThreadId = data.threadId;
     if (!isStaff) {
+      // For clients, ensure they are sending to their own thread
       if (thread.user_id !== context.userId) throw new Error("Acesso negado a esta conversa");
+      
+      // Auto-reopen logic if thread was closed
       if (thread.status === "closed") {
         // Auto-open a fresh thread for the customer and post there.
         const ntPayload = {
