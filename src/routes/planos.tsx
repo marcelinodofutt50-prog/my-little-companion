@@ -1196,6 +1196,33 @@ function LegacyLookup() {
 
   return (
     <div className="border-t border-border/40 px-5 py-4">
+      <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-primary">
+          <ShieldCheck className="h-3.5 w-3.5" /> Verificação de Membro Antigo
+        </div>
+        <div className="mt-3 grid gap-2 md:grid-cols-3">
+          {[
+            { step: 1, label: "Validação", desc: "Consultar histórico" },
+            { step: 2, label: "Segurança", desc: "Confirmar acesso" },
+            { step: 3, label: "Ativação", desc: "Upgrade automático" },
+          ].map((s) => (
+            <div key={s.step} className="flex items-center gap-3">
+              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold transition-all ${
+                (s.step === 1 && !result) || (s.step === 2 && result && !done) || (s.step === 3 && done) 
+                  ? "border-primary bg-primary text-primary-foreground shadow-[0_0_10px_rgba(var(--primary),0.5)]" 
+                  : "border-border bg-background/50 text-muted-foreground"
+              }`}>
+                {s.step}
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] font-bold uppercase">{s.label}</div>
+                <div className="truncate text-[9px] text-muted-foreground">{s.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <TooltipProvider delayDuration={200}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -1220,8 +1247,9 @@ function LegacyLookup() {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
       {open && (
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               type="email"
@@ -1250,11 +1278,14 @@ function LegacyLookup() {
           )}
 
           {result?.found && !done && (
-            <div className="space-y-3 rounded border border-primary/30 bg-primary/5 p-3 font-mono text-xs">
-              <div className="text-primary">✓ Login encontrado em: {result.panels.map(panelLabel).join(" · ")}</div>
+            <div className="space-y-4 rounded border border-primary/30 bg-primary/5 p-4 font-mono text-xs shadow-inner">
+              <div className="flex items-center gap-2 text-primary">
+                <CheckCircle2 className="h-4 w-4" /> 
+                <span>Login encontrado em: <b>{result.panels.map(panelLabel).join(" · ")}</b></span>
+              </div>
 
               {result.panels.length > 1 && (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <div className="text-[10px] uppercase text-muted-foreground">Escolha qual licença vincular:</div>
                   <div className="flex flex-wrap gap-2">
                     {result.panels.map((p) => (
@@ -1262,7 +1293,7 @@ function LegacyLookup() {
                         key={p}
                         type="button"
                         onClick={() => setSelectedPanel(p)}
-                        className={`rounded border px-3 py-1.5 text-[11px] uppercase ${selectedPanel === p ? "border-primary bg-primary/20 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/40"}`}
+                        className={`rounded border px-3 py-1.5 text-[11px] uppercase transition-all ${selectedPanel === p ? "border-primary bg-primary/20 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/40"}`}
                       >
                         {panelLabel(p)}
                       </button>
@@ -1271,18 +1302,21 @@ function LegacyLookup() {
                 </div>
               )}
 
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div className="text-[10px] uppercase text-muted-foreground">Sua senha atual do painel</div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setErr(null); }}
-                  placeholder="Senha do login"
-                  className="w-full rounded border border-border bg-background px-3 py-2 font-mono text-sm"
-                  autoComplete="off"
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setErr(null); }}
+                    placeholder="Senha do login"
+                    className="w-full rounded border border-border bg-background pl-9 pr-3 py-2 font-mono text-sm outline-none focus:border-primary"
+                    autoComplete="off"
+                  />
+                </div>
                 <div className="text-[10px] text-muted-foreground">
-                  Guardamos criptografada. Se você não lembra a senha, abra um chamado em <span className="text-primary">/suporte</span>.
+                  Guardamos criptografada. Se você não lembra a senha, abra um chamado em <span className="text-primary underline">/suporte</span>.
                 </div>
               </div>
 
@@ -1290,20 +1324,24 @@ function LegacyLookup() {
                 type="button"
                 onClick={claim}
                 disabled={claiming || !selectedPanel || !password.trim()}
-                className="w-full rounded border border-primary/50 bg-primary/15 px-4 py-2 font-mono text-xs uppercase text-primary hover:bg-primary/25 disabled:opacity-50"
+                className="w-full rounded border border-primary/50 bg-primary/15 px-4 py-3 font-mono text-xs uppercase text-primary hover:bg-primary/25 disabled:opacity-50 transition-all shadow-sm"
               >
-                {claiming ? "Vinculando..." : "→ Vincular licença ao meu dashboard"}
+                {claiming ? "Processando Upgrade..." : "→ Ativar Acesso Legacy (R$ 250/mês)"}
               </button>
 
-              <div className="text-[10px] text-muted-foreground">
-                Após vincular, sua licença aparece no dashboard com taxa de servidor R$ 250/mês (preço legacy). Vencimento realinhado para o próximo dia 20.
+              <div className="text-[9px] text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-2">
+                O acesso será vinculado instantaneamente. A taxa do servidor será fixada em R$ 250 (preço legacy) e o vencimento realinhado para o próximo dia 20.
               </div>
             </div>
           )}
-
+          
           {done && (
-            <div className="rounded border border-primary/60 bg-primary/10 p-3 text-center font-mono text-xs text-primary">
-              ✓ Licença vinculada. Redirecionando para o dashboard...
+            <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 text-primary font-mono text-xs">
+              <Sparkles className="h-5 w-5 animate-bounce" />
+              <div>
+                <div className="font-bold">Upgrade Concluído!</div>
+                <div>Licença vinculada. Redirecionando para o dashboard...</div>
+              </div>
             </div>
           )}
         </div>
@@ -1311,3 +1349,4 @@ function LegacyLookup() {
     </div>
   );
 }
+
