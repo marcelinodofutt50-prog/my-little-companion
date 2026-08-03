@@ -186,6 +186,38 @@ function PlayProtectPage() {
               )}
             </motion.div>
 
+            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 md:grid-cols-[240px_1fr]">
+              <a href={playProtectConfig.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-border/60 bg-background/40">
+                <img src={playProtectConfig.url} alt="Configuração do Play Protect — quais opções desativar" className="h-full w-full object-contain" loading="lazy" />
+              </a>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="h-5 w-5 text-amber-500" />
+                  <h2 className="font-mono text-sm font-bold uppercase tracking-wider">Antes de instalar — desative estas funções</h2>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Abra a <strong>Play Store</strong> → menu do perfil → <strong>Play Protect</strong> → <strong>Configurações</strong> e desative:
+                </p>
+                <ul className="grid gap-1.5 text-xs">
+                  {[
+                    'Verificar apps com Play Protect',
+                    'Melhorar a detecção de apps prejudiciais',
+                    'Alertas de permissão de apps',
+                    'Notificações do Play Protect',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="rounded border border-primary/30 bg-primary/5 p-3 text-xs">
+                  <strong className="text-primary">Como funciona:</strong> você envia seu APK aqui, nossa equipe faz o bypass e assina o arquivo. Assim que ficar pronto, o botão de <em>Download</em> aparece na sua build abaixo. Tempo médio: 2 a 5 min.
+                </div>
+              </div>
+            </div>
+
+
             <div className={`grid gap-6 md:grid-cols-2 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
 
               {/* Build Section */}
