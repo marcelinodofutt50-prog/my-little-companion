@@ -103,7 +103,7 @@ function metaFor(plan: Plan): PlanMeta {
       "Acesso ao Shadow Signer (Bypass Automático & Dropper)",
 
     ],
-    note: "Atenção: Este plano libera o LOGIN. Se você já tem um login ativo (incluindo Trial) e só quer pagar a manutenção, use 'Renovação Servidor'.",
+    note: t("plan.monthly.note"),
   };
   if (s.includes("7d") || s.includes("week") || s === "trial") return {
     tagline: "Ideal para validar a ferramenta em um ciclo curto.",

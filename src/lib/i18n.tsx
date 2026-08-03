@@ -104,6 +104,10 @@ const DICT: Dict = {
   "home.plans.kicker": { pt: "// licenças", en: "// licenses" },
   "home.plans.title.a": { pt: "Acesso à", en: "Access to the" },
   "home.plans.title.b": { pt: "ferramenta", en: "tool" },
+  "plan.monthly.note": { 
+    pt: "Atenção: Este plano libera o LOGIN. Se você já tem um login ativo (incluindo Trial) e só quer pagar a manutenção, use 'Renovação Servidor'.", 
+    en: "Warning: This plan releases the LOGIN. If you already have an active login (including Trial) and just want to pay maintenance, use 'Server Renewal'." 
+  },
   "home.plans.lead": {
     pt: "Pagamento PIX automático · Liberação em segundos",
     en: "Automatic PIX payment · Released in seconds",
