@@ -169,6 +169,21 @@ function ServerStatusPage() {
               </div>
             </section>
 
+            <section className="mt-12">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="flex items-center gap-2 font-display text-lg font-bold">
+                    <Zap className="h-4 w-4 text-primary" /> Notificações do Shadow
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-mono mt-1">
+                    Alertas de status via e-mail e webhook
+                  </p>
+                </div>
+              </div>
+
+              <NotificationSettings />
+            </section>
+
             <section className="mt-12 space-y-6">
               <div className="border-t border-border/40 pt-8">
                 <h3 className="flex items-center gap-2 font-display text-lg font-bold">
@@ -292,6 +307,111 @@ function CriteriaItem({ title, desc, status }: { title: string, desc: string, st
         <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
           {desc}
         </p>
+      </div>
+    </div>
+  );
+}
+
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getNotificationSettings, updateNotificationSettings, testWebhook } from "@/lib/notifications.functions";
+
+function NotificationSettings() {
+  const fetchSettings = useServerFn(getNotificationSettings);
+  const updateSettings = useServerFn(updateNotificationSettings);
+  const triggerTest = useServerFn(testWebhook);
+  
+  const [settings, setSettings] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchSettings().then(setSettings);
+  }, []);
+
+  if (!settings) return <div className="h-32 animate-pulse rounded-xl border border-border/40 bg-card/20" />;
+
+  const handleToggle = async (key: string) => {
+    const newSettings = { ...settings, [key]: !settings[key] };
+    setSettings(newSettings);
+    try {
+      await updateSettings(newSettings);
+      toast.success("Preferências atualizadas");
+    } catch (e) {
+      toast.error("Erro ao salvar preferências");
+    }
+  };
+
+  const handleWebhookTest = async () => {
+    if (!settings.webhook_url) return toast.error("Insira uma URL de Webhook");
+    setLoading(true);
+    try {
+      await triggerTest({ data: { url: settings.webhook_url } });
+      toast.success("Notificação de teste enviada com sucesso");
+    } catch (e) {
+      toast.error("Falha no envio do webhook");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-6 rounded-xl border border-border/40 bg-card/10 p-6">
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border/20 bg-background/40 p-3">
+            <div className="space-y-0.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Notificações por E-mail</Label>
+              <p className="text-[10px] text-muted-foreground">Receba alertas diretamente no seu e-mail cadastrado.</p>
+            </div>
+            <Switch checked={settings.email_enabled} onCheckedChange={() => handleToggle('email_enabled')} />
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border/20 bg-background/40 p-3">
+            <div className="space-y-0.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Webhook de Servidor</Label>
+              <p className="text-[10px] text-muted-foreground">Integre alertas com Discord ou servidores externos.</p>
+            </div>
+            <Switch checked={settings.webhook_enabled} onCheckedChange={() => handleToggle('webhook_enabled')} />
+          </div>
+
+          {settings.webhook_enabled && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+              <Label className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Endpoint URL</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={settings.webhook_url} 
+                  onChange={(e) => setSettings({...settings, webhook_url: e.target.value})}
+                  placeholder="https://discord.com/api/webhooks/..." 
+                  className="h-9 font-mono text-xs bg-background/50"
+                />
+                <Button variant="outline" size="sm" onClick={handleWebhookTest} disabled={loading} className="h-9 px-3 text-[10px] uppercase font-mono">
+                  Testar
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Label className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Eventos Notificados</Label>
+          
+          <div className="space-y-2">
+            {[
+              { id: 'notify_on_approval', label: 'Acesso Aprovado', desc: 'Alertar quando a elegibilidade for confirmada.' },
+              { id: 'notify_on_pending', label: 'Acesso Pendente', desc: 'Alertar sobre necessidade de ação manual.' },
+              { id: 'notify_on_denial', label: 'Acesso Negado', desc: 'Alertar com justificativa do sistema.' }
+            ].map((event) => (
+              <div key={event.id} className="flex items-center justify-between gap-4 rounded-lg border border-border/20 bg-background/20 p-2.5">
+                <div className="space-y-0.5">
+                  <div className="text-[10px] font-bold uppercase tracking-tight">{event.label}</div>
+                  <p className="text-[9px] text-muted-foreground">{event.desc}</p>
+                </div>
+                <Switch checked={settings[event.id]} onCheckedChange={() => handleToggle(event.id)} className="scale-75" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
