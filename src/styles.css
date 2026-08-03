@@ -109,7 +109,7 @@
 
 /* ===== Tema claro (segue o tema do sistema por padrão) ===== */
 html.theme-light {
-  color-scheme: dark; /* Force dark context even in light mode for the landing page */
+  color-scheme: light; /* Allow light mode styles to apply */
 
   --background: #050505;
   --foreground: #e0e0e0;

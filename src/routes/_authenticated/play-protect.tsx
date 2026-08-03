@@ -60,14 +60,21 @@ function PlayProtectPage() {
     queryKey: ['my-license', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('licenses')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('licenses')
+          .select('*')
+          .eq('user_id', user!.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.error("Error fetching license:", err);
+        return null;
+      }
     }
   });
 
