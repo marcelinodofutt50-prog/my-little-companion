@@ -53,7 +53,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
           {!collapsed && (
             <div className="min-w-0">
               <div className="truncate font-display text-sm font-semibold tracking-tight">SHADOW</div>
-              <div className="truncate font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">operator console</div>
+              <div className="truncate font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">enterprise console</div>
             </div>
           )}
         </Link>
