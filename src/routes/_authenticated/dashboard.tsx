@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { BellRing, Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, ArrowUpRight, Activity, LockIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
