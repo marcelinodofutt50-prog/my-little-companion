@@ -788,6 +788,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   onBuy: (s: string) => void;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const price = Number(plan.price_brl);
   // Cupom pessoal travado em outro plano não vale aqui — não mostramos desconto falso.
   const appliedCoupon = coupon && (!coupon.plan_slug || coupon.plan_slug === plan.slug) ? coupon : null;
@@ -796,7 +797,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
     [price, appliedCoupon, cashback, useCash]
   );
   const hasBenefit = b.discount > 0 || b.cashbackApplied > 0 || b.cashbackEarn > 0;
-  const meta = useMemo(() => metaFor(plan), [plan]);
+  const meta = useMemo(() => metaFor(plan, t), [plan, t]);
   const Icon = meta.icon;
   const handleClick = useCallback(() => onBuy(plan.slug), [onBuy, plan.slug]);
   const isLifetime = plan.slug.toLowerCase().includes("lifetime");
