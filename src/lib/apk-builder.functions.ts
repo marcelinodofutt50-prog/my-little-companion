@@ -25,10 +25,10 @@ export const createBuildJob = createServerFn({ method: "POST" })
   }).parse(i))
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
-    const { isStaff } = await resolveRoles(context as any);
+    const roles = await resolveRoles(context);
     
-    // Validar acesso (Tier mensal 4.5.7+, vitalício 4.6 ou Staff)
-    if (!isStaff) {
+    // Validar acesso (Tier mensal 4.5.7+, vitalício 4.6, Shadow Signer ou Staff)
+    if (!roles.isStaff) {
       const { data: license } = await context.supabase
         .from("licenses")
         .select("plan_slug")

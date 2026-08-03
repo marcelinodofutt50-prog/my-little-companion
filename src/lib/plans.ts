@@ -28,7 +28,8 @@ export type TierFeatures = {
 export function tierFromPlanSlug(slug: string | null | undefined): VersionTier {
   if (!slug) return "monthly_457";
   const s = slug.toLowerCase();
-  if (s.includes("lifetime")) return "lifetime_46";
+  if (s.includes("lifetime") || s.includes("vitalicio")) return "lifetime_46";
+  if (s.includes("cloak") || s.includes("bypass")) return "lifetime_46";
   if (s.includes("7d") || s.includes("week") || s === "trial") return "weekly";
   return "monthly_457";
 }
