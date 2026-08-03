@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -68,6 +68,20 @@ type License = {
 
 function DashboardPage() {
   const { t, lang } = useI18n();
+  const search = useSearch({ from: "/_authenticated/dashboard" }) as any;
+  
+  useEffect(() => {
+    const html = document.documentElement;
+    const isLight = search?.theme === 'light';
+    if (isLight) {
+      html.classList.add('theme-light');
+      html.classList.remove('dark');
+    } else {
+      html.classList.remove('theme-light');
+      html.classList.add('dark');
+    }
+  }, [search?.theme]);
+
   const [licenses, setLicenses] = useState<License[]>([]);
   const [balance, setBalance] = useState(0);
   const [email, setEmail] = useState<string>("");

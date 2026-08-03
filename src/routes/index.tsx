@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { Activity, ArrowRight, ChevronDown, Copy, Cpu, Fingerprint, Lock, ShieldCheck, Zap, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -41,6 +41,20 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const { t } = useI18n();
+  const search = useSearch({ from: "/" }) as any;
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const isLight = search?.theme === 'light';
+    if (isLight) {
+      html.classList.add('theme-light');
+      html.classList.remove('dark');
+    } else {
+      html.classList.remove('theme-light');
+      html.classList.add('dark');
+    }
+  }, [search?.theme]);
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
