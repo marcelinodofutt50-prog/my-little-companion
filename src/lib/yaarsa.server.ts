@@ -839,8 +839,8 @@ async function yaarsaPost(
     }
   }
 
-  if (lastNetworkErr && !lastFail.Fail?.includes("erro")) {
-    return { Fail: `${lastFail.Fail} — verifique ${PANEL_CONFIG[panel].baseEnv}` };
+  if (lastNetworkErr && !lastFail.Fail?.includes("erro") && !lastFail.Fail?.includes("HTML")) {
+    return { Fail: `${lastFail.Fail} — verifique ${PANEL_CONFIG[panel].baseEnv} (possível erro de proxy/DNS)` };
   }
   return lastFail;
 }
