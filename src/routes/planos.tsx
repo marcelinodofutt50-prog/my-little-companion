@@ -1235,7 +1235,7 @@ function LegacyLookup() {
     <div className="border-t border-border/40 px-5 py-4">
       <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-primary">
-          <ShieldCheck className="h-3.5 w-3.5" /> Verificação de Membro Antigo
+          <ShieldCheck className="h-3.5 w-3.5" /> Login de Elegibilidade: Membro Antigo
         </div>
         <div className="mt-3 grid gap-2 md:grid-cols-3">
           {[
@@ -1279,7 +1279,7 @@ function LegacyLookup() {
           <TooltipContent side="top" className="max-w-xs text-center leading-relaxed">
             <div className="flex flex-col items-center gap-1.5">
               <Info className="h-3.5 w-3.5" />
-              <span>Se você já comprou antes na Shadow 4.5.7 ou 4.6, clique para sincronizar seu login antigo com esta conta. Seus dados e licença aparecem no dashboard em segundos.</span>
+              <span>Implemente um login no fluxo de verificação de “membros antigos” para eu comprovar minha elegibilidade com segurança antes de ativar o servidor.</span>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -1302,7 +1302,7 @@ function LegacyLookup() {
               disabled={busy || done}
               className="rounded border border-primary/40 bg-primary/10 px-4 py-2 font-mono text-xs uppercase text-primary hover:bg-primary/20 disabled:opacity-50"
             >
-              {busy ? "Verificando..." : "Verificar email"}
+              {busy ? "Verificando..." : "Validar Elegibilidade (Login)"}
             </button>
           </div>
 
