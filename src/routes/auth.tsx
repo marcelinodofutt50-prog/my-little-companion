@@ -201,7 +201,7 @@ function AuthPage() {
       }
       if (data.user) {
         toast.success("E-mail confirmado! Redirecionando...");
-        navigate({ to: (next as any) || "/dashboard" });
+        navigate({ to: (next as any) || "/dashboard", search: {} as any });
       }
     }
     exchange();
