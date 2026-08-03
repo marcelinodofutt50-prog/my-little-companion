@@ -183,7 +183,7 @@ const TAB_DESC: Record<Tab, string> = {
   health: "Saúde do sistema: erros recentes, falhas de entrega e alertas.",
   logs: "Registro técnico do servidor, útil para investigar um problema específico.",
   audit: "Histórico de ações dos administradores, com data e responsável.",
-  apk: "Fila do Play Protect: APKs enviados pelos clientes aguardando processamento.",
+  apk: "Shadow Signer (Fila APK): APKs enviados pelos clientes para bypass de Play Protect.",
   updates: "Publicar uma nova versão do app para os clientes baixarem.",
   servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",

