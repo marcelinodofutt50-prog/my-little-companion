@@ -441,6 +441,12 @@ function AdminTipsSection() {
       category: "technical",
       title: "Verificação de Assinatura",
       text: "O novo bypass é assinado automaticamente durante a compilação. Confirmamos que cada APK gerado passa pela verificação de integridade antes do download."
+    },
+    {
+      id: "07",
+      category: "technical",
+      title: "Lembrete de Preços",
+      text: "Lembrando que o Shadow 4.5.5 custa R$ 450, o de 30 dias custa R$ 750, o servidor custa R$ 250 somente para membros antigos e o Play Protect da Shadow custa R$ 450."
     }
   ];
 
