@@ -876,49 +876,54 @@ function TierComparison() {
         <h2 className="mt-2 font-display text-2xl md:text-3xl">Shadow 4.5.5 vs Mensal vs Servidor</h2>
       </div>
 
-      {/* Desktop View: Grid Table */}
-      <div className="hidden md:block overflow-hidden rounded-xl border border-border/50 bg-card/40">
-        <div className="grid grid-cols-5 border-b border-border/50 bg-background/40 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-          <div className="px-4 py-3.5">Recurso</div>
-          {plans.map((p) => (
-            <div key={p.id} className={`px-4 py-3.5 text-center ${p.accent === "primary" ? "text-primary" : ""} ${p.bold ? "font-bold" : ""}`}>
-              {p.name}
-            </div>
-          ))}
-        </div>
-        {rows.map((r, i) => (
-          <div key={r.label} className={`grid grid-cols-5 text-sm ${i % 2 ? "bg-background/20" : ""}`}>
-            <div className="px-4 py-3 text-muted-foreground">{r.label}</div>
-            <div className="px-4 py-3 text-center font-mono">{r.weekly}</div>
-            <div className="px-4 py-3 text-center font-mono">{r.monthly}</div>
-            <div className="px-4 py-3 text-center font-mono text-primary">{r.serverOld}</div>
-            <div className="px-4 py-3 text-center font-mono text-foreground font-semibold">{r.lifetime}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Mobile View: Comparison Cards */}
-      <div className="grid gap-4 md:hidden">
-        {plans.map((p) => (
-          <div key={p.id} className={`rounded-xl border p-4 ${p.id === 'lifetime' ? 'border-primary/50 bg-primary/5' : 'border-border/50 bg-card/40'}`}>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className={`font-display text-lg ${p.accent === "primary" ? "text-primary" : ""} ${p.bold ? "font-bold" : ""}`}>
-                {p.name}
-              </h3>
-              {p.id === 'lifetime' && <span className="rounded bg-primary/20 px-2 py-0.5 font-mono text-[8px] uppercase text-primary">Recomendado</span>}
-            </div>
-            <div className="space-y-2.5">
-              {rows.map((r) => (
-                <div key={r.label} className="flex items-center justify-between gap-2 border-b border-border/20 pb-2 last:border-0 last:pb-0">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/90">{r.label}</span>
-                  <span className={`font-mono text-sm font-semibold ${p.id === 'lifetime' || p.id === 'serverOld' ? 'text-primary' : 'text-foreground'}`}>
-                    {(r as any)[p.id]}
-                  </span>
+      {/* Responsive Comparison Container */}
+      <div className="overflow-hidden rounded-xl border border-border/50 bg-card/40">
+        {/* Horizontal scroll container for the table on mobile, full-width grid on desktop */}
+        <div className="overflow-x-auto overflow-y-hidden md:overflow-visible">
+          <div className="min-w-[760px] md:min-w-full">
+            {/* Header Row */}
+            <div className="grid grid-cols-5 border-b border-border/50 bg-background/40 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+              <div className="px-4 py-3.5 sticky left-0 z-10 bg-background/80 backdrop-blur-sm border-r border-border/20 md:static md:bg-transparent md:border-r-0">
+                Recurso
+              </div>
+              {plans.map((p) => (
+                <div 
+                  key={p.id} 
+                  className={`px-4 py-3.5 text-center ${p.accent === "primary" ? "text-primary" : ""} ${p.bold ? "font-bold" : ""} ${p.id === 'lifetime' ? 'bg-primary/5' : ''}`}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    {p.name}
+                    {p.id === 'lifetime' && (
+                      <span className="rounded bg-primary/20 px-1.5 py-0.5 font-mono text-[7px] uppercase tracking-tighter text-primary">
+                        Top
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
+            
+            {/* Data Rows */}
+            {rows.map((r, i) => (
+              <div key={r.label} className={`grid grid-cols-5 text-[11px] md:text-sm ${i % 2 ? "bg-background/20" : ""}`}>
+                <div className="px-4 py-3 text-muted-foreground font-medium sticky left-0 z-10 bg-background/80 backdrop-blur-sm border-r border-border/20 md:static md:bg-transparent md:border-r-0">
+                  {r.label}
+                </div>
+                <div className="px-4 py-3 text-center font-mono whitespace-normal">{r.weekly}</div>
+                <div className="px-4 py-3 text-center font-mono whitespace-normal">{r.monthly}</div>
+                <div className="px-4 py-3 text-center font-mono text-primary whitespace-normal">{r.serverOld}</div>
+                <div className={`px-4 py-3 text-center font-mono text-foreground font-semibold whitespace-normal ${i % 2 ? 'bg-primary/5' : 'bg-primary/[0.07]'}`}>
+                  {r.lifetime}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+      </div>
+      
+      {/* Mobile-Friendly "Hint" for horizontal scroll */}
+      <div className="mt-3 flex items-center justify-center gap-1.5 text-[9px] uppercase tracking-[0.15em] text-muted-foreground/60 md:hidden">
+        <ArrowLeftRight className="h-3 w-3" /> deslize lateral para ver todos os planos
       </div>
     </section>
   );
