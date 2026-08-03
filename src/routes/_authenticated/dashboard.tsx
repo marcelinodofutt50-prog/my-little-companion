@@ -12,6 +12,7 @@ import { SecurityWelcomeDialog } from '@/components/SecurityWelcomeDialog'
 import { TutorialHintDialog } from '@/components/TutorialHintDialog'
 import { InAppNotifications } from '@/components/InAppNotifications'
 import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/lib/i18n'
 
