@@ -5,7 +5,7 @@ import type { VersionTier } from "@/lib/plans";
 
 const DOWNLOAD_TTL = 60 * 60 * 24; // 24h signed URL
 
-const tierRank: Record<VersionTier, number> = { weekly: 0, monthly_457: 1, lifetime_46: 2 };
+const tierRank: Record<VersionTier, number> = { weekly: 0, monthly_457: 1, lifetime_46: 2, upgrade: 2 };
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
@@ -127,7 +127,7 @@ export const adminPublishUpdate = createServerFn({ method: "POST" })
       title: z.string().trim().min(2).max(120),
       version: z.string().trim().min(1).max(40),
       notes: z.string().trim().max(4000).optional().nullable(),
-      min_tier: z.enum(["weekly", "monthly_457", "lifetime_46"]),
+      min_tier: z.enum(["weekly", "monthly_457", "lifetime_46", "upgrade"]),
       storage_path: z.string().min(1).max(400),
       filename: z.string().min(1).max(200),
       size_bytes: z.number().int().positive().max(2_000_000_000).optional().nullable(),
