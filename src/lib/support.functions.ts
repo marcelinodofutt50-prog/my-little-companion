@@ -280,7 +280,9 @@ export const sendMessage = createServerFn({ method: "POST" })
       });
     }
 
-    return { ...msg, thread_id: effectiveThreadId };
+    const { normalizeSupportMessage } = await import("./support-message");
+    return normalizeSupportMessage(msg, effectiveThreadId);
+
   });
 
 /**
