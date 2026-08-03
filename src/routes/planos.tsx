@@ -439,7 +439,7 @@ function PlansPage() {
 
       <GuaranteeStrip />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 py-12 pb-28 md:pb-12">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-24 sm:px-6">
         <HowItWorksSteps variant="checkout" />
         <PlanAdvisor className="mt-5" />
         <ConversionBoosters />
