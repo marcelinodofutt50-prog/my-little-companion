@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { triggerDownload, withRetry, friendlyDownloadError } from "@/lib/download";
 import { formatBrl, tierFromPlanSlug, tierLabel, tierAccent, getTierFeatures, serverFeeFor, downloadsForTier, type VersionTier } from "@/lib/plans";
+import { useI18n } from "@/lib/i18n";
 import { listMyLicenses, generateTrial, getMyCashbackBalance, suspendMyLicense, reactivateMyLicense, disableMyLicense } from "@/lib/license.functions";
 import { detectLegacyForCurrentUser, getMyLegacyStatus } from "@/lib/legacy-detect.functions";
 import { createCheckout } from "@/lib/checkout.functions";
@@ -66,6 +67,7 @@ type License = {
 
 
 function DashboardPage() {
+  const { t, lang } = useI18n();
   const [licenses, setLicenses] = useState<License[]>([]);
   const [balance, setBalance] = useState(0);
   const [email, setEmail] = useState<string>("");
@@ -255,14 +257,14 @@ function DashboardPage() {
             <SidebarTrigger className="text-muted-foreground hover:text-primary" />
             <div className="h-6 w-px bg-border/60" />
             <div className="min-w-0 flex-1">
-              <div className="osint-label text-primary/80">Painel do cliente</div>
+              <div className="osint-label text-primary/80">{t("dash.client_panel" as any)}</div>
               <div className="truncate font-display text-sm text-foreground">{displayIdentity(displayName, email)}</div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <InAppNotifications />
               <RgbModeToggle />
               <NicknameDialog displayName={displayName} email={email} onChange={setDisplayName} compact />
-              <Link to="/planos"><Button size="sm" variant="ghost" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"><Sparkles className="mr-1.5 h-3.5 w-3.5" />Planos</Button></Link>
+              <Link to="/planos"><Button size="sm" variant="ghost" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"><Sparkles className="mr-1.5 h-3.5 w-3.5" />{t("nav.plans" as any)}</Button></Link>
             </div>
 
           </header>
@@ -309,26 +311,26 @@ function DashboardPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <div className="osint-label text-primary/80">Nível de Acesso</div>
+                          <div className="osint-label text-primary/80">{t("dash.access_level" as any)}</div>
                           <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-primary border border-primary/20">Alpha-Ops</span>
                         </div>
                         <h1 className="mt-1 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl text-foreground">{displayIdentity(displayName, email)}</h1>
                         <div className="mt-1.5 flex flex-wrap items-center gap-3 font-mono text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-neon animate-pulse" /> {new Date().toLocaleDateString("pt-BR")}</span>
+                          <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-neon animate-pulse" /> {new Date().toLocaleDateString(lang === "en" ? "en-US" : "pt-BR")}</span>
                           <span className="hidden sm:inline text-border/40">|</span>
-                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date().toLocaleTimeString(lang === "en" ? "en-US" : "pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
                       </div>
                     </div>
                     <div className={`shrink-0 rounded-lg border-2 px-4 py-3 text-right font-mono shadow-lg transition-all ${statusRing}`}>
                       <div className={`text-[10px] font-bold uppercase tracking-[0.25em] ${statusColor}`}>
-                        {daysLeft === null ? "acesso offline" : daysLeft === 0 ? "expira hoje" : "dias de licença"}
+                        {daysLeft === null ? t("dash.offline" as any) : daysLeft === 0 ? t("dash.expires_today" as any) : t("dash.license_days" as any)}
                       </div>
                       <div className={`text-2xl font-black leading-none mt-1 ${statusColor}`}>
                         {daysLeft === null ? "00" : String(daysLeft).padStart(2, '0')}
                       </div>
                       <div className="mt-1 text-[10px] font-medium text-muted-foreground/80">
-                        {active.length} terminal{active.length === 1 ? "" : "s"} ativ.{active.length === 1 ? "o" : "os"}
+                        {active.length} {t("dash.active_terminals" as any)}
                       </div>
                     </div>
                   </div>
