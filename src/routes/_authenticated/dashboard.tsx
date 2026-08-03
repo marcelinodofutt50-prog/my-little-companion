@@ -345,7 +345,7 @@ function DashboardPage() {
                     <Button size="sm" variant="outline" onClick={() => setTutorialOpen(true)} className="font-mono text-[11px] uppercase tracking-wider">
                       <Sparkles className="mr-1.5 h-3 w-3 text-neon" /> Tutorial
                     </Button>
-                    <Link to="/suporte">
+                    <Link to="/suporte" search={{}}>
                       <Button size="sm" variant="outline" className="font-mono text-[11px] uppercase tracking-wider">
                         <LifeBuoy className="mr-1.5 h-3 w-3" /> Suporte
                       </Button>
@@ -1252,13 +1252,13 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
     if (expired) return {
       code: "expired", title: "Licença expirada", short: "expirada",
       detail: `Expirou em ${fmt(expired.expires_at)}. Renove o plano — os downloads liberam assim que o pagamento é aprovado (geralmente < 1 min).`,
-      cta: { label: "Renovar plano", to: "/planos" },
+      cta: { label: "Renovar plano", to: "/planos" as const },
     };
     const disabled = sorted.find((l) => l.disabled_at);
     if (disabled) return {
       code: "disabled", title: "Licença desativada", short: "desativada",
       detail: `Desativada em ${fmt(disabled.disabled_at)} — a conta foi removida do servidor e não pode ser reativada. Compre um novo plano para receber credenciais e liberar os arquivos.`,
-      cta: { label: "Ver planos", to: "/planos" },
+      cta: { label: "Ver planos", to: "/planos" as const },
     };
     const revoked = sorted.find((l) => l.revoked);
     if (revoked) return {
@@ -1266,7 +1266,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
       detail: "Sua licença foi revogada pelo admin. Fale com o suporte ou compre um novo plano.",
       cta: { label: "Falar com suporte", to: "/suporte" as const },
     };
-    return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" } };
+    return { code: "none", title: "Sem licença ativa", short: "sem licença", detail: "Nenhuma licença ativa encontrada.", cta: { label: "Ver planos", to: "/planos" as const } };
   }
 
   return (
@@ -1330,7 +1330,7 @@ function DownloadsSection({ licenses, isAdmin }: { licenses: License[]; isAdmin:
               ))}
               {r.cta.to === "#"
                 ? null
-                : <Link to={r.cta.to}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
+                : <Link to={r.cta.to as any}><Button className="font-mono uppercase tracking-wider">{r.cta.label}</Button></Link>}
             </div>
           </>
         );
