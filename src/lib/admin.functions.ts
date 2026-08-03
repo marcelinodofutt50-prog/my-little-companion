@@ -401,7 +401,11 @@ export const adminSendMessage = createServerFn({ method: "POST" })
 
     // A cache de esquema pode ainda não conhecer reply_to_id logo após uma
     // migração. A resposta do suporte não deve falhar por uma coluna opcional.
-    if (error && error.code === "PGRST204") {
+    if (
+      error &&
+      (error.code === "PGRST204" || error.code === "42703" || String(error.message ?? "").includes("reply_to_id"))
+    ) {
+
       const { reply_to_id: _replyToId, ...fallbackPayload } = payload;
       const retry = await context.supabase
         .from("support_messages")
