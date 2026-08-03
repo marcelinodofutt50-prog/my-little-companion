@@ -1070,9 +1070,9 @@ function FaqSection() {
   const faq = [
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
     { q: "E se algo falhar na criação?", a: "Se houver qualquer erro na provisão, você vê um botão 'Tentar novamente' no dashboard e o suporte é acionado automaticamente. Nenhum pagamento fica sem licença — garantia de reembolso integral em caso de falha." },
-    { q: "Como funciona a taxa do dia 20?", a: "Todo dia 20 há renovação do servidor. Se não for paga, o login é suspenso automaticamente até a nova renovação. Cliente antigo paga R$ 250, cliente novo R$ 450." },
-    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: "Lembrando que o Shadow 4.5.5 custa R$ 450, o plano de 30 dias custa R$ 750, o servidor custa R$ 250 somente para membros antigos e o Play Protect da Shadow custa R$ 450. São considerados 'membros antigos' usuários com licença ativa (v4.5.7 ou v4.6) ou trial validado há mais de 48h. A ativação é automática ao detectar o histórico da conta no checkout." },
-    { q: "Posso trocar de plano depois?", a: "Sim. Cliente antigo v4.5.7 pode fazer upgrade para v4.6 vitalício por R$ 600 — o processo é automático e mantém seu histórico." },
+    { q: "Como funciona a taxa do dia 20?", a: "Todo dia 20 há renovação da infraestrutura VPS. Se não for paga, o acesso é suspenso automaticamente até a nova renovação. O custo fixo de manutenção é de R$ 450 para todos os planos." },
+    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: "Os preços oficiais são: Shadow 4.5.5 (Trial) por R$ 450, Plano Mensal (4.5.7) por R$ 750, Plano Vitalício (4.6) por R$ 1.600, Shadow Bypass (Signer) por R$ 450 e a taxa de manutenção do servidor por R$ 450." },
+    { q: "Posso trocar de plano depois?", a: "Sim. Cliente v4.5.7 pode fazer upgrade para v4.6 vitalício — o processo é automático e mantém seu histórico de ativações." },
     { q: "O cupom BTMOB40 é seguro?", a: "Sim. Ele dá 40% de cashback no primeiro depósito, que fica no seu saldo e pode ser usado em compras futuras (limitado a 50% do valor de cada compra)." },
     { q: "Vocês emitem nota?", a: "Sim, o comprovante oficial do Mercado Pago é emitido no ato do pagamento e enviado por email pela própria operadora." },
   ];
