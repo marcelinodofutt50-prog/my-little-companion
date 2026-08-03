@@ -1,16 +1,38 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Loader2, PlayCircle, ShieldAlert } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, PlayCircle, ShieldAlert, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { runPurchaseSelfTest, type SelfTestStep } from "@/lib/selftest.functions";
+import { runSupportE2E, type SupportTestStep } from "@/lib/support-selftest.functions";
 
 export function AdminSelfTestPanel() {
   const run = useServerFn(runPurchaseSelfTest);
+  const runSupport = useServerFn(runSupportE2E);
   const [loading, setLoading] = useState<"safe" | "full" | null>(null);
   const [steps, setSteps] = useState<SelfTestStep[] | null>(null);
   const [mode, setMode] = useState<string>("");
   const [confirmFull, setConfirmFull] = useState(false);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportSteps, setSupportSteps] = useState<SupportTestStep[] | null>(null);
+
+  async function executeSupport() {
+    if (supportLoading) return;
+    setSupportLoading(true);
+    setSupportSteps(null);
+    try {
+      const res = await runSupport({ data: {} });
+      setSupportSteps(res.steps);
+      const failed = res.steps.filter((s) => !s.ok).length;
+      if (failed === 0) toast.success("Suporte: fluxo ponta a ponta funcionando");
+      else toast.error(`Suporte: ${failed} etapa(s) com problema`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao executar o teste de suporte");
+    } finally {
+      setSupportLoading(false);
+    }
+  }
+
 
   async function execute(m: "safe" | "full") {
     if (loading) return;
