@@ -291,6 +291,21 @@ function DashboardPage() {
                   </div>
                 </div>
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
+                  <div className="grid gap-2 sm:grid-cols-3 lg:col-span-2">
+                    {[
+                      { icon: Clock, t: 'O contador manda', d: 'Quando o tempo zerar, o login é encerrado automaticamente — mesmo que o app mostre outra data.' },
+                      { icon: Sparkles, t: 'Como usar seu login', d: 'Abra o Tutorial no topo do painel: instalação, Play Protect e primeiro acesso.' },
+                      { icon: LifeBuoy, t: 'Ficou com dúvida?', d: 'Fale com o suporte pelo chat — a gente resolve login, senha e renovação.' },
+                    ].map((tip) => (
+                      <div key={tip.t} className="flex gap-2.5 rounded-md border border-border/50 bg-background/50 p-3">
+                        <tip.icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <div>
+                          <div className="text-xs font-semibold">{tip.t}</div>
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{tip.d}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                   {user === undefined || licensesLoading ? (
                     <p className="text-sm text-muted-foreground">Carregando licenças…</p>
                   ) : licensesError ? (
