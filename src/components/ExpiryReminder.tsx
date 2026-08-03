@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { daysUntil, severityFromDays, severityColor } from "@/lib/expiry";
+import { severityColor, licenseExpiryState } from "@/lib/expiry";
+import { useServerNow } from "@/hooks/use-server-now";
 
 type Item = { label: string; days: number; sev: "critical" | "warning"; trial: boolean };
 
@@ -11,6 +12,7 @@ const DISMISS_KEY = "shadow:expiry-reminder-dismissed";
 export function ExpiryReminder() {
   const [items, setItems] = useState<Item[]>([]);
   const [dismissed, setDismissed] = useState(true);
+  const serverNow = useServerNow(60_000);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -26,21 +28,21 @@ export function ExpiryReminder() {
       if (!alive || !data) return;
       const list: Item[] = [];
       for (const l of data as any[]) {
-        const dLic = daysUntil(l.expires_at);
-        const sLic = severityFromDays(dLic);
-        // Trial já expirado não gera aviso — ele some do painel por conta própria.
-        if (l.is_trial && dLic !== null && dLic <= 0) continue;
-        if (sLic && dLic !== null)
-          list.push({ label: `${l.is_trial ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim(), days: dLic, sev: sLic, trial: !!l.is_trial });
-        const dSrv = daysUntil(l.server_paid_until ? `${l.server_paid_until}T23:59:59` : null);
-        const sSrv = severityFromDays(dSrv);
-        if (sSrv && dSrv !== null) list.push({ label: "Mensalidade do servidor", days: dSrv, sev: sSrv, trial: false });
+        const st = licenseExpiryState(l, serverNow);
+        if (!st.active) continue;
+        if (st.severity && st.daysLeft !== null) {
+          const label =
+            st.kind === "lifetime"
+              ? "Mensalidade do servidor"
+              : `${st.kind === "trial" ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim();
+          list.push({ label, days: st.daysLeft, sev: st.severity, trial: st.kind === "trial" });
+        }
       }
       list.sort((a, b) => a.days - b.days);
       setItems(list.slice(0, 3));
     })();
     return () => { alive = false; };
-  }, []);
+  }, [serverNow]);
 
   if (dismissed || items.length === 0) return null;
   const worst = items[0];
