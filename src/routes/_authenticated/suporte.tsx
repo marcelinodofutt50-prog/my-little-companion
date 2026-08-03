@@ -49,6 +49,8 @@ function SupportPage() {
 
   useThemeSearchParam(search?.theme);
   const [thread, setThread] = useState<Thread | null>(null);
+  const [opening, setOpening] = useState(true);
+  const [openError, setOpenError] = useState<string | null>(null);
 
   const [savingCat, setSavingCat] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -84,14 +86,18 @@ function SupportPage() {
       const role = await fetchMyRole(id);
       if (!cancelled) isAdminRef.current = isStaffRole(role);
     });
+    setOpening(true);
+    setOpenError(null);
     openFn()
       .then((t) => { if (!cancelled) setThread(t); })
       .catch((e: any) => {
         // Se for admin, o servidor retorna null em vez de criar automático.
         if (e?.message !== "Conversa não encontrada" && !isAdminRef.current) {
           toast.error(e?.message ?? "Não foi possível abrir o atendimento");
+          setOpenError(e?.message ?? "Não foi possível abrir o atendimento");
         }
-      });
+      })
+      .finally(() => { if (!cancelled) setOpening(false); });
     return () => { cancelled = true; };
   }, [openFn]);
 
@@ -331,7 +337,7 @@ function SupportPage() {
           </span>
 
           <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-muted-foreground">
-            ticket {thread ? `#${thread.id.slice(0, 8)}` : "abrindo..."}
+            ticket {thread ? `#${thread.id.slice(0, 8)}` : opening ? "abrindo..." : "indisponível"}
           </span>
           <span className="rounded-full border border-border/60 bg-card/60 px-3 py-1 text-muted-foreground">
             {active.emoji} {active.label}
@@ -342,6 +348,15 @@ function SupportPage() {
             </span>
           )}
         </div>
+
+        {openError && !thread && (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <span>{openError}</span>
+            <Button type="button" size="sm" variant="outline" onClick={() => window.location.reload()}>
+              <RotateCw className="mr-1.5 h-3.5 w-3.5" /> Tentar novamente
+            </Button>
+          </div>
+        )}
 
         {/* Categorias */}
         <section className="mt-5">
