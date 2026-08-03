@@ -5,13 +5,21 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getMyBuildJobs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("apk_build_jobs")
-      .select("*")
-      .eq("user_id", context.userId)
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    return data ?? [];
+    try {
+      const { data, error } = await context.supabase
+        .from("apk_build_jobs")
+        .select("*")
+        .eq("user_id", context.userId)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("[getMyBuildJobs] Supabase error:", error);
+        throw error;
+      }
+      return data ?? [];
+    } catch (e) {
+      console.error("[getMyBuildJobs] Unexpected error:", e);
+      throw e;
+    }
   });
 
 export const createBuildJob = createServerFn({ method: "POST" })

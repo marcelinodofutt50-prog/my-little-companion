@@ -194,6 +194,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       url = signed?.signedUrl ?? null;
     }
 
+    // Build payload dynamically to avoid schema cache issues with reply_to_id
     const payload: any = {
       thread_id: effectiveThreadId,
       sender_id: context.userId,
@@ -201,8 +202,12 @@ export const sendMessage = createServerFn({ method: "POST" })
       body: data.body ?? null,
       attachment_url: url,
       attachment_type: data.attachmentType ?? null,
-      reply_to_id: data.replyToId ?? null,
     };
+
+    // Only add reply_to_id if it's explicitly provided
+    if (data.replyToId) {
+      payload.reply_to_id = data.replyToId;
+    }
 
     async function doInsert(p: any) {
       const result = await context.supabase.from("support_messages").insert(p).select("*").maybeSingle();
