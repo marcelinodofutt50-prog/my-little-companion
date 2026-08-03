@@ -1235,7 +1235,7 @@ function LegacyLookup() {
     <div className="border-t border-border/40 px-5 py-4">
       <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-primary">
-          <ShieldCheck className="h-3.5 w-3.5" /> Verificação de Membro Antigo
+          <ShieldCheck className="h-3.5 w-3.5" /> Login de Elegibilidade: Membro Antigo
         </div>
         <div className="mt-3 grid gap-2 md:grid-cols-3">
           {[
