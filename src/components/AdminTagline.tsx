@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 export function AdminTagline({ className = "" }: { className?: string }) {
   const words = ["Your", "shadow,", "everywhere."];
   return (
-    <div className={`flex items-baseline gap-1.5 font-display text-sm italic tracking-tight sm:text-base ${className}`}>
+    <div className={`flex items-baseline gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.25em] ${className}`}>
       {words.map((w, i) => (
         <motion.span
           key={w}

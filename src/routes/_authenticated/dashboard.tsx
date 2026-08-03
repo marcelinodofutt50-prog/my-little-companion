@@ -190,19 +190,22 @@ function DashboardPage() {
                 <div className="lg:col-span-2 space-y-6">
                   <div className="grid gap-4 sm:grid-cols-3">
                     {[
-                      { label: "SLA Commitment", value: "99.98%", icon: ShieldIcon, color: "text-primary" },
-                      { label: "Asset Compliance", value: "Compliant", icon: ShieldIcon, color: "text-neon" },
-                      { label: "Network Latency", value: "14ms", icon: Globe, color: "text-cyan" },
+                      { label: "SLA Commitment", value: "99.98%", icon: ShieldIcon, color: "text-primary", sub: "Global Average" },
+                      { label: "Asset Compliance", value: "Compliant", icon: ShieldIcon, color: "text-neon", sub: "Standard ISO-27001" },
+                      { label: "Network Latency", value: "14ms", icon: Globe, color: "text-cyan", sub: "Enterprise Fiber" },
                     ].map((stat, i) => (
-                      <Card key={i} className="border-border/40 bg-card/30 backdrop-blur-md overflow-hidden group">
+                      <Card key={i} className="border-border/40 bg-card/30 backdrop-blur-md overflow-hidden group hover:border-primary/40 transition-all duration-300">
                         <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <CardContent className="flex flex-col gap-3 p-5">
-                          <div className={`rounded-lg bg-white/5 p-2 w-fit border border-white/10 ${stat.color}`}>
-                            <stat.icon className="h-4 w-4" />
+                          <div className="flex items-center justify-between">
+                            <div className={`rounded-lg bg-white/5 p-2 w-fit border border-white/10 ${stat.color}`}>
+                              <stat.icon className="h-4 w-4" />
+                            </div>
+                            <div className="font-mono text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40">{stat.sub}</div>
                           </div>
                           <div>
                             <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">{stat.label}</div>
-                            <div className="text-xl font-extrabold tracking-tight mt-0.5">{stat.value}</div>
+                            <div className="text-2xl font-extrabold tracking-tight mt-0.5">{stat.value}</div>
                           </div>
                         </CardContent>
                       </Card>

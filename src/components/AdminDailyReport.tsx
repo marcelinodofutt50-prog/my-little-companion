@@ -45,23 +45,23 @@ export function AdminDailyReport() {
 
 
   return (
-    <Card className="border border-border/60 bg-background/60 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <Card className="border border-border/40 bg-card/30 backdrop-blur-md shadow-sm overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-3 bg-muted/20 border-b border-border/40">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="flex items-center gap-2 transition-opacity hover:opacity-80"
         >
-          <div className="rounded-md bg-neon/10 p-1.5 text-neon">
-            <Activity className="h-4 w-4" />
+          <div className="rounded bg-primary/10 p-1.5 text-primary border border-primary/20">
+            <Activity className="h-3.5 w-3.5" />
           </div>
-          <CardTitle className="font-display text-sm tracking-tight">
-            Relatório diário
-            <span className="ml-2 font-mono text-[10px] text-muted-foreground opacity-50">
-              {isCollapsed ? "[+]" : "[-]"}
+          <CardTitle className="font-mono text-[10px] font-bold uppercase tracking-[0.2em]">
+            Operational Intelligence
+            <span className="ml-2 text-muted-foreground/50 lowercase italic tracking-normal">
+              {isCollapsed ? "[+ expand]" : "[- collapse]"}
             </span>
           </CardTitle>
         </button>
-        <Button size="icon" variant="ghost" onClick={load} disabled={loading} className="h-7 w-7">
+        <Button size="icon" variant="ghost" onClick={load} disabled={loading} className="h-8 w-8 hover:bg-white/5">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
         </Button>
       </CardHeader>
