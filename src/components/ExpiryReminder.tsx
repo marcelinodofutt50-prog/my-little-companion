@@ -10,7 +10,7 @@ type Item = { label: string; days: number; sev: "critical" | "warning"; trial: b
 const DISMISS_KEY = "shadow:expiry-reminder-dismissed";
 
 export function ExpiryReminder() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
   const [dismissed, setDismissed] = useState(true);
   const serverNow = useServerNow(60_000);
 
@@ -22,29 +22,32 @@ export function ExpiryReminder() {
     (async () => {
       const { data } = await supabase
         .from("licenses")
-        .select("plan_slug, expires_at, server_paid_until, revoked, disabled_at, is_trial")
+        .select("plan_slug, expires_at, server_paid_until, revoked, disabled_at, suspended_at, is_trial")
         .eq("revoked", false)
         .is("disabled_at", null);
       if (!alive || !data) return;
-      const list: Item[] = [];
-      for (const l of data as any[]) {
-        const st = licenseExpiryState(l, serverNow);
-        if (!st.active) continue;
-        if (st.severity && st.daysLeft !== null) {
-          const label =
-            st.kind === "lifetime"
-              ? "Mensalidade do servidor"
-              : `${st.kind === "trial" ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim();
-          list.push({ label, days: st.daysLeft, sev: st.severity, trial: st.kind === "trial" });
-        }
-      }
-      list.sort((a, b) => a.days - b.days);
-      setItems(list.slice(0, 3));
+      setRows(data as any[]);
     })();
     return () => { alive = false; };
-  }, [serverNow]);
+  }, []);
+
+  const items: Item[] = [];
+  for (const l of rows) {
+    const st = licenseExpiryState(l, serverNow);
+    if (!st.active) continue;
+    if (st.severity && st.daysLeft !== null) {
+      const label =
+        st.kind === "lifetime"
+          ? "Mensalidade do servidor"
+          : `${st.kind === "trial" ? "Teste" : "Licença"} ${l.plan_slug ?? ""}`.trim();
+      items.push({ label, days: st.daysLeft, sev: st.severity, trial: st.kind === "trial" });
+    }
+  }
+  items.sort((a, b) => a.days - b.days);
+  items.splice(3);
 
   if (dismissed || items.length === 0) return null;
+
   const worst = items[0];
   const c = severityColor(worst.sev);
 
