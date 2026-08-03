@@ -109,52 +109,52 @@
 
 /* ===== Tema claro (segue o tema do sistema por padrão) ===== */
 html.theme-light {
-  color-scheme: light;
+  color-scheme: dark; /* Force dark context even in light mode for the landing page */
 
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  --background: #050505;
+  --foreground: #e0e0e0;
 
-  --card: #ffffff;
-  --card-foreground: #1a1a1a;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
+  --card: #0a0a0a;
+  --card-foreground: #e0e0e0;
+  --popover: #0a0a0a;
+  --popover-foreground: #e0e0e0;
 
-  --primary: #006a4e;
-  --primary-foreground: #ffffff;
+  --primary: #c9a84c;
+  --primary-foreground: #000000;
 
-  --secondary: #f4f4f4;
-  --secondary-foreground: #1a1a1a;
-  --muted: #f4f4f4;
-  --muted-foreground: #555555;
+  --secondary: #121212;
+  --secondary-foreground: #e0e0e0;
+  --muted: #121212;
+  --muted-foreground: #888888;
 
-  --accent: #f4f4f4;
-  --accent-foreground: #006a4e;
+  --accent: #1a1a1a;
+  --accent-foreground: #c9a84c;
 
-  --destructive: #cc0000;
+  --destructive: #ff3b3b;
   --destructive-foreground: #ffffff;
 
-  --border: #e2e2e2;
-  --input: #e2e2e2;
-  --ring: rgba(0, 106, 78, 0.2);
+  --border: #1a1a1a;
+  --input: #1a1a1a;
+  --ring: rgba(201, 168, 76, 0.3);
 
-  --neon: #006a4e;
-  --cyan: #004d40;
-  --violet: #2e7d32;
-  --danger: #cc0000;
-  --chart-1: #006a4e;
-  --chart-2: #2e7d32;
-  --chart-3: #1a1a1a;
-  --chart-4: #555555;
-  --chart-5: #cc0000;
+  --neon: #c9a84c;
+  --cyan: #888888;
+  --violet: #ffffff;
+  --danger: #ff3b3b;
+  --chart-1: #c9a84c;
+  --chart-2: #888888;
+  --chart-3: #ffffff;
+  --chart-4: #444444;
+  --chart-5: #ff3b3b;
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1a1a1a;
-  --sidebar-primary: #006a4e;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f4;
-  --sidebar-accent-foreground: #1a1a1a;
-  --sidebar-border: #e2e2e2;
-  --sidebar-ring: rgba(0, 106, 78, 0.2);
+  --sidebar: #050505;
+  --sidebar-foreground: #e0e0e0;
+  --sidebar-primary: #c9a84c;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #121212;
+  --sidebar-accent-foreground: #e0e0e0;
+  --sidebar-border: #1a1a1a;
+  --sidebar-ring: rgba(201, 168, 76, 0.3);
 }
 
 html.theme-light body {
