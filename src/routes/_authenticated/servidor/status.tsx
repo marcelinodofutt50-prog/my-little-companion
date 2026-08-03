@@ -346,7 +346,7 @@ function NotificationSettings() {
     if (!settings.webhook_url) return toast.error("Insira uma URL de Webhook");
     setLoading(true);
     try {
-      await triggerTest({ url: settings.webhook_url });
+      await triggerTest({ data: { url: settings.webhook_url } });
       toast.success("Notificação de teste enviada com sucesso");
     } catch (e) {
       toast.error("Falha no envio do webhook");
