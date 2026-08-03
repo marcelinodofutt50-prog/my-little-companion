@@ -27,7 +27,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
-    const roles = await resolveRoles(context);
+    const roles = await resolveRoles(context as any);
     
     if (!roles.isStaff) {
       const { data: license } = await context.supabase
