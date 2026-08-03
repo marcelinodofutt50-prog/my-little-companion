@@ -78,7 +78,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
                   <Link to="/dashboard" hash="downloads" search={{ theme: search?.theme }} className="flex items-center gap-2.5">
                     <Download className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">{t("nav.downloads") as string}</span>}
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
