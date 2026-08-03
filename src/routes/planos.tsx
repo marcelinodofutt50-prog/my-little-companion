@@ -618,6 +618,8 @@ function PlansPage() {
           useCash={useCash}
           featuredSlug="lifetime_46"
         />
+        <OrderCalculator />
+
         {licenses.length === 0 && (
           <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
             Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
