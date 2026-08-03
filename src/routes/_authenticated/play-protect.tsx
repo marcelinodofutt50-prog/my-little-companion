@@ -406,7 +406,7 @@ function PlayProtectPage() {
             <div className="mt-12">
               <div className="mb-4 flex items-center gap-2">
                 <span className="h-px flex-1 bg-violet/30" />
-                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Método público — Shadow Bypass self-service (beta)</span>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Método público — Shadow Bypass self-service · GRÁTIS (beta)</span>
                 <span className="h-px flex-1 bg-violet/30" />
               </div>
               <PublicBuilderSection />
