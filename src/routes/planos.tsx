@@ -73,7 +73,7 @@ type PlanMeta = {
 
 };
 
-function metaFor(plan: Plan): PlanMeta {
+function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
   const s = plan.slug.toLowerCase();
   if (s.includes("lifetime")) return {
     tagline: "Acesso perpétuo à linha 4.6+ com atualizações inclusas.",
@@ -321,22 +321,23 @@ function PlansPage() {
 
 
   const { licenses, servers, sources, upgrades } = useMemo(() => {
-    const serverAll = plans.filter((p) => p.category === "server");
+    const tFunc = t; // helper for nested function
+    const serverAll = plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "server");
     const serverFiltered = isLegacy
       ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
     // O upgrade de R$ 600 deve aparecer para quem é legacy (v457)
     // E agora também garantimos que o plano mensal apareça para upgrades
-    const upgradeList = plans.filter((p) => p.category === "upgrade");
+    const upgradeList = plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "upgrade");
     
     return {
-      licenses: plans.filter((p) => p.category === "license"),
+      licenses: plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "license"),
       servers: serverFiltered,
-      sources: plans.filter((p) => p.category === "source"),
+      sources: plans.map(p => ({ ...p, meta: metaFor(p, tFunc) })).filter((p) => p.category === "source"),
       upgrades: isLegacy ? upgradeList : [],
     };
-  }, [plans, isLegacy]);
+  }, [plans, isLegacy, t]);
 
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
