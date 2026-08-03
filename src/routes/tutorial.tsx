@@ -48,6 +48,17 @@ function TutorialPage() {
 }
 
 export const Route = createFileRoute("/tutorial")({
-  head: () => ({ meta: [{ title: "Tutorial — Shadow" }, { name: "description", content: "Aprenda a usar o Shadow BTMOB." }] }),
+  head: () => ({
+    meta: [
+      { title: "Tutorial — Shadow" },
+      { name: "description", content: "Aprenda a usar o Shadow BTMOB: instalação, configuração, downloads e primeiros passos passo a passo." },
+      { property: "og:title", content: "Tutorial — Shadow" },
+      { property: "og:description", content: "Guia completo para instalar e usar o Shadow BTMOB." },
+      { property: "og:type", content: "article" },
+      { property: "og:url", content: siteUrl("/tutorial") },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: siteUrl("/tutorial") }],
+  }),
   component: TutorialPage,
 });
