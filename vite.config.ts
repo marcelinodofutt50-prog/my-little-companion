@@ -17,4 +17,5 @@ export default defineConfig({
     server: { entry: "server" },
   },
   ...(isVercel ? { nitro: { preset: "vercel" } } : {}),
+  vite: { plugins: [imagetools()] },
 });
