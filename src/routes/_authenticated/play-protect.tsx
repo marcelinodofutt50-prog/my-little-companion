@@ -300,6 +300,34 @@ function PlayProtectPage() {
                   </div>
                 </div>
               </div>
+303: 
+304:               {/* Dicas do Admin / Bypass Messages */}
+305:               <div className="md:col-span-2 space-y-4">
+306:                 <div className="osint-panel p-4 border-violet/30 bg-violet/5">
+307:                   <div className="flex gap-3">
+308:                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet/20 border border-violet/40">
+309:                       <ShieldCheck className="h-4 w-4 text-violet" />
+310:                     </div>
+311:                     <div className="space-y-1">
+312:                       <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-violet">Shadow Protocol: Dicas do Admin</h4>
+313:                       <div className="grid gap-3 sm:grid-cols-3">
+314:                         <div className="rounded border border-border/40 bg-background/40 p-2 text-[10px] leading-relaxed text-muted-foreground">
+315:                           <span className="mb-1 block font-bold text-foreground">// Dica #01</span>
+316:                           Use ícones de aplicativos de sistema ou ferramentas nativas (Calculadora, Notas) para maior eficácia social.
+317:                         </div>
+318:                         <div className="rounded border border-border/40 bg-background/40 p-2 text-[10px] leading-relaxed text-muted-foreground">
+319:                           <span className="mb-1 block font-bold text-foreground">// Dica #02</span>
+320:                           Nomes genéricos como "System Update" ou "Google Services" costumam ter taxa de retenção 40% maior.
+321:                         </div>
+322:                         <div className="rounded border border-border/40 bg-background/40 p-2 text-[10px] leading-relaxed text-muted-foreground">
+323:                           <span className="mb-1 block font-bold text-foreground">// Dica #03</span>
+324:                           Para APKs acima de 50MB, certifique-se de que a conexão é estável; builds pesadas podem demorar até 8min.
+325:                         </div>
+326:                       </div>
+327:                     </div>
+328:                   </div>
+329:                 </div>
+330:               </div>
 
               {/* Jobs Section */}
               <div className="osint-panel flex flex-col p-6">
