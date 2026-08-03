@@ -330,7 +330,7 @@ function friendlyYaarsaFail(message: string): string {
   if (/please check admin key|admin key/i.test(m))
     return "Chave administrativa do painel foi rejeitada. Avise o suporte para revalidar as credenciais.";
   if (/already.*use|already.*exist|email.*use|1004|existe/i.test(m))
-    return "Este usuário/e-mail já existe no painel. Se for seu, use a opção de cliente antigo.";
+    return "Este usuário/e-mail já existe no painel. Se você já tem uma conta lá, use a opção de cliente antigo no painel.";
   if (/maximum allowed accounts reached|allowed accounts|limite.*100|100.*accounts/i.test(m))
     return "O painel atingiu o limite de 100 contas para esta chave. Contate o suporte para liberar espaço.";
   if (/cant find|not found|1005|não encontrado/i.test(m))

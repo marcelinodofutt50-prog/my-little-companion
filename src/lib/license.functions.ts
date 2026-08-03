@@ -113,7 +113,7 @@ export const generateTrial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor } = await import("./yaarsa.server");
+    const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, panelFromPlanSlug } = await import("./yaarsa.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Deterministic credentials seeded purely by userId. The seed lives
@@ -164,18 +164,19 @@ export const generateTrial = createServerFn({ method: "POST" })
       planSlug: "trial",
       totalPaid: 0,
       additionalInfo: "shadow-trial",
+      panel: panelFromPlanSlug("trial"),
     });
+    
     const alreadyExists = yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
     if (yr.Fail && !alreadyExists) {
       // Yaarsa really failed: release the claim so the user can try again.
-      // Only delete rows that haven't been linked to a license yet.
       await supabaseAdmin.from("trials").delete()
         .eq("user_id", userId).is("license_id", null);
       throw new Error(`Painel: ${yr.Fail}`);
     }
 
     const expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 1);
-    const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert({
+    const licPayload = {
       user_id: userId,
       plan_slug: "trial",
       yaarsa_username: creds.username,
@@ -183,7 +184,10 @@ export const generateTrial = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: expiresAt.toISOString(),
       is_trial: true,
-    }).select("*").single();
+      panel: panelFromPlanSlug("trial"), // Ensure panel is set correctly for trial
+    };
+
+    const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").single();
     if (licErr || !lic) {
       // Leave the claim in place; the Yaarsa account is safe and the next
       // retry will short-circuit via step (1) once the row does land.

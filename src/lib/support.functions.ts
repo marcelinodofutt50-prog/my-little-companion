@@ -32,11 +32,28 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
     // Retorna null para sinalizar que não há atendimento ativo.
     if (isStaff) return null;
 
-    const { data, error } = await context.supabase
-      .from("support_threads")
-      .insert({ user_id: context.userId, subject: "Suporte Shadow", status: "open" })
-      .select("*")
-      .single();
+    const threadPayload = {
+      user_id: context.userId,
+      subject: "Suporte Shadow",
+      status: "open",
+      category: "outro",
+      priority: "normal"
+    };
+    
+    async function doCreate(p: any) {
+      return context.supabase.from("support_threads").insert(p).select("*").single();
+    }
+
+    let { data, error } = await doCreate(threadPayload);
+    
+    // Fallback para colunas novas (category/priority) se o cache falhar
+    if (error && (error as any).code === "PGRST204") {
+      const { category, priority, ...fallback } = threadPayload;
+      const retry = await doCreate(fallback);
+      data = retry.data;
+      error = retry.error;
+    }
+
     if (error) throw error;
     return data;
   });
@@ -131,12 +148,28 @@ export const sendMessage = createServerFn({ method: "POST" })
       if (thread.user_id !== context.userId) throw new Error("Acesso negado a esta conversa");
       if (thread.status === "closed") {
         // Auto-open a fresh thread for the customer and post there.
-        const { data: nt, error: nErr } = await context.supabase
-          .from("support_threads")
-          .insert({ user_id: context.userId, subject: "Suporte Shadow", status: "open" })
-          .select("id")
-          .single();
-        if (nErr) throw nErr;
+        const ntPayload = {
+          user_id: context.userId,
+          subject: "Suporte Shadow",
+          status: "open",
+          category: "outro",
+          priority: "normal"
+        };
+        
+        async function doCreate(p: any) {
+          return context.supabase.from("support_threads").insert(p).select("id").single();
+        }
+        
+        let { data: nt, error: nErr } = await doCreate(ntPayload);
+        
+        if (nErr && (nErr as any).code === "PGRST204") {
+          const { category, priority, ...fallback } = ntPayload;
+          const retry = await doCreate(fallback);
+          nt = retry.data;
+          nErr = retry.error;
+        }
+
+        if (nErr || !nt) throw nErr || new Error("Falha ao criar atendimento");
         effectiveThreadId = nt.id;
       }
     } else {
@@ -152,7 +185,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       url = signed?.signedUrl ?? null;
     }
 
-    const { data: msg, error } = await context.supabase.from("support_messages").insert({
+    const payload: any = {
       thread_id: effectiveThreadId,
       sender_id: context.userId,
       is_admin: isStaff,
@@ -160,7 +193,23 @@ export const sendMessage = createServerFn({ method: "POST" })
       attachment_url: url,
       attachment_type: data.attachmentType ?? null,
       reply_to_id: data.replyToId ?? null,
-    }).select("*").single();
+    };
+
+    async function doInsert(p: any) {
+      return context.supabase.from("support_messages").insert(p).select("*").single();
+    }
+
+    let { data: msg, error } = await doInsert(payload);
+
+    // Fallback: se o cache de schema do PostgREST estiver desatualizado
+    // (PGRST204 "Could not find the 'reply_to_id' column"), tentamos sem o reply.
+    if (error && (error as any).code === "PGRST204") {
+      const { reply_to_id, ...fallback } = payload;
+      const retry = await doInsert(fallback);
+      msg = retry.data;
+      error = retry.error;
+    }
+
     if (error) throw error;
     
     // Inicia análise por IA se não for staff e a mensagem contiver gatilhos de erro de login

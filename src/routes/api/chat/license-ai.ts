@@ -25,16 +25,16 @@ REGRAS:
 async function requireAdmin(request: Request) {
   const auth = request.headers.get("authorization") ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
-  if (!token) return { error: new Response("Unauthorized", { status: 401 }) };
+  if (!token) return { error: new Response(JSON.stringify({ error: "Missing token" }), { status: 401, headers: { "content-type": "application/json" } }) };
   const { createClient } = await import("@supabase/supabase-js");
   const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data: u } = await sb.auth.getUser();
-  if (!u.user) return { error: new Response("Unauthorized", { status: 401 }) };
+  if (!u.user) return { error: new Response(JSON.stringify({ error: "Invalid session" }), { status: 401, headers: { "content-type": "application/json" } }) };
   const { data: isAdmin } = await sb.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
-  if (!isAdmin) return { error: new Response("Forbidden", { status: 403 }) };
+  if (!isAdmin) return { error: new Response(JSON.stringify({ error: "Access forbidden" }), { status: 403, headers: { "content-type": "application/json" } }) };
   return { userId: u.user.id };
 }
 
