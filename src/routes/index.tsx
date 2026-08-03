@@ -109,7 +109,7 @@ function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.4 }}
-            className="font-display text-7xl font-extrabold tracking-[-0.04em] sm:text-9xl text-white mb-6"
+            className="font-display text-7xl font-extrabold tracking-[-0.04em] sm:text-9xl text-foreground mb-6"
           >
             SHADOW
           </motion.h1>
