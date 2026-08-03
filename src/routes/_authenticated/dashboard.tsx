@@ -301,7 +301,7 @@ function DashboardPage() {
                           </div>
                           {licenseDownloads.length > 0 && (
                             <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
-                              {licenseDownloads.map((file) => (
+                              {licenseDownloads.map((file: { url: string; label: string }) => (
                                 <Button key={file.url} size="sm" variant="outline" asChild>
                                   <a href={file.url} target="_blank" rel="noreferrer">
                                     <Download className="mr-2 h-4 w-4" />{file.label}<ExternalLink className="ml-2 h-3 w-3" />
