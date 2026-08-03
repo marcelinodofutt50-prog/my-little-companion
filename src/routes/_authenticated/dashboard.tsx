@@ -143,11 +143,13 @@ function DashboardPage() {
   }
   const fallbackDownloads = activeLicense ? downloadsForLicense(activeLicense) : []
   const daysLeft = expiry ? expiry.daysLeft : null
+  const lifetimeActive = !!expiry && expiry.active && expiry.countdownAt === null
   const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
 
-  const statusColor = daysLeft === null ? "text-red-500" : daysLeft <= 3 ? "text-amber-500" : "text-neon"
-  const statusRing = daysLeft === null ? "border-red-500/30 bg-red-500/5 shadow-red-500/10" : daysLeft <= 3 ? "border-amber-500/30 bg-amber-500/5 shadow-amber-500/10" : "border-neon/30 bg-neon/5 shadow-neon/10"
+  const statusColor = lifetimeActive ? "text-neon" : daysLeft === null ? "text-red-500" : daysLeft <= 3 ? "text-amber-500" : "text-neon"
+  const statusRing = lifetimeActive ? "border-neon/30 bg-neon/5 shadow-neon/10" : daysLeft === null ? "border-red-500/30 bg-red-500/5 shadow-red-500/10" : daysLeft <= 3 ? "border-amber-500/30 bg-amber-500/5 shadow-amber-500/10" : "border-neon/30 bg-neon/5 shadow-neon/10"
+
 
   const copyPrimary = () => {
     if (primary) {
