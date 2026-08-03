@@ -23,7 +23,7 @@ export async function validateAndFixSchema() {
     }
 
     // 2. Health check of critical tables
-    const tables = ["support_messages", "support_threads", "apk_jobs"];
+    const tables = ["support_messages", "support_threads", "apk_build_jobs"];
     for (const table of tables) {
       const { error } = await supabaseAdmin.from(table as any).select("id" as any).limit(1);
       if (error) {
