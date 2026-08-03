@@ -260,6 +260,42 @@ function DashboardPage() {
                             <span>Servidor: {license.server_ip || '—'}</span>
                             <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleDateString('pt-BR') : 'Vitalícia'}</span>
                           </div>
+                          <div className="space-y-2 border-t border-border/50 pt-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="font-mono text-[10px] uppercase"
+                              onClick={() => setRevealed((prev) => ({ ...prev, [license.id]: !prev[license.id] }))}
+                            >
+                              {revealed[license.id] ? <EyeOff className="mr-1.5 h-3.5 w-3.5" /> : <Eye className="mr-1.5 h-3.5 w-3.5" />}
+                              {revealed[license.id] ? 'Ocultar dados' : 'Mostrar dados da licença'}
+                            </Button>
+                            {revealed[license.id] && (
+                              <div className="space-y-1.5 rounded-md border border-border/60 bg-background/60 p-3 font-mono text-xs">
+                                {[
+                                  { label: 'Usuário', value: license.yaarsa_username || license.yaarsa_email },
+                                  { label: 'E-mail', value: license.yaarsa_email },
+                                  { label: 'Senha', value: license.password ?? '••••••' },
+                                  { label: 'Servidor', value: license.server_ip || '—' },
+                                ].map((row) => (
+                                  <div key={row.label} className="flex items-center justify-between gap-2">
+                                    <span className="text-muted-foreground">{row.label}</span>
+                                    <button
+                                      type="button"
+                                      className="flex items-center gap-1.5 truncate text-foreground hover:text-primary"
+                                      onClick={() => { navigator.clipboard.writeText(String(row.value ?? '')); toast.success('Copiado!') }}
+                                    >
+                                      <span className="truncate">{row.value}</span>
+                                      <Copy className="h-3 w-3 shrink-0" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <p className="pt-1 text-[10px] normal-case text-muted-foreground">
+                                  Use estes dados para entrar no painel Shadow. Nunca compartilhe sua senha.
+                                </p>
+                              </div>
+                            )}
+                          </div>
                           {licenseDownloads.length > 0 && (
                             <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
                               {licenseDownloads.map((file) => (
