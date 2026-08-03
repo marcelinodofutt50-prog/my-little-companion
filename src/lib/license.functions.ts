@@ -113,7 +113,7 @@ export const generateTrial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor } = await import("./yaarsa.server");
+    const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, panelFromPlanSlug } = await import("./yaarsa.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Deterministic credentials seeded purely by userId. The seed lives
