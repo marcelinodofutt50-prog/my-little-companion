@@ -33,6 +33,21 @@ function PlayProtectPage() {
   const getJobs = useServerFn(getMyBuildJobs);
   const createJob = useServerFn(createBuildJob);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [appName, setAppName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedIcon, setSelectedIcon] = useState<File | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (data.user) {
+        const role = await fetchMyRole(data.user.id);
+        setIsAdmin(isStaffRole(role));
+      }
+    });
+  }, []);
+
   const { data: user } = useQuery({
     queryKey: ['auth-user'],
     queryFn: async () => {
@@ -69,21 +84,6 @@ function PlayProtectPage() {
     }
   });
 
-
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [appName, setAppName] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedIcon, setSelectedIcon] = useState<File | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (data.user) {
-        const role = await fetchMyRole(data.user.id);
-        setIsAdmin(isStaffRole(role));
-      }
-    });
-  }, []);
 
   const handleBuild = async () => {
     if (!selectedFile || !appName) {
