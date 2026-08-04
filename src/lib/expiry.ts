@@ -109,7 +109,7 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
 
   const renewalNote =
     isEffectivelyLifetime
-      ? "Sua licença é vitalícia e não expira. Só a mensalidade do servidor precisa ser paga até o dia 20 de cada mês para manter o acesso."
+      ? "Sua licença é vitalícia e não expira (o aviso de vencimento acima refere-se apenas à mensalidade do servidor, que precisa estar em dia até o dia 20)."
       : kind === "trial"
         ? "Teste grátis de 24 horas exatas contadas a partir da ativação. O contador não depende de meia-noite — quando zerar, o login é encerrado automaticamente."
         : "Sua licença mensal expira quando os dias comprados acabarem. O dia 20 do servidor é uma cobrança separada e não muda esse contador.";
