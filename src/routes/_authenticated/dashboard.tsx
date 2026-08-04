@@ -204,8 +204,8 @@ function DashboardPage() {
                     </div>
                   </div>
                   <div className={`shrink-0 rounded-md border-2 px-5 py-3 text-right font-mono shadow-sm ${statusRing}`}>
-                    <div className={`text-[10px] font-bold uppercase ${statusColor}`}>{lifetimeActive ? 'Protocolo' : 'Dias de licença'}</div>
-                    <div className={`mt-1 text-3xl font-black ${statusColor}`}>{lifetimeActive ? 'Ativo' : daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
+                    <div className={`text-[10px] font-bold uppercase ${statusColor}`}>{lifetimeActive ? 'Acesso' : 'Dias de licença'}</div>
+                    <div className={`mt-1 text-3xl font-black ${statusColor}`}>{lifetimeActive ? 'Vitalício' : daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
 
                     <div className="text-[10px] text-muted-foreground">{licenses?.length || 0} terminais ativos</div>
                   </div>

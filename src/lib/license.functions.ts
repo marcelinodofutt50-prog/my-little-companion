@@ -58,7 +58,14 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
     if (yr.Fail) {
       console.error("[suspendMyLicense] Yaarsa Date Fail:", yr.Fail);
-      throw new Error(`O servidor não respondeu corretamente ao comando de pausa. Tente novamente em alguns minutos. (Detalhe: ${yr.Fail})`);
+      // Se o erro for "1006" (date not accepted), o painel pode estar recusando a data de ontem.
+      // Tentamos uma data alternativa (1970) para forçar o bloqueio.
+      if (yr.Fail.includes("1006") || yr.Fail.includes("accepted")) {
+        const yrRetry = await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
+        if (yrRetry.Fail) throw new Error(`O servidor recusou o bloqueio de data. Tente novamente. (Detalhe: ${yrRetry.Fail})`);
+      } else {
+        throw new Error(`O servidor não respondeu corretamente ao comando de pausa. Tente novamente em alguns minutos. (Detalhe: ${yr.Fail})`);
+      }
     }
 
     // 2) troca a senha por uma aleatória (bloqueio real do login).
