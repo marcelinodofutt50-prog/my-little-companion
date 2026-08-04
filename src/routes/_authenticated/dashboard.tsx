@@ -383,11 +383,62 @@ function DashboardPage() {
                               )}
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 font-mono text-xs text-muted-foreground">
-                            <span>Servidor: {license.server_ip || '—'}</span>
-                            <span>Expira: {license.expires_at ? new Date(license.expires_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'Vitalícia'}</span>
-                          </div>
+                          {(() => {
+                            const fmt = (iso?: string | null) =>
+                              iso
+                                ? new Date(iso).toLocaleString('pt-BR', {
+                                    day: '2-digit', month: '2-digit', year: 'numeric',
+                                    hour: '2-digit', minute: '2-digit',
+                                    timeZone: 'America/Sao_Paulo',
+                                  }) + ' (BRT)'
+                                : '—'
+                            // Fim real da licença: se pausada, vale a data guardada na pausa.
+                            const endIso = state.paused
+                              ? (license.expires_at_before_suspend ?? license.expires_at)
+                              : license.expires_at
+                            const startMs = license.created_at ? new Date(license.created_at).getTime() : null
+                            const endMs = endIso ? new Date(endIso).getTime() : null
+                            const totalDays =
+                              startMs && endMs ? Math.max(0, Math.round((endMs - startMs) / 86400000)) : null
+                            return (
+                              <div className="grid gap-1.5 rounded-md border border-border/50 bg-background/50 p-3 font-mono text-[11px] sm:grid-cols-2">
+                                <div className="flex justify-between gap-2 sm:col-span-2">
+                                  <span className="text-muted-foreground">Comprada em</span>
+                                  <span className="text-foreground">{fmt(license.created_at)}</span>
+                                </div>
+                                <div className="flex justify-between gap-2 sm:col-span-2">
+                                  <span className="text-muted-foreground">{state.paused ? 'Venceria em' : 'Vence em'}</span>
+                                  <span className="text-foreground">{endIso ? fmt(endIso) : 'Vitalícia'}</span>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                  <span className="text-muted-foreground">Período contratado</span>
+                                  <span className="text-foreground">{totalDays !== null ? `${totalDays} dia${totalDays === 1 ? '' : 's'}` : 'Vitalícia'}</span>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                  <span className="text-muted-foreground">Dias restantes</span>
+                                  <span className="text-foreground">
+                                    {state.paused
+                                      ? 'congelados'
+                                      : state.daysLeft !== null
+                                        ? `${Math.max(0, state.daysLeft)}`
+                                        : '∞'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between gap-2 sm:col-span-2">
+                                  <span className="text-muted-foreground">Servidor</span>
+                                  <span className="text-foreground">{license.server_ip || '—'}</span>
+                                </div>
+                                {state.serverDueAt && (
+                                  <div className="flex justify-between gap-2 sm:col-span-2">
+                                    <span className="text-muted-foreground">Mensalidade do servidor</span>
+                                    <span className="text-foreground">{fmt(state.serverDueAt)}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })()}
                           <p className="text-[11px] leading-relaxed text-muted-foreground">{state.renewalNote}</p>
+
 
                           <div className="border-t border-border/50 pt-3">
                             <LicensePauseControls license={license} state={state} onDone={() => void refetchLicenses()} />
