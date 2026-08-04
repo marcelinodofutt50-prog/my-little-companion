@@ -54,7 +54,8 @@ export function canPauseLicense(lic: PauseLicenseLike | null | undefined, now = 
     }
   
   // Se a licença já expirou no banco, não faz sentido pausar (não há tempo a congelar)
-  if (lic.expires_at && new Date(lic.expires_at).getTime() <= now) {
+  // Permitimos um buffer de 12h para cobrir discrepâncias de timezone entre banco e relógio local.
+  if (lic.expires_at && new Date(lic.expires_at).getTime() < now - (12 * 60 * 60 * 1000)) {
     return { ok: false, code: "expired", message: "Licença já expirada — renove antes de pausar." }
   }
 

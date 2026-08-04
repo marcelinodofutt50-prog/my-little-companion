@@ -91,10 +91,10 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
     : null;
   
   // Uma licença só é ativa se não estiver revogada, desativada ou pausada,
-  // E se a data de expiração (se houver) for futura.
+  // E se a data de expiração (se houver) for futura (ou dentro do buffer de 24h do painel).
   const active =
     !l.revoked && !l.disabled_at && !l.suspended_at &&
-    (!l.expires_at || new Date(l.expires_at).getTime() > now);
+    (!l.expires_at || new Date(l.expires_at).getTime() > now - (24 * 60 * 60 * 1000));
 
   const serverDueAt = l.server_paid_until
     ? `${String(l.server_paid_until).slice(0, 10)}T23:59:59`
