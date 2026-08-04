@@ -596,11 +596,13 @@ export type Database = {
           paid_externally_marked_at: string | null
           paid_externally_until: string | null
           panel: string
+          password_fingerprint: string | null
           plan_slug: string
           revoked: boolean
           server_ip: string
           server_overdue_at: string | null
           server_paid_until: string | null
+          suspend_password_fingerprint: string | null
           suspended_at: string | null
           suspended_by: string | null
           updated_at: string
@@ -627,11 +629,13 @@ export type Database = {
           paid_externally_marked_at?: string | null
           paid_externally_until?: string | null
           panel?: string
+          password_fingerprint?: string | null
           plan_slug: string
           revoked?: boolean
           server_ip?: string
           server_overdue_at?: string | null
           server_paid_until?: string | null
+          suspend_password_fingerprint?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           updated_at?: string
@@ -658,11 +662,13 @@ export type Database = {
           paid_externally_marked_at?: string | null
           paid_externally_until?: string | null
           panel?: string
+          password_fingerprint?: string | null
           plan_slug?: string
           revoked?: boolean
           server_ip?: string
           server_overdue_at?: string | null
           server_paid_until?: string | null
+          suspend_password_fingerprint?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
           updated_at?: string
@@ -1720,11 +1726,13 @@ export type Database = {
           paid_externally_marked_at: string | null
           paid_externally_until: string | null
           panel: string
+          password_fingerprint: string | null
           plan_slug: string
           revoked: boolean
           server_ip: string
           server_overdue_at: string | null
           server_paid_until: string | null
+          suspend_password_fingerprint: string | null
           suspended_at: string | null
           suspended_by: string | null
           updated_at: string
