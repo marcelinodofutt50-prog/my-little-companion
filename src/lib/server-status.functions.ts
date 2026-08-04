@@ -23,21 +23,21 @@ export const getServerStatus = createServerFn({ method: "GET" })
       const start = Date.now();
       
       try {
-        const endpoints = yaarsaEndpointsFor(baseUrl);
-        // We just do a HEAD or a small GET to the proxy to see if it's alive
-        // Since we don't want to trigger actions, we send a junk request
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch(endpoints[0], {
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+        // Reachability probe: any HTTP response (even 404) means the host is up.
+        // Yaarsa's root often returns 404 without a valid action param — that's healthy.
+        const response = await fetch(baseUrl, {
           method: "GET",
           signal: controller.signal,
+          redirect: "manual",
         }).finally(() => clearTimeout(timeoutId));
 
         const latency = Date.now() - start;
-        
-        // Yaarsa usually returns 200 even for some errors, but if it's 404 or 500 it's definitely bad
-        if (response.ok) {
+        const reachable = response.status < 500;
+
+        if (reachable) {
           results.push({
             panel,
             host,
@@ -61,7 +61,7 @@ export const getServerStatus = createServerFn({ method: "GET" })
           host,
           status: "offline",
           latency_ms: null,
-          message: e.name === "AbortError" ? "Timeout" : "Connection failed",
+          message: e.name === "AbortError" ? "Timeout" : "Sem conexão",
           last_checked: new Date().toISOString(),
         });
       }
