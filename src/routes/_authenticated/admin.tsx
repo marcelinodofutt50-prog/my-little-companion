@@ -1413,6 +1413,7 @@ function AdminPage() {
                               variant="outline"
                               className="h-7 font-mono text-[10px] uppercase"
                               onClick={() => bulkAction("Reprocessar")}
+                              title="Reprocessar os pagamentos do webhook para garantir que as licenças sejam criadas e apareçam no dashboard a partir das compras já feitas. faz isso so para verificar se ta tudo certo"
                             >
                               Reprocessar
                             </Button>
