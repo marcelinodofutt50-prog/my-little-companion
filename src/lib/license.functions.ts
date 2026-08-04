@@ -38,14 +38,36 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
 
 
     const panel = (lic as any).panel ?? "v457";
-    const { yaarsaExtend, yaarsaSetPassword, generateCredentials } = await import("./yaarsa.server");
+    const { yaarsaExtend, yaarsaSetPassword, generateCredentials, decrypt } = await import("./yaarsa.server");
+    const { sha256Hex } = await import("./password-safety.server");
+
+    // 0) SEGURANÇA: só pausamos se conseguirmos recuperar a senha original AGORA.
+    // Assim nunca trancamos um cliente que não conseguiríamos destravar depois.
+    let original: string | null = null;
+    try { original = decrypt(lic.yaarsa_password_enc); } catch { original = null; }
+    if (!original || original.length < 4) {
+      throw new Error("Não conseguimos validar sua senha original — fale com o suporte antes de pausar.");
+    }
+    const originalFp = sha256Hex(original);
+    const storedFp = (lic as any).password_fingerprint as string | null;
+    if (storedFp && storedFp !== originalFp) {
+      throw new Error("Divergência na senha registrada desta licença — fale com o suporte.");
+    }
 
     // 1) trava a data no painel
     const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
     if (yr.Fail) throw new Error(`Painel: ${yr.Fail}`);
 
-    // 2) troca a senha por uma aleatória (bloqueio real do login)
-    const tempPassword = generateCredentials().password;
+    // 2) troca a senha por uma aleatória (bloqueio real do login).
+    // A senha de pausa NUNCA é igual à original e NUNCA é gravada como senha
+    // do cliente — guardamos apenas a impressão digital para poder rejeitá-la.
+    let tempPassword = generateCredentials().password;
+    for (let i = 0; i < 5 && sha256Hex(tempPassword) === originalFp; i++) {
+      tempPassword = generateCredentials().password;
+    }
+    if (sha256Hex(tempPassword) === originalFp) {
+      throw new Error("Falha ao gerar senha de pausa segura — tente novamente.");
+    }
     const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
     if (pr.Fail) {
       // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
@@ -60,6 +82,8 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
       suspended_at: now.toISOString(),
       suspended_by: "user",
       expires_at_before_suspend: lic.expires_at,
+      password_fingerprint: originalFp,
+      suspend_password_fingerprint: sha256Hex(tempPassword),
     }).eq("id", lic.id).eq("user_id", userId);
     if (upErr) throw new Error(upErr.message);
 
@@ -107,15 +131,29 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     const ymd = newExpires.toISOString().slice(0, 10);
 
     const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
+    const { sha256Hex } = await import("./password-safety.server");
+
+    // 0) SEGURANÇA: valida a senha ANTES de mexer no painel.
+    let original: string | null = null;
+    try { original = decrypt(lic.yaarsa_password_enc); } catch { original = null; }
+    if (!original || original.length < 4) {
+      throw new Error("Não foi possível recuperar a senha original — fale com o suporte");
+    }
+    const fp = sha256Hex(original);
+    const expectedFp = (lic as any).password_fingerprint as string | null;
+    if (expectedFp && expectedFp !== fp) {
+      throw new Error("A senha registrada não confere com a original desta licença — fale com o suporte.");
+    }
+    const pausedFp = (lic as any).suspend_password_fingerprint as string | null;
+    if (pausedFp && pausedFp === fp) {
+      throw new Error("Bloqueado: a senha guardada é a senha temporária da pausa — fale com o suporte.");
+    }
 
     // 1) devolve os dias
     const yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
     if (yr.Fail) throw new Error(`Painel: ${yr.Fail}`);
 
     // 2) restaura a senha original (a mesma entregue na compra)
-    let original: string | null = null;
-    try { original = decrypt(lic.yaarsa_password_enc); } catch { original = null; }
-    if (!original) throw new Error("Não foi possível recuperar a senha original — fale com o suporte");
     const pr = await yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username);
     if (pr.Fail) throw new Error(`Painel (senha): ${pr.Fail}`);
 
@@ -125,6 +163,8 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       suspended_by: null,
       expires_at_before_suspend: null,
       expires_at: newExpires.toISOString(),
+      password_fingerprint: fp,
+      suspend_password_fingerprint: null,
     }).eq("id", lic.id).eq("user_id", userId);
     if (upErr) throw new Error(upErr.message);
 
