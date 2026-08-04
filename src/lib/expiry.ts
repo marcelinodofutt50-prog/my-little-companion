@@ -102,7 +102,7 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
   const licenseEnd = l.expires_at ?? null;
   const isEffectivelyLifetime =
     kind === "lifetime" ||
-    (licenseEnd ? new Date(licenseEnd).getTime() - now > 5 * 365 * MS_DAY : false);
+    (licenseEnd ? new Date(licenseEnd).getTime() - now > 2 * 365 * MS_DAY : false);
 
   const countdownAt = isEffectivelyLifetime ? null : licenseEnd;
   const daysLeft = daysUntil(countdownAt, now);
