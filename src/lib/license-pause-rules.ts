@@ -51,8 +51,9 @@ export function canPauseLicense(lic: PauseLicenseLike | null | undefined, now = 
       code: "trial",
       message: "Trials de 24h não podem ser pausados — o tempo corre até o fim.",
     }
-  if (!lic.expires_at)
-    return { ok: false, code: "no_expiry", message: "Licença sem data de expiração — fale com o suporte." }
+  // Licença vitalícia (sem expires_at) pode pausar: nada a congelar, apenas
+  // bloqueia o login no painel.
+  if (!lic.expires_at) return ok
 
   const left = new Date(lic.expires_at).getTime() - now
   if (left <= 0)
@@ -84,8 +85,7 @@ export function canResumeLicense(lic: PauseLicenseLike | null | undefined, now =
     }
 
   const baseline = lic.expires_at_before_suspend ?? lic.expires_at
-  if (!baseline)
-    return { ok: false, code: "no_expiry", message: "Sem data de expiração para restaurar — fale com o suporte." }
+  if (!baseline) return ok // vitalícia: nada de dias para restaurar
   if (new Date(baseline).getTime() - pausedAt <= 0)
     return {
       ok: false,

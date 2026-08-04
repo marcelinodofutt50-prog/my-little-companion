@@ -71,8 +71,8 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
     if (pr.Fail) {
       // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
-      const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : null;
-      if (back) await yaarsaExtend(lic.yaarsa_email, back, panel);
+      const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "2099-12-31";
+      await yaarsaExtend(lic.yaarsa_email, back, panel);
       throw new Error(`Painel (senha): ${pr.Fail}`);
     }
 
@@ -117,18 +117,17 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
 
     const panel = (lic as any).panel ?? "v457";
     const baseline = lic.expires_at_before_suspend ?? lic.expires_at;
-    if (!baseline) throw new Error("Sem data de expiração para restaurar");
-
 
     // Tempo que faltava NO MOMENTO DA PAUSA — os dias parados não contam.
-    const msLeft = Math.max(
-      0,
-      new Date(baseline).getTime() - new Date(lic.suspended_at).getTime(),
-    );
-    if (msLeft <= 0) throw new Error("A licença já estava expirada quando foi pausada — renove o plano");
+    // Licença vitalícia (sem baseline) volta com validade longa padrão.
+    const LIFETIME_YMD = "2099-12-31";
+    const msLeft = baseline
+      ? Math.max(0, new Date(baseline).getTime() - new Date(lic.suspended_at).getTime())
+      : null;
+    if (msLeft !== null && msLeft <= 0) throw new Error("A licença já estava expirada quando foi pausada — renove o plano");
 
-    const newExpires = new Date(Date.now() + msLeft);
-    const ymd = newExpires.toISOString().slice(0, 10);
+    const newExpires = msLeft !== null ? new Date(Date.now() + msLeft) : null;
+    const ymd = newExpires ? newExpires.toISOString().slice(0, 10) : LIFETIME_YMD;
 
     const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
     const { sha256Hex } = await import("./password-safety.server");
@@ -162,7 +161,7 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       suspended_at: null,
       suspended_by: null,
       expires_at_before_suspend: null,
-      expires_at: newExpires.toISOString(),
+      ...(newExpires ? { expires_at: newExpires.toISOString() } : {}),
       password_fingerprint: fp,
       suspend_password_fingerprint: null,
     }).eq("id", lic.id).eq("user_id", userId);
@@ -170,10 +169,10 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${panel}`, action: "license_resume", outcome: "success",
-      context: { license_id: lic.id, new_expires_at: newExpires.toISOString() } as any,
+      context: { license_id: lic.id, new_expires_at: newExpires?.toISOString() ?? null } as any,
     } as any);
 
-    return { ok: true, expires_at: newExpires.toISOString() };
+    return { ok: true, expires_at: newExpires?.toISOString() ?? null };
   });
 
 export const disableMyLicense = createServerFn({ method: "POST" })
