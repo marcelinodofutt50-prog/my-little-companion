@@ -51,13 +51,17 @@ export function canPauseLicense(lic: PauseLicenseLike | null | undefined, now = 
       code: "trial",
       message: "Trials de 24h não podem ser pausados — o tempo corre até o fim.",
     }
+  
+  // Se a licença já expirou no banco, não faz sentido pausar (não há tempo a congelar)
+  if (lic.expires_at && new Date(lic.expires_at).getTime() <= now) {
+    return { ok: false, code: "expired", message: "Licença já expirada — renove antes de pausar." }
+  }
+
   // Licença vitalícia (sem expires_at) pode pausar: nada a congelar, apenas
   // bloqueia o login no painel.
   if (!lic.expires_at) return ok
 
   const left = new Date(lic.expires_at).getTime() - now
-  if (left <= 0)
-    return { ok: false, code: "expired", message: "Licença já expirada — renove antes de pausar." }
   if (left < MIN_PAUSE_MS)
     return {
       ok: false,
