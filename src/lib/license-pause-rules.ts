@@ -17,6 +17,7 @@ export type PauseRuleCode =
   | "too_short"
   | "cooldown"
   | "expired_at_pause"
+  | "panel_error"
 
 export type PauseRuleResult = { ok: boolean; code: PauseRuleCode; message: string }
 

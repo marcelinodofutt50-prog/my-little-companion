@@ -56,7 +56,10 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
 
     // 1) trava a data no painel
     const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
-    if (yr.Fail) throw new Error(`Painel: ${yr.Fail}`);
+    if (yr.Fail) {
+      console.error("[suspendMyLicense] Yaarsa Date Fail:", yr.Fail);
+      throw new Error(`O servidor não respondeu corretamente ao comando de pausa. Tente novamente em alguns minutos. (Detalhe: ${yr.Fail})`);
+    }
 
     // 2) troca a senha por uma aleatória (bloqueio real do login).
     // A senha de pausa NUNCA é igual à original e NUNCA é gravada como senha
@@ -71,9 +74,10 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
     if (pr.Fail) {
       // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
+      console.error("[suspendMyLicense] Yaarsa Pass Fail:", pr.Fail);
       const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "2099-12-31";
       await yaarsaExtend(lic.yaarsa_email, back, panel);
-      throw new Error(`Painel (senha): ${pr.Fail}`);
+      throw new Error(`Erro ao configurar trava de segurança. Tente novamente. (Detalhe: ${pr.Fail})`);
     }
 
     const now = new Date();

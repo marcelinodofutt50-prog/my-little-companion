@@ -89,6 +89,9 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
   const pausedMsLeft = pausedBaseline
     ? Math.max(0, new Date(pausedBaseline).getTime() - new Date(l.suspended_at as string).getTime())
     : null;
+  
+  // Uma licença só é ativa se não estiver revogada, desativada ou pausada,
+  // E se a data de expiração (se houver) for futura.
   const active =
     !l.revoked && !l.disabled_at && !l.suspended_at &&
     (!l.expires_at || new Date(l.expires_at).getTime() > now);
