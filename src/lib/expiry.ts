@@ -89,6 +89,9 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
   const pausedMsLeft = pausedBaseline
     ? Math.max(0, new Date(pausedBaseline).getTime() - new Date(l.suspended_at as string).getTime())
     : null;
+  
+  // Uma licença só é ativa se não estiver revogada, desativada ou pausada,
+  // E se a data de expiração (se houver) for futura.
   const active =
     !l.revoked && !l.disabled_at && !l.suspended_at &&
     (!l.expires_at || new Date(l.expires_at).getTime() > now);
@@ -102,14 +105,14 @@ export function licenseExpiryState(l: LicenseLike, now = Date.now()): LicenseExp
   const licenseEnd = l.expires_at ?? null;
   const isEffectivelyLifetime =
     kind === "lifetime" ||
-    (licenseEnd ? new Date(licenseEnd).getTime() - now > 5 * 365 * MS_DAY : false);
+    (licenseEnd ? new Date(licenseEnd).getTime() - now > 2 * 365 * MS_DAY : false);
 
   const countdownAt = isEffectivelyLifetime ? null : licenseEnd;
   const daysLeft = daysUntil(countdownAt, now);
 
   const renewalNote =
     isEffectivelyLifetime
-      ? "Sua licença é vitalícia e não expira. Só a mensalidade do servidor precisa ser paga até o dia 20 de cada mês para manter o acesso."
+      ? "Sua licença é vitalícia e não expira (o aviso de vencimento acima refere-se apenas à mensalidade do servidor, que precisa estar em dia até o dia 20)."
       : kind === "trial"
         ? "Teste grátis de 24 horas exatas contadas a partir da ativação. O contador não depende de meia-noite — quando zerar, o login é encerrado automaticamente."
         : "Sua licença mensal expira quando os dias comprados acabarem. O dia 20 do servidor é uma cobrança separada e não muda esse contador.";
