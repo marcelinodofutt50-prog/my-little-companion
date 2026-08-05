@@ -58,13 +58,15 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
     if (yr.Fail) {
       console.error("[suspendMyLicense] Yaarsa Date Fail:", yr.Fail);
-      // Se o erro for "1006" (date not accepted), o painel pode estar recusando a data de ontem.
-      // Tentamos uma data alternativa (1970) para forçar o bloqueio.
-      if (yr.Fail.includes("1006") || yr.Fail.includes("accepted")) {
-        const yrRetry = await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
-        if (yrRetry.Fail) throw new Error(`O servidor recusou o bloqueio de data. Tente novamente. (Detalhe: ${yrRetry.Fail})`);
-      } else {
-        throw new Error(`O servidor não respondeu corretamente ao comando de pausa. Tente novamente em alguns minutos. (Detalhe: ${yr.Fail})`);
+      // Fallback 1: Alguns painéis recusam a data de "ontem" se ela cair num range inválido.
+      // Tentamos uma data fixa bem antiga (1970) para forçar o bloqueio por expiração.
+      const yrRetry = await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
+      
+      if (yrRetry.Fail) {
+        console.error("[suspendMyLicense] Yaarsa Date Retry Fail:", yrRetry.Fail);
+        // Fallback Final: Se o painel estiver offline ou com erro de conexão persistente,
+        // não podemos garantir que a licença parou de contar no servidor.
+        throw new Error(`O servidor de licenças não está respondendo. Tente pausar novamente em alguns minutos.`);
       }
     }
 
@@ -161,7 +163,10 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
 
     // 1) devolve os dias
     const yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
-    if (yr.Fail) throw new Error(`Painel: ${yr.Fail}`);
+    if (yr.Fail) {
+      console.error("[reactivateMyLicense] Yaarsa Extend Fail:", yr.Fail);
+      throw new Error(`O servidor não conseguiu processar o retorno dos dias. Tente novamente em 1 minuto.`);
+    }
 
     // 2) restaura a senha original (a mesma entregue na compra)
     const pr = await yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username);

@@ -34,7 +34,7 @@ export type PauseLicenseLike = {
 /** Tempo mínimo restante para valer a pena pausar. */
 export const MIN_PAUSE_MS = 60 * 60 * 1000 // 1 hora
 /** Tempo mínimo pausada antes de poder despausar (evita flood no painel). */
-export const RESUME_COOLDOWN_MS = 2 * 60 * 1000 // 2 minutos
+export const RESUME_COOLDOWN_MS = 30 * 1000 // Reduzido para 30s para melhor UX
 
 const ok: PauseRuleResult = { ok: true, code: "ok", message: "" }
 
