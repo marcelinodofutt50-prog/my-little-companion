@@ -20,13 +20,13 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 // Hardcoded paths to public assets to ensure they load from the repository
-const shadowMark = "/assets/shadow-logo-v9.png?v=v9-200";
+const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
 const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
-const btmobDashboard = "/assets/shadow-dashboard-real.png?v=v9-200";
-const assetMissing = "/assets/shadow-dashboard-real.png?v=v9-200";
-const btmob1 = "/assets/btmob-conexxion-1.png?v=v9-200";
-const btmob2 = "/assets/btmob-conexxion-2.png?v=v9-200";
+const btmobDashboard = "/assets/shadow-dashboard-real.png?v=v9-300";
+const assetMissing = "/assets/shadow-dashboard-real.png?v=v9-300";
+const btmob1 = "/assets/btmob-conexxion-1.png?v=v9-300";
+const btmob2 = "/assets/btmob-conexxion-2.png?v=v9-300";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
