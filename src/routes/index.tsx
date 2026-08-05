@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mask.png?format=webp";
 import panelOriginalAsset from "@/assets/panel-original.png.asset.json";
+import { ProgressiveImage } from "@/components/ProgressiveImage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -105,7 +106,7 @@ function DashboardPreview() {
             </div>
             
             <div className="relative aspect-video w-full bg-[#020808]">
-              <img 
+              <ProgressiveImage 
                 src={panelOriginalAsset.url} 
                 alt="Shadow Original Dashboard" 
                 className="absolute inset-0 h-full w-full object-contain md:object-cover opacity-90 group-hover:opacity-100 transition-opacity"

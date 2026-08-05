@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
 import btmobInstructions from "@/assets/build-btmob-instructions.png.asset.json";
+import { ProgressiveImage } from "@/components/ProgressiveImage";
 
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
@@ -227,11 +228,10 @@ function PlayProtectPage() {
                   </div>
 
                   <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block w-full aspect-video md:aspect-square lg:aspect-video overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
-                    <img 
+                    <ProgressiveImage 
                       src={btmobInstructions.url} 
                       alt="Instruções de Build BTMob — O que desativar" 
                       className="h-full w-full object-contain md:object-cover lg:object-contain" 
-                      loading="lazy" 
                     />
                   </a>
                 </div>
