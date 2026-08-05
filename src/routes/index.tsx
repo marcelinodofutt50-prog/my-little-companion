@@ -293,7 +293,13 @@ function Index() {
                     <span className="font-mono text-[8px] uppercase tracking-widest text-primary font-bold">{item.tag}</span>
                   </div>
 
-                  <ProgressiveImage src={item.src} alt={item.alt} className="w-full h-auto transition-all duration-700 rounded-lg group-hover:scale-[1.02]" />
+                  <ProgressiveImage 
+                    src={item.src} 
+                    alt={item.alt} 
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-auto transition-all duration-700 rounded-lg group-hover:scale-[1.02]" 
+                  />
                 </motion.div>
               ))}
             </div>
