@@ -836,48 +836,12 @@ function PlansPage() {
           <div className="mb-16 text-center">
             <Button variant="outline" onClick={() => setShowMore(true)} className="max-w-full whitespace-normal h-auto py-3 font-mono text-[11px] uppercase tracking-wider leading-snug">
               <span className="block">Mais opções ({secondaryCount})</span>
-              <span className="block text-[10px] opacity-70">servidor · upgrade · bypass · código-fonte</span>
+              <span className="block text-[10px] opacity-70">código-fonte auditável</span>
             </Button>
           </div>
         )}
 
-        {showMore && upgrades.length > 0 && (
-          <PlanGroup
-            title="Upgrade v4.5.7 → v4.6"
-            eyebrow="Exclusivo cliente antigo · migração automática"
-            items={upgrades}
-            onBuy={buy}
-            loading={loadingPlan}
-            coupon={couponValid}
-            cashback={cashbackBalance}
-            useCash={useCash}
-          />
-        )}
-        {showMore && addons.length > 0 && (
-          <PlanGroup
-            title="Play Protect Bypass & Signer"
-            eyebrow="O bypass mais estável do mercado · Shadow Signer incluso"
-            items={addons}
-            onBuy={buy}
-            loading={loadingPlan}
-            coupon={couponValid}
-            cashback={cashbackBalance}
-            useCash={useCash}
-          />
-        )}
-        {showMore && (
-        <PlanGroup
-          title="Servidor"
-          eyebrow={isLegacy ? "Renovação legacy · R$ 250/mês · vence dia 20" : "Renovação mensal · vence todo dia 20"}
-          items={servers}
-          onBuy={buy}
-          loading={loadingPlan}
-          coupon={couponValid}
-          cashback={cashbackBalance}
-          useCash={useCash}
-        />
-        )}
-        {showMore && (
+        {showMore && sources.length > 0 && (
         <PlanGroup
           title="Código-fonte"
           eyebrow="Auditável, com sessão de handoff"
