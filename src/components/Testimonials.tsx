@@ -17,64 +17,61 @@ export function Testimonials() {
   const { t } = useI18n();
 
   const items: Testimonial[] = [
-  {
-    name: "Rafael M.",
-    handle: "@rafa.ops",
-    plan: "Vitalício v4.6",
-    text: t("test.txt.rafael"),
-    initials: "RM",
-    accent: "neon",
-  },
-  {
-    name: "Juliana P.",
-    handle: "@juh.intel",
-    plan: "Mensal v4.5.7",
-    text: t("test.txt.juliana"),
-    initials: "JP",
-    accent: "cyan",
-  },
-  {
-    name: "Diego S.",
-    handle: "@dsx.recon",
-    plan: "Servidor + Vitalício",
-    text: t("test.txt.diego"),
-    initials: "DS",
-    accent: "violet",
-  },
-  {
-    name: "Bruno L.",
-    handle: "@brl.osint",
-    plan: "Código-fonte",
-    text: t("test.txt.bruno"),
-    initials: "BL",
-    accent: "neon",
-  },
-  {
-    name: "Carla T.",
-    handle: "@carla.k",
-    plan: "Mensal v4.5.7",
-    text: t("test.txt.carla"),
-    initials: "CT",
-    accent: "cyan",
-  },
-  {
-    name: "Vinícius R.",
-    handle: "@vini.rd",
-    plan: "Vitalício v4.6",
-    text: t("test.txt.vinicius"),
-    initials: "VR",
-    accent: "violet",
-  },
-];
+    {
+      name: "Rafael M.",
+      handle: "@rafa.ops",
+      plan: "Vitalício v4.6",
+      text: t("test.txt.rafael"),
+      initials: "RM",
+      accent: "neon",
+    },
+    {
+      name: "Juliana P.",
+      handle: "@juh.intel",
+      plan: "Mensal v4.5.7",
+      text: t("test.txt.juliana"),
+      initials: "JP",
+      accent: "cyan",
+    },
+    {
+      name: "Diego S.",
+      handle: "@dsx.recon",
+      plan: "Servidor + Vitalício",
+      text: t("test.txt.diego"),
+      initials: "DS",
+      accent: "violet",
+    },
+    {
+      name: "Bruno L.",
+      handle: "@brl.osint",
+      plan: "Código-fonte",
+      text: t("test.txt.bruno"),
+      initials: "BL",
+      accent: "neon",
+    },
+    {
+      name: "Carla T.",
+      handle: "@carla.k",
+      plan: "Mensal v4.5.7",
+      text: t("test.txt.carla"),
+      initials: "CT",
+      accent: "cyan",
+    },
+    {
+      name: "Vinícius R.",
+      handle: "@vini.rd",
+      plan: "Vitalício v4.6",
+      text: t("test.txt.vinicius"),
+      initials: "VR",
+      accent: "violet",
+    },
+  ];
 
-const accentMap: Record<string, string> = {
-  neon: "text-neon border-neon/40 bg-neon/10",
-  cyan: "text-cyan border-cyan/40 bg-cyan/10",
-  violet: "text-violet border-violet/40 bg-violet/10",
-};
-
-export function Testimonials() {
-  const { t } = useI18n();
+  const accentMap: Record<string, string> = {
+    neon: "text-neon border-neon/40 bg-neon/10",
+    cyan: "text-cyan border-cyan/40 bg-cyan/10",
+    violet: "text-violet border-violet/40 bg-violet/10",
+  };
 
   return (
     <section className="border-t border-border py-20">

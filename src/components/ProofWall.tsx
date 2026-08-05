@@ -20,89 +20,85 @@ export function ProofWall() {
   const [open, setOpen] = useState<number | null>(null);
 
   const shots: Shot[] = [
-  {
-    src: pPhones.url,
-    fallback: pPhones.fallback,
-    caption: t("pw.caption.phones"),
-    tag: t("pw.tag.operation"),
-    source: t("pw.source.wa"),
-    date: "jan/2026",
-    accent: "neon",
-  },
-  {
-    src: p2.url,
-    fallback: p2.fallback,
-    caption: t("pw.caption.pix1800"),
-    tag: t("pw.tag.payment"),
-    source: t("pw.source.mp"),
-    date: "jan/2026",
-    accent: "cyan",
-  },
-  {
-    src: p4.url,
-    fallback: p4.fallback,
-    caption: t("pw.caption.pix900"),
-    tag: t("pw.tag.recurring"),
-    source: t("pw.source.mp"),
-    date: "fev/2026",
-    accent: "violet",
-  },
-  {
-    src: pPix300.url,
-    fallback: pPix300.fallback,
-    caption: t("pw.caption.renew300"),
-    tag: t("pw.tag.autorenew"),
-    source: t("pw.source.panel"),
-    date: "jan/2026",
-    accent: "cyan",
-  },
-  {
-    src: p3.url,
-    fallback: p3.fallback,
-    caption: t("pw.caption.src"),
-    tag: t("pw.tag.sourcecode"),
-    source: t("pw.source.wa"),
-    date: "2026",
-    accent: "neon",
-  },
-  {
-    src: pDouglas.url,
-    fallback: pDouglas.fallback,
-    caption: t("pw.caption.support"),
-    tag: t("pw.tag.support"),
-    source: t("pw.source.tg"),
-    date: "2026",
-    accent: "violet",
-  },
-  {
-    src: p1.url,
-    fallback: p1.fallback,
-    caption: t("pw.caption.activation"),
-    tag: t("pw.tag.activation"),
-    source: t("pw.source.wa"),
-    date: "2026",
-    accent: "neon",
-  },
-];
+    {
+      src: pPhones.url,
+      fallback: pPhones.fallback,
+      caption: t("pw.caption.phones"),
+      tag: t("pw.tag.operation"),
+      source: t("pw.source.wa"),
+      date: "jan/2026",
+      accent: "neon",
+    },
+    {
+      src: p2.url,
+      fallback: p2.fallback,
+      caption: t("pw.caption.pix1800"),
+      tag: t("pw.tag.payment"),
+      source: t("pw.source.mp"),
+      date: "jan/2026",
+      accent: "cyan",
+    },
+    {
+      src: p4.url,
+      fallback: p4.fallback,
+      caption: t("pw.caption.pix900"),
+      tag: t("pw.tag.recurring"),
+      source: t("pw.source.mp"),
+      date: "fev/2026",
+      accent: "violet",
+    },
+    {
+      src: pPix300.url,
+      fallback: pPix300.fallback,
+      caption: t("pw.caption.renew300"),
+      tag: t("pw.tag.autorenew"),
+      source: t("pw.source.panel"),
+      date: "jan/2026",
+      accent: "cyan",
+    },
+    {
+      src: p3.url,
+      fallback: p3.fallback,
+      caption: t("pw.caption.src"),
+      tag: t("pw.tag.sourcecode"),
+      source: t("pw.source.wa"),
+      date: "2026",
+      accent: "neon",
+    },
+    {
+      src: pDouglas.url,
+      fallback: pDouglas.fallback,
+      caption: t("pw.caption.support"),
+      tag: t("pw.tag.support"),
+      source: t("pw.source.tg"),
+      date: "2026",
+      accent: "violet",
+    },
+    {
+      src: p1.url,
+      fallback: p1.fallback,
+      caption: t("pw.caption.activation"),
+      tag: t("pw.tag.activation"),
+      source: t("pw.source.wa"),
+      date: "2026",
+      accent: "neon",
+    },
+  ];
 
-const accentBadge: Record<string, string> = {
-  neon: "border-neon/40 bg-neon/10 text-neon",
-  cyan: "border-cyan/40 bg-cyan/10 text-cyan",
-  violet: "border-violet/40 bg-violet/10 text-violet",
-};
-
-export function ProofWall() {
-  const { t } = useI18n();
-  const [open, setOpen] = useState<number | null>(null);
+  const accentBadge: Record<string, string> = {
+    neon: "border-neon/40 bg-neon/10 text-neon",
+    cyan: "border-cyan/40 bg-cyan/10 text-cyan",
+    violet: "border-violet/40 bg-violet/10 text-violet",
+  };
 
   const close = useCallback(() => setOpen(null), []);
   const prev = useCallback(
     () => setOpen((i) => (i === null ? null : (i - 1 + shots.length) % shots.length)),
-    [],
+    [shots.length],
   );
   const next = useCallback(
     () => setOpen((i) => (i === null ? null : (i + 1) % shots.length)),
-    [],
+    [shots.length],
   );
 
   useEffect(() => {
