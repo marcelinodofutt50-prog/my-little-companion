@@ -31,7 +31,7 @@ export function ProgressiveImage({ src, alt, className, ...props }: ProgressiveI
         src={src}
         alt={alt}
         className={cn(
-          "h-full w-full transition-all duration-700",
+          "h-full w-full transition-opacity duration-700",
           isLoaded ? "opacity-100" : "opacity-0"
         )}
         onLoad={(e) => {
