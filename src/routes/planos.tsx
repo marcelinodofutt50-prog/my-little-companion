@@ -759,7 +759,7 @@ function PlansPage() {
           </div>
           
           <div className="grid gap-5 md:grid-cols-3">
-            {licenses.filter(p => usageOf(p) === "monthly" || usageOf(p) === "lifetime")
+            {licenses.filter(p => (usage === "all" || usageOf(p) === usage))
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
               .map((p) => {
                 // Cada card recebe UMA extensão específica coerente com o plano.
