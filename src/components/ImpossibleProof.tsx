@@ -1,4 +1,5 @@
 import { ShieldCheck, Zap } from "lucide-react";
+import { ProgressiveImage } from "./ProgressiveImage";
 
 const shots = [
   {
@@ -39,15 +40,11 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
         {shots.map((s) => (
           <figure key={s.src} className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
             <div className="flex aspect-video w-full items-center justify-center bg-background/60">
-              <picture>
-                <source srcSet={s.src} type="image/webp" />
-                <img
-                  src={s.fallback}
-                  alt={s.tag}
-                  loading="lazy"
-                  className="max-h-full max-w-full object-contain"
-                />
-              </picture>
+              <ProgressiveImage
+                src={s.src}
+                alt={s.tag}
+                className="max-h-full max-w-full object-contain"
+              />
             </div>
 
             <figcaption className="space-y-1 p-3">
