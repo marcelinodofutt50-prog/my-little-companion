@@ -19,7 +19,7 @@ import { GuaranteeStrip } from "@/components/GuaranteeStrip";
 import { Testimonials } from "@/components/Testimonials";
 import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { useI18n } from "@/lib/i18n";
-import { MigrationOffer } from "@/components/MigrationOffer";
+
 
 import { TrustBadges } from "@/components/TrustBadges";
 import { HowItWorksSteps } from "@/components/HowItWorksSteps";
@@ -897,7 +897,7 @@ function PlansPage() {
           </div>
         )}
 
-        <MigrationOffer />
+        
 
         <FaqSection />
 
