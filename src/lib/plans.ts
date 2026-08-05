@@ -1,4 +1,4 @@
-export type PlanCategory = "license" | "server" | "source";
+export type PlanCategory = "license" | "server" | "source" | "addon";
 export type Plan = {
   slug: string;
   name: string;

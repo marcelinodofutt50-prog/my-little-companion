@@ -345,7 +345,7 @@ function PlansPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showMore, setShowMore] = useState(false);
 
-  const { licenses, servers, sources, upgrades } = useMemo(() => {
+  const { licenses, servers, sources, upgrades, addons } = useMemo(() => {
     const seen = new Set<string>();
     const unique = plans.filter((p) => {
       const key = `${p.category}|${p.price_brl}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
@@ -359,7 +359,8 @@ function PlansPage() {
       ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
-    const upgradeList = unique.filter((p) => p.category === "upgrade");
+    const upgradeList = unique.filter((p) => p.category === "upgrade" || p.slug.includes("upgrade"));
+    const addonList = unique.filter((p) => p.category === "addon" || p.slug.includes("play-protect") || p.slug.includes("bypass"));
     
     // Simulate yearly discount (20% off) for licenses if yearly is selected
     const applyBillingFilter = (list: Plan[]) => {
@@ -382,10 +383,11 @@ function PlansPage() {
     };
 
     return {
-      licenses: applyBillingFilter(unique.filter((p) => p.category === "license")),
+      licenses: applyBillingFilter(unique.filter((p) => p.category === "license" && !p.slug.includes("upgrade") && !p.slug.includes("bypass"))),
       servers: applyBillingFilter(serverFiltered),
       sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
-      upgrades: isLegacy ? applyBillingFilter(upgradeList) : [],
+      upgrades: applyBillingFilter(upgradeList),
+      addons: applyBillingFilter(addonList),
     };
   }, [plans, isLegacy, usage, billingCycle]);
 
