@@ -1507,14 +1507,25 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         </p>
       )}
 
-      <div className="mt-5">
+      <div className="mt-6 flex flex-col gap-1">
         {hasBenefit && b.final < price ? (
           <>
-            <div className="font-mono text-xs text-muted-foreground line-through">{formatBrl(price)}</div>
-            <div className="font-display text-4xl font-semibold text-primary">{formatBrl(b.final)}</div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground line-through opacity-50">{formatBrl(price)}</span>
+              <span className="rounded bg-primary/20 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-primary animate-pulse">
+                Desconto Ativo
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display text-5xl font-bold tracking-tighter text-primary">{formatBrl(b.final).split(',')[0]}</span>
+              <span className="font-display text-2xl font-bold text-primary">,{formatBrl(b.final).split(',')[1]}</span>
+            </div>
           </>
         ) : (
-          <div className="font-display text-4xl font-semibold">{formatBrl(price)}</div>
+          <div className="flex items-baseline gap-1">
+            <span className="font-display text-5xl font-bold tracking-tighter">{formatBrl(price).split(',')[0]}</span>
+            <span className="font-display text-2xl font-bold">,{formatBrl(price).split(',')[1]}</span>
+          </div>
         )}
       </div>
 
