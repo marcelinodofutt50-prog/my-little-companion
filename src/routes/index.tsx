@@ -27,8 +27,11 @@ import assetMissingAsset from "@/assets/image-97.png.asset.json";
 import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 
+// Assets versioning for cache busting
+const ASSET_VERSION = "v7-320";
+
 const heroRestore = heroRestoreAsset.url;
-const shadowMark = shadowMarkAsset.url;
+const shadowMark = `${shadowMarkAsset.url}?v=${ASSET_VERSION}`;
 const heroClassic = heroClassicAsset.url;
 const btmobDashboard = btmobDashboardAsset.url;
 const assetMissing = assetMissingAsset.url;
