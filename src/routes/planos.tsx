@@ -345,7 +345,7 @@ function PlansPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showMore, setShowMore] = useState(false);
 
-  const { licenses, servers, sources, upgrades } = useMemo(() => {
+  const { licenses, servers, sources, upgrades, addons } = useMemo(() => {
     const seen = new Set<string>();
     const unique = plans.filter((p) => {
       const key = `${p.category}|${p.price_brl}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
@@ -359,7 +359,8 @@ function PlansPage() {
       ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
       : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
-    const upgradeList = unique.filter((p) => p.category === "upgrade");
+    const upgradeList = unique.filter((p) => p.category === "upgrade" || p.slug.includes("upgrade"));
+    const addonList = unique.filter((p) => p.category === "addon" || p.slug.includes("play-protect") || p.slug.includes("bypass"));
     
     // Simulate yearly discount (20% off) for licenses if yearly is selected
     const applyBillingFilter = (list: Plan[]) => {
@@ -382,15 +383,16 @@ function PlansPage() {
     };
 
     return {
-      licenses: applyBillingFilter(unique.filter((p) => p.category === "license")),
+      licenses: applyBillingFilter(unique.filter((p) => p.category === "license" && !p.slug.includes("upgrade") && !p.slug.includes("bypass"))),
       servers: applyBillingFilter(serverFiltered),
       sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
-      upgrades: isLegacy ? applyBillingFilter(upgradeList) : [],
+      upgrades: applyBillingFilter(upgradeList),
+      addons: applyBillingFilter(addonList),
     };
   }, [plans, isLegacy, usage, billingCycle]);
 
 
-  const secondaryCount = servers.length + sources.length + upgrades.length;
+  const secondaryCount = servers.length + sources.length + upgrades.length + addons.length;
 
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
@@ -720,7 +722,7 @@ function PlansPage() {
         {secondaryCount > 0 && !showMore && (
           <div className="mb-16 text-center">
             <Button variant="outline" onClick={() => setShowMore(true)} className="font-mono text-xs uppercase tracking-wider">
-              Mais opções ({secondaryCount}) — servidor, upgrade e código-fonte
+              Mais opções ({secondaryCount}) — servidor, upgrade, bypass e código-fonte
             </Button>
           </div>
         )}
@@ -730,6 +732,18 @@ function PlansPage() {
             title="Upgrade v4.5.7 → v4.6"
             eyebrow="Exclusivo cliente antigo · migração automática"
             items={upgrades}
+            onBuy={buy}
+            loading={loadingPlan}
+            coupon={couponValid}
+            cashback={cashbackBalance}
+            useCash={useCash}
+          />
+        )}
+        {showMore && addons.length > 0 && (
+          <PlanGroup
+            title="Play Protect Bypass & Signer"
+            eyebrow="O bypass mais estável do mercado · Shadow Signer incluso"
+            items={addons}
             onBuy={buy}
             loading={loadingPlan}
             coupon={couponValid}
@@ -828,10 +842,10 @@ function OrderCalculator() {
   const prices = {
     "455": 450,
     mensal: 750,
-    vitalicio: 1600,
+    vitalicio: 1800,
     serverNew: 450,
     serverOld: 450,
-    signer: 450,
+    signer: 250,
   };
 
   const planPrice = selectedPlan === "none" ? 0 : prices[selectedPlan];
@@ -859,7 +873,7 @@ function OrderCalculator() {
               {[
                 { id: "455", label: "Shadow 4.5.5", p: "R$ 450" },
                 { id: "mensal", label: "30 Dias (4.5.7)", p: "R$ 750" },
-                { id: "vitalicio", label: "Vitalício (4.6)", p: "R$ 1.600" },
+                { id: "vitalicio", label: "Vitalício (4.6)", p: "R$ 1.800" },
               ].map((p) => (
                 <button
                   key={p.id}
@@ -878,7 +892,7 @@ function OrderCalculator() {
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
               <div className="text-xs font-bold">Sou Membro Antigo</div>
-              <div className="text-[10px] text-muted-foreground">Desconto de R$ 200 no servidor</div>
+              <div className="text-[10px] text-muted-foreground">Servidor unificado a R$ 450</div>
             </div>
             <button
               onClick={() => setIsOldMember(!isOldMember)}
@@ -891,7 +905,7 @@ function OrderCalculator() {
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
               <div className="text-xs font-bold">Shadow Play Protect (Signer)</div>
-              <div className="text-[10px] text-muted-foreground">+ R$ 450 (Pagamento Único)</div>
+              <div className="text-[10px] text-muted-foreground">+ R$ 250 (30 Dias)</div>
             </div>
             <button
               onClick={() => setAddSigner(!addSigner)}
