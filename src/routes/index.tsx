@@ -116,7 +116,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground/60"
+            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground/75"
           >
             Infraestrutura de cybersegurança de alto desempenho. Provisionada em segundos. Blindada por padrão.
           </motion.p>
@@ -143,7 +143,7 @@ function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/40"
+            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/60"
           >
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
@@ -166,7 +166,7 @@ function Index() {
               </div>
               <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
                 Gestão Empresarial <br />
-                <span className="italic text-muted-foreground/50 text-5xl md:text-7xl block">De Alto Nível.</span>
+                <span className="italic text-muted-foreground/60 text-5xl md:text-7xl block">De Alto Nível.</span>
               </h2>
               
               <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
