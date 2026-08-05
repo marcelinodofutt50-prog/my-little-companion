@@ -20,7 +20,8 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mask.png";
-import panelFixed from "@/assets/panel-original-fixed.png";
+import panelFixedAsset from "@/assets/panel-original-fixed.png.asset.json";
+const panelFixed = panelFixedAsset.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -74,44 +75,69 @@ function Index() {
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary"
           >
-            <Terminal className="h-3 w-3" />
-            System Live · Shadow Protocol v4.6
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+            Cyber Operations · Est. 2024
           </motion.div>
           
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-8 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-8xl lg:text-9xl text-foreground"
+            className="mt-8 font-display text-7xl font-bold leading-[0.9] tracking-tighter md:text-9xl lg:text-[11rem] text-foreground"
           >
-            OPERE NAS<br />
-            <span className="text-primary italic">SOMBRAS.</span>
+            SHADOW
           </motion.h1>
           
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground md:text-xl"
+            className="mx-auto mt-8 max-w-2xl text-lg font-medium text-muted-foreground md:text-xl"
           >
-            A elite do gerenciamento de ativos digitais e bypass de segurança. 
-            Shadow Signer, Droppers indetectáveis e infraestrutura de rede blindada.
+            Your <span className="text-foreground italic">shadow</span>, everywhere.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground/60"
+          >
+            Infraestrutura de cybersegurança de alto desempenho. Provisionada em segundos. Blindada por padrão.
           </motion.p>
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-12 flex flex-wrap justify-center gap-4"
+            className="mt-12 flex flex-wrap items-center justify-center gap-6"
           >
-            <Button size="lg" asChild className="h-14 px-10 text-base">
+            <Button size="lg" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full">
               <Link to="/planos">
-                Entrar na Shadow <ChevronRight className="ml-2 h-4 w-4" />
+                Começar Agora <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base">
-              <Link to="/auth">Criar Conta Grátis</Link>
-            </Button>
+            <Link 
+              to="/auth" 
+              className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+            >
+              Testar Grátis por 24h <span className="h-px w-8 bg-muted-foreground/30" />
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-20 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/40"
+          >
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> Suporte 24/7</div>
           </motion.div>
         </div>
       </section>
