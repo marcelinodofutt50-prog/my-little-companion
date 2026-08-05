@@ -24,7 +24,7 @@ import { useI18n } from '@/lib/i18n'
 import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
 import { listMyLicenses } from '@/lib/license.functions'
 import { triggerDownload, friendlyDownloadError } from '@/lib/download'
-const shadowMark = "/assets/shadow-logo-v9.png?v=v9-100";
+const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
 import { useServerNow } from '@/hooks/use-server-now'
 import { licenseExpiryState } from '@/lib/expiry'
