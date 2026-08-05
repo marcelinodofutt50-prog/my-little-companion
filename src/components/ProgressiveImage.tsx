@@ -1,24 +1,46 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { ImageOff } from "lucide-react";
 
 interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
   className?: string;
+  fallbackText?: string;
 }
 
-export function ProgressiveImage({ src, alt, className, ...props }: ProgressiveImageProps) {
+export function ProgressiveImage({ src, alt, className, fallbackText, ...props }: ProgressiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!src) {
+      setError(true);
+      return;
+    }
+    
     const img = new Image();
     img.src = src;
-    img.onload = () => setIsLoaded(true);
-    img.onerror = () => setError(true);
     
-    if (img.complete && img.naturalWidth > 0) {
+    img.onload = () => {
       setIsLoaded(true);
+      setError(false);
+    };
+    
+    img.onerror = () => {
+      setError(true);
+      setIsLoaded(false);
+      console.warn(`[ProgressiveImage] Failed to load: ${src}`);
+    };
+    
+    if (img.complete) {
+      if (img.naturalWidth > 0) {
+        setIsLoaded(true);
+        setError(false);
+      } else {
+        setError(true);
+        setIsLoaded(false);
+      }
     }
   }, [src]);
 
@@ -27,20 +49,32 @@ export function ProgressiveImage({ src, alt, className, ...props }: ProgressiveI
       {!isLoaded && !error && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/5 to-muted/20 z-0" />
       )}
+      
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/10 text-muted-foreground/40 text-[10px] font-mono uppercase tracking-widest z-0">
-          Failed to load image
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/10 text-muted-foreground/40 p-4 text-center z-20">
+          <ImageOff className="h-6 w-6 mb-2 opacity-20" />
+          <span className="text-[10px] font-mono uppercase tracking-widest leading-tight">
+            {fallbackText || "Asset Missing"}
+          </span>
+          <span className="mt-1 text-[8px] opacity-30 font-mono">404_NOT_FOUND</span>
         </div>
       )}
+
       <img
         src={src}
         alt={alt}
         className={cn(
-          "relative h-full w-full transition-opacity duration-500 z-10",
-          isLoaded ? "opacity-100" : "opacity-0"
+          "relative h-full w-full transition-all duration-700 z-10",
+          isLoaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-105 blur-lg"
         )}
-        onLoad={() => setIsLoaded(true)}
-        onError={() => setError(true)}
+        onLoad={() => {
+          setIsLoaded(true);
+          setError(false);
+        }}
+        onError={() => {
+          setError(true);
+          setIsLoaded(false);
+        }}
         {...props}
       />
     </div>
