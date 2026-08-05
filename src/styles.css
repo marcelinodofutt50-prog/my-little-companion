@@ -112,7 +112,7 @@ html.theme-light,
 html.theme-light body {
   color-scheme: light;
 
-  /* Refined light theme with better contrast */
+  /* Refined light theme with high contrast and readable primary colors */
   --background: oklch(0.99 0.005 255);
   --foreground: oklch(0.12 0.02 255);
 
@@ -121,8 +121,8 @@ html.theme-light body {
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.02 255);
 
-  /* A refined blue primary for light mode instead of gold */
-  --primary: oklch(0.55 0.22 255);
+  /* Using a deep, authoritative blue for primary text in light mode instead of gold/yellow */
+  --primary: oklch(0.45 0.22 260); 
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.96 0.01 255);
@@ -136,28 +136,28 @@ html.theme-light body {
   --destructive: oklch(0.6 0.2 25);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.9 0.01 255);
-  --input: oklch(0.9 0.01 255);
-  --ring: oklch(0.55 0.22 255 / 0.2);
+  --border: oklch(0.88 0.015 255);
+  --input: oklch(0.88 0.015 255);
+  --ring: oklch(0.45 0.22 260 / 0.2);
 
-  --neon: oklch(0.55 0.22 255);
-  --cyan: oklch(0.65 0.18 200);
-  --violet: oklch(0.6 0.2 300);
+  --neon: oklch(0.45 0.22 260); /* Fixed from light yellow */
+  --cyan: oklch(0.55 0.18 200);
+  --violet: oklch(0.5 0.2 300);
   --danger: oklch(0.6 0.2 25);
-  --chart-1: oklch(0.55 0.22 255);
-  --chart-2: oklch(0.65 0.18 200);
-  --chart-3: oklch(0.6 0.2 300);
-  --chart-4: oklch(0.45 0.02 255);
+  --chart-1: oklch(0.45 0.22 260);
+  --chart-2: oklch(0.55 0.18 200);
+  --chart-3: oklch(0.5 0.2 300);
+  --chart-4: oklch(0.4 0.02 255);
   --chart-5: oklch(0.6 0.2 25);
 
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.15 0.02 255);
-  --sidebar-primary: oklch(0.55 0.22 255);
+  --sidebar-primary: oklch(0.45 0.22 260);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.96 0.01 255);
   --sidebar-accent-foreground: oklch(0.15 0.02 255);
-  --sidebar-border: oklch(0.9 0.01 255);
-  --sidebar-ring: oklch(0.55 0.22 255 / 0.2);
+  --sidebar-border: oklch(0.88 0.015 255);
+  --sidebar-ring: oklch(0.45 0.22 260 / 0.2);
 }
 
 html.theme-light body {
@@ -171,9 +171,9 @@ html.theme-light body {
 
 /* Removido duplicata */
 
-html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.55 0.22 255 / 0.1); }
-html.theme-light .glow-cyan { box-shadow: 0 0 18px oklch(0.65 0.18 200 / 0.1); }
-html.theme-light .glow-violet { box-shadow: 0 0 18px oklch(0.6 0.2 300 / 0.1); }
+html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.45 0.22 260 / 0.12); }
+html.theme-light .glow-cyan { box-shadow: 0 0 18px oklch(0.55 0.18 200 / 0.12); }
+html.theme-light .glow-violet { box-shadow: 0 0 18px oklch(0.5 0.2 300 / 0.12); }
 html.theme-light .price-card {
   background: oklch(1 0 0);
   border-color: oklch(0.9 0.01 255);
