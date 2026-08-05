@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "build:ci": "vitest run && vite build",
+    "validate-assets": "bun run scripts/validate-assets.ts",
+    "build": "bun run validate-assets && vite build",
+    "build:dev": "bun run validate-assets && vite build --mode development",
+    "build:ci": "bun run validate-assets && vitest run && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
