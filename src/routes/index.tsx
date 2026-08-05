@@ -72,7 +72,7 @@ function Index() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", damping: 12, stiffness: 200 }}
-            className="mx-auto mb-6 h-28 w-28 md:h-32 md:w-32"
+            className="mx-auto mb-8 h-40 w-40 md:h-56 md:w-56"
           >
             <ProgressiveImage 
               src={shadowMark} 
