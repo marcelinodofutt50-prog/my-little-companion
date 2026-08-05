@@ -389,6 +389,7 @@ function PlansPage() {
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
 
 
+  const [usage, setUsage] = useState<UsageFilter>("all");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showMore, setShowMore] = useState(false);
   const [checkingEligibility, setCheckingEligibility] = useState(false);
