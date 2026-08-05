@@ -193,60 +193,47 @@ function PlayProtectPage() {
               <span className="h-px flex-1 bg-amber-500/30" />
             </div>
 
-            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5 md:grid-cols-2">
+            <div className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5">
               <div className="space-y-4">
-                <a href={playProtectConfig} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40 aspect-video">
-                  <img src={playProtectConfig} alt="Configuração do Play Protect" className="h-full w-full object-cover" loading="lazy" />
-                </a>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <ShieldAlert className="h-5 w-5 text-amber-500" />
-                    <h2 className="font-mono text-sm font-bold uppercase tracking-wider">1. Configurações do Dispositivo</h2>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Abra a <strong>Play Store</strong> → menu do perfil → <strong>Play Protect</strong> → <strong>Configurações</strong> e desative:
-                  </p>
-                  <ul className="grid gap-1 text-[11px]">
-                    {[
-                      'Verificar apps com Play Protect',
-                      'Melhorar a detecção de apps prejudiciais',
-                      'Alertas de permissão de apps',
-                      'Notificações do Play Protect',
-                    ].map((item) => (
-                      <li key={item} className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-amber-500" />
+                  <h2 className="font-mono text-sm font-bold uppercase tracking-wider">Preparação da Build (Essencial)</h2>
                 </div>
-              </div>
+                
+                <div className="grid gap-6 md:grid-cols-[1fr_300px]">
+                  <div className="space-y-4">
+                    <p className="text-xs text-muted-foreground">
+                      Na tela de <strong>Preparar</strong> do seu painel BTMob, certifique-se de <strong>DESMARCAR</strong> as opções indicadas pelas setas na imagem ao lado:
+                    </p>
+                    <ul className="grid gap-2 text-xs">
+                      <li className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        <span className="font-bold text-amber-200 uppercase tracking-tighter">DEX-Protetor (DEVE FICAR DESATIVADO)</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        <span className="font-bold text-amber-200 uppercase tracking-tighter">Criptografar APK (DEVE FICAR DESATIVADO)</span>
+                      </li>
+                    </ul>
+                    
+                    <div className="rounded border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed">
+                      <strong className="text-primary uppercase block mb-1">Por que isso é necessário?</strong> 
+                      Deixar tudo desmarcado é essencial para que nossa equipe consiga realizar o decompile, bypass e a assinatura correta. Se você enviar protegido, o bot não conseguirá processar seu APK.
+                    </div>
 
-              <div className="space-y-4">
-                <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40 aspect-video">
-                  <img src={btmobInstructions.url} alt="Instruções de Build BTMob" className="h-full w-full object-cover" loading="lazy" />
-                </a>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-amber-500" />
-                    <h2 className="font-mono text-sm font-bold uppercase tracking-wider">2. Preparação da Build (Essencial)</h2>
+                    <div className="rounded border border-amber-500/20 bg-amber-500/5 p-3 text-[10px] leading-tight">
+                      <span className="font-bold text-amber-500 uppercase">Dica:</span> Também recomendamos desativar o Play Protect no seu dispositivo de teste (Play Store → Perfil → Play Protect → Configurações) para evitar bloqueios locais durante a instalação.
+                    </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Na tela de <strong>Preparar</strong> do seu painel BTMob, certifique-se de <strong>DESMARCAR</strong> as opções indicadas pelas setas:
-                  </p>
-                  <ul className="grid gap-1 text-[11px]">
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      <span className="font-bold text-amber-200">DEX-Protetor (DESATIVADO)</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      <span className="font-bold text-amber-200">Criptografar APK (DESATIVADO)</span>
-                    </li>
-                  </ul>
-                  <div className="rounded border border-primary/30 bg-primary/5 p-2 text-[10px] leading-tight mt-2">
-                    <strong className="text-primary uppercase">Por que?</strong> Deixar tudo desmarcado é essencial para que nossa equipe consiga realizar o decompile, bypass e a assinatura correta.
-                  </div>
+
+                  <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
+                    <img 
+                      src={btmobInstructions.url} 
+                      alt="Instruções de Build BTMob — O que desativar" 
+                      className="h-full w-full object-contain" 
+                      loading="lazy" 
+                    />
+                  </a>
                 </div>
               </div>
             </div>
