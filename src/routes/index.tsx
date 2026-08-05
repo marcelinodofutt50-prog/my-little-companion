@@ -19,24 +19,14 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMarkAsset from "@/assets/shadow-mark-v8.png.asset.json";
-import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
-import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
-import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
-import assetMissingAsset from "@/assets/enterprise-management-v2.png.asset.json";
-import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
-import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
-
-// Assets versioning for cache busting
-const ASSET_VERSION = "v8-400";
-
-const heroRestore = heroRestoreAsset.url;
-const shadowMark = `${shadowMarkAsset.url}?v=${ASSET_VERSION}`;
-const heroClassic = `${heroClassicAsset.url}?v=${ASSET_VERSION}`;
-const btmobDashboard = btmobDashboardAsset.url;
-const assetMissing = assetMissingAsset.url;
-const btmob1 = btmobPanel1.url;
-const btmob2 = btmobPanel2.url;
+// Hardcoded paths to public assets to ensure they load from the repository
+const shadowMark = "/assets/shadow-mark.png?v=v8-400";
+const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
+const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
+const btmobDashboard = "/assets/enterprise-management.png?v=v8-400";
+const assetMissing = "/assets/enterprise-management.png?v=v8-400";
+const btmob1 = "/assets/enterprise-management.png?v=v8-400";
+const btmob2 = "/assets/enterprise-management.png?v=v8-400";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
