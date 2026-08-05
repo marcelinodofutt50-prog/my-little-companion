@@ -521,6 +521,7 @@ function DashboardPage() {
                       </Card>
                     )
                   })}
+                  </div>
                 </div>
               </section>
 
