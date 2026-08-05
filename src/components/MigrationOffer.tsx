@@ -17,13 +17,85 @@ const pains = [
   { icon: ShieldCheck, title: "Dono some quando dá problema", body: "Suporte humano por chat no painel, com ticket, histórico e reembolso em até 7 dias." },
 ];
 
-type Notice = { kind: "auth" | "ineligible" | "ok"; msg: string };
+type Notice = {
+  kind: "auth" | "ineligible" | "ok";
+  msg: string;
+  reason?: string;
+  fix?: string;
+};
 
 function isActiveMonthly(l: any) {
   if (!MONTHLY_SLUGS.includes(l.plan_slug)) return false;
   if (l.is_trial || l.revoked || l.disabled_at || l.suspended_at) return false;
   if (l.expires_at && new Date(l.expires_at).getTime() <= Date.now()) return false;
   return true;
+}
+
+/** Diagnóstico específico do porquê a licença mensal não serve para o upgrade. */
+function diagnose(licenses: any[]): { reason: string; fix: string } {
+  const monthly = (licenses ?? []).filter((l) => MONTHLY_SLUGS.includes(l.plan_slug));
+
+  if (monthly.length === 0) {
+    const hasLifetime = (licenses ?? []).some((l) => String(l.plan_slug ?? "").includes("46"));
+    if (hasLifetime) {
+      return {
+        reason: "Você já tem uma licença Shadow 4.6 vitalícia — não existe upgrade a partir dela.",
+        fix: "Nada a fazer: você já está na versão mais alta. Se precisa de outro login 4.6, compre um novo plano vitalício.",
+      };
+    }
+    return {
+      reason:
+        (licenses ?? []).length === 0
+          ? "Sua conta não tem nenhuma licença registrada."
+          : "Você não tem nenhuma licença Shadow 4.5.7 (mensal / 30 dias) na conta — só planos de outro tipo.",
+      fix: "Compre o plano Shadow 4.5.7 (mensal / 30 dias) acima. Com ele ativo, o upgrade para a 4.6 vitalícia é liberado na hora.",
+    };
+  }
+
+  // Existe mensal: descobre o bloqueio mais relevante (prioriza o caso mais recuperável).
+  const trial = monthly.find((l) => l.is_trial);
+  const suspended = monthly.find((l) => l.suspended_at && !l.revoked && !l.disabled_at);
+  const expired = monthly.find(
+    (l) => l.expires_at && new Date(l.expires_at).getTime() <= Date.now() && !l.revoked && !l.disabled_at,
+  );
+  const disabled = monthly.find((l) => l.disabled_at && !l.revoked);
+  const revoked = monthly.find((l) => l.revoked);
+
+  if (suspended) {
+    return {
+      reason: "Sua licença 4.5.7 está PAUSADA (suspensa) no momento, e licença pausada não conta como ativa.",
+      fix: "Volte no dashboard e clique em “Despausar login”. Assim que ela voltar a rodar, clique em “Migrar agora” de novo.",
+    };
+  }
+  if (expired) {
+    const when = expired.expires_at ? new Date(expired.expires_at).toLocaleDateString("pt-BR") : null;
+    return {
+      reason: `Sua licença 4.5.7 EXPIROU${when ? ` em ${when}` : ""} — o upgrade exige assinatura mensal dentro do prazo.`,
+      fix: "Renove o plano mensal 4.5.7 acima. Com a renovação confirmada (ativação é automática após o PIX), o upgrade libera na hora.",
+    };
+  }
+  if (trial) {
+    return {
+      reason: "A licença 4.5.7 que você tem é um TRIAL (teste gratuito), e trial não é elegível para o upgrade vitalício.",
+      fix: "Compre o plano mensal 4.5.7 pago acima. Só assinaturas mensais compradas migram para a 4.6 vitalícia.",
+    };
+  }
+  if (disabled) {
+    return {
+      reason: "Sua licença 4.5.7 está DESATIVADA no painel (fora de operação).",
+      fix: "Abra um chamado no suporte para reativar a licença. Depois de reativada, o upgrade fica disponível.",
+    };
+  }
+  if (revoked) {
+    return {
+      reason: "Sua licença 4.5.7 foi REVOGADA (cancelada, reembolsada ou removida por violação de uso).",
+      fix: "Compre uma nova licença mensal 4.5.7 ou fale com o suporte para entender o motivo da revogação.",
+    };
+  }
+  return {
+    reason: "Sua licença 4.5.7 não está em estado ativo válido no momento.",
+    fix: "Fale com o suporte informando o e-mail da conta — a equipe verifica o status e libera o upgrade se estiver tudo certo.",
+  };
 }
 
 export function MigrationOffer() {
@@ -51,9 +123,12 @@ export function MigrationOffer() {
       }
       const licenses = (await fetchMyLicenses()) as any[];
       if (!(licenses ?? []).some(isActiveMonthly)) {
+        const { reason, fix } = diagnose(licenses ?? []);
         setNotice({
           kind: "ineligible",
-          msg: "Você não tem uma licença Shadow 4.5.7 (mensal / 30 dias) ativa. O upgrade para a 4.6 vitalícia é exclusivo para assinantes mensais ativos — compre o plano mensal primeiro, ou fale com o suporte se acha que isso é um engano.",
+          msg: "Você ainda não está apto ao upgrade para a Shadow 4.6 vitalícia. O programa exige uma licença Shadow 4.5.7 (mensal / 30 dias) comprada e ativa.",
+          reason,
+          fix,
         });
         return;
       }
@@ -136,6 +211,18 @@ export function MigrationOffer() {
             )}
             <div className="flex-1">
               <p>{notice.msg}</p>
+              {notice.reason ? (
+                <div className="mt-2 space-y-1.5 rounded-md border border-current/20 bg-background/30 p-2.5">
+                  <p className="font-mono text-[10px] uppercase tracking-widest opacity-70">Motivo detectado</p>
+                  <p>{notice.reason}</p>
+                  {notice.fix ? (
+                    <>
+                      <p className="pt-1 font-mono text-[10px] uppercase tracking-widest opacity-70">Como ficar apto</p>
+                      <p>{notice.fix}</p>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
               {notice.kind === "auth" ? (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Link to="/auth" className="font-mono text-[11px] uppercase text-primary hover:underline">
