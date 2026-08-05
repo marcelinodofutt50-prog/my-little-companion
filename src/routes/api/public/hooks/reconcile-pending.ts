@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/public/hooks/reconcile-pending")({
         const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
         const { data: orders, error } = await supabaseAdmin
           .from("orders")
-          .select("id, status, mp_payment_id, mp_preference_id, created_at")
+          .select("id, status, amount, mp_payment_id, mp_preference_id, created_at")
           .in("status", ["pending", "created", "yaarsa_failed"])
           .gt("created_at", cutoff)
           .order("created_at", { ascending: true })
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/api/public/hooks/reconcile-pending")({
         for (const order of (orders ?? []) as any[]) {
           try {
             // 1) Try authoritative search by external_reference (order id).
-            const approved = await findApprovedPaymentForOrder(order.id);
+            const approved = await findApprovedPaymentForOrder(order.id, Number(order.amount));
             if (approved) {
               await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", order.id);
               const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
