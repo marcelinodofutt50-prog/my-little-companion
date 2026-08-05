@@ -864,7 +864,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
   
   const prices = {
     serverNew: 450,
-    serverOld: 450,
+    serverOld: 250,
     signer: 250,
   };
 
@@ -934,7 +934,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
               <div className="text-xs font-bold">Sou Membro Antigo</div>
-              <div className="text-[10px] text-muted-foreground">Manutenção unificada a R$ 450</div>
+              <div className="text-[10px] text-muted-foreground">Manutenção unificada a R$ 250</div>
             </div>
             <button
               onClick={() => setIsOldMember(!isOldMember)}
