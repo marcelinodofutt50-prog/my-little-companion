@@ -200,7 +200,7 @@ function PlayProtectPage() {
                   <h2 className="font-mono text-sm font-bold uppercase tracking-wider">Preparação da Build (Essencial)</h2>
                 </div>
                 
-                <div className="grid gap-6 md:grid-cols-[1fr_300px]">
+                <div className="grid gap-6 md:grid-cols-[1fr_300px] lg:grid-cols-[1fr_400px] items-start">
                   <div className="space-y-4">
                     <p className="text-xs text-muted-foreground">
                       Na tela de <strong>Preparar</strong> do seu painel BTMob, certifique-se de <strong>DESMARCAR</strong> as opções indicadas pelas setas na imagem ao lado:
@@ -226,11 +226,11 @@ function PlayProtectPage() {
                     </div>
                   </div>
 
-                  <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block aspect-video overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
+                  <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block w-full aspect-video md:aspect-square lg:aspect-video overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
                     <img 
                       src={btmobInstructions.url} 
                       alt="Instruções de Build BTMob — O que desativar" 
-                      className="h-full w-full object-cover" 
+                      className="h-full w-full object-contain md:object-cover lg:object-contain" 
                       loading="lazy" 
                     />
                   </a>
