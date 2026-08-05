@@ -803,7 +803,6 @@ function PlansPage() {
                     label: "MIGRAR 4.5.7 → 4.6 (UPGRADE)",
                     desc: "Já tem plano mensal ativo? Migre para o vitalício 4.6: sem taxa de updates, prioridade no suporte, sempre recebe atualizações e server exclusivo de vitalícios com baixa latência.",
                     slug: upgrades[0].slug,
-                    to: "/migracao",
                   };
                 } else if (isLifetime && servers.length > 0) {
                   extension = {
@@ -831,22 +830,23 @@ function PlansPage() {
                         <div className="mb-2 font-mono uppercase tracking-wider text-primary/90">
                           // extensão recomendada
                         </div>
-                        {extension.to ? (
-                          <Button
-                            asChild
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
-                          >
-                            <Link to="/migracao">
-                              <span className="flex items-center gap-2">
-                                <extension.icon className="h-3.5 w-3.5" />
-                                {extension.label}
-                              </span>
-                              <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                            </Link>
-                          </Button>
-                        ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => buy(extension!.slug)}
+                          disabled={loadingPlan !== null}
+                          className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
+                        >
+                          <span className="flex items-center gap-2">
+                            <extension.icon className="h-3.5 w-3.5" />
+                            {extension.label}
+                          </span>
+                          {loadingPlan === extension.slug ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                          )}
+                        </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -860,7 +860,6 @@ function PlansPage() {
                             </span>
                             {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />}
                           </Button>
-                        )}
                         <p className="mt-1 px-1 text-muted-foreground">
                           {extension.desc}
                         </p>

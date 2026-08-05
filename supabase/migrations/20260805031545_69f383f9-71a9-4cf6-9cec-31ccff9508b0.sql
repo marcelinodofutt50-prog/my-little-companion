@@ -1,0 +1,1 @@
+UPDATE public.plans SET active = true, category = 'license', price_brl = 600 WHERE slug = 'upgrade-457-to-46'; UPDATE public.plans SET active = false WHERE slug = 'upgrade_v46';
