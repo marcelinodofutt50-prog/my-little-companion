@@ -34,12 +34,7 @@ export function ProgressiveImage({ src, alt, className, ...props }: ProgressiveI
           "h-full w-full transition-opacity duration-700",
           isLoaded ? "opacity-100" : "opacity-0"
         )}
-        onLoad={(e) => {
-          const img = e.currentTarget;
-          if (img.naturalWidth > 1) {
-            setIsLoaded(true);
-          }
-        }}
+        onLoad={() => setIsLoaded(true)}
         onError={() => setError(true)}
         {...props}
       />
