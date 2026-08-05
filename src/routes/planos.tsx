@@ -918,9 +918,9 @@ function PlansPage() {
                           disabled={loadingPlan !== null}
                           className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
                         >
-                          <span className="flex items-center gap-2">
-                            <extension.icon className="h-3.5 w-3.5" />
-                            {extension.label}
+                          <span className="flex items-center gap-2 text-left">
+                            <extension.icon className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{extension.label}</span>
                           </span>
                           {loadingPlan === extension.slug ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -928,20 +928,7 @@ function PlansPage() {
                             <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
                           )}
                         </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
-                            onClick={() => buy(extension!.slug)}
-                            disabled={loadingPlan === extension!.slug}
-                          >
-                            <span className="flex items-center gap-2">
-                              <extension.icon className="h-3.5 w-3.5" />
-                              {extension.label}
-                            </span>
-                            {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />}
-                          </Button>
-                        <p className="mt-1 px-1 text-muted-foreground">
+                        <p className="mt-1 px-1 text-[10px] text-muted-foreground leading-tight">
                           {extension.desc}
                         </p>
                       </div>
