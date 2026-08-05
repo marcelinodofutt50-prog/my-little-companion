@@ -710,6 +710,7 @@ function PlansPage() {
                   label: string;
                   desc: string;
                   slug: string;
+                  to?: string;
                 } = null;
 
                 if (is7d && servers.length > 0) {
@@ -730,8 +731,9 @@ function PlansPage() {
                   extension = {
                     icon: ArrowUpRight,
                     label: "MIGRAR 4.5.7 → 4.6 (UPGRADE)",
-                    desc: "Cliente v4.5.7 migra automaticamente para a versão vitalícia 4.6 preservando histórico.",
+                    desc: "Preencha o formulário de migração — a equipe conduz o upgrade e libera o vitalício 4.6 preservando seu histórico.",
                     slug: upgrades[0].slug,
+                    to: "/migracao",
                   };
                 }
 
