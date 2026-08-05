@@ -739,6 +739,17 @@ function PlansPage() {
             useCash={useCash}
           />
         )}
+        {showMore && addons.length > 0 && (
+          <PlanGroup
+            title="Play Protect Bypass & Signer"
+            eyebrow="O bypass mais estável do mercado · Shadow Signer incluso"
+            items={addons}
+            onBuy={buy}
+            loading={loadingPlan}
+            coupon={couponValid}
+            cashback={cashbackBalance}
+            useCash={useCash}
+          />
         {showMore && (
         <PlanGroup
           title="Servidor"
