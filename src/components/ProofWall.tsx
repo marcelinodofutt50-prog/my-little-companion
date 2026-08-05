@@ -15,7 +15,11 @@ type Shot = { src: string; fallback: string; caption: string; tag: string; accen
 
 const refCode = (i: number) => `REF-${String(i + 1).padStart(2, "0")}`;
 
-const shots: Shot[] = [
+export function ProofWall() {
+  const { t } = useI18n();
+  const [open, setOpen] = useState<number | null>(null);
+
+  const shots: Shot[] = [
   {
     src: pPhones.url,
     fallback: pPhones.fallback,

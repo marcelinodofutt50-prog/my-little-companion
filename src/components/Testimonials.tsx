@@ -13,7 +13,10 @@ type Testimonial = {
   accent: "neon" | "cyan" | "violet";
 };
 
-const items: Testimonial[] = [
+export function Testimonials() {
+  const { t } = useI18n();
+
+  const items: Testimonial[] = [
   {
     name: "Rafael M.",
     handle: "@rafa.ops",
