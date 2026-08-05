@@ -110,7 +110,6 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
       "Acesso ao Shadow Signer (Bypass Automático & Dropper)",
-
     ],
     note: t("plan.monthly.note"),
   };
