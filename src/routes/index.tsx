@@ -151,25 +151,6 @@ function Index() {
         </div>
       </section>
 
-      {/* Visual Section - Restoring original reference layout */}
-      <section className="py-12 relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
-            >
-              <ProgressiveImage 
-                src={heroRestore} 
-                alt="Shadow Hero Visual" 
-                className="w-full h-auto rounded-2xl transition-all duration-1000"
-              />
-            </motion.div>
-          </div>
-        </div>
-      </section>
 
       {/* Enterprise Management Section - Integrated Real UI Elements */}
       <section className="py-20 relative border-y border-border/40 bg-card/20 overflow-hidden">
