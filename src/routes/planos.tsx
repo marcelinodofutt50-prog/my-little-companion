@@ -705,16 +705,75 @@ function PlansPage() {
             {licenses.filter(p => usageOf(p) === "monthly" || usageOf(p) === "lifetime")
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
               .map((p) => (
-                <PlanCard
-                  key={p.slug}
-                  plan={p}
-                  coupon={couponValid}
-                  cashback={cashbackBalance}
-                  useCash={useCash}
-                  isLoading={loadingPlan === p.slug}
-                  onBuy={buy}
-                  featured={p.slug === "login-lifetime"}
-                />
+                <div key={p.slug} className="flex flex-col gap-4">
+                  <PlanCard
+                    plan={p}
+                    coupon={couponValid}
+                    cashback={cashbackBalance}
+                    useCash={useCash}
+                    isLoading={loadingPlan === p.slug}
+                    onBuy={buy}
+                    featured={p.slug === "login-lifetime"}
+                  />
+                  
+                  {/* Categorized Quick Links below the main cards as requested */}
+                  <div className="space-y-2 rounded-xl border border-border/40 bg-card/30 p-4">
+                    <div className="font-mono text-[8px] uppercase tracking-widest text-muted-foreground/60 border-b border-border/20 pb-1.5 mb-2">
+                      // extensões e serviços
+                    </div>
+                    
+                    {/* Exibe Renovação de Servidor */}
+                    {servers.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-between h-8 px-2 text-[10px] font-mono hover:bg-primary/10 hover:text-primary transition-colors group/btn"
+                        onClick={() => buy(servers[0].slug)}
+                        disabled={loadingPlan === servers[0].slug}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Server className="h-3 w-3 opacity-60" />
+                          <span>RENOVAR SERVIDOR</span>
+                        </div>
+                        {loadingPlan === servers[0].slug ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />}
+                      </Button>
+                    )}
+
+                    {/* Exibe Play Protect / Signer */}
+                    {addons.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-between h-8 px-2 text-[10px] font-mono hover:bg-primary/10 hover:text-primary transition-colors group/btn"
+                        onClick={() => buy(addons[0].slug)}
+                        disabled={loadingPlan === addons[0].slug}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-3 w-3 opacity-60" />
+                          <span>PLAY PROTECT MENSAL</span>
+                        </div>
+                        {loadingPlan === addons[0].slug ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />}
+                      </Button>
+                    )}
+
+                    {/* Exibe Upgrade (se aplicável para este plano ou em geral) */}
+                    {upgrades.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-between h-8 px-2 text-[10px] font-mono hover:bg-primary/10 hover:text-primary transition-colors group/btn"
+                        onClick={() => buy(upgrades[0].slug)}
+                        disabled={loadingPlan === upgrades[0].slug}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ArrowUpRight className="h-3 w-3 opacity-60" />
+                          <span>MIGRAR PARA 4.6</span>
+                        </div>
+                        {loadingPlan === upgrades[0].slug ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ))}
           </div>
         </div>
