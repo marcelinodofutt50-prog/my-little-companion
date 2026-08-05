@@ -137,12 +137,6 @@ function Index() {
                 Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary" />
               </Link>
             </Button>
-            <Link 
-              to="/auth" 
-              className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
-            >
-              Testar Grátis por 24h <span className="h-px w-8 bg-muted-foreground/30" />
-            </Link>
           </motion.div>
 
           <motion.div
