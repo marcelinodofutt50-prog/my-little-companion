@@ -284,7 +284,7 @@ function StatusCard({ status }: { status: ServerStatus }) {
           </span>
         </div>
         {isOnline && status.latency_ms && (
-          <span className="font-mono text-[10px] text-neon">
+          <span className="font-mono text-[10px] text-[#00ff9d]">
             {status.latency_ms}ms
           </span>
         )}
