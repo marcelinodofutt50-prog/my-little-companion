@@ -14,6 +14,7 @@ import { LanguageToggle, useI18n } from "@/lib/i18n";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
+import { KrakenTab } from "@/components/KrakenTab";
 
 
 import type { User } from "@supabase/supabase-js";
@@ -67,6 +68,7 @@ export function SiteHeader() {
               {l.label}
             </Link>
           ))}
+          <KrakenTab />
           <DropdownMenu>
             <DropdownMenuTrigger className={`${linkCls(more.some((l) => l.to === path))} inline-flex items-center gap-1 outline-none`}>
               Mais <ChevronDown className="h-3 w-3" />
