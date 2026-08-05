@@ -20,10 +20,12 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mark.png";
-import panelFixedAsset from "@/assets/btmob-panel-1.png.asset.json";
-import panelFixed2Asset from "@/assets/btmob-panel-2.png.asset.json";
+import panelFixedAsset from "@/assets/panel-original-fixed.png.asset.json";
+import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
+import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 const panelFixed = panelFixedAsset.url;
-const panelFixed2 = panelFixed2Asset.url;
+const btmob1 = btmobPanel1.url;
+const btmob2 = btmobPanel2.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -147,7 +149,7 @@ function Index() {
       {/* Hero Image / Original Panel */}
       <section className="py-12 relative overflow-hidden border-y border-border/40 bg-card/20">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-2 max-w-6xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -156,25 +158,22 @@ function Index() {
             >
               <ProgressiveImage 
                 src={panelFixed} 
-                alt="Shadow Manager Interface 1" 
-                className="w-full h-auto rounded-2xl grayscale hover:grayscale-0 transition-all duration-1000"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
-            >
-              <ProgressiveImage 
-                src={panelFixed2} 
-                alt="Shadow Manager Interface 2" 
+                alt="Shadow Manager Interface" 
                 className="w-full h-auto rounded-2xl grayscale hover:grayscale-0 transition-all duration-1000"
               />
             </motion.div>
           </div>
-          <div className="mt-10 flex justify-center gap-10 grayscale opacity-50">
+
+          <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto mt-12 opacity-40 hover:opacity-100 transition-opacity">
+            <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30">
+              <ProgressiveImage src={btmob1} alt="BTMob Interface 1" className="w-full h-auto grayscale" />
+            </div>
+            <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30">
+              <ProgressiveImage src={btmob2} alt="BTMob Interface 2" className="w-full h-auto grayscale" />
+            </div>
+          </div>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10 grayscale opacity-50">
              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Shield className="h-4 w-4" /> Anti-Intercept</div>
              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> End-to-End</div>
              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Globe className="h-4 w-4" /> Global Node</div>
