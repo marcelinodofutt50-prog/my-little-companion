@@ -112,9 +112,9 @@ html.theme-light,
 html.theme-light body {
   color-scheme: light;
 
-  /* Pure white background for a clean light theme */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.15 0.02 255);
+  /* Refined light theme with better contrast */
+  --background: oklch(0.99 0.005 255);
+  --foreground: oklch(0.12 0.02 255);
 
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.02 255);
@@ -128,7 +128,7 @@ html.theme-light body {
   --secondary: oklch(0.96 0.01 255);
   --secondary-foreground: oklch(0.15 0.02 255);
   --muted: oklch(0.98 0.005 255);
-  --muted-foreground: oklch(0.45 0.02 255);
+  --muted-foreground: oklch(0.35 0.02 255);
 
   --accent: oklch(0.96 0.01 255);
   --accent-foreground: oklch(0.15 0.02 255);

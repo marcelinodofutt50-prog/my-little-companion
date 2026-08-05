@@ -45,7 +45,7 @@ export function ProgressiveImage({ src, alt, className, fallbackText, ...props }
   }, [src]);
 
   return (
-    <div className={cn("relative overflow-hidden bg-muted/20", className)}>
+    <div className={cn("relative overflow-hidden bg-muted/5", className)}>
       {!isLoaded && !error && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/5 to-muted/20 z-0" />
       )}
