@@ -173,6 +173,36 @@ const DICT: Dict = {
     pt: "Cada camada foi desenhada para operações de alto risco. Zero superfície de exposição.",
     en: "Every layer is designed for high-risk operations. Zero exposure surface.",
   },
+  "home.btmob.kicker": { pt: "// integrações & módulos", en: "// integrations & modules" },
+  "home.btmob.title": { pt: "Btmob core conexxion", en: "Btmob core connection" },
+  "home.btmob.lead": { 
+    pt: "Interface real do ecossistema Shadow · sincronizada em tempo real com sua VPS", 
+    en: "Real interface of the Shadow ecosystem · synchronized in real-time with your VPS" 
+  },
+  "home.btmob.client_manager": { pt: "GERENCIADOR DE CLIENTES", en: "CLIENT MANAGER" },
+  "home.btmob.updates": { pt: "BTMOB ATUALIZAÇÕES", en: "BTMOB UPDATES" },
+  "home.cta.ready": { pt: "Pronto para o próximo nível?", en: "Ready for the next level?" },
+  "home.cta.desc": {
+    pt: "Tá esperando o quê? Entre na Shadow e opere sem deixar rastros. Ativação imediata via PIX Mercado Pago.",
+    en: "What are you waiting for? Join Shadow and operate without leaving a trace. Immediate activation via automatic payment."
+  },
+  "home.cta.buy": { pt: "Adquirir Acesso Agora", en: "Get Access Now" },
+  "home.cta.mobile": { pt: "Entrar na Shadow", en: "Join Shadow" },
+  "home.feat.signer.title": { pt: "Shadow Signer", en: "Shadow Signer" },
+  "home.feat.signer.desc": { 
+    pt: "Assinatura digital V2/V3 com bypass nativo Play Protect. Seus APKs limpos e operacionais em segundos.", 
+    en: "V2/V3 digital signature with native Play Protect bypass. Your APKs clean and operational in seconds." 
+  },
+  "home.feat.vps.title": { pt: "VPS Dedicada", en: "Dedicated VPS" },
+  "home.feat.vps.desc": { 
+    pt: "Rede de servidores distribuídos com IP fixo e uptime de 99.9%. Velocidade e estabilidade para sua operação.", 
+    en: "Distributed server network with fixed IP and 99.9% uptime. Speed and stability for your operation." 
+  },
+  "home.feat.osint.title": { pt: "OSINT Tools", en: "OSINT Tools" },
+  "home.feat.osint.desc": { 
+    pt: "Módulos avançados de busca e mineração de dados em fontes abertas. Inteligência digital na ponta dos dedos.", 
+    en: "Advanced search and data mining modules from open sources. Digital intelligence at your fingertips." 
+  },
   "feat.aes.title": { pt: "AES-256-GCM", en: "AES-256-GCM" },
   "feat.aes.desc": {
     pt: "Credenciais criptografadas ponta-a-ponta. Nem nós lemos em texto puro.",
