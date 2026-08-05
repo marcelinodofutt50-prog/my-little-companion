@@ -468,11 +468,11 @@ function PlansPage() {
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px divider-glow" />
-        <div className="mx-auto max-w-7xl px-4 pt-12 pb-10 md:pt-24 md:pb-20 text-center">
+        <div className="mx-auto max-w-7xl px-4 pt-10 pb-8 md:pt-24 md:pb-20 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="font-display text-4xl font-bold tracking-tighter sm:text-6xl md:text-7xl text-foreground"
+            className="text-balance font-display text-3xl font-bold tracking-tight sm:text-6xl md:text-7xl text-foreground"
           >
             PLANOS: INFRAESTRUTURA <span className="text-primary italic">SHADOW.</span>
           </motion.h1>
