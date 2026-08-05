@@ -123,9 +123,12 @@ export function MigrationOffer() {
       }
       const licenses = (await fetchMyLicenses()) as any[];
       if (!(licenses ?? []).some(isActiveMonthly)) {
+        const { reason, fix } = diagnose(licenses ?? []);
         setNotice({
           kind: "ineligible",
-          msg: "Você não tem uma licença Shadow 4.5.7 (mensal / 30 dias) ativa. O upgrade para a 4.6 vitalícia é exclusivo para assinantes mensais ativos — compre o plano mensal primeiro, ou fale com o suporte se acha que isso é um engano.",
+          msg: "Você ainda não está apto ao upgrade para a Shadow 4.6 vitalícia. O programa exige uma licença Shadow 4.5.7 (mensal / 30 dias) comprada e ativa.",
+          reason,
+          fix,
         });
         return;
       }
