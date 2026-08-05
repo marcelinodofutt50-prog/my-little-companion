@@ -1,9 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Copy, ServerCrash, ShieldCheck, Timer, Users, ArrowRight } from "lucide-react";
+import { Copy, ServerCrash, ShieldCheck, Timer, Users, ArrowRight, Loader2, AlertTriangle, LogIn, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useServerFn } from "@tanstack/react-start";
+import { listMyLicenses } from "@/lib/license.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 const COUPON = "MIGRA";
+const MONTHLY_SLUGS = ["monthly_457"];
 
 const pains = [
   { icon: ServerCrash, title: "Servidor caindo toda hora", body: "Rodamos em infra dedicada com monitoramento 24/7 e checagem automática de saúde do painel." },
@@ -12,11 +17,54 @@ const pains = [
   { icon: ShieldCheck, title: "Dono some quando dá problema", body: "Suporte humano por chat no painel, com ticket, histórico e reembolso em até 7 dias." },
 ];
 
+type Notice = { kind: "auth" | "ineligible" | "ok"; msg: string };
+
+function isActiveMonthly(l: any) {
+  if (!MONTHLY_SLUGS.includes(l.plan_slug)) return false;
+  if (l.is_trial || l.revoked || l.disabled_at || l.suspended_at) return false;
+  if (l.expires_at && new Date(l.expires_at).getTime() <= Date.now()) return false;
+  return true;
+}
+
 export function MigrationOffer() {
+  const fetchMyLicenses = useServerFn(listMyLicenses);
+  const [checking, setChecking] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
+
   function copy() {
     navigator.clipboard.writeText(COUPON);
     localStorage.setItem("shadow_coupon", COUPON);
     toast.success(`Cupom ${COUPON} copiado`);
+  }
+
+  async function handleMigrate() {
+    setChecking(true);
+    setNotice(null);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        setNotice({
+          kind: "auth",
+          msg: "Entre na sua conta para verificarmos sua elegibilidade. O upgrade para a 4.6 vitalícia é liberado apenas para quem tem uma licença Shadow 4.5.7 (mensal) ativa comprada.",
+        });
+        return;
+      }
+      const licenses = (await fetchMyLicenses()) as any[];
+      if (!(licenses ?? []).some(isActiveMonthly)) {
+        setNotice({
+          kind: "ineligible",
+          msg: "Você não tem uma licença Shadow 4.5.7 (mensal / 30 dias) ativa. O upgrade para a 4.6 vitalícia é exclusivo para assinantes mensais ativos — compre o plano mensal primeiro, ou fale com o suporte se acha que isso é um engano.",
+        });
+        return;
+      }
+      setNotice({ kind: "ok", msg: "Elegibilidade confirmada — sua licença 4.5.7 está ativa. Cupom MIGRA aplicado, escolha o upgrade acima." });
+      localStorage.setItem("shadow_coupon", COUPON);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao verificar elegibilidade");
+    } finally {
+      setChecking(false);
+    }
   }
 
   return (
@@ -59,15 +107,59 @@ export function MigrationOffer() {
             <Button
               size="sm"
               className="font-mono uppercase"
-              onClick={() => {
-                localStorage.setItem("shadow_coupon", COUPON);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
+              onClick={handleMigrate}
+              disabled={checking}
             >
+              {checking ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
               Migrar agora <ArrowRight className="ml-2 h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
+
+        {notice ? (
+          <div
+            role="alert"
+            className={`mt-3 flex items-start gap-3 rounded-md border p-3 text-[12px] leading-snug ${
+              notice.kind === "ok"
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                : notice.kind === "auth"
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-200"
+                : "border-destructive/50 bg-destructive/10 text-destructive-foreground"
+            }`}
+          >
+            {notice.kind === "ok" ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            ) : notice.kind === "auth" ? (
+              <LogIn className="mt-0.5 h-4 w-4 shrink-0" />
+            ) : (
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            )}
+            <div className="flex-1">
+              <p>{notice.msg}</p>
+              {notice.kind === "auth" ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Link to="/auth" className="font-mono text-[11px] uppercase text-primary hover:underline">
+                    Entrar / criar conta →
+                  </Link>
+                </div>
+              ) : null}
+              {notice.kind === "ineligible" ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <a
+                    href="#planos-grid"
+                    className="font-mono text-[11px] uppercase text-primary hover:underline"
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  >
+                    Ver plano mensal 4.5.7 →
+                  </a>
+                  <Link to="/suporte" search={{}} className="font-mono text-[11px] uppercase text-primary hover:underline">
+                    Falar com suporte →
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
         <p className="mt-3 text-[11px] text-muted-foreground">
           Quer ver o checklist do que enviar, os prazos do suporte e as dúvidas mais comuns?{" "}
