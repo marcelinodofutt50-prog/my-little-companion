@@ -404,7 +404,7 @@ function PlansPage() {
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-clip">
       <SiteHeader />
       <FlashPromoBar />
       <WinbackOffer onUseCoupon={(code, slug) => { setCoupon(code); void buy(slug, code); }} />
@@ -789,8 +789,9 @@ function PlansPage() {
 
         {secondaryCount > 0 && !showMore && (
           <div className="mb-16 text-center">
-            <Button variant="outline" onClick={() => setShowMore(true)} className="font-mono text-xs uppercase tracking-wider">
-              Mais opções ({secondaryCount}) — servidor, upgrade, bypass e código-fonte
+            <Button variant="outline" onClick={() => setShowMore(true)} className="max-w-full whitespace-normal h-auto py-3 font-mono text-[11px] uppercase tracking-wider leading-snug">
+              <span className="block">Mais opções ({secondaryCount})</span>
+              <span className="block text-[10px] opacity-70">servidor · upgrade · bypass · código-fonte</span>
             </Button>
           </div>
         )}

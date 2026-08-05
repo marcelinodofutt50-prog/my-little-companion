@@ -59,7 +59,7 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="ml-6 hidden flex-1 items-center gap-7 md:flex">
+        <nav className="ml-6 hidden flex-1 items-center gap-7 lg:flex">
           {primary.map((l) => (
             <Link key={l.to} to={l.to} className={linkCls(path === l.to)}>
               {l.label}
@@ -81,7 +81,7 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <SystemHealthIndicator />
+          <div className="hidden lg:block"><SystemHealthIndicator /></div>
           {user && <InAppNotifications />}
 
           <ThemeToggle />
@@ -108,7 +108,7 @@ export function SiteHeader() {
           {/* Mobile menu */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button size="icon" variant="ghost" className="md:hidden">
+              <Button size="icon" variant="ghost" className="lg:hidden">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
