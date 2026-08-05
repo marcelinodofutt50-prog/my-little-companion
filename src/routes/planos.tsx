@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
   HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight, ArrowLeftRight,
-  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield,
+  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield, AlertTriangle,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
@@ -389,8 +389,8 @@ function PlansPage() {
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
 
 
-  const [usage, setUsage] = useState<UsageFilter>("all");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [showMore, setShowMore] = useState(false);
   const [checkingEligibility, setCheckingEligibility] = useState(false);
   const [myLicenses, setMyLicenses] = useState<any[]>([]);
   const fetchMyLicenses = useServerFn(listMyLicenses);
