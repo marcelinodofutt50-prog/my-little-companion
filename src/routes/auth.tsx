@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Mail, LifeBuoy, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import shadowMark from "@/assets/shadow-mask.png";
+import shadowMark from "@/assets/shadow-mark.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
