@@ -1,25 +1,74 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
 
+// Backoff exponencial das tentativas de entrega automática.
+// 1ª falha → 1 min, depois 2, 4, 8, 16, 32 e teto de 60 min.
+export function fulfillmentBackoffMs(attempt: number) {
+  const minutes = Math.min(60, Math.pow(2, Math.max(0, attempt - 1)));
+  return minutes * 60 * 1000;
+}
+
+// Máximo de tentativas automáticas antes de marcar para intervenção manual.
+export const MAX_FULFILLMENT_ATTEMPTS = 12;
+
 // Wrapper: guarantees an order never stays stuck in "processing" when an
 // unexpected error (Yaarsa timeout, network failure) aborts fulfillment.
 export async function fulfillOrder(orderId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   try {
-    return await fulfillOrderInner(orderId);
+    const result = await fulfillOrderInner(orderId);
+    if (result.ok) {
+      // Sucesso: zera o contador de tentativas.
+      await supabaseAdmin
+        .from("orders")
+        .update({ fulfillment_attempts: 0, next_retry_at: null, last_fulfillment_error: null } as any)
+        .eq("id", orderId);
+    } else if (!["in-progress", "already-fulfilled", "already-renewed"].includes((result as any).reason ?? "")) {
+      await scheduleFulfillmentRetry(orderId, (result as any).reason ?? "unknown");
+    }
+    return result;
   } catch (e: any) {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const message = e?.message ?? String(e);
     await supabaseAdmin
       .from("orders")
       .update({ status: "pending", processing_at: null } as any)
       .eq("id", orderId)
       .eq("status", "processing");
+    await scheduleFulfillmentRetry(orderId, message);
     await supabaseAdmin.from("webhook_logs").insert({
       source: "fulfillment",
-      note: `order ${orderId} error, released for retry: ${e?.message ?? String(e)}`,
+      note: `order ${orderId} error, released for retry: ${message}`,
       processed: false,
     });
-    return { ok: false, reason: `error: ${e?.message ?? String(e)}` };
+    return { ok: false, reason: `error: ${message}` };
   }
+}
+
+// Incrementa o contador e agenda a próxima tentativa com backoff exponencial.
+async function scheduleFulfillmentRetry(orderId: string, error: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: row } = await supabaseAdmin
+    .from("orders")
+    .select("fulfillment_attempts")
+    .eq("id", orderId)
+    .maybeSingle();
+  const attempts = Number((row as any)?.fulfillment_attempts ?? 0) + 1;
+  const patch: Record<string, unknown> = {
+    fulfillment_attempts: attempts,
+    last_fulfillment_error: error.slice(0, 500),
+    next_retry_at: new Date(Date.now() + fulfillmentBackoffMs(attempts)).toISOString(),
+  };
+  if (attempts >= MAX_FULFILLMENT_ATTEMPTS) {
+    patch["status"] = "yaarsa_failed";
+    patch["next_retry_at"] = null;
+    await supabaseAdmin.from("webhook_logs").insert({
+      source: "fulfillment",
+      note: `order ${orderId} esgotou ${attempts} tentativas automáticas: ${error}`,
+      processed: false,
+    });
+  }
+  await supabaseAdmin.from("orders").update(patch as any).eq("id", orderId);
+  return attempts;
 }
 
 async function fulfillOrderInner(orderId: string) {
@@ -35,6 +84,7 @@ async function fulfillOrderInner(orderId: string) {
     .eq("id", orderId)
     .eq("status", "processing")
     .lt("processing_at", staleCutoff);
+
 
   // Atomic claim: only proceed if not already paid. Prevents duplicate fulfillment on concurrent webhooks.
   const { data: claimed, error: claimErr } = await supabaseAdmin
