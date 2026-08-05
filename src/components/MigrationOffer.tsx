@@ -56,10 +56,15 @@ export function MigrationOffer() {
             <Button variant="outline" size="sm" onClick={copy} className="font-mono uppercase">
               <Copy className="mr-2 h-3.5 w-3.5" /> Copiar cupom
             </Button>
-            <Button asChild size="sm" className="font-mono uppercase">
-              <Link to="/planos" search={{ cupom: COUPON } as any}>
-                Migrar agora <ArrowRight className="ml-2 h-3.5 w-3.5" />
-              </Link>
+            <Button
+              size="sm"
+              className="font-mono uppercase"
+              onClick={() => {
+                localStorage.setItem("shadow_coupon", COUPON);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              Migrar agora <ArrowRight className="ml-2 h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
