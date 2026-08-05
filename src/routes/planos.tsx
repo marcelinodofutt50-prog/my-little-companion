@@ -456,57 +456,28 @@ function PlansPage() {
       <WinbackOffer onUseCoupon={(code, slug) => { setCoupon(code); void buy(slug, code); }} />
 
 
-      {/* HERO ================================================= */}
+      {/* HERO — clean ================================================= */}
       <section className="relative overflow-hidden border-b border-border/40">
-        <div className="pointer-events-none absolute inset-0 -z-0 opacity-70"
-             style={{ background: "radial-gradient(ellipse 70% 55% at 50% 0%, oklch(0.28 0.09 82 / 0.28), transparent 65%)" }} />
-        
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse" />
-          <div className="absolute top-[20%] -right-[10%] h-[30%] w-[30%] rounded-full bg-primary/10 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px divider-glow" />
-        <div className="mx-auto max-w-7xl px-4 pt-10 pb-8 md:pt-24 md:pb-20 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-balance font-display text-3xl font-bold tracking-tight sm:text-6xl md:text-7xl text-foreground"
-          >
-            PLANOS: INFRAESTRUTURA <span className="text-primary italic">SHADOW.</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg"
-          >
-            Escolha seu nível de acesso. Ativação automática via Mercado Pago.
-          </motion.p>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mt-10 flex flex-wrap items-center justify-center gap-6 text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70"
-          >
-            <span className="flex items-center gap-2 hover:text-primary transition-colors"><ShieldCheck className="h-4 w-4 text-primary" /> Mercado Pago</span>
-            <span className="flex items-center gap-2 hover:text-primary transition-colors"><Zap className="h-4 w-4 text-primary" /> Ativação &lt; 1 min</span>
-            <span className="flex items-center gap-2 hover:text-primary transition-colors"><HeadphonesIcon className="h-4 w-4 text-primary" /> Suporte 24/7</span>
-          </motion.div>
+        <div className="pointer-events-none absolute inset-0 -z-0 opacity-60"
+             style={{ background: "radial-gradient(ellipse 60% 45% at 50% 0%, oklch(0.28 0.09 82 / 0.22), transparent 70%)" }} />
+        <div className="mx-auto max-w-4xl px-4 pt-14 pb-10 md:pt-20 md:pb-14 text-center">
+          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// planos shadow</div>
+          <h1 className="mt-3 text-balance font-display text-3xl font-bold tracking-tight sm:text-5xl md:text-6xl text-foreground">
+            Escolha seu <span className="text-primary italic">acesso.</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground md:text-base">
+            Ativação automática via PIX. Sem burocracia.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Mercado Pago</span>
+            <span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-primary" /> &lt; 1 min</span>
+            <span className="flex items-center gap-1.5"><HeadphonesIcon className="h-3.5 w-3.5 text-primary" /> Suporte 24/7</span>
+          </div>
         </div>
       </section>
 
-      <GuaranteeStrip />
+      <main className="relative z-10 mx-auto max-w-6xl px-4 pb-24 sm:px-6">
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-24 sm:px-6">
-        <ShadowLupinBanner />
-        <HowItWorksSteps variant="checkout" />
-
-        <PlanAdvisor className="mt-5" />
-        <ConversionBoosters />
-        <TrustBadges className="mt-6" />
-        <Testimonials />
 
 
         {/* BENEFITS PANEL ==================================== */}
