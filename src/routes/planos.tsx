@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
+import { LiveActivationTicker }
 import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
 
 import { GuaranteeStrip } from "@/components/GuaranteeStrip";
