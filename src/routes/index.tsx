@@ -20,8 +20,10 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mark.png";
-import panelFixedAsset from "@/assets/panel-original-fixed.png.asset.json";
+import panelFixedAsset from "@/assets/btmob-panel-1.png.asset.json";
+import panelFixed2Asset from "@/assets/btmob-panel-2.png.asset.json";
 const panelFixed = panelFixedAsset.url;
+const panelFixed2 = panelFixed2Asset.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
