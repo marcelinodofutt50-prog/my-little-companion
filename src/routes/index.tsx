@@ -23,8 +23,9 @@ import { playNotifyDing } from "@/lib/notify-sound";
 const shadowMark = "/assets/shadow-logo-v9.png?v=v9-100";
 const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
 const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
-const btmobDashboard = "/assets/enterprise-management-v2.png?v=v8-400";
-const assetMissing = "/assets/enterprise-management-v2.png?v=v8-400";
+import shadowDashboardReal from "@/assets/shadow-dashboard-real.png.asset.json";
+const btmobDashboard = shadowDashboardReal.url;
+const assetMissing = shadowDashboardReal.url;
 const btmob1 = "/assets/shadow-hacker-lupin.jpg?v=v8-400";
 const btmob2 = "/assets/play-protect-config.png?v=v8-400";
 
