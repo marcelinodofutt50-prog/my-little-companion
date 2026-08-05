@@ -27,14 +27,17 @@ export const testMercadoPagoWebhook = createServerFn({ method: "POST" })
 
     const paymentId = `TEST-PAYMENT-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
-    // 1. Atualiza o pedido com o ID de pagamento simulado
+    // 1. Registra o ID de pagamento simulado. O status precisa continuar
+    // "pending" para que fulfillOrder consiga fazer o claim atômico —
+    // marcá-lo como "paid" aqui faria a entrega ser recusada (not-claimable).
     await supabaseAdmin
       .from("orders")
       .update({
         mp_payment_id: paymentId,
-        status: data.status === "approved" ? "paid" : "pending",
+        status: "pending",
       } as any)
       .eq("id", data.orderId);
+
 
     // 2. Se aprovado, dispara o fluxo de entrega
     if (data.status === "approved") {
