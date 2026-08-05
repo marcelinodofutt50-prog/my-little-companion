@@ -518,6 +518,7 @@ function DashboardPage() {
                           )}
                         </CardContent>
                       </Card>
+                      </Card>
                     )
                   })}
                 </div>
