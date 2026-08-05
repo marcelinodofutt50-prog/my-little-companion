@@ -505,6 +505,7 @@ function DashboardPage() {
                               </div>
                             )}
                           </div>
+                        </div>
                           {licenseDownloads.length > 0 && (
                             <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
                               {licenseDownloads.map((file: { url: string; label: string }) => (
