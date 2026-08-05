@@ -125,11 +125,16 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-6"
+            className="mt-8 flex flex-wrap items-center justify-center gap-4"
           >
             <Button size="lg" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full">
               <Link to="/planos">
                 Começar Agora <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5">
+              <Link to="/auth?mode=up">
+                Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary" />
               </Link>
             </Button>
             <Link 
