@@ -23,6 +23,36 @@ function isActiveMonthly(l: any) {
   if (l.is_trial || l.revoked || l.disabled_at || l.suspended_at) return false;
   if (l.expires_at && new Date(l.expires_at).getTime() <= Date.now()) return false;
   return true;
+}
+
+export function MigrationOffer() {
+  const fetchMyLicenses = useServerFn(listMyLicenses);
+  const [checking, setChecking] = useState(false);
+  const [notice, setNotice] = useState<null | { kind: "auth" | "ineligible" | "ok"; msg: string }>(null);
+
+  function copy() {
+    navigator.clipboard.writeText(COUPON);
+    localStorage.setItem("shadow_coupon", COUPON);
+    toast.success(`Cupom ${COUPON} copiado`);
+  }
+
+  async function handleMigrate() {
+    setChecking(true);
+    setNotice(null);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        setNotice({
+          kind: "auth",
+          msg: "Entre na sua conta para verificarmos sua elegibilidade. O upgrade para a 4.6 vitalícia é liberado apenas para quem tem uma licença Shadow 4.5.7 (mensal) ativa comprada.",
+        });
+        return;
+      }
+      const licenses = (await fetchMyLicenses()) as any[];
+      if (!(licenses ?? []).some(isActiveMonthly)) {
+        setNotice({
+          kind: "ineligible",
+          msg: "Você não tem uma licença Shadow 4.5.7 (mensal / 30 dias) ativa. O upgrade para a 4.6 vitalícia é exclusivo para assinantes mensais ativos — compre o plano mensal primeiro, ou fale com o suporte se acha que isso é um eng
 
 
   return (
