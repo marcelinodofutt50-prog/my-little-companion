@@ -69,7 +69,7 @@ export async function getMpPayment(paymentId: string) {
  * (external_reference) has an approved payment. Used as a safety net when the
  * webhook never arrives or its signature can't be validated.
  */
-export async function findApprovedPaymentForOrder(orderId: string) {
+export async function findApprovedPaymentForOrder(orderId: string, minAmount?: number) {
   const res = await fetch(
     `${MP_API}/v1/payments/search?sort=date_created&criteria=desc&external_reference=${encodeURIComponent(orderId)}`,
     { headers: { Authorization: `Bearer ${token()}` } },
@@ -80,7 +80,12 @@ export async function findApprovedPaymentForOrder(orderId: string) {
     results?: Array<{ id: number; status: string; transaction_amount: number; external_reference: string }>;
   };
   const approved = (json.results ?? []).find(
-    (p) => p.status === "approved" && p.external_reference === orderId,
+    (p) =>
+      p.status === "approved" &&
+      p.external_reference === orderId &&
+      // Nunca liberar licença por um valor menor que o do pedido.
+      (minAmount === undefined || Number(p.transaction_amount) >= minAmount - 0.01),
   );
   return approved ?? null;
 }
+
