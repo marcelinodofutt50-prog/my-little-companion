@@ -437,7 +437,7 @@ function PlansPage() {
   }, [plans, isLegacy, usage, billingCycle]);
 
 
-  const secondaryCount = servers.length + sources.length + upgrades.length + addons.length;
+  const secondaryCount = sources.length;
 
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
