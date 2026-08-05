@@ -104,11 +104,11 @@ function DashboardPreview() {
               </div>
             </div>
             
-            <div className="relative aspect-[16/10] bg-[#020808]">
+            <div className="relative aspect-video bg-[#020808]">
               <img 
                 src={panelOriginalAsset.url} 
                 alt="Shadow Original Dashboard" 
-                className="h-full w-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                className="absolute inset-0 h-full w-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
               />
               
               {/* Overlay indicators to match the OSINT style */}

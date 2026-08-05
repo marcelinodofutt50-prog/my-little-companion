@@ -226,11 +226,11 @@ function PlayProtectPage() {
                     </div>
                   </div>
 
-                  <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
+                  <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block aspect-video overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
                     <img 
                       src={btmobInstructions.url} 
                       alt="Instruções de Build BTMob — O que desativar" 
-                      className="h-full w-full object-contain" 
+                      className="h-full w-full object-cover" 
                       loading="lazy" 
                     />
                   </a>
