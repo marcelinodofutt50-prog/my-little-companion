@@ -19,7 +19,7 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
-  const btmobInstructions = "/assets/play-protect-config.png?v=v8-400";
+  const btmobInstructions = "/assets/shadow-play-protect-new.png?v=v147";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 
 
