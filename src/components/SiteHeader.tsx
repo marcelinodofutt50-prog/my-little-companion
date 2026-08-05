@@ -19,7 +19,7 @@ import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import type { User } from "@supabase/supabase-js";
 
 export function SiteHeader() {
-  const shadowMark = "/assets/shadow-mark.png?v=v8-400";
+  const shadowMark = "/assets/shadow-logo.png?v=v8-400";
   const { location } = useRouterState();
   const path = location.pathname;
   const search = location.search as any;
