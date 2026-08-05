@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Mail, LifeBuoy, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import shadowMark from "@/assets/shadow-mark.png";
+import shadowMarkAsset from "@/assets/shadow-mark-v2.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,6 +116,7 @@ function formatTime(ts: number): string {
 }
 
 function AuthPage() {
+  const shadowMark = shadowMarkAsset.url;
   const { next, code, type } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
