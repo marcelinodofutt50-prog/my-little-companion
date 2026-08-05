@@ -776,27 +776,27 @@ function PlansPage() {
                   to?: string;
                 } = null;
 
-                if (is7d && servers.length > 0) {
-                  extension = {
-                    icon: Server,
-                    label: "RENOVAR SERVIDOR (DIA 20)",
-                    desc: "Manutenção mensal da infraestrutura VPS para manter sua licença ativa e operante.",
-                    slug: servers[0].slug,
-                  };
-                } else if (isMonthly && addons.length > 0) {
+                if (is7d && addons.length > 0) {
                   extension = {
                     icon: ShieldCheck,
-                    label: "PLAY PROTECT MENSAL (SIGNER)",
-                    desc: "Shadow Signer: bypass Play Protect nativo BTmob, Dropper e proteção anti-decompile.",
+                    label: "PLAY PROTECT (SHADOW SIGNER)",
+                    desc: "R$ 450 — APK dura 30 dias (vs 1 dia do BTmob nativo). Otimizado e não é detectado como vírus pelo Play Protect.",
                     slug: addons[0].slug,
                   };
-                } else if (isLifetime && upgrades.length > 0) {
+                } else if (isMonthly && upgrades.length > 0) {
                   extension = {
                     icon: ArrowUpRight,
                     label: "MIGRAR 4.5.7 → 4.6 (UPGRADE)",
-                    desc: "Preencha o formulário de migração — a equipe conduz o upgrade e libera o vitalício 4.6 preservando seu histórico.",
+                    desc: "Já tem plano mensal ativo? Migre para o vitalício 4.6: sem taxa de updates, prioridade no suporte, sempre recebe atualizações e server exclusivo de vitalícios com baixa latência.",
                     slug: upgrades[0].slug,
                     to: "/migracao",
+                  };
+                } else if (isLifetime && servers.length > 0) {
+                  extension = {
+                    icon: Server,
+                    label: "RENOVAR SERVIDOR (DIA 20)",
+                    desc: "Vitalícios pagam manutenção do server todo dia 20. Quem tem plano mensal já inclui — renova junto com o login.",
+                    slug: servers[0].slug,
                   };
                 }
 
