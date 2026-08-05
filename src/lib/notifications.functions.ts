@@ -14,13 +14,11 @@ export interface AppNotification {
   actionLabel?: string;
 }
 
-function ago(iso: string) {
-  return new Date(iso).toISOString();
-}
 
 export const listMyNotifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { ago } = await import("@/lib/notifications.server");
     const { resolveRoles } = await import("@/lib/roles.server");
     const { isStaff } = await resolveRoles(context);
     const items: AppNotification[] = [];
