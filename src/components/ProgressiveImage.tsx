@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { ImageOff, ShieldAlert } from "lucide-react";
+import { ImageOff } from "lucide-react";
 
 const GLOBAL_FALLBACK_URL = "/assets/shadow-dashboard-real.png";
 const FALLBACK_LOGO_URL = "/assets/shadow-logo-v10.png";
@@ -14,15 +14,23 @@ interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement
 
 export function ProgressiveImage({ src, alt, className, fallbackText, loading = "lazy", ...props }: ProgressiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [error, setError] = useState(false);
 
+  // Determina qual imagem exibir: a original ou um fallback em caso de erro
   const displaySrc = useMemo(() => {
     if (!error) return src;
-    if (src.includes('logo')) return FALLBACK_LOGO_URL;
+    // Se for um logo, tenta usar o logo padrão. Caso contrário, usa o dashboard como fallback genérico.
+    if (src.toLowerCase().includes('logo') || src.toLowerCase().includes('mark')) {
+      return FALLBACK_LOGO_URL;
+    }
     return GLOBAL_FALLBACK_URL;
   }, [src, error]);
 
   useEffect(() => {
+    // Reset state when src changes
+    setIsLoaded(false);
+    setError(false);
+
     if (!src) {
       setError(true);
       return;
@@ -39,7 +47,7 @@ export function ProgressiveImage({ src, alt, className, fallbackText, loading = 
     img.onerror = () => {
       setError(true);
       setIsLoaded(false);
-      console.warn(`[ProgressiveImage] Failed to load: ${src}`);
+      console.warn(`[ProgressiveImage] Failed to load original: ${src}. Switching to fallback.`);
     };
     
     if (img.complete) {
@@ -55,22 +63,24 @@ export function ProgressiveImage({ src, alt, className, fallbackText, loading = 
 
   return (
     <div className={cn("relative overflow-hidden bg-muted/5", className)}>
-      {!isLoaded && !error && (
+      {/* Skeleton / Loading state */}
+      {!isLoaded && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/5 to-muted/20 z-0" />
       )}
       
-      {error && (
+      {/* Overlay de erro caso até o fallback falhe (raro, mas possível se assets forem deletados) */}
+      {error && !displaySrc && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/10 text-muted-foreground/40 p-4 text-center z-20">
           <ImageOff className="h-6 w-6 mb-2 opacity-20" />
           <span className="text-[10px] font-mono uppercase tracking-widest leading-tight">
             {fallbackText || "Asset Missing"}
           </span>
-          <span className="mt-1 text-[8px] opacity-30 font-mono">404_NOT_FOUND</span>
+          <span className="mt-1 text-[8px] opacity-30 font-mono">CRITICAL_LOAD_FAILURE</span>
         </div>
       )}
 
       <img
-        src={src}
+        src={displaySrc}
         alt={alt}
         className={cn(
           "relative h-full w-full transition-all duration-700 z-10",
@@ -78,9 +88,9 @@ export function ProgressiveImage({ src, alt, className, fallbackText, loading = 
         )}
         onLoad={() => {
           setIsLoaded(true);
-          setError(false);
         }}
         onError={() => {
+          // Se o próprio fallback falhar, mostramos o estado de erro visual
           setError(true);
           setIsLoaded(false);
         }}
