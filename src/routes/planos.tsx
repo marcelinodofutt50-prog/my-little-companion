@@ -97,7 +97,6 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
       "Acesso ao Shadow Signer (Play Protect Cloak & Shadow Bypass Dropper)",
-
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
