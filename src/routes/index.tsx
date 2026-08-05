@@ -236,9 +236,6 @@ function Index() {
               </div>
             </div>
 
-            <div className="mt-12">
-              <ProgressiveImage src={assetMissing} alt="Operational Assets" className="w-full max-w-2xl mx-auto h-auto opacity-50" />
-            </div>
 
             <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10 grayscale opacity-50">
                <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Shield className="h-4 w-4" /> Anti-Intercept</div>
