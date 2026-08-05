@@ -407,37 +407,40 @@ function DashboardPage() {
                             const totalDays =
                               startMs && endMs ? Math.max(0, Math.round((endMs - startMs) / 86400000)) : null
                             return (
-                              <div className="grid gap-1.5 rounded-md border border-border/50 bg-background/50 p-3 font-mono text-[11px] sm:grid-cols-2">
-                                <div className="flex justify-between gap-2 sm:col-span-2">
-                                  <span className="text-muted-foreground">Comprada em</span>
-                                  <span className="text-foreground">{fmt(license.created_at)}</span>
+                              <div className="grid gap-x-6 gap-y-3 rounded-md border border-border/50 bg-background/50 p-4 font-mono text-[11px] sm:grid-cols-2">
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Comprada em</span>
+                                  <span className="text-foreground font-medium">{fmt(license.created_at)}</span>
                                 </div>
-                                <div className="flex justify-between gap-2 sm:col-span-2">
-                                  <span className="text-muted-foreground">{state.paused ? 'Venceria em' : 'Vence em'}</span>
-                                  <span className="text-foreground">{endIso ? fmt(endIso) : 'Vitalícia'}</span>
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">{state.paused ? 'Venceria em' : 'Vence em'}</span>
+                                  <span className="text-foreground font-medium">{endIso ? fmt(endIso) : 'Vitalícia'}</span>
                                 </div>
-                                <div className="flex justify-between gap-2">
-                                  <span className="text-muted-foreground">Período contratado</span>
-                                  <span className="text-foreground">{totalDays !== null ? `${totalDays} dia${totalDays === 1 ? '' : 's'}` : 'Vitalícia'}</span>
+                                <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:border-t-0 sm:pt-0">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Período contratado</span>
+                                  <span className="text-foreground font-medium">{totalDays !== null ? `${totalDays} dia${totalDays === 1 ? '' : 's'}` : 'Vitalícia'}</span>
                                 </div>
-                                <div className="flex justify-between gap-2">
-                                  <span className="text-muted-foreground">Dias restantes</span>
-                                  <span className="text-foreground">
+                                <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:border-t-0 sm:pt-0">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Dias restantes</span>
+                                  <span className={cn(
+                                    "font-bold",
+                                    state.paused ? "text-amber-500" : (state.daysLeft !== null && state.daysLeft <= 3) ? "text-destructive" : "text-primary"
+                                  )}>
                                     {state.paused
-                                      ? 'congelados'
+                                      ? 'CONGELADOS'
                                       : state.daysLeft !== null
-                                        ? `${Math.max(0, state.daysLeft)}`
-                                        : '∞'}
+                                        ? `${Math.max(0, state.daysLeft)} DIAS`
+                                        : '∞ ILIMITADO'}
                                   </span>
                                 </div>
-                                <div className="flex justify-between gap-2 sm:col-span-2">
-                                  <span className="text-muted-foreground">Servidor</span>
-                                  <span className="text-foreground">{license.server_ip || '—'}</span>
+                                <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:col-span-2">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Servidor (IP do nó)</span>
+                                  <span className="text-foreground font-bold tracking-tight">{license.server_ip || 'AGUARDANDO PROVISIONAMENTO'}</span>
                                 </div>
                                 {state.serverDueAt && (
-                                  <div className="flex justify-between gap-2 sm:col-span-2">
-                                    <span className="text-muted-foreground">Mensalidade do servidor</span>
-                                    <span className="text-foreground">{fmt(state.serverDueAt)}</span>
+                                  <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:col-span-2">
+                                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Mensalidade do servidor (Cobrança separada)</span>
+                                    <span className="text-foreground font-medium">{fmt(state.serverDueAt)}</span>
                                   </div>
                                 )}
                               </div>
