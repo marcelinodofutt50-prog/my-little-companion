@@ -18,7 +18,7 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mask.png?format=webp";
-import panelOriginalAsset from "@/assets/panel-original.png.asset.json";
+import panelOriginalAsset from "@/assets/panel-original-fixed.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
