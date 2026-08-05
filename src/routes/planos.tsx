@@ -454,7 +454,9 @@ function PlansPage() {
       <GuaranteeStrip />
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 pb-24 sm:px-6">
+        <ShadowLupinBanner />
         <HowItWorksSteps variant="checkout" />
+
         <PlanAdvisor className="mt-5" />
         <ConversionBoosters />
         <TrustBadges className="mt-6" />
