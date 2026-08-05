@@ -19,7 +19,7 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMarkAsset from "@/assets/shadow-mark-v4.png.asset.json";
+import shadowMarkAsset from "@/assets/shadow-mark-v5.png.asset.json";
 import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
 import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
 import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
