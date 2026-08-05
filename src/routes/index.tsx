@@ -205,7 +205,7 @@ function Index() {
           <div className="mt-24 pt-20 border-t border-border/20">
             <div className="text-center mb-12">
               <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">Integrations & Modules</span>
-              <h3 className="text-3xl font-bold mt-2">BTMob Core Connectivity</h3>
+              <h3 className="text-3xl font-bold mt-2">Btmob core conexxion</h3>
             </div>
             
             <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto opacity-60 hover:opacity-100 transition-opacity">
