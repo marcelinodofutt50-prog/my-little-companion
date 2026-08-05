@@ -1427,11 +1427,11 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
   return (
     <div className={[
-      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-500",
+      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-700",
       featured
-        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)] sm:scale-[1.02] z-10"
-        : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70 hover:translate-y-[-4px]",
-      isLifetime ? "ring-1 ring-primary/30 shadow-[0_0_45px_-10px_oklch(0.78_0.13_82/0.45)]" : "",
+        ? "border-primary/40 bg-gradient-to-b from-primary/[0.08] via-card to-card shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.3)] sm:scale-[1.03] z-10"
+        : "border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/50 hover:-translate-y-1.5 shadow-lg shadow-black/20",
+      isLifetime ? "ring-2 ring-primary/20 shadow-[0_0_50px_-10px_oklch(0.78_0.13_82/0.4)]" : "",
     ].join(" ")}>
       {showUpgradeConfirm && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
@@ -1477,19 +1477,25 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <div className={[
-          "grid h-10 w-10 place-items-center rounded-lg border",
-          featured ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-background/40 text-muted-foreground",
+          "relative grid h-12 w-12 place-items-center rounded-xl border transition-all duration-300",
+          featured 
+            ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_15px_oklch(0.78_0.13_82/0.2)]" 
+            : "border-border/60 bg-background/40 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary",
         ].join(" ")}>
-          <Icon className="h-5 w-5" />
+          <Icon className="h-6 w-6" />
+          {featured && <div className="absolute -right-1 -top-1 h-3 w-3 animate-ping rounded-full bg-primary/40" />}
         </div>
         <div className="min-w-0">
-          <div className="truncate font-display text-lg leading-tight">
+          <div className="truncate font-display text-xl tracking-tight leading-tight group-hover:text-primary transition-colors">
             {plan.name.replace(/\s*\(Trial\)\s*/i, " — 7 dias")}
           </div>
           {meta.cadence && (
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{meta.cadence}</div>
+            <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/80">
+              <span className="inline-block h-1 w-1 rounded-full bg-primary/50" />
+              {meta.cadence}
+            </div>
           )}
         </div>
       </div>
@@ -1501,65 +1507,102 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         </p>
       )}
 
-      <div className="mt-5">
+      <div className="mt-6 flex flex-col gap-1">
         {hasBenefit && b.final < price ? (
           <>
-            <div className="font-mono text-xs text-muted-foreground line-through">{formatBrl(price)}</div>
-            <div className="font-display text-4xl font-semibold text-primary">{formatBrl(b.final)}</div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground line-through opacity-50">{formatBrl(price)}</span>
+              <span className="rounded bg-primary/20 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-primary animate-pulse">
+                Desconto Ativo
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="font-display text-5xl font-bold tracking-tighter text-primary">{formatBrl(b.final).split(',')[0]}</span>
+              <span className="font-display text-2xl font-bold text-primary">,{formatBrl(b.final).split(',')[1]}</span>
+            </div>
           </>
         ) : (
-          <div className="font-display text-4xl font-semibold">{formatBrl(price)}</div>
+          <div className="flex items-baseline gap-1">
+            <span className="font-display text-5xl font-bold tracking-tighter">{formatBrl(price).split(',')[0]}</span>
+            <span className="font-display text-2xl font-bold">,{formatBrl(price).split(',')[1]}</span>
+          </div>
         )}
       </div>
 
       {meta.features.length > 0 && (
-        <ul className="mt-5 space-y-2 border-t border-border/40 pt-4 text-sm">
-          {meta.features.map((f) => (
-            <li key={f} className="flex items-start gap-2 text-muted-foreground">
-              <Check className={`mt-0.5 h-4 w-4 shrink-0 ${featured ? "text-primary" : "text-primary/70"}`} />
-              <span className="text-foreground/90">{f}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-5 space-y-4 border-t border-border/40 pt-4">
+          <ul className="space-y-2.5 text-sm">
+            {meta.features.map((f) => (
+              <li key={f} className="flex items-start gap-2.5 group/feature">
+                <div className={`mt-0.5 rounded-full p-0.5 transition-colors ${featured ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover/feature:bg-primary/20 group-hover/feature:text-primary"}`}>
+                  <Check className="h-3 w-3" />
+                </div>
+                <span className="text-[13px] leading-tight text-foreground/80 group-hover/feature:text-foreground transition-colors">{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {meta.note && (
-        <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
-          <span className="font-mono uppercase tracking-wider text-amber-400">// atenção</span>{" "}
-          {meta.note}
-        </p>
+        <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-inner">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-amber-500">
+            <AlertTriangle className="h-3 w-3" /> Atenção Operador
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground/90 italic">
+            {meta.note}
+          </p>
+        </div>
       )}
 
 
       {hasBenefit && (
-        <ul className="mt-4 space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3 font-mono text-[11px]">
-          {b.discount > 0 && (
-            <li className="flex justify-between text-primary"><span>Desconto do cupom</span><span>-{formatBrl(b.discount)}</span></li>
-          )}
-          {b.cashbackApplied > 0 && (
-            <li className="flex justify-between text-primary"><span>Cashback usado</span><span>-{formatBrl(b.cashbackApplied)}</span></li>
-          )}
-          {b.cashbackEarn > 0 && (
-            <li className="flex justify-between text-primary/80"><span>Cashback estimado</span><span>+{formatBrl(b.cashbackEarn)}</span></li>
-          )}
-        </ul>
+        <div className="mt-5 space-y-2.5 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm backdrop-blur-[2px]">
+          <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-primary/70">
+            <Tag className="h-3 w-3" /> Resumo de Benefícios
+          </div>
+          <ul className="space-y-1.5 font-mono text-[10px]">
+            {b.discount > 0 && (
+              <li className="flex justify-between items-center text-primary">
+                <span className="opacity-80">Cupom Aplicado</span>
+                <span className="font-bold">-{formatBrl(b.discount)}</span>
+              </li>
+            )}
+            {b.cashbackApplied > 0 && (
+              <li className="flex justify-between items-center text-primary">
+                <span className="opacity-80">Saldo Cashback</span>
+                <span className="font-bold">-{formatBrl(b.cashbackApplied)}</span>
+              </li>
+            )}
+            {b.cashbackEarn > 0 && (
+              <li className="flex justify-between items-center text-primary/60">
+                <span className="opacity-70">Cashback Retorno</span>
+                <span>+{formatBrl(b.cashbackEarn)}</span>
+              </li>
+            )}
+          </ul>
+        </div>
       )}
 
       <div className="mt-6 flex-1" />
 
       <Button
         className={[
-          "w-full font-mono uppercase tracking-widest text-xs h-11 sm:h-12 transition-all duration-300 active:scale-95",
+          "group/btn w-full font-mono uppercase tracking-[0.2em] text-[10px] h-12 transition-all duration-500 active:scale-[0.98]",
           featured 
-            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_30px_oklch(0.78_0.13_82/0.6)]" 
-            : "border-2 hover:bg-primary/5 hover:border-primary/50",
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_25px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_40px_oklch(0.78_0.13_82/0.6)]" 
+            : "border-2 border-primary/20 bg-background/50 hover:bg-primary/5 hover:border-primary/50 shadow-sm",
         ].join(" ")}
         variant={featured ? "default" : "outline"}
         onClick={handleClick}
         disabled={isLoading}
         aria-label={`Comprar plano ${plan.name} via PIX`}
       >
-        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Zap className="mr-2 h-4 w-4 transition-transform duration-500 group-hover/btn:scale-125 group-hover/btn:rotate-12" />
+        )}
         Continuar para Checkout
       </Button>
       <div className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
