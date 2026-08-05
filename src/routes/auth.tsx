@@ -431,7 +431,7 @@ function AuthPage() {
       <main className="mx-auto flex max-w-md flex-col items-center px-4 py-14">
         <div className="relative">
           <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-[var(--neon)] opacity-25 blur-2xl" />
-          <img src={shadowMark} alt="Shadow" width={80} height={80} decoding="async" className="mx-auto block h-14 w-14 object-contain sm:h-20 sm:w-20 drop-shadow-[0_0_24px_rgba(201,168,76,0.6)] dark:drop-shadow-[0_0_24px_rgba(255,255,255,0.25)] brightness-110 contrast-110 dark:brightness-125 dark:contrast-125 transition-all duration-300" />
+          <img src={shadowMark} alt="Shadow" width={80} height={80} decoding="async" className="mx-auto block h-14 w-14 object-contain sm:h-20 sm:w-20 drop-shadow-[0_0_24px_rgba(201,168,76,0.6)] dark:drop-shadow-[0_0_24px_rgba(255,255,255,0.25)] brightness-110 contrast-110 dark:brightness-125 dark:contrast-125 light:mix-blend-multiply transition-all duration-300" />
         </div>
         <h1 className="mt-5 font-display text-2xl font-semibold tracking-tight">
           {mode === "in" ? "Acesse sua conta" : "Crie sua conta"}
