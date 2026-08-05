@@ -75,7 +75,7 @@ function Index() {
             className="mx-auto mb-6 h-28 w-28 md:h-32 md:w-32"
           >
             <ProgressiveImage 
-              src={heroClassicAsset.url} 
+              src={shadowMark} 
               alt="Shadow Protocol"
               className="h-full w-full object-contain drop-shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)]"
             />
