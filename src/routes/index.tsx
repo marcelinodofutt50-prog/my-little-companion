@@ -194,7 +194,7 @@ function Index() {
                 whileInView={{ opacity: 1, x: 0 }}
                 className="rounded-2xl border border-primary/20 bg-background/50 p-1 shadow-2xl overflow-hidden"
               >
-                <ProgressiveImage src={btmobDashboard} alt="BTMob Dashboard UI" className="w-full h-auto rounded-xl" />
+                <ProgressiveImage src={assetMissing} alt="BTMob Dashboard UI" className="w-full h-auto rounded-xl" />
               </motion.div>
               
               {/* Floating tactical stats */}
