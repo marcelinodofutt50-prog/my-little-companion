@@ -19,7 +19,8 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMark from "@/assets/shadow-mask.png?format=webp";
+import shadowMark from "@/assets/shadow-mask.png";
+import panelFixed from "@/assets/panel-original-fixed.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -55,6 +56,19 @@ function Index() {
       {/* Hero Section */}
       <section className="relative pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="container mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", damping: 12, stiffness: 200 }}
+            className="mx-auto mb-10 h-32 w-32 md:h-40 md:w-40"
+          >
+            <ProgressiveImage 
+              src={shadowMark} 
+              alt="Shadow Protocol"
+              className="h-full w-full object-contain drop-shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)]"
+            />
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -99,6 +113,29 @@ function Index() {
               <Link to="/auth">Criar Conta Grátis</Link>
             </Button>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Hero Image / Original Panel */}
+      <section className="py-20 relative overflow-hidden border-y border-border/40 bg-card/20">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mx-auto max-w-5xl rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
+          >
+            <ProgressiveImage 
+              src={panelFixed} 
+              alt="Shadow Manager Interface" 
+              className="w-full h-auto rounded-2xl grayscale hover:grayscale-0 transition-all duration-1000"
+            />
+          </motion.div>
+          <div className="mt-10 flex justify-center gap-10 grayscale opacity-50">
+             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Shield className="h-4 w-4" /> Anti-Intercept</div>
+             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> End-to-End</div>
+             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Globe className="h-4 w-4" /> Global Node</div>
+          </div>
         </div>
       </section>
 
