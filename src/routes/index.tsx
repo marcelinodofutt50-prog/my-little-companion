@@ -28,6 +28,7 @@ import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 
 const heroRestore = heroRestoreAsset.url;
+const heroClassic = heroClassicAsset.url;
 const btmobDashboard = btmobDashboardAsset.url;
 const assetMissing = assetMissingAsset.url;
 const btmob1 = btmobPanel1.url;
