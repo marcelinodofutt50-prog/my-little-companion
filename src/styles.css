@@ -113,51 +113,51 @@ html.theme-light body {
   color-scheme: light;
 
   /* Pure white background for a clean light theme */
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0.02 255);
 
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 255);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 255);
 
   /* A refined blue primary for light mode instead of gold */
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
+  --primary: oklch(0.55 0.22 255);
+  --primary-foreground: oklch(1 0 0);
 
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
+  --secondary: oklch(0.96 0.01 255);
+  --secondary-foreground: oklch(0.15 0.02 255);
+  --muted: oklch(0.98 0.005 255);
+  --muted-foreground: oklch(0.45 0.02 255);
 
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
+  --accent: oklch(0.96 0.01 255);
+  --accent-foreground: oklch(0.15 0.02 255);
 
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
 
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: rgba(37, 99, 235, 0.2);
+  --border: oklch(0.9 0.01 255);
+  --input: oklch(0.9 0.01 255);
+  --ring: oklch(0.55 0.22 255 / 0.2);
 
-  --neon: #2563eb;
-  --cyan: #0ea5e9;
-  --violet: #8b5cf6;
-  --danger: #ef4444;
-  --chart-1: #2563eb;
-  --chart-2: #0ea5e9;
-  --chart-3: #8b5cf6;
-  --chart-4: #64748b;
-  --chart-5: #ef4444;
+  --neon: oklch(0.55 0.22 255);
+  --cyan: oklch(0.65 0.18 200);
+  --violet: oklch(0.6 0.2 300);
+  --danger: oklch(0.6 0.2 25);
+  --chart-1: oklch(0.55 0.22 255);
+  --chart-2: oklch(0.65 0.18 200);
+  --chart-3: oklch(0.6 0.2 300);
+  --chart-4: oklch(0.45 0.02 255);
+  --chart-5: oklch(0.6 0.2 25);
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #2563eb;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: rgba(37, 99, 235, 0.2);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.15 0.02 255);
+  --sidebar-primary: oklch(0.55 0.22 255);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.96 0.01 255);
+  --sidebar-accent-foreground: oklch(0.15 0.02 255);
+  --sidebar-border: oklch(0.9 0.01 255);
+  --sidebar-ring: oklch(0.55 0.22 255 / 0.2);
 }
 
 html.theme-light body {
@@ -171,16 +171,16 @@ html.theme-light body {
 
 /* Removido duplicata */
 
-html.theme-light .glow-neon { box-shadow: 0 0 18px rgba(37, 99, 235, 0.1); }
-html.theme-light .glow-cyan { box-shadow: 0 0 18px rgba(14, 165, 233, 0.1); }
-html.theme-light .glow-violet { box-shadow: 0 0 18px rgba(139, 92, 246, 0.1); }
+html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.55 0.22 255 / 0.1); }
+html.theme-light .glow-cyan { box-shadow: 0 0 18px oklch(0.65 0.18 200 / 0.1); }
+html.theme-light .glow-violet { box-shadow: 0 0 18px oklch(0.6 0.2 300 / 0.1); }
 html.theme-light .price-card {
-  background: #ffffff;
-  border-color: #e2e8f0;
+  background: oklch(1 0 0);
+  border-color: oklch(0.9 0.01 255);
 }
 html.theme-light .price-card-popular {
-  border-color: rgba(37, 99, 235, 0.4);
-  background: #f8fafc;
+  border-color: oklch(0.55 0.22 255 / 0.4);
+  background: oklch(0.98 0.005 255);
 }
 html.theme-light .paper-shadow { box-shadow: 0 20px 60px -28px rgba(0, 0, 0, 0.12); }
 html.theme-light .crt::after { display: none; }
