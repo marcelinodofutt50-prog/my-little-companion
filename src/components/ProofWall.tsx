@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ShieldCheck } from "lucide-react";
+import { ProgressiveImage } from "./ProgressiveImage";
 const p1 = { url: "/img/proof-1.webp", fallback: "/img/proof-1.jpg" };
 const p2 = { url: "/img/proof-2.webp", fallback: "/img/proof-2.jpg" };
 const p3 = { url: "/img/proof-3.webp", fallback: "/img/proof-3.jpg" };
@@ -144,15 +145,11 @@ export function ProofWall() {
             onClick={() => setOpen(i)}
             className="group relative aspect-[9/16] overflow-hidden rounded-lg border border-border bg-card/40 transition-all hover:border-neon/40 hover:shadow-lg hover:shadow-neon/10"
           >
-            <picture>
-              <source srcSet={s.src} type="image/webp" />
-              <img
-                loading="lazy"
-                src={s.fallback}
-                alt={s.caption}
-                className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-              />
-            </picture>
+            <ProgressiveImage
+              src={s.src}
+              alt={s.caption}
+              className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+            />
             <div className="absolute inset-x-0 top-0 flex flex-wrap items-center justify-start gap-1 p-2">
               <span className="rounded border border-border/60 bg-background/75 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground backdrop-blur-sm">
                 {refCode(i)}
@@ -220,15 +217,11 @@ export function ProofWall() {
             className="flex max-h-[90vh] w-full max-w-md flex-col items-center gap-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <picture>
-              <source srcSet={shots[open].src} type="image/webp" />
-              <img
-                loading="lazy"
-                src={shots[open].fallback}
-                alt={shots[open].caption}
-                className="max-h-[75vh] w-auto rounded-lg border border-border object-contain shadow-2xl"
-              />
-            </picture>
+            <ProgressiveImage
+              src={shots[open].src}
+              alt={shots[open].caption}
+              className="max-h-[75vh] w-auto rounded-lg border border-border object-contain shadow-2xl"
+            />
             <div className="w-full rounded-md border border-border bg-card/60 p-3 text-center backdrop-blur">
               <div className="flex items-center justify-center gap-1.5">
                 <span className="rounded border border-border/60 bg-background/70 px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
