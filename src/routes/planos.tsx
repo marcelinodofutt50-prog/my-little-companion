@@ -392,7 +392,7 @@ function PlansPage() {
   }, [plans, isLegacy, usage, billingCycle]);
 
 
-  const secondaryCount = servers.length + sources.length + upgrades.length;
+  const secondaryCount = servers.length + sources.length + upgrades.length + addons.length;
 
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
@@ -722,7 +722,7 @@ function PlansPage() {
         {secondaryCount > 0 && !showMore && (
           <div className="mb-16 text-center">
             <Button variant="outline" onClick={() => setShowMore(true)} className="font-mono text-xs uppercase tracking-wider">
-              Mais opções ({secondaryCount}) — servidor, upgrade e código-fonte
+              Mais opções ({secondaryCount}) — servidor, upgrade, bypass e código-fonte
             </Button>
           </div>
         )}
