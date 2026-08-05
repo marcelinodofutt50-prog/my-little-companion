@@ -626,8 +626,15 @@ async function yaarsaPost(
 
   for (const url of endpoints) {
     const kind = kindOf(url);
-    for (let attempt = 0; attempt < 2; attempt++) {
-      if (attempt === 1) {
+    // Increased retry count and implemented exponential backoff
+    const MAX_ATTEMPTS = 4;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      if (attempt > 0) {
+        // Exponential backoff: 500ms, 1500ms, 3500ms
+        const delay = Math.pow(2, attempt) * 500 - 500;
+        console.log(`[yaarsa:${panel}] RETRY attempt=${attempt + 1} delay=${delay}ms url=${url}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
         warmedUp[panel] = false;
         sessionCookies[panel] = "";
         await warmup(url, panel);
