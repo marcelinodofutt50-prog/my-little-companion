@@ -20,13 +20,13 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mark.png";
-import panelFixedAsset from "@/assets/image-95.png.asset.json";
+import btmobDashboardAsset from "@/assets/btmob-servers-dashboard.png.asset.json";
 import enterpriseDashboardAsset from "@/assets/image-96.png.asset.json";
 import assetMissingAsset from "@/assets/image-97.png.asset.json";
 import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 
-const panelFixed = panelFixedAsset.url;
+const btmobDashboard = btmobDashboardAsset.url;
 const enterpriseDashboard = enterpriseDashboardAsset.url;
 const assetMissing = assetMissingAsset.url;
 const btmob1 = btmobPanel1.url;
