@@ -14,9 +14,6 @@ export interface AppNotification {
   actionLabel?: string;
 }
 
-function ago(iso: string) {
-  return new Date(iso).toISOString();
-}
 
 export const listMyNotifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
