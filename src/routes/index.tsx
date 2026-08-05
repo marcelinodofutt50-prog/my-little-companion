@@ -23,8 +23,9 @@ import { playNotifyDing } from "@/lib/notify-sound";
 const shadowMark = "/assets/shadow-logo-v9.png?v=v9-100";
 const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
 const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
-const btmobDashboard = "/assets/enterprise-management-v2.png?v=v8-400";
-const assetMissing = "/assets/enterprise-management-v2.png?v=v8-400";
+import shadowDashboardReal from "@/assets/shadow-dashboard-real.png.asset.json";
+const btmobDashboard = shadowDashboardReal.url;
+const assetMissing = shadowDashboardReal.url;
 const btmob1 = "/assets/shadow-hacker-lupin.jpg?v=v8-400";
 const btmob2 = "/assets/play-protect-config.png?v=v8-400";
 
@@ -188,11 +189,34 @@ function Index() {
               </motion.div>
               
               {/* Floating tactical stats */}
-              <div className="absolute -bottom-6 -left-6 z-10 rounded-xl border border-border bg-background/80 p-6 backdrop-blur-md hidden md:block">
-                <div className="font-mono text-[10px] text-muted-foreground uppercase mb-2">SLA Status</div>
-                <div className="text-3xl font-bold text-foreground">99.98<span className="text-primary text-sm">%</span></div>
-                <div className="mt-2 h-1 w-24 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full w-[99.98%] bg-primary" />
+              <div className="absolute -bottom-8 -left-8 z-10 p-4 hidden md:block group">
+                <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-background/90 backdrop-blur-xl shadow-[0_0_30px_rgba(201,168,76,0.2)] dark:shadow-[0_0_40px_rgba(255,255,255,0.1)] p-5 min-w-[180px]">
+                  {/* Subtle scanline background */}
+                  <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden">
+                    <div className="w-full h-full bg-[repeating-linear-gradient(0deg,transparent,transparent_1px,rgba(255,255,255,0.1)_2px)]" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-mono text-[9px] text-primary uppercase tracking-[0.2em] font-bold">Node-01 Active</div>
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">SLA Status</div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-bold text-foreground tracking-tighter">99.98</span>
+                      <span className="text-primary font-mono text-xs">%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 relative h-1 w-full bg-muted/30 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      whileInView={{ width: "99.98%" }}
+                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                      className="absolute inset-y-0 left-0 bg-primary shadow-[0_0_10px_rgba(201,168,76,0.8)]" 
+                    />
+                  </div>
                 </div>
               </div>
             </div>

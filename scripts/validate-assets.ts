@@ -56,8 +56,9 @@ async function validateAssets() {
   sourceFiles.forEach(file => {
     const content = fs.readFileSync(file, 'utf8');
     
-    // Regex para encontrar padrões como "/assets/nome-do-arquivo.ext"
+    // Regex para encontrar padrões como "/assets/nome-do-arquivo.ext" ou referências em .asset.json
     // Captura o nome do arquivo ignorando query strings como ?v=v8-400
+    // Ignora importações de .asset.json (que são tratadas pelo Lovable Cloud)
     const assetRegex = /\/assets\/([\w.-]+)(?:\?[\w.=-]*)?/g;
     let match;
 
@@ -65,7 +66,7 @@ async function validateAssets() {
       const assetName = match[1];
       totalReferences++;
 
-      if (!existingAssets.includes(assetName)) {
+      if (!existingAssets.includes(assetName) && !assetName.endsWith('.asset.json')) {
         missingAssets.add(`${assetName} (referenciado em ${path.relative(process.cwd(), file)})`);
       }
     }
