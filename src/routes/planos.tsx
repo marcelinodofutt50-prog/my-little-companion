@@ -699,28 +699,33 @@ function PlansPage() {
 
 
 
-        <PlanGroup
-          title="Planos Mensais"
-          eyebrow="Operação recorrente com suporte e atualizações"
-          items={licenses.filter(p => usageOf(p) === "monthly")}
-          onBuy={buy}
-          loading={loadingPlan}
-          coupon={couponValid}
-          cashback={cashbackBalance}
-          useCash={useCash}
-        />
+        <div className="mb-16">
+          <div className="mb-6 flex flex-col gap-1 border-b border-border/40 pb-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// licenças shadow</div>
+              <h2 className="mt-1 font-display text-2xl md:text-3xl">Escolha seu Acesso</h2>
+            </div>
+            <span className="text-sm text-muted-foreground">Provisionamento instantâneo via PIX</span>
+          </div>
+          
+          <div className="grid gap-5 md:grid-cols-3">
+            {licenses.filter(p => usageOf(p) === "monthly" || usageOf(p) === "lifetime")
+              .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
+              .map((p) => (
+                <PlanCard
+                  key={p.slug}
+                  plan={p}
+                  coupon={couponValid}
+                  cashback={cashbackBalance}
+                  useCash={useCash}
+                  isLoading={loadingPlan === p.slug}
+                  onBuy={buy}
+                  featured={p.slug === "login-lifetime"}
+                />
+              ))}
+          </div>
+        </div>
 
-        <PlanGroup
-          title="Acesso Vitalício"
-          eyebrow="Investimento único para acesso perpétuo"
-          items={licenses.filter(p => usageOf(p) === "lifetime")}
-          onBuy={buy}
-          loading={loadingPlan}
-          coupon={couponValid}
-          cashback={cashbackBalance}
-          useCash={useCash}
-          featuredSlug="login-lifetime"
-        />
         <OrderCalculator plans={plans} onBuy={buy} />
 
         {licenses.length === 0 && (
@@ -1003,7 +1008,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
             onClick={() => onBuy(selectedPlanSlug)}
             className="mt-6 w-full rounded-lg bg-primary py-3 font-display text-sm font-bold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Finalizar Compra
+            Continuar para Checkout
           </button>
           <p className="mt-4 text-[10px] text-center text-muted-foreground italic leading-relaxed">
             Ao prosseguir, você será redirecionado para o checkout seguro.
@@ -1360,7 +1365,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         aria-label={`Comprar plano ${plan.name} via PIX`}
       >
         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-        Comprar via PIX
+        Continuar para Checkout
       </Button>
       <div className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
         <Shield className="h-3 w-3 text-primary/60" />
