@@ -81,7 +81,7 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <SystemHealthIndicator />
+          <div className="hidden sm:block"><SystemHealthIndicator /></div>
           {user && <InAppNotifications />}
 
           <ThemeToggle />
