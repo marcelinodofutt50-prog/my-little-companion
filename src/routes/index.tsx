@@ -25,8 +25,8 @@ const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
 const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
 const btmobDashboard = "/assets/enterprise-management-v2.png?v=v8-400";
 const assetMissing = "/assets/enterprise-management-v2.png?v=v8-400";
-const btmob1 = "/assets/enterprise-management-v2.png?v=v8-400";
-const btmob2 = "/assets/enterprise-management-v2.png?v=v8-400";
+const btmob1 = "/assets/shadow-hacker-lupin.jpg?v=v8-400";
+const btmob2 = "/assets/play-protect-config.png?v=v8-400";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
