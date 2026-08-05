@@ -19,7 +19,8 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
-import btmobInstructions from "@/assets/build-btmob-instructions-final.png.asset.json";
+import btmobInstructionsAsset from "@/assets/build-btmob-instructions-final.png.asset.json";
+const btmobInstructions = btmobInstructionsAsset.url;
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 
 
@@ -227,9 +228,9 @@ function PlayProtectPage() {
                     </div>
                   </div>
 
-                  <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block w-full aspect-video md:aspect-square lg:aspect-video overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
+                  <a href={btmobInstructions} target="_blank" rel="noreferrer" className="block w-full aspect-video md:aspect-square lg:aspect-video overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
                     <ProgressiveImage 
-                      src={btmobInstructions.url} 
+                      src={btmobInstructions} 
                       alt="Instruções de Build BTMob — O que desativar" 
                       className="h-full w-full object-contain md:object-cover lg:object-contain" 
                     />
