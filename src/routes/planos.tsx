@@ -180,32 +180,31 @@ function ShadowLupinBanner() {
   return (
     <section
       aria-label="Shadow · Gentleman Operator"
-      className="relative mb-8 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-black via-neutral-950 to-black shadow-[0_0_60px_-15px_rgba(212,175,55,0.25)]"
+      className="relative mb-8 overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-black via-neutral-950 to-black shadow-[0_0_60px_-15px_rgba(212,175,55,0.35)]"
     >
-      <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="flex flex-col justify-center gap-3 p-6 sm:p-8">
-          <span className="w-fit rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+      <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="relative z-10 flex flex-col justify-center gap-3 p-6 sm:p-10">
+          <span className="w-fit rounded-full border border-primary/40 bg-primary/15 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
             // gentleman.operator
           </span>
-          <h2 className="font-serif text-2xl leading-tight text-foreground sm:text-3xl">
-            Opere no escuro. <span className="text-primary">Com elegância.</span>
+          <h2 className="font-serif text-3xl leading-tight text-white sm:text-4xl">
+            Opere no escuro. <span className="text-primary italic">Com elegância.</span>
           </h2>
-          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-lg text-sm leading-relaxed text-white/70">
             A Shadow é a discrição de um cavalheiro com a precisão de um profissional.
-            Escolha sua linha de operação abaixo — anonimato criptografado, ativação via PIX
-            em menos de 1 minuto e garantia de 7 dias.
+            Anonimato criptografado, ativação via PIX em menos de 1 minuto e garantia de 7 dias.
           </p>
         </div>
-        <div className="relative min-h-[220px] md:min-h-[260px]">
+        <div className="relative min-h-[220px] md:min-h-[280px]">
           <img
             src={shadowLupin}
             alt="Operador Shadow — silhueta com cartola e máscara ao estilo Arsène Lupin"
             width={1024}
             height={1280}
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover object-top opacity-90"
+            className="absolute inset-0 h-full w-full object-cover object-top opacity-95"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent md:from-black md:via-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent md:from-black md:via-black/40" />
         </div>
       </div>
     </section>
