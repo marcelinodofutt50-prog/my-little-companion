@@ -335,10 +335,15 @@ function PlansPage() {
           : undefined,
       } });
       markCheckoutIntent(slug);
-      window.location.href = r.initPoint;
+      
+      // Delay to ensure the loading state is visible before redirect
+      setTimeout(() => {
+        window.location.href = r.initPoint;
+      }, 500);
     } catch (e: any) {
       console.error("[CheckoutError]", e);
       toast.error(e?.message?.includes("Plano") ? e.message : `Não foi possível iniciar o checkout: ${e?.message || "Erro desconhecido"}`);
+      setLoadingPlan(slug === "none" ? null : null); // Trigger state refresh
       setLoadingPlan(null);
     }
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
