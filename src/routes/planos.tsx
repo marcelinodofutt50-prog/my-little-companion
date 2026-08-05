@@ -421,6 +421,24 @@ function PlansPage() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px divider-glow" />
         <div className="mx-auto max-w-7xl px-4 pt-12 pb-10 md:pt-24 md:pb-20">
           <div className="mx-auto max-w-3xl text-center px-2">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="font-display text-4xl font-bold tracking-tighter sm:text-6xl md:text-7xl text-foreground"
+            >
+              INFRAESTRUTURA <span className="text-primary italic">SHADOW.</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg"
+            >
+              Escolha seu nível de acesso. Ativação automática via Mercado Pago.
+            </motion.p>
+          </div>
+        </div>
+      </section>
 
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
@@ -902,7 +920,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
           <div>
             <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Plano Base</label>
             <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {[...mainPlans, ...addonPlans].map((p) => (
+              {mainPlans.map((p) => (
                 <button
                   key={p.slug}
                   data-testid={`plan-${p.slug}`}
