@@ -9,7 +9,7 @@ interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement
   fallbackText?: string;
 }
 
-export function ProgressiveImage({ src, alt, className, fallbackText, ...props }: ProgressiveImageProps) {
+export function ProgressiveImage({ src, alt, className, fallbackText, loading = "lazy", ...props }: ProgressiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
 
