@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { ImageOff } from "lucide-react";
+import { ImageOff, ShieldAlert } from "lucide-react";
+
+const GLOBAL_FALLBACK_URL = "/assets/shadow-dashboard-real.png";
+const FALLBACK_LOGO_URL = "/assets/shadow-logo-v10.png";
 
 interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
