@@ -86,7 +86,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-8 font-display text-7xl font-bold leading-[0.9] tracking-tighter md:text-9xl lg:text-[11rem] text-foreground"
+            className="mt-8 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-7xl lg:text-9xl text-foreground"
           >
             SHADOW
           </motion.h1>
@@ -149,7 +149,7 @@ function Index() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mx-auto max-w-5xl rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
+            className="mx-auto max-w-4xl rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
           >
             <ProgressiveImage 
               src={panelFixed} 
