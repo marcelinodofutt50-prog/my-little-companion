@@ -362,7 +362,6 @@ function PlansPage() {
     const upgradeList = unique.filter((p) => p.category === "upgrade" || p.slug.includes("upgrade"));
     const addonList = unique.filter((p) => p.category === "addon" || p.slug.includes("play-protect") || p.slug.includes("bypass"));
     
-    // Simulate yearly discount (20% off) for licenses if yearly is selected
     const applyBillingFilter = (list: Plan[]) => {
       let filtered = list;
       if (usage !== "all") {
@@ -382,8 +381,10 @@ function PlansPage() {
       });
     };
 
+    const licenseList = unique.filter((p) => p.category === "license" && !p.slug.includes("upgrade") && !p.slug.includes("bypass"));
+
     return {
-      licenses: applyBillingFilter(unique.filter((p) => p.category === "license" && !p.slug.includes("upgrade") && !p.slug.includes("bypass"))),
+      licenses: applyBillingFilter(licenseList),
       servers: applyBillingFilter(serverFiltered),
       sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
       upgrades: applyBillingFilter(upgradeList),
@@ -698,15 +699,26 @@ function PlansPage() {
 
 
         <PlanGroup
-          title="Licenças de acesso"
-          eyebrow="Escolha o ciclo que combina com sua operação"
-          items={licenses}
+          title="Planos Mensais"
+          eyebrow="Operação recorrente com suporte e atualizações"
+          items={licenses.filter(p => usageOf(p) === "monthly")}
           onBuy={buy}
           loading={loadingPlan}
           coupon={couponValid}
           cashback={cashbackBalance}
           useCash={useCash}
-          featuredSlug="lifetime_46"
+        />
+
+        <PlanGroup
+          title="Acesso Vitalício"
+          eyebrow="Investimento único para acesso perpétuo"
+          items={licenses.filter(p => usageOf(p) === "lifetime")}
+          onBuy={buy}
+          loading={loadingPlan}
+          coupon={couponValid}
+          cashback={cashbackBalance}
+          useCash={useCash}
+          featuredSlug="login-lifetime"
         />
         <OrderCalculator plans={plans} onBuy={buy} />
 
