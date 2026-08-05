@@ -57,13 +57,13 @@ function Index() {
       <SiteHeader />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-20 md:pt-32 md:pb-28">
+      <section className="relative pt-16 pb-12 md:pt-24 md:pb-20">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", damping: 12, stiffness: 200 }}
-            className="mx-auto mb-10 h-32 w-32 md:h-40 md:w-40"
+            className="mx-auto mb-6 h-28 w-28 md:h-32 md:w-32"
           >
             <ProgressiveImage 
               src={shadowMark} 
@@ -97,7 +97,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mx-auto mt-8 max-w-2xl text-lg font-medium text-muted-foreground md:text-xl"
+            className="mx-auto mt-6 max-w-2xl text-lg font-medium text-muted-foreground md:text-xl"
           >
             Your <span className="text-foreground italic">shadow</span>, everywhere.
           </motion.p>
@@ -115,7 +115,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-6"
+            className="mt-8 flex flex-wrap items-center justify-center gap-6"
           >
             <Button size="lg" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full">
               <Link to="/planos">
@@ -134,7 +134,7 @@ function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-20 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/40"
+            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/40"
           >
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
@@ -145,7 +145,7 @@ function Index() {
       </section>
 
       {/* Hero Image / Original Panel */}
-      <section className="py-20 relative overflow-hidden border-y border-border/40 bg-card/20">
+      <section className="py-12 relative overflow-hidden border-y border-border/40 bg-card/20">
         <div className="container mx-auto px-4">
           <div className="grid gap-8 md:grid-cols-2 max-w-6xl mx-auto">
             <motion.div
@@ -215,7 +215,7 @@ function Index() {
       </div>
 
       {/* Final CTA */}
-      <section className="py-32 relative overflow-hidden">
+      <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 text-foreground uppercase tracking-tight">
