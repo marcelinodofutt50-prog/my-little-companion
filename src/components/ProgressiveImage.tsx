@@ -12,9 +12,11 @@ export function ProgressiveImage({ src, alt, className, ...props }: ProgressiveI
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Basic check if the image is already cached/loaded
     const img = new Image();
     img.src = src;
+    img.onload = () => setIsLoaded(true);
+    img.onerror = () => setError(true);
+    
     if (img.complete && img.naturalWidth > 0) {
       setIsLoaded(true);
     }
@@ -23,10 +25,10 @@ export function ProgressiveImage({ src, alt, className, ...props }: ProgressiveI
   return (
     <div className={cn("relative overflow-hidden bg-muted/20", className)}>
       {!isLoaded && !error && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/5 to-muted/20 z-10" />
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/5 to-muted/20 z-0" />
       )}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/10 text-muted-foreground/40 text-[10px] font-mono uppercase tracking-widest z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/10 text-muted-foreground/40 text-[10px] font-mono uppercase tracking-widest z-0">
           Failed to load image
         </div>
       )}
@@ -34,7 +36,7 @@ export function ProgressiveImage({ src, alt, className, ...props }: ProgressiveI
         src={src}
         alt={alt}
         className={cn(
-          "h-full w-full transition-opacity duration-500",
+          "relative h-full w-full transition-opacity duration-500 z-10",
           isLoaded ? "opacity-100" : "opacity-0"
         )}
         onLoad={() => setIsLoaded(true)}
