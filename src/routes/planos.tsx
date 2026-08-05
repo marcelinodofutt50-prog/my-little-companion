@@ -1008,7 +1008,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
             onClick={() => onBuy(selectedPlanSlug)}
             className="mt-6 w-full rounded-lg bg-primary py-3 font-display text-sm font-bold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Finalizar Compra
+            Continuar para Checkout
           </button>
           <p className="mt-4 text-[10px] text-center text-muted-foreground italic leading-relaxed">
             Ao prosseguir, você será redirecionado para o checkout seguro.
