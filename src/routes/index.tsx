@@ -20,7 +20,7 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 // Hardcoded paths to public assets to ensure they load from the repository
-const shadowMark = "/assets/shadow-logo.png?v=v8-400";
+const shadowMark = "/assets/shadow-logo-v9.png?v=v9-100";
 const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
 const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
 const btmobDashboard = "/assets/enterprise-management-v2.png?v=v8-400";
