@@ -105,10 +105,10 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
     icon: Calendar,
     cadence: "renovação em 30 dias",
     features: [
+      "Shadow 4.5.7, Bypass Play Protect, suporte via chat",
       "Shadow 4.5.7 completa",
       "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
-      "Shadow 4.5.7, Bypass Play Protect, suporte via chat",
       "Acesso ao Shadow Signer (Bypass Automático & Dropper)",
     ],
     note: t("plan.monthly.note"),
@@ -428,7 +428,7 @@ function PlansPage() {
             animate={{ opacity: 1, y: 0 }}
             className="font-display text-4xl font-bold tracking-tighter sm:text-6xl md:text-7xl text-foreground"
           >
-            INFRAESTRUTURA <span className="text-primary italic">SHADOW.</span>
+            PLANOS: INFRAESTRUTURA <span className="text-primary italic">SHADOW.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
