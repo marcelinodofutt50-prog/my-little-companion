@@ -754,19 +754,36 @@ function PlansPage() {
                         <div className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 border-b border-primary/10 pb-2">
                           // extensão recomendada
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
-                          onClick={() => buy(extension!.slug)}
-                          disabled={loadingPlan === extension!.slug}
-                        >
-                          <div className="flex items-center gap-2">
-                            <extension.icon className="h-3.5 w-3.5 text-primary" />
-                            <span>{extension.label}</span>
-                          </div>
-                          {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
-                        </Button>
+                        {extension.to ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                          >
+                            <Link to={extension.to}>
+                              <div className="flex items-center gap-2">
+                                <extension.icon className="h-3.5 w-3.5 text-primary" />
+                                <span>{extension.label}</span>
+                              </div>
+                              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />
+                            </Link>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                            onClick={() => buy(extension!.slug)}
+                            disabled={loadingPlan === extension!.slug}
+                          >
+                            <div className="flex items-center gap-2">
+                              <extension.icon className="h-3.5 w-3.5 text-primary" />
+                              <span>{extension.label}</span>
+                            </div>
+                            {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
+                          </Button>
+                        )}
                         <p className="px-1 text-[9px] text-muted-foreground/80 leading-tight font-medium">
                           {extension.desc}
                         </p>
