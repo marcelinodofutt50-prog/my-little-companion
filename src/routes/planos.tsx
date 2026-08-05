@@ -335,7 +335,8 @@ function PlansPage() {
       markCheckoutIntent(slug);
       window.location.href = r.initPoint;
     } catch (e: any) {
-      toast.error(e?.message?.includes("Plano") ? e.message : "Não foi possível iniciar o checkout. Tente novamente.");
+      console.error("[CheckoutError]", e);
+      toast.error(e?.message?.includes("Plano") ? e.message : `Não foi possível iniciar o checkout: ${e?.message || "Erro desconhecido"}`);
       setLoadingPlan(null);
     }
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
@@ -897,6 +898,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
               {[...mainPlans, ...addonPlans].map((p) => (
                 <button
                   key={p.slug}
+                  data-testid={`plan-${p.slug}`}
                   onClick={() => setSelectedPlanSlug(p.slug)}
                   className={`rounded-lg border p-3 text-left transition-all ${
                     selectedPlanSlug === p.slug ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border/50 bg-background/50 hover:border-primary/30"
