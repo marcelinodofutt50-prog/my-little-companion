@@ -135,7 +135,7 @@ function Index() {
             
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button size="lg" variant="outline" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5 backdrop-blur-sm">
-                <Link to="/auth?mode=up">
+                <Link to="/auth" search={{ mode: 'up' }}>
                   Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary animate-pulse" />
                 </Link>
               </Button>
@@ -388,7 +388,7 @@ function Index() {
               <Link to="/planos">{t('home.cta.buy')}</Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
-              <Link to="/auth?mode=up">{t('home.cta.trial')}</Link>
+              <Link to="/auth" search={{ mode: 'up' }}>{t('home.cta.trial')}</Link>
             </Button>
           </div>
         </div>
