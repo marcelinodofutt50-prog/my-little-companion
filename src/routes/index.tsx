@@ -143,7 +143,7 @@ function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/60"
+            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
           >
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
