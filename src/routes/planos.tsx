@@ -1477,19 +1477,25 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         </div>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <div className={[
-          "grid h-10 w-10 place-items-center rounded-lg border",
-          featured ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-background/40 text-muted-foreground",
+          "relative grid h-12 w-12 place-items-center rounded-xl border transition-all duration-300",
+          featured 
+            ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_15px_oklch(0.78_0.13_82/0.2)]" 
+            : "border-border/60 bg-background/40 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary",
         ].join(" ")}>
-          <Icon className="h-5 w-5" />
+          <Icon className="h-6 w-6" />
+          {featured && <div className="absolute -right-1 -top-1 h-3 w-3 animate-ping rounded-full bg-primary/40" />}
         </div>
         <div className="min-w-0">
-          <div className="truncate font-display text-lg leading-tight">
+          <div className="truncate font-display text-xl tracking-tight leading-tight group-hover:text-primary transition-colors">
             {plan.name.replace(/\s*\(Trial\)\s*/i, " — 7 dias")}
           </div>
           {meta.cadence && (
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{meta.cadence}</div>
+            <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/80">
+              <span className="inline-block h-1 w-1 rounded-full bg-primary/50" />
+              {meta.cadence}
+            </div>
           )}
         </div>
       </div>
