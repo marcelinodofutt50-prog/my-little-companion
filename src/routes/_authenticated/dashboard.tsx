@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
 
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
@@ -316,18 +318,18 @@ function DashboardPage() {
                 </section>
               )}
 
-              <section className="enterprise-surface overflow-hidden" aria-labelledby="licenses-title">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
+              <section className="enterprise-surface overflow-hidden shadow-[0_0_25px_rgba(var(--primary),0.05)] border-primary/10" aria-labelledby="licenses-title">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4 bg-primary/5">
                   <div>
-                    <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase">Minhas licenças</h2>
-                    <p className="mt-1 text-xs text-muted-foreground">Acessos vinculados à sua conta</p>
+                    <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase tracking-widest text-primary">Status Operacional</h2>
+                    <p className="mt-1 text-[10px] uppercase tracking-tighter text-muted-foreground/60">Acessos vinculados à sua conta empresarial</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <SupportDiagnosticButton
                       licenses={licenses as any[]}
                       error={licensesError}
-                      context="Painel do cliente — seção Minhas licenças"
-                      label="Reportar problema"
+                      context="Painel do cliente — seção Status Operacional"
+                      label="Reportar Incidente"
                     />
                     <KeyRound className="h-5 w-5 text-primary" />
                   </div>
@@ -335,15 +337,15 @@ function DashboardPage() {
                 <div className="grid gap-3 p-5 lg:grid-cols-2">
                   <div className="grid gap-2 sm:grid-cols-3 lg:col-span-2">
                     {[
-                      { icon: Clock, t: 'O contador manda', d: 'Quando o tempo zerar, o login é encerrado automaticamente — mesmo que o app mostre outra data.' },
-                      { icon: Sparkles, t: 'Como usar seu login', d: 'Abra o Tutorial no topo do painel: instalação, Play Protect e primeiro acesso.' },
-                      { icon: LifeBuoy, t: 'Ficou com dúvida?', d: 'Fale com o suporte pelo chat — a gente resolve login, senha e renovação.' },
+                      { icon: Clock, t: 'Monitoramento em Tempo Real', d: 'O contador de validade é sincronizado com o servidor central — a expiração é absoluta.' },
+                      { icon: Sparkles, t: 'Guia de Operação', d: 'Acesse a documentação técnica no topo para configurar bypass e Play Protect.' },
+                      { icon: LifeBuoy, t: 'Suporte Tático', d: 'Dificuldades técnicas? Nossa equipe de suporte via chat está pronta para agir.' },
                     ].map((tip) => (
-                      <div key={tip.t} className="flex gap-2.5 rounded-md border border-border/50 bg-background/50 p-3">
+                      <div key={tip.t} className="flex gap-2.5 rounded-md border border-primary/20 bg-primary/5 p-4 transition-all hover:bg-primary/10">
                         <tip.icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                         <div>
-                          <div className="text-xs font-semibold">{tip.t}</div>
-                          <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{tip.d}</p>
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-primary">{tip.t}</div>
+                          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground/80">{tip.d}</p>
                         </div>
                       </div>
                     ))}
@@ -375,15 +377,22 @@ function DashboardPage() {
                     const licenseDownloads = active ? downloadsForLicense(license) : []
                     const state = licenseExpiryState(license, serverNow)
                     return (
-                      <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
-                        <CardContent className="space-y-3 p-4">
+                      <Card key={license.id} className="border-border/60 bg-background/40 shadow-none transition-all hover:border-primary/40 hover:bg-background/50">
+                        <CardContent className="space-y-4 p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="font-semibold">{planLabel(license.plan_slug, license.is_trial)}</div>
                               <div className="text-xs text-muted-foreground">{license.yaarsa_email}</div>
                             </div>
                             <div className="flex flex-col items-end gap-1.5">
-                              <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${state.paused ? 'border-amber-400/40 bg-amber-400/10 text-amber-500' : active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{state.paused ? 'Pausada' : active ? 'Ativa' : 'Inativa'}</span>
+                              <span className={cn(
+                                "rounded border px-2 py-1 font-mono text-[9px] uppercase font-bold tracking-widest",
+                                state.paused ? 'border-amber-400/40 bg-amber-400/10 text-amber-500' : 
+                                active ? 'border-primary/30 bg-primary/10 text-primary shadow-[0_0_8px_rgba(var(--primary),0.2)]' : 
+                                'border-destructive/30 bg-destructive/10 text-destructive'
+                              )}>
+                                {state.paused ? 'Pausada' : active ? 'Ativa' : 'Inativa'}
+                              </span>
                               {active && state.countdownAt && (
                                 <LicenseCountdown compact target={state.countdownAt} serverNow={serverNow} />
                               )}
@@ -407,37 +416,40 @@ function DashboardPage() {
                             const totalDays =
                               startMs && endMs ? Math.max(0, Math.round((endMs - startMs) / 86400000)) : null
                             return (
-                              <div className="grid gap-1.5 rounded-md border border-border/50 bg-background/50 p-3 font-mono text-[11px] sm:grid-cols-2">
-                                <div className="flex justify-between gap-2 sm:col-span-2">
-                                  <span className="text-muted-foreground">Comprada em</span>
-                                  <span className="text-foreground">{fmt(license.created_at)}</span>
+                              <div className="grid gap-x-6 gap-y-3 rounded-md border border-border/50 bg-background/50 p-4 font-mono text-[11px] sm:grid-cols-2">
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Comprada em</span>
+                                  <span className="text-foreground font-medium">{fmt(license.created_at)}</span>
                                 </div>
-                                <div className="flex justify-between gap-2 sm:col-span-2">
-                                  <span className="text-muted-foreground">{state.paused ? 'Venceria em' : 'Vence em'}</span>
-                                  <span className="text-foreground">{endIso ? fmt(endIso) : 'Vitalícia'}</span>
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">{state.paused ? 'Venceria em' : 'Vence em'}</span>
+                                  <span className="text-foreground font-medium">{endIso ? fmt(endIso) : 'Vitalícia'}</span>
                                 </div>
-                                <div className="flex justify-between gap-2">
-                                  <span className="text-muted-foreground">Período contratado</span>
-                                  <span className="text-foreground">{totalDays !== null ? `${totalDays} dia${totalDays === 1 ? '' : 's'}` : 'Vitalícia'}</span>
+                                <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:border-t-0 sm:pt-0">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Período contratado</span>
+                                  <span className="text-foreground font-medium">{totalDays !== null ? `${totalDays} dia${totalDays === 1 ? '' : 's'}` : 'Vitalícia'}</span>
                                 </div>
-                                <div className="flex justify-between gap-2">
-                                  <span className="text-muted-foreground">Dias restantes</span>
-                                  <span className="text-foreground">
+                                <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:border-t-0 sm:pt-0">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Dias restantes</span>
+                                  <span className={cn(
+                                    "font-bold",
+                                    state.paused ? "text-amber-500" : (state.daysLeft !== null && state.daysLeft <= 3) ? "text-destructive" : "text-primary"
+                                  )}>
                                     {state.paused
-                                      ? 'congelados'
+                                      ? 'CONGELADOS'
                                       : state.daysLeft !== null
-                                        ? `${Math.max(0, state.daysLeft)}`
-                                        : '∞'}
+                                        ? `${Math.max(0, state.daysLeft)} DIAS`
+                                        : '∞ ILIMITADO'}
                                   </span>
                                 </div>
-                                <div className="flex justify-between gap-2 sm:col-span-2">
-                                  <span className="text-muted-foreground">Servidor</span>
-                                  <span className="text-foreground">{license.server_ip || '—'}</span>
+                                <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:col-span-2">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Servidor (IP do nó)</span>
+                                  <span className="text-foreground font-bold tracking-tight">{license.server_ip || 'AGUARDANDO PROVISIONAMENTO'}</span>
                                 </div>
                                 {state.serverDueAt && (
-                                  <div className="flex justify-between gap-2 sm:col-span-2">
-                                    <span className="text-muted-foreground">Mensalidade do servidor</span>
-                                    <span className="text-foreground">{fmt(state.serverDueAt)}</span>
+                                  <div className="flex flex-col gap-0.5 border-t border-border/40 pt-2 sm:col-span-2">
+                                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60">Mensalidade do servidor (Cobrança separada)</span>
+                                    <span className="text-foreground font-medium">{fmt(state.serverDueAt)}</span>
                                   </div>
                                 )}
                               </div>
@@ -450,38 +462,45 @@ function DashboardPage() {
                             <LicensePauseControls license={license} state={state} onDone={() => void refetchLicenses()} />
                           </div>
 
-                          <div className="space-y-2 border-t border-border/50 pt-3">
+                          <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="font-mono text-[10px] uppercase"
+                              className="h-8 font-mono text-[9px] uppercase tracking-wider"
                               onClick={() => setRevealed((prev) => ({ ...prev, [license.id]: !prev[license.id] }))}
                             >
-                              {revealed[license.id] ? <EyeOff className="mr-1.5 h-3.5 w-3.5" /> : <Eye className="mr-1.5 h-3.5 w-3.5" />}
-                              {revealed[license.id] ? 'Ocultar dados' : 'Mostrar dados da licença'}
+                              {revealed[license.id] ? <EyeOff className="mr-1.5 h-3.5 w-3.5 text-primary" /> : <Eye className="mr-1.5 h-3.5 w-3.5 text-primary" />}
+                              {revealed[license.id] ? 'Ocultar Credenciais' : 'Revelar Acesso'}
                             </Button>
+                          </div>
+                          <div className="space-y-3">
+
                             {revealed[license.id] && (
-                              <div className="space-y-1.5 rounded-md border border-border/60 bg-background/60 p-3 font-mono text-xs">
+                              <div className="animate-in fade-in slide-in-from-top-1 duration-200 space-y-2.5 rounded-md border border-primary/20 bg-primary/5 p-4 font-mono text-xs">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <KeyRound className="h-3.5 w-3.5 text-primary" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Credenciais de Acesso</span>
+                                </div>
                                 {[
                                   { label: 'Usuário', value: license.yaarsa_username || license.yaarsa_email },
                                   { label: 'E-mail', value: license.yaarsa_email },
                                   { label: 'Senha', value: license.password ?? '••••••' },
                                   { label: 'Servidor', value: license.server_ip || '—' },
                                 ].map((row) => (
-                                  <div key={row.label} className="flex items-center justify-between gap-2">
-                                    <span className="text-muted-foreground">{row.label}</span>
+                                  <div key={row.label} className="flex items-center justify-between gap-2 border-b border-primary/10 pb-1.5 last:border-0 last:pb-0">
+                                    <span className="text-[9px] uppercase text-muted-foreground/70">{row.label}</span>
                                     <button
                                       type="button"
-                                      className="flex items-center gap-1.5 truncate text-foreground hover:text-primary"
+                                      className="group flex items-center gap-2 truncate font-medium text-foreground transition-colors hover:text-primary"
                                       onClick={() => { navigator.clipboard.writeText(String(row.value ?? '')); toast.success('Copiado!') }}
                                     >
                                       <span className="truncate">{row.value}</span>
-                                      <Copy className="h-3 w-3 shrink-0" />
+                                      <Copy className="h-3 w-3 shrink-0 opacity-40 transition-opacity group-hover:opacity-100" />
                                     </button>
                                   </div>
                                 ))}
-                                <p className="pt-1 text-[10px] normal-case text-muted-foreground">
-                                  Use estes dados para entrar no painel Shadow. Nunca compartilhe sua senha.
+                                <p className="pt-2 text-[10px] italic leading-tight text-primary/60">
+                                  * Use estes dados estritamente no painel Shadow. O compartilhamento de credenciais resultará em banimento imediato.
                                 </p>
                               </div>
                             )}
@@ -501,7 +520,7 @@ function DashboardPage() {
                       </Card>
                     )
                   })}
-                </div>
+                  </div>
               </section>
 
               <section id="downloads" className="enterprise-surface scroll-mt-6 overflow-hidden" aria-labelledby="downloads-title">
