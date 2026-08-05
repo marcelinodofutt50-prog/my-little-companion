@@ -153,21 +153,6 @@ function Index() {
         </div>
       </section>
 
-      {/* Primary Hero Visualization - The Classic Shadow Image */}
-      <section className="relative px-4 pb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-          className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-primary/20 bg-background/50 shadow-2xl"
-        >
-          <ProgressiveImage 
-            src={heroClassic} 
-            alt="Shadow Operations Interface"
-            className="w-full h-auto object-cover"
-          />
-        </motion.div>
-      </section>
 
 
 
