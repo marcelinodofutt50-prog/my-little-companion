@@ -19,7 +19,6 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
-import playProtectConfig from "@/assets/play-protect-config.png";
 import btmobInstructions from "@/assets/build-btmob-instructions.png.asset.json";
 
 
