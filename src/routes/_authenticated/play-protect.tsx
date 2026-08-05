@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
 import playProtectConfig from "@/assets/play-protect-config.png";
+import btmobInstructions from "@/assets/build-btmob-instructions.png.asset.json";
 
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
