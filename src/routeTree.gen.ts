@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CryptoRouteImport } from './routes/crypto'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as MercadoRouteImport } from './routes/mercado'
 import { Route as MigracaoRouteImport } from './routes/migracao'
 import { Route as PlanosRouteImport } from './routes/planos'
@@ -71,6 +72,11 @@ const ContatoRoute = ContatoRouteImport.update({
 const CryptoRoute = CryptoRouteImport.update({
   id: '/crypto',
   path: '/crypto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MercadoRoute = MercadoRouteImport.update({
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
+  '/gallery': typeof GalleryRoute
   '/mercado': typeof MercadoRouteWithChildren
   '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
+  '/gallery': typeof GalleryRoute
   '/mercado': typeof MercadoRouteWithChildren
   '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
+  '/gallery': typeof GalleryRoute
   '/mercado': typeof MercadoRouteWithChildren
   '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
+    | '/gallery'
     | '/mercado'
     | '/migracao'
     | '/planos'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
+    | '/gallery'
     | '/mercado'
     | '/migracao'
     | '/planos'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
+    | '/gallery'
     | '/mercado'
     | '/migracao'
     | '/planos'
@@ -507,6 +519,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContatoRoute: typeof ContatoRoute
   CryptoRoute: typeof CryptoRoute
+  GalleryRoute: typeof GalleryRoute
   MercadoRoute: typeof MercadoRouteWithChildren
   MigracaoRoute: typeof MigracaoRoute
   PlanosRoute: typeof PlanosRoute
@@ -570,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/crypto'
       fullPath: '/crypto'
       preLoaderRoute: typeof CryptoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mercado': {
@@ -853,6 +873,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContatoRoute: ContatoRoute,
   CryptoRoute: CryptoRoute,
+  GalleryRoute: GalleryRoute,
   MercadoRoute: MercadoRouteWithChildren,
   MigracaoRoute: MigracaoRoute,
   PlanosRoute: PlanosRoute,
@@ -886,3 +907,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
