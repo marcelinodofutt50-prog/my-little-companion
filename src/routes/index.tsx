@@ -19,7 +19,7 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMarkAsset from "@/assets/shadow-mark-v2.png.asset.json";
+import shadowMarkAsset from "@/assets/shadow-mark-v3.png.asset.json";
 import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
 import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
 import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
@@ -78,7 +78,7 @@ function Index() {
             <ProgressiveImage 
               src={shadowMark} 
               alt="Shadow Protocol"
-              className="h-full w-full object-contain drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]"
+              className="h-full w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]"
             />
           </motion.div>
 
