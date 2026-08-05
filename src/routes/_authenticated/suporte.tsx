@@ -421,7 +421,12 @@ function SupportPage() {
         <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
           {/* Botão de Correção para Clientes */}
           {!isAdminRef.current && thread?.id && (
-            <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-2">
+            <div className="absolute right-4 top-4 z-20 flex flex-wrap justify-end gap-2">
+              <Link to="/servidor/status">
+                <Button size="sm" variant="outline" className="h-8 gap-1.5 border-cyan/40 bg-cyan/10 font-mono text-[10px] uppercase tracking-wider text-cyan shadow-sm backdrop-blur-md transition-all hover:bg-cyan/20">
+                  <Server className="h-3 w-3" /> Status do Servidor
+                </Button>
+              </Link>
               <Button
                 size="sm"
                 variant="outline"
