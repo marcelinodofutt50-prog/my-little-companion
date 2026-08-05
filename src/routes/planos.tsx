@@ -702,88 +702,83 @@ function PlansPage() {
           <div className="grid gap-5 md:grid-cols-3">
             {licenses.filter(p => usageOf(p) === "monthly" || usageOf(p) === "lifetime")
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
-              .map((p) => (
-                <div key={p.slug} className="flex flex-col gap-4">
-                  <PlanCard
-                    plan={p}
-                    coupon={couponValid}
-                    cashback={cashbackBalance}
-                    useCash={useCash}
-                    isLoading={loadingPlan === p.slug}
-                    onBuy={buy}
-                    featured={p.slug === "login-lifetime"}
-                  />
-                  
-                  {/* Categorized Quick Links below the main cards as requested */}
-                  <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-inner">
-                    <div className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 border-b border-primary/10 pb-2 mb-3">
-                      // extensões e serviços críticos
-                    </div>
-                    
-                    {/* Exibe Renovação de Servidor */}
-                    {servers.length > 0 && (
-                      <div className="space-y-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
-                          onClick={() => buy(servers[0].slug)}
-                          disabled={loadingPlan === servers[0].slug}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Server className="h-3.5 w-3.5 text-primary" />
-                            <span>RENOVAR SERVIDOR (DIA 20)</span>
-                          </div>
-                          {loadingPlan === servers[0].slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
-                        </Button>
-                        <p className="px-1 text-[9px] text-muted-foreground/80 leading-tight font-medium">
-                          Manutenção mensal da infraestrutura VPS para manter sua licença ativa e operante.
-                        </p>
-                      </div>
-                    )}
+              .map((p) => {
+                // Cada card recebe UMA extensão específica coerente com o plano.
+                const s = p.slug.toLowerCase();
+                const is7d = s.includes("7d") || s.includes("week") || s === "trial" || s.includes("trial");
+                const isMonthly = !is7d && (s.includes("30") || s.includes("month"));
+                const isLifetime = s.includes("lifetime");
 
-                    {/* Exibe Play Protect / Signer */}
-                    {addons.length > 0 && (
-                      <div className="space-y-2 mt-4 pt-4 border-t border-primary/10">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
-                          onClick={() => buy(addons[0].slug)}
-                          disabled={loadingPlan === addons[0].slug}
-                        >
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                            <span>PLAY PROTECT MENSAL (SIGNER)</span>
-                          </div>
-                          {loadingPlan === addons[0].slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
-                        </Button>
-                        <p className="px-1 text-[9px] text-muted-foreground/80 leading-tight font-medium">
-                          Shadow Signer: Bypass Play Protect nativo BTmob, Shadow Bypass Dropper e proteção anti-decompile.
-                        </p>
-                      </div>
-                    )}
+                let extension: null | {
+                  icon: any;
+                  label: string;
+                  desc: string;
+                  slug: string;
+                } = null;
 
-                    {/* Exibe Upgrade (se aplicável para este plano ou em geral) */}
-                    {upgrades.length > 0 && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-between h-8 px-2 text-[10px] font-mono hover:bg-primary/10 hover:text-primary transition-colors group/btn"
-                        onClick={() => buy(upgrades[0].slug)}
-                        disabled={loadingPlan === upgrades[0].slug}
-                      >
-                        <div className="flex items-center gap-2">
-                          <ArrowUpRight className="h-3 w-3 opacity-60" />
-                          <span>MIGRAR PARA 4.6</span>
+                if (is7d && servers.length > 0) {
+                  extension = {
+                    icon: Server,
+                    label: "RENOVAR SERVIDOR (DIA 20)",
+                    desc: "Manutenção mensal da infraestrutura VPS para manter sua licença ativa e operante.",
+                    slug: servers[0].slug,
+                  };
+                } else if (isMonthly && addons.length > 0) {
+                  extension = {
+                    icon: ShieldCheck,
+                    label: "PLAY PROTECT MENSAL (SIGNER)",
+                    desc: "Shadow Signer: bypass Play Protect nativo BTmob, Dropper e proteção anti-decompile.",
+                    slug: addons[0].slug,
+                  };
+                } else if (isLifetime && upgrades.length > 0) {
+                  extension = {
+                    icon: ArrowUpRight,
+                    label: "MIGRAR 4.5.7 → 4.6 (UPGRADE)",
+                    desc: "Cliente v4.5.7 migra automaticamente para a versão vitalícia 4.6 preservando histórico.",
+                    slug: upgrades[0].slug,
+                  };
+                }
+
+                return (
+                  <div key={p.slug} className="flex flex-col gap-4">
+                    <PlanCard
+                      plan={p}
+                      coupon={couponValid}
+                      cashback={cashbackBalance}
+                      useCash={useCash}
+                      isLoading={loadingPlan === p.slug}
+                      onBuy={buy}
+                      featured={p.slug === "login-lifetime"}
+                    />
+
+                    {extension && (
+                      <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-inner">
+                        <div className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 border-b border-primary/10 pb-2">
+                          // extensão recomendada
                         </div>
-                        {loadingPlan === upgrades[0].slug ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />}
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                          onClick={() => buy(extension!.slug)}
+                          disabled={loadingPlan === extension!.slug}
+                        >
+                          <div className="flex items-center gap-2">
+                            <extension.icon className="h-3.5 w-3.5 text-primary" />
+                            <span>{extension.label}</span>
+                          </div>
+                          {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
+                        </Button>
+                        <p className="px-1 text-[9px] text-muted-foreground/80 leading-tight font-medium">
+                          {extension.desc}
+                        </p>
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
+
         </div>
 
         <OrderCalculator plans={plans} onBuy={(slug, options) => buy(slug, undefined, options)} />
