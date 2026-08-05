@@ -1559,17 +1559,21 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       <Button
         className={[
-          "w-full font-mono uppercase tracking-widest text-xs h-11 sm:h-12 transition-all duration-300 active:scale-95",
+          "group/btn w-full font-mono uppercase tracking-[0.2em] text-[10px] h-12 transition-all duration-500 active:scale-[0.98]",
           featured 
-            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_30px_oklch(0.78_0.13_82/0.6)]" 
-            : "border-2 hover:bg-primary/5 hover:border-primary/50",
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_25px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_40px_oklch(0.78_0.13_82/0.6)]" 
+            : "border-2 border-primary/20 bg-background/50 hover:bg-primary/5 hover:border-primary/50 shadow-sm",
         ].join(" ")}
         variant={featured ? "default" : "outline"}
         onClick={handleClick}
         disabled={isLoading}
         aria-label={`Comprar plano ${plan.name} via PIX`}
       >
-        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Zap className="mr-2 h-4 w-4 transition-transform duration-500 group-hover/btn:scale-125 group-hover/btn:rotate-12" />
+        )}
         Continuar para Checkout
       </Button>
       <div className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
