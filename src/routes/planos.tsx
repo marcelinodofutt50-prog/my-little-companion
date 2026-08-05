@@ -842,10 +842,10 @@ function OrderCalculator() {
   const prices = {
     "455": 450,
     mensal: 750,
-    vitalicio: 1600,
+    vitalicio: 1800,
     serverNew: 450,
     serverOld: 450,
-    signer: 450,
+    signer: 250,
   };
 
   const planPrice = selectedPlan === "none" ? 0 : prices[selectedPlan];
