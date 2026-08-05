@@ -750,6 +750,7 @@ function PlansPage() {
             cashback={cashbackBalance}
             useCash={useCash}
           />
+        )}
         {showMore && (
         <PlanGroup
           title="Servidor"
