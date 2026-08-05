@@ -16,12 +16,14 @@ const pains = [
   { icon: ShieldCheck, title: "Dono some quando dá problema", body: "Suporte humano por chat no painel, com ticket, histórico e reembolso em até 7 dias." },
 ];
 
-export function MigrationOffer() {
-  function copy() {
-    navigator.clipboard.writeText(COUPON);
-    localStorage.setItem("shadow_coupon", COUPON);
-    toast.success(`Cupom ${COUPON} copiado`);
-  }
+const MONTHLY_SLUGS = ["monthly_457"];
+
+function isActiveMonthly(l: any) {
+  if (!MONTHLY_SLUGS.includes(l.plan_slug)) return false;
+  if (l.is_trial || l.revoked || l.disabled_at || l.suspended_at) return false;
+  if (l.expires_at && new Date(l.expires_at).getTime() <= Date.now()) return false;
+  return true;
+
 
   return (
     <section className="mt-16">
