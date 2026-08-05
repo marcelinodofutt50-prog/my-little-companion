@@ -37,9 +37,37 @@ export const Route = createFileRoute("/api/public/hooks/reconcile-pending")({
 
         const results: { orderId: string; action: string; detail?: string }[] = [];
 
+        const now = Date.now();
+        const { MAX_FULFILLMENT_ATTEMPTS } = await import("@/routes/api/public/mp-webhook");
+
         for (const order of (orders ?? []) as any[]) {
           try {
+            // Backoff: ainda não chegou a hora da próxima tentativa.
+            if (order.next_retry_at && new Date(order.next_retry_at).getTime() > now) {
+              results.push({ orderId: order.id, action: "skipped", detail: "backoff" });
+              continue;
+            }
+            // Esgotou as tentativas automáticas — precisa de intervenção manual.
+            if (Number(order.fulfillment_attempts ?? 0) >= MAX_FULFILLMENT_ATTEMPTS) {
+              results.push({ orderId: order.id, action: "skipped", detail: "max-attempts" });
+              continue;
+            }
+            // "processing" só é reprocessado se estiver travado há mais de 10 min.
+            if (order.status === "processing") {
+              const since = order.processing_at ? new Date(order.processing_at).getTime() : 0;
+              if (now - since < 10 * 60 * 1000) {
+                results.push({ orderId: order.id, action: "skipped", detail: "processing" });
+                continue;
+              }
+              await supabaseAdmin
+                .from("orders")
+                .update({ status: "pending", processing_at: null } as any)
+                .eq("id", order.id)
+                .eq("status", "processing");
+            }
+
             // 1) Try authoritative search by external_reference (order id).
+
             const approved = await findApprovedPaymentForOrder(order.id, Number(order.amount));
             if (approved) {
               await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", order.id);
