@@ -56,7 +56,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
         {/* Brand */}
         <Link to="/" className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-70">
-          <img src={shadowMark} alt="" width={24} height={24} decoding="async" className="h-6 w-6 object-contain drop-shadow-[0_0_8px_var(--color-primary)]" />
+          <img src={shadowMark} alt="" width={24} height={24} decoding="async" className="h-6 w-6 object-contain drop-shadow-[0_0_8px_rgba(201,168,76,0.6)] dark:brightness-110" />
           <span className="font-display text-xl leading-none tracking-tight">Shadow</span>
         </Link>
 
