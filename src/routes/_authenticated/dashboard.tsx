@@ -375,8 +375,8 @@ function DashboardPage() {
                     const licenseDownloads = active ? downloadsForLicense(license) : []
                     const state = licenseExpiryState(license, serverNow)
                     return (
-                      <Card key={license.id} className="border-border/60 bg-background/40 shadow-none">
-                        <CardContent className="space-y-3 p-4">
+                      <Card key={license.id} className="border-border/60 bg-background/40 shadow-none transition-all hover:border-primary/40 hover:bg-background/50">
+                        <CardContent className="space-y-4 p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="font-semibold">{planLabel(license.plan_slug, license.is_trial)}</div>
