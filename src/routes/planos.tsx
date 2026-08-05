@@ -264,7 +264,21 @@ function PlansPage() {
   const validateRefFn = useServerFn(validateReferralCode);
 
   useEffect(() => {
-    supabase.from("plans").select("*").eq("active", true).order("sort_order").then(({ data }) => setPlans((data ?? []) as Plan[]));
+    const fetchPlans = async () => {
+      try {
+        const { data, error } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
+        if (error) throw error;
+        setPlans((data ?? []) as Plan[]);
+      } catch (err) {
+        console.error("[PlansLoadError] Retrying...", err);
+        // Retry once after 2s if it fails
+        setTimeout(async () => {
+          const { data } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
+          if (data) setPlans(data as Plan[]);
+        }, 2000);
+      }
+    };
+    fetchPlans();
     supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -759,7 +773,7 @@ function PlansPage() {
           </div>
           
           <div className="grid gap-5 md:grid-cols-3">
-            {licenses.filter(p => usageOf(p) === "monthly" || usageOf(p) === "lifetime")
+            {licenses.filter(p => (usage === "all" || usageOf(p) === usage))
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
               .map((p) => {
                 // Cada card recebe UMA extensão específica coerente com o plano.
@@ -859,13 +873,26 @@ function PlansPage() {
 
         </div>
 
-        {licenses.length === 0 && (
-          <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
-            Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
-            <button type="button" onClick={() => setUsage("all")} className="text-primary underline underline-offset-4">
-              Ver todos os planos
-            </button>
-          </p>
+        {plans.length === 0 ? (
+          <div className="mb-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/30 bg-primary/5 p-12 text-center">
+            <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary/40" />
+            <h3 className="text-lg font-semibold">Carregando planos...</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Se os planos não aparecerem em 5 segundos, tente atualizar a página.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="mt-6">
+              Recarregar Página
+            </Button>
+          </div>
+        ) : (
+          licenses.filter(p => usage === "all" || usageOf(p) === usage).length === 0 && (
+            <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground">
+              Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
+              <button type="button" onClick={() => setUsage("all")} className="text-primary underline underline-offset-4">
+                Ver todos os planos
+              </button>
+            </p>
+          )
         )}
 
         {secondaryCount > 0 && !showMore && (
