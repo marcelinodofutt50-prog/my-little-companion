@@ -636,8 +636,6 @@ function PlansPage() {
           </details>
         )}
 
-        <PreCheckoutFaq />
-
         {/* PLAN GROUPS ====================================== */}
         <div className="sticky top-16 z-40 -mx-4 mb-8 bg-background/80 px-4 py-4 backdrop-blur-md border-b border-border/40 sm:static sm:top-0 sm:mx-0 sm:mb-12 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:border-0">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -800,8 +798,6 @@ function PlansPage() {
 
         </div>
 
-        <OrderCalculator plans={plans} onBuy={(slug, options) => buy(slug, undefined, options)} />
-
         {licenses.length === 0 && (
           <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
             Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
@@ -840,17 +836,7 @@ function PlansPage() {
           </div>
         )}
 
-        <TierComparison />
         <MigrationOffer />
-
-
-        {/* METRICS BAR ================================= */}
-        <section className="mt-14 grid gap-4 rounded-2xl border border-border/50 bg-card/40 p-6 md:grid-cols-4">
-          <Metric value="99.9%" label="Uptime no ciclo" />
-          <Metric value="< 1 min" label="Ativação após pago" />
-          <Metric value="24/7" label="Suporte humano" />
-          <Metric value="100%" label="Reembolso se falhar" />
-        </section>
 
         <FaqSection />
 
