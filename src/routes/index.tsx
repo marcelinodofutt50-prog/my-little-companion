@@ -205,28 +205,107 @@ function Index() {
             </div>
           </div>
 
-          {/* BTMob Reference Grid - Repositioned as secondary reference */}
-          <div className="mt-24 pt-20 border-t border-border/20">
-            <div className="text-center mb-12">
-              <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">Integrations & Modules</span>
-              <h3 className="text-3xl font-bold mt-2">Btmob core conexxion</h3>
-            </div>
-            
-            <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto transition-opacity">
-              <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1">
-                <ProgressiveImage src={btmob1} alt="BTMob Interface 1" className="w-full h-auto transition-all duration-500 rounded-lg" />
-              </div>
-              <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1">
-                <ProgressiveImage src={btmob2} alt="BTMob Interface 2" className="w-full h-auto transition-all duration-500 rounded-lg" />
-              </div>
+          {/* BTMob Reference Grid - Animated */}
+          <div className="mt-24 pt-20 border-t border-border/20 relative">
+            {/* Ambient glow */}
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -z-10"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 1.2 }}
+              viewport={{ once: true }}
+              style={{ background: "radial-gradient(ellipse 55% 55% at 50% 40%, oklch(0.78 0.13 82 / 0.10), transparent 70%)" }}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em] inline-flex items-center gap-2">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                </span>
+                Integrations & Modules
+              </span>
+              <h3 className="text-3xl md:text-4xl font-bold mt-3 tracking-tight">
+                Btmob core <span className="italic text-primary">conexxion</span>
+              </h3>
+              <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
+                Interface real do ecossistema Shadow · sincronizada em tempo real com sua VPS
+              </p>
+            </motion.div>
+
+            <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto">
+              {[
+                { src: btmob1, alt: "BTMob Interface 1", label: "GERENCIADOR DE CLIENTES", tag: "LIVE" },
+                { src: btmob2, alt: "BTMob Interface 2", label: "BTMOB ATUALIZAÇÕES", tag: "v4.6" },
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 40, rotateX: -8 }}
+                  whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                  whileHover={{ y: -6, scale: 1.015 }}
+                  transition={{ duration: 0.7, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  className="group relative rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1 shadow-[0_10px_40px_-20px_oklch(0.78_0.13_82/0.4)] hover:border-primary/40 hover:shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.6)] transition-all duration-500"
+                  style={{ perspective: "1000px" }}
+                >
+                  {/* Scanline effect on hover */}
+                  <div className="pointer-events-none absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden rounded-xl">
+                    <motion.div
+                      initial={{ y: "-100%" }}
+                      animate={{ y: "200%" }}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-x-0 h-24 bg-gradient-to-b from-transparent via-primary/10 to-transparent"
+                    />
+                  </div>
+
+                  {/* Corner label */}
+                  <div className="absolute top-3 left-3 z-10 flex items-center gap-2 rounded-md border border-primary/30 bg-background/80 px-2 py-1 backdrop-blur-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="font-mono text-[8px] uppercase tracking-widest text-primary">{item.label}</span>
+                  </div>
+                  <div className="absolute top-3 right-3 z-10 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 backdrop-blur-md">
+                    <span className="font-mono text-[8px] uppercase tracking-widest text-primary font-bold">{item.tag}</span>
+                  </div>
+
+                  <ProgressiveImage src={item.src} alt={item.alt} className="w-full h-auto transition-all duration-700 rounded-lg group-hover:scale-[1.02]" />
+                </motion.div>
+              ))}
             </div>
 
-
-            <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10 grayscale opacity-50">
-               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Shield className="h-4 w-4" /> Anti-Intercept</div>
-               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> End-to-End</div>
-               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Globe className="h-4 w-4" /> Global Node</div>
-            </div>
+            {/* Animated chips with connecting line */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+              className="mt-12 relative flex flex-wrap justify-center gap-6 md:gap-10"
+            >
+              {[
+                { icon: Shield, label: "Anti-Intercept" },
+                { icon: Lock, label: "End-to-End" },
+                { icon: Globe, label: "Global Node" },
+              ].map((chip, i) => (
+                <motion.div
+                  key={chip.label}
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  whileHover={{ scale: 1.06, color: "oklch(0.78 0.13 82)" }}
+                  transition={{ delay: 0.4 + i * 0.12, type: "spring", stiffness: 200 }}
+                  viewport={{ once: true }}
+                  className="flex items-center gap-2 rounded-full border border-border/50 bg-background/40 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/80 hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-default backdrop-blur"
+                >
+                  <chip.icon className="h-3.5 w-3.5" />
+                  {chip.label}
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
