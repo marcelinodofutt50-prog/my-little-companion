@@ -5,14 +5,14 @@ const shots = [
   {
     src: "/img/proof-itau-10k.webp",
     fallback: "/img/proof-itau-10k.png",
-    tag: "Itaú · R$ 10.000",
-    caption: '"Pagamento concluído" — R$ 10.000,00 confirmados direto no app do banco.',
+    tag: "Cliente · Itaú",
+    caption: "Transação de R$ 10.000,00 confirmada no app do banco.",
   },
   {
     src: "/img/proof-caixa-990.webp",
     fallback: "/img/proof-caixa-990.png",
-    tag: "Caixa · R$ 990",
-    caption: '"Pix enviado com sucesso" — R$ 990,00 rodando ao vivo na mesma tela.',
+    tag: "Cliente · Caixa",
+    caption: "Pix de R$ 990,00 enviado e comprovado em tempo real.",
   },
 ];
 
@@ -27,11 +27,10 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
         <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-neon" />
         <div>
           <h3 className="font-mono text-sm uppercase tracking-wider sm:text-base">
-            Aqui na Shadow, o impossível acontece
+            Referências de Clientes
           </h3>
           <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-sm">
-            Itaú e Caixa operando com a melhor qualidade do mercado — o que em outros servidores simplesmente não
-            acontece. Comprovantes reais, capturados ao vivo.
+            Quem opera na Shadow mostra resultados reais. Comprovantes de clientes verificados, capturados ao vivo no app do banco.
           </p>
         </div>
       </div>
