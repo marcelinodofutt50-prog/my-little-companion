@@ -192,6 +192,8 @@ export const createCheckout = createServerFn({ method: "POST" })
       ...(legacyMeta ? { legacy_claim: legacyMeta } : {}),
       ...(upgradeMeta ? { upgrade: upgradeMeta } : {}),
       ...(giftMeta ? { gift: giftMeta } : {}),
+      includeServer: !!data.includeServer,
+      addSigner: !!data.addSigner,
     };
 
     const { data: order, error: orderErr } = await supabase

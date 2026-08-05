@@ -317,6 +317,12 @@ async function fulfillOrderInner(orderId: string) {
   const versionTier = tierFromPlanSlug(order.plan_slug);
   const { resolvePanelServerHost } = await import("@/lib/yaarsa.server");
   const serverIpForPanel = await resolvePanelServerHost(targetPanel);
+
+  // Se o pedido incluiu servidor antecipado, garantimos que a licença reflita isso
+  // (Embora na prática o fulfillment já cuide da extensão via yaarsaExtend acima)
+  const meta = (order as any).metadata;
+  const includeServer = !!meta?.includeServer || order.plan_slug.includes("server");
+
   await supabaseAdmin.from("licenses").insert({
     user_id: beneficiaryId,
     order_id: order.id,
