@@ -466,12 +466,13 @@ function DashboardPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="font-mono text-[10px] uppercase"
+                              className="h-8 font-mono text-[9px] uppercase tracking-wider"
                               onClick={() => setRevealed((prev) => ({ ...prev, [license.id]: !prev[license.id] }))}
                             >
-                              {revealed[license.id] ? <EyeOff className="mr-1.5 h-3.5 w-3.5" /> : <Eye className="mr-1.5 h-3.5 w-3.5" />}
-                              {revealed[license.id] ? 'Ocultar dados' : 'Mostrar dados da licença'}
+                              {revealed[license.id] ? <EyeOff className="mr-1.5 h-3.5 w-3.5 text-primary" /> : <Eye className="mr-1.5 h-3.5 w-3.5 text-primary" />}
+                              {revealed[license.id] ? 'Ocultar Credenciais' : 'Revelar Acesso'}
                             </Button>
+                          </div>
                             {revealed[license.id] && (
                               <div className="animate-in fade-in slide-in-from-top-1 duration-200 space-y-2.5 rounded-md border border-primary/20 bg-primary/5 p-4 font-mono text-xs">
                                 <div className="flex items-center gap-2 mb-2">
