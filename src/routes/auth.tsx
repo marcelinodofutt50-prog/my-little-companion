@@ -200,7 +200,7 @@ function AuthPage() {
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
-    if (!code || !type) return;
+    if (!code || !type || typeof code !== 'string') return;
 
     async function exchange() {
       setConfirmMessage("Confirmando seu e-mail, aguarde...");
