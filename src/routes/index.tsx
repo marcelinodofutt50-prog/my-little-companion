@@ -20,14 +20,14 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mark.png";
-import btmobDashboardAsset from "@/assets/btmob-servers-dashboard.png.asset.json";
-import enterpriseDashboardAsset from "@/assets/image-96.png.asset.json";
+import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
+import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
 import assetMissingAsset from "@/assets/image-97.png.asset.json";
 import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 
+const heroRestore = heroRestoreAsset.url;
 const btmobDashboard = btmobDashboardAsset.url;
-const enterpriseDashboard = enterpriseDashboardAsset.url;
 const assetMissing = assetMissingAsset.url;
 const btmob1 = btmobPanel1.url;
 const btmob2 = btmobPanel2.url;
@@ -162,8 +162,8 @@ function Index() {
               className="rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
             >
               <ProgressiveImage 
-                src={btmobDashboard} 
-                alt="BTMob Servers Manager" 
+                src={heroRestore} 
+                alt="Shadow Hero Visual" 
                 className="w-full h-auto rounded-2xl transition-all duration-1000"
               />
             </motion.div>
@@ -206,7 +206,7 @@ function Index() {
                 whileInView={{ opacity: 1, x: 0 }}
                 className="rounded-2xl border border-primary/20 bg-background/50 p-1 shadow-2xl overflow-hidden"
               >
-                <ProgressiveImage src={enterpriseDashboard} alt="Enterprise Management UI" className="w-full h-auto rounded-xl" />
+                <ProgressiveImage src={btmobDashboard} alt="BTMob Dashboard UI" className="w-full h-auto rounded-xl" />
               </motion.div>
               
               {/* Floating tactical stats */}
