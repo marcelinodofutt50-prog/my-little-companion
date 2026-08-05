@@ -362,7 +362,6 @@ function PlansPage() {
     const upgradeList = unique.filter((p) => p.category === "upgrade" || p.slug.includes("upgrade"));
     const addonList = unique.filter((p) => p.category === "addon" || p.slug.includes("play-protect") || p.slug.includes("bypass"));
     
-    // Simulate yearly discount (20% off) for licenses if yearly is selected
     const applyBillingFilter = (list: Plan[]) => {
       let filtered = list;
       if (usage !== "all") {
@@ -382,8 +381,10 @@ function PlansPage() {
       });
     };
 
+    const licenseList = unique.filter((p) => p.category === "license" && !p.slug.includes("upgrade") && !p.slug.includes("bypass"));
+
     return {
-      licenses: applyBillingFilter(unique.filter((p) => p.category === "license" && !p.slug.includes("upgrade") && !p.slug.includes("bypass"))),
+      licenses: applyBillingFilter(licenseList),
       servers: applyBillingFilter(serverFiltered),
       sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
       upgrades: applyBillingFilter(upgradeList),
@@ -698,15 +699,26 @@ function PlansPage() {
 
 
         <PlanGroup
-          title="Licenças de acesso"
-          eyebrow="Escolha o ciclo que combina com sua operação"
-          items={licenses}
+          title="Planos Mensais"
+          eyebrow="Operação recorrente com suporte e atualizações"
+          items={licenses.filter(p => usageOf(p) === "monthly")}
           onBuy={buy}
           loading={loadingPlan}
           coupon={couponValid}
           cashback={cashbackBalance}
           useCash={useCash}
-          featuredSlug="lifetime_46"
+        />
+
+        <PlanGroup
+          title="Acesso Vitalício"
+          eyebrow="Investimento único para acesso perpétuo"
+          items={licenses.filter(p => usageOf(p) === "lifetime")}
+          onBuy={buy}
+          loading={loadingPlan}
+          coupon={couponValid}
+          cashback={cashbackBalance}
+          useCash={useCash}
+          featuredSlug="login-lifetime"
         />
         <OrderCalculator plans={plans} onBuy={buy} />
 
@@ -838,6 +850,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>("none");
   const [isOldMember, setIsOldMember] = useState(false);
   const [addSigner, setAddSigner] = useState(false);
+  const [includeServerPrepaid, setIncludeServerPrepaid] = useState(true);
 
   const selectedPlan = plans.find(p => p.slug === selectedPlanSlug);
   
@@ -848,9 +861,14 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
   };
 
   const planPrice = selectedPlan ? selectedPlan.price_brl : 0;
-  const serverPrice = selectedPlanSlug === "none" ? 0 : isOldMember ? prices.serverOld : prices.serverNew;
   
-  // Se o plano selecionado já for o bypass/signer, não permitimos adicionar como addon redundante
+  // Se o plano for vitalício, a renovação é sempre dia 20.
+  // Se for mensal, a renovação é quando o login expirar.
+  const isLifetime = selectedPlanSlug.toLowerCase().includes("vitalicio") || selectedPlanSlug.toLowerCase().includes("lifetime");
+  const isMonthly = selectedPlanSlug.toLowerCase().includes("30") || selectedPlanSlug.toLowerCase().includes("month");
+  
+  const serverPrice = (selectedPlanSlug !== "none" && includeServerPrepaid) ? (isOldMember ? prices.serverOld : prices.serverNew) : 0;
+  
   const isSignerPlan = selectedPlanSlug.includes("bypass") || selectedPlanSlug.includes("signer");
   const effectiveAddSigner = addSigner && !isSignerPlan;
   const signerPrice = effectiveAddSigner ? prices.signer : 0;
@@ -864,9 +882,9 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
     <section className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-sm shadow-[0_0_50px_-12px_oklch(0.78_0.13_82/0.2)]">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// simulador de custo</div>
-          <h2 className="mt-2 font-display text-2xl">Calculadora de Checkout</h2>
-          <p className="text-sm text-muted-foreground">Estime o valor final da sua infraestrutura completa.</p>
+          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// simulador de infraestrutura</div>
+          <h2 className="mt-2 font-display text-2xl">Checkout Unificado</h2>
+          <p className="text-sm text-muted-foreground">Configure sua licença e antecipe a renovação do servidor.</p>
         </div>
         <Rocket className="h-8 w-8 text-primary opacity-50 hidden sm:block" />
       </div>
@@ -874,7 +892,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Escolha o Plano ou Upgrade</label>
+            <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Plano Base</label>
             <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {[...mainPlans, ...addonPlans].map((p) => (
                 <button
@@ -893,8 +911,21 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
 
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
+              <div className="text-xs font-bold">Pagar Servidor Antecipado</div>
+              <div className="text-[10px] text-muted-foreground">Renovação automática após expiração</div>
+            </div>
+            <button
+              onClick={() => setIncludeServerPrepaid(!includeServerPrepaid)}
+              className={`h-5 w-10 rounded-full transition-colors relative ${includeServerPrepaid ? "bg-primary" : "bg-muted"}`}
+            >
+              <div className={`absolute top-1 h-3 w-3 rounded-full bg-white transition-transform ${includeServerPrepaid ? "left-6" : "left-1"}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
+            <div>
               <div className="text-xs font-bold">Sou Membro Antigo</div>
-              <div className="text-[10px] text-muted-foreground">Servidor unificado a R$ 450</div>
+              <div className="text-[10px] text-muted-foreground">Manutenção unificada a R$ 450</div>
             </div>
             <button
               onClick={() => setIsOldMember(!isOldMember)}
@@ -906,8 +937,8 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
 
           <div className={`flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3 transition-opacity ${isSignerPlan ? "opacity-50 cursor-not-allowed" : ""}`}>
             <div>
-              <div className="text-xs font-bold">Shadow Play Protect (Signer)</div>
-              <div className="text-[10px] text-muted-foreground">+ R$ 250 (30 Dias)</div>
+              <div className="text-xs font-bold">Shadow Signer (Play Protect)</div>
+              <div className="text-[10px] text-muted-foreground">+ R$ 250 (Incluso no Vitalício)</div>
             </div>
             <button
               disabled={isSignerPlan}
@@ -922,31 +953,44 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
         <div className="flex flex-col justify-between rounded-xl bg-background/40 p-6 border border-border/50">
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Item Selecionado:</span>
+              <span className="text-muted-foreground">Configuração:</span>
               <span className="font-mono text-right">{selectedPlan ? selectedPlan.name : "Nenhum"}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Valor do Item:</span>
+              <span className="text-muted-foreground">Licença:</span>
               <span className="font-mono">{selectedPlan ? formatBrl(planPrice) : "---"}</span>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Servidor (Setup + Infra):</span>
-              <span className="font-mono">{selectedPlanSlug === "none" ? "---" : formatBrl(serverPrice)}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Addon Signer:</span>
-              <span className="font-mono">{effectiveAddSigner ? formatBrl(signerPrice) : "R$ 0,00"}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Manutenção (Mensal):</span>
-              <span className="font-mono text-neon">R$ 450,00</span>
-            </div>
+            {includeServerPrepaid && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Servidor (Pré-pago):</span>
+                <span className="font-mono">{formatBrl(serverPrice)}</span>
+              </div>
+            )}
+            {effectiveAddSigner && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Addon Signer:</span>
+                <span className="font-mono">{formatBrl(signerPrice)}</span>
+              </div>
+            )}
+            
             <div className="my-4 h-px bg-border/50" />
+            
+            {selectedPlanSlug !== "none" && (
+              <div className="mb-4 rounded border border-primary/20 bg-primary/5 p-2 text-[9px] font-mono text-primary uppercase leading-tight">
+                <Info className="mr-1 inline-h-3 w-3" />
+                {isLifetime 
+                  ? "Vitalício: Renovação do servidor ocorre todo dia 20." 
+                  : isMonthly 
+                    ? "Mensal: Renovação automática assim que o login expirar."
+                    : "Servidor ativo durante todo o período da licença."}
+              </div>
+            )}
+
             <div className="flex justify-between items-end">
               <div>
-                <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">Total Estimado</span>
+                <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">Total à Pagar</span>
                 <div className="flex items-center gap-1.5 text-[10px] text-primary/80">
-                  <CreditCard className="h-3 w-3" /> PIX Automático
+                  <CreditCard className="h-3 w-3" /> Mercado Pago (PIX)
                 </div>
               </div>
               <span className="font-display text-3xl font-bold text-primary">{formatBrl(total)}</span>
@@ -957,10 +1001,10 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
             onClick={() => onBuy(selectedPlanSlug)}
             className="mt-6 w-full rounded-lg bg-primary py-3 font-display text-sm font-bold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Prosseguir para Checkout
+            Finalizar Compra
           </button>
           <p className="mt-4 text-[10px] text-center text-muted-foreground italic leading-relaxed">
-            * O checkout refletirá exatamente os itens selecionados acima no total do Mercado Pago.
+            Ao prosseguir, você será redirecionado para o checkout seguro.
           </p>
         </div>
       </div>

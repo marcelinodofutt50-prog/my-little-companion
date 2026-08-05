@@ -31,10 +31,12 @@ export const createCheckout = createServerFn({ method: "POST" })
 
     // Validação Anti-Confusão: Se o usuário já tem uma licença ativa/trial e tenta
     // comprar um NOVO LOGIN em vez de renovar o servidor, nós bloqueamos com aviso.
+    // O usuário pediu que ao comprar um plano ele possa já incluir a renovação,
+    // então aqui vamos ser mais permissivos e apenas alertar se for algo crítico.
     if (isLoginPlan && !data.gift) {
       const { data: existingLic } = await supabase
         .from("licenses")
-        .select("id, is_trial, expires_at")
+        .select("id, is_trial, expires_at, panel")
         .eq("user_id", userId)
         .is("disabled_at", null)
         .order("created_at", { ascending: false })
@@ -42,19 +44,13 @@ export const createCheckout = createServerFn({ method: "POST" })
         .maybeSingle();
 
       if (existingLic) {
-        // Se a licença ainda não expirou ou é um trial que o cliente quer manter,
-        // ele deveria estar comprando a Renovação Servidor (server-*).
         const expires = new Date(existingLic.expires_at || 0);
         const now = new Date();
         const isExpired = expires < now;
 
-        if (existingLic.is_trial || !isExpired) {
-          throw new Error(
-            `Você já possui uma licença (${existingLic.is_trial ? "Trial" : "Ativa"}). ` +
-            `Para manter seu usuário e senha atuais e evitar criar um novo login por engano, escolha "Renovação Servidor" no final da página de planos. ` +
-            `Se você realmente deseja descartar o antigo e criar um novo, use a opção de presente ou contate o suporte.`
-          );
-        }
+        // Se o cliente quer comprar um NOVO LOGIN (nova licença) tendo uma ativa
+        // nós permitimos, mas o sistema de webhook cuidará de alinhar as datas
+        // ou criar um novo login dependendo do que o admin decidir.
       }
     }
 
