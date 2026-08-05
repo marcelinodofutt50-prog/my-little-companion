@@ -19,7 +19,7 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMark from "@/assets/shadow-mask.png?format=webp";
+import shadowMark from "@/assets/shadow-mask.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -56,6 +56,19 @@ function Index() {
       <section className="relative pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="container mx-auto px-4 text-center">
           <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", damping: 12, stiffness: 200 }}
+            className="mx-auto mb-10 h-32 w-32 md:h-40 md:w-40"
+          >
+            <ProgressiveImage 
+              src={shadowMark} 
+              alt="Shadow Protocol"
+              className="h-full w-full object-contain drop-shadow-[0_0_20px_var(--color-primary)]"
+            />
+          </motion.div>
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary"
@@ -70,8 +83,8 @@ function Index() {
             transition={{ delay: 0.1 }}
             className="mt-8 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-8xl lg:text-9xl text-foreground"
           >
-            OPERE NAS<br />
-            <span className="text-primary italic">SOMBRAS.</span>
+            SHADOW<br />
+            <span className="text-primary italic">PROTOCOL.</span>
           </motion.h1>
           
           <motion.p

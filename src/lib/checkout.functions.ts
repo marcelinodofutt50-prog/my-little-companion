@@ -10,6 +10,8 @@ export const createCheckout = createServerFn({ method: "POST" })
       couponCode: z.string().optional(),
       referralCode: z.string().trim().max(16).optional(),
       useCashback: z.boolean().optional(),
+      includeServer: z.boolean().optional(),
+      addSigner: z.boolean().optional(),
       returnOrigin: z.string().url(),
       legacyClaim: z.object({
         email: z.string().trim().email().max(255),
@@ -78,6 +80,10 @@ export const createCheckout = createServerFn({ method: "POST" })
     }
 
     let amount = Number(plan.price_brl);
+
+    // Soma addons e servidor antecipado se selecionados no simulador
+    if (data.includeServer) amount += 450;
+    if (data.addSigner) amount += 250;
     let couponRow: { code: string; discount_pct: number; cashback_pct: number } | null = null;
     if (data.couponCode) {
       const { data: c } = await supabase.from("coupons").select("*").eq("code", data.couponCode.toUpperCase()).eq("active", true).maybeSingle();
@@ -210,7 +216,7 @@ export const createCheckout = createServerFn({ method: "POST" })
     const notificationUrl = `${origin}/api/public/mp-webhook`;
     const pref = await createMpPreference({
       orderId: order.id,
-      planName: `Shadow — ${plan.name}`,
+      planName: `Shadow — ${plan.name}${data.includeServer ? ' + Servidor' : ''}${data.addSigner ? ' + Signer' : ''}`,
       amount: Number(amount.toFixed(2)),
       payerEmail: context.claims?.email as string | undefined,
       successUrl: `${origin}/pagamento/sucesso?order=${order.id}`,

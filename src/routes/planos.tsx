@@ -314,12 +314,14 @@ function PlansPage() {
 
   function clearReferral() { setReferral(""); setReferralValid(null); setReferralError(null); }
 
-  const buy = useCallback(async (slug: string, couponOverride?: string) => {
+  const buy = useCallback(async (slug: string, couponOverride?: string, options?: { includeServer?: boolean, addSigner?: boolean }) => {
     if (!loggedIn) { navigate({ to: "/auth", search: { next: "/planos" } as any }); return; }
     setLoadingPlan(slug);
     try {
       const r = await checkoutFn({ data: {
         planSlug: slug,
+        includeServer: options?.includeServer,
+        addSigner: options?.addSigner,
         couponCode:
           couponOverride ||
           (couponValid && (!couponValid.plan_slug || couponValid.plan_slug === slug)
@@ -726,7 +728,7 @@ function PlansPage() {
           </div>
         </div>
 
-        <OrderCalculator plans={plans} onBuy={buy} />
+        <OrderCalculator plans={plans} onBuy={(slug, options) => buy(slug, undefined, options)} />
 
         {licenses.length === 0 && (
           <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
@@ -852,7 +854,7 @@ function Metric({ value, label }: { value: string; label: string }) {
   );
 }
 
-function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string) => void }) {
+function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string, options?: { includeServer: boolean, addSigner: boolean }) => void }) {
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>("none");
   const [isOldMember, setIsOldMember] = useState(false);
   const [addSigner, setAddSigner] = useState(false);
@@ -1005,7 +1007,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
           </div>
           <button 
             disabled={selectedPlanSlug === "none"}
-            onClick={() => onBuy(selectedPlanSlug)}
+            onClick={() => onBuy(selectedPlanSlug, { includeServer: includeServerPrepaid, addSigner: effectiveAddSigner })}
             className="mt-6 w-full rounded-lg bg-primary py-3 font-display text-sm font-bold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Continuar para Checkout
