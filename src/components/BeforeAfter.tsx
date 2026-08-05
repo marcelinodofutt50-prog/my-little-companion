@@ -1,65 +1,68 @@
 import { TrendingUp, Clock, ShieldAlert, Zap, DollarSign, Target } from "lucide-react";
-
-const rows = [
-  {
-    icon: Clock,
-    metric: "Tempo de setup",
-    before: "3–7 dias tentando compilar sozinho",
-    after: "< 60 segundos após o PIX",
-    lift: "-99%",
-  },
-  {
-    icon: ShieldAlert,
-    metric: "Risco de Play Protect",
-    before: "APK bloqueado no primeiro install",
-    after: "Bypass automático em cada build",
-    lift: "0 falhas",
-  },
-  {
-    icon: Target,
-    metric: "Taxa de sucesso em campo",
-    before: "~35% (build instável, crash)",
-    after: "98%+ verificado por clientes",
-    lift: "+180%",
-  },
-  {
-    icon: Zap,
-    metric: "Suporte técnico",
-    before: "Fóruns, Discord, sem resposta",
-    after: "Chat interno · resposta em min.",
-    lift: "24/7",
-  },
-  {
-    icon: DollarSign,
-    metric: "Custo mensal real",
-    before: "R$ 1.200+ (VPS + dev + tempo)",
-    after: "A partir de R$ 300/mês",
-    lift: "-75%",
-  },
-];
+import { useI18n } from "@/lib/i18n";
 
 export function BeforeAfter() {
+  const { t } = useI18n();
+
+  const rows = [
+    {
+      icon: Clock,
+      metric: t("ba.metric.setup"),
+      before: "3–7 dias tentando compilar sozinho",
+      after: "< 60 segundos após o PIX",
+      lift: "-99%",
+    },
+    {
+      icon: ShieldAlert,
+      metric: t("ba.metric.risk"),
+      before: "APK bloqueado no primeiro install",
+      after: "Bypass automático em cada build",
+      lift: "0 falhas",
+    },
+    {
+      icon: Target,
+      metric: t("ba.metric.success"),
+      before: "~35% (build instável, crash)",
+      after: "98%+ verificado por clientes",
+      lift: "+180%",
+    },
+    {
+      icon: Zap,
+      metric: t("ba.metric.support"),
+      before: "Fóruns, Discord, sem resposta",
+      after: "Chat interno · resposta em min.",
+      lift: "24/7",
+    },
+    {
+      icon: DollarSign,
+      metric: t("ba.metric.cost"),
+      before: "R$ 1.200+ (VPS + dev + tempo)",
+      after: "A partir de R$ 300/mês",
+      lift: "-75%",
+    },
+  ];
+
   return (
     <section className="border-t border-border py-20">
       <div className="mb-10">
         <div className="font-mono text-[10px] uppercase tracking-[0.32em] text-cyan">
-          // antes vs depois
+          {t("ba.kicker")}
         </div>
         <h2 className="mt-3 font-display text-4xl md:text-5xl">
-          O que muda quando você usa <span className="italic text-cyan">Shadow BTMOB.</span>
+          {t("ba.title").split('Shadow')[0]} <span className="italic text-cyan">Shadow BTMOB.</span>
         </h2>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-          Métricas reais reportadas pelos operadores que já migraram de builds próprios ou de concorrentes instáveis. Sem promessa vaga — número frio.
+          {t("ba.desc")}
         </p>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border terminal-card">
         {/* Header */}
         <div className="grid grid-cols-12 border-b border-border bg-card/40 px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:px-6">
-          <div className="col-span-4 md:col-span-3">Métrica</div>
-          <div className="col-span-4 text-destructive/80">Sem Shadow</div>
-          <div className="col-span-4 text-neon">Com Shadow</div>
-          <div className="hidden md:col-span-1 md:block text-right">Ganho</div>
+          <div className="col-span-4 md:col-span-3">{t("ba.col.metric")}</div>
+          <div className="col-span-4 text-destructive/80">{t("ba.col.before")}</div>
+          <div className="col-span-4 text-neon">{t("ba.col.after")}</div>
+          <div className="hidden md:col-span-1 md:block text-right">{t("ba.col.gain")}</div>
         </div>
 
         {rows.map((r, i) => {
