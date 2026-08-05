@@ -18,6 +18,7 @@ export interface AppNotification {
 export const listMyNotifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { ago } = await import("@/lib/notifications.server");
     const { resolveRoles } = await import("@/lib/roles.server");
     const { isStaff } = await resolveRoles(context);
     const items: AppNotification[] = [];
