@@ -60,7 +60,7 @@ function ServerStatusPage() {
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 60000); // Auto refresh every minute
+    const id = setInterval(refresh, 10000); // Frequência real: a cada 10 segundos
     return () => clearInterval(id);
   }, []);
 
@@ -276,15 +276,15 @@ function StatusCard({ status }: { status: ServerStatus }) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${
-            isOnline ? "bg-neon animate-pulse shadow-[0_0_8px_oklch(0.85_0.24_150)]" : 
-            isError ? "bg-amber-400" : "bg-destructive"
+            isOnline ? "bg-[#00ff9d] animate-pulse shadow-[0_0_8px_rgba(0,255,157,0.8)]" : 
+            isError ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" : "bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.6)]"
           }`} />
           <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             {status.panel.toUpperCase()}
           </span>
         </div>
         {isOnline && status.latency_ms && (
-          <span className="font-mono text-[10px] text-neon">
+          <span className="font-mono text-[10px] text-[#00ff9d]">
             {status.latency_ms}ms
           </span>
         )}
@@ -298,7 +298,7 @@ function StatusCard({ status }: { status: ServerStatus }) {
         <div className="text-right">
           <div className="osint-label mb-1 text-muted-foreground">STATUS</div>
           <div className={`font-display text-lg font-black uppercase tracking-tighter ${
-            isOnline ? "text-neon" : isError ? "text-amber-400" : "text-destructive"
+            isOnline ? "text-[#00ff9d]" : isError ? "text-amber-400" : "text-destructive"
           }`}>
             {status.status}
           </div>
