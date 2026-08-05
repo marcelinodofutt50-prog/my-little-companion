@@ -404,7 +404,7 @@ function PlansPage() {
   const anyBenefit = !!(couponValid || (useCash && cashbackBalance > 0) || referralValid);
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-clip">
       <SiteHeader />
       <FlashPromoBar />
       <WinbackOffer onUseCoupon={(code, slug) => { setCoupon(code); void buy(slug, code); }} />
