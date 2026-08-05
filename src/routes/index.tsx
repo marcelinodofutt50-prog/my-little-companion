@@ -86,7 +86,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-8 font-display text-7xl font-bold leading-[0.9] tracking-tighter md:text-9xl lg:text-[11rem] text-foreground"
+            className="mt-8 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-7xl lg:text-9xl text-foreground"
           >
             SHADOW
           </motion.h1>
@@ -149,7 +149,7 @@ function Index() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mx-auto max-w-5xl rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
+            className="mx-auto max-w-4xl rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
           >
             <ProgressiveImage 
               src={panelFixed} 
@@ -201,14 +201,14 @@ function Index() {
       <section className="py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-4xl md:text-6xl font-bold mb-8 text-foreground">
-            PRONTO PARA O PRÓXIMO NÍVEL?
+          <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 text-foreground uppercase tracking-tight">
+            Pronto para o próximo nível?
           </h2>
-          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground/80 mb-10 max-w-xl mx-auto leading-relaxed">
             Tá esperando o quê? Entre na Shadow e opere sem deixar rastros. 
             Ativação imediata via PIX Mercado Pago.
           </p>
-          <Button size="lg" asChild className="h-16 px-12 text-lg rounded-full">
+          <Button size="lg" asChild className="h-14 px-10 text-base rounded-full shadow-lg shadow-primary/10">
             <Link to="/planos">Adquirir Acesso Agora</Link>
           </Button>
         </div>
