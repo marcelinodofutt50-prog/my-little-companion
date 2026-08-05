@@ -24,10 +24,12 @@ const shadowMark = "/assets/shadow-logo-v9.png?v=v9-100";
 const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
 const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
 import shadowDashboardReal from "@/assets/shadow-dashboard-real.png.asset.json";
+import btmobConexxion1 from "@/assets/btmob-conexxion-1.png.asset.json";
+import btmobConexxion2 from "@/assets/btmob-conexxion-2.png.asset.json";
 const btmobDashboard = shadowDashboardReal.url;
 const assetMissing = shadowDashboardReal.url;
-const btmob1 = "/assets/shadow-hacker-lupin.jpg?v=v8-400";
-const btmob2 = "/assets/play-protect-config.png?v=v8-400";
+const btmob1 = btmobConexxion1.url;
+const btmob2 = btmobConexxion2.url;
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
