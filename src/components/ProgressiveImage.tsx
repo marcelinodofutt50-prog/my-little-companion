@@ -14,7 +14,13 @@ interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement
 
 export function ProgressiveImage({ src, alt, className, fallbackText, loading = "lazy", ...props }: ProgressiveImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [error, setError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const displaySrc = useMemo(() => {
+    if (!error) return src;
+    if (src.includes('logo')) return FALLBACK_LOGO_URL;
+    return GLOBAL_FALLBACK_URL;
+  }, [src, error]);
 
   useEffect(() => {
     if (!src) {
