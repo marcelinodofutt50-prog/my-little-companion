@@ -13,65 +13,65 @@ type Testimonial = {
   accent: "neon" | "cyan" | "violet";
 };
 
-const items: Testimonial[] = [
-  {
-    name: "Rafael M.",
-    handle: "@rafa.ops",
-    plan: "Vitalício v4.6",
-    text: "Comprei às 2h da manhã, em 40 segundos o login já tava no painel. Nunca vi entrega tão rápida em ferramenta desse nível.",
-    initials: "RM",
-    accent: "neon",
-  },
-  {
-    name: "Juliana P.",
-    handle: "@juh.intel",
-    plan: "Mensal v4.5.7",
-    text: "Já usei outras duas concorrentes e caía Play Protect no meio da op. Aqui não caiu uma vez em 3 meses. Suporte responde em minutos.",
-    initials: "JP",
-    accent: "cyan",
-  },
-  {
-    name: "Diego S.",
-    handle: "@dsx.recon",
-    plan: "Servidor + Vitalício",
-    text: "Migrei do 4.5.7 pro vitalício 4.6 e o upgrade foi automático mesmo. Não precisei falar com ninguém. Cashback do BTMOB40 caiu direitinho.",
-    initials: "DS",
-    accent: "violet",
-  },
-  {
-    name: "Bruno L.",
-    handle: "@brl.osint",
-    plan: "Código-fonte",
-    text: "Peguei o pacote completo com fonte. Sessão de handoff bem técnica, engenheiro documentou tudo. Vale cada centavo.",
-    initials: "BL",
-    accent: "neon",
-  },
-  {
-    name: "Carla T.",
-    handle: "@carla.k",
-    plan: "Mensal v4.5.7",
-    text: "Tava com medo de PIX pra ferramenta paga assim, mas o comprovante do Mercado Pago veio na hora. Segurança total.",
-    initials: "CT",
-    accent: "cyan",
-  },
-  {
-    name: "Vinícius R.",
-    handle: "@vini.rd",
-    plan: "Vitalício v4.6",
-    text: "3 updates gratuitos em 2 meses, cada um trazendo módulo novo. A promessa de 'updates for life' é real.",
-    initials: "VR",
-    accent: "violet",
-  },
-];
-
-const accentMap: Record<string, string> = {
-  neon: "text-neon border-neon/40 bg-neon/10",
-  cyan: "text-cyan border-cyan/40 bg-cyan/10",
-  violet: "text-violet border-violet/40 bg-violet/10",
-};
-
 export function Testimonials() {
   const { t } = useI18n();
+
+  const items: Testimonial[] = [
+    {
+      name: "Rafael M.",
+      handle: "@rafa.ops",
+      plan: "Vitalício v4.6",
+      text: t("test.txt.rafael"),
+      initials: "RM",
+      accent: "neon",
+    },
+    {
+      name: "Juliana P.",
+      handle: "@juh.intel",
+      plan: "Mensal v4.5.7",
+      text: t("test.txt.juliana"),
+      initials: "JP",
+      accent: "cyan",
+    },
+    {
+      name: "Diego S.",
+      handle: "@dsx.recon",
+      plan: "Servidor + Vitalício",
+      text: t("test.txt.diego"),
+      initials: "DS",
+      accent: "violet",
+    },
+    {
+      name: "Bruno L.",
+      handle: "@brl.osint",
+      plan: "Código-fonte",
+      text: t("test.txt.bruno"),
+      initials: "BL",
+      accent: "neon",
+    },
+    {
+      name: "Carla T.",
+      handle: "@carla.k",
+      plan: "Mensal v4.5.7",
+      text: t("test.txt.carla"),
+      initials: "CT",
+      accent: "cyan",
+    },
+    {
+      name: "Vinícius R.",
+      handle: "@vini.rd",
+      plan: "Vitalício v4.6",
+      text: t("test.txt.vinicius"),
+      initials: "VR",
+      accent: "violet",
+    },
+  ];
+
+  const accentMap: Record<string, string> = {
+    neon: "text-neon border-neon/40 bg-neon/10",
+    cyan: "text-cyan border-cyan/40 bg-cyan/10",
+    violet: "text-violet border-violet/40 bg-violet/10",
+  };
 
   return (
     <section className="border-t border-border py-20">

@@ -159,7 +159,106 @@ function Index() {
 
 
 
+      {/* Kraken Section */}
+      <section className="py-20 relative bg-background overflow-hidden" id="kraken">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-transparent opacity-50 pointer-events-none" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-8 py-3 cursor-pointer select-none overflow-hidden relative group"
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              
+              // Visual effect
+              const ripple = document.createElement('div');
+              ripple.className = 'absolute bg-white/20 rounded-full animate-ping pointer-events-none';
+              ripple.style.left = `${x}px`;
+              ripple.style.top = `${y}px`;
+              ripple.style.width = '100px';
+              ripple.style.height = '100px';
+              ripple.style.transform = 'translate(-50%, -50%)';
+              e.currentTarget.appendChild(ripple);
+              setTimeout(() => ripple.remove(), 1000);
+              
+              toast("⚡ KRAKEN SYSTEM ACTIVATED: HIGH PRIORITY DISPATCH", {
+                icon: '🌩️',
+                description: 'Thunder protocol initiated.',
+              });
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-green-500/20 to-blue-500/20 animate-[pulse_3s_infinite]" />
+            <span className="bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent font-display text-4xl font-black tracking-[0.2em] uppercase animate-[shimmer_5s_linear_infinite] bg-[length:200%_auto]">
+              KRAKEN
+            </span>
+          </motion.div>
+          
+          <div className="max-w-2xl mx-auto mb-12">
+            <p className="text-xl font-mono text-blue-400 mb-4 tracking-tighter uppercase">Undetected Banking Protocol</p>
+            <p className="text-muted-foreground leading-relaxed">
+              O software mais procurado do mercado. Passa por todos os bancos sem detecção. Interface simplificada, ativação total.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+             <motion.div 
+               whileHover={{ y: -5 }}
+               className="p-8 rounded-xl bg-card/50 border border-border backdrop-blur-sm hover:border-blue-500/50 transition-all text-left"
+             >
+               <div className="flex justify-between items-start mb-6">
+                 <div>
+                   <h3 className="text-lg font-mono text-blue-400 uppercase tracking-widest">Monthly Ops</h3>
+                   <div className="text-3xl font-bold mt-1">R$ 20.000</div>
+                 </div>
+                 <Zap className="h-6 w-6 text-blue-500" />
+               </div>
+               <ul className="space-y-3 mb-8 text-sm text-muted-foreground font-mono">
+                 <li>• Full Banking Bypass</li>
+                 <li>• Anti-Detection v3</li>
+                 <li>• 24/7 Priority Support</li>
+                 <li>• Daily Mode Updates</li>
+               </ul>
+               <Button className="w-full bg-blue-600 hover:bg-blue-700" asChild>
+                 <Link to="/auth?plan=kraken_monthly">Purchase Access</Link>
+               </Button>
+             </motion.div>
+
+             <motion.div 
+               whileHover={{ y: -5 }}
+               className="p-8 rounded-xl bg-card/50 border border-blue-500/30 backdrop-blur-sm hover:border-blue-500/60 transition-all text-left relative overflow-hidden"
+             >
+               <div className="absolute top-0 right-0 bg-blue-500 text-[8px] font-bold px-3 py-1 uppercase tracking-tighter">Vitalício</div>
+               <div className="flex justify-between items-start mb-6">
+                 <div>
+                   <h3 className="text-lg font-mono text-blue-400 uppercase tracking-widest">Permanent Ops</h3>
+                   <div className="text-3xl font-bold mt-1">R$ 30.000</div>
+                 </div>
+                 <Shield className="h-6 w-6 text-blue-500" />
+               </div>
+               <ul className="space-y-3 mb-8 text-sm text-muted-foreground font-mono">
+                 <li>• Lifetime Access</li>
+                 <li>• Priority Support Max</li>
+                 <li>• All Future Modules</li>
+                 <li>• Source-Level Hardening</li>
+               </ul>
+               <Button className="w-full bg-blue-600 hover:bg-blue-700" asChild>
+                 <Link to="/auth?plan=kraken_permanent">Secure Lifetime</Link>
+               </Button>
+             </motion.div>
+          </div>
+          
+          <div className="mt-8">
+            <Button variant="link" className="text-muted-foreground text-xs font-mono uppercase tracking-widest" asChild>
+              <Link to="/auth?mode=up">Testar Grátis (Disponibilidade Limitada)</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Enterprise Management Section - Integrated Real UI Elements */}
+
       <section className="py-20 relative border-y border-border/40 bg-card/20 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
