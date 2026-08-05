@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Mail, LifeBuoy, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import shadowMark from "@/assets/shadow-mask.png";
+import shadowMark from "@/assets/shadow-mark.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -200,7 +200,7 @@ function AuthPage() {
 
   // Processa links de confirmação de e-mail do Supabase (?code=...&type=signup).
   useEffect(() => {
-    if (!code || !type) return;
+    if (!code || !type || typeof code !== 'string') return;
 
     async function exchange() {
       setConfirmMessage("Confirmando seu e-mail, aguarde...");
