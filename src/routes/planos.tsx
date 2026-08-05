@@ -708,7 +708,7 @@ function PlansPage() {
           useCash={useCash}
           featuredSlug="lifetime_46"
         />
-        <OrderCalculator />
+        <OrderCalculator plans={plans} />
 
         {licenses.length === 0 && (
           <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
@@ -834,24 +834,31 @@ function Metric({ value, label }: { value: string; label: string }) {
   );
 }
 
-function OrderCalculator() {
-  const [selectedPlan, setSelectedPlan] = useState<"455" | "mensal" | "vitalicio" | "none">("none");
+function OrderCalculator({ plans }: { plans: Plan[] }) {
+  const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>("none");
   const [isOldMember, setIsOldMember] = useState(false);
   const [addSigner, setAddSigner] = useState(false);
 
+  const selectedPlan = plans.find(p => p.slug === selectedPlanSlug);
+  
   const prices = {
-    "455": 450,
-    mensal: 750,
-    vitalicio: 1800,
     serverNew: 450,
     serverOld: 450,
     signer: 250,
   };
 
-  const planPrice = selectedPlan === "none" ? 0 : prices[selectedPlan];
-  const serverPrice = selectedPlan === "none" ? 0 : isOldMember ? prices.serverOld : prices.serverNew;
-  const signerPrice = addSigner ? prices.signer : 0;
+  const planPrice = selectedPlan ? selectedPlan.price_brl : 0;
+  const serverPrice = selectedPlanSlug === "none" ? 0 : isOldMember ? prices.serverOld : prices.serverNew;
+  
+  // Se o plano selecionado já for o bypass/signer, não permitimos adicionar como addon redundante
+  const isSignerPlan = selectedPlanSlug.includes("bypass") || selectedPlanSlug.includes("signer");
+  const effectiveAddSigner = addSigner && !isSignerPlan;
+  const signerPrice = effectiveAddSigner ? prices.signer : 0;
+  
   const total = planPrice + serverPrice + signerPrice;
+
+  const mainPlans = plans.filter(p => p.category === "license").sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const addonPlans = plans.filter(p => p.category === "addon" || p.category === "upgrade");
 
   return (
     <section className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-sm shadow-[0_0_50px_-12px_oklch(0.78_0.13_82/0.2)]">
@@ -867,23 +874,18 @@ function OrderCalculator() {
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Escolha o Plano</label>
-            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-
-              {[
-                { id: "455", label: "Shadow 4.5.5", p: "R$ 450" },
-                { id: "mensal", label: "30 Dias (4.5.7)", p: "R$ 750" },
-                { id: "vitalicio", label: "Vitalício (4.6)", p: "R$ 1.800" },
-              ].map((p) => (
+            <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">1. Escolha o Plano ou Upgrade</label>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {[...mainPlans, ...addonPlans].map((p) => (
                 <button
-                  key={p.id}
-                  onClick={() => setSelectedPlan(p.id as any)}
+                  key={p.slug}
+                  onClick={() => setSelectedPlanSlug(p.slug)}
                   className={`rounded-lg border p-3 text-left transition-all ${
-                    selectedPlan === p.id ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border/50 bg-background/50 hover:border-primary/30"
+                    selectedPlanSlug === p.slug ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border/50 bg-background/50 hover:border-primary/30"
                   }`}
                 >
-                  <div className="text-xs font-bold">{p.label}</div>
-                  <div className="text-[10px] text-muted-foreground">{p.p}</div>
+                  <div className="text-xs font-bold">{p.name}</div>
+                  <div className="text-[10px] text-muted-foreground">{formatBrl(p.price_brl)}</div>
                 </button>
               ))}
             </div>
@@ -902,16 +904,17 @@ function OrderCalculator() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
+          <div className={`flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3 transition-opacity ${isSignerPlan ? "opacity-50 cursor-not-allowed" : ""}`}>
             <div>
               <div className="text-xs font-bold">Shadow Play Protect (Signer)</div>
               <div className="text-[10px] text-muted-foreground">+ R$ 250 (30 Dias)</div>
             </div>
             <button
+              disabled={isSignerPlan}
               onClick={() => setAddSigner(!addSigner)}
-              className={`h-5 w-10 rounded-full transition-colors relative ${addSigner ? "bg-primary" : "bg-muted"}`}
+              className={`h-5 w-10 rounded-full transition-colors relative ${effectiveAddSigner ? "bg-primary" : "bg-muted"}`}
             >
-              <div className={`absolute top-1 h-3 w-3 rounded-full bg-white transition-transform ${addSigner ? "left-6" : "left-1"}`} />
+              <div className={`absolute top-1 h-3 w-3 rounded-full bg-white transition-transform ${effectiveAddSigner ? "left-6" : "left-1"}`} />
             </button>
           </div>
         </div>
@@ -919,24 +922,24 @@ function OrderCalculator() {
         <div className="flex flex-col justify-between rounded-xl bg-background/40 p-6 border border-border/50">
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Plano Selecionado:</span>
-              <span className="font-mono">{selectedPlan === "none" ? "---" : `R$ ${planPrice}`}</span>
+              <span className="text-muted-foreground">Item Selecionado:</span>
+              <span className="font-mono text-right">{selectedPlan ? selectedPlan.name : "Nenhum"}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Valor do Item:</span>
+              <span className="font-mono">{selectedPlan ? formatBrl(planPrice) : "---"}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Servidor (Setup + Infra):</span>
-              <span className="font-mono">{selectedPlan === "none" ? "---" : `R$ ${serverPrice}`}</span>
+              <span className="font-mono">{selectedPlanSlug === "none" ? "---" : formatBrl(serverPrice)}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Shadow Signer:</span>
-              <span className="font-mono">{addSigner ? "R$ 450" : "R$ 0"}</span>
+              <span className="text-muted-foreground">Addon Signer:</span>
+              <span className="font-mono">{effectiveAddSigner ? formatBrl(signerPrice) : "R$ 0,00"}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Renovação Servidor (Todo dia 20):</span>
-              <span className="font-mono text-neon">R$ 450</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Taxas do Gateway:</span>
-              <span className="font-mono text-neon">Incluso</span>
+              <span className="text-muted-foreground">Manutenção (Mensal):</span>
+              <span className="font-mono text-neon">R$ 450,00</span>
             </div>
             <div className="my-4 h-px bg-border/50" />
             <div className="flex justify-between items-end">
@@ -946,11 +949,11 @@ function OrderCalculator() {
                   <CreditCard className="h-3 w-3" /> PIX Automático
                 </div>
               </div>
-              <span className="font-display text-3xl font-bold text-primary">R$ {total}</span>
+              <span className="font-display text-3xl font-bold text-primary">{formatBrl(total)}</span>
             </div>
           </div>
           <p className="mt-4 text-[10px] text-center text-muted-foreground italic leading-relaxed">
-            * Valores baseados nas regras atuais de membros antigos (histórico {">"} 48h ou licença prévia) e novos.
+            * O checkout refletirá exatamente os itens selecionados acima no total do Mercado Pago.
           </p>
         </div>
       </div>
