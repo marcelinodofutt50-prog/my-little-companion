@@ -5,14 +5,14 @@ const shots = [
   {
     src: "/img/proof-itau-10k.webp",
     fallback: "/img/proof-itau-10k.png",
-    tag: "Itaú · R$ 10.000",
-    caption: '"Pagamento concluído" — R$ 10.000,00 confirmados direto no app do banco.',
+    tag: "Cliente · Itaú",
+    caption: "Transação de R$ 10.000,00 confirmada no app do banco.",
   },
   {
     src: "/img/proof-caixa-990.webp",
     fallback: "/img/proof-caixa-990.png",
-    tag: "Caixa · R$ 990",
-    caption: '"Pix enviado com sucesso" — R$ 990,00 rodando ao vivo na mesma tela.',
+    tag: "Cliente · Caixa",
+    caption: "Pix de R$ 990,00 enviado e comprovado em tempo real.",
   },
 ];
 
