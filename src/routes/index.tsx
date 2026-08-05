@@ -201,14 +201,14 @@ function Index() {
       <section className="py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-4xl md:text-6xl font-bold mb-8 text-foreground">
-            PRONTO PARA O PRÓXIMO NÍVEL?
+          <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 text-foreground uppercase tracking-tight">
+            Pronto para o próximo nível?
           </h2>
-          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground/80 mb-10 max-w-xl mx-auto leading-relaxed">
             Tá esperando o quê? Entre na Shadow e opere sem deixar rastros. 
             Ativação imediata via PIX Mercado Pago.
           </p>
-          <Button size="lg" asChild className="h-16 px-12 text-lg rounded-full">
+          <Button size="lg" asChild className="h-14 px-10 text-base rounded-full shadow-lg shadow-primary/10">
             <Link to="/planos">Adquirir Acesso Agora</Link>
           </Button>
         </div>
