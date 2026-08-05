@@ -139,9 +139,15 @@ function DashboardPage() {
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
   
-  const isLicenseActive = (license: any) => licenseExpiryState(license, serverNow).active
-  const activeLicense = licenses?.find(isLicenseActive)
-  const expiry = activeLicense ? licenseExpiryState(activeLicense, serverNow) : null
+  const isLicenseActive = (license: any) => {
+    const s = licenseExpiryState(license, serverNow)
+    return s.active || s.paused
+  }
+  const activeLicense = licenses?.find((l: any) => licenseExpiryState(l, serverNow).active)
+  const pausedLicense = licenses?.find((l: any) => licenseExpiryState(l, serverNow).paused)
+  const currentLicense = activeLicense || pausedLicense
+  const expiry = currentLicense ? licenseExpiryState(currentLicense, serverNow) : null
+  
   // Sempre resolve um tier válido: version_tier -> plan_slug -> mensal (padrão),
   // garantindo que os downloads apareçam em todo recarregamento.
   const downloadsForLicense = (license: any) => {
@@ -149,7 +155,7 @@ function DashboardPage() {
     const files = downloadsForTier(tier)
     return files.length > 0 ? files : downloadsForTier('monthly_457')
   }
-  const fallbackDownloads = activeLicense ? downloadsForLicense(activeLicense) : []
+  const fallbackDownloads = currentLicense ? downloadsForLicense(currentLicense) : []
   const daysLeft = expiry ? expiry.daysLeft : null
   const lifetimeActive = !!expiry && expiry.active && expiry.countdownAt === null
   const terminalId = activeLicense?.server_ip || "None"
