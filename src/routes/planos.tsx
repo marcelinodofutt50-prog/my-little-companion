@@ -1545,10 +1545,14 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       )}
 
       {meta.note && (
-        <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
-          <span className="font-mono uppercase tracking-wider text-amber-400">// atenção</span>{" "}
-          {meta.note}
-        </p>
+        <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-inner">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-amber-500">
+            <AlertTriangle className="h-3 w-3" /> Atenção Operador
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground/90 italic">
+            {meta.note}
+          </p>
+        </div>
       )}
 
 
