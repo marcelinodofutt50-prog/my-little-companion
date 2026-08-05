@@ -108,7 +108,7 @@ function DashboardPreview() {
               <img 
                 src={panelOriginalAsset.url} 
                 alt="Shadow Original Dashboard" 
-                className="h-full w-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                className="h-full w-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
               />
               
               {/* Overlay indicators to match the OSINT style */}
