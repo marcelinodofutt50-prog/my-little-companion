@@ -24,11 +24,12 @@ export const Route = createFileRoute("/api/public/hooks/reconcile-pending")({
         const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
         const { data: orders, error } = await supabaseAdmin
           .from("orders")
-          .select("id, status, amount, mp_payment_id, mp_preference_id, created_at")
-          .in("status", ["pending", "created", "yaarsa_failed"])
+          .select("id, status, amount, mp_payment_id, mp_preference_id, created_at, processing_at, next_retry_at, fulfillment_attempts")
+          .in("status", ["pending", "created", "yaarsa_failed", "processing"])
           .gt("created_at", cutoff)
           .order("created_at", { ascending: true })
           .limit(100);
+
 
         if (error) {
           return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
