@@ -194,33 +194,60 @@ function PlayProtectPage() {
               <span className="h-px flex-1 bg-amber-500/30" />
             </div>
 
-            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5 md:grid-cols-[280px_1fr]">
-              <a href={playProtectConfig} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40">
-                <img src={playProtectConfig} alt="Configuração do Play Protect — quais opções desativar" width={720} height={1280} className="h-full w-full object-contain" loading="lazy" />
-              </a>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-5 w-5 text-amber-500" />
-                  <h2 className="font-mono text-sm font-bold uppercase tracking-wider">Antes de instalar — desative estas funções</h2>
+            <div className="mb-6 grid gap-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-5 md:grid-cols-2">
+              <div className="space-y-4">
+                <a href={playProtectConfig} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40 aspect-video">
+                  <img src={playProtectConfig} alt="Configuração do Play Protect" className="h-full w-full object-cover" loading="lazy" />
+                </a>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="h-5 w-5 text-amber-500" />
+                    <h2 className="font-mono text-sm font-bold uppercase tracking-wider">1. Configurações do Dispositivo</h2>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Abra a <strong>Play Store</strong> → menu do perfil → <strong>Play Protect</strong> → <strong>Configurações</strong> e desative:
+                  </p>
+                  <ul className="grid gap-1 text-[11px]">
+                    {[
+                      'Verificar apps com Play Protect',
+                      'Melhorar a detecção de apps prejudiciais',
+                      'Alertas de permissão de apps',
+                      'Notificações do Play Protect',
+                    ].map((item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Abra a <strong>Play Store</strong> → menu do perfil → <strong>Play Protect</strong> → <strong>Configurações</strong> e desative:
-                </p>
-                <ul className="grid gap-1.5 text-xs">
-                  {[
-                    'Verificar apps com Play Protect',
-                    'Melhorar a detecção de apps prejudiciais',
-                    'Alertas de permissão de apps',
-                    'Notificações do Play Protect',
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2">
+              </div>
+
+              <div className="space-y-4">
+                <a href={btmobInstructions.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border border-amber-500/40 bg-background/40 aspect-video">
+                  <img src={btmobInstructions.url} alt="Instruções de Build BTMob" className="h-full w-full object-cover" loading="lazy" />
+                </a>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-amber-500" />
+                    <h2 className="font-mono text-sm font-bold uppercase tracking-wider">2. Preparação da Build (Essencial)</h2>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Na tela de <strong>Preparar</strong> do seu painel BTMob, certifique-se de <strong>DESMARCAR</strong> as opções indicadas pelas setas:
+                  </p>
+                  <ul className="grid gap-1 text-[11px]">
+                    <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      <span>{item}</span>
+                      <span className="font-bold text-amber-200">DEX-Protetor (DESATIVADO)</span>
                     </li>
-                  ))}
-                </ul>
-                <div className="rounded border border-primary/30 bg-primary/5 p-3 text-xs">
-                  <strong className="text-primary">Como funciona (método clássico):</strong> você envia seu APK aqui, nossa equipe faz o bypass e assina o arquivo pelo bot. Assim que ficar pronto, o botão de <em>Download</em> aparece na sua build abaixo. Tempo médio: 2 a 5 min.
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      <span className="font-bold text-amber-200">Criptografar APK (DESATIVADO)</span>
+                    </li>
+                  </ul>
+                  <div className="rounded border border-primary/30 bg-primary/5 p-2 text-[10px] leading-tight mt-2">
+                    <strong className="text-primary uppercase">Por que?</strong> Deixar tudo desmarcado é essencial para que nossa equipe consiga realizar o decompile, bypass e a assinatura correta.
+                  </div>
                 </div>
               </div>
             </div>
