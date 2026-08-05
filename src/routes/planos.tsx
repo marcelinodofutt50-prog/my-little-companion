@@ -1388,7 +1388,9 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <div className="truncate font-display text-lg leading-tight">{plan.name}</div>
+          <div className="truncate font-display text-lg leading-tight">
+            {plan.name.replace(/\s*\(Trial\)\s*/i, " — 7 dias")}
+          </div>
           {meta.cadence && (
             <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{meta.cadence}</div>
           )}
