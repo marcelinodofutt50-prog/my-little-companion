@@ -39,11 +39,11 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
       <div className={`mt-4 grid gap-3 ${compact ? "grid-cols-2" : "sm:grid-cols-2"}`}>
         {shots.map((s) => (
           <figure key={s.src} className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
-            <div className="flex aspect-video w-full items-center justify-center bg-background/60">
+            <div className="flex aspect-[4/5] w-full items-center justify-center bg-background/60">
               <ProgressiveImage
                 src={s.src}
                 alt={s.tag}
-                className="max-h-full max-w-full object-contain"
+                className="h-full w-full object-contain p-1"
               />
             </div>
 
