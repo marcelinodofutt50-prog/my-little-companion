@@ -27,11 +27,10 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
         <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-neon" />
         <div>
           <h3 className="font-mono text-sm uppercase tracking-wider sm:text-base">
-            Aqui na Shadow, o impossível acontece
+            Referências de Clientes
           </h3>
           <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-sm">
-            Itaú e Caixa operando com a melhor qualidade do mercado — o que em outros servidores simplesmente não
-            acontece. Comprovantes reais, capturados ao vivo.
+            Quem opera na Shadow mostra resultados reais. Comprovantes de clientes verificados, capturados ao vivo no app do banco.
           </p>
         </div>
       </div>
