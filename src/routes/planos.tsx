@@ -182,12 +182,20 @@ function ShadowLupinBanner() {
       aria-label="Shadow · Gentleman Operator"
       className="relative mb-8 overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-black via-neutral-950 to-black shadow-[0_0_60px_-15px_rgba(212,175,55,0.35)]"
     >
-      <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="relative grid gap-0 md:grid-cols-[minmax(0,1fr)_360px]">
+        {/* Mobile background image */}
+        <img
+          src={shadowLupin}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[70%_center] opacity-40 md:hidden"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/60 md:hidden" />
         <div className="relative z-10 flex flex-col justify-center gap-3 p-6 sm:p-10">
           <span className="w-fit rounded-full border border-primary/40 bg-primary/15 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
             // gentleman.operator
           </span>
-          <h2 className="font-serif text-3xl leading-tight text-white sm:text-4xl">
+          <h2 className="font-serif text-2xl leading-tight text-white sm:text-4xl">
             Opere no escuro. <span className="text-primary italic">Com elegância.</span>
           </h2>
           <p className="max-w-lg text-sm leading-relaxed text-white/70">
@@ -195,7 +203,7 @@ function ShadowLupinBanner() {
             Anonimato criptografado, ativação via PIX em menos de 1 minuto e garantia de 7 dias.
           </p>
         </div>
-        <div className="relative min-h-[220px] md:min-h-[280px]">
+        <div className="relative hidden min-h-[280px] md:block">
           <img
             src={shadowLupin}
             alt="Operador Shadow — silhueta com cartola e máscara ao estilo Arsène Lupin"
