@@ -298,7 +298,7 @@ function StatusCard({ status }: { status: ServerStatus }) {
         <div className="text-right">
           <div className="osint-label mb-1 text-muted-foreground">STATUS</div>
           <div className={`font-display text-lg font-black uppercase tracking-tighter ${
-            isOnline ? "text-neon" : isError ? "text-amber-400" : "text-destructive"
+            isOnline ? "text-[#00ff9d]" : isError ? "text-amber-400" : "text-destructive"
           }`}>
             {status.status}
           </div>
