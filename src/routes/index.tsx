@@ -78,7 +78,7 @@ function Index() {
             <ProgressiveImage 
               src={shadowMark} 
               alt="Shadow Protocol"
-              className="h-full w-full object-contain drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]"
+              className="h-full w-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]"
             />
           </motion.div>
 
