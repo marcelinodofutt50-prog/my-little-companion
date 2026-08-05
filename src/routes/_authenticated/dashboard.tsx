@@ -466,27 +466,31 @@ function DashboardPage() {
                               {revealed[license.id] ? 'Ocultar dados' : 'Mostrar dados da licença'}
                             </Button>
                             {revealed[license.id] && (
-                              <div className="space-y-1.5 rounded-md border border-border/60 bg-background/60 p-3 font-mono text-xs">
+                              <div className="animate-in fade-in slide-in-from-top-1 duration-200 space-y-2.5 rounded-md border border-primary/20 bg-primary/5 p-4 font-mono text-xs">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <KeyRound className="h-3.5 w-3.5 text-primary" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Credenciais de Acesso</span>
+                                </div>
                                 {[
                                   { label: 'Usuário', value: license.yaarsa_username || license.yaarsa_email },
                                   { label: 'E-mail', value: license.yaarsa_email },
                                   { label: 'Senha', value: license.password ?? '••••••' },
                                   { label: 'Servidor', value: license.server_ip || '—' },
                                 ].map((row) => (
-                                  <div key={row.label} className="flex items-center justify-between gap-2">
-                                    <span className="text-muted-foreground">{row.label}</span>
+                                  <div key={row.label} className="flex items-center justify-between gap-2 border-b border-primary/10 pb-1.5 last:border-0 last:pb-0">
+                                    <span className="text-[9px] uppercase text-muted-foreground/70">{row.label}</span>
                                     <button
                                       type="button"
-                                      className="flex items-center gap-1.5 truncate text-foreground hover:text-primary"
+                                      className="group flex items-center gap-2 truncate font-medium text-foreground transition-colors hover:text-primary"
                                       onClick={() => { navigator.clipboard.writeText(String(row.value ?? '')); toast.success('Copiado!') }}
                                     >
                                       <span className="truncate">{row.value}</span>
-                                      <Copy className="h-3 w-3 shrink-0" />
+                                      <Copy className="h-3 w-3 shrink-0 opacity-40 transition-opacity group-hover:opacity-100" />
                                     </button>
                                   </div>
                                 ))}
-                                <p className="pt-1 text-[10px] normal-case text-muted-foreground">
-                                  Use estes dados para entrar no painel Shadow. Nunca compartilhe sua senha.
+                                <p className="pt-2 text-[10px] italic leading-tight text-primary/60">
+                                  * Use estes dados estritamente no painel Shadow. O compartilhamento de credenciais resultará em banimento imediato.
                                 </p>
                               </div>
                             )}
