@@ -21,12 +21,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mark.png";
 import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
+import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
 import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
 import assetMissingAsset from "@/assets/image-97.png.asset.json";
 import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 
 const heroRestore = heroRestoreAsset.url;
+const heroClassic = heroClassicAsset.url;
 const btmobDashboard = btmobDashboardAsset.url;
 const assetMissing = assetMissingAsset.url;
 const btmob1 = btmobPanel1.url;
@@ -150,6 +152,23 @@ function Index() {
           </motion.div>
         </div>
       </section>
+
+      {/* Primary Hero Visualization - The Classic Shadow Image */}
+      <section className="relative px-4 pb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.8 }}
+          className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-primary/20 bg-background/50 shadow-2xl"
+        >
+          <ProgressiveImage 
+            src={heroClassic} 
+            alt="Shadow Operations Interface"
+            className="w-full h-auto object-cover"
+          />
+        </motion.div>
+      </section>
+
 
 
       {/* Enterprise Management Section - Integrated Real UI Elements */}
