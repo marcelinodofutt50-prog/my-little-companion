@@ -354,9 +354,14 @@ function Index() {
             Tá esperando o quê? Entre na Shadow e opere sem deixar rastros. 
             Ativação imediata via PIX Mercado Pago.
           </p>
-          <Button size="lg" asChild className="h-14 px-10 text-base rounded-full shadow-lg shadow-primary/10">
-            <Link to="/planos">Adquirir Acesso Agora</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" asChild className="h-14 px-10 text-base rounded-full shadow-lg shadow-primary/10 w-full sm:w-auto">
+              <Link to="/planos">Adquirir Acesso Agora</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
+              <Link to="/auth?mode=up">Testar Grátis por 24h</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
