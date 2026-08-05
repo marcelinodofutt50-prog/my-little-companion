@@ -419,7 +419,7 @@ function SupportPage() {
         )}
 
         <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
-          {/* Botão de Correção para Clientes (visível se a IA falhar ou não houver IA ativa) */}
+          {/* Botão de Correção para Clientes */}
           {!isAdminRef.current && thread?.id && (
             <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-2">
               <Button
