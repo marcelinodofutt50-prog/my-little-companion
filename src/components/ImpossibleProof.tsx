@@ -3,14 +3,14 @@ import { ProgressiveImage } from "./ProgressiveImage";
 
 const shots = [
   {
-    src: "/img/proof-itau-10k.webp",
-    fallback: "/img/proof-itau-10k.png",
+    src: "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/site-assets/proof-itau-10k.webp",
+    fallback: "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/site-assets/proof-itau-10k.png",
     tag: "Itaú · R$ 10.000",
     caption: '"Pagamento concluído" — R$ 10.000,00 confirmados direto no app do banco.',
   },
   {
-    src: "/img/proof-caixa-990.webp",
-    fallback: "/img/proof-caixa-990.png",
+    src: "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/site-assets/proof-caixa-990.webp",
+    fallback: "https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/site-assets/proof-caixa-990.png",
     tag: "Caixa · R$ 990",
     caption: '"Pix enviado com sucesso" — R$ 990,00 rodando ao vivo na mesma tela.',
   },
