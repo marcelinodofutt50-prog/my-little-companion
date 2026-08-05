@@ -205,6 +205,7 @@ function AuthPage() {
 
     async function exchange() {
       setConfirmMessage("Confirmando seu e-mail, aguarde...");
+      if (!code || !type) return;
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
         setConfirmMessage(null);
