@@ -256,20 +256,20 @@ function Index() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
                 </span>
-                Integrations & Modules
+                {t('home.btmob.kicker')}
               </span>
               <h3 className="text-3xl md:text-4xl font-bold mt-3 tracking-tight">
-                Btmob core <span className="italic text-primary">conexxion</span>
+                {t('home.btmob.title').split(' ')[0]} {t('home.btmob.title').split(' ')[1]} <span className="italic text-primary">{t('home.btmob.title').split(' ')[2]}</span>
               </h3>
               <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
-                Interface real do ecossistema Shadow · sincronizada em tempo real com sua VPS
+                {t('home.btmob.lead')}
               </p>
             </motion.div>
 
             <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto px-2 md:px-0">
               {[
-                { src: btmob1, alt: "BTMob Interface 1", label: "GERENCIADOR DE CLIENTES", tag: "LIVE" },
-                { src: btmob2, alt: "BTMob Interface 2", label: "BTMOB ATUALIZAÇÕES", tag: "v4.6" },
+                { src: btmob1, alt: "BTMob Interface 1", label: t('home.btmob.client_manager'), tag: "LIVE" },
+                { src: btmob2, alt: "BTMob Interface 2", label: t('home.btmob.updates'), tag: "v4.6" },
               ].map((item, idx) => (
                 <motion.div
                   key={idx}
@@ -350,18 +350,18 @@ function Index() {
           <div className="grid gap-8 md:grid-cols-3">
             <FeatureCard 
               icon={ShieldCheck} 
-              title="Shadow Signer" 
-              desc="Assinatura digital V2/V3 com bypass nativo Play Protect. Seus APKs limpos e operacionais em segundos."
+              title={t('home.feat.signer.title')} 
+              desc={t('home.feat.signer.desc')}
             />
             <FeatureCard 
               icon={Globe} 
-              title="VPS Dedicada" 
-              desc="Rede de servidores distribuídos com IP fixo e uptime de 99.9%. Velocidade e estabilidade para sua operação."
+              title={t('home.feat.vps.title')} 
+              desc={t('home.feat.vps.desc')}
             />
             <FeatureCard 
               icon={Database} 
-              title="OSINT Tools" 
-              desc="Módulos avançados de busca e mineração de dados em fontes abertas. Inteligência digital na ponta dos dedos."
+              title={t('home.feat.osint.title')} 
+              desc={t('home.feat.osint.desc')}
             />
           </div>
         </div>
@@ -379,24 +379,23 @@ function Index() {
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 text-foreground uppercase tracking-tight">
-            Pronto para o próximo nível?
+            {t('home.cta.ready')}
           </h2>
           <p className="text-lg text-muted-foreground/80 mb-10 max-w-xl mx-auto leading-relaxed">
-            Tá esperando o quê? Entre na Shadow e opere sem deixar rastros. 
-            Ativação imediata via PIX Mercado Pago.
+            {t('home.cta.desc')}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" asChild className="h-14 px-10 text-base rounded-full shadow-lg shadow-primary/10 w-full sm:w-auto">
-              <Link to="/planos">Adquirir Acesso Agora</Link>
+              <Link to="/planos">{t('home.cta.buy')}</Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
-              <Link to="/auth?mode=up">Testar Grátis por 24h</Link>
+              <Link to="/auth?mode=up">{t('home.cta.trial')}</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      <MobileStickyCTA label="Entrar na Shadow" to="/planos" />
+      <MobileStickyCTA label={t('home.cta.mobile')} to="/planos" />
     </div>
   );
 }
