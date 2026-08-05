@@ -319,10 +319,10 @@ function DashboardPage() {
               )}
 
               <section className="enterprise-surface overflow-hidden" aria-labelledby="licenses-title">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4 bg-primary/5">
                   <div>
-                    <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase">Minhas licenças</h2>
-                    <p className="mt-1 text-xs text-muted-foreground">Acessos vinculados à sua conta</p>
+                    <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase tracking-widest text-primary">Status Operacional</h2>
+                    <p className="mt-1 text-[10px] uppercase tracking-tighter text-muted-foreground/60">Acessos vinculados à sua conta empresarial</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <SupportDiagnosticButton
