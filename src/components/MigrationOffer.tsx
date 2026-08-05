@@ -211,6 +211,18 @@ export function MigrationOffer() {
             )}
             <div className="flex-1">
               <p>{notice.msg}</p>
+              {notice.reason ? (
+                <div className="mt-2 space-y-1.5 rounded-md border border-current/20 bg-background/30 p-2.5">
+                  <p className="font-mono text-[10px] uppercase tracking-widest opacity-70">Motivo detectado</p>
+                  <p>{notice.reason}</p>
+                  {notice.fix ? (
+                    <>
+                      <p className="pt-1 font-mono text-[10px] uppercase tracking-widest opacity-70">Como ficar apto</p>
+                      <p>{notice.fix}</p>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
               {notice.kind === "auth" ? (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Link to="/auth" className="font-mono text-[11px] uppercase text-primary hover:underline">
