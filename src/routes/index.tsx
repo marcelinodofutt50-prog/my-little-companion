@@ -68,7 +68,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-8 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-8xl lg:text-9xl"
+            className="mt-8 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-8xl lg:text-9xl text-foreground"
           >
             OPERE NAS<br />
             <span className="text-primary italic">SOMBRAS.</span>
@@ -138,7 +138,7 @@ function Index() {
       <section className="py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-4xl md:text-6xl font-bold mb-8">
+          <h2 className="font-display text-4xl md:text-6xl font-bold mb-8 text-foreground">
             PRONTO PARA O PRÓXIMO NÍVEL?
           </h2>
           <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
@@ -162,7 +162,7 @@ function FeatureCard({ icon: Icon, title, desc }: { icon: any, title: string, de
       <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
         <Icon className="h-6 w-6" />
       </div>
-      <h3 className="mb-4 text-xl font-bold">{title}</h3>
+      <h3 className="mb-4 text-xl font-bold text-foreground">{title}</h3>
       <p className="text-muted-foreground leading-relaxed">{desc}</p>
     </div>
   );
