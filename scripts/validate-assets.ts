@@ -66,7 +66,7 @@ async function validateAssets() {
       const assetName = match[1];
       totalReferences++;
 
-      if (!existingAssets.includes(assetName)) {
+      if (!existingAssets.includes(assetName) && !assetName.endsWith('.asset.json')) {
         missingAssets.add(`${assetName} (referenciado em ${path.relative(process.cwd(), file)})`);
       }
     }
