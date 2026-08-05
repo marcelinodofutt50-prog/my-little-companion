@@ -56,7 +56,7 @@ export function tierAccent(tier: VersionTier): "neon" | "cyan" | "violet" {
 
 export function serverFeeFor(isLegacy: boolean, override?: number | null): number {
   if (override && override > 0) return Number(override);
-  // User specified: Servidor para mensal e vitalicio custa 450
+  // User specified: Servidor para mensal custa 450, vitalicio no dia 20
   return 450;
 }
 
