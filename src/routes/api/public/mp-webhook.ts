@@ -661,9 +661,10 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
               processed: true,
             });
           }
-        } catch (e) {
+        } catch (e: any) {
+          console.error("[WebhookError]", e);
           await supabaseAdmin.from("webhook_logs").insert({
-            source: "mercadopago", note: `error: ${String(e)}`, processed: false,
+            source: "mercadopago", note: `error: ${e?.message || String(e)}`, processed: false,
           });
         }
         return new Response("ok", { status: 200 });
