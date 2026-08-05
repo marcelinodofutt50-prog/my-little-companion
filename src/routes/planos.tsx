@@ -776,27 +776,27 @@ function PlansPage() {
                   to?: string;
                 } = null;
 
-                if (is7d && servers.length > 0) {
-                  extension = {
-                    icon: Server,
-                    label: "RENOVAR SERVIDOR (DIA 20)",
-                    desc: "Manutenção mensal da infraestrutura VPS para manter sua licença ativa e operante.",
-                    slug: servers[0].slug,
-                  };
-                } else if (isMonthly && addons.length > 0) {
+                if (is7d && addons.length > 0) {
                   extension = {
                     icon: ShieldCheck,
-                    label: "PLAY PROTECT MENSAL (SIGNER)",
-                    desc: "Shadow Signer: bypass Play Protect nativo BTmob, Dropper e proteção anti-decompile.",
+                    label: "PLAY PROTECT (SHADOW SIGNER)",
+                    desc: "R$ 450 — APK dura 30 dias (vs 1 dia do BTmob nativo). Otimizado e não é detectado como vírus pelo Play Protect.",
                     slug: addons[0].slug,
                   };
-                } else if (isLifetime && upgrades.length > 0) {
+                } else if (isMonthly && upgrades.length > 0) {
                   extension = {
                     icon: ArrowUpRight,
                     label: "MIGRAR 4.5.7 → 4.6 (UPGRADE)",
-                    desc: "Preencha o formulário de migração — a equipe conduz o upgrade e libera o vitalício 4.6 preservando seu histórico.",
+                    desc: "Já tem plano mensal ativo? Migre para o vitalício 4.6: sem taxa de updates, prioridade no suporte, sempre recebe atualizações e server exclusivo de vitalícios com baixa latência.",
                     slug: upgrades[0].slug,
                     to: "/migracao",
+                  };
+                } else if (isLifetime && servers.length > 0) {
+                  extension = {
+                    icon: Server,
+                    label: "RENOVAR SERVIDOR (DIA 20)",
+                    desc: "Vitalícios pagam manutenção do server todo dia 20. Quem tem plano mensal já inclui — renova junto com o login.",
+                    slug: servers[0].slug,
                   };
                 }
 
@@ -813,41 +813,41 @@ function PlansPage() {
                     />
 
                     {extension && (
-                      <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-inner">
-                        <div className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 border-b border-primary/10 pb-2">
+                      <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-[11px] leading-relaxed">
+                        <div className="mb-2 font-mono uppercase tracking-wider text-primary/90">
                           // extensão recomendada
                         </div>
                         {extension.to ? (
                           <Button
                             asChild
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                            className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
                           >
                             <Link to={extension.to}>
-                              <div className="flex items-center gap-2">
-                                <extension.icon className="h-3.5 w-3.5 text-primary" />
-                                <span>{extension.label}</span>
-                              </div>
-                              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />
+                              <span className="flex items-center gap-2">
+                                <extension.icon className="h-3.5 w-3.5" />
+                                {extension.label}
+                              </span>
+                              <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
                             </Link>
                           </Button>
                         ) : (
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                            className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
                             onClick={() => buy(extension!.slug)}
                             disabled={loadingPlan === extension!.slug}
                           >
-                            <div className="flex items-center gap-2">
-                              <extension.icon className="h-3.5 w-3.5 text-primary" />
-                              <span>{extension.label}</span>
-                            </div>
-                            {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
+                            <span className="flex items-center gap-2">
+                              <extension.icon className="h-3.5 w-3.5" />
+                              {extension.label}
+                            </span>
+                            {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />}
                           </Button>
                         )}
-                        <p className="px-1 text-[9px] text-muted-foreground/80 leading-tight font-medium">
+                        <p className="mt-1 px-1 text-muted-foreground">
                           {extension.desc}
                         </p>
                       </div>
