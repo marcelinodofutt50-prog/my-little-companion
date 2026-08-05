@@ -19,7 +19,7 @@ import shadowMarkAsset from "@/assets/shadow-mark-v8.png.asset.json";
 import type { User } from "@supabase/supabase-js";
 
 export function SiteHeader() {
-  const shadowMark = `${shadowMarkAsset.url}?v=v7-320`;
+  const shadowMark = `${shadowMarkAsset.url}?v=v8-400`;
   const { location } = useRouterState();
   const path = location.pathname;
   const search = location.search as any;
