@@ -274,29 +274,8 @@ function PlansPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!loggedIn || !coupon || couponValid || couponPending || autoCouponTried.current) return;
-    const code = coupon.trim().toUpperCase();
-    if (!CODE_RE.test(code)) return;
-
-    autoCouponTried.current = true;
-    setCouponPending(true);
-    setCouponError(null);
-    validateFn({ data: { code } })
-      .then((r) => {
-        if (r.coupon) {
-          setCouponValid(r.coupon);
-          setCoupon(r.coupon.code);
-          localStorage.setItem("shadow_coupon", r.coupon.code);
-          toast.success(`Cupom ${r.coupon.code} aplicado automaticamente`);
-        } else {
-          setCouponValid(null);
-          setCouponError("Cupom inválido ou expirado");
-        }
-      })
-      .catch(() => setCouponError("Não foi possível validar o cupom agora. Tente aplicar manualmente."))
-      .finally(() => setCouponPending(false));
-  }, [loggedIn, coupon, couponValid, couponPending, validateFn]);
+  // Cupons nunca são aplicados automaticamente — o cliente precisa clicar em "Aplicar".
+  // O campo apenas é pré-preenchido quando vem via ?cupom= na URL.
 
   useEffect(() => {
     if (loggedIn) {
