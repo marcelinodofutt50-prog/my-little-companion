@@ -520,8 +520,6 @@ function DashboardPage() {
                       </Card>
                     )
                   })}
-                  </div>
-                </div>
               </section>
 
               <section id="downloads" className="enterprise-surface scroll-mt-6 overflow-hidden" aria-labelledby="downloads-title">
