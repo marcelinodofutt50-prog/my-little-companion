@@ -31,7 +31,7 @@ const primary: Item[] = [
   { title: "Affiliate Network", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
   { title: "Token Redemption", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
   { title: "Executive Support", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
-  { title: "Global Infrastructure", url: "/servidor/status", icon: Server },
+  { title: "Service Recovery", url: "/servidor/status", icon: Server },
 ];
 
 
