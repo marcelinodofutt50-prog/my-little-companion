@@ -473,6 +473,8 @@ function DashboardPage() {
                               {revealed[license.id] ? 'Ocultar Credenciais' : 'Revelar Acesso'}
                             </Button>
                           </div>
+                          <div className="space-y-3">
+
                             {revealed[license.id] && (
                               <div className="animate-in fade-in slide-in-from-top-1 duration-200 space-y-2.5 rounded-md border border-primary/20 bg-primary/5 p-4 font-mono text-xs">
                                 <div className="flex items-center gap-2 mb-2">
