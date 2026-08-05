@@ -108,7 +108,7 @@ function DashboardPreview() {
               <img 
                 src={panelOriginalAsset.url} 
                 alt="Shadow Original Dashboard" 
-                className="h-full w-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                className="h-full w-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
               />
               
               {/* Overlay indicators to match the OSINT style */}
@@ -273,6 +273,37 @@ function LandingPage() {
           <ImpossibleProof />
           <ProofWall />
           <Testimonials />
+          
+          {/* Final CTA Section */}
+          <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-primary/5 p-12 text-center">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,var(--color-primary),transparent_70%)] opacity-[0.05]" />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative z-10 space-y-8"
+            >
+              <h2 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl text-foreground">
+                Tá esperando o quê? <br />
+                <span className="text-primary italic">Entre na Shadow e opere sem deixar rastros.</span>
+              </h2>
+              
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Link to="/planos">
+                  <Button size="lg" className="h-14 w-full sm:w-auto rounded-full bg-primary px-10 font-mono text-xs uppercase tracking-[0.2em] text-primary-foreground hover:opacity-90 transition-all duration-500 shadow-[0_0_20px_var(--color-primary)]">
+                    Ver Planos
+                  </Button>
+                </Link>
+                
+                <Link to="/auth">
+                  <Button size="lg" variant="outline" className="h-14 w-full sm:w-auto rounded-full border-primary/20 bg-transparent px-10 font-mono text-xs uppercase tracking-[0.2em] text-primary hover:bg-primary/5 transition-all duration-500">
+                    Criar Trial 24H
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          </section>
         </div>
       </main>
       <MobileStickyCTA />
