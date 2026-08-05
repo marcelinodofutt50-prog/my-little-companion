@@ -824,7 +824,7 @@ function PlansPage() {
                             size="sm"
                             className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
                           >
-                            <Link to={extension.to}>
+                            <Link to="/migracao">
                               <span className="flex items-center gap-2">
                                 <extension.icon className="h-3.5 w-3.5" />
                                 {extension.label}

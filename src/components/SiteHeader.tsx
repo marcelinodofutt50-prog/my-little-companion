@@ -39,6 +39,7 @@ export function SiteHeader() {
   ] as const;
 
   const more = [
+    { to: "/migracao", label: "Migração" },
     { to: "/crypto", label: t("nav.crypto") },
     { to: "/contato", label: t("nav.contact") },
   ] as const;
