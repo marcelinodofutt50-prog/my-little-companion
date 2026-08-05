@@ -1,6 +1,13 @@
 // Server-only helpers for Yaarsa integration and license credential encryption.
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
+// Yaarsa expire_date format: YYYY-MM-DD.
+function yesterdayYMD(): string {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+
 // ============================================================================
 // MULTI-PANEL SUPPORT
 // ----------------------------------------------------------------------------
@@ -323,7 +330,7 @@ export function expireDateFor(planSlug: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-type YaarsaResponse = { Success?: string; Fail?: string };
+type YaarsaResponse = { Success?: string; Fail?: string; action?: string };
 
 function friendlyYaarsaFail(message: string): string {
   const m = message.trim();
@@ -335,16 +342,16 @@ function friendlyYaarsaFail(message: string): string {
     return "O painel atingiu o limite de 100 contas para esta chave. Contate o suporte para liberar espaço.";
   if (/cant find|not found|1005|não encontrado/i.test(m))
     return "Usuário não encontrado neste painel.";
-  if (/date not accepted|1006|expired|expira/i.test(m))
-    return "Data de expiração recusada pelo painel. Tente novamente em instantes.";
+  if (/date not accepted|1006|expired|expira|accepted/i.test(m))
+    return "Data de expiração recusada pelo painel (pode estar fora do range permitido). Tente novamente.";
   if (/array offset on null|undefined offset|trying to access|warning:|notice:/i.test(m))
-    return "O painel devolveu uma resposta inválida (erro interno). Tente novamente em alguns segundos.";
+    return "O painel devolveu uma resposta inválida (erro interno PHP). Tente novamente.";
   if (/HTTP 403/i.test(m))
     return "O painel bloqueou temporariamente esta requisição (403). Tentando rota alternativa — se persistir, avise o suporte.";
   if (/devolveu HTML/i.test(m))
-    return "O painel devolveu uma página HTML em vez de dados. Provavelmente está em manutenção — tente novamente em breve.";
+    return "O painel devolveu uma página HTML (status 200/404 em vez de JSON). Provavelmente o endereço ou a rota proxy está incorreta.";
   if (/falha de rede/i.test(m))
-    return "Falha de rede ao contatar o painel. Verifique sua conexão e tente novamente.";
+    return "Falha de rede ao contatar o painel. Verifique se a VPS está online.";
   return m;
 }
 
@@ -396,9 +403,8 @@ export async function yaarsaExtend(
 }
 
 // Reaplica/troca a senha da conta no painel.
-// Verificado no painel real: a ação é `update` (responde
-// {"Success":"Password updated successfully!"}). Mantemos aliases de outras
-// builds como fallback caso o painel seja atualizado.
+// Verificado no painel real: a ação primária é `update`.
+// Tentamos `update` primeiro, depois fallbacks.
 export async function yaarsaSetPassword(
   email: string,
   password: string,
@@ -406,7 +412,7 @@ export async function yaarsaSetPassword(
   username?: string,
 ): Promise<YaarsaResponse & { action?: string }> {
   await refreshPanelOverrides();
-  const candidates = ["update", "cpassword", "cpass", "changepassword"];
+  const candidates = ["update", "cpassword", "cpass", "changepassword", "add"];
   let last: YaarsaResponse = { Fail: "Painel não aceitou nenhuma ação de troca de senha" };
   for (const action of candidates) {
     const fields: Record<string, string> = {
@@ -416,6 +422,13 @@ export async function yaarsaSetPassword(
       adminkey: yaarsaAdminKey(panel),
     };
     if (username) fields.username = username;
+    
+    // Se a ação for 'add', garantimos que enviamos subtype e expire_date
+    // para o painel não reclamar de campos ausentes, simulando um "upsert".
+    if (action === "add") {
+      fields.subtype = "1 Month";
+      fields.expire_date = yesterdayYMD(); // ontem para manter pausado
+    }
     const r = await yaarsaPost(fields, panel);
     if (r.Success) return { ...r, action };
     last = r;
