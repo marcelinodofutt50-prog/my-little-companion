@@ -171,16 +171,16 @@ html.theme-light body {
 
 /* Removido duplicata */
 
-html.theme-light .glow-neon { box-shadow: 0 0 18px rgba(37, 99, 235, 0.1); }
-html.theme-light .glow-cyan { box-shadow: 0 0 18px rgba(14, 165, 233, 0.1); }
-html.theme-light .glow-violet { box-shadow: 0 0 18px rgba(139, 92, 246, 0.1); }
+html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.55 0.22 255 / 0.1); }
+html.theme-light .glow-cyan { box-shadow: 0 0 18px oklch(0.65 0.18 200 / 0.1); }
+html.theme-light .glow-violet { box-shadow: 0 0 18px oklch(0.6 0.2 300 / 0.1); }
 html.theme-light .price-card {
-  background: #ffffff;
-  border-color: #e2e8f0;
+  background: oklch(1 0 0);
+  border-color: oklch(0.9 0.01 255);
 }
 html.theme-light .price-card-popular {
-  border-color: rgba(37, 99, 235, 0.4);
-  background: #f8fafc;
+  border-color: oklch(0.55 0.22 255 / 0.4);
+  background: oklch(0.98 0.005 255);
 }
 html.theme-light .paper-shadow { box-shadow: 0 20px 60px -28px rgba(0, 0, 0, 0.12); }
 html.theme-light .crt::after { display: none; }
