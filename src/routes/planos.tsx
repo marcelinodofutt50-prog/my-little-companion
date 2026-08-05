@@ -1513,14 +1513,18 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       </div>
 
       {meta.features.length > 0 && (
-        <ul className="mt-5 space-y-2 border-t border-border/40 pt-4 text-sm">
-          {meta.features.map((f) => (
-            <li key={f} className="flex items-start gap-2 text-muted-foreground">
-              <Check className={`mt-0.5 h-4 w-4 shrink-0 ${featured ? "text-primary" : "text-primary/70"}`} />
-              <span className="text-foreground/90">{f}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-5 space-y-4 border-t border-border/40 pt-4">
+          <ul className="space-y-2.5 text-sm">
+            {meta.features.map((f) => (
+              <li key={f} className="flex items-start gap-2.5 group/feature">
+                <div className={`mt-0.5 rounded-full p-0.5 transition-colors ${featured ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover/feature:bg-primary/20 group-hover/feature:text-primary"}`}>
+                  <Check className="h-3 w-3" />
+                </div>
+                <span className="text-[13px] leading-tight text-foreground/80 group-hover/feature:text-foreground transition-colors">{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {meta.note && (
