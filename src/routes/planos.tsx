@@ -34,6 +34,8 @@ import { siteUrl } from "@/lib/site-url";
 import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus } from "@/lib/license.functions";
 
 import { validateReferralCode } from "@/lib/referrals.functions";
+import shadowLupin from "@/assets/shadow-hacker-lupin.jpg";
+
 
 
 export const Route = createFileRoute("/planos")({
