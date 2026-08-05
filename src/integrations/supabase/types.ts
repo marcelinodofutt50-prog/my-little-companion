@@ -900,10 +900,13 @@ export type Database = {
           cashback_used: number | null
           coupon_code: string | null
           created_at: string
+          fulfillment_attempts: number
           id: string
+          last_fulfillment_error: string | null
           metadata: Json | null
           mp_payment_id: string | null
           mp_preference_id: string | null
+          next_retry_at: string | null
           paid_at: string | null
           plan_slug: string
           processing_at: string | null
@@ -917,10 +920,13 @@ export type Database = {
           cashback_used?: number | null
           coupon_code?: string | null
           created_at?: string
+          fulfillment_attempts?: number
           id?: string
+          last_fulfillment_error?: string | null
           metadata?: Json | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
+          next_retry_at?: string | null
           paid_at?: string | null
           plan_slug: string
           processing_at?: string | null
@@ -934,10 +940,13 @@ export type Database = {
           cashback_used?: number | null
           coupon_code?: string | null
           created_at?: string
+          fulfillment_attempts?: number
           id?: string
+          last_fulfillment_error?: string | null
           metadata?: Json | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
+          next_retry_at?: string | null
           paid_at?: string | null
           plan_slug?: string
           processing_at?: string | null
