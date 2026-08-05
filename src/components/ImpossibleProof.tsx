@@ -36,7 +36,7 @@ export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
 
-      <div className={`mt-4 grid gap-3 ${compact ? "grid-cols-2" : "sm:grid-cols-2"}`}>
+      <div className={`mt-4 grid gap-3 ${compact ? "grid-cols-2" : "sm:grid-cols-2 max-w-2xl mx-auto"}`}>
         {shots.map((s) => (
           <figure key={s.src} className="overflow-hidden rounded-lg border border-border/60 bg-card/50">
             <div className="flex aspect-[4/5] w-full items-center justify-center bg-background/60">
