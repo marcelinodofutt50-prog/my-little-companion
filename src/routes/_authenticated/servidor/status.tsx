@@ -60,7 +60,7 @@ function ServerStatusPage() {
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 60000); // Auto refresh every minute
+    const id = setInterval(refresh, 10000); // Frequência real: a cada 10 segundos
     return () => clearInterval(id);
   }, []);
 
