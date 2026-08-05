@@ -210,7 +210,7 @@ function Index() {
               </motion.div>
               
               {/* Floating tactical stats */}
-              <div className="absolute -bottom-6 -left-6 rounded-xl border border-border bg-background/80 p-6 backdrop-blur-md hidden md:block">
+              <div className="absolute -bottom-6 -left-6 z-10 rounded-xl border border-border bg-background/80 p-6 backdrop-blur-md hidden md:block">
                 <div className="font-mono text-[10px] text-muted-foreground uppercase mb-2">SLA Status</div>
                 <div className="text-3xl font-bold text-foreground">99.98<span className="text-primary text-sm">%</span></div>
                 <div className="mt-2 h-1 w-24 bg-muted rounded-full overflow-hidden">
