@@ -20,10 +20,15 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mark.png";
-import panelFixedAsset from "@/assets/panel-original-fixed.png.asset.json";
+import panelFixedAsset from "@/assets/image-95.png.asset.json";
+import enterpriseDashboardAsset from "@/assets/image-96.png.asset.json";
+import assetMissingAsset from "@/assets/image-97.png.asset.json";
 import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
+
 const panelFixed = panelFixedAsset.url;
+const enterpriseDashboard = enterpriseDashboardAsset.url;
+const assetMissing = assetMissingAsset.url;
 const btmob1 = btmobPanel1.url;
 const btmob2 = btmobPanel2.url;
 
@@ -146,8 +151,8 @@ function Index() {
         </div>
       </section>
 
-      {/* Hero Image / Original Panel */}
-      <section className="py-12 relative overflow-hidden border-y border-border/40 bg-card/20">
+      {/* Visual Section - Restoring original reference layout */}
+      <section className="py-12 relative overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
             <motion.div
@@ -158,25 +163,88 @@ function Index() {
             >
               <ProgressiveImage 
                 src={panelFixed} 
-                alt="Shadow Manager Interface" 
-                className="w-full h-auto rounded-2xl grayscale hover:grayscale-0 transition-all duration-1000"
+                alt="Shadow Hero Visual" 
+                className="w-full h-auto rounded-2xl transition-all duration-1000"
               />
             </motion.div>
           </div>
+        </div>
+      </section>
 
-          <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto mt-12 opacity-40 hover:opacity-100 transition-opacity">
-            <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30">
-              <ProgressiveImage src={btmob1} alt="BTMob Interface 1" className="w-full h-auto grayscale" />
+      {/* Enterprise Management Section - Integrated Real UI Elements */}
+      <section className="py-20 relative border-y border-border/40 bg-card/20 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
+                ALPHA-OPS CONSOLE V4.6
+              </div>
+              <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
+                Gestão Empresarial <br />
+                <span className="italic text-muted-foreground/50 text-5xl md:text-7xl block">De Alto Nível.</span>
+              </h2>
+              
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
+                Painel OSINT redesenhado para transparência absoluta. Visualize a saúde da sua infraestrutura, status de nós globais e compliance de segurança em uma única interface táctica.
+              </p>
+
+              <div className="grid gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Monitoramento em tempo real de SLA</div>
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Gestão de credenciais com AES-256</div>
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Status de nodes globais (EUA, EUROPA, ÁSIA)</div>
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Audit log de acessos e decisões</div>
+              </div>
+
+              <Button size="lg" asChild className="h-12 px-8 text-xs font-mono uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground border border-border">
+                <Link to="/auth">Ver Demo Painel</Link>
+              </Button>
             </div>
-            <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30">
-              <ProgressiveImage src={btmob2} alt="BTMob Interface 2" className="w-full h-auto grayscale" />
+
+            <div className="relative">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                className="rounded-2xl border border-primary/20 bg-background/50 p-1 shadow-2xl overflow-hidden"
+              >
+                <ProgressiveImage src={enterpriseDashboard} alt="Enterprise Management UI" className="w-full h-auto rounded-xl" />
+              </motion.div>
+              
+              {/* Floating tactical stats */}
+              <div className="absolute -bottom-6 -left-6 rounded-xl border border-border bg-background/80 p-6 backdrop-blur-md hidden md:block">
+                <div className="font-mono text-[10px] text-muted-foreground uppercase mb-2">SLA Status</div>
+                <div className="text-3xl font-bold text-foreground">99.98<span className="text-primary text-sm">%</span></div>
+                <div className="mt-2 h-1 w-24 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full w-[99.98%] bg-primary" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10 grayscale opacity-50">
-             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Shield className="h-4 w-4" /> Anti-Intercept</div>
-             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> End-to-End</div>
-             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Globe className="h-4 w-4" /> Global Node</div>
+          {/* BTMob Reference Grid - Repositioned as secondary reference */}
+          <div className="mt-24 pt-20 border-t border-border/20">
+            <div className="text-center mb-12">
+              <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">Integrations & Modules</span>
+              <h3 className="text-2xl font-bold mt-2">BTMob Core Connectivity</h3>
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto opacity-60 hover:opacity-100 transition-opacity">
+              <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1">
+                <ProgressiveImage src={btmob1} alt="BTMob Interface 1" className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-500 rounded-lg" />
+              </div>
+              <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1">
+                <ProgressiveImage src={btmob2} alt="BTMob Interface 2" className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-500 rounded-lg" />
+              </div>
+            </div>
+
+            <div className="mt-12">
+              <ProgressiveImage src={assetMissing} alt="Operational Assets" className="w-full max-w-2xl mx-auto h-auto opacity-50" />
+            </div>
+
+            <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10 grayscale opacity-50">
+               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Shield className="h-4 w-4" /> Anti-Intercept</div>
+               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> End-to-End</div>
+               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Globe className="h-4 w-4" /> Global Node</div>
+            </div>
           </div>
         </div>
       </section>
