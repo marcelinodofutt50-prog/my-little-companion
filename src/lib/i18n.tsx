@@ -356,6 +356,37 @@ const DICT: Dict = {
   "footer.privacy": { pt: "Privacidade", en: "Privacy" },
   "footer.rights": { pt: "Shadow · Infraestrutura OSINT segura", en: "Shadow · Secure OSINT Infrastructure" },
 
+  // ===== Components / BeforeAfter =====
+  "ba.kicker": { pt: "// antes vs depois", en: "// before vs after" },
+  "ba.title": { pt: "O que muda quando você usa Shadow BTMOB.", en: "What changes when you use Shadow BTMOB." },
+  "ba.desc": { pt: "Métricas reais reportadas pelos operadores que já migraram de builds próprios ou de concorrentes instáveis. Sem promessa vaga — número frio.", en: "Real metrics reported by operators who migrated from their own builds or unstable competitors. No vague promises — cold numbers." },
+  "ba.col.metric": { pt: "Métrica", en: "Metric" },
+  "ba.col.before": { pt: "Sem Shadow", en: "Without Shadow" },
+  "ba.col.after": { pt: "Com Shadow", en: "With Shadow" },
+  "ba.col.gain": { pt: "Ganho", en: "Gain" },
+  "ba.metric.setup": { pt: "Tempo de setup", en: "Setup time" },
+  "ba.metric.risk": { pt: "Risco de Play Protect", en: "Play Protect risk" },
+  "ba.metric.success": { pt: "Taxa de sucesso em campo", en: "Success rate in field" },
+  "ba.metric.support": { pt: "Suporte técnico", en: "Technical support" },
+  "ba.metric.cost": { pt: "Custo mensal real", en: "Real monthly cost" },
+
+  // ===== Components / ProofWall =====
+  "pw.kicker": { pt: "// referências de clientes", en: "// customer references" },
+  "pw.title": { pt: "Resultados que falam por si.", en: "Results that speak for themselves." },
+  "pw.desc": { pt: "Itaú e Caixa operando — comprovantes de clientes reais, capturados ao vivo. PIX aprovados, ativações confirmadas e operações concluídas sem edição, sem ator.", en: "Itaú and Caixa operating — real customer receipts, captured live. PIX approved, activations confirmed and operations completed without editing, no actors." },
+  "pw.badge": { pt: "Dados pessoais borrados · nomes autorizados", en: "Personal data blurred · names authorized" },
+  "pw.label.ref": { pt: "Cada print tem uma referência", en: "Each screenshot has a reference" },
+  "pw.label.nav": { pt: "clique para ampliar · use ← → para navegar", en: "click to enlarge · use ← → to navigate" },
+
+  // ===== Components / Testimonials =====
+  "test.kicker": { pt: "// depoimentos", en: "// testimonials" },
+  "test.title": { pt: "Quem opera com a Shadow", en: "Who operates with Shadow" },
+  "test.desc": { pt: "+2.400 licenças ativas · nota média 4,9/5 baseada em avaliações reais no painel após 30 dias de uso.", en: "+2,400 active licenses · average rating 4.9/5 based on real dashboard reviews after 30 days of use." },
+  "test.reviews": { pt: "avaliações", en: "reviews" },
+  "test.footer.1": { pt: "Compras verificadas pelo Mercado Pago", en: "Purchases verified by Mercado Pago" },
+  "test.footer.2": { pt: "Nomes exibidos com consentimento", en: "Names displayed with consent" },
+  "test.footer.3": { pt: "Avaliação após 30 dias de uso", en: "Evaluation after 30 days of use" },
+
   // ===== Tutorial =====
   "tutorial.kicker": { pt: "// docs", en: "// docs" },
   "tutorial.title": { pt: "Tutoriais Shadow", en: "Shadow tutorials" },

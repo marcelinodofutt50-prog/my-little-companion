@@ -1,6 +1,6 @@
 import { Star, Quote, ShieldCheck } from "lucide-react";
 import { VerifiedReviewsBadge } from "@/components/TrustBadges";
-
+import { useI18n } from "@/lib/i18n";
 
 type Testimonial = {
   name: string;
@@ -71,18 +71,20 @@ const accentMap: Record<string, string> = {
 };
 
 export function Testimonials() {
+  const { t } = useI18n();
+
   return (
     <section className="border-t border-border py-20">
       <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.32em] text-neon">
-            // depoimentos
+            {t("test.kicker")}
           </div>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">
-            Quem opera com a <span className="italic text-neon">Shadow</span>
+            {t("test.title").split('Shadow')[0]} <span className="italic text-neon">Shadow</span>
           </h2>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            +2.400 licenças ativas · nota média 4,9/5 baseada em avaliações reais no painel após 30 dias de uso.
+            {t("test.desc")}
           </p>
           <div className="mt-3"><VerifiedReviewsBadge /></div>
         </div>
@@ -94,7 +96,7 @@ export function Testimonials() {
             ))}
           </div>
           <div className="font-mono text-xs text-muted-foreground">
-            <span className="text-foreground">4.9/5</span> · 1.187 avaliações
+            <span className="text-foreground">4.9/5</span> · 1.187 {t("test.reviews")}
           </div>
         </div>
       </div>
@@ -135,9 +137,9 @@ export function Testimonials() {
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-6 border-t border-border pt-8 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-        <span>✓ Compras verificadas pelo Mercado Pago</span>
-        <span>✓ Nomes exibidos com consentimento</span>
-        <span>✓ Avaliação após 30 dias de uso</span>
+        <span>✓ {t("test.footer.1")}</span>
+        <span>✓ {t("test.footer.2")}</span>
+        <span>✓ {t("test.footer.3")}</span>
       </div>
     </section>
   );

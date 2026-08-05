@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ShieldCheck } from "lucide-react";
 import { ProgressiveImage } from "./ProgressiveImage";
+import { useI18n } from "@/lib/i18n";
+
 const p1 = { url: "/img/proof-1.webp", fallback: "/img/proof-1.jpg" };
 const p2 = { url: "/img/proof-2.webp", fallback: "/img/proof-2.jpg" };
 const p3 = { url: "/img/proof-3.webp", fallback: "/img/proof-3.jpg" };
@@ -11,11 +13,9 @@ const pDouglas = { url: "/img/proof-telegram-douglas.webp", fallback: "/img/proo
 
 type Shot = { src: string; fallback: string; caption: string; tag: string; accent: "neon" | "cyan" | "violet"; ref?: string; source?: string; date?: string };
 
-/** Código de referência estável de cada prova (REF-01, REF-02, ...). */
 const refCode = (i: number) => `REF-${String(i + 1).padStart(2, "0")}`;
 
 const shots: Shot[] = [
-
   {
     src: pPhones.url,
     fallback: pPhones.fallback,
@@ -25,7 +25,6 @@ const shots: Shot[] = [
     date: "jan/2026",
     accent: "neon",
   },
-
   {
     src: p2.url,
     fallback: p2.fallback,
@@ -89,6 +88,7 @@ const accentBadge: Record<string, string> = {
 };
 
 export function ProofWall() {
+  const { t } = useI18n();
   const [open, setOpen] = useState<number | null>(null);
 
   const close = useCallback(() => setOpen(null), []);
@@ -121,19 +121,18 @@ export function ProofWall() {
       <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.32em] text-cyan">
-            // referências de clientes
+            {t("pw.kicker")}
           </div>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">
-            Resultados que <span className="italic text-cyan">falam por si.</span>
+            {t("pw.title").split('falam')[0]} <span className="italic text-cyan">falam por si.</span>
           </h2>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Itaú e Caixa operando</span> — comprovantes de clientes reais, capturados ao vivo. PIX aprovados, ativações confirmadas e operações concluídas sem edição, sem ator.
+            {t("pw.desc")}
           </p>
-
         </div>
         <div className="flex items-center gap-2 rounded-md border border-border bg-card/40 px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-neon" />
-          Dados pessoais borrados · nomes autorizados
+          {t("pw.badge")}
         </div>
       </div>
 
@@ -178,7 +177,7 @@ export function ProofWall() {
       </div>
 
       <div className="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-        cada print tem uma referência (REF-01 … REF-{String(shots.length).padStart(2, "0")}) com fonte e data · clique para ampliar · use ← → para navegar
+        {t("pw.label.ref")} (REF-01 … REF-{String(shots.length).padStart(2, "0")}) · {t("pw.label.nav")}
       </div>
 
       {open !== null && (
@@ -192,7 +191,7 @@ export function ProofWall() {
             type="button"
             onClick={close}
             className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/80 text-foreground hover:border-neon/60"
-            aria-label="Fechar"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
@@ -200,7 +199,7 @@ export function ProofWall() {
             type="button"
             onClick={(e) => { e.stopPropagation(); prev(); }}
             className="absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 hover:border-neon/60 md:h-12 md:w-12"
-            aria-label="Anterior"
+            aria-label="Previous"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -208,7 +207,7 @@ export function ProofWall() {
             type="button"
             onClick={(e) => { e.stopPropagation(); next(); }}
             className="absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/80 hover:border-neon/60 md:h-12 md:w-12"
-            aria-label="Próxima"
+            aria-label="Next"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

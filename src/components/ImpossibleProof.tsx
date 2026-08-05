@@ -1,36 +1,35 @@
 import { ShieldCheck, Zap } from "lucide-react";
 import { ProgressiveImage } from "./ProgressiveImage";
+import { useI18n } from "@/lib/i18n";
 
 const shots = [
   {
     src: "/img/proof-itau-10k.webp",
     fallback: "/img/proof-itau-10k.png",
-    tag: "Cliente · Itaú",
-    caption: "Transação de R$ 10.000,00 confirmada no app do banco.",
+    tag: "Itaú",
+    caption: "Transação confirmada no app do banco.",
   },
   {
     src: "/img/proof-caixa-990.webp",
     fallback: "/img/proof-caixa-990.png",
-    tag: "Cliente · Caixa",
-    caption: "Pix de R$ 990,00 enviado e comprovado em tempo real.",
+    tag: "Caixa",
+    caption: "Pix enviado e comprovado em tempo real.",
   },
 ];
 
-/**
- * Destaque dos comprovantes de Itaú e Caixa — usado fora da galeria principal
- * para reforçar prova social em pontos estratégicos do site.
- */
 export function ImpossibleProof({ compact = false }: { compact?: boolean }) {
+  const { t } = useI18n();
+
   return (
     <section className="rounded-xl border border-neon/30 bg-gradient-to-b from-neon/5 to-transparent p-4 sm:p-6">
       <div className="flex items-start gap-3">
         <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-neon" />
         <div>
           <h3 className="font-mono text-sm uppercase tracking-wider sm:text-base">
-            Referências de Clientes
+            {t("pw.kicker").replace('// ', '')}
           </h3>
           <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-sm">
-            Quem opera na Shadow mostra resultados reais. Comprovantes de clientes verificados, capturados ao vivo no app do banco.
+            {t("pw.desc").split('—')[1]?.trim() || t("pw.desc")}
           </p>
         </div>
       </div>
