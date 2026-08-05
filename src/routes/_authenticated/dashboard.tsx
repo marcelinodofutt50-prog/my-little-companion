@@ -385,7 +385,14 @@ function DashboardPage() {
                               <div className="text-xs text-muted-foreground">{license.yaarsa_email}</div>
                             </div>
                             <div className="flex flex-col items-end gap-1.5">
-                              <span className={`rounded border px-2 py-1 font-mono text-[9px] uppercase ${state.paused ? 'border-amber-400/40 bg-amber-400/10 text-amber-500' : active ? 'border-primary/30 bg-primary/10 text-primary' : 'border-destructive/30 bg-destructive/10 text-destructive'}`}>{state.paused ? 'Pausada' : active ? 'Ativa' : 'Inativa'}</span>
+                              <span className={cn(
+                                "rounded border px-2 py-1 font-mono text-[9px] uppercase font-bold tracking-widest",
+                                state.paused ? 'border-amber-400/40 bg-amber-400/10 text-amber-500' : 
+                                active ? 'border-primary/30 bg-primary/10 text-primary shadow-[0_0_8px_rgba(var(--primary),0.2)]' : 
+                                'border-destructive/30 bg-destructive/10 text-destructive'
+                              )}>
+                                {state.paused ? 'Pausada' : active ? 'Ativa' : 'Inativa'}
+                              </span>
                               {active && state.countdownAt && (
                                 <LicenseCountdown compact target={state.countdownAt} serverNow={serverNow} />
                               )}
