@@ -121,13 +121,13 @@ export function ProofWall() {
       <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.32em] text-cyan">
-            // provas reais
+            // referências de clientes
           </div>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">
-            Aqui na Shadow, <span className="italic text-cyan">o impossível acontece.</span>
+            Resultados que <span className="italic text-cyan">falam por si.</span>
           </h2>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Itaú e Caixa operando</span> — pagamentos altos entrando e confirmando na hora. Melhor qualidade do mercado, prints reais de conversas, PIX aprovados e ativações confirmadas. Sem edição, sem ator.
+            <span className="font-semibold text-foreground">Itaú e Caixa operando</span> — comprovantes de clientes reais, capturados ao vivo. PIX aprovados, ativações confirmadas e operações concluídas sem edição, sem ator.
           </p>
 
         </div>
