@@ -19,8 +19,7 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { useQuery } from "@tanstack/react-query";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
-import btmobInstructionsAsset from "@/assets/build-btmob-instructions-final.png.asset.json";
-const btmobInstructions = btmobInstructionsAsset.url;
+  const btmobInstructions = "/assets/play-protect-config.png?v=v8-400";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 
 
