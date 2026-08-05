@@ -127,10 +127,12 @@ function Index() {
         </div>
       </section>
 
-      <BeforeAfter />
-      <ProofWall />
-      <ImpossibleProof />
-      <Testimonials />
+      <div className="container mx-auto px-4 py-20 space-y-32">
+        <BeforeAfter />
+        <ProofWall />
+        <ImpossibleProof />
+        <Testimonials />
+      </div>
 
       {/* Final CTA */}
       <section className="py-32 relative overflow-hidden">
