@@ -269,34 +269,13 @@ function PlansPage() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
       if (ref) setReferral(ref.toUpperCase());
-      const promo = params.get("cupom") || localStorage.getItem("shadow_coupon");
+      const promo = params.get("cupom");
       if (promo && CODE_RE.test(promo.trim().toUpperCase())) setCoupon(promo.trim().toUpperCase());
     }
   }, []);
 
-  useEffect(() => {
-    if (!loggedIn || !coupon || couponValid || couponPending || autoCouponTried.current) return;
-    const code = coupon.trim().toUpperCase();
-    if (!CODE_RE.test(code)) return;
-
-    autoCouponTried.current = true;
-    setCouponPending(true);
-    setCouponError(null);
-    validateFn({ data: { code } })
-      .then((r) => {
-        if (r.coupon) {
-          setCouponValid(r.coupon);
-          setCoupon(r.coupon.code);
-          localStorage.setItem("shadow_coupon", r.coupon.code);
-          toast.success(`Cupom ${r.coupon.code} aplicado automaticamente`);
-        } else {
-          setCouponValid(null);
-          setCouponError("Cupom inválido ou expirado");
-        }
-      })
-      .catch(() => setCouponError("Não foi possível validar o cupom agora. Tente aplicar manualmente."))
-      .finally(() => setCouponPending(false));
-  }, [loggedIn, coupon, couponValid, couponPending, validateFn]);
+  // Cupons nunca são aplicados automaticamente — o cliente precisa clicar em "Aplicar".
+  // O campo apenas é pré-preenchido quando vem via ?cupom= na URL.
 
   useEffect(() => {
     if (loggedIn) {
@@ -731,6 +710,7 @@ function PlansPage() {
                   label: string;
                   desc: string;
                   slug: string;
+                  to?: string;
                 } = null;
 
                 if (is7d && servers.length > 0) {
@@ -751,8 +731,9 @@ function PlansPage() {
                   extension = {
                     icon: ArrowUpRight,
                     label: "MIGRAR 4.5.7 → 4.6 (UPGRADE)",
-                    desc: "Cliente v4.5.7 migra automaticamente para a versão vitalícia 4.6 preservando histórico.",
+                    desc: "Preencha o formulário de migração — a equipe conduz o upgrade e libera o vitalício 4.6 preservando seu histórico.",
                     slug: upgrades[0].slug,
+                    to: "/migracao",
                   };
                 }
 
@@ -773,19 +754,36 @@ function PlansPage() {
                         <div className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 border-b border-primary/10 pb-2">
                           // extensão recomendada
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
-                          onClick={() => buy(extension!.slug)}
-                          disabled={loadingPlan === extension!.slug}
-                        >
-                          <div className="flex items-center gap-2">
-                            <extension.icon className="h-3.5 w-3.5 text-primary" />
-                            <span>{extension.label}</span>
-                          </div>
-                          {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
-                        </Button>
+                        {extension.to ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                          >
+                            <Link to={extension.to}>
+                              <div className="flex items-center gap-2">
+                                <extension.icon className="h-3.5 w-3.5 text-primary" />
+                                <span>{extension.label}</span>
+                              </div>
+                              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />
+                            </Link>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                            onClick={() => buy(extension!.slug)}
+                            disabled={loadingPlan === extension!.slug}
+                          >
+                            <div className="flex items-center gap-2">
+                              <extension.icon className="h-3.5 w-3.5 text-primary" />
+                              <span>{extension.label}</span>
+                            </div>
+                            {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
+                          </Button>
+                        )}
                         <p className="px-1 text-[9px] text-muted-foreground/80 leading-tight font-medium">
                           {extension.desc}
                         </p>
