@@ -813,41 +813,41 @@ function PlansPage() {
                     />
 
                     {extension && (
-                      <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-inner">
-                        <div className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 border-b border-primary/10 pb-2">
+                      <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 text-[11px] leading-relaxed">
+                        <div className="mb-2 font-mono uppercase tracking-wider text-primary/90">
                           // extensão recomendada
                         </div>
                         {extension.to ? (
                           <Button
                             asChild
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                            className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
                           >
                             <Link to={extension.to}>
-                              <div className="flex items-center gap-2">
-                                <extension.icon className="h-3.5 w-3.5 text-primary" />
-                                <span>{extension.label}</span>
-                              </div>
-                              <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />
+                              <span className="flex items-center gap-2">
+                                <extension.icon className="h-3.5 w-3.5" />
+                                {extension.label}
+                              </span>
+                              <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
                             </Link>
                           </Button>
                         ) : (
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="w-full justify-between h-10 px-3 text-[11px] font-bold font-mono border-primary/30 bg-primary/5 hover:bg-primary/20 hover:text-primary transition-all group/btn"
+                            className="w-full justify-between h-9 px-2 text-[11px] font-bold font-mono text-primary hover:bg-primary/10 hover:text-primary group/btn"
                             onClick={() => buy(extension!.slug)}
                             disabled={loadingPlan === extension!.slug}
                           >
-                            <div className="flex items-center gap-2">
-                              <extension.icon className="h-3.5 w-3.5 text-primary" />
-                              <span>{extension.label}</span>
-                            </div>
-                            {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 text-primary group-hover/btn:translate-x-1 transition-transform" />}
+                            <span className="flex items-center gap-2">
+                              <extension.icon className="h-3.5 w-3.5" />
+                              {extension.label}
+                            </span>
+                            {loadingPlan === extension.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />}
                           </Button>
                         )}
-                        <p className="px-1 text-[9px] text-muted-foreground/80 leading-tight font-medium">
+                        <p className="mt-1 px-1 text-muted-foreground">
                           {extension.desc}
                         </p>
                       </div>
