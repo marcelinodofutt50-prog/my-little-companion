@@ -708,7 +708,7 @@ function PlansPage() {
           useCash={useCash}
           featuredSlug="lifetime_46"
         />
-        <OrderCalculator plans={plans} />
+        <OrderCalculator plans={plans} onBuy={buy} />
 
         {licenses.length === 0 && (
           <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
