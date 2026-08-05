@@ -251,7 +251,7 @@ export const getOrderState = createServerFn({ method: "GET" })
     if (["pending", "created", "yaarsa_failed"].includes(String(order.status))) {
       try {
         const { findApprovedPaymentForOrder } = await import("./mercadopago.server");
-        const approved = await findApprovedPaymentForOrder(data.orderId);
+        const approved = await findApprovedPaymentForOrder(data.orderId, Number(order.amount));
         if (approved) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", data.orderId);
