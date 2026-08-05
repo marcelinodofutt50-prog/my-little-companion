@@ -319,7 +319,6 @@ function DashboardPage() {
               )}
 
               <section className="enterprise-surface overflow-hidden shadow-[0_0_25px_rgba(var(--primary),0.05)] border-primary/10" aria-labelledby="licenses-title">
-                <div>
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4 bg-primary/5">
                   <div>
                     <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase tracking-widest text-primary">Status Operacional</h2>
