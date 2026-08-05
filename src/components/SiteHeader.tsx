@@ -118,7 +118,7 @@ export function SiteHeader() {
               <div className="flex h-full flex-col">
                 <div className="hairline-b px-6 py-5">
                   <div className="flex items-center gap-2">
-                    <img src={shadowMark} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain" />
+                    <img src={shadowMark} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain dark:brightness-110" />
                     <span className="font-display text-xl tracking-tight">Shadow</span>
                   </div>
                 </div>
