@@ -23,16 +23,16 @@ import shadowMarkAsset from "@/assets/shadow-mark-v8.png.asset.json";
 import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
 import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
 import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
-import assetMissingAsset from "@/assets/image-97.png.asset.json";
+import assetMissingAsset from "@/assets/enterprise-management-v2.png.asset.json";
 import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 
 // Assets versioning for cache busting
-const ASSET_VERSION = "v7-320";
+const ASSET_VERSION = "v8-400";
 
 const heroRestore = heroRestoreAsset.url;
 const shadowMark = `${shadowMarkAsset.url}?v=${ASSET_VERSION}`;
-const heroClassic = heroClassicAsset.url;
+const heroClassic = `${heroClassicAsset.url}?v=${ASSET_VERSION}`;
 const btmobDashboard = btmobDashboardAsset.url;
 const assetMissing = assetMissingAsset.url;
 const btmob1 = btmobPanel1.url;
@@ -194,7 +194,7 @@ function Index() {
                 whileInView={{ opacity: 1, x: 0 }}
                 className="rounded-2xl border border-primary/20 bg-background/50 p-1 shadow-2xl overflow-hidden"
               >
-                <ProgressiveImage src={btmobDashboard} alt="BTMob Dashboard UI" className="w-full h-auto rounded-xl" />
+                <ProgressiveImage src={assetMissing} alt="BTMob Dashboard UI" className="w-full h-auto rounded-xl" />
               </motion.div>
               
               {/* Floating tactical stats */}

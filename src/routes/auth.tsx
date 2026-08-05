@@ -116,7 +116,7 @@ function formatTime(ts: number): string {
 }
 
 function AuthPage() {
-  const shadowMark = `${shadowMarkAsset.url}?v=v7-320`;
+  const shadowMark = `${shadowMarkAsset.url}?v=v8-400`;
   const { next, code, type } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
