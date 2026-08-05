@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mark.png";
 import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
+import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
 import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
 import assetMissingAsset from "@/assets/image-97.png.asset.json";
 import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
