@@ -18,6 +18,7 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mask.png?format=webp";
+import panelOriginalAsset from "@/assets/panel-original.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -90,48 +91,31 @@ function DashboardPreview() {
         </div>
         
         <div className="relative">
-          {/* Dashboard UI Mockup */}
+          {/* Dashboard UI Original - Real Image from VPS */}
           <div className="relative rounded-2xl border border-border/60 bg-background/80 shadow-2xl overflow-hidden backdrop-blur-sm group hover:scale-[1.02] transition-all duration-700">
-            <div className="border-b border-border px-4 py-2 bg-muted/30 flex items-center justify-between">
+            <div className="border-b border-border px-4 py-2 bg-[#020808] flex items-center justify-between">
               <div className="flex gap-1.5">
                 <div className="h-2 w-2 rounded-full bg-red-500/50" />
                 <div className="h-2 w-2 rounded-full bg-amber-500/50" />
                 <div className="h-2 w-2 rounded-full bg-neon/50" />
               </div>
-              <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-widest">Enterprise Dashboard • ID: 7710-AX</div>
+              <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-widest">
+                Enterprise Dashboard • ID: 7710-AX
+              </div>
             </div>
             
-            <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="h-8 w-1/2 bg-muted/40 rounded animate-pulse" />
-                <div className="h-8 w-1/4 bg-primary/10 rounded animate-pulse border border-primary/20" />
-              </div>
+            <div className="relative aspect-[16/10] bg-[#020808]">
+              <img 
+                src={panelOriginalAsset.url} 
+                alt="Shadow Original Dashboard" 
+                className="h-full w-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+              />
               
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="h-16 bg-muted/20 rounded-lg border border-border/40 p-2 space-y-2">
-                    <div className="h-2 w-full bg-muted/40 rounded" />
-                    <div className="h-3 w-2/3 bg-muted/60 rounded" />
-                  </div>
-                ))}
-              </div>
+              {/* Overlay indicators to match the OSINT style */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#020808] via-transparent to-transparent opacity-60" />
               
-              <div className="h-32 bg-muted/10 rounded-xl border border-border/40 p-4 relative overflow-hidden">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="h-4 w-1/3 bg-muted/40 rounded" />
-                  <div className="h-4 w-4 bg-neon/20 rounded-full" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-2 w-full bg-muted/20 rounded" />
-                  <div className="h-2 w-full bg-muted/20 rounded" />
-                  <div className="h-2 w-2/3 bg-muted/20 rounded" />
-                </div>
-                {/* Decorative map dots */}
-                <div className="absolute bottom-4 right-4 flex gap-1">
-                  <div className="h-1 w-1 rounded-full bg-neon animate-ping" />
-                  <div className="h-1 w-1 rounded-full bg-cyan opacity-50" />
-                  <div className="h-1 w-1 rounded-full bg-white opacity-20" />
-                </div>
+              <div className="absolute bottom-4 left-4 font-mono text-[8px] text-neon/40 uppercase tracking-widest">
+                System: Stable // Mode: Tactical
               </div>
             </div>
             
@@ -140,12 +124,12 @@ function DashboardPreview() {
           </div>
           
           {/* Floating elements */}
-          <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-xl flex flex-col items-center justify-center p-2 text-center animate-bounce-slow">
+          <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-xl flex flex-col items-center justify-center p-2 text-center animate-bounce-slow z-20">
             <Lock className="h-4 w-4 text-primary mb-1" />
             <span className="text-[8px] font-mono font-bold text-primary uppercase leading-tight">AES-256 <br />Secure</span>
           </div>
           
-          <div className="absolute -bottom-10 -left-6 h-32 w-48 rounded-xl border border-neon/20 bg-neon/5 backdrop-blur-xl p-4 hidden md:block">
+          <div className="absolute -bottom-10 -left-6 h-32 w-48 rounded-xl border border-neon/20 bg-neon/5 backdrop-blur-xl p-4 hidden md:block z-20">
             <div className="flex items-center gap-2 mb-3">
               <Zap className="h-3 w-3 text-neon" />
               <span className="text-[9px] font-mono font-bold text-neon uppercase tracking-widest">SLA Status</span>
