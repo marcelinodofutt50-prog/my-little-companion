@@ -473,6 +473,7 @@ function DashboardPage() {
                               {revealed[license.id] ? 'Ocultar Credenciais' : 'Revelar Acesso'}
                             </Button>
                           </div>
+                          </div>
                           <div className="space-y-3">
 
                             {revealed[license.id] && (
