@@ -15,10 +15,11 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 
-import shadowMark from "@/assets/shadow-mark.png?format=webp";
+import shadowMarkAsset from "@/assets/shadow-mark-v2.png.asset.json";
 import type { User } from "@supabase/supabase-js";
 
 export function SiteHeader() {
+  const shadowMark = shadowMarkAsset.url;
   const { location } = useRouterState();
   const path = location.pathname;
   const search = location.search as any;
