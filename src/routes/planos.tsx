@@ -35,7 +35,7 @@ import { siteUrl } from "@/lib/site-url";
 import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus, listMyLicenses } from "@/lib/license.functions";
 
 import { validateReferralCode } from "@/lib/referrals.functions";
-import shadowLupin from "@/assets/shadow-hacker-lupin.jpg";
+const shadowLupin = "/assets/shadow-hacker-lupin.jpg?v=v8-400";
 
 
 
