@@ -15,7 +15,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 
-import shadowMarkAsset from "@/assets/shadow-mark-v5.png.asset.json";
+import shadowMarkAsset from "@/assets/shadow-mark-v6.png.asset.json";
 import type { User } from "@supabase/supabase-js";
 
 export function SiteHeader() {
@@ -56,7 +56,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
         {/* Brand */}
         <Link to="/" className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-70">
-          <img src={shadowMark} alt="" width={24} height={24} decoding="async" className="h-6 w-6 object-contain drop-shadow-[0_0_8px_rgba(201,168,76,0.6)] dark:brightness-110" />
+          <img src={shadowMark} alt="" width={24} height={24} decoding="async" className="h-6 w-6 object-contain drop-shadow-[0_0_8px_rgba(201,168,76,0.6)] brightness-110 dark:brightness-125 dark:contrast-125" />
           <span className="font-display text-xl leading-none tracking-tight">Shadow</span>
         </Link>
 
@@ -118,7 +118,7 @@ export function SiteHeader() {
               <div className="flex h-full flex-col">
                 <div className="hairline-b px-6 py-5">
                   <div className="flex items-center gap-2">
-                    <img src={shadowMark} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain dark:brightness-110" />
+                    <img src={shadowMark} alt="" width={24} height={24} loading="lazy" decoding="async" className="h-6 w-6 object-contain brightness-110 dark:brightness-125 dark:contrast-125" />
                     <span className="font-display text-xl tracking-tight">Shadow</span>
                   </div>
                 </div>

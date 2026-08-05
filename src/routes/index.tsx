@@ -19,7 +19,7 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMarkAsset from "@/assets/shadow-mark-v5.png.asset.json";
+import shadowMarkAsset from "@/assets/shadow-mark-v6.png.asset.json";
 import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
 import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
 import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
@@ -78,7 +78,7 @@ function Index() {
             <ProgressiveImage 
               src={shadowMark} 
               alt="Shadow Protocol"
-              className="h-full w-full object-contain drop-shadow-[0_0_20px_rgba(201,168,76,0.55)] dark:drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] dark:brightness-125"
+              className="h-full w-full object-contain drop-shadow-[0_0_25px_rgba(201,168,76,0.65)] dark:drop-shadow-[0_0_30px_rgba(255,255,255,0.25)] brightness-110 contrast-110 dark:brightness-125 transition-all duration-300"
             />
           </motion.div>
 
@@ -116,7 +116,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground/60"
+            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground/75"
           >
             Infraestrutura de cybersegurança de alto desempenho. Provisionada em segundos. Blindada por padrão.
           </motion.p>
@@ -143,7 +143,7 @@ function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/40"
+            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
           >
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
@@ -166,7 +166,7 @@ function Index() {
               </div>
               <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
                 Gestão Empresarial <br />
-                <span className="italic text-muted-foreground/50 text-5xl md:text-7xl block">De Alto Nível.</span>
+                <span className="italic text-muted-foreground/60 text-5xl md:text-7xl block">De Alto Nível.</span>
               </h2>
               
               <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
