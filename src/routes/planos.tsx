@@ -708,7 +708,7 @@ function PlansPage() {
           useCash={useCash}
           featuredSlug="lifetime_46"
         />
-        <OrderCalculator plans={plans} />
+        <OrderCalculator plans={plans} onBuy={buy} />
 
         {licenses.length === 0 && (
           <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
@@ -834,7 +834,7 @@ function Metric({ value, label }: { value: string; label: string }) {
   );
 }
 
-function OrderCalculator({ plans }: { plans: Plan[] }) {
+function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string) => void }) {
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>("none");
   const [isOldMember, setIsOldMember] = useState(false);
   const [addSigner, setAddSigner] = useState(false);
@@ -952,6 +952,13 @@ function OrderCalculator({ plans }: { plans: Plan[] }) {
               <span className="font-display text-3xl font-bold text-primary">{formatBrl(total)}</span>
             </div>
           </div>
+          <button 
+            disabled={selectedPlanSlug === "none"}
+            onClick={() => onBuy(selectedPlanSlug)}
+            className="mt-6 w-full rounded-lg bg-primary py-3 font-display text-sm font-bold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Prosseguir para Checkout
+          </button>
           <p className="mt-4 text-[10px] text-center text-muted-foreground italic leading-relaxed">
             * O checkout refletirá exatamente os itens selecionados acima no total do Mercado Pago.
           </p>
