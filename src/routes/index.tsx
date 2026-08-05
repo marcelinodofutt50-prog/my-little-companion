@@ -162,8 +162,8 @@ function Index() {
               className="rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
             >
               <ProgressiveImage 
-                src={panelFixed} 
-                alt="Shadow Hero Visual" 
+                src={btmobDashboard} 
+                alt="BTMob Servers Manager" 
                 className="w-full h-auto rounded-2xl transition-all duration-1000"
               />
             </motion.div>
