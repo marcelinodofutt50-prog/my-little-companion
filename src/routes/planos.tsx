@@ -269,7 +269,7 @@ function PlansPage() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
       if (ref) setReferral(ref.toUpperCase());
-      const promo = params.get("cupom") || localStorage.getItem("shadow_coupon");
+      const promo = params.get("cupom");
       if (promo && CODE_RE.test(promo.trim().toUpperCase())) setCoupon(promo.trim().toUpperCase());
     }
   }, []);
