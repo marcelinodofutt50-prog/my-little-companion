@@ -259,7 +259,7 @@ function Index() {
               </p>
             </motion.div>
 
-            <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto">
+            <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto px-2 md:px-0">
               {[
                 { src: btmob1, alt: "BTMob Interface 1", label: "GERENCIADOR DE CLIENTES", tag: "LIVE" },
                 { src: btmob2, alt: "BTMob Interface 2", label: "BTMOB ATUALIZAÇÕES", tag: "v4.6" },
