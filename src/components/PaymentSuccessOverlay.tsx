@@ -47,22 +47,35 @@ export function PaymentSuccessOverlay() {
             </motion.div>
 
             <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="font-display text-3xl font-bold tracking-tight text-foreground"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: "spring", bounce: 0.5 }}
+              className="font-display text-4xl font-black uppercase tracking-tighter text-primary drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.4)]"
             >
-              Pagamento Confirmado!
+              Shadow Protocol Ativado
             </motion.h2>
 
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="mt-4 text-muted-foreground leading-relaxed"
+              className="mt-4 text-sm font-mono uppercase tracking-[0.2em] text-foreground/80"
             >
-              Sua licença foi gerada e provisionada automaticamente. O sistema Yaarsa já configurou seu acesso no servidor.
+              Operação confirmada. Sua licença foi gerada e provisionada na elite da rede.
             </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="mt-8 flex justify-center"
+            >
+              <div className="rounded-full border border-primary/20 bg-primary/5 px-6 py-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-primary animate-pulse">
+                  Obrigado por operar conosco
+                </span>
+              </div>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}

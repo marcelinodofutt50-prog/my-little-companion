@@ -20,6 +20,7 @@ import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import shadowMark from "@/assets/shadow-mask.png";
+import panelFixed from "@/assets/panel-original-fixed.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -83,8 +84,8 @@ function Index() {
             transition={{ delay: 0.1 }}
             className="mt-8 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-8xl lg:text-9xl text-foreground"
           >
-            SHADOW<br />
-            <span className="text-primary italic">PROTOCOL.</span>
+            OPERE NAS<br />
+            <span className="text-primary italic">SOMBRAS.</span>
           </motion.h1>
           
           <motion.p
@@ -112,6 +113,29 @@ function Index() {
               <Link to="/auth">Criar Conta Grátis</Link>
             </Button>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Hero Image / Original Panel */}
+      <section className="py-20 relative overflow-hidden border-y border-border/40 bg-card/20">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mx-auto max-w-5xl rounded-3xl border border-primary/20 bg-background/50 p-2 shadow-[0_0_80px_-20px_oklch(0.78_0.13_82/0.2)] overflow-hidden"
+          >
+            <ProgressiveImage 
+              src={panelFixed} 
+              alt="Shadow Manager Interface" 
+              className="w-full h-auto rounded-2xl grayscale hover:grayscale-0 transition-all duration-1000"
+            />
+          </motion.div>
+          <div className="mt-10 flex justify-center gap-10 grayscale opacity-50">
+             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Shield className="h-4 w-4" /> Anti-Intercept</div>
+             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> End-to-End</div>
+             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><Globe className="h-4 w-4" /> Global Node</div>
+          </div>
         </div>
       </section>
 
