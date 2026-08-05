@@ -898,6 +898,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
               {[...mainPlans, ...addonPlans].map((p) => (
                 <button
                   key={p.slug}
+                  data-testid={`plan-${p.slug}`}
                   onClick={() => setSelectedPlanSlug(p.slug)}
                   className={`rounded-lg border p-3 text-left transition-all ${
                     selectedPlanSlug === p.slug ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border/50 bg-background/50 hover:border-primary/30"
