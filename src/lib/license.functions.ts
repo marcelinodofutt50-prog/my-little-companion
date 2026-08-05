@@ -323,7 +323,7 @@ export const generateTrial = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: expiresAt.toISOString(),
       is_trial: true,
-      panel: panelFromPlanSlug("trial"), // Ensure panel is set correctly for trial
+      panel: panelFromPlanSlug("trial") || "v457", // Ensure panel is set correctly for trial
     };
 
     const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
