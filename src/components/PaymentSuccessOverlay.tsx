@@ -27,10 +27,11 @@ export function PaymentSuccessOverlay() {
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 p-4 backdrop-blur-xl">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-primary/30 bg-card p-8 shadow-[0_0_50px_-12px_oklch(0.78_0.13_82/0.5)]"
+          initial={{ opacity: 0, scale: 0.8, rotateX: 20 }}
+          animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+          exit={{ opacity: 0, scale: 0.8, rotateX: 20 }}
+          transition={{ type: "spring", damping: 15, stiffness: 100 }}
+          className="relative w-full max-w-lg overflow-hidden rounded-2xl border-2 border-primary/50 bg-card p-8 shadow-[0_0_80px_-12px_oklch(0.78_0.13_82/0.6)] ring-1 ring-primary/20"
         >
           {/* Background elements */}
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-[100px]" />
@@ -38,12 +39,12 @@ export function PaymentSuccessOverlay() {
 
           <div className="relative z-10 text-center">
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", damping: 12, stiffness: 200, delay: 0.2 }}
-              className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 border-2 border-primary/30 text-primary shadow-[0_0_20px_rgba(var(--primary),0.3)]"
+              className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/20 border-2 border-primary/40 text-primary shadow-[0_0_30px_rgba(var(--primary),0.4)]"
             >
-              <CheckCircle2 className="h-10 w-10" />
+              <CheckCircle2 className="h-12 w-12" />
             </motion.div>
 
             <motion.h2
