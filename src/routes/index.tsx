@@ -208,12 +208,12 @@ function Index() {
               <h3 className="text-3xl font-bold mt-2">Btmob core conexxion</h3>
             </div>
             
-            <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto opacity-60 hover:opacity-100 transition-opacity">
+            <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto transition-opacity">
               <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1">
-                <ProgressiveImage src={btmob1} alt="BTMob Interface 1" className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-500 rounded-lg" />
+                <ProgressiveImage src={btmob1} alt="BTMob Interface 1" className="w-full h-auto transition-all duration-500 rounded-lg" />
               </div>
               <div className="rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1">
-                <ProgressiveImage src={btmob2} alt="BTMob Interface 2" className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-500 rounded-lg" />
+                <ProgressiveImage src={btmob2} alt="BTMob Interface 2" className="w-full h-auto transition-all duration-500 rounded-lg" />
               </div>
             </div>
 
