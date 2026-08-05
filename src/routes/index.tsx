@@ -19,7 +19,7 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMark from "@/assets/shadow-mark.png";
+import shadowMarkAsset from "@/assets/shadow-mark-v2.png.asset.json";
 import heroRestoreAsset from "@/assets/shadow-hero-restore.png.asset.json";
 import heroClassicAsset from "@/assets/shadow-hero-classic.png.asset.json";
 import btmobDashboardAsset from "@/assets/btmob-new-dashboard.png.asset.json";
@@ -28,6 +28,7 @@ import btmobPanel1 from "@/assets/btmob-panel-1.png.asset.json";
 import btmobPanel2 from "@/assets/btmob-panel-2.png.asset.json";
 
 const heroRestore = heroRestoreAsset.url;
+const shadowMark = shadowMarkAsset.url;
 const heroClassic = heroClassicAsset.url;
 const btmobDashboard = btmobDashboardAsset.url;
 const assetMissing = assetMissingAsset.url;
@@ -72,12 +73,12 @@ function Index() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", damping: 12, stiffness: 200 }}
-            className="mx-auto mb-8 h-40 w-40 md:h-56 md:w-56"
+            className="mx-auto mb-8 h-32 w-32 md:h-44 md:w-44"
           >
             <ProgressiveImage 
               src={shadowMark} 
               alt="Shadow Protocol"
-              className="h-full w-full object-contain drop-shadow-[0_0_20px_oklch(0.78_0.13_82/0.4)]"
+              className="h-full w-full object-contain drop-shadow-[0_0_15px_oklch(0.78_0.13_82/0.3)]"
             />
           </motion.div>
 
