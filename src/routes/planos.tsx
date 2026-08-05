@@ -892,7 +892,7 @@ function OrderCalculator() {
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
               <div className="text-xs font-bold">Sou Membro Antigo</div>
-              <div className="text-[10px] text-muted-foreground">Desconto de R$ 200 no servidor</div>
+              <div className="text-[10px] text-muted-foreground">Servidor unificado a R$ 450</div>
             </div>
             <button
               onClick={() => setIsOldMember(!isOldMember)}
@@ -905,7 +905,7 @@ function OrderCalculator() {
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
               <div className="text-xs font-bold">Shadow Play Protect (Signer)</div>
-              <div className="text-[10px] text-muted-foreground">+ R$ 450 (Pagamento Único)</div>
+              <div className="text-[10px] text-muted-foreground">+ R$ 250 (30 Dias)</div>
             </div>
             <button
               onClick={() => setAddSigner(!addSigner)}
