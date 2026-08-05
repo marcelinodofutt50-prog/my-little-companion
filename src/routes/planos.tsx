@@ -335,7 +335,8 @@ function PlansPage() {
       markCheckoutIntent(slug);
       window.location.href = r.initPoint;
     } catch (e: any) {
-      toast.error(e?.message?.includes("Plano") ? e.message : "Não foi possível iniciar o checkout. Tente novamente.");
+      console.error("[CheckoutError]", e);
+      toast.error(e?.message?.includes("Plano") ? e.message : `Não foi possível iniciar o checkout: ${e?.message || "Erro desconhecido"}`);
       setLoadingPlan(null);
     }
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
