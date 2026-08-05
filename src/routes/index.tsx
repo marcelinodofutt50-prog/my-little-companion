@@ -19,7 +19,7 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
-import shadowMark from "@/assets/shadow-mask.png";
+import shadowMark from "@/assets/shadow-mark.png";
 import panelFixedAsset from "@/assets/panel-original-fixed.png.asset.json";
 const panelFixed = panelFixedAsset.url;
 
