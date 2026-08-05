@@ -1,7 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Copy, ServerCrash, ShieldCheck, Timer, Users, ArrowRight } from "lucide-react";
+import { Copy, ServerCrash, ShieldCheck, Timer, Users, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useServerFn } from "@tanstack/react-start";
+import { listMyLicenses } from "@/lib/license.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 const COUPON = "MIGRA";
 
