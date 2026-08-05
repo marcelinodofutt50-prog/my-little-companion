@@ -1557,17 +1557,31 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
 
       {hasBenefit && (
-        <ul className="mt-4 space-y-1 rounded-lg border border-primary/20 bg-primary/5 p-3 font-mono text-[11px]">
-          {b.discount > 0 && (
-            <li className="flex justify-between text-primary"><span>Desconto do cupom</span><span>-{formatBrl(b.discount)}</span></li>
-          )}
-          {b.cashbackApplied > 0 && (
-            <li className="flex justify-between text-primary"><span>Cashback usado</span><span>-{formatBrl(b.cashbackApplied)}</span></li>
-          )}
-          {b.cashbackEarn > 0 && (
-            <li className="flex justify-between text-primary/80"><span>Cashback estimado</span><span>+{formatBrl(b.cashbackEarn)}</span></li>
-          )}
-        </ul>
+        <div className="mt-5 space-y-2.5 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm backdrop-blur-[2px]">
+          <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-primary/70">
+            <Tag className="h-3 w-3" /> Resumo de Benefícios
+          </div>
+          <ul className="space-y-1.5 font-mono text-[10px]">
+            {b.discount > 0 && (
+              <li className="flex justify-between items-center text-primary">
+                <span className="opacity-80">Cupom Aplicado</span>
+                <span className="font-bold">-{formatBrl(b.discount)}</span>
+              </li>
+            )}
+            {b.cashbackApplied > 0 && (
+              <li className="flex justify-between items-center text-primary">
+                <span className="opacity-80">Saldo Cashback</span>
+                <span className="font-bold">-{formatBrl(b.cashbackApplied)}</span>
+              </li>
+            )}
+            {b.cashbackEarn > 0 && (
+              <li className="flex justify-between items-center text-primary/60">
+                <span className="opacity-70">Cashback Retorno</span>
+                <span>+{formatBrl(b.cashbackEarn)}</span>
+              </li>
+            )}
+          </ul>
+        </div>
       )}
 
       <div className="mt-6 flex-1" />
