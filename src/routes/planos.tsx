@@ -1427,11 +1427,11 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
   return (
     <div className={[
-      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-500",
+      "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-700",
       featured
-        ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] via-card/60 to-card/40 shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.35)] sm:scale-[1.02] z-10"
-        : "border-border/60 bg-card/50 hover:border-primary/30 hover:bg-card/70 hover:translate-y-[-4px]",
-      isLifetime ? "ring-1 ring-primary/30 shadow-[0_0_45px_-10px_oklch(0.78_0.13_82/0.45)]" : "",
+        ? "border-primary/40 bg-gradient-to-b from-primary/[0.08] via-card to-card shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.3)] sm:scale-[1.03] z-10"
+        : "border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/50 hover:-translate-y-1.5 shadow-lg shadow-black/20",
+      isLifetime ? "ring-2 ring-primary/20 shadow-[0_0_50px_-10px_oklch(0.78_0.13_82/0.4)]" : "",
     ].join(" ")}>
       {showUpgradeConfirm && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
