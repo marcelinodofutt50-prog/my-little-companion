@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
   HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight, ArrowLeftRight,
-  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield,
+  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield, AlertTriangle,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
@@ -147,6 +147,8 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Mantém seu histórico e servidor",
       "Prioridade no suporte após upgrade",
       "Libera Shadow Play Protect Builder",
+      "Economia real: não precisa pagar R$ 1.700 no valor cheio",
+      "Acesso ao servidor exclusivo de vitalícios",
     ],
   };
 
@@ -390,6 +392,85 @@ function PlansPage() {
   const [usage, setUsage] = useState<UsageFilter>("all");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showMore, setShowMore] = useState(false);
+  const [checkingEligibility, setCheckingEligibility] = useState(false);
+  const [myLicenses, setMyLicenses] = useState<any[]>([]);
+  const fetchMyLicenses = useServerFn(listMyLicenses);
+
+  useEffect(() => {
+    if (loggedIn) {
+      setCheckingEligibility(true);
+      fetchMyLicenses()
+        .then(setMyLicenses)
+        .catch(console.error)
+        .finally(() => setCheckingEligibility(false));
+    }
+  }, [loggedIn, fetchMyLicenses]);
+
+  function UpgradeEligibilityButton({ p, loading, onBuy }: { p: Plan; loading: boolean; onBuy: () => void }) {
+    const isEligible = myLicenses.some(l => 
+      ["monthly_457"].includes(l.plan_slug) && 
+      !l.is_trial && !l.revoked && !l.disabled_at && !l.suspended_at &&
+      (!l.expires_at || new Date(l.expires_at).getTime() > Date.now())
+    );
+
+    if (checkingEligibility) {
+      return (
+        <Button disabled className="w-full h-12">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Verificando elegibilidade...
+        </Button>
+      );
+    }
+
+    if (!isEligible && loggedIn) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-full">
+                <Button disabled className="w-full h-12 opacity-50 cursor-not-allowed grayscale bg-muted text-muted-foreground border-dashed">
+                  <Lock className="mr-2 h-4 w-4" />
+                  Upgrade Bloqueado
+                </Button>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[280px] p-4 bg-black border-amber-500/50 text-white shadow-xl">
+              <div className="space-y-2">
+                <p className="font-bold text-amber-500 flex items-center gap-2 text-xs uppercase tracking-tighter">
+                  <AlertTriangle className="h-3 w-3" /> Requisito não preenchido
+                </p>
+                <p className="text-[11px] leading-relaxed">
+                  Este upgrade exige uma assinatura <strong>Shadow 4.5.7 (Mensal)</strong> ativa e paga vinculada à sua conta.
+                </p>
+                <Link 
+                  to="/migracao" 
+                  className="block pt-2 text-[10px] font-bold text-primary hover:underline uppercase"
+                >
+                  Entender regras de migração →
+                </Link>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    return (
+      <Button
+        variant="outline"
+        className="w-full border-amber-500/50 text-amber-500 hover:bg-amber-500 hover:text-black font-serif text-base font-medium h-12 shadow-[0_0_15px_-5px_rgba(245,158,11,0.4)]"
+        onClick={onBuy}
+        disabled={loading}
+      >
+        {loading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <ArrowUpRight className="mr-2 h-4 w-4" />
+        )}
+        Migrar para Vitalício
+      </Button>
+    );
+  }
 
   const { licenses, servers, sources, upgrades, addons } = useMemo(() => {
     const seen = new Set<string>();
