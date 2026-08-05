@@ -97,7 +97,6 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
       "Acesso ao Shadow Signer (Play Protect Cloak & Shadow Bypass Dropper)",
-
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
@@ -111,7 +110,6 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Suporte via chat no painel",
       "Atualizações pagas à parte",
       "Acesso ao Shadow Signer (Bypass Automático & Dropper)",
-
     ],
     note: t("plan.monthly.note"),
   };
@@ -335,10 +333,15 @@ function PlansPage() {
           : undefined,
       } });
       markCheckoutIntent(slug);
-      window.location.href = r.initPoint;
+      
+      // Delay to ensure the loading state is visible before redirect
+      setTimeout(() => {
+        window.location.href = r.initPoint;
+      }, 500);
     } catch (e: any) {
       console.error("[CheckoutError]", e);
       toast.error(e?.message?.includes("Plano") ? e.message : `Não foi possível iniciar o checkout: ${e?.message || "Erro desconhecido"}`);
+      setLoadingPlan(slug === "none" ? null : null); // Trigger state refresh
       setLoadingPlan(null);
     }
   }, [loggedIn, navigate, checkoutFn, couponValid, useCash, cashbackBalance, referralValid, referral, giftOn, giftEmail, giftMessage]);
@@ -700,16 +703,75 @@ function PlansPage() {
             {licenses.filter(p => usageOf(p) === "monthly" || usageOf(p) === "lifetime")
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
               .map((p) => (
-                <PlanCard
-                  key={p.slug}
-                  plan={p}
-                  coupon={couponValid}
-                  cashback={cashbackBalance}
-                  useCash={useCash}
-                  isLoading={loadingPlan === p.slug}
-                  onBuy={buy}
-                  featured={p.slug === "login-lifetime"}
-                />
+                <div key={p.slug} className="flex flex-col gap-4">
+                  <PlanCard
+                    plan={p}
+                    coupon={couponValid}
+                    cashback={cashbackBalance}
+                    useCash={useCash}
+                    isLoading={loadingPlan === p.slug}
+                    onBuy={buy}
+                    featured={p.slug === "login-lifetime"}
+                  />
+                  
+                  {/* Categorized Quick Links below the main cards as requested */}
+                  <div className="space-y-2 rounded-xl border border-border/40 bg-card/30 p-4">
+                    <div className="font-mono text-[8px] uppercase tracking-widest text-muted-foreground/60 border-b border-border/20 pb-1.5 mb-2">
+                      // extensões e serviços
+                    </div>
+                    
+                    {/* Exibe Renovação de Servidor */}
+                    {servers.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-between h-8 px-2 text-[10px] font-mono hover:bg-primary/10 hover:text-primary transition-colors group/btn"
+                        onClick={() => buy(servers[0].slug)}
+                        disabled={loadingPlan === servers[0].slug}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Server className="h-3 w-3 opacity-60" />
+                          <span>RENOVAR SERVIDOR</span>
+                        </div>
+                        {loadingPlan === servers[0].slug ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />}
+                      </Button>
+                    )}
+
+                    {/* Exibe Play Protect / Signer */}
+                    {addons.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-between h-8 px-2 text-[10px] font-mono hover:bg-primary/10 hover:text-primary transition-colors group/btn"
+                        onClick={() => buy(addons[0].slug)}
+                        disabled={loadingPlan === addons[0].slug}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-3 w-3 opacity-60" />
+                          <span>PLAY PROTECT MENSAL</span>
+                        </div>
+                        {loadingPlan === addons[0].slug ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />}
+                      </Button>
+                    )}
+
+                    {/* Exibe Upgrade (se aplicável para este plano ou em geral) */}
+                    {upgrades.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-between h-8 px-2 text-[10px] font-mono hover:bg-primary/10 hover:text-primary transition-colors group/btn"
+                        onClick={() => buy(upgrades[0].slug)}
+                        disabled={loadingPlan === upgrades[0].slug}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ArrowUpRight className="h-3 w-3 opacity-60" />
+                          <span>MIGRAR PARA 4.6</span>
+                        </div>
+                        {loadingPlan === upgrades[0].slug ? <Loader2 className="h-3 w-3 animate-spin" /> : <ChevronRight className="h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ))}
           </div>
         </div>
@@ -1138,7 +1200,7 @@ function FaqSection() {
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
     { q: "E se algo falhar na criação?", a: "Se houver qualquer erro na provisão, você vê um botão 'Tentar novamente' no dashboard e o suporte é acionado automaticamente. Nenhum pagamento fica sem licença — garantia de reembolso integral em caso de falha." },
     { q: "Como funciona a taxa do dia 20?", a: "Todo dia 20 há renovação da infraestrutura VPS. Se não for paga, o acesso é suspenso automaticamente até a nova renovação. O custo fixo de manutenção é de R$ 450 para todos os planos." },
-    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: "Os preços oficiais são: Shadow 4.5.5 (Trial) por R$ 450, Plano Mensal (4.5.7) por R$ 750, Plano Vitalício (4.6) por R$ 1.600, Shadow Bypass (Signer) por R$ 450 e a taxa de manutenção do servidor por R$ 450." },
+    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: "Os preços oficiais são: Shadow 4.5.5 (Trial) por R$ 450, Plano Mensal (4.5.7) por R$ 750, Plano Vitalício (4.6) por R$ 1.700, Shadow Bypass (Signer) por R$ 450 e a taxa de manutenção do servidor por R$ 450." },
     { q: "Posso trocar de plano depois?", a: "Sim. Cliente v4.5.7 pode fazer upgrade para v4.6 vitalício — o processo é automático e mantém seu histórico de ativações." },
     { q: "O cupom BTMOB40 é seguro?", a: "Sim. Ele dá 40% de cashback no primeiro depósito, que fica no seu saldo e pode ser usado em compras futuras (limitado a 50% do valor de cada compra)." },
     { q: "Vocês emitem nota?", a: "Sim, o comprovante oficial do Mercado Pago é emitido no ato do pagamento e enviado por email pela própria operadora." },
