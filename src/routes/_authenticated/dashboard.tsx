@@ -328,8 +328,8 @@ function DashboardPage() {
                     <SupportDiagnosticButton
                       licenses={licenses as any[]}
                       error={licensesError}
-                      context="Painel do cliente — seção Minhas licenças"
-                      label="Reportar problema"
+                      context="Painel do cliente — seção Status Operacional"
+                      label="Reportar Incidente"
                     />
                     <KeyRound className="h-5 w-5 text-primary" />
                   </div>
