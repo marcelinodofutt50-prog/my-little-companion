@@ -859,13 +859,26 @@ function PlansPage() {
 
         </div>
 
-        {licenses.length === 0 && (
-          <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground" title="as vezes buga e os planos somem">
-            Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
-            <button type="button" onClick={() => setUsage("all")} className="text-primary underline underline-offset-4">
-              Ver todos os planos
-            </button>
-          </p>
+        {plans.length === 0 ? (
+          <div className="mb-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/30 bg-primary/5 p-12 text-center">
+            <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary/40" />
+            <h3 className="text-lg font-semibold">Carregando planos...</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Se os planos não aparecerem em 5 segundos, tente atualizar a página.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="mt-6">
+              Recarregar Página
+            </Button>
+          </div>
+        ) : (
+          licenses.filter(p => usage === "all" || usageOf(p) === usage).length === 0 && (
+            <p className="mb-12 rounded-xl border border-border/50 bg-card/40 p-6 text-center text-sm text-muted-foreground">
+              Nenhuma licença {usage === "monthly" ? "mensal" : "vitalícia"} disponível no momento.{" "}
+              <button type="button" onClick={() => setUsage("all")} className="text-primary underline underline-offset-4">
+                Ver todos os planos
+              </button>
+            </p>
+          )
         )}
 
         {secondaryCount > 0 && !showMore && (
