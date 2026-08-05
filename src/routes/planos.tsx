@@ -264,7 +264,21 @@ function PlansPage() {
   const validateRefFn = useServerFn(validateReferralCode);
 
   useEffect(() => {
-    supabase.from("plans").select("*").eq("active", true).order("sort_order").then(({ data }) => setPlans((data ?? []) as Plan[]));
+    const fetchPlans = async () => {
+      try {
+        const { data, error } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
+        if (error) throw error;
+        setPlans((data ?? []) as Plan[]);
+      } catch (err) {
+        console.error("[PlansLoadError] Retrying...", err);
+        // Retry once after 2s if it fails
+        setTimeout(async () => {
+          const { data } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
+          if (data) setPlans(data as Plan[]);
+        }, 2000);
+      }
+    };
+    fetchPlans();
     supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
