@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles } from "lucide-react"
+import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles, ArrowLeft } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -271,80 +271,18 @@ function KrakenPage() {
       {/* Lightning and flashing effects removed per user request to stop white screen flashes */}
 
 
-
-      {/* Settings Panel Overlay */}
-      <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-3">
-        <div className="flex flex-col gap-3 bg-black/80 backdrop-blur-xl border border-red-900/30 p-4 rounded-xl shadow-2xl shadow-red-900/20 w-64 kraken-fade-in">
-          <div className="flex items-center justify-between border-b border-red-900/20 pb-2 mb-2">
-            <span className="text-[10px] font-mono font-bold text-red-500 uppercase tracking-widest">System Params</span>
-            <div className="flex items-center gap-1">
-              <div className="h-1 w-1 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[8px] font-mono text-white/40 uppercase">Ajuste tático</span>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {/* Intensity Control */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-3 w-3 text-amber-500" />
-                  <span className="text-[10px] font-mono text-white/60 uppercase">Raios (Intensity)</span>
-                </div>
-                <span className="text-[10px] font-mono text-white/40">{Math.round(intensity * 100)}%</span>
-              </div>
-              <Slider 
-                value={[intensity * 100]} 
-                min={0} 
-                max={100} 
-                step={1} 
-                onValueChange={(val) => setIntensity(val[0] / 100)}
-                className="cursor-pointer"
-              />
-            </div>
-
-            {/* Audio Delay Calibration */}
-            <div className="space-y-2 pt-2 border-t border-red-900/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-3 w-3 text-emerald-500" />
-                  <span className="text-[10px] font-mono text-white/60 uppercase">Audio Sync (Delay)</span>
-                </div>
-                <span className="text-[10px] font-mono text-white/40">{audioDelay}ms</span>
-              </div>
-              <Slider 
-                value={[audioDelay]} 
-                min={-500} 
-                max={500} 
-                step={10} 
-                onValueChange={(val) => setAudioDelay(val[0])}
-                className="cursor-pointer"
-              />
-              <p className="text-[8px] font-mono text-white/20 uppercase tracking-tighter">Ajuste se o som estiver atrasado ou adiantado</p>
-            </div>
-
-            {/* Audio Toggle */}
-            <div className="flex items-center justify-between group pt-2 border-t border-red-900/10">
-              <div className="flex items-center gap-2">
-                <Volume2 className={cn("h-3 w-3 transition-colors", isMuted ? "text-white/20" : "text-red-500 animate-pulse")} />
-                <span className="text-[10px] font-mono text-white/60 uppercase">Audio Engine</span>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setIsMuted(!isMuted)}
-                className={cn(
-                  "h-7 px-3 text-[9px] font-mono uppercase border transition-all",
-                  isMuted 
-                    ? "text-white/40 border-white/10 hover:bg-white/5" 
-                    : "text-red-500 border-red-500/30 bg-red-500/10 hover:bg-red-500/20"
-                )}
-              >
-                {isMuted ? "Disabled" : "Operational"}
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Navigation back to Dashboard */}
+      <div className="absolute top-4 right-4 z-50">
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="font-mono text-[10px] uppercase tracking-widest border-red-900/40 bg-black/70 backdrop-blur-md hover:bg-red-500/10 hover:text-red-500"
+        >
+          <Link to="/dashboard">
+            <ArrowLeft className="h-3 w-3 mr-2" /> Voltar ao Dashboard
+          </Link>
+        </Button>
       </div>
 
       <div className="relative z-20 space-y-6">
