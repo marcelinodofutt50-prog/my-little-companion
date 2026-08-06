@@ -82,6 +82,9 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
+        // Toggle intensity slightly to force DOM recalculation
+        setIntensity(prev => prev === 1 ? 0.99 : 1);
+        
         if (audioDelay === 0) {
           playThunderEffect();
         } else {
