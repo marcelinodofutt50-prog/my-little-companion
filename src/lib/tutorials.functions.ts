@@ -12,14 +12,35 @@ export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<any[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("tutorials")
-      .select("*")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
-    if (error) throw new Error(error.message);
-    return (data ?? []) as any[];
+    
+    const MAX_RETRIES = 3;
+    let lastError = null;
+    
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const delay = Math.pow(2, attempt) * 500 + Math.random() * 200;
+        console.log(`[tutorials] Retry attempt ${attempt} after ${delay.toFixed(0)}ms due to schema/cache error`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      const { data, error } = await supabaseAdmin
+        .from("tutorials")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+        
+      if (!error) return (data ?? []) as any[];
+      
+      lastError = error;
+      const isSchemaError = error.message?.includes("relation \"public.tutorials\" does not exist") || 
+                           error.message?.includes("public.tutorials' in the schema cache");
+                           
+      if (!isSchemaError) break;
+    }
+    
+    throw new Error(lastError?.message || "Erro desconhecido ao carregar tutoriais");
   });
+
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
