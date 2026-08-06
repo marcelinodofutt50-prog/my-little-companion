@@ -28,7 +28,7 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Alterado para true para exigir interação explícita ou manual
+  const [isMuted, setIsMuted] = useState(true); // Silenciado por padrão para evitar bloqueio de autoplay do navegador
   const [intensity, setIntensity] = useState(1);
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
@@ -82,6 +82,9 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
+        // Toggle intensity slightly to force DOM recalculation
+        setIntensity(prev => prev === 1 ? 0.99 : 1);
+        
         if (audioDelay === 0) {
           playThunderEffect();
         } else {
@@ -196,13 +199,14 @@ function KrakenPage() {
       </AnimatePresence>
 
       {showEffects && (
-        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+        <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
           {/* Main Lightning Strike */}
           <div 
             className="animate-lightning" 
             style={{ 
               '--lightning-opacity': intensity,
-              background: bgLoadError ? 'rgba(255,255,255,0.05)' : undefined
+              background: bgLoadError ? 'rgba(255,255,255,0.05)' : undefined,
+              animation: 'lightning-strike 4s infinite both'
             } as React.CSSProperties}
           />
           

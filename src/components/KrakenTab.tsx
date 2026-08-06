@@ -49,15 +49,16 @@ export function KrakenTab({ onNavigate }: { onNavigate?: () => void }) {
   const [flash, setFlash] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const trigger = useCallback(() => {
+  const trigger = useCallback((e: React.MouseEvent) => {
+    // Force immediate navigation to ensure reliability
     setLoading(true);
     setFlash(true);
     playThunder();
+    
+    // Safety: ensure we navigate even if Link component has issues
     if (onNavigate) onNavigate();
     
-    // Reset flash after animation, but loading stays until unmount or long timeout
     setTimeout(() => setFlash(false), 900);
-    // Safety timeout to reset loading if navigation fails
     setTimeout(() => setLoading(false), 5000);
   }, [onNavigate]);
 
@@ -68,7 +69,9 @@ export function KrakenTab({ onNavigate }: { onNavigate?: () => void }) {
           <TooltipTrigger asChild>
             <Link
               to="/servidor/kraken"
-              onClick={trigger}
+              onClick={(e) => {
+                trigger(e);
+              }}
               className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none group flex items-center gap-2"
             >
               <span
