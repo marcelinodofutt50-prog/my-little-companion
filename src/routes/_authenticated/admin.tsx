@@ -4514,7 +4514,7 @@ function LegacyClientsPanel({ licenses, onChanged }: { licenses: any[]; onChange
           </>
         )}
       </div>
-    </div>
+      </motion.div>
   );
 }
 
