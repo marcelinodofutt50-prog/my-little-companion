@@ -1,0 +1,58 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { checkRateLimit, recordAttempt } from "./rate-limit.server";
+import { maskEmail } from "./antifraud.server";
+
+/**
+ * Public security check for sensitive auth actions.
+ * Used by the client to verify if they are rate limited before attempting Supabase Auth.
+ */
+export const checkAuthSecurity = createServerFn({ method: "POST" })
+  .inputValidator((input: { email: string; action: 'login' | 'signup' | 'recovery' }) => 
+    z.object({
+      email: z.string().email(),
+      action: z.enum(['login', 'signup', 'recovery'])
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    // Default configs
+    const configs = {
+      login: { max: 5, window: 5 * 60 * 1000 }, // 5 attempts per 5 mins
+      signup: { max: 3, window: 60 * 60 * 1000 }, // 3 attempts per hour (IP level checked elsewhere too)
+      recovery: { max: 3, window: 15 * 60 * 1000 }, // 3 recoveries per 15 mins
+    };
+
+    const config = configs[data.action];
+    const rl = await checkRateLimit({
+      key: data.action,
+      maxAttempts: config.max,
+      windowMs: config.window
+    });
+
+    if (!rl.allowed) {
+      await recordAttempt(data.action, "blocked", maskEmail(data.email));
+      return { 
+        allowed: false, 
+        message: `Muitas tentativas de ${data.action}. Tente novamente em ${Math.ceil(rl.retryAfter / 60)} minutos.`,
+        retryAfter: rl.retryAfter
+      };
+    }
+
+    return { allowed: true };
+  });
+
+/**
+ * Records a successful or failed auth attempt for security auditing.
+ */
+export const reportAuthOutcome = createServerFn({ method: "POST" })
+  .inputValidator((input: { email: string; action: 'login' | 'signup' | 'recovery'; success: boolean }) => 
+    z.object({
+      email: z.string().email(),
+      action: z.enum(['login', 'signup', 'recovery']),
+      success: z.boolean()
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    await recordAttempt(data.action, data.success ? "success" : "failure", maskEmail(data.email));
+    return { ok: true };
+  });
