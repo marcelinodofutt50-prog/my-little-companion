@@ -16,7 +16,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      .order("display_order", { ascending: true });
     if (error) throw new Error(error.message);
     return (data ?? []) as any[];
   });
@@ -32,6 +32,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
       youtube_url: z.string().url().optional(),
       category: z.string().optional(),
       is_active: z.boolean().default(true),
+      display_order: z.number().int().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
