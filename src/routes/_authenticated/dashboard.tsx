@@ -310,7 +310,7 @@ function DashboardPage() {
                       error={(licenses as any)?._schemaError} 
                       context="Dashboard - Erro de Schema (Table Missing)"
                       label="Reportar Erro"
-                      variant="destructive"
+                      variant="outline"
                     />
                   </CardContent>
                 </Card>
