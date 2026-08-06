@@ -28,7 +28,7 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false); // Inicia como "Operational" para garantir o som
   const [intensity, setIntensity] = useState(1);
   const [audioDelay, setAudioDelay] = useState(0); // Delay em milissegundos
 
