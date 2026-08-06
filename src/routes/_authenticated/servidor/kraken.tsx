@@ -205,7 +205,8 @@ function KrakenPage() {
             className="animate-lightning" 
             style={{ 
               '--lightning-opacity': intensity,
-              background: bgLoadError ? 'rgba(255,255,255,0.05)' : undefined
+              background: bgLoadError ? 'rgba(255,255,255,0.05)' : undefined,
+              animation: 'lightning-strike 4s infinite'
             } as React.CSSProperties}
           />
           
