@@ -207,17 +207,6 @@ function KrakenPage() {
           />
         </div>
       )}
-          
-          {/* Global Screen Flash */}
-          <div 
-            className="absolute inset-0 bg-white/20 opacity-0 mix-blend-overlay pointer-events-none"
-            style={{ 
-              animation: 'lightning-strike 5s infinite',
-              animationDelay: '0.05s'
-            }}
-          />
-        </div>
-      )}
 
 
 
