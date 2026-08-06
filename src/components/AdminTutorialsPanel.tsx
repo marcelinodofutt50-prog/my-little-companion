@@ -284,6 +284,52 @@ export function AdminTutorialsPanel() {
               </div>
 
 
+            {(current.video_url || current.youtube_url || current.image_url) && (
+              <div className="grid gap-4 md:grid-cols-2 mt-4 p-4 rounded-lg bg-black/20 border border-primary/10">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Preview da Mídia</label>
+                  <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center">
+                    {current.youtube_url ? (
+                      <iframe 
+                        src={`https://www.youtube.com/embed/${current.youtube_url.includes('v=') ? current.youtube_url.split('v=')[1].split('&')[0] : current.youtube_url.split('/').pop()}`}
+                        className="w-full h-full"
+                        allowFullScreen
+                      />
+                    ) : current.video_url ? (
+                      <video 
+                        src={current.video_url} 
+                        controls 
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-muted-foreground/30 flex flex-col items-center">
+                        <Video className="h-8 w-8 mb-2" />
+                        <span className="text-[10px]">Nenhum vídeo selecionado</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Preview da Capa</label>
+                  <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center">
+                    {current.image_url ? (
+                      <img 
+                        src={current.image_url} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-muted-foreground/30 flex flex-col items-center">
+                        <ImageIcon className="h-8 w-8 mb-2" />
+                        <span className="text-[10px]">Nenhuma capa selecionada</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
               <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }}>
                 Cancelar
