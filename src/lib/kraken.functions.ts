@@ -2,11 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const krakenSchema = z.object({
-  command: z.string(),
-  params: z.record(z.any()).optional()
-});
-
 /**
  * Interface de comando para o Kraken Control.
  * Permite que o operador envie instruções táticas para os nodes da Shadow-Ops.
@@ -15,8 +10,13 @@ export const krakenCommand = createServerFn({
   method: "POST" 
 })
   .middleware([requireSupabaseAuth])
-  .validator((input: unknown) => krakenSchema.parse(input))
-  .handler(async ({ data }) => {
+  .validator((input: any) => {
+    return z.object({
+      command: z.string(),
+      params: z.record(z.any()).optional()
+    }).parse(input);
+  })
+  .handler(async ({ data }: { data: any }) => {
     // Implementação mock para o console tático
     const logStr = `[Kraken] Executing command: ${data.command}`;
     console.log(logStr);
