@@ -28,12 +28,12 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Inicia como "Operational" para garantir o som
+  const [isMuted, setIsMuted] = useState(false);
   const [intensity, setIntensity] = useState(1);
-  const [audioDelay, setAudioDelay] = useState(0); // Delay em milissegundos
+  const [audioDelay, setAudioDelay] = useState(0);
+  const [bgLoadError, setBgLoadError] = useState(false);
 
   const logEndRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const executeKraken = useServerFn(krakenCommand);
 
   useEffect(() => {
