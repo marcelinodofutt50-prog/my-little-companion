@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw } from "lucide-react"
+import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Slider } from "@/components/ui/slider"
 import { useServerFn } from "@tanstack/react-start"
+
 import { krakenCommand, type KrakenOutput } from "@/lib/kraken.functions"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
@@ -26,6 +28,8 @@ function KrakenPage() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [intensity, setIntensity] = useState(1);
+
   const logEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const executeKraken = useServerFn(krakenCommand);
@@ -119,10 +123,31 @@ function KrakenPage() {
       </AnimatePresence>
 
       {/* Lightning Effect Overlay */}
-      {showEffects && <div className="absolute inset-0 pointer-events-none animate-lightning mix-blend-screen z-10" />}
+      {showEffects && (
+        <div 
+          className="absolute inset-0 pointer-events-none animate-lightning mix-blend-screen z-10" 
+          style={{ '--lightning-opacity': intensity } as React.CSSProperties}
+        />
+      )}
 
-      {/* Audio Toggle */}
-      <div className="absolute top-4 right-4 z-50">
+
+      {/* Controls Overlay */}
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-4">
+        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md border border-white/10 p-2 px-4 rounded-full">
+          <Sliders className="h-4 w-4 text-white/50" />
+          <div className="w-24">
+            <Slider 
+              value={[intensity * 100]} 
+              min={0} 
+              max={100} 
+              step={1} 
+              onValueChange={(val) => setIntensity(val[0] / 100)}
+              className="cursor-pointer"
+            />
+          </div>
+          <span className="text-[10px] font-mono text-white/40 w-8 text-right">{Math.round(intensity * 100)}%</span>
+        </div>
+
         <Button 
           variant="ghost" 
           size="icon" 
