@@ -87,7 +87,8 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
               {primary.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.tKey ? t(item.tKey) : item.title}>
-                    <Link to={item.url} className="flex items-center gap-2.5">
+                    <Link to={item.url} className="flex items-center gap-2.5 w-full h-full">
+
                       <item.icon className="h-4 w-4" />
                       {!collapsed && (
                         <span className={cn(
