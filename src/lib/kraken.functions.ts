@@ -8,7 +8,7 @@ import { z } from "zod";
  */
 export const krakenCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => 
+  .validator((input: unknown) => 
     z.object({
       command: z.string(),
       params: z.record(z.any()).optional()
