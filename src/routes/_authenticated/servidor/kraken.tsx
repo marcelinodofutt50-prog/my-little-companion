@@ -46,6 +46,7 @@ function KrakenPage() {
   const [intensity, setIntensity] = useState(0.4); 
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
+  const [bgLoaded, setBgLoaded] = useState({ core: false, bg4: false, bg5: false });
 
   const logEndRef = useRef<HTMLDivElement>(null);
   const executeKraken = useServerFn(krakenCommand);
@@ -59,6 +60,28 @@ function KrakenPage() {
   });
 
   useEffect(() => {
+    // Verificação automática de renderização de imagens (Prefetch)
+    const imagesToPrefetch = [
+      { key: 'core', url: krakenCore },
+      { key: 'bg4', url: krakenBg4 },
+      { key: 'bg5', url: krakenBg5 }
+    ];
+
+    imagesToPrefetch.forEach(imgInfo => {
+      const img = new Image();
+      img.src = imgInfo.url;
+      img.onload = () => {
+        setBgLoaded(prev => ({ ...prev, [imgInfo.key]: true }));
+      };
+      img.onerror = () => {
+        console.warn(`Kraken: Falha ao carregar ${imgInfo.key}, aplicando fallback.`);
+        // Se falhar o core, tentamos o fallback manual imediatamente
+        if (imgInfo.key === 'core') {
+          setBgLoaded(prev => ({ ...prev, core: true })); // Marcamos como carregado para mostrar o fallback se necessário
+        }
+      };
+    });
+
     const timer = setTimeout(() => setShowEffects(true), 500);
     
     // Web Audio API context para reprodução mais robusta
@@ -190,7 +213,7 @@ function KrakenPage() {
             {/* Camada Base Central (Fixa para evitar tela preta) */}
             <motion.div 
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.8 }}
+              animate={{ opacity: bgLoaded.core ? 0.8 : 0 }}
               className="absolute inset-0 pointer-events-none"
               style={{ 
                 backgroundImage: `url(${krakenCore})`, 
@@ -200,31 +223,43 @@ function KrakenPage() {
               }}
             />
 
+            {/* Fallback imediato se o core demorar muito (mais de 2s) ou falhar */}
+            <AnimatePresence>
+              {!bgLoaded.core && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.4 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 pointer-events-none bg-gradient-to-br from-red-950/40 via-black to-black z-[1]"
+                />
+              )}
+            </AnimatePresence>
+
             {!bgLoadError && (
               <>
                 <motion.div 
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.5 }}
+                  animate={{ opacity: bgLoaded.bg4 ? 0.5 : 0 }}
                   className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
                   style={{ 
                     backgroundImage: `url(${krakenBg4})`, 
                     backgroundSize: 'cover', 
                     backgroundPosition: 'center',
-                    zIndex: 1
+                    zIndex: 2
                   }}
                   onError={() => setBgLoadError(true)}
                 />
 
                 <motion.div 
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.3 }}
+                  animate={{ opacity: bgLoaded.bg5 ? 0.3 : 0 }}
                   transition={{ delay: 1 }}
                   className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
                   style={{ 
                     backgroundImage: `url(${krakenBg5})`, 
                     backgroundSize: 'cover', 
                     backgroundPosition: 'center',
-                    zIndex: 2
+                    zIndex: 3
                   }}
                   onError={() => setBgLoadError(true)}
                 />
