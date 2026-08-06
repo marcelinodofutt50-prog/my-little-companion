@@ -156,6 +156,34 @@ function Index() {
           </motion.div>
         </div>
       </section>
+      
+      {/* Enterprise Differential Section */}
+      <section className="py-20 relative bg-black/40">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center mb-16">
+            <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">// diferenciais táticos</span>
+            <h2 className="text-3xl md:text-5xl font-bold mt-4 tracking-tighter">O que nos torna <span className="italic text-primary">indetectáveis.</span></h2>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
+              <Shield className="h-10 w-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
+              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">Shadow Signer</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Assinatura V2/V3 com ofuscação polimórfica que engana as heurísticas do Play Protect em tempo real.</p>
+            </div>
+            <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
+              <Zap className="h-10 w-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
+              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">Fast Injection</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Provisionamento de infraestrutura VPS dedicada em menos de 60 segundos após o PIX Mercado Pago.</p>
+            </div>
+            <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
+              <Lock className="h-10 w-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
+              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">AES-256 Ops</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Todas as suas credenciais e logs de operação são blindados com criptografia de nível militar ponta-a-ponta.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Enterprise Management Section - Integrated Real UI Elements */}
 
