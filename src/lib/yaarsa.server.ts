@@ -351,7 +351,9 @@ function friendlyYaarsaFail(message: string): string {
   if (/devolveu HTML/i.test(m))
     return "O painel devolveu uma página HTML (status 200/404 em vez de JSON). Provavelmente o endereço ou a rota proxy está incorreta.";
   if (/falha de rede/i.test(m))
-    return "Falha de rede ao contatar o painel. Verifique se a VPS está online.";
+    return "Falha de rede ao contatar o servidor de autenticação. Verifique se o servidor está online ou tente novamente em instantes.";
+  if (/Nenhum painel respondeu/i.test(m))
+    return "O servidor de autenticação está temporariamente indisponível. A operação foi registrada e será processada assim que a conexão for reestabelecida.";
   return m;
 }
 
