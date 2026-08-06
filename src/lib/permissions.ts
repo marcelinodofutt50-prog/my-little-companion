@@ -35,12 +35,12 @@ export type Capability =
   | "referral.pay"
   | "market.edit" | "updates.publish"
   | "announcements.create" | "announcements.approve" | "announcements.publish"
-  | "staff.manage" | "system.selftest";
+  | "staff.manage" | "system.selftest" | "tutorials.manage";
 
 const SUPPORT_CAPS: Capability[] = [
   "view.overview", "view.chat", "view.apk", "view.users", "view.orders", "view.licenses",
   "chat.reply", "chat.assume", "chat.close", "apk.manage",
-  "announcements.create",
+  "announcements.create", "tutorials.manage",
 ];
 
 const ALL_CAPS: Capability[] = [
@@ -63,6 +63,8 @@ export function can(role: Role | null | undefined, cap: Capability): boolean {
   if (!role) return false;
   return ROLE_CAPS[role]?.includes(cap) ?? false;
 }
+
+SECTION_CAP.tutorials = "tutorials.manage";
 
 /** Seção do painel -> capacidade mínima para enxergar. */
 export const SECTION_CAP: Record<string, Capability> = {
@@ -139,6 +141,12 @@ export const MATRIX_ROWS: { group: string; items: { cap: Capability; label: stri
       { cap: "announcements.create", label: "Criar rascunhos de comunicados" },
       { cap: "announcements.approve", label: "Revisar e aprovar comunicados" },
       { cap: "announcements.publish", label: "Publicar comunicados (site-wide)" },
+    ],
+  },
+  {
+    group: "Conteúdo",
+    items: [
+      { cap: "tutorials.manage", label: "Gerenciar Centro de Treinamento", note: "Vídeos e fotos" },
     ],
   },
 ];
