@@ -125,10 +125,10 @@ export function OnboardingChecklist({
 
   // Concluiu tudo? mostra o "parabéns" por alguns segundos e some de vez.
   useEffect(() => {
-    if (!allDone || dismissed) return;
-    const t = setTimeout(() => hideForGood(), 6000);
+    if (!allDone || dismissed || (doneCount as number) === 0) return;
+    const t = setTimeout(() => hideForGood(), 8000);
     return () => clearTimeout(t);
-  }, [allDone, dismissed]);
+  }, [allDone, dismissed, doneCount]);
 
   if (dismissed) return null;
 
@@ -175,10 +175,10 @@ export function OnboardingChecklist({
               type="button"
               title={step.hint}
               onClick={() => runStep(step.id)}
-              className={`flex items-center gap-2.5 rounded-md border px-3 py-2.5 text-left font-mono text-xs transition-colors ${
+              className={`group flex items-center gap-2.5 rounded-md border px-3 py-2.5 text-left font-mono text-xs transition-all duration-300 ${
                 isDone
-                  ? "border-neon/40 bg-neon/10 text-neon"
-                  : "border-border/40 bg-background/40 text-muted-foreground hover:border-neon/30 hover:text-foreground"
+                  ? "border-neon/40 bg-neon/10 text-neon shadow-[0_0_10px_rgba(var(--neon),0.05)]"
+                  : "border-border/40 bg-background/40 text-muted-foreground hover:border-neon/30 hover:bg-neon/5 hover:text-foreground hover:shadow-[0_0_15px_rgba(var(--neon),0.1)]"
               }`}
             >
               {isDone ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <Circle className="h-4 w-4 shrink-0" />}

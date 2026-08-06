@@ -264,11 +264,16 @@ function DashboardPage() {
                 <TrialActivationCard onDone={() => void refetchLicenses()} />
               )}
 
-              <OnboardingChecklist
-                hasActiveLicense={!!activeLicense}
-                onGoToLicense={() => {}}
-                onCopyCredentials={() => { copyPrimary(); return !!primary }}
-              />
+              {licenses && licenses.length > 0 && (
+                <OnboardingChecklist
+                  hasActiveLicense={!!activeLicense}
+                  onGoToLicense={() => {
+                    const el = document.getElementById("status-operacional");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  onCopyCredentials={() => { copyPrimary(); return !!primary }}
+                />
+              )}
 
               {activeLicense && (
                 <section className="enterprise-surface overflow-hidden" aria-labelledby="usage-title">
