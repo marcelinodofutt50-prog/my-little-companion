@@ -372,13 +372,25 @@ function KrakenPage() {
               transition={{ delay: 1 }}
               className="p-4 rounded border border-red-500/20 bg-red-500/5 text-[10px] text-white/80 font-mono space-y-2"
             >
-              <div className="font-bold text-red-400 uppercase tracking-wider border-b border-red-500/20 pb-1 mb-2">Diferenciais Elite:</div>
-              <ul className="grid grid-cols-1 gap-1.5 list-disc pl-4">
-                <li>Apk simples e fácil de criar</li>
-                <li>Kraken Dropper integrado</li>
-                <li>Nova interface tática simplificada</li>
-                <li>Criação personalizada de Tela Preta</li>
-                <li>Módulos: Nubank, Caixa e Itaú</li>
+              <div className="font-bold text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Diferenciais de Elite:
+              </div>
+              <ul className="grid grid-cols-1 gap-3">
+                {[
+                  { t: "Bypass Heurístico IA", d: "Supera as novas detecções automáticas que a Btmob não alcança." },
+                  { t: "Dropper Polimórfico", d: "O código do APK muda a cada build, impossibilitando assinaturas de antivírus." },
+                  { t: "Painel Multi-alvo", d: "Interface otimizada para gerenciar múltiplos bancos em uma única tela." },
+                  { t: "Instalação Stealth", d: "Processo de infecção 70% mais rápido e com menos alertas de sistema." }
+                ].map((item, idx) => (
+                  <li key={idx} className="flex gap-3 items-start border-l border-red-500/10 pl-3">
+                    <div className="h-1.5 w-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                    <div>
+                      <div className="text-white font-bold uppercase tracking-tighter text-[11px]">{item.t}</div>
+                      <div className="text-white/50 text-[10px] leading-tight mt-0.5">{item.d}</div>
+                    </div>
+                  </li>
+                ))}
               </ul>
               <p className="mt-3 text-[9px] text-muted-foreground italic border-t border-white/5 pt-2">
                 [NOTE] Ticket de prioridade máxima automático após aquisição.
