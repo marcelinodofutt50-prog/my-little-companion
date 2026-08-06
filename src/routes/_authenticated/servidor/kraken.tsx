@@ -18,6 +18,11 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json"
 const krakenBg4 = krakenBg4Asset.url
 const krakenBg5 = krakenBg5Asset.url
 
+// Fallback manual URLs if asset references fail in some environments
+const FALLBACK_BG4 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
+const FALLBACK_BG5 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-5.png";
+
+
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
   component: KrakenPage,
 })
@@ -182,26 +187,42 @@ function KrakenPage() {
               animate={{ opacity: 0.5 }}
               className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
               style={{ 
-                backgroundImage: `url(${krakenBg4})`, 
+                backgroundImage: `url(${krakenBg4}), url(${FALLBACK_BG4})`, 
                 backgroundSize: 'cover', 
                 backgroundPosition: 'center',
                 zIndex: 0
               }}
-              onError={() => setBgLoadError(true)}
+              onError={(e) => {
+                const target = e.target as HTMLDivElement;
+                if (target.style.backgroundImage.includes(krakenBg4)) {
+                   target.style.backgroundImage = `url(${FALLBACK_BG4})`;
+                } else {
+                   setBgLoadError(true);
+                }
+              }}
             />
+
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.3 }}
               transition={{ delay: 1 }}
               className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
               style={{ 
-                backgroundImage: `url(${krakenBg5})`, 
+                backgroundImage: `url(${krakenBg5}), url(${FALLBACK_BG5})`, 
                 backgroundSize: 'cover', 
                 backgroundPosition: 'center',
                 zIndex: 1
               }}
-              onError={() => setBgLoadError(true)}
+              onError={(e) => {
+                const target = e.target as HTMLDivElement;
+                if (target.style.backgroundImage.includes(krakenBg5)) {
+                   target.style.backgroundImage = `url(${FALLBACK_BG5})`;
+                } else {
+                   setBgLoadError(true);
+                }
+              }}
             />
+
           </>
         )}
         {showEffects && bgLoadError && (
