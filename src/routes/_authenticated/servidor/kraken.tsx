@@ -10,6 +10,8 @@ import { createCheckout } from "@/lib/checkout.functions"
 import { krakenCommand, type KrakenOutput } from "@/lib/kraken.functions"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
+import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json"
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json"
@@ -38,6 +40,13 @@ function KrakenPage() {
   const logEndRef = useRef<HTMLDivElement>(null);
   const executeKraken = useServerFn(krakenCommand);
   const checkoutFn = useServerFn(createCheckout);
+  const fetchStatus = useServerFn(getKrakenStatus);
+
+  const { data: krakenStatus, refetch: refetchStatus, isRefetching } = useQuery({
+    queryKey: ['kraken-status'],
+    queryFn: () => fetchStatus({ data: undefined }),
+    refetchInterval: 30000, // Sync every 30s
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => setShowEffects(true), 500);
@@ -307,6 +316,55 @@ function KrakenPage() {
             </div>
             <span className="text-[9px] font-mono text-white/40">NODE_ID: 0xFA-88</span>
           </div>
+        </div>
+
+        {/* User Status Bar */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="md:col-span-3 border-red-900/20 bg-black/60 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Status da Licença</span>
+                <div className="flex items-center gap-2">
+                  <div className={cn("h-2 w-2 rounded-full", krakenStatus?.active ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+                  <span className={cn("text-xs font-mono font-bold uppercase", krakenStatus?.active ? "text-emerald-500" : "text-red-500")}>
+                    {krakenStatus?.active ? "Kraken 2.0 Ativa" : "Licença Inativa"}
+                  </span>
+                </div>
+              </div>
+              
+              {krakenStatus?.license && (
+                <div className="h-8 w-px bg-white/5 hidden sm:block" />
+              )}
+              
+              {krakenStatus?.license && (
+                <div className="flex flex-col hidden sm:flex">
+                  <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Expiração</span>
+                  <span className="text-xs font-mono text-white/80">
+                    {new Date(krakenStatus.license.expires_at || "").toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
+
+              {krakenStatus?.lastOrder && krakenStatus.lastOrder.status === 'processing' && (
+                <div className="flex items-center gap-2 px-3 py-1 rounded bg-amber-500/10 border border-amber-500/20 animate-pulse">
+                  <RefreshCw className="h-3 w-3 text-amber-500 animate-spin" />
+                  <span className="text-[10px] font-mono text-amber-500 uppercase font-bold">Pagamento em processamento</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 px-3 text-[9px] font-mono uppercase text-white/40 hover:text-white border border-white/5 hover:bg-white/5"
+                onClick={() => refetchStatus()}
+              >
+                <RefreshCw className={cn("h-3 w-3 mr-2", isRefetching && "animate-spin")} />
+                Sync Status
+              </Button>
+            </div>
+          </Card>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
