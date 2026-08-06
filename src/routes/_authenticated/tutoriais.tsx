@@ -23,6 +23,9 @@ function TutorialsPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<any>(null);
   const [completedIds, setCompletedIds] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("Tudo");
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   const listFn = useServerFn(listTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
