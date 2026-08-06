@@ -420,35 +420,35 @@ html.theme-light .crt::after { display: none; }
   }
 
   @keyframes lightning-strike {
-    0%, 10%, 90%, 100% { 
+    0%, 5%, 95%, 100% { 
       opacity: 0; 
       background-color: transparent;
       filter: brightness(1) blur(0);
     }
-    92.5% {
+    10% {
       opacity: var(--lightning-opacity, 1);
       background-color: rgba(255, 255, 255, 1);
       box-shadow: 0 0 100vw 100vw rgba(255, 255, 255, 0.9);
     }
-    93% { 
+    12% { 
       opacity: var(--lightning-opacity, 1); 
       background-color: rgba(255, 255, 255, 1);
       filter: brightness(5) blur(0);
       box-shadow: 0 0 100vw 100vw white;
     }
-    94% { 
+    15% { 
       opacity: 0; 
     }
-    95% { 
+    18% { 
       opacity: calc(var(--lightning-opacity, 1) * 0.9); 
       background-color: rgba(230, 245, 255, 1);
       filter: brightness(3) blur(0);
       box-shadow: 0 0 100vw 100vw rgba(200, 230, 255, 1);
     }
-    96% { 
+    20% { 
       opacity: 0; 
     }
-    97% {
+    22% {
       opacity: calc(var(--lightning-opacity, 1) * 0.4);
       background-color: white;
       box-shadow: 0 0 50vw 50vw white;

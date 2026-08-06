@@ -28,7 +28,7 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Changed to false by default to help user see/hear effects immediately if possible
+  const [isMuted, setIsMuted] = useState(false); // Ativado por padrão para teste imediato de áudio
   const [intensity, setIntensity] = useState(1);
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
