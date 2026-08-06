@@ -5019,7 +5019,7 @@ function SupportQuotasPanel() {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
