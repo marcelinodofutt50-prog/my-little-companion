@@ -131,7 +131,7 @@ export function AnnouncementsSection() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border/40">
-          {filtered?.map((item) => (
+          {filtered?.map((item: any) => (
             <div key={item.id} className="group p-6 hover:bg-white/5 transition-all relative overflow-hidden">
                {/* Impact indicator */}
                <div className={`absolute left-0 top-0 bottom-0 w-1 ${
