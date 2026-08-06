@@ -192,7 +192,7 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       context: { license_id: lic.id, new_expires_at: newExpires?.toISOString() ?? null } as any,
     } as any);
 
-    return { ok: true, expires_at: newExpires?.toISOString() ?? null };
+    return { ok: true, expires_at: newExpires?.toISOString() ?? null, message: "Licença reativada com sucesso" };
   });
 
 export const disableMyLicense = createServerFn({ method: "POST" })
