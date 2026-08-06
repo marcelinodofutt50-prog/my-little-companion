@@ -39,7 +39,7 @@ function KrakenPage() {
     setIsExecuting(true);
 
     try {
-      const res = await executeKraken(cmd);
+      const res = await executeKraken({ data: { command: cmd } });
       setLogs(prev => [...prev, `[KRAKEN] ${res.message}`]);
       if (res.success) {
         toast.success("Comando Kraken executado");
