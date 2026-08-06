@@ -15,10 +15,22 @@ export function AnnouncementsSection() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { data: announcements, isLoading, refetch } = useQuery({
+  const { data: announcements, isLoading, refetch, error } = useQuery({
     queryKey: ["announcements"],
-    queryFn: () => listMyAnnouncements(),
+    queryFn: async () => {
+      try {
+        return await listMyAnnouncements();
+      } catch (err: any) {
+        if (err?._schemaError) {
+          const data: any = [];
+          data._schemaError = err._schemaError;
+          return data;
+        }
+        throw err;
+      }
+    },
   });
+
 
   // Real-time subscription for new announcements
   useEffect(() => {
