@@ -37,6 +37,17 @@ function TutorialsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const statsByCategory = useMemo(() => {
+    const groups: Record<string, { total: number; completed: number }> = {};
+    tutorials.forEach(t => {
+      const cat = t.category || "Geral";
+      if (!groups[cat]) groups[cat] = { total: 0, completed: 0 };
+      groups[cat].total++;
+      if (completedIds.includes(t.id)) groups[cat].completed++;
+    });
+    return groups;
+  }, [tutorials, completedIds]);
+
   const progress = useMemo(() => {
     if (tutorials.length === 0) return 0;
     return Math.round((completedIds.length / tutorials.length) * 100);
@@ -81,13 +92,31 @@ function TutorialsPage() {
                 </div>
                 
                 {tutorials.length > 0 && (
-                  <div className="w-full md:w-64 space-y-3 enterprise-surface p-4 rounded-xl border-primary/20 bg-primary/5">
-                    <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
-                      <span className="flex items-center gap-2"><Trophy className="h-3 w-3 text-primary" /> Progresso Global</span>
-                      <span className="text-primary">{progress}%</span>
+                  <div className="w-full md:w-80 space-y-4 enterprise-surface p-5 rounded-xl border-primary/20 bg-primary/5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
+                        <span className="flex items-center gap-2"><Trophy className="h-3 w-3 text-primary" /> Progresso Total</span>
+                        <span className="text-primary">{progress}%</span>
+                      </div>
+                      <Progress value={progress} className="h-1.5 bg-primary/10" />
                     </div>
-                    <Progress value={progress} className="h-1.5 bg-primary/10" />
-                    <div className="text-[9px] text-muted-foreground text-center uppercase tracking-tighter">
+                    
+                    <div className="pt-2 space-y-3 border-t border-primary/10">
+                      {Object.entries(statsByCategory).map(([cat, stats]) => {
+                        const catProgress = Math.round((stats.completed / stats.total) * 100);
+                        return (
+                          <div key={cat} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[8px] font-mono uppercase text-muted-foreground tracking-tighter">
+                              <span>{cat}</span>
+                              <span>{stats.completed}/{stats.total}</span>
+                            </div>
+                            <Progress value={catProgress} className="h-1 bg-primary/5" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className="text-[9px] text-muted-foreground text-center uppercase tracking-tighter opacity-60">
                       {completedIds.length} de {tutorials.length} módulos finalizados
                     </div>
                   </div>
