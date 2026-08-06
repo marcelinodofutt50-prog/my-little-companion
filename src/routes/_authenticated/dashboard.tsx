@@ -158,13 +158,20 @@ function DashboardPage() {
   const email = user?.email || ''
 
   const handleSync = async () => {
+    // Exibição explicativa do que o botão faz
+    toast.info("Iniciando Verificação de Integridade: O sistema irá re-sincronizar suas datas de expiração e credenciais originais com o painel de autenticação central, corrigindo possíveis divergências de 'Licença Expirada'.", {
+      duration: 6000,
+    })
+
     setSyncing(true)
     try {
-      await syncLicensesFn()
-      toast.success("Licenças sincronizadas com o servidor de autenticação!")
-      refetchLicenses()
+      const result = await syncLicensesFn()
+      if (result.ok) {
+        toast.success(`Integridade restaurada! ${result.synced} licença(s) foram sincronizadas com sucesso.`)
+        refetchLicenses()
+      }
     } catch (err) {
-      toast.error("Falha na sincronização automática.")
+      toast.error("Falha na sincronização automática. Tente novamente ou contate o suporte.")
     } finally {
       setSyncing(false)
     }
@@ -255,7 +262,7 @@ function DashboardPage() {
                     variant="outline" 
                     onClick={handleSync} 
                     disabled={syncing}
-                    className="font-mono text-[10px] uppercase border-primary/20 bg-primary/5 hover:bg-primary/10"
+                    className="font-mono text-[10px] uppercase rgb-button-animated border-none"
                   >
                     <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} /> 
                     {syncing ? "Sincronizando..." : "Corrigir Erros"}
