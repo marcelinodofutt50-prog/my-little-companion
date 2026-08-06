@@ -39,6 +39,7 @@ import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-w
 import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
 import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authenticated/servidor/status'
+import { Route as AuthenticatedServidorKrakenRouteImport } from './routes/_authenticated/servidor/kraken'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
@@ -201,6 +202,12 @@ const AuthenticatedServidorStatusRoute =
     path: '/servidor/status',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedServidorKrakenRoute =
+  AuthenticatedServidorKrakenRouteImport.update({
+    id: '/servidor/kraken',
+    path: '/servidor/kraken',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicHooksVerifyExternalPayersRoute =
   ApiPublicHooksVerifyExternalPayersRouteImport.update({
     id: '/api/public/hooks/verify-external-payers',
@@ -286,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
@@ -327,6 +335,7 @@ export interface FileRoutesByTo {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
@@ -370,6 +379,7 @@ export interface FileRoutesById {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/_authenticated/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/_authenticated/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/servidor/kraken'
     | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/servidor/kraken'
     | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
@@ -496,6 +508,7 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/_authenticated/servidor/kraken'
     | '/_authenticated/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
@@ -759,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServidorStatusRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/servidor/kraken': {
+      id: '/_authenticated/servidor/kraken'
+      path: '/servidor/kraken'
+      fullPath: '/servidor/kraken'
+      preLoaderRoute: typeof AuthenticatedServidorKrakenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/hooks/verify-external-payers': {
       id: '/api/public/hooks/verify-external-payers'
       path: '/api/public/hooks/verify-external-payers'
@@ -840,6 +860,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPresentesRoute: typeof AuthenticatedPresentesRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
   AuthenticatedTutoriaisRoute: typeof AuthenticatedTutoriaisRoute
+  AuthenticatedServidorKrakenRoute: typeof AuthenticatedServidorKrakenRoute
   AuthenticatedServidorStatusRoute: typeof AuthenticatedServidorStatusRoute
 }
 
@@ -851,6 +872,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPresentesRoute: AuthenticatedPresentesRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
   AuthenticatedTutoriaisRoute: AuthenticatedTutoriaisRoute,
+  AuthenticatedServidorKrakenRoute: AuthenticatedServidorKrakenRoute,
   AuthenticatedServidorStatusRoute: AuthenticatedServidorStatusRoute,
 }
 
@@ -907,3 +929,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
