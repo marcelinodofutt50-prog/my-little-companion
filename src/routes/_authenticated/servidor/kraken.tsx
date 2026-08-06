@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useServerFn } from "@tanstack/react-start"
-import { krakenCommand } from "@/lib/kraken.functions"
+import { krakenCommand, type KrakenOutput } from "@/lib/kraken.functions"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import krakenBg4 from "@/assets/kraken-bg-4.png.asset.json"
@@ -71,7 +71,7 @@ function KrakenPage() {
     setIsExecuting(true);
 
     try {
-      const res = await executeKraken({ data: { command: cmd } });
+      const res = (await executeKraken({ data: { command: cmd } })) as KrakenOutput;
       setLogs(prev => [...prev, `[KRAKEN] ${res.message}`]);
       if (res.success) {
         toast.success("Comando Kraken executado");

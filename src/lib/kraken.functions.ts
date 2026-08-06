@@ -2,10 +2,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const krakenSchema = z.object({
+export const krakenInputSchema = z.object({
   command: z.string(),
   params: z.record(z.string(), z.any()).optional()
 });
+
+export type KrakenInput = z.infer<typeof krakenInputSchema>;
+
+export interface KrakenOutput {
+  success: boolean;
+  message: string;
+  timestamp: string;
+}
+
 
 /**
  * Interface de comando para o Kraken Control.
@@ -14,9 +23,9 @@ const krakenSchema = z.object({
 export const krakenCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => {
-    return krakenSchema.parse(d);
+    return krakenInputSchema.parse(d);
   })
-  .handler(async (args) => {
+  .handler(async (args): Promise<KrakenOutput> => {
     const data = args.data;
     // Implementação mock para o console tático
     const logStr = `[Kraken] Executing command: ${data.command}`;
@@ -31,3 +40,4 @@ export const krakenCommand = createServerFn({ method: "POST" })
       timestamp: new Date().toISOString()
     };
   });
+
