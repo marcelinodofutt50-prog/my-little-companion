@@ -207,6 +207,7 @@ const TAB_DESC: Record<Tab, string> = {
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
   quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
 
+
 };
 
 function AdminPage() {
