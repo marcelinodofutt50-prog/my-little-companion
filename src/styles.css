@@ -409,19 +409,44 @@ html.theme-light .crt::after { display: none; }
 
   /* Kraken UI animations */
   .animate-lightning {
-    animation: lightning-flash 4s infinite;
-    will-change: opacity, background-color;
-    transform: translateZ(0); /* Force GPU layer */
+    animation: lightning-strike 5s infinite;
+    will-change: opacity, background-color, transform, filter;
+    transform: translateZ(0);
     backface-visibility: hidden;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
   }
-  @keyframes lightning-flash {
-    0%, 93%, 100% { opacity: 0; background-color: transparent; }
-    94% { opacity: var(--lightning-opacity, 1); background-color: rgba(255, 255, 255, 1); box-shadow: 0 0 150px 75px white; }
-    95% { opacity: 0; background-color: transparent; }
-    96% { opacity: calc(var(--lightning-opacity, 1) * 0.9); background-color: rgba(220, 240, 255, 1); box-shadow: 0 0 120px 60px rgba(220, 240, 255, 0.9); }
-    97% { opacity: 0; background-color: transparent; }
-    98% { opacity: calc(var(--lightning-opacity, 1) * 0.6); background-color: white; box-shadow: 0 0 100px 50px white; }
 
+  @keyframes lightning-strike {
+    0%, 92%, 100% { 
+      opacity: 0; 
+      background-color: transparent;
+      filter: brightness(1) blur(0);
+    }
+    93% { 
+      opacity: var(--lightning-opacity, 1); 
+      background-color: rgba(255, 255, 255, 0.95);
+      filter: brightness(2) blur(2px);
+      box-shadow: 0 0 200px 100px white, inset 0 0 100px white;
+    }
+    94% { 
+      opacity: 0; 
+    }
+    95% { 
+      opacity: calc(var(--lightning-opacity, 1) * 0.8); 
+      background-color: rgba(200, 230, 255, 0.8);
+      filter: brightness(1.5) blur(1px);
+      box-shadow: 0 0 150px 75px rgba(200, 230, 255, 0.8);
+    }
+    96% { 
+      opacity: 0; 
+    }
+    97% {
+      opacity: calc(var(--lightning-opacity, 1) * 0.4);
+      background-color: white;
+      box-shadow: 0 0 80px 40px white;
+    }
   }
 
 
