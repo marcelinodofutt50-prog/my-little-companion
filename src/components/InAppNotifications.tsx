@@ -144,7 +144,7 @@ export function InAppNotifications() {
 
 
   return (
-    <DropdownMenu onOpenChange={(open) => { if (open) { unlockNotifySound(); void refresh(false); } }}>
+    <DropdownMenu onOpenChange={(open) => { if (open) { unlockNotifySound(); void refresh(false); markAllRead(); } }}>
       <DropdownMenuTrigger asChild>
         <button
           aria-label="Notificações"
