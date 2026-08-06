@@ -440,7 +440,6 @@ html.theme-light .crt::after { display: none; }
       filter: brightness(2) blur(1px);
       box-shadow: 0 0 200px 100px rgba(200, 230, 255, 0.9);
     }
-    }
     96% { 
       opacity: 0; 
     }
