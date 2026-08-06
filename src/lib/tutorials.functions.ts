@@ -61,7 +61,16 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
         .from("tutorials")
         .upsert({ ...data, created_by: context.userId });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[tutorials] Database error:", error);
+      const wrapped = new Error(error.message);
+      if (error.message?.includes("relation \"public.tutorials\" does not exist") || 
+          error.message?.includes("public.tutorials' in the schema cache")) {
+        (wrapped as any)._schemaError = "public.tutorials";
+      }
+      throw wrapped;
+    }
+
     return { ok: true };
   });
 
