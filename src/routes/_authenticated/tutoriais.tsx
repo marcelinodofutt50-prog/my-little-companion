@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "framer-motion";
-import { Video, Youtube, ChevronRight, Play, BookOpen, Star, Info, CheckCircle2, Circle, Trophy } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Video, Youtube, ChevronRight, Play, BookOpen, Star, Info, CheckCircle2, Circle, Trophy, Search, Filter } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
