@@ -64,7 +64,6 @@ export function can(role: Role | null | undefined, cap: Capability): boolean {
   return ROLE_CAPS[role]?.includes(cap) ?? false;
 }
 
-SECTION_CAP.tutorials = "tutorials.manage";
 
 /** Seção do painel -> capacidade mínima para enxergar. */
 export const SECTION_CAP: Record<string, Capability> = {
@@ -87,6 +86,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   audit: "view.audit",
   apk: "view.apk",
   updates: "view.updates",
+  tutorials: "tutorials.manage",
   selftest: "system.selftest",
 };
 
