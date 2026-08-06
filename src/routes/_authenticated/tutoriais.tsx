@@ -112,7 +112,7 @@ function TutorialsPage() {
                   </p>
                 </div>
                 
-                {tutorials.length > 0 && (
+                {tutorials.length >= 0 && (
                   <div className="w-full md:w-80 space-y-4 enterprise-surface p-5 rounded-xl border-primary/20 bg-primary/5 shadow-lg shadow-primary/5">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
