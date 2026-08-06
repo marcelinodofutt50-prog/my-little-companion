@@ -57,6 +57,20 @@ function DashboardPage() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const serverNow = useServerNow()
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
+  // Auto-oculta credenciais reveladas após 30s (shoulder-surfing).
+  useEffect(() => {
+    const openIds = Object.entries(revealed).filter(([, v]) => v).map(([k]) => k)
+    if (openIds.length === 0) return
+    const t = setTimeout(() => {
+      setRevealed((prev) => {
+        const next = { ...prev }
+        for (const id of openIds) next[id] = false
+        return next
+      })
+    }, 30000)
+    return () => clearTimeout(t)
+  }, [revealed])
+
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
   const fetchMyLicenses = useServerFn(listMyLicenses)
