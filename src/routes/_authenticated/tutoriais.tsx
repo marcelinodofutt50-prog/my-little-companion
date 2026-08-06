@@ -105,7 +105,7 @@ function TutorialsPage() {
                     Shadow Knowledge Base
                   </div>
                   <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-                    Centro de <span className="text-primary italic rgb-text animate-rgb-text">Treinamento RGB</span>
+                    Centro de Treinamento
                   </h1>
                   <p className="mt-4 max-w-2xl text-muted-foreground">
                     Domine o ecossistema Shadow. De configurações básicas a técnicas avançadas de bypass e gestão de ativos.
