@@ -125,10 +125,10 @@ export function OnboardingChecklist({
 
   // Concluiu tudo? mostra o "parabéns" por alguns segundos e some de vez.
   useEffect(() => {
-    if (!allDone || dismissed) return;
-    const t = setTimeout(() => hideForGood(), 6000);
+    if (!allDone || dismissed || doneCount === 0) return;
+    const t = setTimeout(() => hideForGood(), 8000);
     return () => clearTimeout(t);
-  }, [allDone, dismissed]);
+  }, [allDone, dismissed, doneCount]);
 
   if (dismissed) return null;
 
