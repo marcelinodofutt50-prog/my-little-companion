@@ -33,14 +33,12 @@ describe('Kraken Control Functions', () => {
     });
   });
 
-  describe('krakenCommand handler', () => {
+  describe('krakenCommand execution', () => {
     it('should process a valid command and return success response', async () => {
-      // @ts-ignore - access handler directly for testing purposes
-      const handler = (krakenCommand as any).handler;
-      const result = await handler({
-        data: { command: 'test-command' },
-        request: new Request('http://localhost:8080/api/kraken'),
-        context: {} as any
+      // In TanStack Start v1, server functions are callable directly
+      // When called with the correct data structure, they execute the handler
+      const result = await krakenCommand({
+        data: { command: 'test-command' }
       });
 
       expect(result.success).toBe(true);
@@ -48,6 +46,7 @@ describe('Kraken Control Functions', () => {
       expect(result.timestamp).toBeDefined();
     });
   });
+
 
 });
 
