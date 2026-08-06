@@ -13,10 +13,10 @@ const krakenSchema = z.object({
  */
 export const krakenCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: any) => {
+  .validator((input: unknown) => {
     return krakenSchema.parse(input);
   })
-  .handler(async (args: any) => {
+  .handler(async (args) => {
     const data = args.data;
     // Implementação mock para o console tático
     const logStr = `[Kraken] Executing command: ${data.command}`;
