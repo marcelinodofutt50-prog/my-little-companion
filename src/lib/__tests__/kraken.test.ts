@@ -1,10 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { krakenInputSchema, krakenCommand } from '../kraken.functions';
-
-// Mock requireSupabaseAuth to avoid auth issues in unit tests
-vi.mock('@/integrations/supabase/auth-middleware', () => ({
-  requireSupabaseAuth: (fn: any) => fn
-}));
+import { krakenInputSchema, krakenHandler } from '../kraken.functions';
 
 describe('Kraken Control Functions', () => {
   describe('krakenInputSchema', () => {
@@ -33,11 +28,9 @@ describe('Kraken Control Functions', () => {
     });
   });
 
-  describe('krakenCommand execution', () => {
+  describe('krakenHandler', () => {
     it('should process a valid command and return success response', async () => {
-      // In TanStack Start v1, server functions are callable directly
-      // When called with the correct data structure, they execute the handler
-      const result = await krakenCommand({
+      const result = await krakenHandler({
         data: { command: 'test-command' }
       });
 
@@ -46,7 +39,6 @@ describe('Kraken Control Functions', () => {
       expect(result.timestamp).toBeDefined();
     });
   });
-
-
 });
+
 
