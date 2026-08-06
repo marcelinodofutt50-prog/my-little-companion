@@ -4509,7 +4509,7 @@ function LegacyClientsPanel({ licenses, onChanged }: { licenses: any[]; onChange
                 >
                   próxima →
                 </button>
-              </div>
+      </motion.div>
             )}
           </>
         )}
