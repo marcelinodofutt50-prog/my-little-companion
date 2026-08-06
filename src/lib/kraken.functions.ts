@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const krakenSchema = z.object({
   command: z.string(),
-  params: z.record(z.any()).optional(),
+  params: z.record(z.any()).optional()
 });
 
 /**
@@ -21,13 +21,13 @@ export const krakenCommand = createServerFn({ method: "POST" })
     // Implementação mock para o console tático
     const logStr = `[Kraken] Executing command: ${data.command}`;
     console.log(logStr);
-
+    
     // Simulação de delay de processamento para feedback visual no terminal
-    await new Promise((r) => setTimeout(r, 800));
-
+    await new Promise(r => setTimeout(r, 800));
+    
     return {
       success: true,
       message: `Command '${data.command}' processed by Kraken Node 0xFA-88`,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
   });
