@@ -43,30 +43,28 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
   if (license.revoked && !paused) return null
 
   const run = async (fn: () => Promise<any>, ok: string) => {
-    if (busy) return
-    setBusy(true)
+    if (busy) return;
+    setBusy(true);
     try {
-      const res = await fn()
-      // If the server returns a successful result with an 'ok: true' flag
+      const res = await fn();
       if (res && res.ok) {
-        toast.success(ok)
-        // Give the server state a moment to propagate before refetching
-        setTimeout(() => {
-          onDone()
-        }, 1000)
+        toast.success(ok);
+        // Refresh component state via parent callback
+        onDone();
       } else {
-        throw new Error(res?.message || 'O servidor não confirmou a operação')
+        throw new Error(res?.message || 'O servidor não confirmou a operação');
       }
     } catch (e: any) {
-      const msg = e?.message ?? 'O servidor não respondeu ao comando'
+      const msg = e?.message ?? 'O servidor não respondeu ao comando';
       toast.error('Erro na solicitação', {
         description: msg,
-      })
+      });
     } finally {
-      setBusy(false)
-      setConfirming(false)
+      // Re-enable interactions only after completion
+      setBusy(false);
+      setConfirming(false);
     }
-  }
+  };
 
 
   if (paused) {
