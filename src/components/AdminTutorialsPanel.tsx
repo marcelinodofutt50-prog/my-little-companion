@@ -205,7 +205,7 @@ export function AdminTutorialsPanel() {
                   </Button>
                 </div>
               </div>
-            </div>
+
 
             <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
               <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }}>
