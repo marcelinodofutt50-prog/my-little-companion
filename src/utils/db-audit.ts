@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './integrations/supabase/client.server';
+import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
 /**
  * Script de auditoria de permissões e RLS.
