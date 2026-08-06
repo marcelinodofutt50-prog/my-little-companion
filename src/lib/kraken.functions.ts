@@ -2,23 +2,27 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+/**
+ * Interface de comando para o Kraken Control.
+ * Permite que o operador envie instruções táticas para os nodes da Shadow-Ops.
+ */
 export const krakenCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d: unknown) => z.object({
     command: z.string(),
     params: z.record(z.any()).optional()
   }).parse(d))
-  .handler(async ({ input, context }) => {
+  .handler(async ({ data }) => {
     // Implementação mock para o console tático
-    const log = `[Kraken] Executing: ${input.command}...`;
+    const log = `[Kraken] Executing: ${data.command}...`;
     console.log(log);
     
-    // Simulação de delay de processamento
+    // Simulação de delay de processamento para feedback visual no terminal
     await new Promise(r => setTimeout(r, 800));
     
     return {
       success: true,
-      message: "Command processed by Kraken Node 0xFA-88",
+      message: `Command '${data.command}' processed by Kraken Node 0xFA-88`,
       timestamp: new Date().toISOString()
     };
   });
