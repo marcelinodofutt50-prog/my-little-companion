@@ -85,12 +85,13 @@ export async function recordAttempt(key: string, outcome: "success" | "failure" 
     await (supabaseAdmin.from("signup_attempts") as any).insert(payload);
 
     // Log to audit_logs for admin visibility
-    await supabaseAdmin.from("audit_logs").insert({
+    // Cast to any to bypass strict type check for metadata vs context
+    await (supabaseAdmin.from("audit_logs") as any).insert({
       event: `AUTH_${key.toUpperCase()}`,
       decision: outcome.toUpperCase(),
       reason: outcome === "blocked" ? "Rate limit exceeded" : outcome,
       system: "Shadow Security Guard",
-      context: {
+      metadata: {
         ip_hash: ipHash,
         email_masked: emailMasked || null
       }
