@@ -289,25 +289,25 @@ function KrakenPage() {
 
                   <div className="pt-4 border-t border-red-500/10 mt-2 space-y-4">
                     <p className="text-[9px] text-muted-foreground uppercase font-mono">Select Plan:</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Button 
                         variant="outline" 
-                        className="flex flex-col h-auto p-4 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 group transition-all"
-                        onClick={() => window.open('https://www.mercadopago.com.br/', '_blank')}
+                        className="flex-1 flex flex-col h-auto p-4 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 group transition-all"
+                        onClick={() => window.open('https://link.mercadopago.com.br/kraken-mensal', '_blank')}
                       >
                         <span className="text-[10px] text-amber-400 font-bold">MENSAL</span>
-                        <span className="text-lg font-black text-white group-hover:scale-110 transition-transform">R$ 20.000</span>
-                        <span className="text-[8px] text-amber-400/60 uppercase mt-1">Buy via Mercado Pago</span>
+                        <span className="text-xl font-black text-white group-hover:scale-110 transition-transform">R$ 20.000</span>
+                        <span className="text-[8px] text-amber-400/60 uppercase mt-1">Checkout Mensal</span>
                       </Button>
                       
                       <Button 
                         variant="outline" 
-                        className="flex flex-col h-auto p-4 border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 group transition-all"
-                        onClick={() => window.open('https://www.mercadopago.com.br/', '_blank')}
+                        className="flex-1 flex flex-col h-auto p-4 border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 group transition-all"
+                        onClick={() => window.open('https://link.mercadopago.com.br/kraken-vitalicio', '_blank')}
                       >
                         <span className="text-[10px] text-emerald-400 font-bold">VITALÍCIO</span>
-                        <span className="text-lg font-black text-white group-hover:scale-110 transition-transform">R$ 30.000</span>
-                        <span className="text-[8px] text-emerald-400/60 uppercase mt-1">Buy via Mercado Pago</span>
+                        <span className="text-xl font-black text-white group-hover:scale-110 transition-transform">R$ 30.000</span>
+                        <span className="text-[8px] text-emerald-400/60 uppercase mt-1">Checkout Vitalício</span>
                       </Button>
                     </div>
                   </div>
