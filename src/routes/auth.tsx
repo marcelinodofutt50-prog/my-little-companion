@@ -13,6 +13,7 @@ import { Lost2faHelp } from "@/components/Lost2faHelp";
 import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
 import { checkEmailAvailability, confirmFreshSignupEmail, createAccountWhenEmailBlocked } from "@/lib/signup.functions";
+import { checkAuthSecurity, reportAuthOutcome } from "@/lib/security.functions";
 
 
 export const Route = createFileRoute("/auth")({
@@ -320,6 +321,13 @@ function AuthPage() {
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     try {
+      // Security Check: Rate limiting before attempting Supabase Auth
+      const sec = await checkAuthSecurity({ data: { email: cleanEmail, action: mode === "up" ? "signup" : "login" } });
+      if (!sec.allowed) {
+        setLoading(false);
+        return toast.error(sec.message);
+      }
+
       if (mode === "up") {
         // 1) Mesma caixa de entrada já cadastrada? (cobre alias do Gmail: pontos e +tag)
         const avail = await checkEmailAvailability({ data: { email: cleanEmail } })
@@ -418,7 +426,11 @@ function AuthPage() {
         navigate({ to: (next as any) || "/dashboard" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
-        if (error) throw error;
+        if (error) {
+          void reportAuthOutcome({ data: { email: cleanEmail, action: "login", success: false } });
+          throw error;
+        }
+        void reportAuthOutcome({ data: { email: cleanEmail, action: "login", success: true } });
         clearLocalLimits();
         navigate({ to: (next as any) || "/dashboard" });
       }
