@@ -56,6 +56,22 @@ export const listMyAnnouncements = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<Announcement[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const nowIso = new Date().toISOString();
+    
+    let rank = -1;
+    try {
+      rank = await bestTierRank(context);
+    } catch (err: any) {
+      console.error("bestTierRank failed in listMyAnnouncements", err);
+      // Se bestTierRank falhar (ex: licenses table missing), o erro deve ser capturado no handler principal
+      if (err?.message?.includes("relation \"public.licenses\" does not exist") || 
+          err?.message?.includes("public.licenses' in the schema cache")) {
+         const wrapped = new Error(err.message);
+         (wrapped as any)._schemaError = "public.licenses";
+         throw wrapped;
+      }
+      throw err;
+    }
+
     const { data, error } = await supabaseAdmin
       .from("announcements")
       .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, status, tags, created_at, image_url, attachment_url, attachment_name")
@@ -64,13 +80,22 @@ export const listMyAnnouncements = createServerFn({ method: "GET" })
       .lte("starts_at", nowIso)
       .order("created_at", { ascending: false })
       .limit(20);
-    if (error) throw new Error(error.message);
+      
+    if (error) {
+      if (error.message?.includes("relation \"public.announcements\" does not exist") || 
+          error.message?.includes("public.announcements' in the schema cache")) {
+         const wrapped = new Error(error.message);
+         (wrapped as any)._schemaError = "public.announcements";
+         throw wrapped;
+      }
+      throw new Error(error.message);
+    }
 
-    const rank = await bestTierRank(context);
     return ((data ?? []) as any[])
       .filter((r) => !r.ends_at || r.ends_at > nowIso)
       .filter((r) => rank >= (tierRank[r.min_tier as VersionTier] ?? 0)) as Announcement[];
   });
+
 
 /** Lista completa (admin) — inclui agendados e ocultos. */
 export const adminListAnnouncements = createServerFn({ method: "GET" })

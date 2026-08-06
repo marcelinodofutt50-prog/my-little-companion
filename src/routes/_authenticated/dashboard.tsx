@@ -118,21 +118,35 @@ function DashboardPage() {
       try {
         const result = await fetchMyLicenses()
         return result ?? []
-      } catch (err) {
+      } catch (err: any) {
         console.error("fetchMyLicenses failed, falling back to direct supabase read", err)
+        
+        // Se o erro for de tabela inexistente, o dashboard deve saber para mostrar o alerta
+        const isTableMissing = err?.message?.includes("relation \"public.tutorials\" does not exist") || 
+                              err?.message?.includes("public.tutorials' in the schema cache")
+        
         const { data, error } = await supabase
           .from('licenses')
           .select('*')
           .eq('user_id', user?.id)
           .order('created_at', { ascending: false })
-        if (error) throw error
+          
+        if (error) {
+          // Se a tabela licenses também falhar (problema crítico de DB), propaga
+          throw error
+        }
+        
+        // Anexa info de erro de schema se detectado em fetchMyLicenses (que pode ler várias tabelas)
+        if (isTableMissing) {
+          (data as any)._schemaError = "public.tutorials"
+        }
+        
         return data ?? []
       }
     },
     enabled: !!user?.id,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 2000),
-    // Expiração precisa ser sempre em tempo real: nada de cache "fresco".
     staleTime: 5000,
     gcTime: 60_000,
     refetchOnMount: 'always',
@@ -142,6 +156,7 @@ function DashboardPage() {
     refetchIntervalInBackground: false,
     placeholderData: (prev: any) => prev,
   })
+
 
   const {
     data: updates = [],
@@ -276,6 +291,31 @@ function DashboardPage() {
               </section>
 
               <ExpiryAlertBanner licenses={licenses} serverNow={serverNow} />
+
+              {(licenses as any)?._schemaError === "public.tutorials" && (
+                <Card className="border-red-500/30 bg-red-500/5 backdrop-blur-sm border-2 animate-pulse mb-4">
+                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-red-500/20 p-2 rounded-full">
+                        <ShieldIcon className="h-5 w-5 text-red-500" />
+                      </div>
+                      <div>
+                        <h4 className="font-mono text-xs font-bold text-red-500 uppercase">Falha Crítica de Sincronização</h4>
+                        <p className="text-[10px] text-muted-foreground font-mono">
+                          Tabela 'public.tutorials' não encontrada no cache do schema. Isso pode afetar o Hub de Vídeos.
+                        </p>
+                      </div>
+                    </div>
+                    <SupportDiagnosticButton 
+                      error={(licenses as any)?._schemaError} 
+                      context="Dashboard - Erro de Schema (Table Missing)"
+                      label="Reportar Erro"
+                      variant="outline"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[

@@ -15,10 +15,22 @@ export function AnnouncementsSection() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { data: announcements, isLoading, refetch } = useQuery({
+  const { data: announcements, isLoading, refetch, error } = useQuery({
     queryKey: ["announcements"],
-    queryFn: () => listMyAnnouncements(),
+    queryFn: async () => {
+      try {
+        return await listMyAnnouncements();
+      } catch (err: any) {
+        if (err?._schemaError) {
+          const data: any = [];
+          data._schemaError = err._schemaError;
+          return data;
+        }
+        throw err;
+      }
+    },
   });
+
 
   // Real-time subscription for new announcements
   useEffect(() => {
@@ -57,7 +69,29 @@ export function AnnouncementsSection() {
   });
 
   if (isLoading) return <div className="animate-pulse h-48 bg-muted rounded-xl" />;
-  if (!announcements || announcements.length === 0) return null;
+  if (!announcements || announcements.length === 0) {
+    // Only show the system error card if announcements fail or are empty, and we have a specific error
+    const errorMsg = (announcements as any)?._schemaError;
+    if (errorMsg) {
+      return (
+        <Card className="border-red-500/20 bg-red-500/5 backdrop-blur-sm border mb-4">
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Megaphone className="h-4 w-4 text-red-500 animate-pulse" />
+              <div>
+                <h4 className="font-mono text-xs font-bold text-red-500 uppercase">Aviso do Sistema</h4>
+                <p className="text-[10px] text-muted-foreground font-mono">
+                  Instabilidade na sincronização de dados detectada ({errorMsg}). Alguns recursos podem estar limitados.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    return null;
+  }
+
 
   return (
     <Card className="border-border/40 bg-card/30 backdrop-blur-md overflow-hidden">
@@ -97,7 +131,7 @@ export function AnnouncementsSection() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border/40">
-          {filtered?.map((item) => (
+          {filtered?.map((item: any) => (
             <div key={item.id} className="group p-6 hover:bg-white/5 transition-all relative overflow-hidden">
                {/* Impact indicator */}
                <div className={`absolute left-0 top-0 bottom-0 w-1 ${
