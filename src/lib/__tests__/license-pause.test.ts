@@ -10,6 +10,11 @@ vi.mock('@/integrations/supabase/client.server', () => ({
   }
 }));
 
+// Mock panel-servers.server to avoid database calls
+vi.mock('@/lib/panel-servers.server', () => ({
+  loadPanelOverrides: vi.fn().mockResolvedValue(new Map())
+}));
+
 describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
   const mockEmail = 'test@example.com';
   const mockPassword = 'NewPassword123!';
@@ -25,6 +30,7 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
   afterEach(() => {
     global.fetch = originalFetch;
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('should handle 502 Bad Gateway with retries and return a friendly error', async () => {
@@ -41,9 +47,6 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
     // Should return the friendly error message defined in friendlyYaarsaFail
     expect(result.Fail).toContain('Falha de rede ou timeout');
     expect(result.statusCode).toBe(502);
-    // Based on src/lib/yaarsa.server.ts, it tries multiple actions ('update', 'cpassword', etc.)
-    // and each action has MAX_ATTEMPTS = 5.
-    // However, if it hits a non-retryable break (like a recognized HTTP error), it might stop earlier.
     expect(global.fetch).toHaveBeenCalled();
   });
 
@@ -66,6 +69,7 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
 
     const result = await yaarsaSetPassword(mockEmail, mockPassword);
 
+    // Using partial match and case-insensitivity as found in previous run
     expect(result.Fail?.toLowerCase()).toContain('falha de rede');
   });
 
@@ -93,7 +97,6 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
     const result = await yaarsaSetPassword(mockEmail, mockPassword);
 
     expect(result.Success).toBeDefined();
-    // It should have tried the next action or next attempt
     expect(callCount).toBeGreaterThan(1);
   });
 });
