@@ -40,7 +40,7 @@ export type Capability =
 const SUPPORT_CAPS: Capability[] = [
   "view.overview", "view.chat", "view.apk", "view.users", "view.orders", "view.licenses",
   "chat.reply", "chat.assume", "chat.close", "apk.manage",
-  "announcements.create", "tutorials.manage",
+  "announcements.create", "tutorials.manage", "license.issue",
 ];
 
 const ALL_CAPS: Capability[] = [
@@ -108,7 +108,7 @@ export const MATRIX_ROWS: { group: string; items: { cap: Capability; label: stri
     items: [
       { cap: "view.users", label: "Ver clientes e ficha 360º" },
       { cap: "view.licenses", label: "Ver licenças" },
-      { cap: "license.issue", label: "Emitir licença manual", note: "cria acesso sem pagamento" },
+      { cap: "license.issue", label: "Emitir licença manual", note: "sujeito a cotas diárias/mensais para Suporte" },
       { cap: "license.extend", label: "Estender prazo" },
       { cap: "license.revoke", label: "Revogar acesso" },
     ],

@@ -747,7 +747,15 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => CreateLicenseInput.parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
+    
+    // Verificação de Cota para Staff (Moderadores)
+    const { data: quotaOk } = await context.supabase.rpc('check_license_quota' as any, { _staff_id: context.userId });
+    if (!quotaOk) {
+        throw new Error("Você atingiu seu limite diário ou mensal de geração de licenças manuais. Solicite liberação a um administrador.");
+    }
+
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { yaarsaCreateAccount, yaarsaExtend, generateCredentials, encrypt, resolvePanelFromPlanSlug } = await import("./yaarsa.server");
 
@@ -786,6 +794,16 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
       server_ip: serverIpForPanel,
     } as any).select("*").single();
     if (licErr) throw new Error(licErr.message);
+
+    // Registrar no log de cotas
+    await (context.supabase.from('license_generation_logs' as any) as any).insert({
+      staff_id: context.userId,
+      customer_email: data.userEmail.toLowerCase(),
+      plan_slug: data.planSlug,
+      license_id: lic.id
+    });
+
+
 
     if (data.postToThreadId) {
       const body =
