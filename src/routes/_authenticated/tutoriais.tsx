@@ -66,6 +66,7 @@ function TutorialsPage() {
         <main className="flex-1 overflow-y-auto">
           <SiteHeader />
           <div className="container mx-auto px-4 py-8">
+            <div className="mb-10">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="text-center md:text-left">
                   <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
@@ -262,7 +263,5 @@ function TutorialsPage() {
         </main>
       </div>
     </SidebarProvider>
-  );
-}
   );
 }
