@@ -35,9 +35,9 @@ describe('Kraken Control Functions', () => {
 
   describe('krakenCommand handler', () => {
     it('should process a valid command and return success response', async () => {
-      // Accessing the handler directly for unit testing
-      // Note: server functions have a .handler property in TanStack Start
-      const result = await krakenCommand.handler({
+      // @ts-ignore - access handler directly for testing purposes
+      const handler = (krakenCommand as any).handler;
+      const result = await handler({
         data: { command: 'test-command' },
         request: new Request('http://localhost:8080/api/kraken'),
         context: {} as any
@@ -48,5 +48,6 @@ describe('Kraken Control Functions', () => {
       expect(result.timestamp).toBeDefined();
     });
   });
+
 });
 
