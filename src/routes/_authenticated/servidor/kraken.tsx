@@ -13,15 +13,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
-import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json"
-import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json"
+// Removed asset json imports to favor direct raw github URLs for Vercel stability
 
 // Imagem central do Kraken v2 (sempre visível no meio)
 const krakenCore = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
 
 // Backgrounds táticos (efeito de profundidade/camadas)
-const krakenBg4 = krakenBg4Asset.url
-const krakenBg5 = krakenBg5Asset.url
+const krakenBg4 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
+const krakenBg5 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-5.png";
 
 // Fallback manual URLs if asset references fail in some environments
 const FALLBACK_BG4 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
