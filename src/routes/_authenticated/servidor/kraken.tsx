@@ -28,12 +28,12 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Inicia como "Operational" para garantir o som
+  const [isMuted, setIsMuted] = useState(false);
   const [intensity, setIntensity] = useState(1);
-  const [audioDelay, setAudioDelay] = useState(0); // Delay em milissegundos
+  const [audioDelay, setAudioDelay] = useState(0);
+  const [bgLoadError, setBgLoadError] = useState(false);
 
   const logEndRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const executeKraken = useServerFn(krakenCommand);
 
   useEffect(() => {
@@ -148,7 +148,7 @@ function KrakenPage() {
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black min-h-screen overflow-hidden">
       {/* Background Images with Fade */}
       <AnimatePresence>
-        {showEffects && (
+        {showEffects && !bgLoadError && (
           <>
             <motion.div 
               initial={{ opacity: 0 }}
@@ -160,6 +160,7 @@ function KrakenPage() {
                 backgroundPosition: 'center',
                 zIndex: 0
               }}
+              onError={() => setBgLoadError(true)}
             />
             <motion.div 
               initial={{ opacity: 0 }}
@@ -172,8 +173,16 @@ function KrakenPage() {
                 backgroundPosition: 'center',
                 zIndex: 1
               }}
+              onError={() => setBgLoadError(true)}
             />
           </>
+        )}
+        {showEffects && bgLoadError && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.2 }}
+            className="absolute inset-0 pointer-events-none bg-gradient-to-br from-red-950/40 via-black to-black z-0"
+          />
         )}
       </AnimatePresence>
 
@@ -182,7 +191,10 @@ function KrakenPage() {
           {/* Main Lightning Strike */}
           <div 
             className="animate-lightning" 
-            style={{ '--lightning-opacity': intensity } as React.CSSProperties}
+            style={{ 
+              '--lightning-opacity': intensity,
+              background: bgLoadError ? 'rgba(255,255,255,0.05)' : undefined
+            } as React.CSSProperties}
           />
           
           {/* Global Screen Flash */}
