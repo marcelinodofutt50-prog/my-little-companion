@@ -280,11 +280,18 @@ html.theme-light .crt::after { display: none; }
     content: "";
     position: absolute; inset: -1px; border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(120deg, var(--neon), var(--cyan), var(--violet));
+    background: linear-gradient(120deg, var(--neon), var(--cyan), var(--violet), var(--neon));
+    background-size: 300% 100%;
+    animation: rgb-slide 4s linear infinite;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
             mask-composite: exclude;
     pointer-events: none;
+  }
+
+  @keyframes rgb-slide {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
   }
 
   .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
