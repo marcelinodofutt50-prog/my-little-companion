@@ -35,8 +35,10 @@ function KrakenPage() {
     const timer = setTimeout(() => setShowEffects(true), 500);
     
     // Setup áudio
-    audioRef.current = new Audio("/audio/thunder.mp3");
+    audioRef.current = new Audio("https://www.soundjay.com/nature/thunder-01.mp3");
     audioRef.current.loop = true;
+    audioRef.current.volume = 0.6;
+
     
     return () => {
       clearTimeout(timer);
