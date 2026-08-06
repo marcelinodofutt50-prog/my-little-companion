@@ -40,18 +40,23 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
   if (license.revoked && !paused) return null
 
   const run = async (fn: () => Promise<any>, ok: string) => {
+    if (busy) return
     setBusy(true)
     try {
       await fn()
       toast.success(ok)
       onDone()
     } catch (e: any) {
-      toast.error(e?.message ?? 'Não foi possível concluir a operação')
+      const msg = e?.message ?? 'Não foi possível concluir a operação'
+      toast.error(msg, {
+        description: 'Se o problema continuar, abra um chamado no suporte que a equipe destrava manualmente.',
+      })
     } finally {
       setBusy(false)
       setConfirming(false)
     }
   }
+
 
   if (paused) {
     return (
