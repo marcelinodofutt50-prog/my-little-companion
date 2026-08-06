@@ -36,34 +36,48 @@ function KrakenPage() {
   const executeKraken = useServerFn(krakenCommand);
 
   useEffect(() => {
-    // Entrou na página: ativa efeitos e sons (se não estiver mudo)
     const timer = setTimeout(() => setShowEffects(true), 500);
     
-    // Setup áudio
-    // Setup áudio
-    audioRef.current = new Audio("https://www.soundjay.com/nature/thunder-01.mp3");
-    audioRef.current.loop = false;
-    audioRef.current.volume = 0.5;
-    audioRef.current.preload = "auto";
+    // Web Audio API context para reprodução mais robusta
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioUrl = "https://www.soundjay.com/nature/thunder-01.mp3";
+    let audioBuffer: AudioBuffer | null = null;
+
+    // Carregar o áudio no buffer para resposta instantânea
+    fetch(audioUrl)
+      .then(response => response.arrayBuffer())
+      .then(data => audioContext.decodeAudioData(data))
+      .then(buffer => {
+        audioBuffer = buffer;
+      })
+      .catch(e => console.error("Falha ao carregar áudio de trovão:", e));
+
+    const playThunderEffect = () => {
+      if (!showEffects || isMuted || !audioBuffer) return;
+      
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 0.5 + Math.random() * 0.5;
+      
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      source.start(0);
+    };
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        if (!isMuted && audioRef.current) {
-          // Usamos um clone para permitir sons sobrepostos e garantir o play imediato
-          const thunderClone = audioRef.current.cloneNode() as HTMLAudioElement;
-          thunderClone.volume = 0.7 + Math.random() * 0.3;
-          thunderClone.play().catch(e => console.log("Audio play blocked", e));
-        }
+        // Dispara o som sincronizado com o efeito visual
+        playThunderEffect();
       }
     }, 4000);
     
     return () => {
       clearTimeout(timer);
       clearInterval(lightningInterval);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+      audioContext.close();
     };
   }, [isMuted, showEffects]);
 
