@@ -21,7 +21,7 @@ const DICT: Dict = {
   "nav.support": { pt: "Suporte", en: "Support" },
   "nav.admin": { pt: "Painel Admin", en: "Admin Panel" },
   "nav.playprotect": { pt: "Shadow Signer", en: "Shadow Signer" },
-  "nav.tutorials": { pt: "Centro de Treinamento RGB", en: "Training Hub RGB" },
+  "nav.tutorials": { pt: "Centro de Treinamento", en: "Training Hub" },
 
   // ===== Dashboard =====
   "dash.client_panel": { pt: "Painel do cliente", en: "Customer Dashboard" },
