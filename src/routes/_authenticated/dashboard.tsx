@@ -250,6 +250,16 @@ function DashboardPage() {
                 <div className="mt-5 flex flex-wrap gap-2 border-t border-border/50 pt-3">
                   <Button size="sm" variant="outline" onClick={copyPrimary} disabled={!primary} className="font-mono text-[10px] uppercase"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar credenciais</Button>
                   <Button size="sm" variant="outline" onClick={() => setTutorialOpen(true)} className="font-mono text-[10px] uppercase"><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Tutorial</Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleSync} 
+                    disabled={syncing}
+                    className="font-mono text-[10px] uppercase border-primary/20 bg-primary/5 hover:bg-primary/10"
+                  >
+                    <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} /> 
+                    {syncing ? "Sincronizando..." : "Corrigir Erros"}
+                  </Button>
                   <Link to="/tutoriais"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-primary border-primary/30 hover:bg-primary/5"><Video className="mr-1.5 h-3.5 w-3.5" /> Hub de Vídeos</Button></Link>
                   <Link to="/suporte" search={{}}><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase"><LifeBuoy className="mr-1.5 h-3.5 w-3.5" /> Suporte</Button></Link>
                   <Link to="/planos"><Button size="sm" className="font-mono text-[10px] uppercase"><ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Renovar agora</Button></Link>
