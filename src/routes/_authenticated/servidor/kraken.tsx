@@ -125,10 +125,14 @@ function KrakenPage() {
       {/* Lightning Effect Overlay */}
       {showEffects && (
         <div 
-          className="absolute inset-0 pointer-events-none animate-lightning mix-blend-screen z-10" 
+          className="absolute inset-0 pointer-events-none animate-lightning mix-blend-screen z-10 overflow-hidden" 
           style={{ '--lightning-opacity': intensity } as React.CSSProperties}
-        />
+        >
+          {/* Hardware-accelerated glow substitute for heavy box-shadow */}
+          <div className="absolute inset-0 bg-white/30 blur-[100px] opacity-0 animate-lightning" />
+        </div>
       )}
+
 
 
       {/* Controls Overlay */}

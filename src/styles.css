@@ -410,15 +410,19 @@ html.theme-light .crt::after { display: none; }
   /* Kraken UI animations */
   .animate-lightning {
     animation: lightning-flash 4s infinite;
+    will-change: opacity, background-color;
+    transform: translateZ(0); /* Force GPU layer */
+    backface-visibility: hidden;
   }
   @keyframes lightning-flash {
     0%, 94%, 100% { opacity: 0; background-color: transparent; }
-    95% { opacity: var(--lightning-opacity, 1); background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 100px 50px white; }
+    95% { opacity: var(--lightning-opacity, 1); background-color: rgba(255, 255, 255, 0.95); }
     96% { opacity: 0; background-color: transparent; }
     97% { opacity: calc(var(--lightning-opacity, 1) * 0.8); background-color: rgba(200, 230, 255, 0.9); }
     98% { opacity: 0; background-color: transparent; }
     99% { opacity: calc(var(--lightning-opacity, 1) * 0.4); background-color: white; }
   }
+
 
 
 
