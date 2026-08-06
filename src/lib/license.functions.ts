@@ -564,12 +564,13 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
       if (lic.suspended_at) {
         try {
           // Bloqueio por data antiga (1970)
-          await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
+          const yr = await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
           
-          // Senha de pausa (baseada no fingerprint se possível, ou apenas garantindo que não é a original)
-          // Na dúvida, re-geramos uma senha de bloqueio para este terminal.
-          // Note: syncAllMyLicenses não tem acesso à plain original facilmente sem decrypt em loop,
-          // mas queremos garantir que o painel NÃO aceite a original enquanto pausado.
+          // Se falhar a data e não for 1005 (not found), tentamos ontem como fallback
+          if (yr.Fail && !/1005|não encontrado|not found/i.test(yr.Fail)) {
+             await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
+          }
+          
           results.push({ id: lic.id, status: "pause_verified" });
         } catch (e) {
           results.push({ id: lic.id, status: "failed" });
