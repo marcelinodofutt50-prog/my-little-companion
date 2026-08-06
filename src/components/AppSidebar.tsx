@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard,
-  Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video } from "lucide-react";
+  Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -34,7 +34,9 @@ const primary: Item[] = [
   { title: "Executive Support", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
   { title: "Service Recovery", url: "/servidor/status", icon: Server },
   { title: "Training Hub", url: "/tutoriais", icon: Video, tKey: "nav.tutorials" as const },
+  { title: "Kraken Control", url: "/servidor/kraken", icon: Skull, tKey: "nav.kraken" as const },
 ];
+
 
 
 export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
