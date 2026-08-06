@@ -37,7 +37,7 @@ export function SiteHeader() {
   const primary = [
     { to: "/planos", label: t("nav.plans") },
     { to: "/mercado", label: "Mercado" },
-    { to: "/tutorial", label: t("nav.tutorial") },
+    { to: "/tutoriais", label: t("nav.tutorial") },
   ] as const;
 
   const more = [
