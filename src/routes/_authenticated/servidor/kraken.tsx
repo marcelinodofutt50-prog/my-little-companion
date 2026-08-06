@@ -138,31 +138,59 @@ function KrakenPage() {
 
 
 
-      {/* Controls Overlay */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-4">
-        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md border border-white/10 p-2 px-4 rounded-full">
-          <Sliders className="h-4 w-4 text-white/50" />
-          <div className="w-24">
-            <Slider 
-              value={[intensity * 100]} 
-              min={0} 
-              max={100} 
-              step={1} 
-              onValueChange={(val) => setIntensity(val[0] / 100)}
-              className="cursor-pointer"
-            />
+      {/* Settings Panel Overlay */}
+      <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-3">
+        <div className="flex flex-col gap-3 bg-black/80 backdrop-blur-xl border border-red-900/30 p-4 rounded-xl shadow-2xl shadow-red-900/20 w-64 kraken-fade-in">
+          <div className="flex items-center justify-between border-b border-red-900/20 pb-2 mb-2">
+            <span className="text-[10px] font-mono font-bold text-red-500 uppercase tracking-widest">System Params</span>
+            <div className="flex items-center gap-1">
+              <div className="h-1 w-1 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[8px] font-mono text-white/40 uppercase">Ajuste tático</span>
+            </div>
           </div>
-          <span className="text-[10px] font-mono text-white/40 w-8 text-right">{Math.round(intensity * 100)}%</span>
-        </div>
 
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setIsMuted(!isMuted)}
-          className="text-white/50 hover:text-white hover:bg-white/10"
-        >
-          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5 animate-pulse text-red-500" />}
-        </Button>
+          <div className="space-y-4">
+            {/* Intensity Control */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-3 w-3 text-amber-500" />
+                  <span className="text-[10px] font-mono text-white/60 uppercase">Raios (Intensity)</span>
+                </div>
+                <span className="text-[10px] font-mono text-white/40">{Math.round(intensity * 100)}%</span>
+              </div>
+              <Slider 
+                value={[intensity * 100]} 
+                min={0} 
+                max={100} 
+                step={1} 
+                onValueChange={(val) => setIntensity(val[0] / 100)}
+                className="cursor-pointer"
+              />
+            </div>
+
+            {/* Audio Toggle */}
+            <div className="flex items-center justify-between group pt-2 border-t border-red-900/10">
+              <div className="flex items-center gap-2">
+                <Volume2 className={cn("h-3 w-3 transition-colors", isMuted ? "text-white/20" : "text-red-500 animate-pulse")} />
+                <span className="text-[10px] font-mono text-white/60 uppercase">Audio Engine</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsMuted(!isMuted)}
+                className={cn(
+                  "h-7 px-3 text-[9px] font-mono uppercase border transition-all",
+                  isMuted 
+                    ? "text-white/40 border-white/10 hover:bg-white/5" 
+                    : "text-red-500 border-red-500/30 bg-red-500/10 hover:bg-red-500/20"
+                )}
+              >
+                {isMuted ? "Disabled" : "Operational"}
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="relative z-20 space-y-6">
