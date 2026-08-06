@@ -13,7 +13,6 @@ export interface SupportStaffQuota extends QuotaInfo {
   email?: string;
 }
 
-
 export const getMyQuota = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -21,7 +20,7 @@ export const getMyQuota = createServerFn({ method: "GET" })
     
     // Check if admin (unlimited)
     const { data: roleData } = await supabase.rpc('has_role' as any, { _user_id: userId, _role: 'admin' });
-    if (roleData) return { unlimited: true };
+    if (roleData) return { unlimited: true } as QuotaInfo;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -43,7 +42,7 @@ export const getMyQuota = createServerFn({ method: "GET" })
       unlimited: false,
       daily: { limit: dailyLimit, used: dailyUsed, remaining: Math.max(0, dailyLimit - dailyUsed) },
       monthly: { limit: monthlyLimit, used: monthlyUsed, remaining: Math.max(0, monthlyLimit - monthlyUsed) }
-    };
+    } as QuotaInfo;
   });
 
 export const updateSupportQuota = createServerFn({ method: "POST" })
@@ -77,7 +76,6 @@ export const listSupportQuotas = createServerFn({ method: "GET" })
     await assertAdminRole(context);
     const { supabase } = context;
 
-    // Buscar todos os moderadores (staff)
     const { data: staffRoles } = await supabase
       .from('user_roles' as any)
       .select('user_id')
@@ -87,7 +85,6 @@ export const listSupportQuotas = createServerFn({ method: "GET" })
 
     const staffIds = staffRoles.map((r: any) => r.user_id);
 
-    // Buscar perfis para emails
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, email')
@@ -99,7 +96,6 @@ export const listSupportQuotas = createServerFn({ method: "GET" })
     today.setHours(0, 0, 0, 0);
     const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    // Buscar cotas configuradas e logs
     const [quotasRes, logsRes] = await Promise.all([
       supabase.from('support_quotas' as any).select('*').in('user_id', staffIds),
       supabase.from('license_generation_logs' as any).select('staff_id, created_at').in('staff_id', staffIds).gte('created_at', firstOfMonth.toISOString())
@@ -117,14 +113,12 @@ export const listSupportQuotas = createServerFn({ method: "GET" })
       const dailyLimit = (q as any)?.daily_limit ?? 5;
       const monthlyLimit = (q as any)?.monthly_limit ?? 30;
 
-
       return {
         userId: id,
         email: emailMap.get(id),
         unlimited: false,
         daily: { limit: dailyLimit, used: dailyUsed, remaining: Math.max(0, dailyLimit - dailyUsed) },
         monthly: { limit: monthlyLimit, used: monthlyUsed, remaining: Math.max(0, monthlyLimit - monthlyUsed) }
-      };
+      } as SupportStaffQuota;
     });
   });
-
