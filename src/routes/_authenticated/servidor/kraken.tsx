@@ -122,23 +122,25 @@ function KrakenPage() {
           <>
             <motion.div 
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.3 }}
-              className="absolute inset-0 pointer-events-none"
+              animate={{ opacity: 0.5 }}
+              className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
               style={{ 
                 backgroundImage: `url(${krakenBg4.url})`, 
                 backgroundSize: 'cover', 
-                backgroundPosition: 'center' 
+                backgroundPosition: 'center',
+                zIndex: 0
               }}
             />
             <motion.div 
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.2 }}
-              transition={{ delay: 2 }}
-              className="absolute inset-0 pointer-events-none mix-blend-overlay"
+              animate={{ opacity: 0.3 }}
+              transition={{ delay: 1 }}
+              className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
               style={{ 
                 backgroundImage: `url(${krakenBg5.url})`, 
                 backgroundSize: 'cover', 
-                backgroundPosition: 'center' 
+                backgroundPosition: 'center',
+                zIndex: 1
               }}
             />
           </>
@@ -248,7 +250,7 @@ function KrakenPage() {
             animate={{ opacity: 1, x: 0 }}
             className="kraken-fade-in"
           >
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter rgb-text animate-rgb-text uppercase italic">
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter rgb-text animate-rgb-text uppercase italic drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
               Kraken (2.0)
             </h2>
             <div className="flex items-center gap-2 mt-1">
