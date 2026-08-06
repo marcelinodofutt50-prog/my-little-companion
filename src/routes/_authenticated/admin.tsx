@@ -54,6 +54,7 @@ import { AdminApkPanel } from "@/components/AdminApkPanel";
 import { AdminRefundsPanel } from "@/components/AdminRefundsPanel";
 import { AdminMarketPanel } from "@/components/AdminMarketPanel";
 import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
+import { AdminTutorialsPanel } from "@/components/AdminTutorialsPanel";
 import { AdminAnnouncementsPanel } from "@/components/AdminAnnouncementsPanel";
 import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
@@ -171,6 +172,7 @@ type Tab =
   | "market"
   | "announcements"
   | "updates"
+  | "tutorials"
   | "refunds"
   | "selftest";
 
