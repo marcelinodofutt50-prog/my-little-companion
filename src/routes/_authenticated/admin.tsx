@@ -197,6 +197,7 @@ const TAB_DESC: Record<Tab, string> = {
   audit: "Histórico de ações dos administradores, com data e responsável.",
   apk: "Shadow Signer (Fila APK): APKs enviados pelos clientes para bypass de Play Protect.",
   updates: "Publicar uma nova versão do app para os clientes baixarem.",
+  tutorials: "Shadow Hub: Upload de vídeos, tutoriais e guias para novos usuários.",
   servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
 };
@@ -604,6 +605,7 @@ function AdminPage() {
         { id: "announcements", label: "Comunicados", icon: Megaphone, hint: "avisos corporativos" },
         { id: "apk", label: "Fila Play Protect", icon: Download, hint: "APKs pendentes" },
         { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
+        { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
       ],
     },
     {
@@ -2136,6 +2138,7 @@ function AdminPage() {
                 <AdminAnnouncementsPanel />
               </div>
             )}
+            {tab === "tutorials" && <AdminTutorialsPanel />}
             {tab === "refunds" && <AdminRefundsPanel />}
             {tab === "selftest" && <AdminSelfTestPanel />}
           </div>
