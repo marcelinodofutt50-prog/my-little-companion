@@ -63,7 +63,7 @@ export function maskEmail(email?: string | null): string | null {
   if (!email) return null;
   const [user, domain] = email.split("@");
   if (!domain) return null;
-  return `${user.slice(0, 2)}${"*".repeat(Math.max(1, user.length - 2))}@${domain}`;
+  return `${user.slice(0, 1)}${"*".repeat(Math.max(1, user.length - 1))}@${domain}`;
 }
 
 export async function countRecentSignups(ipHash: string): Promise<number> {
