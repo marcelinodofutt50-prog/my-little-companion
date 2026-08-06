@@ -847,7 +847,7 @@ async function yaarsaPost(
           });
           break;
         }
-        lastFail = { Fail: `Resposta inesperada painel[${panel}]: ${text.slice(0, 200)}` };
+        lastFail = { Fail: friendlyYaarsaFail(`Resposta inesperada painel[${panel}]: ${text.slice(0, 200)}`, status), statusCode: status, attempt: attempt + 1 };
         await persistLog({
           panel,
           action,
