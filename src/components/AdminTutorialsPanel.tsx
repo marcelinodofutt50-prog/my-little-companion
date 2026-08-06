@@ -329,14 +329,8 @@ export function AdminTutorialsPanel() {
           )}
         </div>
       </DndContext>
-
-        {!loading && tutorials.length === 0 && (
-          <div className="col-span-full py-12 text-center">
-            <Video className="h-12 w-12 mx-auto text-muted-foreground/20" />
-            <h4 className="mt-4 font-medium text-muted-foreground">Nenhum tutorial cadastrado.</h4>
-          </div>
-        )}
-      </div>
     </div>
+  );
+}
   );
 }
