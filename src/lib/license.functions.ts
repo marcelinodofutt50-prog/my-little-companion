@@ -30,7 +30,7 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
-    if (error) throw new Error("Não foi possível carregar a licença. Tente novamente.");
+    if (error) throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
     const { canPauseLicense } = await import("./license-pause-rules");
     const gate = canPauseLicense(lic as any);
     if (!gate.ok) throw new Error(gate.message);
@@ -122,7 +122,7 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
-    if (error) throw new Error("Não foi possível carregar a licença. Tente novamente.");
+    if (error) throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
     const { canResumeLicense } = await import("./license-pause-rules");
     const gate = canResumeLicense(lic as any);
     if (!gate.ok) throw new Error(gate.message);

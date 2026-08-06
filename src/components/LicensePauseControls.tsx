@@ -18,8 +18,8 @@ function humanLeft(ms: number | null): string {
   const mins = Math.floor(ms / 60000)
   const days = Math.floor(mins / 1440)
   const hours = Math.floor((mins % 1440) / 60)
-  if (days > 0) return `${days} dia${days === 1 ? '' : 's'} e ${hours}h`
-  return `${hours}h ${mins % 60}min`
+  if (days > 0) return `${days} dia${days === 1 ? '' : 's'}, ${hours}h e ${mins % 60}min`
+  if (hours > 0) return `${hours}h e ${mins % 60}min`
 }
 
 /**
