@@ -716,7 +716,7 @@ async function yaarsaPost(
       } catch (err) {
         const latency = Date.now() - started;
         lastNetworkErr = err;
-        lastFail = { Fail: `painel[${panel}] (${url}) falha de rede` };
+        lastFail = { Fail: friendlyYaarsaFail(`painel[${panel}] (${url}) falha de rede`), attempt: attempt + 1 };
         await persistLog({
           panel,
           action,
