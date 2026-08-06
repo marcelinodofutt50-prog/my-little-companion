@@ -161,7 +161,7 @@ export function AdminTutorialsPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold tracking-tight text-foreground rgb-text animate-rgb-text">Training Hub</h3>
+          <h3 className="text-xl font-bold tracking-tight text-foreground rgb-text animate-rgb-text">Centro de Treinamento</h3>
           <p className="text-sm text-muted-foreground">Gerencie os vídeos e guias para seus clientes.</p>
         </div>
         <div className="flex gap-2">

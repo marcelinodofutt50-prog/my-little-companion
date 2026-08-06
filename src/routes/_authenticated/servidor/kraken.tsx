@@ -293,7 +293,7 @@ function KrakenPage() {
             className="kraken-fade-in"
           >
             <h2 className="text-4xl md:text-6xl font-black tracking-tighter rgb-text animate-rgb-text uppercase italic drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-              Kraken (2.0)
+              Kraken 2.0
             </h2>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-muted-foreground font-mono text-xs uppercase tracking-[0.3em]">
@@ -329,7 +329,7 @@ function KrakenPage() {
             </div>
 
             <CardTitle className="text-3xl font-black font-mono uppercase tracking-[0.4em] text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
-              KRAKEN UNIT
+              KRAKEN 2.0
             </CardTitle>
             
             <div className="max-w-md space-y-4">

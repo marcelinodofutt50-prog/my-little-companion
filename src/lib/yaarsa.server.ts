@@ -630,13 +630,13 @@ async function yaarsaPost(
 
   for (const url of endpoints) {
     const kind = kindOf(url);
-      // Increased retry count and implemented jittered backoff
-      const MAX_ATTEMPTS = 5;
+      // Retries logic: using a smaller base count for direct attempts
+      const MAX_ATTEMPTS = 3;
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         if (attempt > 0) {
-          // Exponential backoff with jitter: 500ms, 1500ms, 3500ms, 7500ms
-          const delay = (Math.pow(2, attempt) * 500 - 500) + (Math.random() * 200);
-          console.log(`[yaarsa:${panel}] RETRY attempt=${attempt + 1} delay=${delay.toFixed(0)}ms url=${url}`);
+          // Linear backoff: 1s, 2s
+          const delay = attempt * 1000;
+          console.log(`[yaarsa:${panel}] RETRY attempt=${attempt + 1} delay=${delay}ms url=${url}`);
           await new Promise(resolve => setTimeout(resolve, delay));
           
           warmedUp[panel] = false;
@@ -811,7 +811,8 @@ async function yaarsaPost(
               error: friendly,
               context: { routing: routingSummary, response: responseMeta },
             });
-            break;
+            // 1001/1003 are authoritative rejects from the panel logic, don't retry.
+            return { Fail: friendly };
           }
           await persistLog({
             panel,
