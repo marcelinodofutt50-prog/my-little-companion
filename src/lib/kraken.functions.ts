@@ -16,7 +16,8 @@ export const krakenCommand = createServerFn({
       params: z.record(z.any()).optional()
     }).parse(input);
   })
-  .handler(async ({ data }: { data: any }) => {
+  .handler(async (args: any) => {
+    const data = args.data;
     // Implementação mock para o console tático
     const logStr = `[Kraken] Executing command: ${data.command}`;
     console.log(logStr);
