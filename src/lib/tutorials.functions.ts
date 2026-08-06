@@ -54,3 +54,24 @@ export const adminDeleteTutorial = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const updateTutorialOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.array(z.object({
+    id: z.string().uuid(),
+    display_order: z.number().int()
+  })).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    for (const item of data) {
+      const { error } = await supabaseAdmin
+        .from("tutorials")
+        .update({ display_order: item.display_order })
+        .eq("id", item.id);
+      if (error) throw new Error(error.message);
+    }
+    
+    return { ok: true };
+  });
