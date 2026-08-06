@@ -40,6 +40,23 @@ function TutorialsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const categories = useMemo(() => {
+    const cats = new Set<string>(["Tudo"]);
+    tutorials.forEach(t => {
+      if (t.category) cats.add(t.category);
+    });
+    return Array.from(cats);
+  }, [tutorials]);
+
+  const filteredTutorials = useMemo(() => {
+    return tutorials.filter(t => {
+      const matchesSearch = t.title.toLowerCase().includes(search.toLowerCase()) || 
+                           t.description?.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = activeCategory === "Tudo" || t.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [tutorials, search, activeCategory]);
+
   const statsByCategory = useMemo(() => {
     const groups: Record<string, { total: number; completed: number }> = {};
     tutorials.forEach(t => {
