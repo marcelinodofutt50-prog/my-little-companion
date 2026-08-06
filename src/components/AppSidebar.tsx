@@ -35,6 +35,7 @@ const primary: Item[] = [
   { title: "Service Recovery", url: "/servidor/status", icon: Server },
   { title: "Training Hub", url: "/tutoriais", icon: Video, tKey: "nav.tutorials" as const },
   { title: "Kraken Control", url: "/servidor/kraken", icon: Skull, tKey: "nav.kraken" as const },
+
 ];
 
 
@@ -86,19 +87,19 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
               {primary.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.tKey ? t(item.tKey) : item.title}>
-                    <Link to={item.url} className="flex items-center gap-2.5">
+                    <Link to={item.url}>
                       <item.icon className="h-4 w-4" />
                       {!collapsed && (
                         <span className={cn(
                           "text-sm",
                           (item.tKey === "nav.tutorials" || item.tKey === "nav.kraken") && "rgb-text animate-rgb-text font-bold"
-
                         )}>
                           {item.tKey ? t(item.tKey) : item.title}
                         </span>
                       )}
                     </Link>
                   </SidebarMenuButton>
+
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
