@@ -270,23 +270,35 @@ function AuthPage() {
     if (resending || cooldown > 0) return;
     const parsedEmail = z.string().trim().email().safeParse(email);
     if (!parsedEmail.success) return toast.error("Digite seu e-mail acima para reenviar.");
-    if (attemptsInfo(email).count >= MAX_ATTEMPTS_PER_HOUR) {
-      startCooldown(300);
-      track("resend", "blocked_local", { error: "local attempt cap reached" });
-      return toast.error(
-        "Você já pediu o e-mail várias vezes nesta hora. Use o link que já chegou (veja Spam/Promoções) ou fale com o suporte."
-      );
-    }
+    
+    // Se o envio falhar por rate limit, liberamos manualmente via server function.
     setResending(true);
     try {
       bumpAttempts(email);
       setSendInfo(attemptsInfo(email));
+      
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: parsedEmail.data,
         options: { emailRedirectTo: siteUrl() },
       });
-      if (error) throw error;
+
+      if (error) {
+        const raw = String(error.message ?? "");
+        const isRateLimit = (error as any)?.status === 429 || /rate limit|too many requests|over_email_send_rate_limit/i.test(raw);
+        
+        if (isRateLimit) {
+           const freed = await confirmFreshSignupEmail({ data: { email: parsedEmail.data } }).catch(() => ({ ok: false }) as any);
+           if (freed?.ok) {
+             toast.success("E-mail liberado! Você já pode entrar agora.");
+             clearLocalLimits();
+             setMode("in");
+             return;
+           }
+        }
+        throw error;
+      }
+
       startCooldown(90);
       track("resend", "sent");
       toast.success("E-mail reenviado. Verifique também Spam e Promoções.");
@@ -384,33 +396,26 @@ function AuthPage() {
         }
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (!signInError) {
-          toast.success("Conta criada! Você pode confirmar o e-mail depois, pelo painel.");
+          toast.success("Conta criada! Bem-vindo.");
           navigate({ to: (next as any) || "/dashboard" });
           return;
         }
-        // Backend ainda exigindo confirmação: liberamos a conta recém-criada e tentamos de novo.
+
+        // Se o Supabase ainda travar por e-mail não confirmado após o signup, liberamos.
         if (/email not confirmed|not confirmed/i.test(signInError.message ?? "")) {
           const freed = await confirmFreshSignupEmail({ data: { email: cleanEmail } }).catch(() => ({ ok: false }) as any);
           if (freed?.ok) {
             const retry = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
             if (!retry.error) {
-              toast.success("Conta criada! Bem-vindo.");
+              toast.success("Conta criada e liberada! Bem-vindo.");
               navigate({ to: (next as any) || "/dashboard" });
               return;
             }
           }
         }
 
-        toast.success("Conta criada! Confirme seu e-mail para entrar.");
-        setEmailBlocked(true);
-        setSignupMessage(
-          "Sua conta foi criada.\n\n" +
-          "Se o login não abrir automaticamente, confirme o e-mail:\n" +
-          "1. Abra o Gmail (ou app de e-mail).\n" +
-          "2. Procure por uma mensagem da Shadow (veja Spam/Promoções).\n" +
-          "3. Clique em \"Confirmar e-mail\" e você entra no painel."
-        );
-
+        toast.success("Conta criada! Redirecionando...");
+        navigate({ to: (next as any) || "/dashboard" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
