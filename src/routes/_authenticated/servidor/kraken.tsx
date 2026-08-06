@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles } from "lucide-react"
+import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles, ArrowLeft } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -283,7 +283,6 @@ function KrakenPage() {
             <ArrowLeft className="h-3 w-3 mr-2" /> Voltar ao Dashboard
           </Link>
         </Button>
-      </div>
       </div>
 
       <div className="relative z-20 space-y-6">
