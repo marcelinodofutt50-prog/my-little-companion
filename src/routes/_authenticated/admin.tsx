@@ -4930,7 +4930,11 @@ function SupportQuotasPanel() {
   }
 
   return (
-    <div className="space-y-4">
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="space-y-4"
+    >
       <div className="terminal-card scanlines relative p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
