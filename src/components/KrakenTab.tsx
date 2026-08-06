@@ -50,19 +50,15 @@ export function KrakenTab({ onNavigate }: { onNavigate?: () => void }) {
   const [loading, setLoading] = useState(false);
 
   const trigger = useCallback((e: React.MouseEvent) => {
-    // Prevent default to ensure our manual navigation logic runs if needed,
-    // though Link to="/servidor/kraken" should work.
-    // However, the user says it "doesn't go anywhere".
+    // Force immediate navigation to ensure reliability
     setLoading(true);
     setFlash(true);
     playThunder();
     
-    // Explicit navigation fallback if Link fails
+    // Safety: ensure we navigate even if Link component has issues
     if (onNavigate) onNavigate();
     
-    // Reset flash after animation
     setTimeout(() => setFlash(false), 900);
-    // Safety timeout to reset loading
     setTimeout(() => setLoading(false), 5000);
   }, [onNavigate]);
 
