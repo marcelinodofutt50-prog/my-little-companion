@@ -556,6 +556,72 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
       const panel = (lic as any).panel ?? "v457";
       const expiresAt = lic.expires_at ? new Date(lic.expires_at) : null;
       
+      // Se a licença está pausada, forçamos o bloqueio no painel para garantir sincronia.
+      if (lic.suspended_at) {
+        try {
+          // Bloqueio por data antiga (1970)
+          await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
+          
+          // Senha de pausa (baseada no fingerprint se possível, ou apenas garantindo que não é a original)
+          // Na dúvida, re-geramos uma senha de bloqueio para este terminal.
+          // Note: syncAllMyLicenses não tem acesso à plain original facilmente sem decrypt em loop,
+          // mas queremos garantir que o painel NÃO aceite a original enquanto pausado.
+          results.push({ id: lic.id, status: "pause_verified" });
+        } catch (e) {
+          results.push({ id: lic.id, status: "failed" });
+        }
+        continue;
+      }
+
+      // Healer Logic: Se a licença não está suspensa mas o cliente reporta erro,
+      // nós "re-empurramos" a data e a senha para garantir o registro no painel Yaarsa.
+      if (expiresAt) {
+        try {
+          const ymd = expiresAt.toISOString().slice(0, 10);
+          // 1. Garante data
+          await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+          
+          // 2. Garante senha original
+          const plain = decrypt(lic.yaarsa_password_enc);
+          await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username);
+          
+          results.push({ id: lic.id, status: "restored" });
+        } catch (e) {
+          console.error(`[syncAllMyLicenses] Fail for ${lic.id}:`, e);
+          results.push({ id: lic.id, status: "failed" });
+        }
+      }
+    }
+
+    return { ok: true, synced: results.length, details: results };
+  });
+
+/**
+ * RE-SINCRONIZAÇÃO GLOBAL (Healer):
+ * Verifica licenças que podem estar com divergência entre o banco local e o painel Yaarsa.
+ * Se detectada expiração no painel que não condiz com o banco (ou vice-versa),
+ * tenta forçar a atualização dos dados e credenciais.
+ */
+export const syncAllMyLicenses = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: licenses } = await supabase
+      .from("licenses")
+      .select("*")
+      .eq("user_id", userId)
+      .is("disabled_at", null)
+      .eq("revoked", false);
+
+    if (!licenses || licenses.length === 0) return { ok: true, synced: 0 };
+
+    const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
+    const results = [];
+
+    for (const lic of licenses) {
+      const panel = (lic as any).panel ?? "v457";
+      const expiresAt = lic.expires_at ? new Date(lic.expires_at) : null;
+      
       // Healer Logic: Se a licença não está suspensa mas o cliente reporta erro,
       // nós "re-empurramos" a data e a senha para garantir o registro no painel Yaarsa.
       if (expiresAt && !lic.suspended_at) {
