@@ -199,7 +199,7 @@ function KrakenPage() {
       </AnimatePresence>
 
       {showEffects && (
-        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+        <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
           {/* Main Lightning Strike */}
           <div 
             className="animate-lightning" 
