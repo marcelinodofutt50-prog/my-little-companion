@@ -205,6 +205,8 @@ const TAB_DESC: Record<Tab, string> = {
   tutorials: "Shadow Hub: Upload de vídeos, tutoriais e guias para novos usuários.",
   servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
+  quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
+
 };
 
 function AdminPage() {
