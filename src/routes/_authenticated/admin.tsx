@@ -128,6 +128,12 @@ import {
   adminListReferrals,
   adminMarkReferralPaid,
 } from "@/lib/admin.functions";
+import {
+  getMyQuota,
+  listSupportQuotas,
+  updateSupportQuota,
+} from "@/lib/support-quotas.functions";
+
 
 import {
   adminListAnnouncements,
@@ -3740,10 +3746,7 @@ function IssueLicensePanel({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  const quotaFn = useServerFn(useCallback(async (...args: any[]) => {
-    const { getMyQuota } = await import("@/lib/support-quotas.functions");
-    return (getMyQuota as any)(...args);
-  }, []));
+  const quotaFn = useServerFn(getMyQuota);
   const [quota, setQuota] = useState<any>(null);
   const [loadingQuota, setLoadingQuota] = useState(true);
 
@@ -3761,6 +3764,7 @@ function IssueLicensePanel({
   useEffect(() => {
     void loadQuota();
   }, [loadQuota]);
+
 
 
   async function submit(e: React.FormEvent) {
@@ -4872,14 +4876,9 @@ function ReferralsAdminPanel() {
 }
 
 function SupportQuotasPanel() {
-  const listFn = useServerFn(useCallback(async (...args: any[]) => {
-    const { listSupportQuotas } = await import("@/lib/support-quotas.functions");
-    return (listSupportQuotas as any)(...args);
-  }, []));
-  const updateFn = useServerFn(useCallback(async (...args: any[]) => {
-    const { updateSupportQuota } = await import("@/lib/support-quotas.functions");
-    return (updateSupportQuota as any)(...args);
-  }, []));
+  const listFn = useServerFn(listSupportQuotas);
+  const updateFn = useServerFn(updateSupportQuota);
+
 
 
   const [staff, setStaff] = useState<any[]>([]);
