@@ -43,13 +43,14 @@ function KrakenPage() {
     audioRef.current = new Audio("https://www.soundjay.com/nature/thunder-01.mp3");
     audioRef.current.loop = false;
     audioRef.current.volume = 0.5;
+    audioRef.current.preload = "auto";
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        // Sincroniza som com o início da animação de raio
         if (!isMuted && audioRef.current) {
+          // Usamos um clone para permitir sons sobrepostos e garantir o play imediato
           const thunderClone = audioRef.current.cloneNode() as HTMLAudioElement;
-          thunderClone.volume = 0.6 + Math.random() * 0.4;
+          thunderClone.volume = 0.7 + Math.random() * 0.3;
           thunderClone.play().catch(e => console.log("Audio play blocked", e));
         }
       }
