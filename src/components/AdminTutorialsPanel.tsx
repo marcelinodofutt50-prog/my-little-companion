@@ -46,6 +46,9 @@ export function AdminTutorialsPanel() {
 
   async function handleSave() {
     if (!current.title) return toast.error("Título é obrigatório");
+    if (!current.description) return toast.error("Descrição é obrigatória");
+    if (!current.category) return toast.error("Categoria é obrigatória");
+    if (!current.video_url && !current.youtube_url) return toast.error("É necessário um vídeo (upload ou link)");
     try {
       await saveFn({ data: current });
       toast.success("Tutorial salvo com sucesso!");
@@ -72,6 +75,28 @@ export function AdminTutorialsPanel() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validations
+    const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024;   // 5MB
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+    if (type === 'video') {
+      if (!allowedVideoTypes.includes(file.type)) {
+        return toast.error("Apenas vídeos MP4, WebM ou OGG são permitidos.");
+      }
+      if (file.size > MAX_VIDEO_SIZE) {
+        return toast.error("O vídeo deve ter no máximo 100MB.");
+      }
+    } else {
+      if (!allowedImageTypes.includes(file.type)) {
+        return toast.error("Apenas imagens JPEG, PNG, WEBP ou GIF são permitidas.");
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        return toast.error("A imagem deve ter no máximo 5MB.");
+      }
+    }
+
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
@@ -83,7 +108,7 @@ export function AdminTutorialsPanel() {
       const { data: { publicUrl } } = supabase.storage.from('tutorials').getPublicUrl(path);
       
       setCurrent({ ...current, [type === 'video' ? 'video_url' : 'image_url']: publicUrl });
-      toast.success("Arquivo enviado!");
+      toast.success(`${type === 'video' ? 'Vídeo' : 'Capa'} enviado com sucesso!`);
     } catch (e: any) {
       toast.error("Erro no upload: " + e.message);
     } finally {
@@ -179,23 +204,27 @@ export function AdminTutorialsPanel() {
               
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold">Upload MP4</label>
+                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
+                    Upload MP4 <span className="text-[10px] text-muted-foreground opacity-70">Max 100MB</span>
+                  </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <Video className="h-4 w-4 mr-2" />
-                    {uploading ? "Sincronizando..." : "Vídeo"}
+                    {uploading ? "Sincronizando..." : "Selecionar Vídeo"}
                     <input 
                       type="file" 
-                      accept="video/*"
+                      accept="video/mp4,video/webm,video/ogg"
                       onChange={(e) => handleFileUpload(e, 'video')}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold">Upload Capa</label>
+                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
+                    Upload Capa <span className="text-[10px] text-muted-foreground opacity-70">Max 5MB</span>
+                  </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    {uploading ? "Sincronizando..." : "Foto"}
+                    {uploading ? "Sincronizando..." : "Selecionar Foto"}
                     <input 
                       type="file" 
                       accept="image/*"
