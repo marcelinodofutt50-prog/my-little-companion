@@ -28,6 +28,8 @@ function KrakenPage() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [intensity, setIntensity] = useState(1);
+
   const logEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const executeKraken = useServerFn(krakenCommand);
