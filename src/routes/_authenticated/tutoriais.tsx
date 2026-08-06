@@ -188,23 +188,26 @@ function TutorialsPage() {
                   <div className="aspect-video w-full bg-black relative">
                     {selected.video_url ? (
                       <video 
+                        key={selected.video_url}
                         src={selected.video_url} 
                         controls 
-                        className="h-full w-full"
+                        className="h-full w-full object-contain"
                         poster={selected.image_url}
+                        autoPlay
                       />
                     ) : selected.youtube_url ? (
                       <iframe
+                        key={selected.youtube_url}
                         className="h-full w-full"
-                        src={selected.youtube_url.replace("watch?v=", "embed/")}
+                        src={selected.youtube_url.includes("embed") ? selected.youtube_url : selected.youtube_url.replace("watch?v=", "embed/") + "?autoplay=1"}
                         title={selected.title}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
                     ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-muted-foreground">
-                        <Video className="h-16 w-16 opacity-20" />
-                        <p className="font-mono text-xs uppercase tracking-widest">Sem mídia disponível</p>
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-muted-foreground bg-primary/5">
+                        <Video className="h-16 w-16 opacity-10 animate-pulse" />
+                        <p className="font-mono text-[10px] uppercase tracking-[0.3em]">Sinal de Mídia Ausente</p>
                       </div>
                     )}
                   </div>
@@ -256,7 +259,12 @@ function TutorialsPage() {
                   <Card 
                     className="group h-full cursor-pointer overflow-hidden border-border/40 bg-card/40 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                     onClick={() => {
-                      setSelected(t);
+                      if (selected?.id === t.id) {
+                        setSelected(null);
+                        setTimeout(() => setSelected(t), 10);
+                      } else {
+                        setSelected(t);
+                      }
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                   >
@@ -285,9 +293,9 @@ function TutorialsPage() {
                       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
                          <div className="flex gap-2">
                            {completedIds.includes(t.id) && (
-                             <div className="rounded bg-emerald-500/20 px-2 py-0.5 backdrop-blur-md border border-emerald-500/20">
+                             <div className="rounded bg-emerald-500/10 px-2 py-0.5 backdrop-blur-md border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
                                <span className="font-mono text-[9px] uppercase tracking-widest text-emerald-500 font-bold flex items-center gap-1">
-                                 <CheckCircle2 className="h-2 w-2" /> Done
+                                 <CheckCircle2 className="h-2.5 w-2.5" /> Concluído
                                </span>
                              </div>
                            )}
@@ -310,8 +318,8 @@ function TutorialsPage() {
                       </div>
                     </div>
                     <CardContent className="p-5">
-                      <h3 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight">{t.title}</h3>
-                      <p className="mt-2 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">{t.description}</p>
+                      <h3 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight h-10">{t.title}</h3>
+                      <p className="mt-2 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity h-8">{t.description || "Nenhuma descrição disponível para este módulo."}</p>
                       <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4">
                         <div className="flex items-center gap-2 text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
                            <BookOpen className="h-3 w-3 text-primary/50" /> Módulo {idx + 1}
