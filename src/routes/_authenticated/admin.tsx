@@ -42,6 +42,7 @@ import {
   Wrench,
   Bot,
   Server,
+  Video,
   Megaphone,
   Building2,
 } from "lucide-react";
