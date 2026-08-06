@@ -2572,12 +2572,12 @@ function ExecStat({
       >
         {pulse && <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-current" />}
         {value}
-    </motion.div>
+      </div>
       <div className="mt-2 flex items-center justify-between gap-2 pl-2.5 font-mono text-[10px] uppercase text-muted-foreground/60">
         <span className="truncate">{sub}</span>
         {code && <span className={`shrink-0 tracking-[0.18em] opacity-40 ${color}`}>{code}</span>}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
