@@ -40,16 +40,18 @@ function KrakenPage() {
     
     // Setup áudio
     // Setup áudio
-    audioRef.current = new Audio("https://cdn.pixabay.com/audio/2022/01/18/audio_823a39e830.mp3");
-    audioRef.current.loop = false; // We'll trigger it manually for lightning
+    audioRef.current = new Audio("https://www.soundjay.com/nature/thunder-01.mp3");
+    audioRef.current.loop = false;
     audioRef.current.volume = 0.5;
 
     const lightningInterval = setInterval(() => {
-      if (!isMuted && showEffects && audioRef.current) {
-        // Sincroniza som com o início da animação de raio (ciclo de 4s em styles.css)
-        const thunderClone = audioRef.current.cloneNode() as HTMLAudioElement;
-        thunderClone.volume = 0.4 + Math.random() * 0.3;
-        thunderClone.play().catch(e => console.log("Audio play blocked", e));
+      if (showEffects) {
+        // Sincroniza som com o início da animação de raio
+        if (!isMuted && audioRef.current) {
+          const thunderClone = audioRef.current.cloneNode() as HTMLAudioElement;
+          thunderClone.volume = 0.6 + Math.random() * 0.4;
+          thunderClone.play().catch(e => console.log("Audio play blocked", e));
+        }
       }
     }, 4000);
     
@@ -195,13 +197,13 @@ function KrakenPage() {
                 <Skull className="h-6 w-6 text-red-500" />
               </div>
               <div>
-                <CardTitle className="text-sm font-mono uppercase tracking-widest text-red-500">Kraken Command Console</CardTitle>
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-red-500">Kraken Control Console</CardTitle>
                 <p className="text-[10px] text-muted-foreground uppercase leading-tight">
                   Cansado do bancor travar? Perdendo muita pena? Caixa detectando?<br/>
                   Mude agora para a Kraken e mude de conceito.
                 </p>
-
               </div>
+
             </CardHeader>
             <CardContent className="p-0">
               <div className="h-[400px] overflow-y-auto p-4 font-mono text-xs space-y-1 custom-scrollbar scroll-smooth bg-black/40">
@@ -285,13 +287,31 @@ function KrakenPage() {
                     "A Kraken não é apenas uma ferramenta; é uma entidade. O futuro da KL chegou."
                   </p>
 
-                  <div className="pt-2 border-t border-red-500/10 mt-2">
-                    <p className="text-[9px] text-muted-foreground uppercase font-mono">Pricing:</p>
-                    <div className="flex gap-4 mt-1">
-                      <span className="text-[10px] text-amber-400 font-bold">R$ 20.000 / MENSAL</span>
-                      <span className="text-[10px] text-emerald-400 font-bold">R$ 30.000 / VITALÍCIO</span>
+                  <div className="pt-4 border-t border-red-500/10 mt-2 space-y-4">
+                    <p className="text-[9px] text-muted-foreground uppercase font-mono">Select Plan:</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col h-auto p-4 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 group transition-all"
+                        onClick={() => window.open('https://www.mercadopago.com.br/', '_blank')}
+                      >
+                        <span className="text-[10px] text-amber-400 font-bold">MENSAL</span>
+                        <span className="text-lg font-black text-white group-hover:scale-110 transition-transform">R$ 20.000</span>
+                        <span className="text-[8px] text-amber-400/60 uppercase mt-1">Buy via Mercado Pago</span>
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col h-auto p-4 border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 group transition-all"
+                        onClick={() => window.open('https://www.mercadopago.com.br/', '_blank')}
+                      >
+                        <span className="text-[10px] text-emerald-400 font-bold">VITALÍCIO</span>
+                        <span className="text-lg font-black text-white group-hover:scale-110 transition-transform">R$ 30.000</span>
+                        <span className="text-[8px] text-emerald-400/60 uppercase mt-1">Buy via Mercado Pago</span>
+                      </Button>
                     </div>
                   </div>
+
                 </div>
               </CardContent>
             </Card>
