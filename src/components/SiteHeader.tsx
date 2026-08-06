@@ -125,6 +125,11 @@ export function SiteHeader() {
                   </div>
                 </div>
                 <nav className="flex flex-col gap-1 p-4">
+                  <div className="px-3 py-3 border-b border-muted/50 mb-1 flex justify-center">
+                    <KrakenTab onNavigate={() => setOpen(false)} />
+                  </div>
+
+
                   {allLinks.map((l) => (
                     <Link
                       key={l.to}

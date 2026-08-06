@@ -38,14 +38,16 @@ function playThunder() {
   }
 }
 
-export function KrakenTab() {
+export function KrakenTab({ onNavigate }: { onNavigate?: () => void }) {
   const [flash, setFlash] = useState(false);
 
   const trigger = useCallback(() => {
     setFlash(true);
     playThunder();
+    if (onNavigate) onNavigate();
     setTimeout(() => setFlash(false), 900);
-  }, []);
+  }, [onNavigate]);
+
 
   return (
     <>
