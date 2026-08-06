@@ -415,12 +415,12 @@ html.theme-light .crt::after { display: none; }
     backface-visibility: hidden;
   }
   @keyframes lightning-flash {
-    0%, 94%, 100% { opacity: 0; background-color: transparent; }
-    95% { opacity: var(--lightning-opacity, 1); background-color: rgba(255, 255, 255, 1); box-shadow: 0 0 100px 50px white; }
-    96% { opacity: 0; background-color: transparent; }
-    97% { opacity: calc(var(--lightning-opacity, 1) * 0.9); background-color: rgba(220, 240, 255, 1); box-shadow: 0 0 80px 40px rgba(220, 240, 255, 0.8); }
-    98% { opacity: 0; background-color: transparent; }
-    99% { opacity: calc(var(--lightning-opacity, 1) * 0.5); background-color: white; }
+    0%, 93%, 100% { opacity: 0; background-color: transparent; }
+    94% { opacity: var(--lightning-opacity, 1); background-color: rgba(255, 255, 255, 1); box-shadow: 0 0 150px 75px white; }
+    95% { opacity: 0; background-color: transparent; }
+    96% { opacity: calc(var(--lightning-opacity, 1) * 0.9); background-color: rgba(220, 240, 255, 1); box-shadow: 0 0 120px 60px rgba(220, 240, 255, 0.9); }
+    97% { opacity: 0; background-color: transparent; }
+    98% { opacity: calc(var(--lightning-opacity, 1) * 0.6); background-color: white; box-shadow: 0 0 100px 50px white; }
 
   }
 
