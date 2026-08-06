@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 
@@ -24,7 +24,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/lib/i18n'
 import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
-import { listMyLicenses } from '@/lib/license.functions'
+import { listMyLicenses, syncAllMyLicenses } from '@/lib/license.functions'
 import { triggerDownload, friendlyDownloadError } from '@/lib/download'
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
@@ -74,6 +74,8 @@ function DashboardPage() {
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
   const fetchMyLicenses = useServerFn(listMyLicenses)
+  const syncLicensesFn = useServerFn(syncAllMyLicenses)
+  const [syncing, setSyncing] = useState(false)
 
 
 
@@ -154,6 +156,19 @@ function DashboardPage() {
 
   const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
   const email = user?.email || ''
+
+  const handleSync = async () => {
+    setSyncing(true)
+    try {
+      await syncLicensesFn()
+      toast.success("Licenças sincronizadas com o servidor de autenticação!")
+      refetchLicenses()
+    } catch (err) {
+      toast.error("Falha na sincronização automática.")
+    } finally {
+      setSyncing(false)
+    }
+  }
   
   const isLicenseActive = (license: any) => {
     const s = licenseExpiryState(license, serverNow)
