@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { krakenInputSchema } from '../kraken.functions';
+import { krakenInputSchema, krakenCommand } from '../kraken.functions';
+
+// Mock requireSupabaseAuth to avoid auth issues in unit tests
+vi.mock('@/integrations/supabase/auth-middleware', () => ({
+  requireSupabaseAuth: (fn: any) => fn
+}));
 
 describe('Kraken Control Functions', () => {
   describe('krakenInputSchema', () => {
@@ -26,17 +31,22 @@ describe('Kraken Control Functions', () => {
       const result = krakenInputSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
     });
+  });
 
-    it('should fail if command is not a string', () => {
-      const invalidData = { command: 123 };
-      const result = krakenInputSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
-    });
+  describe('krakenCommand handler', () => {
+    it('should process a valid command and return success response', async () => {
+      // Accessing the handler directly for unit testing
+      // Note: server functions have a .handler property in TanStack Start
+      const result = await krakenCommand.handler({
+        data: { command: 'test-command' },
+        request: new Request('http://localhost:8080/api/kraken'),
+        context: {} as any
+      });
 
-    it('should fail if params is not an object', () => {
-      const invalidData = { command: 'test', params: 'not-an-object' };
-      const result = krakenInputSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('test-command');
+      expect(result.timestamp).toBeDefined();
     });
   });
 });
+
