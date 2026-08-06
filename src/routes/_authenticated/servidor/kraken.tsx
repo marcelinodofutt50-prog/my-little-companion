@@ -225,12 +225,12 @@ function KrakenPage() {
 
             {/* Fallback imediato se o core demorar muito (mais de 2s) ou falhar */}
             <AnimatePresence>
-              {!bgLoaded.core && (
+              {(!bgLoaded.core || !bgLoaded.bg4 || !bgLoaded.bg5) && (
                 <motion.div 
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.4 }}
+                  animate={{ opacity: 0.6 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 pointer-events-none bg-gradient-to-br from-red-950/40 via-black to-black z-[1]"
+                  className="absolute inset-0 pointer-events-none bg-gradient-to-br from-red-950/60 via-black to-black z-[1]"
                 />
               )}
             </AnimatePresence>

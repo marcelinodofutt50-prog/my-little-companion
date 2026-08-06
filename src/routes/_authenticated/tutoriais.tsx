@@ -175,7 +175,7 @@ function TutorialsPage() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Aguardando Sincronização</h3>
                   <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
-                    A base de dados de tutoriais está sendo carregada. Se o erro de "schema cache" persistir, tente atualizar a página ou aguarde o provisionamento automático do backend.
+                    A base de dados está sendo sincronizada com a produção. Se o erro "schema cache" persistir, utilize o botão abaixo para forçar a atualização do sistema.
                   </p>
                 </div>
                 <Button 
