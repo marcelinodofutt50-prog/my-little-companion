@@ -148,6 +148,35 @@ function TutorialsPage() {
               </div>
             </div>
 
+            {/* Filter Bar */}
+            <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                {categories.map(cat => (
+                  <Button
+                    key={cat}
+                    variant={activeCategory === cat ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveCategory(cat)}
+                    className={`rounded-full px-4 h-8 text-[10px] font-mono uppercase tracking-widest transition-all ${
+                      activeCategory === cat ? "shadow-lg shadow-primary/20" : "border-primary/10 hover:border-primary/30"
+                    }`}
+                  >
+                    {cat}
+                  </Button>
+                ))}
+              </div>
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar tutorial..."
+                  className="pl-10 h-10 bg-primary/5 border-primary/10 rounded-full text-xs font-mono uppercase tracking-widest focus:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            <AnimatePresence mode="wait">
             {selected && (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
