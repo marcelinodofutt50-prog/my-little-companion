@@ -408,14 +408,13 @@ html.theme-light .crt::after { display: none; }
   }
 
   /* Kraken UI animations - Disabled per user request (flashing screen issue) */
-  .animate-lightning {
-    display: none;
+  .animate-lightning, 
+  [style*="lightning-strike"], 
+  [class*="lightning"] {
+    display: none !important;
+    animation: none !important;
+    opacity: 0 !important;
   }
-
-
-
-
-
 
   .kraken-fade-in {
     animation: kraken-fade-in 2s ease-out forwards;
