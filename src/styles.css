@@ -406,7 +406,28 @@ html.theme-light .crt::after { display: none; }
     0% { background-position: 160% 0; }
     100% { background-position: -60% 0; }
   }
+
+  /* Kraken UI animations */
+  .animate-lightning {
+    animation: lightning-flash 5s infinite;
+  }
+  @keyframes lightning-flash {
+    0%, 94%, 100% { opacity: 0; }
+    95%, 97% { opacity: 0.8; background-color: white; }
+    96% { opacity: 0; }
+    98% { opacity: 0.4; background-color: white; }
+    99% { opacity: 0; }
+  }
+
+  .kraken-fade-in {
+    animation: kraken-fade-in 2s ease-out forwards;
+  }
+  @keyframes kraken-fade-in {
+    from { opacity: 0; transform: scale(0.95); filter: blur(10px); }
+    to { opacity: 1; transform: scale(1); filter: blur(0); }
+  }
 }
+
 
 
 #lovable-badge { display: none !important; }

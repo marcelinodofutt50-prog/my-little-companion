@@ -22,7 +22,7 @@ const DICT: Dict = {
   "nav.admin": { pt: "Painel Admin", en: "Admin Panel" },
   "nav.playprotect": { pt: "Shadow Signer", en: "Shadow Signer" },
   "nav.tutorials": { pt: "Centro de Treinamento", en: "Training Hub" },
-  "nav.kraken": { pt: "Kraken Control", en: "Kraken Control" },
+  "nav.kraken": { pt: "Kraken RGB", en: "Kraken RGB" },
 
 
   // ===== Dashboard =====
