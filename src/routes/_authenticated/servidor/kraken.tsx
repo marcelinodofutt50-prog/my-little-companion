@@ -28,8 +28,8 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Silenciado por padrão para evitar bloqueio de autoplay do navegador
-  const [intensity, setIntensity] = useState(1);
+  const [isMuted, setIsMuted] = useState(false); // Ativado por padrão para facilitar o teste inicial, mas depende de interação
+  const [intensity, setIntensity] = useState(0.4); // Reduzido para evitar flash excessivo
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
 
@@ -82,16 +82,19 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        // Toggle intensity slightly to force DOM recalculation
-        setIntensity(prev => prev === 1 ? 0.99 : 1);
-        
-        if (audioDelay === 0) {
-          playThunderEffect();
-        } else {
-          setTimeout(playThunderEffect, Math.max(0, audioDelay));
+        // Probabilidade de 40% de disparar o raio a cada 8 segundos para ser menos frenético
+        if (Math.random() > 0.6) {
+          // Force DOM recalculation for animation
+          setIntensity(prev => prev > 0.4 ? 0.39 : 0.41);
+          
+          if (audioDelay === 0) {
+            playThunderEffect();
+          } else {
+            setTimeout(playThunderEffect, Math.max(0, audioDelay));
+          }
         }
       }
-    }, 4000);
+    }, 8000);
 
     // Handler para desbloquear o áudio na primeira interação do usuário
     const unlockAudio = () => {
