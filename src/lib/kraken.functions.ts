@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const krakenSchema = z.object({
   command: z.string(),
-  params: z.record(z.any()).optional()
+  params: z.record(z.string(), z.any()).optional()
 });
 
 /**
