@@ -194,15 +194,16 @@ function TutorialsPage() {
             )}
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {tutorials.map((t, idx) => (
+              {!loading && tutorials.length > 0 && tutorials.map((t, idx) => (
                 <motion.div
                   key={t.id}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: (idx % 4) * 0.1 }}
                 >
                   <Card 
-                    className="group h-full cursor-pointer overflow-hidden border-border/40 bg-card/40 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+                    className="group h-full cursor-pointer overflow-hidden border-border/40 bg-card/40 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                     onClick={() => {
                       setSelected(t);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -213,19 +214,25 @@ function TutorialsPage() {
                         <img 
                           src={t.image_url} 
                           alt={t.title} 
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                          loading="lazy"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-muted/20">
-                          <Video className="h-8 w-8 text-muted-foreground/30" />
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted/20 to-primary/5">
+                          <Video className="h-8 w-8 text-primary/20 group-hover:text-primary/40 transition-colors" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-90" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                      
+                      {/* Floating Category Badge */}
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <div className="rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md border border-white/10">
+                          <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-primary font-bold">{t.category || "Geral"}</span>
+                        </div>
+                      </div>
+
                       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
                          <div className="flex gap-2">
-                           <div className="rounded bg-primary/20 px-2 py-0.5 backdrop-blur-md border border-primary/20">
-                             <span className="font-mono text-[9px] uppercase tracking-widest text-primary font-bold">{t.category}</span>
-                           </div>
                            {completedIds.includes(t.id) && (
                              <div className="rounded bg-emerald-500/20 px-2 py-0.5 backdrop-blur-md border border-emerald-500/20">
                                <span className="font-mono text-[9px] uppercase tracking-widest text-emerald-500 font-bold flex items-center gap-1">
@@ -237,28 +244,28 @@ function TutorialsPage() {
                          <div className="flex gap-2">
                            <button 
                              onClick={(e) => handleToggle(e, t.id)}
-                             className="rounded-full bg-black/40 p-2 backdrop-blur-md hover:bg-primary/20 transition-colors border border-white/5"
+                             className="rounded-full bg-black/60 p-2.5 backdrop-blur-md hover:bg-primary/20 transition-colors border border-white/10 group-active:scale-90"
                            >
                              {completedIds.includes(t.id) ? (
-                               <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                              ) : (
-                               <Circle className="h-3 w-3 text-white/40" />
+                               <Circle className="h-3.5 w-3.5 text-white/40" />
                              )}
                            </button>
-                           <div className="rounded-full bg-white/10 p-2 backdrop-blur-md opacity-0 transition-all group-hover:opacity-100">
-                             <Play className="h-3 w-3 fill-white text-white" />
+                           <div className="rounded-full bg-primary/20 p-2.5 backdrop-blur-md opacity-0 scale-90 transition-all group-hover:opacity-100 group-hover:scale-100 border border-primary/20">
+                             <Play className="h-3.5 w-3.5 fill-primary text-primary" />
                            </div>
                          </div>
                       </div>
                     </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">{t.title}</h3>
-                      <p className="mt-2 text-xs text-muted-foreground line-clamp-2 leading-relaxed">{t.description}</p>
-                      <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
-                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground uppercase">
-                           <BookOpen className="h-3 w-3" /> Guia Prático
+                    <CardContent className="p-5">
+                      <h3 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight">{t.title}</h3>
+                      <p className="mt-2 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">{t.description}</p>
+                      <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4">
+                        <div className="flex items-center gap-2 text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
+                           <BookOpen className="h-3 w-3 text-primary/50" /> Módulo {idx + 1}
                         </div>
-                        <ChevronRight className="h-3 w-3 text-primary transition-transform group-hover:translate-x-1" />
+                        <ChevronRight className="h-3.5 w-3.5 text-primary transition-transform group-hover:translate-x-1" />
                       </div>
                     </CardContent>
                   </Card>
@@ -266,7 +273,14 @@ function TutorialsPage() {
               ))}
 
               {loading && Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[3/4] rounded-xl bg-card/40 animate-pulse border border-border/20" />
+                <div key={i} className="aspect-[4/5] rounded-xl bg-card/20 animate-pulse border border-border/10 overflow-hidden">
+                  <div className="aspect-video bg-muted/20" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 w-3/4 bg-muted/20 rounded" />
+                    <div className="h-3 w-full bg-muted/20 rounded" />
+                    <div className="h-3 w-5/6 bg-muted/20 rounded" />
+                  </div>
+                </div>
               ))}
             </div>
 
