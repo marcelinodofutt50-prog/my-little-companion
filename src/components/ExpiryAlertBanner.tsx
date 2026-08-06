@@ -42,6 +42,8 @@ export function ExpiryAlertBanner({ licenses, serverNow: baseNow }: Props) {
   for (const l of licenses ?? []) {
     const st = licenseExpiryState(l, serverNow)
     if (!st.active) continue
+    if (st.paused) continue // licença pausada não deve gerar alerta de expiração
+
 
     if (st.countdownAt) {
       const ms = new Date(st.countdownAt).getTime() - serverNow
