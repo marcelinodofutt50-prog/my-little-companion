@@ -119,8 +119,8 @@ export function AdminTutorialsPanel() {
     if (!file) return;
 
     // Validations
-    const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
-    const MAX_IMAGE_SIZE = 5 * 1024 * 1024;   // 5MB
+    const MAX_VIDEO_SIZE = 250 * 1024 * 1024; // 250MB (Aumentado para vídeos em 4K)
+    const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10MB
     const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska'];
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 
@@ -129,14 +129,14 @@ export function AdminTutorialsPanel() {
         return toast.error("Apenas vídeos MP4, WebM, OGG, MOV ou MKV são permitidos.");
       }
       if (file.size > MAX_VIDEO_SIZE) {
-        return toast.error("O vídeo deve ter no máximo 100MB.");
+        return toast.error("O vídeo deve ter no máximo 250MB.");
       }
     } else {
       if (!allowedImageTypes.includes(file.type)) {
         return toast.error("Apenas imagens JPEG, PNG, WEBP, GIF ou SVG são permitidas.");
       }
       if (file.size > MAX_IMAGE_SIZE) {
-        return toast.error("A imagem deve ter no máximo 5MB.");
+        return toast.error("A imagem deve ter no máximo 10MB.");
       }
     }
 
@@ -255,7 +255,7 @@ export function AdminTutorialsPanel() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-2">
                   <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
-                    Upload MP4 <span className="text-[10px] text-muted-foreground opacity-70">Max 100MB</span>
+                    Upload MP4 <span className="text-[10px] text-muted-foreground opacity-70">Max 250MB</span>
                   </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <Video className="h-4 w-4 mr-2" />
@@ -270,7 +270,7 @@ export function AdminTutorialsPanel() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
-                    Upload Capa <span className="text-[10px] text-muted-foreground opacity-70">Max 5MB</span>
+                    Upload Capa <span className="text-[10px] text-muted-foreground opacity-70">Max 10MB</span>
                   </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <ImageIcon className="h-4 w-4 mr-2" />
