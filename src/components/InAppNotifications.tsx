@@ -132,7 +132,11 @@ export function InAppNotifications() {
     };
   }, [refresh]);
 
-  const unread = useMemo(() => items.filter((n) => !readIds.includes(n.id)), [items, readIds]);
+  const unread = useMemo(() => {
+    const cutoff = Date.now() - 30 * 86400000
+    return items.filter((n) => !readIds.includes(n.id) && new Date(n.createdAt).getTime() >= cutoff)
+  }, [items, readIds]);
+
 
   function markAllRead() {
     const ids = Array.from(new Set([...readIds, ...items.map((n) => n.id)])).slice(-200);
@@ -144,7 +148,7 @@ export function InAppNotifications() {
 
 
   return (
-    <DropdownMenu onOpenChange={(open) => { if (open) { unlockNotifySound(); void refresh(false); } }}>
+    <DropdownMenu onOpenChange={(open) => { if (open) { unlockNotifySound(); void refresh(false); markAllRead(); } }}>
       <DropdownMenuTrigger asChild>
         <button
           aria-label="Notificações"
