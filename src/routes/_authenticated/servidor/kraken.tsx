@@ -131,8 +131,23 @@ function KrakenPage() {
       )}
 
 
-      {/* Audio Toggle */}
-      <div className="absolute top-4 right-4 z-50">
+      {/* Controls Overlay */}
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-4">
+        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md border border-white/10 p-2 px-4 rounded-full">
+          <Sliders className="h-4 w-4 text-white/50" />
+          <div className="w-24">
+            <Slider 
+              value={[intensity * 100]} 
+              min={0} 
+              max={100} 
+              step={1} 
+              onValueChange={(val) => setIntensity(val[0] / 100)}
+              className="cursor-pointer"
+            />
+          </div>
+          <span className="text-[10px] font-mono text-white/40 w-8 text-right">{Math.round(intensity * 100)}%</span>
+        </div>
+
         <Button 
           variant="ghost" 
           size="icon" 
