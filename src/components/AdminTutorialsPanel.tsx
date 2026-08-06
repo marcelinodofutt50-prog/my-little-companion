@@ -16,6 +16,8 @@ export function AdminTutorialsPanel() {
   const [current, setCurrent] = useState<any>({
     title: "",
     description: "",
+    video_url: "",
+    image_url: "",
     youtube_url: "",
     category: "general",
     is_active: true
@@ -48,7 +50,7 @@ export function AdminTutorialsPanel() {
       await saveFn({ data: current });
       toast.success("Tutorial salvo com sucesso!");
       setIsEditing(false);
-      setCurrent({ title: "", description: "", youtube_url: "", category: "general", is_active: true });
+      setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true });
       load();
     } catch (e: any) {
       toast.error(e.message);
@@ -142,21 +144,42 @@ export function AdminTutorialsPanel() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">YouTube Link (Opcional)</label>
+                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">URL do Vídeo (Direto ou YouTube)</label>
                 <div className="flex gap-2">
-                  <LinkIcon className="h-5 w-5 mt-2 text-muted-foreground" />
+                  <Video className="h-5 w-5 mt-2 text-muted-foreground" />
                   <Input 
-                    value={current.youtube_url} 
-                    onChange={(e) => setCurrent({ ...current, youtube_url: e.target.value })}
-                    placeholder="https://youtube.com/watch?v=..."
-                    className="bg-background/50"
+                    value={current.video_url || current.youtube_url} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.includes("youtube.com") || val.includes("youtu.be")) {
+                        setCurrent({ ...current, youtube_url: val, video_url: "" });
+                      } else {
+                        setCurrent({ ...current, video_url: val, youtube_url: "" });
+                      }
+                    }}
+                    placeholder="https://..."
+                    className="bg-background/50 text-xs"
                   />
                 </div>
               </div>
               
+              <div className="space-y-2">
+                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">URL da Thumbnail</label>
+                <div className="flex gap-2">
+                  <ImageIcon className="h-5 w-5 mt-2 text-muted-foreground" />
+                  <Input 
+                    value={current.image_url} 
+                    onChange={(e) => setCurrent({ ...current, image_url: e.target.value })}
+                    placeholder="https://.../thumb.jpg"
+                    className="bg-background/50 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+              
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Upload Vídeo</label>
+                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold">Upload MP4</label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <Video className="h-4 w-4 mr-2" />
                     {uploading ? "Sincronizando..." : "Vídeo"}
@@ -169,7 +192,7 @@ export function AdminTutorialsPanel() {
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Upload Capa</label>
+                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold">Upload Capa</label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <ImageIcon className="h-4 w-4 mr-2" />
                     {uploading ? "Sincronizando..." : "Foto"}
@@ -182,10 +205,10 @@ export function AdminTutorialsPanel() {
                   </Button>
                 </div>
               </div>
-            </div>
+
 
             <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
-              <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrent({ title: "", description: "", youtube_url: "", category: "general", is_active: true }); }}>
+              <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }}>
                 Cancelar
               </Button>
               <Button onClick={handleSave} className="gap-2 bg-primary hover:bg-primary/90">
@@ -217,7 +240,7 @@ export function AdminTutorialsPanel() {
               <div className="flex justify-between items-start gap-2">
                 <h4 className="font-bold text-foreground line-clamp-1">{t.title}</h4>
                 <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => { setCurrent(t); setIsEditing(true); }}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/20" onClick={() => { setCurrent(t); setIsEditing(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
                     <Plus className="h-4 w-4" />
                   </Button>
                   <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500/70 hover:text-red-500" onClick={() => handleDelete(t.id)}>
