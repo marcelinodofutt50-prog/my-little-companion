@@ -15,6 +15,11 @@ import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json"
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json"
+
+// Imagem central do Kraken v2 (sempre visível no meio)
+const krakenCore = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
+
+// Backgrounds táticos (efeito de profundidade/camadas)
 const krakenBg4 = krakenBg4Asset.url
 const krakenBg5 = krakenBg5Asset.url
 
@@ -180,57 +185,52 @@ function KrakenPage() {
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black min-h-screen overflow-hidden">
       {/* Background Images with Fade */}
       <AnimatePresence>
-        {showEffects && !bgLoadError && (
+        {showEffects && (
           <>
+            {/* Camada Base Central (Fixa para evitar tela preta) */}
             <motion.div 
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+              animate={{ opacity: 0.8 }}
+              className="absolute inset-0 pointer-events-none"
               style={{ 
-                backgroundImage: `url(${krakenBg4}), url(${FALLBACK_BG4})`, 
+                backgroundImage: `url(${krakenCore})`, 
                 backgroundSize: 'cover', 
                 backgroundPosition: 'center',
                 zIndex: 0
               }}
-              onError={(e) => {
-                const target = e.target as HTMLDivElement;
-                if (target.style.backgroundImage.includes(krakenBg4)) {
-                   target.style.backgroundImage = `url(${FALLBACK_BG4})`;
-                } else {
-                   setBgLoadError(true);
-                }
-              }}
             />
 
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.3 }}
-              transition={{ delay: 1 }}
-              className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
-              style={{ 
-                backgroundImage: `url(${krakenBg5}), url(${FALLBACK_BG5})`, 
-                backgroundSize: 'cover', 
-                backgroundPosition: 'center',
-                zIndex: 1
-              }}
-              onError={(e) => {
-                const target = e.target as HTMLDivElement;
-                if (target.style.backgroundImage.includes(krakenBg5)) {
-                   target.style.backgroundImage = `url(${FALLBACK_BG5})`;
-                } else {
-                   setBgLoadError(true);
-                }
-              }}
-            />
+            {!bgLoadError && (
+              <>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.5 }}
+                  className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+                  style={{ 
+                    backgroundImage: `url(${krakenBg4})`, 
+                    backgroundSize: 'cover', 
+                    backgroundPosition: 'center',
+                    zIndex: 1
+                  }}
+                  onError={() => setBgLoadError(true)}
+                />
 
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.3 }}
+                  transition={{ delay: 1 }}
+                  className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
+                  style={{ 
+                    backgroundImage: `url(${krakenBg5})`, 
+                    backgroundSize: 'cover', 
+                    backgroundPosition: 'center',
+                    zIndex: 2
+                  }}
+                  onError={() => setBgLoadError(true)}
+                />
+              </>
+            )}
           </>
-        )}
-        {showEffects && bgLoadError && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.2 }}
-            className="absolute inset-0 pointer-events-none bg-gradient-to-br from-red-950/40 via-black to-black z-0"
-          />
         )}
       </AnimatePresence>
 

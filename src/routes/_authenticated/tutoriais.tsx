@@ -165,16 +165,27 @@ function TutorialsPage() {
             </div>
 
             {!loading && tutorials.length === 0 && (
-              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-4 mb-10">
+              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-6 mb-10">
                 <div className="flex justify-center">
-                  <div className="p-4 rounded-full bg-primary/5 border border-primary/10">
+                  <div className="p-4 rounded-full bg-primary/5 border border-primary/10 relative">
                     <BookOpen className="h-12 w-12 text-primary/20" />
+                    <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping opacity-20" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Base de Dados Vazia</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto text-sm">
-                  Nenhum tutorial foi configurado no sistema ainda. Se você for um administrador, utilize o painel de gestão para adicionar conteúdo.
-                </p>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Aguardando Sincronização</h3>
+                  <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
+                    A base de dados de tutoriais está sendo carregada. Se o erro de "schema cache" persistir, tente atualizar a página ou aguarde o provisionamento automático do backend.
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.location.reload()}
+                  className="font-mono text-[10px] uppercase border-primary/20"
+                >
+                  <RefreshCw className="h-3 w-3 mr-2" /> Recarregar Módulos
+                </Button>
               </div>
             )}
 
