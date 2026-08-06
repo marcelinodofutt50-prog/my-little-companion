@@ -3717,6 +3717,29 @@ function IssueLicensePanel({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  const quotaFn = useServerFn(useCallback(async (...args: any[]) => {
+    const { getMyQuota } = await import("@/lib/support-quotas.functions");
+    return (getMyQuota as any)(...args);
+  }, []));
+  const [quota, setQuota] = useState<any>(null);
+  const [loadingQuota, setLoadingQuota] = useState(true);
+
+  const loadQuota = useCallback(async () => {
+    try {
+      const q = await quotaFn();
+      setQuota(q);
+    } catch {
+      /* fallback */
+    } finally {
+      setLoadingQuota(false);
+    }
+  }, [quotaFn]);
+
+  useEffect(() => {
+    void loadQuota();
+  }, [loadQuota]);
+
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return toast.error("Informe o email do cliente");
@@ -3751,11 +3774,24 @@ function IssueLicensePanel({
   return (
     <div className={compact ? "" : "terminal-card scanlines relative p-5"}>
       {!compact && (
-        <div className="mb-4 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-neon" />
-          <h3 className="font-mono text-sm uppercase text-neon">// emitir licença para cliente</h3>
+        <div className="mb-4 flex items-center justify-between gap-2 border-b border-border/20 pb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-neon" />
+            <h3 className="font-mono text-sm uppercase text-neon">// emitir licença para cliente</h3>
+          </div>
+          {quota && !quota.unlimited && (
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase">
+              <span className={quota.daily.remaining === 0 ? "text-danger" : "text-muted-foreground"}>
+                hoje: <span className="text-foreground">{quota.daily.used}</span>/{quota.daily.limit}
+              </span>
+              <span className={quota.monthly.remaining === 0 ? "text-danger" : "text-muted-foreground"}>
+                mês: <span className="text-foreground">{quota.monthly.used}</span>/{quota.monthly.limit}
+              </span>
+            </div>
+          )}
         </div>
       )}
+
       <form onSubmit={submit} className="grid gap-3 md:grid-cols-2">
         <label className="md:col-span-2">
           <span className="mb-1 block font-mono text-[10px] uppercase text-muted-foreground">
