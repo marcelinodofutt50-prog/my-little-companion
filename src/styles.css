@@ -408,57 +408,10 @@ html.theme-light .crt::after { display: none; }
   }
 
   /* Kraken UI animations */
+  /* Kraken UI animations - Disabled per user request (flashing screen issue) */
   .animate-lightning {
-    animation: lightning-strike 12s infinite both;
-    will-change: opacity, background-color, transform, filter;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 9999;
+    display: none;
   }
-
-  @keyframes lightning-strike {
-    0%, 5%, 35%, 100% { 
-      opacity: 0; 
-      background-color: transparent;
-      filter: brightness(1) blur(0);
-      transform: scale(1);
-    }
-    10% {
-      opacity: var(--lightning-opacity, 0.4);
-      background-color: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 0 100vw 100vw rgba(255, 255, 255, 0.8);
-      transform: scale(1.02);
-    }
-    11% {
-      opacity: var(--lightning-opacity, 0.4);
-      background-color: rgba(200, 230, 255, 1);
-      box-shadow: 0 0 100vw 100vw rgba(200, 230, 255, 1);
-      filter: brightness(3);
-    }
-    12% { 
-      opacity: var(--lightning-opacity, 0.4); 
-      background-color: rgba(255, 255, 255, 0.8);
-      filter: brightness(4) blur(0);
-      box-shadow: 0 0 100vw 100vw rgba(255, 255, 255, 0.5);
-      transform: scale(1);
-    }
-    15% { 
-      opacity: 0; 
-    }
-    18% { 
-      opacity: calc(var(--lightning-opacity, 0.4) * 0.7); 
-      background-color: rgba(200, 230, 255, 0.6);
-      filter: brightness(2) blur(0);
-      box-shadow: 0 0 100vw 100vw rgba(200, 230, 255, 0.3);
-    }
-    20% { 
-      opacity: 0; 
-    }
     22% {
       opacity: calc(var(--lightning-opacity, 0.4) * 0.4);
       background-color: rgba(255, 255, 255, 0.3);
