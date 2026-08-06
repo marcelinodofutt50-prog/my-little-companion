@@ -59,13 +59,13 @@ export function AdminTutorialsPanel() {
   }
 
   async function handleSave() {
-    if (!current.title) return toast.error("Título é obrigatório");
-    if (!current.description) return toast.error("Descrição é obrigatória");
-    if (!current.category) return toast.error("Categoria é obrigatória");
+    if (!current.title?.trim()) return toast.error("Título é obrigatório");
+    if (!current.description?.trim()) return toast.error("Descrição é obrigatória");
+    if (!current.category?.trim()) return toast.error("Categoria é obrigatória");
     if (!current.video_url && !current.youtube_url) return toast.error("É necessário um vídeo (upload ou link)");
     try {
       await saveFn({ data: current });
-      toast.success("Tutorial salvo com sucesso!");
+      toast.success(current.id ? "Tutorial atualizado!" : "Tutorial criado!");
       setIsEditing(false);
       setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true });
       load();
@@ -257,7 +257,7 @@ export function AdminTutorialsPanel() {
                   </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <Video className="h-4 w-4 mr-2" />
-                    {uploading ? "Sincronizando..." : "Selecionar Vídeo"}
+                    {uploading ? "Enviando..." : "Selecionar Vídeo"}
                     <input 
                       type="file" 
                       accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska"
@@ -272,7 +272,7 @@ export function AdminTutorialsPanel() {
                   </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    {uploading ? "Sincronizando..." : "Selecionar Foto"}
+                    {uploading ? "Enviando..." : "Selecionar Foto"}
                     <input 
                       type="file" 
                       accept="image/*"
@@ -370,7 +370,7 @@ export function AdminTutorialsPanel() {
           {!loading && tutorials.length === 0 && (
             <div className="col-span-full py-12 text-center">
               <Video className="h-12 w-12 mx-auto text-muted-foreground/20" />
-              <h4 className="mt-4 font-medium text-muted-foreground">Nenhum tutorial cadastrado.</h4>
+              <h4 className="mt-4 font-medium text-muted-foreground">Nenhum tutorial encontrado.</h4>
             </div>
           )}
         </div>
