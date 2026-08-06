@@ -55,47 +55,47 @@ export function KrakenTab({ onNavigate }: { onNavigate?: () => void }) {
     playThunder();
     if (onNavigate) onNavigate();
     
-    // We don't reset loading here because navigation will unmount the component
-    // but in case it's slow, it gives feedback
+    // Reset flash after animation, but loading stays until unmount or long timeout
     setTimeout(() => setFlash(false), 900);
+    // Safety timeout to reset loading if navigation fails
+    setTimeout(() => setLoading(false), 5000);
   }, [onNavigate]);
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Link
-            to="/servidor/kraken"
-            onClick={trigger}
-            className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none group flex items-center gap-2"
-          >
-            <span
-              className="bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent font-bold"
-              style={{
-                backgroundSize: "300% 100%",
-                animation: "kraken-rgb 4s linear infinite",
-              }}
+    <>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              to="/servidor/kraken"
+              onClick={trigger}
+              className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none group flex items-center gap-2"
             >
-              Kraken
-            </span>
-            {loading && (
-              <Loader2 className="h-3 w-3 animate-spin text-cyan-400" />
-            )}
-            <style>{`
-              @keyframes kraken-rgb {
-                0% { background-position: 0% 50%; }
-                100% { background-position: 300% 50%; }
-              }
-            `}</style>
-          </Link>
-        </TooltipTrigger>
-        <TooltipContent className="bg-black/90 border-cyan-500/50 text-cyan-400 text-[10px] uppercase tracking-wider">
-          Acessar Terminal de Controle
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
+              <span
+                className="bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent font-bold"
+                style={{
+                  backgroundSize: "300% 100%",
+                  animation: "kraken-rgb 4s linear infinite",
+                }}
+              >
+                Kraken
+              </span>
+              {loading && (
+                <Loader2 className="h-3 w-3 animate-spin text-cyan-400" />
+              )}
+              <style>{`
+                @keyframes kraken-rgb {
+                  0% { background-position: 0% 50%; }
+                  100% { background-position: 300% 50%; }
+                }
+              `}</style>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent className="bg-black/90 border-cyan-500/50 text-cyan-400 text-[10px] uppercase tracking-wider">
+            Acessar Terminal de Controle
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <AnimatePresence>
         {flash && (
