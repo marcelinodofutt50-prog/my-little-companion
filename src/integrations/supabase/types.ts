@@ -1583,6 +1583,48 @@ export type Database = {
           },
         ]
       }
+      tutorials: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          title: string
+          updated_at: string | null
+          video_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title: string
+          updated_at?: string | null
+          video_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string | null
+          video_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       updates: {
         Row: {
           created_at: string

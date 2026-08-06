@@ -27,6 +27,7 @@ import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso
 import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
 import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
 import { Route as MercadoSucessoRouteImport } from './routes/mercado.sucesso'
+import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
 import { Route as AuthenticatedPresentesRouteImport } from './routes/_authenticated/presentes'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
@@ -137,6 +138,11 @@ const MercadoSucessoRoute = MercadoSucessoRouteImport.update({
   id: '/sucesso',
   path: '/sucesso',
   getParentRoute: () => MercadoRoute,
+} as any)
+const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
+  id: '/tutoriais',
+  path: '/tutoriais',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   id: '/suporte',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/presentes': typeof AuthenticatedPresentesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
+  '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/mercado/sucesso': typeof MercadoSucessoRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
@@ -315,6 +322,7 @@ export interface FileRoutesByTo {
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/presentes': typeof AuthenticatedPresentesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
+  '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/mercado/sucesso': typeof MercadoSucessoRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
   '/_authenticated/presentes': typeof AuthenticatedPresentesRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
+  '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/mercado/sucesso': typeof MercadoSucessoRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
@@ -399,6 +408,7 @@ export interface FileRouteTypes {
     | '/play-protect'
     | '/presentes'
     | '/suporte'
+    | '/tutoriais'
     | '/mercado/sucesso'
     | '/pagamento/erro'
     | '/pagamento/pendente'
@@ -439,6 +449,7 @@ export interface FileRouteTypes {
     | '/play-protect'
     | '/presentes'
     | '/suporte'
+    | '/tutoriais'
     | '/mercado/sucesso'
     | '/pagamento/erro'
     | '/pagamento/pendente'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/_authenticated/play-protect'
     | '/_authenticated/presentes'
     | '/_authenticated/suporte'
+    | '/_authenticated/tutoriais'
     | '/mercado/sucesso'
     | '/pagamento/erro'
     | '/pagamento/pendente'
@@ -663,6 +675,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MercadoSucessoRouteImport
       parentRoute: typeof MercadoRoute
     }
+    '/_authenticated/tutoriais': {
+      id: '/_authenticated/tutoriais'
+      path: '/tutoriais'
+      fullPath: '/tutoriais'
+      preLoaderRoute: typeof AuthenticatedTutoriaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/suporte': {
       id: '/_authenticated/suporte'
       path: '/suporte'
@@ -820,6 +839,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
   AuthenticatedPresentesRoute: typeof AuthenticatedPresentesRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
+  AuthenticatedTutoriaisRoute: typeof AuthenticatedTutoriaisRoute
   AuthenticatedServidorStatusRoute: typeof AuthenticatedServidorStatusRoute
 }
 
@@ -830,6 +850,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
   AuthenticatedPresentesRoute: AuthenticatedPresentesRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
+  AuthenticatedTutoriaisRoute: AuthenticatedTutoriaisRoute,
   AuthenticatedServidorStatusRoute: AuthenticatedServidorStatusRoute,
 }
 
