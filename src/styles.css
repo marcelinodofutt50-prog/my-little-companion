@@ -420,7 +420,7 @@ html.theme-light .crt::after { display: none; }
   }
 
   @keyframes lightning-strike {
-    0%, 92%, 100% { 
+    0%, 10%, 90%, 100% { 
       opacity: 0; 
       background-color: transparent;
       filter: brightness(1) blur(0);

@@ -73,7 +73,9 @@ export function KrakenTab({ onNavigate }: { onNavigate?: () => void }) {
           <TooltipTrigger asChild>
             <Link
               to="/servidor/kraken"
-              onClick={trigger}
+              onClick={(e) => {
+                trigger(e);
+              }}
               className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none group flex items-center gap-2"
             >
               <span

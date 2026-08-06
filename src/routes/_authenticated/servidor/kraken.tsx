@@ -82,6 +82,9 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
+        // Force a state update to trigger re-render of the animation if needed
+        // but the CSS animation 'infinite' should handle it.
+        // However, we want to ensure the audio syncs perfectly.
         if (audioDelay === 0) {
           playThunderEffect();
         } else {
