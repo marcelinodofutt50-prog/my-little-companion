@@ -264,3 +264,5 @@ function TutorialsPage() {
     </SidebarProvider>
   );
 }
+  );
+}
