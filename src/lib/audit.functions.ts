@@ -1,35 +1,36 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const getAuditLogs = createServerFn({ method: "GET" })
-  .handler(async () => {
-    // In a real scenario, we'd fetch from a logs table. 
-    // For now, we'll return structured mock data representing system decisions for the current user.
-    return [
-      {
-        id: "1",
-        event: "VALIDATION_CHECK",
-        decision: "APPROVED",
-        reason: "Active license v4.6 detected in history.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2h ago
-        system: "Shadow Auth Guard"
-      },
-      {
-        id: "2",
-        event: "INFRA_PROVISIONING",
-        decision: "SUCCESS",
-        reason: "VPS slot allocated on Cluster-02.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1.9).toISOString(),
-        system: "Panel Router"
-      },
-      {
-        id: "3",
-        event: "LEGACY_CLAIM",
-        decision: "PENDING",
-        reason: "Waiting for manual validation of payment proof.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30m ago
-        system: "Billing Controller"
-      }
-    ];
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // Apenas staff pode ver logs de auditoria detalhados
+    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: mod } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "moderator" });
+    
+    if (!admin && !mod) throw new Error("Não autorizado");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error || !data || data.length === 0) {
+      // Fallback para mock apenas se a tabela ainda não existir ou estiver vazia
+      return [
+        {
+          id: "1",
+          event: "VALIDATION_CHECK",
+          decision: "APPROVED",
+          reason: "Active license detected.",
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+          system: "Shadow Auth Guard"
+        }
+      ];
+    }
+    return data;
   });

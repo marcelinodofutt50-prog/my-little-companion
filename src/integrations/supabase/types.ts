@@ -283,6 +283,39 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          created_at: string | null
+          decision: string | null
+          event: string
+          id: string
+          metadata: Json | null
+          reason: string | null
+          system: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          decision?: string | null
+          event: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          system?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          decision?: string | null
+          event?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          system?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       cashback_ledger: {
         Row: {
           amount: number

@@ -3,7 +3,7 @@ export function maskEmail(email?: string | null): string {
   if (!email) return "operator";
   const [user, domain] = email.split("@");
   if (!domain) return "operator";
-  const head = user.slice(0, 2);
+  const head = user.slice(0, 1);
   const tld = domain.includes(".") ? domain.slice(domain.lastIndexOf(".")) : "";
   return `${head}${"•".repeat(Math.max(3, Math.min(user.length - 2, 6)))}@•••${tld}`;
 }

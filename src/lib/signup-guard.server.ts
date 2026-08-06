@@ -17,7 +17,7 @@ function maskEmail(email: string): string {
   const parts = splitEmail(email);
   if (!parts) return "***";
   const { local, domain } = parts;
-  const head = local.slice(0, 2);
+  const head = local.slice(0, 1);
   return `${head}${"*".repeat(Math.max(2, local.length - 2))}@${domain}`;
 }
 
