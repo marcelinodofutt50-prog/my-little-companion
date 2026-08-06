@@ -1137,9 +1137,24 @@ function AdminPage() {
                               <div className="text-[10px] text-muted-foreground">
                                 Fila Play Protect / Dropper
                               </div>
-                            </div>
-                          </button>
-                        </div>
+                             </div>
+                           </button>
+                           {isAdminUser && (
+                             <button
+                               onClick={() => setTab("quotas")}
+                               className="flex w-full items-center gap-3 rounded border border-border/40 bg-background/40 p-3 text-left transition-colors hover:border-violet/40 hover:bg-violet/5"
+                             >
+                               <Settings2 className="h-4 w-4 shrink-0 text-violet" />
+                               <div className="min-w-0">
+                                 <div className="font-mono text-xs uppercase">Cotas Staff</div>
+                                 <div className="text-[10px] text-muted-foreground">
+                                   Limites para Suporte
+                                 </div>
+                               </div>
+                             </button>
+                           )}
+                         </div>
+
                       </div>
                     </div>
 
@@ -1259,6 +1274,8 @@ function AdminPage() {
               />
             )}
             {tab === "external" && <AdminExternalPayersPanel />}
+            {tab === "quotas" && isAdminUser && <SupportQuotasPanel />}
+
 
             {tab === "users" && (
               <div className="space-y-4">
@@ -4847,3 +4864,132 @@ function ReferralsAdminPanel() {
     </div>
   );
 }
+
+function SupportQuotasPanel() {
+  const { listSupportQuotas, updateSupportQuota } = await import("@/lib/support-quotas.functions");
+  const listFn = useServerFn(listSupportQuotas);
+  const updateFn = useServerFn(updateSupportQuota);
+
+  const [staff, setStaff] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await listFn();
+      setStaff(data as any[]);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [listFn]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function update(userId: string, daily: number, monthly: number) {
+    setBusy(userId);
+    try {
+      await updateFn({ data: { targetUserId: userId, dailyLimit: daily, monthlyLimit: monthly } });
+      toast.success("Cota atualizada");
+      await load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="terminal-card scanlines relative p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Settings2 className="h-4 w-4 text-violet" />
+            <h3 className="font-mono text-sm uppercase text-violet">// controle de cotas suporte</h3>
+          </div>
+          <Button size="sm" variant="ghost" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+        <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+          Defina limites para o número de licenças manuais que membros da equipe de Suporte (Moderadores)
+          podem gerar por dia e por mês. Administradores têm cota ilimitada.
+        </p>
+
+        {loading ? (
+          <div className="py-8 text-center font-mono text-xs text-muted-foreground animate-pulse">
+            acessando logs de atividade...
+          </div>
+        ) : staff.length === 0 ? (
+          <div className="rounded border border-dashed border-border/40 py-8 text-center text-xs text-muted-foreground">
+            nenhum moderador encontrado na equipe
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {staff.map((s) => (
+              <div key={s.userId} className="rounded border border-border/40 bg-background/40 p-4">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-mono text-xs text-foreground truncate">{s.email || "staff-id: " + s.userId.slice(0,8)}</div>
+                    <div className="text-[10px] text-muted-foreground">ID: {s.userId}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="rounded bg-background/60 px-2 py-1 text-center min-w-[60px]">
+                      <div className="text-[9px] uppercase text-muted-foreground">Hoje</div>
+                      <div className={`font-mono text-xs ${s.daily.remaining === 0 ? "text-danger" : "text-neon"}`}>
+                        {s.daily.used}/{s.daily.limit}
+                      </div>
+                    </div>
+                    <div className="rounded bg-background/60 px-2 py-1 text-center min-w-[60px]">
+                      <div className="text-[9px] uppercase text-muted-foreground">Mês</div>
+                      <div className={`font-mono text-xs ${s.monthly.remaining === 0 ? "text-danger" : "text-neon"}`}>
+                        {s.monthly.used}/{s.monthly.limit}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap items-end gap-3 border-t border-border/20 pt-3">
+                  <label className="flex-1 min-w-[100px]">
+                    <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Limite Diário</span>
+                    <Input 
+                      type="number" 
+                      defaultValue={s.daily.limit} 
+                      className="h-8 text-xs font-mono"
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val) && val !== s.daily.limit) update(s.userId, val, s.monthly.limit);
+                      }}
+                    />
+                  </label>
+                  <label className="flex-1 min-w-[100px]">
+                    <span className="mb-1 block font-mono text-[9px] uppercase text-muted-foreground">Limite Mensal</span>
+                    <Input 
+                      type="number" 
+                      defaultValue={s.monthly.limit} 
+                      className="h-8 text-xs font-mono"
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val) && val !== s.monthly.limit) update(s.userId, s.daily.limit, val);
+                      }}
+                    />
+                  </label>
+                  {busy === s.userId && (
+                    <div className="h-8 flex items-center px-2">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-violet" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

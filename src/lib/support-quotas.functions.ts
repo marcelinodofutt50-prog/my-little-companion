@@ -114,8 +114,9 @@ export const listSupportQuotas = createServerFn({ method: "GET" })
       const dailyUsed = staffLogs.filter((l: any) => new Date(l.created_at) >= today).length;
       const monthlyUsed = staffLogs.length;
       
-      const dailyLimit = q?.daily_limit ?? 5;
-      const monthlyLimit = q?.monthly_limit ?? 30;
+      const dailyLimit = (q as any)?.daily_limit ?? 5;
+      const monthlyLimit = (q as any)?.monthly_limit ?? 30;
+
 
       return {
         userId: id,
