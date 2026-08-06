@@ -67,8 +67,8 @@ function TutorialsPage() {
 
   const filteredTutorials = useMemo(() => {
     return tutorials.filter(t => {
-      const matchesSearch = t.title.toLowerCase().includes(search.toLowerCase()) || 
-                           t.description?.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = (t.title?.toLowerCase() || "").includes(search.toLowerCase()) || 
+                           (t.description?.toLowerCase() || "").includes(search.toLowerCase());
       const matchesCategory = activeCategory === "Tudo" || t.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
