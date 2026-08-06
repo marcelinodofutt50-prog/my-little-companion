@@ -221,26 +221,29 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-red-900/30 bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[500px] relative overflow-hidden group">
+          <Card className="lg:col-span-4 border-red-900/30 bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
-            <div className="relative">
-              <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
-              <div className="rounded-full bg-black/50 p-8 border border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.4)] mb-8 relative z-10">
-                <Skull className="h-20 w-20 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
-              </div>
+            <div className="w-full max-w-2xl mb-8 relative z-10 aspect-video rounded-lg overflow-hidden border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                src="https://www.youtube.com/embed/XgIQPCXVaY8" 
+                title="Kraken (2.0) Review" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowFullScreen
+                className="opacity-80 hover:opacity-100 transition-opacity"
+              ></iframe>
             </div>
 
-            <CardTitle className="text-3xl md:text-4xl font-black font-mono uppercase tracking-[0.4em] text-red-500 mb-6 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+            <CardTitle className="text-3xl font-black font-mono uppercase tracking-[0.4em] text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
               KRAKEN UNIT
             </CardTitle>
             
             <div className="max-w-md space-y-4">
-              <p className="text-base text-white font-medium uppercase tracking-wider leading-relaxed">
-                A evolução definitiva da Btmob.
-              </p>
-              <p className="text-xs text-muted-foreground uppercase leading-relaxed tracking-widest">
-                Desenvolvida para operadores que exigem invisibilidade absoluta e execução cirúrgica em ambientes hostis.
+              <p className="text-sm text-white font-medium uppercase tracking-wider leading-relaxed">
+                Revisão Tática de Campo (2.0)
               </p>
             </div>
 
