@@ -241,9 +241,10 @@ function TutorialsPage() {
                 </div>
               </motion.div>
             )}
+            </AnimatePresence>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {!loading && tutorials.length > 0 && tutorials.map((t, idx) => (
+              {!loading && filteredTutorials.length > 0 && filteredTutorials.map((t, idx) => (
                 <motion.div
                   key={t.id}
                   initial={{ opacity: 0, y: 20 }}
