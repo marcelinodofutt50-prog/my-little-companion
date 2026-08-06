@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { recoverAccountWithCode } from "@/lib/recovery.functions";
 import { Lost2faHelp } from "@/components/Lost2faHelp";
+import { checkAuthSecurity, reportAuthOutcome } from "@/lib/security.functions";
 
 
 export const Route = createFileRoute("/recuperar")({
@@ -38,10 +39,19 @@ function RecoverPage() {
     if (password !== confirm) return toast.error("As senhas não conferem");
     setLoading(true);
     try {
+      // Security Check: Rate limiting before recovery attempt
+      const sec = await checkAuthSecurity({ data: { email, action: 'recovery' } });
+      if (!sec.allowed) {
+        setLoading(false);
+        return toast.error(sec.message);
+      }
+
       const r = await recoverFn({ data: { email, code, newPassword: password } });
+      void reportAuthOutcome({ data: { email, action: "recovery", success: true } });
       toast.success(`Senha redefinida! Restam ${r.codesRemaining} códigos.`);
       navigate({ to: "/auth" });
     } catch (err: any) {
+      void reportAuthOutcome({ data: { email, action: "recovery", success: false } });
       toast.error(err?.message ?? "Não foi possível recuperar a conta");
     } finally {
       setLoading(false);
