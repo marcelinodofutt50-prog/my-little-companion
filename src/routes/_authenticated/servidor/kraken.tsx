@@ -221,23 +221,57 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-red-900/30 bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/20 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[500px]">
-            <div className="rounded-full bg-red-500/10 p-6 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.3)] mb-6">
-              <Skull className="h-16 w-16 text-red-500" />
-            </div>
-            <CardTitle className="text-2xl font-mono uppercase tracking-[0.3em] text-red-500 mb-4">Kraken Control</CardTitle>
-            <p className="text-sm text-muted-foreground uppercase leading-relaxed max-w-md">
-              Cansado do bancor travar? Perdendo muita pena? Caixa detectando?<br/>
-              Mude agora para a Kraken e mude de conceito.
-            </p>
-            <div className="mt-8 grid grid-cols-2 gap-4 w-full max-w-sm">
-              <div className="p-4 rounded border border-red-500/10 bg-red-500/5">
-                <div className="text-[10px] text-red-400 font-mono uppercase">Status</div>
-                <div className="text-xs font-bold text-white">ACTIVE_NODE</div>
+          <Card className="lg:col-span-4 border-red-900/30 bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[500px] relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            
+            <div className="relative">
+              <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
+              <div className="rounded-full bg-black/50 p-8 border border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.4)] mb-8 relative z-10">
+                <Skull className="h-20 w-20 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
               </div>
-              <div className="p-4 rounded border border-red-500/10 bg-red-500/5">
-                <div className="text-[10px] text-red-400 font-mono uppercase">Security</div>
-                <div className="text-xs font-bold text-white">ENCRYPTED</div>
+            </div>
+
+            <CardTitle className="text-3xl md:text-4xl font-black font-mono uppercase tracking-[0.4em] text-red-500 mb-6 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+              KRAKEN UNIT
+            </CardTitle>
+            
+            <div className="max-w-md space-y-4">
+              <p className="text-base text-white font-medium uppercase tracking-wider leading-relaxed">
+                A evolução definitiva da Btmob.
+              </p>
+              <p className="text-xs text-muted-foreground uppercase leading-relaxed tracking-widest">
+                Desenvolvida para operadores que exigem invisibilidade absoluta e execução cirúrgica em ambientes hostis.
+              </p>
+            </div>
+
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="h-4 w-4 text-red-500" />
+                  <div className="text-[10px] text-red-400 font-mono uppercase font-bold">Protocolo Stealth</div>
+                </div>
+                <div className="text-[11px] text-white/90 text-left font-mono">Bypass nativo indetectável por algoritmos heurísticos de IA.</div>
+              </div>
+              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  <div className="text-[10px] text-amber-400 font-mono uppercase font-bold">Kraken Dropper</div>
+                </div>
+                <div className="text-[11px] text-white/90 text-left font-mono">Injeção em tempo real com ofuscação polimórfica dinâmica.</div>
+              </div>
+              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+                <div className="flex items-center gap-2 mb-1">
+                  <Activity className="h-4 w-4 text-emerald-500" />
+                  <div className="text-[10px] text-emerald-400 font-mono uppercase font-bold">Multi-Node Hub</div>
+                </div>
+                <div className="text-[11px] text-white/90 text-left font-mono">Controle centralizado para Nubank, Caixa e Itaú simultâneos.</div>
+              </div>
+              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+                <div className="flex items-center gap-2 mb-1">
+                  <Terminal className="h-4 w-4 text-blue-500" />
+                  <div className="text-[10px] text-blue-400 font-mono uppercase font-bold">Custom black-screen</div>
+                </div>
+                <div className="text-[11px] text-white/90 text-left font-mono">Criação de telas de engenharia social 100% customizáveis.</div>
               </div>
             </div>
           </Card>
