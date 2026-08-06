@@ -830,7 +830,7 @@ async function yaarsaPost(
           return { Fail: friendly };
         }
         if (/<html|<!doctype/i.test(text)) {
-          lastFail = { Fail: `painel[${panel}] devolveu HTML (status ${status})` };
+          lastFail = { Fail: friendlyYaarsaFail(`painel[${panel}] devolveu HTML (status ${status})`, status), statusCode: status, attempt: attempt + 1 };
           await persistLog({
             panel,
             action,
