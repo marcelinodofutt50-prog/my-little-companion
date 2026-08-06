@@ -687,9 +687,15 @@ function AdminPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-[1520px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-5 sm:py-6 lg:pb-8">
         {/* HEADER BAR */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className="enterprise-surface relative overflow-hidden p-5 sm:p-6"
         >
+          {/* Subtle background glow */}
+          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-[80px]" />
+          
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
@@ -710,7 +716,7 @@ function AdminPage() {
 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-primary">
-                  <Circle className="h-1.5 w-1.5 fill-primary text-primary pulse-dot" /> Operacional
+                  <Circle className="h-1.5 w-1.5 fill-primary text-primary animate-pulse" /> Operacional
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-muted-foreground">
                   <ShieldCheck className="h-3 w-3 text-cyan" />
@@ -719,9 +725,13 @@ function AdminPage() {
                   </span>
                 </span>
                 {totalPending > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-amber-400">
+                  <motion.span 
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-amber-400"
+                  >
                     {totalPending} pendência{totalPending > 1 ? "s" : ""}
-                  </span>
+                  </motion.span>
                 )}
               </div>
             </div>
@@ -735,7 +745,7 @@ function AdminPage() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="font-mono text-[10px] uppercase tracking-wider"
+                  className="font-mono text-[10px] uppercase tracking-wider transition-all hover:bg-primary/10 hover:text-primary"
                 >
                   Meu Painel
                 </Button>
@@ -747,13 +757,13 @@ function AdminPage() {
                 onClick={() => {
                   void secureSignOut();
                 }}
-                className="font-mono text-[10px] uppercase tracking-wider"
+                className="font-mono text-[10px] uppercase tracking-wider hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
               >
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
               </Button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* STATS */}
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -764,6 +774,7 @@ function AdminPage() {
             sub="conta total"
             accent="cyan"
             code="TGT-001"
+            delay={0.1}
           />
           <ExecStat
             icon={KeyRound}
@@ -772,6 +783,7 @@ function AdminPage() {
             sub="em operação"
             accent="neon"
             code="LIC-002"
+            delay={0.2}
           />
           <ExecStat
             icon={DollarSign}
@@ -780,6 +792,7 @@ function AdminPage() {
             sub="pedidos pagos"
             accent="violet"
             code="FIN-003"
+            delay={0.3}
           />
           <ExecStat
             icon={Activity}
@@ -789,6 +802,7 @@ function AdminPage() {
             accent="neon"
             pulse
             code="OPS-004"
+            delay={0.4}
           />
         </div>
 
