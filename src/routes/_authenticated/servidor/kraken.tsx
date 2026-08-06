@@ -28,8 +28,8 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Silenciado por padrão para evitar bloqueio de autoplay do navegador
-  const [intensity, setIntensity] = useState(1);
+  const [isMuted, setIsMuted] = useState(false); // Mantém ativo por padrão para incentivar o clique do usuário
+  const [intensity, setIntensity] = useState(0.4); 
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
 
@@ -42,7 +42,7 @@ function KrakenPage() {
     // Web Audio API context para reprodução mais robusta
     let audioContext: AudioContext | null = null;
     let audioBuffer: AudioBuffer | null = null;
-    const audioUrl = "https://www.soundjay.com/nature/thunder-01.mp3";
+    const audioUrl = "https://www.soundjay.com/nature/thunder-02.mp3"; // Trovão mais curto e direto
 
     const initAudio = async () => {
       try {
@@ -82,16 +82,21 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        // Toggle intensity slightly to force DOM recalculation
-        setIntensity(prev => prev === 1 ? 0.99 : 1);
+        // Dispara entre 6 e 12 segundos (mais espaçado)
+        const delay = 6000 + Math.random() * 6000;
         
-        if (audioDelay === 0) {
-          playThunderEffect();
-        } else {
-          setTimeout(playThunderEffect, Math.max(0, audioDelay));
-        }
+        setTimeout(() => {
+          // Force DOM recalculation for animation
+          setIntensity(prev => prev > 0.4 ? 0.39 : 0.41);
+          
+          if (audioDelay === 0) {
+            playThunderEffect();
+          } else {
+            setTimeout(playThunderEffect, Math.max(0, audioDelay));
+          }
+        }, delay);
       }
-    }, 4000);
+    }, 12000);
 
     // Handler para desbloquear o áudio na primeira interação do usuário
     const unlockAudio = () => {
