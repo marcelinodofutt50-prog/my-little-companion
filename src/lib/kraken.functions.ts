@@ -15,7 +15,7 @@ export const krakenCommand = createServerFn({
   method: "POST" 
 })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => krakenSchema.parse(input))
+  .validator((input: unknown) => krakenSchema.parse(input))
   .handler(async ({ data }) => {
     // Implementação mock para o console tático
     const logStr = `[Kraken] Executing command: ${data.command}`;
