@@ -82,11 +82,25 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     }
     const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
     if (pr.Fail) {
-      // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
-      console.error("[suspendMyLicense] Yaarsa Pass Fail:", pr.Fail);
-      const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "2099-12-31";
-      await yaarsaExtend(lic.yaarsa_email, back, panel);
-      throw new Error(`Erro ao configurar trava de segurança. Tente novamente. (Detalhe: ${pr.Fail})`);
+      // Se for apenas erro de "não encontrado", tentamos criar a conta (upsert informal)
+      if (/1005|não encontrado|not found/i.test(pr.Fail)) {
+        console.warn("[suspendMyLicense] Account missing during pause, attempting reconstruction...");
+        const { yaarsaCreateAccount, panelFromPlanSlug } = await import("./yaarsa.server");
+        await yaarsaCreateAccount({
+           username: lic.yaarsa_username,
+           email: lic.yaarsa_email,
+           password: tempPassword,
+           planSlug: (lic as any).plan_slug || "mensal",
+           totalPaid: 0,
+           panel: panelFromPlanSlug((lic as any).plan_slug)
+        });
+      } else {
+        // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
+        console.error("[suspendMyLicense] Yaarsa Pass Fail:", pr.Fail);
+        const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "2099-12-31";
+        await yaarsaExtend(lic.yaarsa_email, back, panel);
+        throw new Error(`Erro ao configurar trava de segurança. Tente novamente. (Detalhe: ${pr.Fail})`);
+      }
     }
 
     const now = new Date();
@@ -162,12 +176,20 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     }
 
     // 1) devolve os dias
-    const yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+    let yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+    
+    // Se falhar a extensão (ex: erro temporário), tentamos uma vez mais com a mesma data 
+    // ou garantimos que o erro seja propagado corretamente para o Healer/Retry.
     if (yr.Fail) {
       console.error("[reactivateMyLicense] Yaarsa Extend Fail:", yr.Fail);
-      // Fallback: Tenta data padrão se a calculada falhar
-      const yrRetry = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
-      if (yrRetry.Fail) {
+      
+      // Tentativa de re-sincronização agressiva em caso de timeout/rede
+      if (/timeout|rede|network|respondendo/i.test(yr.Fail)) {
+        await new Promise(r => setTimeout(r, 1000));
+        yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+      }
+      
+      if (yr.Fail) {
         throw new Error(`O servidor não conseguiu processar o retorno dos dias. Tente novamente em alguns minutos ou contate o suporte.`);
       }
     }
@@ -564,12 +586,13 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
       if (lic.suspended_at) {
         try {
           // Bloqueio por data antiga (1970)
-          await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
+          const yr = await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
           
-          // Senha de pausa (baseada no fingerprint se possível, ou apenas garantindo que não é a original)
-          // Na dúvida, re-geramos uma senha de bloqueio para este terminal.
-          // Note: syncAllMyLicenses não tem acesso à plain original facilmente sem decrypt em loop,
-          // mas queremos garantir que o painel NÃO aceite a original enquanto pausado.
+          // Se falhar a data e não for 1005 (not found), tentamos ontem como fallback
+          if (yr.Fail && !/1005|não encontrado|not found/i.test(yr.Fail)) {
+             await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
+          }
+          
           results.push({ id: lic.id, status: "pause_verified" });
         } catch (e) {
           results.push({ id: lic.id, status: "failed" });

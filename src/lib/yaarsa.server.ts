@@ -330,9 +330,9 @@ export function expireDateFor(planSlug: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-type YaarsaResponse = { Success?: string; Fail?: string; action?: string };
+type YaarsaResponse = { Success?: string; Fail?: string; action?: string; statusCode?: number; attempt?: number };
 
-function friendlyYaarsaFail(message: string): string {
+function friendlyYaarsaFail(message: string, statusCode?: number): string {
   const m = message.trim();
   if (/please check admin key|admin key/i.test(m))
     return "Chave administrativa do painel foi rejeitada. Avise o suporte para revalidar as credenciais.";
@@ -346,13 +346,13 @@ function friendlyYaarsaFail(message: string): string {
     return "Data de expiração recusada pelo painel (pode estar fora do range permitido). Tente novamente.";
   if (/array offset on null|undefined offset|trying to access|warning:|notice:/i.test(m))
     return "O painel devolveu uma resposta inválida (erro interno PHP). Tente novamente.";
-  if (/HTTP 403/i.test(m))
+  if (statusCode === 403 || /HTTP 403/i.test(m))
     return "O painel bloqueou temporariamente esta requisição (403). Tentando rota alternativa — se persistir, avise o suporte.";
-  if (/devolveu HTML/i.test(m))
-    return "O painel devolveu uma página HTML (status 200/404 em vez de JSON). Provavelmente o endereço ou a rota proxy está incorreta.";
-  if (/falha de rede/i.test(m))
-    return "Falha de rede ao contatar o servidor de autenticação. Verifique se o servidor está online ou tente novamente em instantes.";
-  if (/Nenhum painel respondeu|Nenhum painel respondeu/i.test(m))
+  if (statusCode === 404 || /devolveu HTML|não encontrado/i.test(m))
+    return "O painel devolveu uma página inválida ou não encontrada (404). Provavelmente o endereço ou a rota proxy está incorreta.";
+  if (statusCode === 502 || statusCode === 503 || statusCode === 504 || /falha de rede|gateway|timeout/i.test(m))
+    return "Falha de rede ou timeout ao contatar o servidor de autenticação. Verifique se o servidor está online ou tente novamente.";
+  if (/Nenhum painel respondeu/i.test(m))
     return "O servidor de licenças não está respondendo no momento. Sua solicitação foi recebida e será processada automaticamente em alguns instantes. Caso o problema persista, tente novamente ou contate o suporte.";
   return m;
 }
@@ -692,7 +692,11 @@ async function yaarsaPost(
             });
             continue;
           }
-          lastFail = { Fail: `painel[${panel}] (${url}) HTTP ${res.status}` };
+          lastFail = { 
+            Fail: friendlyYaarsaFail(`painel[${panel}] (${url}) HTTP ${res.status}`, res.status),
+            statusCode: res.status,
+            attempt: attempt + 1
+          };
           await persistLog({
             panel,
             action,
@@ -712,7 +716,7 @@ async function yaarsaPost(
       } catch (err) {
         const latency = Date.now() - started;
         lastNetworkErr = err;
-        lastFail = { Fail: `painel[${panel}] (${url}) falha de rede` };
+        lastFail = { Fail: friendlyYaarsaFail(`painel[${panel}] (${url}) falha de rede`), attempt: attempt + 1 };
         await persistLog({
           panel,
           action,
@@ -748,7 +752,7 @@ async function yaarsaPost(
           return { Success: String(parsed.Success) };
         }
         if (parsed.Fail) {
-          const friendly = friendlyYaarsaFail(String(parsed.Fail));
+          const friendly = friendlyYaarsaFail(String(parsed.Fail), status);
           // 1005 "not found" during a cexpire is normal for lookup probes — log as informational.
           const isLookupMiss =
             action === "cexpire" &&
@@ -826,7 +830,7 @@ async function yaarsaPost(
           return { Fail: friendly };
         }
         if (/<html|<!doctype/i.test(text)) {
-          lastFail = { Fail: `painel[${panel}] devolveu HTML (status ${status})` };
+          lastFail = { Fail: friendlyYaarsaFail(`painel[${panel}] devolveu HTML (status ${status})`, status), statusCode: status, attempt: attempt + 1 };
           await persistLog({
             panel,
             action,
@@ -843,7 +847,7 @@ async function yaarsaPost(
           });
           break;
         }
-        lastFail = { Fail: `Resposta inesperada painel[${panel}]: ${text.slice(0, 200)}` };
+        lastFail = { Fail: friendlyYaarsaFail(`Resposta inesperada painel[${panel}]: ${text.slice(0, 200)}`, status), statusCode: status, attempt: attempt + 1 };
         await persistLog({
           panel,
           action,
