@@ -123,7 +123,13 @@ function KrakenPage() {
       </AnimatePresence>
 
       {/* Lightning Effect Overlay */}
-      {showEffects && <div className="absolute inset-0 pointer-events-none animate-lightning mix-blend-screen z-10" />}
+      {showEffects && (
+        <div 
+          className="absolute inset-0 pointer-events-none animate-lightning mix-blend-screen z-10" 
+          style={{ '--lightning-opacity': intensity } as React.CSSProperties}
+        />
+      )}
+
 
       {/* Audio Toggle */}
       <div className="absolute top-4 right-4 z-50">
