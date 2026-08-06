@@ -409,7 +409,7 @@ html.theme-light .crt::after { display: none; }
 
   /* Kraken UI animations */
   .animate-lightning {
-    animation: lightning-strike 5s infinite;
+    animation: lightning-strike 4s infinite;
     will-change: opacity, background-color, transform, filter;
     transform: translateZ(0);
     backface-visibility: hidden;
