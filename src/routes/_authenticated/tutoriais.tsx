@@ -335,6 +335,21 @@ function TutorialsPage() {
               ))}
             </div>
 
+            {!loading && filteredTutorials.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="rounded-full bg-muted/10 p-6">
+                  <Search className="h-10 w-10 text-muted-foreground/30" />
+                </div>
+                <h3 className="mt-4 text-xl font-bold text-foreground">Nenhum tutorial encontrado</h3>
+                <p className="mt-2 text-muted-foreground">Tente ajustar sua busca ou filtro para encontrar o que procura.</p>
+                {search && (
+                  <Button variant="ghost" className="mt-4" onClick={() => setSearch("")}>
+                    Limpar busca
+                  </Button>
+                )}
+              </div>
+            )}
+
             {!loading && tutorials.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="rounded-full bg-muted/10 p-6">
