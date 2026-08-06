@@ -106,7 +106,7 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     } as any);
 
     const msLeft = lic.expires_at ? Math.max(0, new Date(lic.expires_at).getTime() - now.getTime()) : null;
-    return { ok: true, paused_at: now.toISOString(), ms_left: msLeft };
+    return { ok: true, paused_at: now.toISOString(), ms_left: msLeft, message: "Licença suspensa com sucesso" };
   });
 
 /**
