@@ -2541,6 +2541,7 @@ function ExecStat({
   accent,
   pulse,
   code,
+  delay = 0,
 }: {
   icon: any;
   label: string;
@@ -2549,10 +2550,16 @@ function ExecStat({
   accent: "neon" | "cyan" | "violet";
   pulse?: boolean;
   code?: string;
+  delay?: number;
 }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
-    <div className="osint-panel osint-corners group relative overflow-hidden p-4 transition-colors hover:border-foreground/25">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, delay }}
+      className="osint-panel osint-corners group relative overflow-hidden p-4 transition-colors hover:border-foreground/25"
+    >
       <div
         className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50 ${color}`}
       />
