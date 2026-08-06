@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Video, Image as ImageIcon, Link as LinkIcon, Save, X, Eye, EyeOff, Edit, GripVertical, Loader2 } from "lucide-react";
