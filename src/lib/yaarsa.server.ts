@@ -692,7 +692,11 @@ async function yaarsaPost(
             });
             continue;
           }
-          lastFail = { Fail: `painel[${panel}] (${url}) HTTP ${res.status}` };
+          lastFail = { 
+            Fail: friendlyYaarsaFail(`painel[${panel}] (${url}) HTTP ${res.status}`, res.status),
+            statusCode: res.status,
+            attempt: attempt + 1
+          };
           await persistLog({
             panel,
             action,
