@@ -2,6 +2,7 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   DollarSign,
@@ -686,9 +687,15 @@ function AdminPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-[1520px] overflow-x-hidden px-3 pb-24 pt-4 sm:px-5 sm:py-6 lg:pb-8">
         {/* HEADER BAR */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className="enterprise-surface relative overflow-hidden p-5 sm:p-6"
         >
+          {/* Subtle background glow */}
+          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-[80px]" />
+          
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
@@ -709,7 +716,7 @@ function AdminPage() {
 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-primary">
-                  <Circle className="h-1.5 w-1.5 fill-primary text-primary pulse-dot" /> Operacional
+                  <Circle className="h-1.5 w-1.5 fill-primary text-primary animate-pulse" /> Operacional
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-muted-foreground">
                   <ShieldCheck className="h-3 w-3 text-cyan" />
@@ -718,9 +725,13 @@ function AdminPage() {
                   </span>
                 </span>
                 {totalPending > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-amber-400">
+                  <motion.span 
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-amber-400"
+                  >
                     {totalPending} pendência{totalPending > 1 ? "s" : ""}
-                  </span>
+                  </motion.span>
                 )}
               </div>
             </div>
@@ -734,7 +745,7 @@ function AdminPage() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="font-mono text-[10px] uppercase tracking-wider"
+                  className="font-mono text-[10px] uppercase tracking-wider transition-all hover:bg-primary/10 hover:text-primary"
                 >
                   Meu Painel
                 </Button>
@@ -746,13 +757,13 @@ function AdminPage() {
                 onClick={() => {
                   void secureSignOut();
                 }}
-                className="font-mono text-[10px] uppercase tracking-wider"
+                className="font-mono text-[10px] uppercase tracking-wider hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
               >
                 <LogOut className="mr-2 h-3.5 w-3.5" /> Sair
               </Button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* STATS */}
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -763,6 +774,7 @@ function AdminPage() {
             sub="conta total"
             accent="cyan"
             code="TGT-001"
+            delay={0.1}
           />
           <ExecStat
             icon={KeyRound}
@@ -771,6 +783,7 @@ function AdminPage() {
             sub="em operação"
             accent="neon"
             code="LIC-002"
+            delay={0.2}
           />
           <ExecStat
             icon={DollarSign}
@@ -779,6 +792,7 @@ function AdminPage() {
             sub="pedidos pagos"
             accent="violet"
             code="FIN-003"
+            delay={0.3}
           />
           <ExecStat
             icon={Activity}
@@ -788,6 +802,7 @@ function AdminPage() {
             accent="neon"
             pulse
             code="OPS-004"
+            delay={0.4}
           />
         </div>
 
@@ -839,8 +854,10 @@ function AdminPage() {
                         const isNew = t.id === "external";
                         const badge = navBadges[t.id] ?? 0;
                         return (
-                          <button
+                          <motion.button
                             key={t.id}
+                            whileHover={{ x: 4 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={() => setTab(t.id)}
                             aria-current={active ? "page" : undefined}
                             className={`group relative flex w-full items-center gap-2.5 rounded-md py-2 pl-3 pr-2 text-left transition-colors ${
@@ -884,7 +901,7 @@ function AdminPage() {
                                 {badge > 99 ? "99+" : badge}
                               </span>
                             )}
-                          </button>
+                          </motion.button>
                         );
                       })}
                     </div>
@@ -905,12 +922,20 @@ function AdminPage() {
 
           {/* CONTENT */}
           <div className="min-w-0">
-            {isAdminUser && (
-              <AdminAlertsBanner
-                onOpenLogs={() => setTab("health")}
-                onOpenIA={() => setTab("ia")}
-              />
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {isAdminUser && (
+                  <AdminAlertsBanner
+                    onOpenLogs={() => setTab("health")}
+                    onOpenIA={() => setTab("ia")}
+                  />
+                )}
 
             {/* Section title bar */}
             {activeMeta && (
@@ -2171,6 +2196,8 @@ function AdminPage() {
             {tab === "tutorials" && <AdminTutorialsPanel />}
             {tab === "refunds" && <AdminRefundsPanel />}
             {tab === "selftest" && <AdminSelfTestPanel />}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </main>
@@ -2526,6 +2553,7 @@ function ExecStat({
   accent,
   pulse,
   code,
+  delay = 0,
 }: {
   icon: any;
   label: string;
@@ -2534,10 +2562,16 @@ function ExecStat({
   accent: "neon" | "cyan" | "violet";
   pulse?: boolean;
   code?: string;
+  delay?: number;
 }) {
   const color = accent === "neon" ? "text-neon" : accent === "cyan" ? "text-cyan" : "text-violet";
   return (
-    <div className="osint-panel osint-corners group relative overflow-hidden p-4 transition-colors hover:border-foreground/25">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4, delay }}
+      className="osint-panel osint-corners group relative overflow-hidden p-4 transition-colors hover:border-foreground/25"
+    >
       <div
         className={`absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-current to-transparent opacity-50 ${color}`}
       />
@@ -2555,7 +2589,7 @@ function ExecStat({
         <span className="truncate">{sub}</span>
         {code && <span className={`shrink-0 tracking-[0.18em] opacity-40 ${color}`}>{code}</span>}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -4090,7 +4124,11 @@ function LegacyClientsPanel({ licenses, onChanged }: { licenses: any[]; onChange
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
       <div className="terminal-card scanlines relative p-5">
         <div className="mb-4 flex items-center gap-2">
           <History className="h-4 w-4 text-cyan" />
@@ -4490,12 +4528,12 @@ function LegacyClientsPanel({ licenses, onChanged }: { licenses: any[]; onChange
                 >
                   próxima →
                 </button>
-              </div>
+                </div>
             )}
           </>
         )}
       </div>
-    </div>
+      </motion.div>
   );
 }
 
@@ -4915,7 +4953,11 @@ function SupportQuotasPanel() {
   }
 
   return (
-    <div className="space-y-4">
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="space-y-4"
+    >
       <div className="terminal-card scanlines relative p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -5000,7 +5042,7 @@ function SupportQuotasPanel() {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
