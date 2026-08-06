@@ -192,60 +192,25 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-red-900/30 bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/20 kraken-fade-in">
-            <CardHeader className="flex flex-row items-center gap-4 border-b border-red-900/20 pb-4">
-              <div className="rounded-full bg-red-500/10 p-2 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                <Skull className="h-6 w-6 text-red-500" />
+          <Card className="lg:col-span-4 border-red-900/30 bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/20 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[500px]">
+            <div className="rounded-full bg-red-500/10 p-6 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.3)] mb-6">
+              <Skull className="h-16 w-16 text-red-500" />
+            </div>
+            <CardTitle className="text-2xl font-mono uppercase tracking-[0.3em] text-red-500 mb-4">Kraken Control</CardTitle>
+            <p className="text-sm text-muted-foreground uppercase leading-relaxed max-w-md">
+              Cansado do bancor travar? Perdendo muita pena? Caixa detectando?<br/>
+              Mude agora para a Kraken e mude de conceito.
+            </p>
+            <div className="mt-8 grid grid-cols-2 gap-4 w-full max-w-sm">
+              <div className="p-4 rounded border border-red-500/10 bg-red-500/5">
+                <div className="text-[10px] text-red-400 font-mono uppercase">Status</div>
+                <div className="text-xs font-bold text-white">ACTIVE_NODE</div>
               </div>
-              <div>
-                <CardTitle className="text-sm font-mono uppercase tracking-widest text-red-500">Kraken Control Console</CardTitle>
-                <p className="text-[10px] text-muted-foreground uppercase leading-tight">
-                  Cansado do bancor travar? Perdendo muita pena? Caixa detectando?<br/>
-                  Mude agora para a Kraken e mude de conceito.
-                </p>
+              <div className="p-4 rounded border border-red-500/10 bg-red-500/5">
+                <div className="text-[10px] text-red-400 font-mono uppercase">Security</div>
+                <div className="text-xs font-bold text-white">ENCRYPTED</div>
               </div>
-
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[400px] overflow-y-auto p-4 font-mono text-xs space-y-1 custom-scrollbar scroll-smooth bg-black/40">
-                <AnimatePresence initial={false}>
-                  {logs.map((log, i) => (
-                    <motion.div 
-                      key={i}
-                      initial={{ opacity: 0, x: -5 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={log.startsWith(">") ? "text-amber-500" : log.startsWith("[ERROR]") ? "text-red-500" : "text-emerald-500/80"}
-                    >
-                      {log}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                <div ref={logEndRef} />
-              </div>
-              
-              <form onSubmit={handleCommand} className="p-4 border-t border-red-900/20 bg-black/60">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Terminal className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-500/50" />
-                    <Input 
-                      value={command}
-                      onChange={(e) => setCommand(e.target.value)}
-                      placeholder="Enter tactical command..."
-                      className="bg-black/40 border-red-900/30 pl-9 font-mono text-xs focus-visible:ring-red-500/50 h-10 text-white"
-                      disabled={isExecuting}
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    disabled={isExecuting}
-                    className="bg-red-600 hover:bg-red-700 text-white font-mono text-[10px] uppercase tracking-widest h-10 px-6 shadow-[0_0_15px_rgba(220,38,38,0.4)]"
-                  >
-                    {isExecuting ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
-                    <span className="ml-2 hidden sm:inline">Dispatch</span>
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
+            </div>
           </Card>
 
           <div className="lg:col-span-3 space-y-6">
