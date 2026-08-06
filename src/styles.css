@@ -407,17 +407,12 @@ html.theme-light .crt::after { display: none; }
     100% { background-position: -60% 0; }
   }
 
-  /* Kraken UI animations */
   /* Kraken UI animations - Disabled per user request (flashing screen issue) */
   .animate-lightning {
     display: none;
   }
-    22% {
-      opacity: calc(var(--lightning-opacity, 0.4) * 0.4);
-      background-color: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 0 50vw 50vw rgba(255, 255, 255, 0.2);
-    }
-  }
+
+
 
 
 
