@@ -82,11 +82,25 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     }
     const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
     if (pr.Fail) {
-      // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
-      console.error("[suspendMyLicense] Yaarsa Pass Fail:", pr.Fail);
-      const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "2099-12-31";
-      await yaarsaExtend(lic.yaarsa_email, back, panel);
-      throw new Error(`Erro ao configurar trava de segurança. Tente novamente. (Detalhe: ${pr.Fail})`);
+      // Se for apenas erro de "não encontrado", tentamos criar a conta (upsert informal)
+      if (/1005|não encontrado|not found/i.test(pr.Fail)) {
+        console.warn("[suspendMyLicense] Account missing during pause, attempting reconstruction...");
+        const { yaarsaCreateAccount, panelFromPlanSlug } = await import("./yaarsa.server");
+        await yaarsaCreateAccount({
+           username: lic.yaarsa_username,
+           email: lic.yaarsa_email,
+           password: tempPassword,
+           planSlug: (lic as any).plan_slug || "mensal",
+           totalPaid: 0,
+           panel: panelFromPlanSlug((lic as any).plan_slug)
+        });
+      } else {
+        // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
+        console.error("[suspendMyLicense] Yaarsa Pass Fail:", pr.Fail);
+        const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "2099-12-31";
+        await yaarsaExtend(lic.yaarsa_email, back, panel);
+        throw new Error(`Erro ao configurar trava de segurança. Tente novamente. (Detalhe: ${pr.Fail})`);
+      }
     }
 
     const now = new Date();
