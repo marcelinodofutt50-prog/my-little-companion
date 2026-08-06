@@ -312,8 +312,8 @@ export function deriveCredentials(seed: string) {
 
 export function planToSubtype(planSlug: string): string {
   if (planSlug === "login-7d") return "7 Days";
-  if (planSlug === "login-30d") return "1 Month";
-  if (planSlug === "login-lifetime") return "12 Month";
+  if (planSlug === "login-30d" || planSlug === "kraken-monthly") return "1 Month";
+  if (planSlug === "login-lifetime" || planSlug === "kraken-lifetime") return "12 Month";
   return "1 Month";
 }
 
