@@ -106,7 +106,7 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     } as any);
 
     const msLeft = lic.expires_at ? Math.max(0, new Date(lic.expires_at).getTime() - now.getTime()) : null;
-    return { ok: true, paused_at: now.toISOString(), ms_left: msLeft };
+    return { ok: true, paused_at: now.toISOString(), ms_left: msLeft, message: "Licença suspensa com sucesso" };
   });
 
 /**
@@ -192,7 +192,7 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       context: { license_id: lic.id, new_expires_at: newExpires?.toISOString() ?? null } as any,
     } as any);
 
-    return { ok: true, expires_at: newExpires?.toISOString() ?? null };
+    return { ok: true, expires_at: newExpires?.toISOString() ?? null, message: "Licença reativada com sucesso" };
   });
 
 export const disableMyLicense = createServerFn({ method: "POST" })

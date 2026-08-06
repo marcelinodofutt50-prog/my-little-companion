@@ -116,8 +116,10 @@ function DashboardPage() {
     queryKey: ['licenses', user?.id],
     queryFn: async () => {
       try {
-        return (await fetchMyLicenses()) ?? []
-      } catch {
+        const result = await fetchMyLicenses()
+        return result ?? []
+      } catch (err) {
+        console.error("fetchMyLicenses failed, falling back to direct supabase read", err)
         const { data, error } = await supabase
           .from('licenses')
           .select('*')
@@ -128,8 +130,8 @@ function DashboardPage() {
       }
     },
     enabled: !!user?.id,
-    retry: 3,
-    retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 3000),
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 2000),
     // Expiração precisa ser sempre em tempo real: nada de cache "fresco".
     staleTime: 5000,
     gcTime: 60_000,

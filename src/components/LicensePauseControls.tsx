@@ -46,13 +46,21 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
     if (busy) return
     setBusy(true)
     try {
-      await fn()
-      toast.success(ok)
-      onDone()
+      const res = await fn()
+      // If the server returns a successful result with an 'ok: true' flag
+      if (res && res.ok) {
+        toast.success(ok)
+        // Give the server state a moment to propagate before refetching
+        setTimeout(() => {
+          onDone()
+        }, 1000)
+      } else {
+        throw new Error(res?.message || 'O servidor não confirmou a operação')
+      }
     } catch (e: any) {
-      const msg = e?.message ?? 'O servidor não respondeu ao comando de pausa'
-      toast.error(msg, {
-        description: 'Sua solicitação foi recebida, mas o servidor de autenticação está instável. Caso o login não pare imediatamente, tente novamente em alguns minutos ou contate o suporte.',
+      const msg = e?.message ?? 'O servidor não respondeu ao comando'
+      toast.error('Erro na solicitação', {
+        description: msg,
       })
     } finally {
       setBusy(false)
