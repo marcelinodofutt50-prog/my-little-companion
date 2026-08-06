@@ -2,7 +2,7 @@ import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
 /**
  * Script de auditoria de permissões e RLS.
- * Verifica se as tabelas críticas possuem RLS ativo e permissões básicas para o app.
+ * Utiliza rpc e queries cruas para verificar integridade entre ambientes.
  */
 export async function auditPermissions() {
   console.log('--- INICIANDO AUDITORIA DE SEGURANÇA DO BANCO ---');
@@ -12,31 +12,30 @@ export async function auditPermissions() {
 
   for (const table of tables) {
     try {
-      // 1. Verifica se RLS está habilitado
-      const { data: rlsData, error: rlsError } = await supabaseAdmin.rpc('check_rls_enabled', { table_name: table });
-      
-      // Como talvez a função RPC não exista, usamos uma query direta nas tabelas do sistema se possível, 
-      // ou apenas tentamos ler informações de políticas.
-      const { data: policies, error: polError } = await supabaseAdmin
+      // 1. Verifica RLS usando query crua (contornando tipagem estrita do cliente gerado)
+      const { data: rlsCheck, error: rlsError } = await (supabaseAdmin as any).rpc('check_rls_enabled', { 
+        table_name: table 
+      });
+
+      // 2. Verifica se existem políticas de segurança
+      // Usamos query direta no schema do sistema para evitar restrições do cliente public
+      const { data: policies, error: polError } = await (supabaseAdmin as any)
         .from('pg_policies')
         .select('*')
         .eq('tablename', table);
 
-      // 2. Verifica Grants (via query direta em information_schema se permitido)
-      // Nota: Em ambientes restritos, verificamos se a tabela é acessível via service_role vs anon
-      
       results.push({
         table,
-        rls: policies && policies.length > 0 ? 'ENABLED/CONFIGURED' : 'WARNING: NO POLICIES FOUND',
+        rls: rlsCheck ? 'ENABLED' : 'WARNING: DISABLED',
         policyCount: policies?.length || 0,
-        status: policies && policies.length > 0 ? 'OK' : 'FAIL'
+        status: (rlsCheck && policies && policies.length > 0) ? 'OK' : 'FAIL',
+        details: polError ? `Error: ${polError.message}` : 'Clean'
       });
-    } catch (e) {
-      results.push({ table, error: 'Failed to inspect' });
+    } catch (e: any) {
+      results.push({ table, error: e.message || 'Failed to inspect' });
     }
   }
 
   console.table(results);
-  console.log('--- FIM DA AUDITORIA ---');
   return results;
 }
