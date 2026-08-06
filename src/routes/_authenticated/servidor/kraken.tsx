@@ -28,8 +28,8 @@ function KrakenPage() {
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Ativado por padrão para facilitar o teste inicial, mas depende de interação
-  const [intensity, setIntensity] = useState(0.4); // Reduzido para evitar flash excessivo
+  const [isMuted, setIsMuted] = useState(false); // Mantém ativo por padrão para incentivar o clique do usuário
+  const [intensity, setIntensity] = useState(0.4); 
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
 
@@ -42,7 +42,7 @@ function KrakenPage() {
     // Web Audio API context para reprodução mais robusta
     let audioContext: AudioContext | null = null;
     let audioBuffer: AudioBuffer | null = null;
-    const audioUrl = "https://www.soundjay.com/nature/thunder-01.mp3";
+    const audioUrl = "https://www.soundjay.com/nature/thunder-02.mp3"; // Trovão mais curto e direto
 
     const initAudio = async () => {
       try {
@@ -82,8 +82,10 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        // Probabilidade de 40% de disparar o raio a cada 8 segundos para ser menos frenético
-        if (Math.random() > 0.6) {
+        // Dispara entre 6 e 12 segundos (mais espaçado)
+        const delay = 6000 + Math.random() * 6000;
+        
+        setTimeout(() => {
           // Force DOM recalculation for animation
           setIntensity(prev => prev > 0.4 ? 0.39 : 0.41);
           
@@ -92,9 +94,9 @@ function KrakenPage() {
           } else {
             setTimeout(playThunderEffect, Math.max(0, audioDelay));
           }
-        }
+        }, delay);
       }
-    }, 8000);
+    }, 12000);
 
     // Handler para desbloquear o áudio na primeira interação do usuário
     const unlockAudio = () => {
