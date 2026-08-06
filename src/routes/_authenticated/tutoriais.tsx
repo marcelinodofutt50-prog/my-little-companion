@@ -129,8 +129,25 @@ function TutorialsPage() {
                   </p>
                 </div>
                 
-                {tutorials.length >= 0 && (
-                  <div className="w-full md:w-80 space-y-4 enterprise-surface p-5 rounded-xl border-primary/20 bg-primary/5 shadow-lg shadow-primary/5 rgb-border overflow-hidden">
+            {!loading && tutorials.length > 0 ? (
+              <div className="mb-10">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                  {/* ... contents ... */}
+                </div>
+              </div>
+            ) : !loading && tutorials.length === 0 ? (
+              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="p-4 rounded-full bg-primary/5 border border-primary/10">
+                    <BookOpen className="h-12 w-12 text-primary/20" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-foreground">Base de Dados Vazia</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto">
+                  Nenhum tutorial foi configurado no sistema ainda. Se você for um administrador, utilize o painel de gestão para adicionar conteúdo.
+                </p>
+              </div>
+            ) : null}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
                         <span className="flex items-center gap-2"><Trophy className="h-3 w-3 text-primary" /> Progresso Total</span>
