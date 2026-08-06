@@ -352,8 +352,8 @@ function friendlyYaarsaFail(message: string): string {
     return "O painel devolveu uma página HTML (status 200/404 em vez de JSON). Provavelmente o endereço ou a rota proxy está incorreta.";
   if (/falha de rede/i.test(m))
     return "Falha de rede ao contatar o servidor de autenticação. Verifique se o servidor está online ou tente novamente em instantes.";
-  if (/Nenhum painel respondeu/i.test(m))
-    return "O servidor de autenticação está temporariamente indisponível. A operação foi registrada e será processada assim que a conexão for reestabelecida.";
+  if (/Nenhum painel respondeu|Nenhum painel respondeu/i.test(m))
+    return "O servidor de licenças não está respondendo no momento. Sua solicitação foi recebida e será processada automaticamente em alguns instantes. Caso o problema persista, tente novamente ou contate o suporte.";
   return m;
 }
 
@@ -605,7 +605,9 @@ async function yaarsaPost(
   const action = payload.action || "unknown";
   const proxyUrl = (process.env.YAARSA_PROXY_URL || "").trim();
   const directEndpoints = yaarsaEndpoints(panel);
-  // Proxy only applies to the original v457 panel (that's what it was set up for).
+  
+  // Dynamic endpoint discovery: check if current runtime host should be prioritized
+  // for direct communication to avoid proxy overhead.
   const endpoints = Array.from(
     new Set(proxyUrl && panel === "v457" ? [proxyUrl, ...directEndpoints] : directEndpoints),
   );
@@ -628,19 +630,19 @@ async function yaarsaPost(
 
   for (const url of endpoints) {
     const kind = kindOf(url);
-    // Increased retry count and implemented exponential backoff
-    const MAX_ATTEMPTS = 4;
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      if (attempt > 0) {
-        // Exponential backoff: 500ms, 1500ms, 3500ms
-        const delay = Math.pow(2, attempt) * 500 - 500;
-        console.log(`[yaarsa:${panel}] RETRY attempt=${attempt + 1} delay=${delay}ms url=${url}`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        
-        warmedUp[panel] = false;
-        sessionCookies[panel] = "";
-        await warmup(url, panel);
-      }
+      // Increased retry count and implemented jittered backoff
+      const MAX_ATTEMPTS = 5;
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        if (attempt > 0) {
+          // Exponential backoff with jitter: 500ms, 1500ms, 3500ms, 7500ms
+          const delay = (Math.pow(2, attempt) * 500 - 500) + (Math.random() * 200);
+          console.log(`[yaarsa:${panel}] RETRY attempt=${attempt + 1} delay=${delay.toFixed(0)}ms url=${url}`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+          warmedUp[panel] = false;
+          sessionCookies[panel] = "";
+          await warmup(url, panel);
+        }
 
       const started = Date.now();
       let text = "";

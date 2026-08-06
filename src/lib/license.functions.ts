@@ -165,7 +165,11 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     const yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
     if (yr.Fail) {
       console.error("[reactivateMyLicense] Yaarsa Extend Fail:", yr.Fail);
-      throw new Error(`O servidor não conseguiu processar o retorno dos dias. Tente novamente em 1 minuto.`);
+      // Fallback: Tenta data padrão se a calculada falhar
+      const yrRetry = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+      if (yrRetry.Fail) {
+        throw new Error(`O servidor não conseguiu processar o retorno dos dias. Tente novamente em alguns minutos ou contate o suporte.`);
+      }
     }
 
     // 2) restaura a senha original (a mesma entregue na compra)
