@@ -425,20 +425,25 @@ html.theme-light .crt::after { display: none; }
       background-color: transparent;
       filter: brightness(1) blur(0);
     }
+    92.5% {
+      opacity: var(--lightning-opacity, 1);
+      background-color: rgba(255, 255, 255, 1);
+      box-shadow: 0 0 100vw 100vw rgba(255, 255, 255, 0.9);
+    }
     93% { 
       opacity: var(--lightning-opacity, 1); 
-      background-color: rgba(255, 255, 255, 0.98);
-      filter: brightness(3) blur(1px);
-      box-shadow: 0 0 300px 150px white, inset 0 0 100px white;
+      background-color: rgba(255, 255, 255, 1);
+      filter: brightness(5) blur(0);
+      box-shadow: 0 0 100vw 100vw white;
     }
     94% { 
       opacity: 0; 
     }
     95% { 
       opacity: calc(var(--lightning-opacity, 1) * 0.9); 
-      background-color: rgba(230, 245, 255, 0.95);
-      filter: brightness(2) blur(1px);
-      box-shadow: 0 0 200px 100px rgba(200, 230, 255, 0.9);
+      background-color: rgba(230, 245, 255, 1);
+      filter: brightness(3) blur(0);
+      box-shadow: 0 0 100vw 100vw rgba(200, 230, 255, 1);
     }
     96% { 
       opacity: 0; 
@@ -446,7 +451,7 @@ html.theme-light .crt::after { display: none; }
     97% {
       opacity: calc(var(--lightning-opacity, 1) * 0.4);
       background-color: white;
-      box-shadow: 0 0 80px 40px white;
+      box-shadow: 0 0 50vw 50vw white;
     }
   }
 
