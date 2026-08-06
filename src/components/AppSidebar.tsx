@@ -85,7 +85,14 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.tKey ? t(item.tKey) : item.title}>
                     <Link to={item.url} className="flex items-center gap-2.5">
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <span className="text-sm">{item.tKey ? t(item.tKey) : item.title}</span>}
+                      {!collapsed && (
+                        <span className={cn(
+                          "text-sm",
+                          item.tKey === "nav.tutorials" && "rgb-text animate-rgb-text font-bold"
+                        )}>
+                          {item.tKey ? t(item.tKey) : item.title}
+                        </span>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
