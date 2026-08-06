@@ -35,7 +35,7 @@ export function panelFromTier(tier: string | null | undefined): YaarsaPanel {
 export function panelFromPlanSlug(slug: string | null | undefined): YaarsaPanel {
   if (!slug) return "v457";
   const s = slug.toLowerCase();
-  if (s.includes("lifetime")) return "v46";
+  if (s.includes("lifetime") || s.includes("kraken-lifetime")) return "v46";
   if (s.includes("7d") || s.includes("week") || s.includes("seman") || s === "trial")
     return weeklyPanel();
   return "v457";
