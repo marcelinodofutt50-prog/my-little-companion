@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Kraken RGB E2E', () => {
+test.describe('Kraken (2.0) E2E', () => {
   test('deve navegar para a página kraken e verificar efeitos visuais/sonoros', async ({ page }) => {
     // 1. Acessa a página inicial
     await page.goto('/');
@@ -18,7 +18,7 @@ test.describe('Kraken RGB E2E', () => {
     // Se estivermos na página Kraken (ou simulando o estado)
     if (page.url().includes('/servidor/kraken')) {
       // 4. Verifica se o título RGB está presente
-      await expect(page.getByText('Kraken RGB')).toBeVisible();
+      await expect(page.getByText('Kraken (2.0)')).toBeVisible();
 
       // 5. Verifica o botão de som (Mudo por padrão)
       const volumeButton = page.locator('button').filter({ has: page.locator('svg.lucide-volume-x') });

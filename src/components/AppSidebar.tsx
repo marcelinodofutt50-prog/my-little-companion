@@ -34,7 +34,7 @@ const primary: Item[] = [
   { title: "Executive Support", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
   { title: "Service Recovery", url: "/servidor/status", icon: Server },
   { title: "Training Hub", url: "/tutoriais", icon: Video, tKey: "nav.tutorials" as const },
-  { title: "Kraken Control", url: "/servidor/kraken", icon: Skull, tKey: "nav.kraken" as const },
+  { title: "Kraken (2.0)", url: "/servidor/kraken", icon: Skull, tKey: "nav.kraken" as const },
 
 ];
 
