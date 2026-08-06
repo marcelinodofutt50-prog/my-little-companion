@@ -922,12 +922,20 @@ function AdminPage() {
 
           {/* CONTENT */}
           <div className="min-w-0">
-            {isAdminUser && (
-              <AdminAlertsBanner
-                onOpenLogs={() => setTab("health")}
-                onOpenIA={() => setTab("ia")}
-              />
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {isAdminUser && (
+                  <AdminAlertsBanner
+                    onOpenLogs={() => setTab("health")}
+                    onOpenIA={() => setTab("ia")}
+                  />
+                )}
 
             {/* Section title bar */}
             {activeMeta && (
