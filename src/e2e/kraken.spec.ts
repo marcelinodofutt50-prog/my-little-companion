@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Kraken RGB Navigation', () => {
+test.describe('Kraken (2.0) Navigation', () => {
   test('header Kraken link should navigate to the command interface', async ({ page }) => {
     // Navigate to homepage
     await page.goto('http://localhost:8080');
