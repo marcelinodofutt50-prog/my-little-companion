@@ -26,19 +26,35 @@ function TutorialsPage() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Tudo");
-  const videoRef = useRef<HTMLVideoElement>(null);
   
   const listFn = useServerFn(listTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
   const toggleFn = useServerFn(toggleTutorialStatus);
 
   useEffect(() => {
-    Promise.all([listFn(), getProgressFn()])
-      .then(([tData, pData]) => {
-        setTutorials(tData);
-        setCompletedIds(pData);
-      })
-      .finally(() => setLoading(false));
+    let mounted = true;
+    
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
+        if (mounted) {
+          setTutorials(tData || []);
+          setCompletedIds(pData || []);
+        }
+      } catch (err: any) {
+        console.error("[tutorials] Data load failed:", err);
+        if (mounted) {
+          toast.error(err.message || "Erro ao carregar tutoriais");
+          setTutorials([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => { mounted = false; };
   }, []);
 
   const categories = useMemo(() => {
@@ -86,7 +102,7 @@ function TutorialsPage() {
       await toggleFn({ data: { tutorialId: id, completed: !isCompleted } });
       toast.success(isCompleted ? "Marcado como não assistido" : "Tutorial concluído!");
     } catch (err) {
-      setCompletedIds(completedIds); // Revert on error
+      setCompletedIds(completedIds); 
       toast.error("Erro ao atualizar progresso");
     }
   };
@@ -112,7 +128,7 @@ function TutorialsPage() {
                   </p>
                 </div>
                 
-                {tutorials.length >= 0 && (
+                {!loading && tutorials.length > 0 && (
                   <div className="w-full md:w-80 space-y-4 enterprise-surface p-5 rounded-xl border-primary/20 bg-primary/5 shadow-lg shadow-primary/5 rgb-border overflow-hidden">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
@@ -140,7 +156,6 @@ function TutorialsPage() {
                         );
                       })}
                     </div>
-                    
                     <div className="text-[9px] text-muted-foreground text-center uppercase tracking-tighter opacity-60 font-mono">
                       {completedIds.length} de {tutorials.length} módulos finalizados
                     </div>
@@ -148,6 +163,20 @@ function TutorialsPage() {
                 )}
               </div>
             </div>
+
+            {!loading && tutorials.length === 0 && (
+              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-4 mb-10">
+                <div className="flex justify-center">
+                  <div className="p-4 rounded-full bg-primary/5 border border-primary/10">
+                    <BookOpen className="h-12 w-12 text-primary/20" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Base de Dados Vazia</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto text-sm">
+                  Nenhum tutorial foi configurado no sistema ainda. Se você for um administrador, utilize o painel de gestão para adicionar conteúdo.
+                </p>
+              </div>
+            )}
 
             {/* Filter Bar */}
             <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -178,73 +207,73 @@ function TutorialsPage() {
             </div>
 
             <AnimatePresence mode="wait">
-            {selected && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-12"
-              >
-                <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card/40 backdrop-blur-xl shadow-2xl">
-                  <div className="aspect-video w-full bg-black relative">
-                    {selected.video_url ? (
-                      <video 
-                        key={selected.video_url}
-                        src={selected.video_url} 
-                        controls 
-                        className="h-full w-full object-contain"
-                        poster={selected.image_url}
-                        autoPlay
-                      />
-                    ) : selected.youtube_url ? (
-                      <iframe
-                        key={selected.youtube_url}
-                        className="h-full w-full"
-                        src={selected.youtube_url.includes("embed") ? selected.youtube_url : selected.youtube_url.replace("watch?v=", "embed/") + "?autoplay=1"}
-                        title={selected.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-muted-foreground bg-primary/5">
-                        <Video className="h-16 w-16 opacity-10 animate-pulse" />
-                        <p className="font-mono text-[10px] uppercase tracking-[0.3em]">Sinal de Mídia Ausente</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6 md:p-8">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">{selected.category}</div>
-                        <h2 className="text-2xl font-bold text-foreground md:text-3xl">{selected.title}</h2>
-                        <p className="text-muted-foreground leading-relaxed">{selected.description}</p>
-                      </div>
-                      <div className="flex gap-2">
-                         <Button 
-                           variant={completedIds.includes(selected.id) ? "default" : "outline"} 
-                           size="sm" 
-                           onClick={(e) => handleToggle(e, selected.id)}
-                           className="gap-2"
-                         >
-                           {completedIds.includes(selected.id) ? (
-                             <><CheckCircle2 className="h-4 w-4" /> Concluído</>
-                           ) : (
-                             <><Circle className="h-4 w-4" /> Marcar como Assistido</>
-                           )}
-                         </Button>
-                         {selected.youtube_url && (
-                           <Button variant="outline" size="sm" asChild className="gap-2 border-red-500/20 hover:bg-red-500/10 hover:text-red-500">
-                             <a href={selected.youtube_url} target="_blank" rel="noopener noreferrer">
-                               <Youtube className="h-4 w-4" /> Detalhes no YouTube
-                             </a>
+              {selected && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-12"
+                >
+                  <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card/40 backdrop-blur-xl shadow-2xl">
+                    <div className="aspect-video w-full bg-black relative">
+                      {selected.video_url ? (
+                        <video 
+                          key={selected.video_url}
+                          src={selected.video_url} 
+                          controls 
+                          className="h-full w-full object-contain"
+                          poster={selected.image_url}
+                          autoPlay
+                        />
+                      ) : selected.youtube_url ? (
+                        <iframe
+                          key={selected.youtube_url}
+                          className="h-full w-full"
+                          src={selected.youtube_url.includes("embed") ? selected.youtube_url : selected.youtube_url.replace("watch?v=", "embed/") + "?autoplay=1"}
+                          title={selected.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-muted-foreground bg-primary/5">
+                          <Video className="h-16 w-16 opacity-10 animate-pulse" />
+                          <p className="font-mono text-[10px] uppercase tracking-[0.3em]">Sinal de Mídia Ausente</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-6 md:p-8">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">{selected.category}</div>
+                          <h2 className="text-2xl font-bold text-foreground md:text-3xl">{selected.title}</h2>
+                          <p className="text-muted-foreground leading-relaxed">{selected.description}</p>
+                        </div>
+                        <div className="flex gap-2">
+                           <Button 
+                             variant={completedIds.includes(selected.id) ? "default" : "outline"} 
+                             size="sm" 
+                             onClick={(e) => handleToggle(e, selected.id)}
+                             className="gap-2"
+                           >
+                             {completedIds.includes(selected.id) ? (
+                               <><CheckCircle2 className="h-4 w-4" /> Concluído</>
+                             ) : (
+                               <><Circle className="h-4 w-4" /> Marcar como Assistido</>
+                             )}
                            </Button>
-                         )}
-                         <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>Fechar</Button>
+                           {selected.youtube_url && (
+                             <Button variant="outline" size="sm" asChild className="gap-2 border-red-500/20 hover:bg-red-500/10 hover:text-red-500">
+                               <a href={selected.youtube_url} target="_blank" rel="noopener noreferrer">
+                                 <Youtube className="h-4 w-4" /> Detalhes no YouTube
+                               </a>
+                             </Button>
+                           )}
+                           <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>Fechar</Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
             </AnimatePresence>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -259,12 +288,7 @@ function TutorialsPage() {
                   <Card 
                     className="group h-full cursor-pointer overflow-hidden border-border/40 bg-card/40 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                     onClick={() => {
-                      if (selected?.id === t.id) {
-                        setSelected(null);
-                        setTimeout(() => setSelected(t), 10);
-                      } else {
-                        setSelected(t);
-                      }
+                      setSelected(t);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                   >
@@ -283,7 +307,6 @@ function TutorialsPage() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
                       
-                      {/* Floating Category Badge */}
                       <div className="absolute top-3 left-3 flex gap-2">
                         <div className="rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md border border-white/10">
                           <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-primary font-bold">{t.category || "Geral"}</span>
@@ -336,50 +359,17 @@ function TutorialsPage() {
                   <div className="aspect-video bg-muted/20" />
                   <div className="p-4 space-y-3">
                     <div className="h-4 w-3/4 bg-muted/20 rounded" />
-                    <div className="h-3 w-full bg-muted/20 rounded" />
-                    <div className="h-3 w-5/6 bg-muted/20 rounded" />
+                    <div className="h-3 w-full bg-muted/10 rounded" />
                   </div>
                 </div>
               ))}
             </div>
 
-            {!loading && filteredTutorials.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="rounded-full bg-muted/10 p-6">
-                  <Search className="h-10 w-10 text-muted-foreground/30" />
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-foreground">Nenhum tutorial encontrado</h3>
-                <p className="mt-2 text-muted-foreground">Tente ajustar sua busca ou filtro para encontrar o que procura.</p>
-                {search && (
-                  <Button variant="ghost" className="mt-4" onClick={() => setSearch("")}>
-                    Limpar busca
-                  </Button>
-                )}
+            {!loading && filteredTutorials.length === 0 && tutorials.length > 0 && (
+              <div className="py-20 text-center">
+                <p className="text-muted-foreground font-mono uppercase tracking-widest text-xs">Nenhum resultado para "{search}"</p>
               </div>
             )}
-
-            {!loading && tutorials.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="rounded-full bg-muted/10 p-6">
-                  <Info className="h-10 w-10 text-muted-foreground/30" />
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-foreground">Hub em Manutenção</h3>
-                <p className="mt-2 text-muted-foreground">O admin ainda não publicou tutoriais nesta seção.</p>
-                <Button variant="outline" className="mt-6" asChild>
-                   <Link to="/dashboard">Voltar ao Console</Link>
-                </Button>
-              </div>
-            )}
-
-            <div className="mt-20 rounded-2xl border border-border/40 bg-card/20 p-8 text-center">
-              <h3 className="text-xl font-bold text-foreground">Dúvidas Específicas?</h3>
-              <p className="mt-2 text-muted-foreground">Se não encontrar o que procura aqui, nosso time de suporte está pronto para ajudar via console.</p>
-              <div className="mt-6 flex justify-center gap-4">
-                <Button asChild className="bg-primary hover:bg-primary/90 rounded-full px-8">
-                  <Link to="/suporte">Abrir Ticket</Link>
-                </Button>
-              </div>
-            </div>
           </div>
         </main>
       </div>
