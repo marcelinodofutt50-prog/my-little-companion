@@ -206,28 +206,7 @@ function KrakenPage() {
         )}
       </AnimatePresence>
 
-      {showEffects && (
-        <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
-          {/* Main Lightning Strike */}
-          <div 
-            className="animate-lightning" 
-            style={{ 
-              '--lightning-opacity': intensity,
-              background: bgLoadError ? 'rgba(255,255,255,0.05)' : undefined,
-              animation: 'lightning-strike 4s infinite both'
-            } as React.CSSProperties}
-          />
-          
-          {/* Global Screen Flash */}
-          <div 
-            className="absolute inset-0 bg-white/10 opacity-0 mix-blend-overlay pointer-events-none"
-            style={{ 
-              animation: 'lightning-strike 12s infinite',
-              animationDelay: '0.05s'
-            }}
-          />
-        </div>
-      )}
+      {/* Lightning and flashing effects removed per user request to stop white screen flashes */}
 
 
 
