@@ -71,6 +71,8 @@ export function KrakenTab({ onNavigate }: { onNavigate?: () => void }) {
               to="/servidor/kraken"
               onClick={(e) => {
                 trigger(e);
+                // Force router navigation as a safety measure
+                window.location.href = "/servidor/kraken";
               }}
               className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none group flex items-center gap-2"
             >
