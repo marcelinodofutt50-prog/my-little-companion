@@ -901,7 +901,7 @@ function AdminPage() {
                                 {badge > 99 ? "99+" : badge}
                               </span>
                             )}
-                          </button>
+                          </motion.button>
                         );
                       })}
                     </div>
