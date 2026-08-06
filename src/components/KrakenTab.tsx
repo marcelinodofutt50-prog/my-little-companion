@@ -48,12 +48,12 @@ export function KrakenTab() {
 
   return (
     <>
-      <button
-        type="button"
+      <Link
+        to="/servidor/kraken"
         onClick={trigger}
-        aria-label="Kraken"
         className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none"
       >
+
         <span
           className="bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent font-bold"
           style={{
@@ -69,7 +69,7 @@ export function KrakenTab() {
             100% { background-position: 300% 50%; }
           }
         `}</style>
-      </button>
+      </Link>
 
       <AnimatePresence>
         {flash && (
