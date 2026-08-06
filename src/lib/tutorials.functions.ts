@@ -25,12 +25,12 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({
       id: z.string().uuid().optional(),
-      title: z.string().min(1),
-      description: z.string().optional(),
+      title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
+      description: z.string().min(5, "Descrição deve ter pelo menos 5 caracteres"),
       video_url: z.string().url().optional(),
       image_url: z.string().url().optional(),
       youtube_url: z.string().url().optional(),
-      category: z.string().optional(),
+      category: z.string().min(2, "Categoria é obrigatória"),
       is_active: z.boolean().default(true),
       display_order: z.number().int().optional(),
   }).parse(input))
