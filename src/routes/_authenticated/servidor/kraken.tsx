@@ -11,8 +11,10 @@ import { krakenCommand, type KrakenOutput } from "@/lib/kraken.functions"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import krakenBg4 from "@/assets/kraken-bg-4.png"
-import krakenBg5 from "@/assets/kraken-bg-5.png"
+import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json"
+import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json"
+const krakenBg4 = krakenBg4Asset.url
+const krakenBg5 = krakenBg5Asset.url
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
   component: KrakenPage,
