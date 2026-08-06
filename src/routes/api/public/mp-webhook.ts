@@ -648,26 +648,20 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
         // block a real delivery, and a forged request still can't grant a
         // license because MP would not confirm it.
         const secret = process.env['MP_WEBHOOK_SECRET'];
-        const valid = secret
-          ? verifyMpSignature(request, dataId ? String(dataId) : null, secret)
-          : true; // Se o secret não estiver configurado, aceitamos para validar via API (fail-safe)
+        const valid = secret ? verifyMpSignature(request, dataId ? String(dataId) : null, secret) : false;
 
-        if (!valid && secret) {
-          // HMAC Verification failed
+        if (!valid) {
+          // If signature is invalid or secret is missing, we STILL try to validate via API fallback.
+          // This ensures that even if HMAC fails (e.g. secret mismatch or rotation), we verify with MP directly.
+          // However, we log it clearly to monitor potential fraud or misconfiguration.
           await supabaseAdmin.from("webhook_logs").insert({
             source: "mercadopago",
-            note: `Invalid signature (dataId=${dataId ?? "?"}) — returning 401 for retry`,
+            note: secret 
+              ? `Invalid HMAC signature (dataId=${dataId ?? "?"}) — performing authoritative API fallback validation`
+              : `Webhook secret not configured (dataId=${dataId ?? "?"}) — using authoritative API validation`,
             processed: false,
           });
-          return new Response("Invalid signature", { status: 401 });
-        }
-
-        if (!secret) {
-          await supabaseAdmin.from("webhook_logs").insert({
-            source: "mercadopago",
-            note: `Webhook secret not configured (dataId=${dataId ?? "?"}) — validating via API fallback`,
-            processed: false,
-          });
+          // We do NOT return 401 anymore; we proceed to authoritative API check.
         }
 
 
