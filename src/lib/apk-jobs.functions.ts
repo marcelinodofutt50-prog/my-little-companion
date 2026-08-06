@@ -191,7 +191,10 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
     const safeName = (job.result_filename || "app-protegido.apk").replace(/[^\w.\-]+/g, "_");
     const { data: signed, error } = await supabaseAdmin.storage
       .from("apk-results")
-      .createSignedUrl(job.result_path, 60 * 60, { download: safeName });
+      .createSignedUrl(job.result_path, 60 * 60, { 
+        download: safeName,
+        transform: undefined // Ensure no transformation for APKs
+      });
     if (error || !signed) throw new Error(error?.message || "Falha ao gerar link de download");
     return { url: signed.signedUrl, filename: safeName };
   });
