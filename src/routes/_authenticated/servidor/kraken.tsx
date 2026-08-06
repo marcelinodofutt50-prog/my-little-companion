@@ -83,15 +83,13 @@ function KrakenPage() {
       source.start(0);
     };
 
+    // Lightning simulation (audio only, visual flashes removed per user request)
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        // Dispara entre 6 e 12 segundos (mais espaçado)
-        const delay = 6000 + Math.random() * 6000;
+        // Dispara entre 8 e 15 segundos
+        const delay = 8000 + Math.random() * 7000;
         
         setTimeout(() => {
-          // Force DOM recalculation for animation
-          setIntensity(prev => prev > 0.4 ? 0.39 : 0.41);
-          
           if (audioDelay === 0) {
             playThunderEffect();
           } else {
@@ -99,7 +97,7 @@ function KrakenPage() {
           }
         }, delay);
       }
-    }, 12000);
+    }, 15000);
 
     // Handler para desbloquear o áudio na primeira interação do usuário
     const unlockAudio = () => {
