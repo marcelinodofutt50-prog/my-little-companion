@@ -38,7 +38,13 @@ export const listTutorials = createServerFn({ method: "GET" })
       if (!isSchemaError) break;
     }
     
-    throw new Error(lastError?.message || "Erro desconhecido ao carregar tutoriais");
+    const wrapped = new Error(lastError?.message || "Erro desconhecido ao carregar tutoriais");
+    if (lastError?.message?.includes("relation \"public.tutorials\" does not exist") || 
+        lastError?.message?.includes("public.tutorials' in the schema cache")) {
+      (wrapped as any)._schemaError = "public.tutorials";
+    }
+    throw wrapped;
+
   });
 
 
