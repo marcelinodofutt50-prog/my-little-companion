@@ -33,12 +33,29 @@ function TutorialsPage() {
   const toggleFn = useServerFn(toggleTutorialStatus);
 
   useEffect(() => {
-    Promise.all([listFn(), getProgressFn()])
-      .then(([tData, pData]) => {
-        setTutorials(tData);
-        setCompletedIds(pData);
-      })
-      .finally(() => setLoading(false));
+    let mounted = true;
+    
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
+        if (mounted) {
+          setTutorials(tData || []);
+          setCompletedIds(pData || []);
+        }
+      } catch (err: any) {
+        console.error("[tutorials] Data load failed:", err);
+        if (mounted) {
+          toast.error(err.message || "Erro ao carregar tutoriais");
+          setTutorials([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => { mounted = false; };
   }, []);
 
   const categories = useMemo(() => {
