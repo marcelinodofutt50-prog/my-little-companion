@@ -9,7 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { adminSaveTutorial, adminDeleteTutorial, listTutorials } from "@/lib/tutorials.functions";
 
+import { useI18n } from "@/lib/i18n";
+import { Edit } from "lucide-react";
+
 export function AdminTutorialsPanel() {
+  const { t } = useI18n();
   const [tutorials, setTutorials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -270,7 +274,7 @@ export function AdminTutorialsPanel() {
                 <h4 className="font-bold text-foreground line-clamp-1">{t.title}</h4>
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/20" onClick={() => { setCurrent(t); setIsEditing(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-                    <Plus className="h-4 w-4" />
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500/70 hover:text-red-500" onClick={() => handleDelete(t.id)}>
                     <Trash2 className="h-4 w-4" />
