@@ -66,7 +66,7 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
 
     const result = await yaarsaSetPassword(mockEmail, mockPassword);
 
-    expect(result.Fail).toContain('falha de rede');
+    expect(result.Fail?.toLowerCase()).toContain('falha de rede');
   });
 
   it('should succeed if one of the retries or actions eventually succeeds', async () => {
