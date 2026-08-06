@@ -389,7 +389,7 @@ function Index() {
               <Link to="/planos">{t('home.cta.buy')}</Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
-              <Link to="/auth" search={{ mode: 'up' }}>{t('home.cta.trial')}</Link>
+              <Link to="/auth">{t('home.cta.trial')}</Link>
             </Button>
           </div>
         </div>
