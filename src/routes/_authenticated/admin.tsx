@@ -4105,7 +4105,11 @@ function LegacyClientsPanel({ licenses, onChanged }: { licenses: any[]; onChange
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
       <div className="terminal-card scanlines relative p-5">
         <div className="mb-4 flex items-center gap-2">
           <History className="h-4 w-4 text-cyan" />
