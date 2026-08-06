@@ -24,13 +24,24 @@ if (import.meta.env.SSR && typeof process !== "undefined" && process.env) {
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
-  } catch (error) {
+  } catch (error: any) {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    console.error(error);
+    
+    // Detailed logging for Unauthorized errors to diagnose Vercel issues
+    if (error?.message?.includes('Unauthorized')) {
+      console.error('[VercelAuthError] Unauthorized access attempt:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.error('[ServerError]', error);
+    }
+
     return new Response(renderErrorPage(), {
-      status: 500,
+      status: error?.message?.includes('Unauthorized') ? 401 : 500,
       headers: { "content-type": "text/html; charset=utf-8" },
     });
   }
