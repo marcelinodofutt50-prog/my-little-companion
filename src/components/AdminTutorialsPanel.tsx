@@ -16,6 +16,7 @@ import { SortableTutorialCard } from "./SortableTutorialCard";
 export function AdminTutorialsPanel() {
   const { t } = useI18n();
   const [tutorials, setTutorials] = useState<any[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [current, setCurrent] = useState<any>({
@@ -67,6 +68,7 @@ export function AdminTutorialsPanel() {
       await saveFn({ data: current });
       toast.success(current.id ? "Tutorial atualizado!" : "Tutorial criado!");
       setIsEditing(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true });
       load();
     } catch (e: any) {
@@ -158,7 +160,7 @@ export function AdminTutorialsPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={scrollRef}>
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold tracking-tight text-foreground rgb-text animate-rgb-text">Centro de Treinamento</h3>
@@ -171,7 +173,7 @@ export function AdminTutorialsPanel() {
             </div>
           )}
           {!isEditing && (
-            <Button onClick={() => setIsEditing(true)} className="gap-2">
+            <Button onClick={() => { setIsEditing(true); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }} className="gap-2">
               <Plus className="h-4 w-4" /> Novo Tutorial
             </Button>
           )}
