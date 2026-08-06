@@ -11,8 +11,8 @@ import { krakenCommand, type KrakenOutput } from "@/lib/kraken.functions"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import krakenBg4 from "@/assets/kraken-bg-4.png.asset.json"
-import krakenBg5 from "@/assets/kraken-bg-5.png.asset.json"
+import krakenBg4 from "@/assets/kraken-bg-4.png"
+import krakenBg5 from "@/assets/kraken-bg-5.png"
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
   component: KrakenPage,
@@ -172,7 +172,7 @@ function KrakenPage() {
               animate={{ opacity: 0.5 }}
               className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
               style={{ 
-                backgroundImage: `url(${krakenBg4.url})`, 
+                backgroundImage: `url(${krakenBg4})`, 
                 backgroundSize: 'cover', 
                 backgroundPosition: 'center',
                 zIndex: 0
@@ -185,7 +185,7 @@ function KrakenPage() {
               transition={{ delay: 1 }}
               className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
               style={{ 
-                backgroundImage: `url(${krakenBg5.url})`, 
+                backgroundImage: `url(${krakenBg5})`, 
                 backgroundSize: 'cover', 
                 backgroundPosition: 'center',
                 zIndex: 1
@@ -217,9 +217,9 @@ function KrakenPage() {
           
           {/* Global Screen Flash */}
           <div 
-            className="absolute inset-0 bg-white/20 opacity-0 mix-blend-overlay pointer-events-none"
+            className="absolute inset-0 bg-white/10 opacity-0 mix-blend-overlay pointer-events-none"
             style={{ 
-              animation: 'lightning-strike 5s infinite',
+              animation: 'lightning-strike 12s infinite',
               animationDelay: '0.05s'
             }}
           />
