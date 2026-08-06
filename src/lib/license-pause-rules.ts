@@ -32,9 +32,9 @@ export type PauseLicenseLike = {
 }
 
 /** Tempo mínimo restante para valer a pena pausar. */
-export const MIN_PAUSE_MS = 60 * 60 * 1000 // 1 hora
+export const MIN_PAUSE_MS = 1 * 60 * 1000 // 1 minuto (era 1 hora)
 /** Tempo mínimo pausada antes de poder despausar (evita flood no painel). */
-export const RESUME_COOLDOWN_MS = 30 * 1000 // Reduzido para 30s para melhor UX
+export const RESUME_COOLDOWN_MS = 10 * 1000 // Reduzido para 10s para melhor UX (era 30s)
 
 const ok: PauseRuleResult = { ok: true, code: "ok", message: "" }
 
@@ -68,7 +68,7 @@ export function canPauseLicense(lic: PauseLicenseLike | null | undefined, now = 
     return {
       ok: false,
       code: "too_short",
-      message: "Resta menos de 1 hora nesta licença; não é possível pausar.",
+      message: "Resta menos de 1 minuto nesta licença; não é possível pausar.",
     }
   return ok
 }
