@@ -752,7 +752,7 @@ async function yaarsaPost(
           return { Success: String(parsed.Success) };
         }
         if (parsed.Fail) {
-          const friendly = friendlyYaarsaFail(String(parsed.Fail));
+          const friendly = friendlyYaarsaFail(String(parsed.Fail), status);
           // 1005 "not found" during a cexpire is normal for lookup probes — log as informational.
           const isLookupMiss =
             action === "cexpire" &&
