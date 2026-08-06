@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Synthesize a thunder clap with WebAudio (no external asset needed)
@@ -53,7 +54,6 @@ export function KrakenTab() {
         onClick={trigger}
         className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none"
       >
-
         <span
           className="bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent font-bold"
           style={{
