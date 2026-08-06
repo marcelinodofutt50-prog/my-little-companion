@@ -35,31 +35,30 @@ function KrakenPage() {
     const timer = setTimeout(() => setShowEffects(true), 500);
     
     // Setup áudio
-    // Sound of a realistic storm/thunder
+    // Setup áudio
     audioRef.current = new Audio("https://cdn.pixabay.com/audio/2022/01/18/audio_823a39e830.mp3");
-    audioRef.current.loop = true;
+    audioRef.current.loop = false; // We'll trigger it manually for lightning
     audioRef.current.volume = 0.5;
 
-
+    const lightningInterval = setInterval(() => {
+      if (!isMuted && showEffects && audioRef.current) {
+        // Sincroniza som com o início da animação de raio (ciclo de 4s em styles.css)
+        const thunderClone = audioRef.current.cloneNode() as HTMLAudioElement;
+        thunderClone.volume = 0.4 + Math.random() * 0.3;
+        thunderClone.play().catch(e => console.log("Audio play blocked", e));
+      }
+    }, 4000);
     
     return () => {
       clearTimeout(timer);
+      clearInterval(lightningInterval);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
-  }, []);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      if (!isMuted && showEffects) {
-        audioRef.current.play().catch(e => console.log("Audio play blocked", e));
-      } else {
-        audioRef.current.pause();
-      }
-    }
   }, [isMuted, showEffects]);
+
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -167,8 +166,12 @@ function KrakenPage() {
                 <Skull className="h-6 w-6 text-red-500" />
               </div>
               <div>
-                <CardTitle className="text-sm font-mono uppercase tracking-widest text-red-500">Kraken Terminal</CardTitle>
-                <p className="text-[10px] text-muted-foreground uppercase">Direct interface to Shadow-Ops Cluster</p>
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-red-500">Kraken Command Console</CardTitle>
+                <p className="text-[10px] text-muted-foreground uppercase leading-tight">
+                  Cansado do bancor travar? Perdendo muita pena? Caixa detectando?<br/>
+                  Mude agora para a Kraken e mude de conceito.
+                </p>
+
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -250,8 +253,9 @@ function KrakenPage() {
                     </div>
                   </div>
                   <p className="text-[11px] text-white/70 leading-relaxed font-medium italic">
-                    "A Kraken não é apenas uma ferramenta; é uma entidade. Sem testes grátis. Somente operadores qualificados."
+                    "A Kraken não é apenas uma ferramenta; é uma entidade. O futuro da KL chegou."
                   </p>
+
                   <div className="pt-2 border-t border-red-500/10 mt-2">
                     <p className="text-[9px] text-muted-foreground uppercase font-mono">Pricing:</p>
                     <div className="flex gap-4 mt-1">
@@ -286,10 +290,21 @@ function KrakenPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="p-4 rounded border border-white/5 bg-white/5 text-[9px] text-muted-foreground font-mono leading-tight"
+              className="p-4 rounded border border-red-500/20 bg-red-500/5 text-[10px] text-white/80 font-mono space-y-2"
             >
-              [NOTE] Após a aquisição, um ticket de prioridade máxima será aberto automaticamente no suporte Shadow para entrega imediata das credenciais.
+              <div className="font-bold text-red-400 uppercase tracking-wider border-b border-red-500/20 pb-1 mb-2">Diferenciais Elite:</div>
+              <ul className="grid grid-cols-1 gap-1.5 list-disc pl-4">
+                <li>Apk simples e fácil de criar</li>
+                <li>Kraken Dropper integrado</li>
+                <li>Nova interface tática simplificada</li>
+                <li>Criação personalizada de Tela Preta</li>
+                <li>Módulos: Nubank, Caixa e Itaú</li>
+              </ul>
+              <p className="mt-3 text-[9px] text-muted-foreground italic border-t border-white/5 pt-2">
+                [NOTE] Ticket de prioridade máxima automático após aquisição.
+              </p>
             </motion.div>
+
           </div>
         </div>
       </div>

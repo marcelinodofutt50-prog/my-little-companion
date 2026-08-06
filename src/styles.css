@@ -409,15 +409,17 @@ html.theme-light .crt::after { display: none; }
 
   /* Kraken UI animations */
   .animate-lightning {
-    animation: lightning-flash 5s infinite;
+    animation: lightning-flash 4s infinite;
   }
   @keyframes lightning-flash {
-    0%, 94%, 100% { opacity: 0; }
-    95%, 97% { opacity: 0.8; background-color: white; }
-    96% { opacity: 0; }
-    98% { opacity: 0.4; background-color: white; }
-    99% { opacity: 0; }
+    0%, 94%, 100% { opacity: 0; background-color: transparent; }
+    95% { opacity: 1; background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 100px 50px white; }
+    96% { opacity: 0; background-color: transparent; }
+    97% { opacity: 0.8; background-color: rgba(200, 230, 255, 0.9); }
+    98% { opacity: 0; background-color: transparent; }
+    99% { opacity: 0.4; background-color: white; }
   }
+
 
   .kraken-fade-in {
     animation: kraken-fade-in 2s ease-out forwards;
