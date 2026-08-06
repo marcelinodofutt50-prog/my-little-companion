@@ -40,22 +40,34 @@ function KrakenPage() {
     const timer = setTimeout(() => setShowEffects(true), 500);
     
     // Web Audio API context para reprodução mais robusta
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const audioUrl = "https://www.soundjay.com/nature/thunder-01.mp3";
+    let audioContext: AudioContext | null = null;
     let audioBuffer: AudioBuffer | null = null;
+    const audioUrl = "https://www.soundjay.com/nature/thunder-01.mp3";
 
-    // Carregar o áudio no buffer para resposta instantânea
-    fetch(audioUrl)
-      .then(response => response.arrayBuffer())
-      .then(data => audioContext.decodeAudioData(data))
-      .then(buffer => {
-        audioBuffer = buffer;
-      })
-      .catch(e => console.error("Falha ao carregar áudio de trovão:", e));
+    const initAudio = async () => {
+      try {
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const response = await fetch(audioUrl);
+        const data = await response.arrayBuffer();
+        audioBuffer = await audioContext.decodeAudioData(data);
+        console.log("Áudio de trovão carregado e pronto.");
+      } catch (e) {
+        console.error("Falha ao inicializar o motor de áudio:", e);
+      }
+    };
+
+    initAudio();
 
     const playThunderEffect = () => {
-      if (!showEffects || isMuted || !audioBuffer) return;
+      if (!showEffects || isMuted || !audioBuffer || !audioContext) return;
       
+      // Se o contexto estiver suspenso (restrição de autoplay), tentamos retomar
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(console.error);
+        // Mesmo se retomar agora, a primeira execução pode falhar se não houver interação prévia,
+        // mas as subsequentes funcionarão assim que o usuário clicar em qualquer lugar.
+      }
+
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
       
@@ -70,19 +82,37 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        // Dispara o som sincronizado com o efeito visual, aplicando o delay de calibração
         if (audioDelay === 0) {
           playThunderEffect();
         } else {
-          setTimeout(playThunderEffect, audioDelay);
+          setTimeout(playThunderEffect, Math.max(0, audioDelay));
         }
       }
     }, 4000);
+
+    // Handler para desbloquear o áudio na primeira interação do usuário
+    const unlockAudio = () => {
+      if (audioContext && audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+          console.log("AudioContext retomado após interação do usuário.");
+          window.removeEventListener('click', unlockAudio);
+          window.removeEventListener('keydown', unlockAudio);
+          window.removeEventListener('touchstart', unlockAudio);
+        });
+      }
+    };
+
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
     
     return () => {
       clearTimeout(timer);
       clearInterval(lightningInterval);
-      audioContext.close();
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+      if (audioContext) audioContext.close();
     };
   }, [isMuted, showEffects, audioDelay]);
 
