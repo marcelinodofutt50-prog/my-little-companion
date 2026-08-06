@@ -119,19 +119,19 @@ export function AdminTutorialsPanel() {
     // Validations
     const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
     const MAX_IMAGE_SIZE = 5 * 1024 * 1024;   // 5MB
-    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
-    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska'];
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 
     if (type === 'video') {
       if (!allowedVideoTypes.includes(file.type)) {
-        return toast.error("Apenas vídeos MP4, WebM ou OGG são permitidos.");
+        return toast.error("Apenas vídeos MP4, WebM, OGG, MOV ou MKV são permitidos.");
       }
       if (file.size > MAX_VIDEO_SIZE) {
         return toast.error("O vídeo deve ter no máximo 100MB.");
       }
     } else {
       if (!allowedImageTypes.includes(file.type)) {
-        return toast.error("Apenas imagens JPEG, PNG, WEBP ou GIF são permitidas.");
+        return toast.error("Apenas imagens JPEG, PNG, WEBP, GIF ou SVG são permitidas.");
       }
       if (file.size > MAX_IMAGE_SIZE) {
         return toast.error("A imagem deve ter no máximo 5MB.");
@@ -161,7 +161,7 @@ export function AdminTutorialsPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold tracking-tight text-foreground">Tutorials Hub</h3>
+          <h3 className="text-xl font-bold tracking-tight text-foreground rgb-text animate-rgb-text">Training Hub</h3>
           <p className="text-sm text-muted-foreground">Gerencie os vídeos e guias para seus clientes.</p>
         </div>
         <div className="flex gap-2">
@@ -260,7 +260,7 @@ export function AdminTutorialsPanel() {
                     {uploading ? "Sincronizando..." : "Selecionar Vídeo"}
                     <input 
                       type="file" 
-                      accept="video/mp4,video/webm,video/ogg"
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska"
                       onChange={(e) => handleFileUpload(e, 'video')}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
