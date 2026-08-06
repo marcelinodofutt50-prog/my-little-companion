@@ -84,7 +84,8 @@ function PlayProtectPage() {
     retry: 2,
   });
 
-  const hasAccess = Boolean(accessStatus?.canSubmit || accessStatus?.hasActivePlan || isAdmin);
+  const hasAccess = Boolean(accessStatus?.hasActivePlan || accessStatus?.canSubmit || isAdmin);
+  const canDownload = Boolean(accessStatus?.hasActivePlan || accessStatus?.freeTrialUsed || isAdmin);
 
   const { data: jobs } = useSuspenseQuery({
     queryKey: ["apk-jobs"],
@@ -368,14 +369,26 @@ function PlayProtectPage() {
                               <CheckCircle2 className="h-3 w-3" />
                               <span className="font-mono text-[9px] uppercase">Pronto para download</span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 rounded-none px-2 font-mono text-[9px] hover:text-neon"
-                               onClick={() => void downloadResult(job.id)}
-                            >
-                              <Download className="mr-1 h-3 w-3" /> Download
-                            </Button>
+                            {canDownload ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 rounded-none px-2 font-mono text-[9px] hover:text-neon"
+                                 onClick={() => void downloadResult(job.id)}
+                              >
+                                <Download className="mr-1 h-3 w-3" /> Download
+                              </Button>
+                            ) : (
+                              <Link to="/planos">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 rounded-none px-2 font-mono text-[9px] text-danger hover:bg-danger/10"
+                                >
+                                  Ativar Plano
+                                </Button>
+                              </Link>
+                            )}
                           </div>
                         )}
 
