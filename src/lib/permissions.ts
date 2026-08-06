@@ -40,7 +40,7 @@ export type Capability =
 const SUPPORT_CAPS: Capability[] = [
   "view.overview", "view.chat", "view.apk", "view.users", "view.orders", "view.licenses",
   "chat.reply", "chat.assume", "chat.close", "apk.manage",
-  "announcements.create", "tutorials.manage",
+  "announcements.create", "tutorials.manage", "license.issue",
 ];
 
 const ALL_CAPS: Capability[] = [
