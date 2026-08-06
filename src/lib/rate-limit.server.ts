@@ -76,11 +76,13 @@ export async function recordAttempt(key: string, outcome: "success" | "failure" 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
     // Log to signup_attempts for rate limiting logic
-    await supabaseAdmin.from("signup_attempts").insert({
+    // Explicitly use the fields expected by the database schema to avoid TS errors
+    const payload = {
       ip_hash: ipHash,
       email_masked: emailMasked || null,
       outcome: `rl:${key}`, // Used as the bucket key
-    });
+    };
+    await (supabaseAdmin.from("signup_attempts") as any).insert(payload);
 
     // Log to audit_logs for admin visibility
     await supabaseAdmin.from("audit_logs").insert({
