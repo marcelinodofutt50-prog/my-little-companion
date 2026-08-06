@@ -292,6 +292,31 @@ function DashboardPage() {
 
               <ExpiryAlertBanner licenses={licenses} serverNow={serverNow} />
 
+              {(licenses as any)?._schemaError === "public.tutorials" && (
+                <Card className="border-red-500/30 bg-red-500/5 backdrop-blur-sm border-2 animate-pulse mb-4">
+                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-red-500/20 p-2 rounded-full">
+                        <ShieldIcon className="h-5 w-5 text-red-500" />
+                      </div>
+                      <div>
+                        <h4 className="font-mono text-xs font-bold text-red-500 uppercase">Falha Crítica de Sincronização</h4>
+                        <p className="text-[10px] text-muted-foreground font-mono">
+                          Tabela 'public.tutorials' não encontrada no cache do schema. Isso pode afetar o Hub de Vídeos.
+                        </p>
+                      </div>
+                    </div>
+                    <SupportDiagnosticButton 
+                      error={(licenses as any)?._schemaError} 
+                      context="Dashboard - Erro de Schema (Table Missing)"
+                      label="Reportar Erro"
+                      variant="destructive"
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   { label: 'Crédito operacional', value: 'R$ 0,00', detail: 'Resgate disponível em PIX', icon: Activity, tone: 'text-primary' },
