@@ -91,7 +91,8 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
                       {!collapsed && (
                         <span className={cn(
                           "text-sm",
-                          item.tKey === "nav.tutorials" && "rgb-text animate-rgb-text font-bold"
+                          (item.tKey === "nav.tutorials" || item.tKey === "nav.kraken") && "rgb-text animate-rgb-text font-bold"
+
                         )}>
                           {item.tKey ? t(item.tKey) : item.title}
                         </span>
