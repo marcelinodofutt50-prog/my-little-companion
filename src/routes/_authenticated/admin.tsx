@@ -854,8 +854,10 @@ function AdminPage() {
                         const isNew = t.id === "external";
                         const badge = navBadges[t.id] ?? 0;
                         return (
-                          <button
+                          <motion.button
                             key={t.id}
+                            whileHover={{ x: 4 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={() => setTab(t.id)}
                             aria-current={active ? "page" : undefined}
                             className={`group relative flex w-full items-center gap-2.5 rounded-md py-2 pl-3 pr-2 text-left transition-colors ${
