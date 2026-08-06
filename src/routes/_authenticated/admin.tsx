@@ -2196,6 +2196,8 @@ function AdminPage() {
             {tab === "tutorials" && <AdminTutorialsPanel />}
             {tab === "refunds" && <AdminRefundsPanel />}
             {tab === "selftest" && <AdminSelfTestPanel />}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </main>
