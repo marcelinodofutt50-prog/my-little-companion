@@ -140,14 +140,22 @@ function KrakenPage() {
         )}
       </AnimatePresence>
 
-      {/* Lightning Effect Overlay */}
       {showEffects && (
-        <div 
-          className="absolute inset-0 pointer-events-none animate-lightning mix-blend-screen z-10 overflow-hidden" 
-          style={{ '--lightning-opacity': intensity } as React.CSSProperties}
-        >
-          {/* Hardware-accelerated glow substitute for heavy box-shadow */}
-          <div className="absolute inset-0 bg-white/30 blur-[100px] opacity-0 animate-lightning" />
+        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+          {/* Main Lightning Strike */}
+          <div 
+            className="animate-lightning" 
+            style={{ '--lightning-opacity': intensity } as React.CSSProperties}
+          />
+          
+          {/* Global Screen Flash */}
+          <div 
+            className="absolute inset-0 bg-white/20 opacity-0 mix-blend-overlay pointer-events-none"
+            style={{ 
+              animation: 'lightning-strike 5s infinite',
+              animationDelay: '0.05s'
+            }}
+          />
         </div>
       )}
 
