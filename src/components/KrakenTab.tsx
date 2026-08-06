@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Synthesize a thunder clap with WebAudio (no external asset needed)
@@ -48,10 +49,9 @@ export function KrakenTab() {
 
   return (
     <>
-      <button
-        type="button"
+      <Link
+        to="/servidor/kraken"
         onClick={trigger}
-        aria-label="Kraken"
         className="relative font-mono text-[11px] uppercase tracking-[0.2em] outline-none"
       >
         <span
@@ -69,7 +69,7 @@ export function KrakenTab() {
             100% { background-position: 300% 50%; }
           }
         `}</style>
-      </button>
+      </Link>
 
       <AnimatePresence>
         {flash && (
