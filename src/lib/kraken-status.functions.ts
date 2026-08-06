@@ -29,6 +29,40 @@ export const getKrakenStatus = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
+    // 3. Adicionar lógica de verificação autoritativa para ordens pendentes
+    if (order && order.status !== 'paid' && order.status !== 'yaarsa_failed') {
+      try {
+        const { findApprovedPaymentForOrder } = await import("@/lib/mercadopago.server");
+        const approved = await findApprovedPaymentForOrder(order.id, Number(order.amount));
+        
+        if (approved) {
+          // Se encontramos um pagamento aprovado que o webhook ainda não processou, 
+          // disparamos o fulfillment em segundo plano e retornamos status positivo.
+          const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+          // Não aguardamos o fulfillOrder para não travar a UI, ele é idempotente.
+          fulfillOrder(order.id).catch(console.error);
+          
+          return {
+            active: true,
+            license: license ? {
+              id: license.id,
+              expires_at: license.expires_at,
+              plan_slug: license.plan_slug,
+              is_revoked: license.status
+            } : null,
+            lastOrder: {
+              ...order,
+              status: 'paid'
+            },
+            serverTime: new Date().toISOString(),
+            isAuthoritative: true
+          };
+        }
+      } catch (e) {
+        console.error("[KrakenStatus] Erro na reconciliação autoritativa:", e);
+      }
+    }
+
     return {
       active: !!license && !license.status,
       license: license ? {
