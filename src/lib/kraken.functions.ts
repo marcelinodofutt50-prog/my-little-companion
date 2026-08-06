@@ -8,12 +8,12 @@ import { z } from "zod";
  */
 export const krakenCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: unknown) => 
-    z.object({
+  .validator((input: any) => {
+    return z.object({
       command: z.string(),
       params: z.record(z.any()).optional()
-    }).parse(input)
-  )
+    }).parse(input);
+  })
   .handler(async ({ data }) => {
     // Implementação mock para o console tático
     const logStr = `[Kraken] Executing command: ${data.command}`;
