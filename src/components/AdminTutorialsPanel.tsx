@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Video, Image as ImageIcon, Link as LinkIcon, Save, X, Eye, EyeOff, Edit, GripVertical, Loader2 } from "lucide-react";
@@ -16,6 +16,7 @@ import { SortableTutorialCard } from "./SortableTutorialCard";
 export function AdminTutorialsPanel() {
   const { t } = useI18n();
   const [tutorials, setTutorials] = useState<any[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [current, setCurrent] = useState<any>({
@@ -59,14 +60,15 @@ export function AdminTutorialsPanel() {
   }
 
   async function handleSave() {
-    if (!current.title) return toast.error("Título é obrigatório");
-    if (!current.description) return toast.error("Descrição é obrigatória");
-    if (!current.category) return toast.error("Categoria é obrigatória");
+    if (!current.title?.trim()) return toast.error("Título é obrigatório");
+    if (!current.description?.trim()) return toast.error("Descrição é obrigatória");
+    if (!current.category?.trim()) return toast.error("Categoria é obrigatória");
     if (!current.video_url && !current.youtube_url) return toast.error("É necessário um vídeo (upload ou link)");
     try {
       await saveFn({ data: current });
-      toast.success("Tutorial salvo com sucesso!");
+      toast.success(current.id ? "Tutorial atualizado!" : "Tutorial criado!");
       setIsEditing(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true });
       load();
     } catch (e: any) {
@@ -158,7 +160,7 @@ export function AdminTutorialsPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={scrollRef}>
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold tracking-tight text-foreground rgb-text animate-rgb-text">Centro de Treinamento</h3>
@@ -171,7 +173,7 @@ export function AdminTutorialsPanel() {
             </div>
           )}
           {!isEditing && (
-            <Button onClick={() => setIsEditing(true)} className="gap-2">
+            <Button onClick={() => { setIsEditing(true); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }} className="gap-2">
               <Plus className="h-4 w-4" /> Novo Tutorial
             </Button>
           )}
@@ -257,7 +259,7 @@ export function AdminTutorialsPanel() {
                   </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <Video className="h-4 w-4 mr-2" />
-                    {uploading ? "Sincronizando..." : "Selecionar Vídeo"}
+                    {uploading ? "Enviando..." : "Selecionar Vídeo"}
                     <input 
                       type="file" 
                       accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska"
@@ -272,7 +274,7 @@ export function AdminTutorialsPanel() {
                   </label>
                   <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
                     <ImageIcon className="h-4 w-4 mr-2" />
-                    {uploading ? "Sincronizando..." : "Selecionar Foto"}
+                    {uploading ? "Enviando..." : "Selecionar Foto"}
                     <input 
                       type="file" 
                       accept="image/*"
@@ -370,7 +372,7 @@ export function AdminTutorialsPanel() {
           {!loading && tutorials.length === 0 && (
             <div className="col-span-full py-12 text-center">
               <Video className="h-12 w-12 mx-auto text-muted-foreground/20" />
-              <h4 className="mt-4 font-medium text-muted-foreground">Nenhum tutorial cadastrado.</h4>
+              <h4 className="mt-4 font-medium text-muted-foreground">Nenhum tutorial encontrado.</h4>
             </div>
           )}
         </div>
