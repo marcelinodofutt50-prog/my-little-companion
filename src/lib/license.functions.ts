@@ -162,12 +162,20 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     }
 
     // 1) devolve os dias
-    const yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+    let yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+    
+    // Se falhar a extensão (ex: erro temporário), tentamos uma vez mais com a mesma data 
+    // ou garantimos que o erro seja propagado corretamente para o Healer/Retry.
     if (yr.Fail) {
       console.error("[reactivateMyLicense] Yaarsa Extend Fail:", yr.Fail);
-      // Fallback: Tenta data padrão se a calculada falhar
-      const yrRetry = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
-      if (yrRetry.Fail) {
+      
+      // Tentativa de re-sincronização agressiva em caso de timeout/rede
+      if (/timeout|rede|network|respondendo/i.test(yr.Fail)) {
+        await new Promise(r => setTimeout(r, 1000));
+        yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+      }
+      
+      if (yr.Fail) {
         throw new Error(`O servidor não conseguiu processar o retorno dos dias. Tente novamente em alguns minutos ou contate o suporte.`);
       }
     }
