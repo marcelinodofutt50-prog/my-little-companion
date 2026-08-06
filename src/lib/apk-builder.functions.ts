@@ -120,7 +120,7 @@ export const createBuildJob = createServerFn({ method: "POST" })
 
     const { error: cfgErr } = await context.supabase.from("apk_dropper_configs").insert({
       job_id: job.id,
-      dropper_type: data.dropperType, // always normalized to shadow_bypass
+      dropper_type: data.dropperType, // normalized
       config_json: (data.config ?? {}) as any,
     });
     if (cfgErr) {

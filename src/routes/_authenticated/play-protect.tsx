@@ -154,7 +154,19 @@ function PlayProtectPage() {
   const downloadResult = async (id: string) => {
     try {
       const result = await getResult({ data: { id } });
-      triggerDownload(result.url, result.filename);
+      if (!result.url) throw new Error("Link de download não gerado");
+      
+      // Resilient trigger
+      const link = document.createElement("a");
+      link.href = result.url;
+      link.setAttribute("download", result.filename);
+      link.setAttribute("target", "_blank");
+      link.setAttribute("rel", "noopener noreferrer");
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => document.body.removeChild(link), 200);
+      
+      toast.success("Download iniciado");
     } catch (error: any) {
       toast.error(error?.message ?? "Não foi possível baixar o resultado");
     }
