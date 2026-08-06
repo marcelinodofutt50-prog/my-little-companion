@@ -168,7 +168,6 @@ function PlayProtectPage() {
       
       toast.success("Download iniciado");
     } catch (error: any) {
-    } catch (error: any) {
       toast.error(error?.message ?? "Não foi possível baixar o resultado");
     }
   };
