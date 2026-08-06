@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Video, Image as ImageIcon, Link as LinkIcon, Save, X, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Video, Image as ImageIcon, Link as LinkIcon, Save, X, Eye, EyeOff, Edit, GripVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { adminSaveTutorial, adminDeleteTutorial, listTutorials } from "@/lib/tutorials.functions";
-
+import { adminSaveTutorial, adminDeleteTutorial, listTutorials, updateTutorialOrder } from "@/lib/tutorials.functions";
 import { useI18n } from "@/lib/i18n";
-import { Edit } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableTutorialCard } from "./SortableTutorialCard";
 
 export function AdminTutorialsPanel() {
   const { t } = useI18n();
@@ -27,10 +28,19 @@ export function AdminTutorialsPanel() {
     is_active: true
   });
   const [uploading, setUploading] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
 
   const saveFn = useServerFn(adminSaveTutorial);
   const deleteFn = useServerFn(adminDeleteTutorial);
   const listFn = useServerFn(listTutorials);
+  const updateOrderFn = useServerFn(updateTutorialOrder);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     load();
@@ -72,6 +82,33 @@ export function AdminTutorialsPanel() {
       load();
     } catch (e: any) {
       toast.error(e.message);
+    }
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = tutorials.findIndex((t) => t.id === active.id);
+      const newIndex = tutorials.findIndex((t) => t.id === over.id);
+      
+      const newOrder = arrayMove(tutorials, oldIndex, newIndex);
+      setTutorials(newOrder);
+
+      // Save to server
+      setIsOrdering(true);
+      try {
+        const orderData = newOrder.map((t, idx) => ({
+          id: t.id,
+          display_order: idx
+        }));
+        await updateOrderFn({ data: orderData });
+        toast.success("Ordem atualizada!");
+      } catch (e: any) {
+        toast.error("Erro ao salvar ordem: " + e.message);
+        load(); // Revert on error
+      } finally {
+        setIsOrdering(false);
+      }
     }
   }
 
@@ -127,11 +164,18 @@ export function AdminTutorialsPanel() {
           <h3 className="text-xl font-bold tracking-tight text-foreground">Tutorials Hub</h3>
           <p className="text-sm text-muted-foreground">Gerencie os vídeos e guias para seus clientes.</p>
         </div>
-        {!isEditing && (
-          <Button onClick={() => setIsEditing(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> Novo Tutorial
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {isOrdering && (
+            <div className="flex items-center text-xs font-mono text-primary animate-pulse mr-2">
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" /> Salvando ordem...
+            </div>
+          )}
+          {!isEditing && (
+            <Button onClick={() => setIsEditing(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Novo Tutorial
+            </Button>
+          )}
+        </div>
       </div>
 
       {isEditing && (
@@ -252,55 +296,39 @@ export function AdminTutorialsPanel() {
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {tutorials.map((t) => (
-          <Card key={t.id} className="group overflow-hidden border-border/40 bg-card/40 transition-all hover:border-primary/40">
-            <div className="relative aspect-video w-full bg-muted overflow-hidden">
-              {t.image_url ? (
-                <img src={t.image_url} alt={t.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Video className="h-10 w-10 text-muted-foreground/30" />
-                </div>
-              )}
-              {!t.is_active && (
-                <div className="absolute inset-0 bg-background/60 flex items-center justify-center backdrop-blur-[2px]">
-                  <span className="text-[10px] font-mono uppercase bg-red-500/20 text-red-500 px-2 py-1 rounded">Desativado</span>
-                </div>
-              )}
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <SortableContext 
+            items={tutorials.map(t => t.id)}
+            strategy={rectSortingStrategy}
+          >
+            {tutorials.map((t) => (
+              <SortableTutorialCard 
+                key={t.id} 
+                t={t} 
+                setCurrent={setCurrent} 
+                setIsEditing={setIsEditing} 
+                handleDelete={handleDelete} 
+              />
+            ))}
+          </SortableContext>
+
+          {loading && [1, 2, 3].map((i) => (
+            <div key={i} className="aspect-video rounded-xl bg-muted animate-pulse" />
+          ))}
+
+          {!loading && tutorials.length === 0 && (
+            <div className="col-span-full py-12 text-center">
+              <Video className="h-12 w-12 mx-auto text-muted-foreground/20" />
+              <h4 className="mt-4 font-medium text-muted-foreground">Nenhum tutorial cadastrado.</h4>
             </div>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start gap-2">
-                <h4 className="font-bold text-foreground line-clamp-1">{t.title}</h4>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/20" onClick={() => { setCurrent(t); setIsEditing(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500/70 hover:text-red-500" onClick={() => handleDelete(t.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>
-              <div className="mt-3 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
-                <span>{t.category}</span>
-                {t.youtube_url && <LinkIcon className="h-3 w-3" />}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        {loading && [1, 2, 3].map((i) => (
-          <div key={i} className="aspect-video rounded-xl bg-muted animate-pulse" />
-        ))}
-
-        {!loading && tutorials.length === 0 && (
-          <div className="col-span-full py-12 text-center">
-            <Video className="h-12 w-12 mx-auto text-muted-foreground/20" />
-            <h4 className="mt-4 font-medium text-muted-foreground">Nenhum tutorial cadastrado.</h4>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </DndContext>
     </div>
   );
 }

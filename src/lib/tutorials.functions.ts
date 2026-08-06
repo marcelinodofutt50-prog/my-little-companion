@@ -16,7 +16,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      .order("display_order", { ascending: true });
     if (error) throw new Error(error.message);
     return (data ?? []) as any[];
   });
@@ -32,6 +32,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
       youtube_url: z.string().url().optional(),
       category: z.string().optional(),
       is_active: z.boolean().default(true),
+      display_order: z.number().int().optional(),
   }).parse(input))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
@@ -51,5 +52,26 @@ export const adminDeleteTutorial = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("tutorials").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateTutorialOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.array(z.object({
+    id: z.string().uuid(),
+    display_order: z.number().int()
+  })).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    for (const item of data) {
+      const { error } = await supabaseAdmin
+        .from("tutorials")
+        .update({ display_order: item.display_order })
+        .eq("id", item.id);
+      if (error) throw new Error(error.message);
+    }
+    
     return { ok: true };
   });
