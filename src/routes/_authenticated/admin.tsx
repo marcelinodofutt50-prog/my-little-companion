@@ -3739,7 +3739,9 @@ function IssueLicensePanel({
         `Licença emitida (${tierLabel(r.version_tier as VersionTier)})${r.invited ? " · convite enviado" : ""}`,
       );
       onIssued?.();
+      void loadQuota();
     } catch (err: any) {
+
       toast.error(err?.message || "Falha ao emitir licença");
     } finally {
       setBusy(false);
