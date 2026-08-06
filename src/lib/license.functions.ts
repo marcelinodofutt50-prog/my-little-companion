@@ -185,7 +185,7 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       
       // Tentativa de re-sincronização agressiva em caso de timeout/rede
       if (/timeout|rede|network|respondendo/i.test(yr.Fail)) {
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 800));
         yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
       }
       
@@ -354,7 +354,7 @@ export const generateTrial = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: expiresAt.toISOString(),
       is_trial: true,
-      panel: panelFromPlanSlug("trial") || "v457", // Ensure panel is set correctly for trial
+      panel: panelFromPlanSlug("trial") || "v455", // Fallback to v455 for trials if slug detection fails
     };
 
     const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
