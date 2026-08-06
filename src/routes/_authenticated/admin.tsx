@@ -45,7 +45,9 @@ import {
   Video,
   Megaphone,
   Building2,
+  Settings2,
 } from "lucide-react";
+
 
 import { categoryMeta } from "@/lib/support-categories";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -175,7 +177,9 @@ type Tab =
   | "updates"
   | "tutorials"
   | "refunds"
+  | "quotas"
   | "selftest";
+
 
 // Explicação em linguagem simples de cada seção do painel.
 const TAB_DESC: Record<Tab, string> = {
@@ -4866,9 +4870,15 @@ function ReferralsAdminPanel() {
 }
 
 function SupportQuotasPanel() {
-  const { listSupportQuotas, updateSupportQuota } = await import("@/lib/support-quotas.functions");
-  const listFn = useServerFn(listSupportQuotas);
-  const updateFn = useServerFn(updateSupportQuota);
+  const listFn = useServerFn(useCallback(async (...args: any[]) => {
+    const { listSupportQuotas } = await import("@/lib/support-quotas.functions");
+    return (listSupportQuotas as any)(...args);
+  }, []));
+  const updateFn = useServerFn(useCallback(async (...args: any[]) => {
+    const { updateSupportQuota } = await import("@/lib/support-quotas.functions");
+    return (updateSupportQuota as any)(...args);
+  }, []));
+
 
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
