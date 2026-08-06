@@ -173,7 +173,7 @@ function KrakenPage() {
             className="kraken-fade-in"
           >
             <h2 className="text-4xl md:text-5xl font-black tracking-tighter rgb-text animate-rgb-text uppercase italic">
-              Kraken RGB
+              Kraken (2.0)
             </h2>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-muted-foreground font-mono text-xs uppercase tracking-[0.3em]">
