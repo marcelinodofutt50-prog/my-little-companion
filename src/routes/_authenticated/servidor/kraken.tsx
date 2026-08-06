@@ -30,6 +30,7 @@ function KrakenPage() {
   const [showEffects, setShowEffects] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [intensity, setIntensity] = useState(1);
+  const [audioDelay, setAudioDelay] = useState(0); // Delay em milissegundos
 
   const logEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -69,8 +70,12 @@ function KrakenPage() {
 
     const lightningInterval = setInterval(() => {
       if (showEffects) {
-        // Dispara o som sincronizado com o efeito visual
-        playThunderEffect();
+        // Dispara o som sincronizado com o efeito visual, aplicando o delay de calibração
+        if (audioDelay === 0) {
+          playThunderEffect();
+        } else {
+          setTimeout(playThunderEffect, audioDelay);
+        }
       }
     }, 4000);
     
@@ -79,7 +84,7 @@ function KrakenPage() {
       clearInterval(lightningInterval);
       audioContext.close();
     };
-  }, [isMuted, showEffects]);
+  }, [isMuted, showEffects, audioDelay]);
 
 
   useEffect(() => {
@@ -190,6 +195,26 @@ function KrakenPage() {
                 onValueChange={(val) => setIntensity(val[0] / 100)}
                 className="cursor-pointer"
               />
+            </div>
+
+            {/* Audio Delay Calibration */}
+            <div className="space-y-2 pt-2 border-t border-red-900/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-3 w-3 text-emerald-500" />
+                  <span className="text-[10px] font-mono text-white/60 uppercase">Audio Sync (Delay)</span>
+                </div>
+                <span className="text-[10px] font-mono text-white/40">{audioDelay}ms</span>
+              </div>
+              <Slider 
+                value={[audioDelay]} 
+                min={-500} 
+                max={500} 
+                step={10} 
+                onValueChange={(val) => setAudioDelay(val[0])}
+                className="cursor-pointer"
+              />
+              <p className="text-[8px] font-mono text-white/20 uppercase tracking-tighter">Ajuste se o som estiver atrasado ou adiantado</p>
             </div>
 
             {/* Audio Toggle */}
