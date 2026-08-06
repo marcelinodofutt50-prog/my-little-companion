@@ -649,7 +649,7 @@ function AdminPage() {
     },
   ];
   const visibleGroups = tabGroups
-    .map((g) => ({ ...g, items: g.items.filter((t) => can(role, SECTION_CAP[t.id])) }))
+    .map((g) => ({ ...g, items: g.items.filter((t) => can(role, (SECTION_CAP as any)[t.id])) }))
     .filter((g) => g.items.length > 0);
   const allTabs = visibleGroups.flatMap((g) => g.items);
   const activeMeta = allTabs.find((t) => t.id === tab);
