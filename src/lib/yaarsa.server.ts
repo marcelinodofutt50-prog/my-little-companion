@@ -323,8 +323,8 @@ export function expireDateFor(planSlug: string): string {
   // que remove a conta assim que o expires_at persistido no banco é atingido.
   const d = new Date();
   if (planSlug === "login-7d") d.setDate(d.getDate() + 8);
-  else if (planSlug === "login-30d") d.setDate(d.getDate() + 31);
-  else if (planSlug === "login-lifetime") d.setFullYear(d.getFullYear() + 20);
+  else if (planSlug === "login-30d" || planSlug === "kraken-monthly") d.setDate(d.getDate() + 31);
+  else if (planSlug === "login-lifetime" || planSlug === "kraken-lifetime") d.setFullYear(d.getFullYear() + 20);
   else if (planSlug === "trial") d.setDate(d.getDate() + 2);
   else d.setDate(d.getDate() + 31);
   return d.toISOString().slice(0, 10);
