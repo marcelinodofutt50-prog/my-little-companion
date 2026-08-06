@@ -853,7 +853,7 @@ function PlansPage() {
             <span className="text-sm text-muted-foreground">Provisionamento instantâneo via PIX</span>
           </div>
           
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {licenses.filter(p => (usage === "all" || usageOf(p) === usage))
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
               .map((p) => {

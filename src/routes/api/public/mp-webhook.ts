@@ -650,21 +650,19 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
         const secret = process.env['MP_WEBHOOK_SECRET'];
         const valid = secret
           ? verifyMpSignature(request, dataId ? String(dataId) : null, secret)
-          : false;
+          : true; // Se o secret não estiver configurado, aceitamos para validar via API (fail-safe)
 
-        if (!valid) {
-          // HMAC Verification failed or secret missing. 
-          // We return 401 only if a secret IS configured but the signature is wrong.
-          // This forces Mercado Pago to retry the webhook (Retry Mechanism).
-          if (secret) {
-            await supabaseAdmin.from("webhook_logs").insert({
-              source: "mercadopago",
-              note: `Invalid signature (dataId=${dataId ?? "?"}) — returning 401 for retry`,
-              processed: false,
-            });
-            return new Response("Invalid signature", { status: 401 });
-          }
+        if (!valid && secret) {
+          // HMAC Verification failed
+          await supabaseAdmin.from("webhook_logs").insert({
+            source: "mercadopago",
+            note: `Invalid signature (dataId=${dataId ?? "?"}) — returning 401 for retry`,
+            processed: false,
+          });
+          return new Response("Invalid signature", { status: 401 });
+        }
 
+        if (!secret) {
           await supabaseAdmin.from("webhook_logs").insert({
             source: "mercadopago",
             note: `Webhook secret not configured (dataId=${dataId ?? "?"}) — validating via API fallback`,
