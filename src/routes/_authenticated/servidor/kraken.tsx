@@ -353,14 +353,29 @@ function KrakenPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-2 py-1 rounded bg-foreground/5 dark:bg-white/5 border border-foreground/10 dark:border-white/10">
+                <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-tighter">Asset Health:</span>
+                <div className="flex gap-1">
+                  {Object.entries(bgLoaded).map(([key, loaded]) => (
+                    <div 
+                      key={key} 
+                      title={`${key}: ${loaded ? 'LOADED' : 'PENDING'}`}
+                      className={cn("h-1.5 w-1.5 rounded-full", loaded ? "bg-emerald-500" : "bg-red-500 animate-pulse")} 
+                    />
+                  ))}
+                </div>
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="h-8 px-3 text-[9px] font-mono uppercase text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white border border-foreground/5 dark:border-white/5 hover:bg-foreground/5 dark:hover:bg-white/5"
-                onClick={() => refetchStatus()}
+                onClick={() => {
+                  setBgLoaded({ core: false, bg4: false, bg5: false });
+                  refetchStatus();
+                }}
               >
-                <RefreshCw className={cn("h-3 w-3 mr-2", isRefetching && "animate-spin")} />
-                Sync Status
+                <RefreshCw className={cn("h-3 w-3 mr-2", (isRefetching || Object.values(bgLoaded).some(v => !v)) && "animate-spin")} />
+                Sync & Diagnostics
               </Button>
             </div>
           </Card>
