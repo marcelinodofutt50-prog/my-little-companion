@@ -253,10 +253,9 @@ function PlayProtectPage() {
 
 
 
-            <div className={`space-y-6 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
+            <div className="space-y-6">
 
-              {/* Build Section — grande zona de upload estilo clássico */}
-              <div id="nova-operacao" className="osint-panel p-6 scroll-mt-24">
+              {/
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Enviar APK</div>
