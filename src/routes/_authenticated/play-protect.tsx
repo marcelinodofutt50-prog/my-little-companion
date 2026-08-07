@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
