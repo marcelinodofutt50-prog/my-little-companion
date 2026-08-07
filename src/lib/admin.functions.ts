@@ -4,36 +4,9 @@ import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { tierFromPlanSlug, type VersionTier } from "@/lib/plans";
 import { createGeminiProvider } from "./gemini-provider.server";
+import { assertAdmin, assertStaff, resolveOrInviteUser } from "@/lib/admin-helpers.server";
+import { computeExpiries, nextDay20, nextDay20Date, CreateLicenseInput, RegisterLegacyInput } from "@/lib/admin-shared";
 
-async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const { assertAdminRole } = await import("@/lib/roles.server");
-  await assertAdminRole(ctx);
-}
-
-/** Admin OU moderador (Suporte). Usado nas áreas de atendimento. */
-async function assertStaff(ctx: { supabase: any; userId: string }) {
-  const { assertStaffRole } = await import("@/lib/roles.server");
-  await assertStaffRole(ctx);
-}
-
-// Compute expire_date + server_paid_until aligned to next day 20 for monthly plans.
-function computeExpiries(planSlug: string, customExpire?: string | null) {
-  const next20 = (() => {
-    const d = new Date();
-    const t = new Date(d.getFullYear(), d.getMonth(), 20, 23, 59, 59);
-    if (d.getDate() >= 20) t.setMonth(t.getMonth() + 1);
-    return t;
-  })();
-  let expiresAt: Date;
-  if (customExpire) expiresAt = new Date(customExpire);
-  else if (planSlug === "login-7d") { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7); }
-  else if (planSlug === "login-lifetime") { expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20); }
-  else if (planSlug === "trial") { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 1); }
-  // Mensal (e qualquer plano por dias): conta os dias comprados a partir de
-  // hoje. O corte do dia 20 é a mensalidade do servidor, cobrança separada.
-  else { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30); }
-  return { expiresAt, serverPaidUntil: next20 };
-}
 
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -526,12 +499,6 @@ export const adminListRoles = createServerFn({ method: "GET" })
   });
 
 // ---- Client license operations ----
-function nextDay20(): Date {
-  const d = new Date();
-  const t = new Date(d.getFullYear(), d.getMonth(), 20, 23, 59, 59);
-  if (d.getDate() >= 20) t.setMonth(t.getMonth() + 1);
-  return t;
-}
 
 export const adminRenewClientServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -740,25 +707,7 @@ export const adminListLogs = createServerFn({ method: "GET" })
   });
 
 // ============ Emitir licença para cliente (novo ou antigo) ============
-const CreateLicenseInput = z.object({
-  userEmail: z.string().trim().email().max(255),
-  planSlug: z.enum(["login-7d", "login-30d", "login-lifetime"]),
-  panel: z.enum(["v455", "v457", "v46"]).optional(),
-  isLegacy: z.boolean().optional(),
-  customExpireDate: z.string().optional(),
-  legacyServerFeeBrl: z.number().positive().max(10000).optional(),
-  postToThreadId: z.string().uuid().optional(),
-});
 
-async function resolveOrInviteUser(email: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: existing } = await supabaseAdmin
-    .from("profiles").select("id, email").eq("email", email).maybeSingle();
-  if (existing) return { userId: existing.id, invited: false };
-  const { data: invited, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
-  if (error || !invited?.user) throw new Error(`Falha ao convidar ${email}: ${error?.message || "sem retorno"}`);
-  return { userId: invited.user.id, invited: true };
-}
 
 export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -886,17 +835,6 @@ export const adminSetLicenseTier = createServerFn({ method: "POST" })
 // ============ Registrar cliente antigo com login Yaarsa já existente ============
 // Não chama Yaarsa create — apenas grava a licença no nosso banco com as
 // credenciais que o admin fornece.
-const RegisterLegacyInput = z.object({
-  userEmail: z.string().trim().email().max(255),
-  planSlug: z.enum(["login-7d", "login-30d", "login-lifetime"]),
-  yaarsaUsername: z.string().trim().min(1).max(64),
-  yaarsaEmail: z.string().trim().email().max(255),
-  yaarsaPassword: z.string().trim().min(1).max(128),
-  panel: z.enum(["v455", "v457", "v46"]).optional(),
-  serverIp: z.string().trim().min(1).max(64).optional(),
-  expiresAt: z.string().min(1),
-  legacyServerFeeBrl: z.number().positive().max(10000).optional(),
-});
 
 export const adminRegisterLegacyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -1088,12 +1026,6 @@ export const adminLookupYaarsaEmail = createServerFn({ method: "POST" })
 // que o painel não caia. Para "cancelar", basta desmarcar — na próxima
 // virada do dia 20 o cron normal revoga.
 
-function nextDay20Date(): Date {
-  const d = new Date();
-  const t = new Date(d.getFullYear(), d.getMonth(), 20, 23, 59, 59);
-  if (d.getDate() >= 20) t.setMonth(t.getMonth() + 1);
-  return t;
-}
 
 export const adminMarkPaidExternally = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
