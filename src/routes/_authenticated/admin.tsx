@@ -1,8 +1,9 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   Users,
   DollarSign,
@@ -159,7 +160,11 @@ export const Route = createFileRoute("/_authenticated/admin")({
     const role = await fetchMyRole(u.user.id);
     if (!isStaffRole(role)) throw redirect({ to: "/dashboard" });
   },
-  component: AdminPage,
+  component: () => (
+    <ErrorBoundary name="AdminPage">
+      <AdminPage />
+    </ErrorBoundary>
+  ),
 });
 
 type Tab =
