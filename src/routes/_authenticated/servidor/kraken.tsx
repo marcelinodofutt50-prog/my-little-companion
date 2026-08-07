@@ -13,18 +13,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
-// Removed asset json imports to favor direct raw github URLs for Vercel stability
+import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
+import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
-// Imagem central do Kraken v2 (sempre visível no meio)
-const krakenCore = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
+// Imagem central do Kraken v2
+const krakenCore = krakenBg4Asset.url;
+const krakenBg4 = krakenBg4Asset.url;
+const krakenBg5 = krakenBg5Asset.url;
 
-// Backgrounds táticos (efeito de profundidade/camadas)
-const krakenBg4 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
-const krakenBg5 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-5.png";
-
-// Fallback manual URLs if asset references fail in some environments
-const FALLBACK_BG4 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-4.png";
-const FALLBACK_BG5 = "https://raw.githubusercontent.com/lovable-uploads/aa5c6d4b-4a83-49d2-a5ba-32781957814c/main/kraken-bg-5.png";
 
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
@@ -204,7 +200,7 @@ function KrakenPage() {
   };
 
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black min-h-screen overflow-hidden">
+    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-background dark:bg-black min-h-screen overflow-hidden">
       {/* Background Images with Fade */}
       <AnimatePresence>
         {showEffects && (
@@ -307,16 +303,16 @@ function KrakenPage() {
               <div className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
               <span className="font-mono text-[10px] text-red-500 font-bold uppercase tracking-tighter">Live Connection</span>
             </div>
-            <span className="text-[9px] font-mono text-white/40">NODE_ID: 0xFA-88</span>
+            <span className="text-[9px] font-mono text-foreground/40 dark:text-white/40">NODE_ID: 0xFA-88</span>
           </div>
         </div>
 
         {/* User Status Bar */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-3 border-red-900/20 bg-black/60 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
+          <Card className="md:col-span-3 border-red-900/20 bg-card/60 dark:bg-black/60 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Status da Licença</span>
+                <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Status da Licença</span>
                 <div className="flex items-center gap-2">
                   <div className={cn("h-2 w-2 rounded-full", krakenStatus?.active ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
                   <span className={cn("text-xs font-mono font-bold uppercase", krakenStatus?.active ? "text-emerald-500" : "text-red-500")}>
@@ -326,13 +322,13 @@ function KrakenPage() {
               </div>
               
               {krakenStatus?.license && (
-                <div className="h-8 w-px bg-white/5 hidden sm:block" />
+                <div className="h-8 w-px bg-foreground/5 dark:bg-white/5 hidden sm:block" />
               )}
               
               {krakenStatus?.license && (
                 <div className="flex flex-col hidden sm:flex">
-                  <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Expiração</span>
-                  <span className="text-xs font-mono text-white/80">
+                  <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Expiração</span>
+                  <span className="text-xs font-mono text-foreground/80 dark:text-white/80">
                     {new Date(krakenStatus.license.expires_at || "").toLocaleDateString('pt-BR')}
                   </span>
                 </div>
@@ -350,7 +346,7 @@ function KrakenPage() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 px-3 text-[9px] font-mono uppercase text-white/40 hover:text-white border border-white/5 hover:bg-white/5"
+                className="h-8 px-3 text-[9px] font-mono uppercase text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white border border-foreground/5 dark:border-white/5 hover:bg-foreground/5 dark:hover:bg-white/5"
                 onClick={() => refetchStatus()}
               >
                 <RefreshCw className={cn("h-3 w-3 mr-2", isRefetching && "animate-spin")} />
@@ -361,7 +357,7 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-red-900/30 bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
+          <Card className="lg:col-span-4 border-red-900/30 bg-card/80 dark:bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             <div className="w-full max-w-2xl mb-8 relative z-10 aspect-video rounded-lg overflow-hidden border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
@@ -393,7 +389,7 @@ function KrakenPage() {
                   <Shield className="h-4 w-4 text-red-500" />
                   <div className="text-[10px] text-red-400 font-mono uppercase font-bold">Protocolo Stealth</div>
                 </div>
-                <div className="text-[11px] text-white/90 text-left font-mono">Bypass nativo indetectável por algoritmos heurísticos de IA.</div>
+                <div className="text-[11px] text-foreground/90 dark:text-white/90 text-left font-mono">Bypass nativo indetectável por algoritmos heurísticos de IA.</div>
               </div>
               <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
                 <div className="flex items-center gap-2 mb-1">

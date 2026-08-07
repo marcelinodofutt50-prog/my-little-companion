@@ -1807,6 +1807,7 @@ export type Database = {
     }
     Functions: {
       check_license_consistency: { Args: never; Returns: undefined }
+      check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
       expire_stale_apk_jobs: { Args: never; Returns: number }
       gen_referral_code: { Args: never; Returns: string }
       generate_my_recovery_codes: {

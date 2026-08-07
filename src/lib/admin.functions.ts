@@ -749,10 +749,13 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     
-    // Verificação de Cota para Staff (Moderadores)
-    const { data: quotaOk } = await context.supabase.rpc('check_license_quota' as any, { _staff_id: context.userId });
-    if (!quotaOk) {
-        throw new Error("Você atingiu seu limite diário ou mensal de geração de licenças manuais. Solicite liberação a um administrador.");
+    // Verificação de Cota para Staff (Moderadores) - Admins ignoram
+    const { isAdmin } = await (await import("@/lib/roles.server")).resolveRoles(context);
+    if (!isAdmin) {
+      const { data: quotaOk } = await context.supabase.rpc('check_license_quota' as any, { _staff_id: context.userId });
+      if (!quotaOk) {
+          throw new Error("Você atingiu seu limite diário ou mensal de geração de licenças manuais. Solicite liberação a um administrador.");
+      }
     }
 
 
