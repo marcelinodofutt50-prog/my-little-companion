@@ -253,7 +253,7 @@ function PlayProtectPage() {
 
 
 
-            <div className={`space-y-6 ${!hasAccess ? 'pointer-events-none opacity-50 grayscale' : ''}`}>
+            <div className="space-y-6">
 
               {/* Build Section — grande zona de upload estilo clássico */}
               <div id="nova-operacao" className="osint-panel p-6 scroll-mt-24">
