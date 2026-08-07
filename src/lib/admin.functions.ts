@@ -38,44 +38,61 @@ function computeExpiries(planSlug: string, customExpire?: string | null) {
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertStaff(context);
-    const { data, error } = await context.supabase
-      .from("profiles")
-      .select("id,email,full_name,display_name,created_at")
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (error) throw new Error(error.message);
-    return data ?? [];
+    try {
+      await assertStaff(context);
+      const { data, error } = await context.supabase
+        .from("profiles")
+        .select("id,email,full_name,display_name,created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    } catch (err: any) {
+      console.error("[ADMIN_ERR] listUsers:", err);
+      throw err;
+    }
   });
 
 
 export const adminListOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertStaff(context);
-    const { data } = await context.supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
-    const rows = data ?? [];
-    const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
-    if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
-    const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
-    return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
+    try {
+      await assertStaff(context);
+      const { data, error } = await context.supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
+      if (error) throw new Error(error.message);
+      const rows = data ?? [];
+      const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
+      if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
+      const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
+    } catch (err: any) {
+      console.error("[ADMIN_ERR] listOrders:", err);
+      throw err;
+    }
   });
 
 
 export const adminListLicenses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertStaff(context);
-    const { data } = await context.supabase.from("licenses").select("*").order("created_at", { ascending: false }).limit(200);
-    const rows = data ?? [];
-    const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
-    if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
-    const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
-    return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
+    try {
+      await assertStaff(context);
+      const { data, error } = await context.supabase.from("licenses").select("*").order("created_at", { ascending: false }).limit(200);
+      if (error) throw new Error(error.message);
+      const rows = data ?? [];
+      const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
+      if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
+      const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
+    } catch (err: any) {
+      console.error("[ADMIN_ERR] listLicenses:", err);
+      throw err;
+    }
   });
 
 
@@ -747,7 +764,8 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => CreateLicenseInput.parse(i))
   .handler(async ({ data, context }) => {
-    await assertStaff(context);
+    try {
+      await assertStaff(context);
     
     // Verificação de Cota para Staff (Moderadores) - Admins ignoram
     const { isAdmin } = await (await import("@/lib/roles.server")).resolveRoles(context);
@@ -839,7 +857,11 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
       version_tier: tier,
       panel: targetPanel,
     };
-  });
+  } catch (err: any) {
+    console.error("[ADMIN_ERR] createLicense:", err);
+    throw err;
+  }
+});
 
 export const adminSetLicenseTier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
