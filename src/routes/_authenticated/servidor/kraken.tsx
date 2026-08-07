@@ -55,7 +55,7 @@ function KrakenPage() {
   });
 
   useEffect(() => {
-    // Verificação automática de renderização de imagens (Prefetch)
+    // Verificação de renderização de imagens (Prefetch robusto)
     const imagesToPrefetch = [
       { key: 'core', url: krakenCore },
       { key: 'bg4', url: krakenBg4 },
@@ -65,16 +65,21 @@ function KrakenPage() {
     imagesToPrefetch.forEach(imgInfo => {
       const img = new Image();
       img.src = imgInfo.url;
-      img.onload = () => {
+      
+      const setLoaded = () => {
         setBgLoaded(prev => ({ ...prev, [imgInfo.key]: true }));
       };
-      img.onerror = () => {
-        console.warn(`Kraken: Falha ao carregar ${imgInfo.key}, aplicando fallback.`);
-        // Se falhar o core, tentamos o fallback manual imediatamente
-        if (imgInfo.key === 'core') {
-          setBgLoaded(prev => ({ ...prev, core: true })); // Marcamos como carregado para mostrar o fallback se necessário
-        }
-      };
+
+      if (img.complete) {
+        setLoaded();
+      } else {
+        img.onload = setLoaded;
+        img.onerror = () => {
+          console.warn(`Kraken: Falha ao carregar ${imgInfo.key}, aplicando fallback.`);
+          // Forçamos o estado de carregado para mostrar o fallback visual
+          setLoaded();
+        };
+      }
     });
 
     const timer = setTimeout(() => setShowEffects(true), 500);
