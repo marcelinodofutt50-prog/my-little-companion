@@ -96,6 +96,27 @@ function PlayProtectPage() {
     }
   });
 
+  // When a job reaches a terminal state, refresh the access status so
+  // canDownload / hasAccess update without a manual page refresh.
+  const prevStatusesRef = useRef<Record<string, string>>({});
+  useEffect(() => {
+    if (!jobs) return;
+    const prev = prevStatusesRef.current;
+    const next: Record<string, string> = {};
+    let settled = false;
+    for (const j of jobs as Array<{ id: string; status: string }>) {
+      next[j.id] = j.status;
+      const was = prev[j.id];
+      if (was && was !== j.status && (j.status === "done" || j.status === "failed")) settled = true;
+    }
+    prevStatusesRef.current = next;
+    if (settled) {
+      queryClient.invalidateQueries({ queryKey: ["play-protect-status"] });
+    }
+  }, [jobs, queryClient]);
+
+
+
 
   const MAX_APK_MB = 50;
 
