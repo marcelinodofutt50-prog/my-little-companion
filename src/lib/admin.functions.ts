@@ -4,36 +4,9 @@ import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { tierFromPlanSlug, type VersionTier } from "@/lib/plans";
 import { createGeminiProvider } from "./gemini-provider.server";
+import { assertAdmin, assertStaff, resolveOrInviteUser } from "@/lib/admin-helpers.server";
+import { computeExpiries, nextDay20, nextDay20Date, CreateLicenseInput, RegisterLegacyInput } from "@/lib/admin-shared";
 
-async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const { assertAdminRole } = await import("@/lib/roles.server");
-  await assertAdminRole(ctx);
-}
-
-/** Admin OU moderador (Suporte). Usado nas áreas de atendimento. */
-async function assertStaff(ctx: { supabase: any; userId: string }) {
-  const { assertStaffRole } = await import("@/lib/roles.server");
-  await assertStaffRole(ctx);
-}
-
-// Compute expire_date + server_paid_until aligned to next day 20 for monthly plans.
-function computeExpiries(planSlug: string, customExpire?: string | null) {
-  const next20 = (() => {
-    const d = new Date();
-    const t = new Date(d.getFullYear(), d.getMonth(), 20, 23, 59, 59);
-    if (d.getDate() >= 20) t.setMonth(t.getMonth() + 1);
-    return t;
-  })();
-  let expiresAt: Date;
-  if (customExpire) expiresAt = new Date(customExpire);
-  else if (planSlug === "login-7d") { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7); }
-  else if (planSlug === "login-lifetime") { expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20); }
-  else if (planSlug === "trial") { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 1); }
-  // Mensal (e qualquer plano por dias): conta os dias comprados a partir de
-  // hoje. O corte do dia 20 é a mensalidade do servidor, cobrança separada.
-  else { expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30); }
-  return { expiresAt, serverPaidUntil: next20 };
-}
 
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
