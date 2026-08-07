@@ -21,7 +21,8 @@ export interface KrakenOutput {
  * Permite que o operador envie instruções táticas para os nodes da Shadow-Ops.
  */
 export const krakenHandler = async (args: { data: KrakenInput }) => {
-  const data = args.data;
+  try {
+    const data = args.data;
   // Implementação mock para o console tático
   const logStr = `[Kraken] Executing command: ${data.command}`;
   console.log(logStr);
@@ -34,6 +35,10 @@ export const krakenHandler = async (args: { data: KrakenInput }) => {
     message: `Command '${data.command}' processed by Kraken Node 0xFA-88`,
     timestamp: new Date().toISOString()
   };
+} catch (err: any) {
+  console.error("[KRAKEN_ERR] handler:", err);
+  throw err;
+}
 };
 
 export const krakenCommand = createServerFn({ method: "POST" })
