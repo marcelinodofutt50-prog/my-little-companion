@@ -1458,7 +1458,9 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
         console.error("[admin] force_refresh_schema_permissions FAILED:", error);
         
         // Fallback: Notify manually and touch tables
-        await (supabaseAdmin as any).rpc("notify_pgrst_reload").catch(() => {});
+        if (typeof (supabaseAdmin as any).rpc === 'function') {
+          await (supabaseAdmin as any).rpc("notify_pgrst_reload");
+        }
         
         const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads", "user_roles"];
         await Promise.allSettled(
