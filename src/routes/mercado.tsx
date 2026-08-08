@@ -39,7 +39,32 @@ function MarketPage() {
           .eq("active", true)
           .in("category", ["addon", "upgrade", "source"])
           .order("sort_order");
-        if (error) throw error;
+        
+        if (error) {
+          if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+            const { trackSchemaFailure } = await import("@/lib/tutorials.functions");
+            const { data: userData } = await supabase.auth.getUser();
+            await trackSchemaFailure(error, "MarketPage:fetchPlans", false, { route: window.location.pathname }, userData.user?.id);
+            
+            // Fallback para admin tunnel via server fn se necessário, mas aqui tentamos refresh e retry local primeiro
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server").catch(() => ({ supabaseAdmin: null }));
+            if (supabaseAdmin) {
+              await supabaseAdmin.rpc("force_refresh_schema_permissions");
+              const { data: retryData, error: retryError } = await supabaseAdmin
+                .from("plans")
+                .select("*")
+                .eq("active", true)
+                .in("category", ["addon", "upgrade", "source"])
+                .order("sort_order");
+              if (!retryError) {
+                setPlans(retryData || []);
+                await trackSchemaFailure(error, "MarketPage:fetchPlans", true, { stage: "retry_success" }, userData.user?.id);
+                return;
+              }
+            }
+          }
+          throw error;
+        }
         setPlans(data || []);
       } catch (err) {
         console.error(err);

@@ -31,7 +31,8 @@ describe('Kraken Control Functions', () => {
   describe('krakenHandler', () => {
     it('should process a valid command and return success response', async () => {
       const result = await krakenHandler({
-        data: { command: 'test-command' }
+        data: { command: 'test-command' },
+        context: { userId: 'test-user-id' }
       });
 
       expect(result.success).toBe(true);

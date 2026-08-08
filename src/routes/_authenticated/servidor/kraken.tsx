@@ -58,7 +58,7 @@ function KrakenPage() {
 
   const { data: krakenStatus, refetch: refetchStatus, isRefetching } = useQuery({
     queryKey: ['kraken-status'],
-    queryFn: () => fetchStatus({ data: undefined }),
+    queryFn: () => fetchStatus({ data: { metadata: { route: window.location.pathname } } }),
     refetchInterval: 30000, // Sync every 30s
   });
 
@@ -190,7 +190,7 @@ function KrakenPage() {
     setIsExecuting(true);
 
     try {
-      const res = await executeKraken({ data: { command: cmd } });
+      const res = await executeKraken({ data: { command: cmd, metadata: { route: window.location.pathname } } as any });
       
       // Handle the response properly based on its structure
       const success = (res as any)?.success ?? false;
@@ -341,7 +341,7 @@ function KrakenPage() {
                   refetchStatus();
                 }}
               >
-                <RefreshCw className={cn("h-3 w-3 mr-2", (isRefetching || Object.values(bgLoaded).some(v => !v)) && "animate-spin")} />
+                <RefreshCw className={cn("h-3 w-3 mr-2", (isRefetching || Object.values(bgLoaded).some(v => !v)) && "animate-spin-slow")} />
                 Sync & Diagnostics
               </Button>
             </div>

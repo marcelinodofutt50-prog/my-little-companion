@@ -1,16 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { trackSchemaFailure } from "./tutorials.functions";
 
 export const getKrakenStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((d: unknown) => z.object({ metadata: z.record(z.string(), z.any()).optional() }).optional().parse(d))
+  .handler(async ({ data: input, context }) => {
+    const metadata = (input as any)?.metadata || {};
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const userId = context.userId;
 
     // 1. Verificar se o usuário já possui uma licença ativa do Kraken
-    // Baseado no mapping do fulfillOrder, Kraken planos levam para v46 ou v457.
-    // O usuário quer saber o status especificamente da "Kraken 2.0".
-    const { data: license } = await supabaseAdmin
+    const fetchLicense = async (client: any) => client
       .from("licenses")
       .select("id, status:revoked, expires_at, created_at, plan_slug")
       .eq("user_id", userId)
@@ -19,8 +21,20 @@ export const getKrakenStatus = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    // 2. Verificar o status do pagamento mais recente para Kraken (se não tiver licença ativa ou para info de processamento)
-    const { data: order } = await supabaseAdmin
+    let { data: license, error: licenseError } = await fetchLicense(context.supabase);
+    
+    // Auto-repair if cache fails
+    if (licenseError && (licenseError.code === 'PGRST108' || licenseError.message?.includes('schema cache'))) {
+      await trackSchemaFailure(licenseError, "getKrakenStatus", false, { stage: "fetch_license", ...metadata }, userId);
+      const adminResult = await fetchLicense(supabaseAdmin);
+      license = adminResult.data;
+      if (!adminResult.error) {
+        await trackSchemaFailure(licenseError, "getKrakenStatus", true, { stage: "retry_license_success" }, userId);
+      }
+    }
+
+    // 2. Verificar o status do pagamento mais recente
+    const fetchOrder = async (client: any) => client
       .from("orders")
       .select("id, status, paid_at, created_at, amount, plan_slug")
       .eq("user_id", userId)
@@ -28,6 +42,17 @@ export const getKrakenStatus = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    let { data: order, error: orderError } = await fetchOrder(context.supabase);
+
+    if (orderError && (orderError.code === 'PGRST108' || orderError.message?.includes('schema cache'))) {
+      await trackSchemaFailure(orderError, "getKrakenStatus", false, { stage: "fetch_order", ...metadata }, userId);
+      const adminResult = await fetchOrder(supabaseAdmin);
+      order = adminResult.data;
+      if (!adminResult.error) {
+         await trackSchemaFailure(orderError, "getKrakenStatus", true, { stage: "retry_order_success" }, userId);
+      }
+    }
 
     // 3. Adicionar lógica de verificação autoritativa para ordens pendentes
     if (order && order.status !== 'paid' && order.status !== 'yaarsa_failed') {
