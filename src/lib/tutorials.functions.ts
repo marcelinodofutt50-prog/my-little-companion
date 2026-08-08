@@ -72,14 +72,13 @@ export const listTutorials = createServerFn({ method: "GET" })
         if (isPGRST) await trackSchemaFailure(error, "listTutorials", false, { catch_error: String(e) });
       }
       
-      throw new Error(`Erro de Sincronização Shadow (PGRST108). A infraestrutura de tutoriais está inacessível.`);
+      // Em vez de throw, retornamos array vazio para não quebrar a UI
+      // A UI lida com o estado vazio mostrando o botão de sincronização
+      return [];
     }
 
     return data ?? [];
   });
-
-
-
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -116,7 +115,6 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
-
 
 export const adminDeleteTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

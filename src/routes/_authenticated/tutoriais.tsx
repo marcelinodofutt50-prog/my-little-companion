@@ -32,14 +32,20 @@ function TutorialsPage() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Tudo");
-  const [syncHistory, setSyncHistory] = useState<{ time: string; status: 'success' | 'error'; type: 'auto' | 'manual'; message?: string }[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('shadow_sync_history');
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
+  const [syncHistory, setSyncHistory] = useState<{ time: string; status: 'success' | 'error'; type: 'auto' | 'manual'; message?: string }[]>([]);
   const [showSyncStatus, setShowSyncStatus] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('shadow_sync_history');
+    if (saved) {
+      try {
+        setSyncHistory(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse sync history", e);
+      }
+    }
+  }, []);
+
   
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [diagResult, setDiagResult] = useState<any>(null);
