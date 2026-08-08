@@ -211,7 +211,7 @@ function KrakenPage() {
   };
 
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
+    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black theme-light:bg-background min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
       {/* Tactical Background Overlay - High Opacity for Vercel visibility */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div 
