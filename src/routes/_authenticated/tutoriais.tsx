@@ -90,6 +90,7 @@ function TutorialsPage() {
                            
       if (isSchemaError) {
         console.warn("[tutorials] Schema sync issue detected. Triggering deep recovery...");
+        addSyncLog('warning', 'auto', 'Detectada falha de cache PGRST108. Iniciando rastreamento e reparo...');
         
         try {
           const { supabase } = await import("@/integrations/supabase/client");
@@ -102,16 +103,17 @@ function TutorialsPage() {
           const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
           setTutorials(retryTData || []);
           setCompletedIds(retryPData || []);
-          addSyncLog('success', 'auto', 'Recuperação automática concluída');
+          addSyncLog('success', 'auto', 'Recuperação automática concluída com sucesso');
         } catch (repairErr: any) {
           console.error("[tutorials] Recovery flow FAILED:", repairErr);
-          // Fallback UI silêncio: se falhou a recuperação, apenas mostramos o erro amigável se não tivermos nada
+          addSyncLog('error', 'auto', `Falha persistente: ${repairErr.message || 'Erro desconhecido'}`);
+          
           if (tutorials.length === 0) {
             toast.error("Erro de Sincronização. Tente o botão de reparo manual.");
           }
-          addSyncLog('error', 'auto', repairErr.message || 'Falha na recuperação automática');
         }
       } else {
+
         toast.error(`Erro: ${err.message || "Erro ao carregar tutoriais"}`);
       }
     } finally {
