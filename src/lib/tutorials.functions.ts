@@ -11,6 +11,10 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
 export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<any[]> => {
+    // Verificação Admin/Staff é necessária para garantir que apenas autorizados acessem as funções de reparo
+    // No entanto, para LISTAR tutoriais publicamente (ou para usuários comuns), 
+    // precisamos de uma lógica que não quebre se o usuário não for staff.
+
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
