@@ -15,7 +15,7 @@ import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 
@@ -212,6 +212,61 @@ function RootShell({ children }: { children: ReactNode }) {
 
 
 function RootComponent() {
+  const isConfigured = isSupabaseConfigured();
+  
+  if (!isConfigured && typeof window !== 'undefined') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="enterprise-surface max-w-lg p-10 shadow-2xl border-primary/20 bg-black/60 backdrop-blur-xl">
+          <div className="mb-6 flex justify-center">
+            <div className="relative h-20 w-20">
+              <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+              <div className="relative flex h-full w-full items-center justify-center rounded-full bg-primary/10 border border-primary/30">
+                <span className="font-mono text-3xl font-bold text-primary">!</span>
+              </div>
+            </div>
+          </div>
+          
+          <h1 className="text-center font-display text-2xl font-bold tracking-tight text-foreground uppercase">
+            Configuração de Ambiente <span className="text-primary italic">Incompleta</span>
+          </h1>
+          
+          <div className="mt-8 space-y-4 text-left">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              O ecossistema Shadow detectou a ausência de variáveis essenciais para a conectividade com o backend.
+            </p>
+            
+            <div className="rounded-lg border border-primary/10 bg-primary/5 p-4 font-mono text-[11px]">
+              <div className="mb-2 font-bold text-primary uppercase tracking-tighter">// variáveis_ausentes</div>
+              <ul className="list-inside list-disc space-y-1 text-muted-foreground/80">
+                <li>SUPABASE_URL</li>
+                <li>SUPABASE_PUBLISHABLE_KEY</li>
+              </ul>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <h3 className="font-mono text-[10px] font-bold uppercase tracking-widest text-primary">Ação Requerida:</h3>
+              <div className="space-y-2 text-[12px] text-muted-foreground/90">
+                <p>1. Verifique se as chaves foram injetadas no painel de controle do Lovable Cloud.</p>
+                <p>2. Certifique-se de que o projeto do banco de dados está ativo e operacional.</p>
+                <p>3. Reinicie o servidor de desenvolvimento para forçar a detecção.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full rounded-full bg-primary py-3 text-xs font-mono font-bold uppercase tracking-[0.2em] text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:opacity-90 transition-all"
+            >
+              Re-escanear Ambiente
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
