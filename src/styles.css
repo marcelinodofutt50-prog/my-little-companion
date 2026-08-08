@@ -114,7 +114,7 @@ html.theme-light body {
 
   /* Refined light theme with high contrast and readable primary colors */
   --background: oklch(0.99 0.005 255);
-  --foreground: oklch(0.12 0.02 255);
+  --foreground: oklch(0.1 0.01 255);
 
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.02 255);
@@ -168,7 +168,7 @@ html.theme-light body {
     linear-gradient(to right, oklch(0.45 0.22 260 / 0.05) 1px, transparent 1px),
     linear-gradient(to bottom, oklch(0.45 0.22 260 / 0.05) 1px, transparent 1px) !important;
   background-attachment: fixed !important;
-  color: oklch(0.12 0.02 255) !important;
+  color: oklch(0.1 0.01 255) !important;
 }
 
 html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.45 0.22 260 / 0.12); }
