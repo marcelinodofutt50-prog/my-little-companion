@@ -31,9 +31,7 @@ import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
 import { Route as MercadoSucessoRouteImport } from './routes/mercado.sucesso'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
-import { Route as AuthenticatedPresentesRouteImport } from './routes/_authenticated/presentes'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
-import { Route as AuthenticatedIndicacoesRouteImport } from './routes/_authenticated/indicacoes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder/index'
@@ -163,22 +161,12 @@ const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   path: '/suporte',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPresentesRoute = AuthenticatedPresentesRouteImport.update({
-  id: '/presentes',
-  path: '/presentes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedPlayProtectRoute =
   AuthenticatedPlayProtectRouteImport.update({
     id: '/play-protect',
     path: '/play-protect',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedIndicacoesRoute = AuthenticatedIndicacoesRouteImport.update({
-  id: '/indicacoes',
-  path: '/indicacoes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -303,9 +291,7 @@ export interface FileRoutesByFullPath {
   '/tutorial': typeof TutorialRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/indicacoes': typeof AuthenticatedIndicacoesRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
-  '/presentes': typeof AuthenticatedPresentesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/mercado/sucesso': typeof MercadoSucessoRoute
@@ -348,9 +334,7 @@ export interface FileRoutesByTo {
   '/tutorial': typeof TutorialRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/indicacoes': typeof AuthenticatedIndicacoesRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
-  '/presentes': typeof AuthenticatedPresentesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/mercado/sucesso': typeof MercadoSucessoRoute
@@ -395,9 +379,7 @@ export interface FileRoutesById {
   '/tutorial': typeof TutorialRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/indicacoes': typeof AuthenticatedIndicacoesRoute
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
-  '/_authenticated/presentes': typeof AuthenticatedPresentesRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/mercado/sucesso': typeof MercadoSucessoRoute
@@ -442,9 +424,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/admin'
     | '/dashboard'
-    | '/indicacoes'
     | '/play-protect'
-    | '/presentes'
     | '/suporte'
     | '/tutoriais'
     | '/mercado/sucesso'
@@ -487,9 +467,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/admin'
     | '/dashboard'
-    | '/indicacoes'
     | '/play-protect'
-    | '/presentes'
     | '/suporte'
     | '/tutoriais'
     | '/mercado/sucesso'
@@ -533,9 +511,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
-    | '/_authenticated/indicacoes'
     | '/_authenticated/play-protect'
-    | '/_authenticated/presentes'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
     | '/mercado/sucesso'
@@ -754,25 +730,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuporteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/presentes': {
-      id: '/_authenticated/presentes'
-      path: '/presentes'
-      fullPath: '/presentes'
-      preLoaderRoute: typeof AuthenticatedPresentesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/play-protect': {
       id: '/_authenticated/play-protect'
       path: '/play-protect'
       fullPath: '/play-protect'
       preLoaderRoute: typeof AuthenticatedPlayProtectRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/indicacoes': {
-      id: '/_authenticated/indicacoes'
-      path: '/indicacoes'
-      fullPath: '/indicacoes'
-      preLoaderRoute: typeof AuthenticatedIndicacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -914,9 +876,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedIndicacoesRoute: typeof AuthenticatedIndicacoesRoute
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
-  AuthenticatedPresentesRoute: typeof AuthenticatedPresentesRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
   AuthenticatedTutoriaisRoute: typeof AuthenticatedTutoriaisRoute
   AuthenticatedServidorKrakenRoute: typeof AuthenticatedServidorKrakenRoute
@@ -926,9 +886,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedIndicacoesRoute: AuthenticatedIndicacoesRoute,
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
-  AuthenticatedPresentesRoute: AuthenticatedPresentesRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
   AuthenticatedTutoriaisRoute: AuthenticatedTutoriaisRoute,
   AuthenticatedServidorKrakenRoute: AuthenticatedServidorKrakenRoute,
@@ -1002,3 +960,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
