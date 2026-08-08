@@ -1635,56 +1635,48 @@ export type Database = {
           tutorial_id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tutorial_progress_tutorial_id_fkey"
-            columns: ["tutorial_id"]
-            isOneToOne: false
-            referencedRelation: "tutorials"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tutorials: {
         Row: {
-          category: string | null
-          created_at: string | null
+          category: string
+          created_at: string
           created_by: string | null
-          description: string | null
+          description: string
           display_order: number | null
           id: string
           image_url: string | null
           is_active: boolean | null
           title: string
-          updated_at: string | null
+          updated_at: string
           video_url: string | null
           youtube_url: string | null
         }
         Insert: {
-          category?: string | null
-          created_at?: string | null
+          category?: string
+          created_at?: string
           created_by?: string | null
-          description?: string | null
+          description: string
           display_order?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           title: string
-          updated_at?: string | null
+          updated_at?: string
           video_url?: string | null
           youtube_url?: string | null
         }
         Update: {
-          category?: string | null
-          created_at?: string | null
+          category?: string
+          created_at?: string
           created_by?: string | null
-          description?: string | null
+          description?: string
           display_order?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           title?: string
-          updated_at?: string | null
+          updated_at?: string
           video_url?: string | null
           youtube_url?: string | null
         }
@@ -1809,7 +1801,7 @@ export type Database = {
       check_license_consistency: { Args: never; Returns: undefined }
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
       expire_stale_apk_jobs: { Args: never; Returns: number }
-      force_refresh_schema_permissions: { Args: never; Returns: boolean }
+      force_refresh_schema_permissions: { Args: never; Returns: undefined }
       gen_referral_code: { Args: never; Returns: string }
       generate_my_recovery_codes: {
         Args: never
