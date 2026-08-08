@@ -102,9 +102,13 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
         .upsert({ ...data, created_by: context.userId });
     if (error) {
       console.error("[tutorials] Database error:", error);
+      
+      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache');
+      if (isPGRST) await trackSchemaFailure(error, "adminSaveTutorial", false);
+
       const wrapped = new Error(error.message);
       if (error.message?.includes("relation \"public.tutorials\" does not exist") || 
-          error.message?.includes("public.tutorials' in the schema cache")) {
+          isPGRST) {
         (wrapped as any)._schemaError = "public.tutorials";
       }
       throw wrapped;
@@ -112,6 +116,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
 
 export const adminDeleteTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
