@@ -1,21 +1,22 @@
 import { test, expect } from 'vitest';
-import playwright from 'playwright';
+import { chromium } from 'playwright';
 
 test('verify kraken background assets', async () => {
-  const browser = await playwright.chromium.launch({ headless: true });
-  const context = await browser.new_context();
-  const page = await context.new_page();
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
   
   try {
-    await page.goto('http://localhost:8080/servidor/kraken', { waitUntil: 'networkidle' });
+    // Navigate and wait for some reasonable time for assets to resolve
+    await page.goto('http://localhost:8080/servidor/kraken', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2000); 
     
-    // Check if any tactical background is visible (has a background-image with a URL)
     const bgVisibility = await page.evaluate(() => {
       const overlays = Array.from(document.querySelectorAll('.absolute.inset-0.bg-cover'));
       return overlays.map(el => {
         const style = window.getComputedStyle(el);
         return {
-          hasBg: style.backgroundImage !== 'none',
+          hasBg: style.backgroundImage !== 'none' && !style.backgroundImage.includes('none'),
           url: style.backgroundImage,
           opacity: style.opacity
         };
@@ -24,8 +25,7 @@ test('verify kraken background assets', async () => {
     
     console.log('Background Visibility:', JSON.stringify(bgVisibility, null, 2));
     
-    // At least one background should be set
-    const hasBackground = bgVisibility.some(v => v.hasBg);
+    const hasBackground = bgVisibility.some((v: any) => v.hasBg);
     expect(hasBackground).toBe(true);
   } finally {
     await browser.close();
