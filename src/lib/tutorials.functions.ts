@@ -14,21 +14,23 @@ export const listTutorials = createServerFn({ method: "GET" })
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // Tentamos recarregar as permissões e o cache ANTES da query para evitar PGRST108
+    // Fallback agressivo: Tentamos "tocar" as tabelas para forçar o carregamento do schema
+    // se o RPC falhar ou se o cache estiver muito teimoso.
     try {
-      console.log("[tutorials] Running pre-flight schema synchronization...");
-      const startTime = Date.now();
-      // Usamos o supabaseAdmin para garantir privilégios na chamada do RPC de reparo
-      await supabaseAdmin.rpc("force_refresh_schema_permissions");
-      console.log(`[tutorials] Schema sync completed in ${Date.now() - startTime}ms`);
+      console.log("[tutorials] Performing tactical table touch...");
+      await Promise.allSettled([
+        supabaseAdmin.from("tutorials").select("id").limit(1),
+        supabaseAdmin.from("tutorial_progress").select("id").limit(1),
+        supabaseAdmin.rpc("force_refresh_schema_permissions")
+      ]);
     } catch (e) {
-      console.error("[tutorials] Pre-fetch schema sync failed! This might lead to PGRST108.", e);
+      console.warn("[tutorials] Table touch/sync skipped:", e);
     }
     
     // Attempt 1: Standard query
     console.log("[tutorials] Executing fetch from 'public.tutorials'...");
-    // Mudança Crítica: Usamos supabaseAdmin para a leitura também se o usuário estiver autenticado
-    // Isso ignora o cache do PostgREST que está quebrado para o papel 'authenticated'
+    // Mudança Crítica: Forçamos a leitura via supabaseAdmin SEMPRE nesta função 
+    // enquanto o PostgREST estiver instável para o papel 'authenticated'.
     const { data, error, status, statusText } = await supabaseAdmin
       .from("tutorials")
       .select("*")
@@ -77,7 +79,7 @@ export const listTutorials = createServerFn({ method: "GET" })
           console.error("[tutorials] Server-side repair routine crashed:", repairErr);
         }
         
-        const wrapped = new Error(`Erro de Sincronização (PGRST108): ${error.message}. Detalhes: ${error.details || 'Nenhum'}`);
+        const wrapped = new Error(`Falha Estrutural de Sincronização. Por favor, tente recarregar a página ou usar o botão manual.`);
         (wrapped as any)._schemaError = "public.tutorials";
         (wrapped as any)._errorDetails = error;
         throw wrapped;

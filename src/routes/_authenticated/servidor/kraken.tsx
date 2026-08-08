@@ -243,10 +243,13 @@ function KrakenPage() {
         />
         
         {/* Luzes azuis táticas sem gradientes pretos por cima */}
-        <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-blue-500/10 mix-blend-overlay pointer-events-none" />
         
-        {/* Vinheta ultra suave nas bordas para não escurecer o centro */}
-        <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)]" />
+        {/* Camada de brilho central para destacar a Kraken */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.15)_0%,_transparent_70%)] pointer-events-none" />
+        
+        {/* Vinheta ultra suave nas bordas - reduzida para 20% de opacidade */}
+        <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.2)] pointer-events-none" />
       </div>
 
       {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
