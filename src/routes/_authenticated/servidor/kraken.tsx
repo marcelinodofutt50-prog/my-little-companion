@@ -229,7 +229,9 @@ function KrakenPage() {
     window.addEventListener('touchstart', unlockAudio);
     
     return () => {
+      cancelled = true;
       clearTimeout(timer);
+
       clearInterval(lightningInterval);
       window.removeEventListener('click', unlockAudio);
       window.removeEventListener('keydown', unlockAudio);
