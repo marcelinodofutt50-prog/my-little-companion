@@ -272,7 +272,7 @@ function KrakenPage() {
 
         {/* User Status Bar */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-3 border-red-900/20 bg-card/60 dark:bg-black/60 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
+          <Card className="md:col-span-3 border-red-900/20 bg-black/80 dark:bg-black/80 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
                 <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Status da Licença</span>
@@ -376,14 +376,16 @@ function KrakenPage() {
                 </div>
                 <div className="text-[11px] text-white/90 text-left font-mono">Injeção em tempo real com ofuscação polimórfica dinâmica.</div>
               </div>
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/40 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+
                 <div className="flex items-center gap-2 mb-1">
                   <Activity className="h-4 w-4 text-emerald-500" />
                   <div className="text-[10px] text-emerald-400 font-mono uppercase font-bold">Multi-Node Hub</div>
                 </div>
                 <div className="text-[11px] text-white/90 text-left font-mono">Controle centralizado para Nubank, Caixa e Itaú simultâneos.</div>
               </div>
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/40 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+
                 <div className="flex items-center gap-2 mb-1">
                   <Terminal className="h-4 w-4 text-blue-500" />
                   <div className="text-[10px] text-blue-400 font-mono uppercase font-bold">Custom black-screen</div>
