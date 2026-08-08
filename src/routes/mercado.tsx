@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Store, Zap, Shield, ShieldCheck, Rocket, ArrowRight, Info, Crown, Calendar, Lock } from "lucide-center";
+import { Store, Zap, Shield, ShieldCheck, Rocket, ArrowRight, Info, Crown, Calendar, Lock } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -13,10 +13,6 @@ import { createCheckout } from "@/lib/checkout.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Fix lucide import
-import * as LucideIcons from "lucide-react";
-const { Store: StoreIcon, Zap: ZapIcon, Shield: ShieldIcon, ShieldCheck: ShieldCheckIcon, Rocket: RocketIcon, ArrowRight: ArrowRightIcon, Info: InfoIcon, Crown: CrownIcon, Calendar: CalendarIcon, Lock: LockIcon } = LucideIcons;
-
 export const Route = createFileRoute("/mercado")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
@@ -25,7 +21,6 @@ export const Route = createFileRoute("/mercado")({
   head: () => ({ meta: [{ title: "Mercado Shadow — Módulos & Upgrades" }] }),
   component: MarketPage,
 });
-
 
 function MarketPage() {
   const { t } = useI18n();
