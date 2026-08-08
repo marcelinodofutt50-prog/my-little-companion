@@ -321,7 +321,7 @@ function DashboardPage() {
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { label: 'Crédito operacional', value: (profile as any)?.referral_balance ? formatBrl(Number((profile as any).referral_balance)) : 'R$ 0,00', detail: 'Resgate disponível em PIX', icon: Activity, tone: 'text-primary' },
+                  { label: 'Crédito operacional', value: (profile as any)?.referral_balance ? `R$ ${(profile as any).referral_balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00', detail: 'Resgate disponível em PIX', icon: Activity, tone: 'text-primary' },
                   { label: 'Terminais ativos', value: String(licenses?.length || 0), detail: 'Nodes em sincronização', icon: Server, tone: 'text-cyan' },
                   { label: 'Tickets suporte', value: '0', detail: 'Sem alertas pendentes', icon: Ticket, tone: 'text-violet' },
                   { label: 'Integridade Ops', value: '100%', detail: 'Protocolo AES-256 ativo', icon: ShieldIcon, tone: 'text-amber-500' },
