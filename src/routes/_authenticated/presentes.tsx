@@ -100,7 +100,10 @@ function GiftGrid({ gifts, kind, loading }: { gifts: any[], kind: "sent" | "rece
             </div>
             
             {g.message && (
-              <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg italic text-[11px] text-muted-foreground">
+              <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg italic text-[11px] text-muted-foreground relative">
+                <div className="absolute -top-2 -left-2 bg-primary text-black p-1 rounded-sm">
+                   <Inbox className="h-2 w-2" />
+                </div>
                 "{g.message}"
               </div>
             )}

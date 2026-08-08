@@ -115,14 +115,14 @@ function MarketPage() {
                           {p.days && <span className="text-[10px] text-muted-foreground uppercase font-mono">/ {p.days} dias</span>}
                         </div>
                         
-                        <div className="space-y-2 pt-4 border-t border-white/5">
-                           <div className="flex items-start gap-2 text-[10px] font-mono text-muted-foreground uppercase">
-                             <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1 shrink-0" />
-                             <span>Liberação Instantânea</span>
+                        <div className="grid grid-cols-2 gap-2 pt-4 border-t border-white/5">
+                           <div className="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5">
+                             <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                             <span className="text-[9px] font-mono text-muted-foreground uppercase leading-none">Entrega Instantânea</span>
                            </div>
-                           <div className="flex items-start gap-2 text-[10px] font-mono text-muted-foreground uppercase">
-                             <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1 shrink-0" />
-                             <span>Suporte Tático Incluso</span>
+                           <div className="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5">
+                             <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                             <span className="text-[9px] font-mono text-muted-foreground uppercase leading-none">Suporte 24/7</span>
                            </div>
                         </div>
 
