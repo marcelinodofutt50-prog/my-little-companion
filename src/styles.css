@@ -130,7 +130,8 @@ html.theme-light body {
   --muted: oklch(0.98 0.005 255);
   --muted-foreground: oklch(0.35 0.02 255);
 
-  --accent: oklch(0.96 0.01 255);
+  /* Fix for "buttons turning black" - ensure secondary buttons have readable colors in light mode */
+  --accent: oklch(0.94 0.01 255);
   --accent-foreground: oklch(0.15 0.02 255);
 
   --destructive: oklch(0.6 0.2 25);
@@ -140,7 +141,7 @@ html.theme-light body {
   --input: oklch(0.88 0.015 255);
   --ring: oklch(0.45 0.22 260 / 0.2);
 
-  --neon: oklch(0.45 0.22 260); /* Fixed from light yellow */
+  --neon: oklch(0.45 0.22 260); 
   --cyan: oklch(0.55 0.18 200);
   --violet: oklch(0.5 0.2 300);
   --danger: oklch(0.6 0.2 25);
@@ -320,22 +321,26 @@ html.theme-light .crt::after { display: none; }
   .rgb-button-animated {
     position: relative;
     border: none !important;
-    background: oklch(0.15 0.014 162) !important; /* var(--card) fallback */
+    background: #111111 !important; /* Ensure high contrast in light mode */
+    color: #ffffff !important;      /* White text even in light mode for tactical buttons */
     overflow: hidden;
+    z-index: 1;
   }
   
   .rgb-button-animated::before {
     content: "";
     position: absolute;
     inset: 0;
-    padding: 1px;
+    padding: 2px;
     background: linear-gradient(120deg, var(--neon), var(--cyan), var(--violet), var(--neon));
     background-size: 300% 100%;
     animation: rgb-slide 4s linear infinite;
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     -webkit-mask-composite: destination-out;
+    z-index: -1;
   }
+
 
   @keyframes rgb-slide {
     0% { background-position: 0% 50%; }

@@ -210,69 +210,22 @@ function KrakenPage() {
   };
 
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black min-h-screen overflow-hidden theme-transition">
-      {/* Background Images with Fade */}
-      <AnimatePresence>
-        {showEffects && (
-          <>
-            {/* Camada Base Central (Fixa para evitar tela preta) */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: bgLoaded.core ? 1 : 0 }}
-              className="absolute inset-0 pointer-events-none"
-              style={{ 
-                backgroundImage: `url(${krakenCore})`, 
-                backgroundSize: 'cover', 
-                backgroundPosition: 'center',
-                zIndex: 0
-              }}
-            />
+    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
+      {/* Tactical Background Overlay - High Opacity for Vercel visibility */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-60"
+          style={{ backgroundImage: `url(${krakenBg4})` }}
+        />
+        <div 
+          className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-40"
+          style={{ backgroundImage: `url(${krakenBg5})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black" />
+      </div>
 
-            {/* Fallback imediato se o core demorar muito (mais de 2s) ou falhar */}
-            <AnimatePresence>
-              {(!bgLoaded.core || !bgLoaded.bg4 || !bgLoaded.bg5) && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 pointer-events-none bg-black z-[1]"
-                />
-              )}
-            </AnimatePresence>
+      {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
 
-            {!bgLoadError && (
-              <>
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: bgLoaded.bg4 ? 1 : 0 }}
-                  className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-                  style={{ 
-                    backgroundImage: `url(${krakenBg4})`, 
-                    backgroundSize: 'cover', 
-                    backgroundPosition: 'center',
-                    zIndex: 2
-                  }}
-                  onError={() => setBgLoadError(true)}
-                />
-
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: bgLoaded.bg5 ? 0.8 : 0 }}
-                  transition={{ delay: 1 }}
-                  className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
-                  style={{ 
-                    backgroundImage: `url(${krakenBg5})`, 
-                    backgroundSize: 'cover', 
-                    backgroundPosition: 'center',
-                    zIndex: 3
-                  }}
-                  onError={() => setBgLoadError(true)}
-                />
-              </>
-            )}
-          </>
-        )}
-      </AnimatePresence>
 
       {/* Lightning and flashing effects removed per user request to stop white screen flashes */}
 
@@ -319,7 +272,7 @@ function KrakenPage() {
 
         {/* User Status Bar */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-3 border-red-900/20 bg-card/60 dark:bg-black/60 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
+          <Card className="md:col-span-3 border-red-900/20 bg-black/80 dark:bg-black/80 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
                 <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Status da Licença</span>
@@ -382,7 +335,7 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-red-900/30 bg-card/80 dark:bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group border-white/10">
+          <Card className="lg:col-span-4 border-white/10 bg-black/90 dark:bg-black/90 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             <div className="w-full max-w-2xl mb-8 relative z-10 aspect-video rounded-lg overflow-hidden border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
@@ -409,28 +362,31 @@ function KrakenPage() {
             </div>
 
             <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/60 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+
                 <div className="flex items-center gap-2 mb-1">
                   <Shield className="h-4 w-4 text-red-500" />
                   <div className="text-[10px] text-red-400 font-mono uppercase font-bold">Protocolo Stealth</div>
                 </div>
                 <div className="text-[11px] text-foreground/90 dark:text-white/90 text-left font-mono">Bypass nativo indetectável por algoritmos heurísticos de IA.</div>
               </div>
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/60 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
                 <div className="flex items-center gap-2 mb-1">
                   <Zap className="h-4 w-4 text-amber-500" />
                   <div className="text-[10px] text-amber-400 font-mono uppercase font-bold">Kraken Dropper</div>
                 </div>
                 <div className="text-[11px] text-white/90 text-left font-mono">Injeção em tempo real com ofuscação polimórfica dinâmica.</div>
               </div>
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/40 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+
                 <div className="flex items-center gap-2 mb-1">
                   <Activity className="h-4 w-4 text-emerald-500" />
                   <div className="text-[10px] text-emerald-400 font-mono uppercase font-bold">Multi-Node Hub</div>
                 </div>
                 <div className="text-[11px] text-white/90 text-left font-mono">Controle centralizado para Nubank, Caixa e Itaú simultâneos.</div>
               </div>
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/40 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+
                 <div className="flex items-center gap-2 mb-1">
                   <Terminal className="h-4 w-4 text-blue-500" />
                   <div className="text-[10px] text-blue-400 font-mono uppercase font-bold">Custom black-screen</div>
@@ -441,7 +397,7 @@ function KrakenPage() {
           </Card>
 
           <div className="lg:col-span-3 space-y-6">
-            <Card className="border-amber-900/30 bg-black/80 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
+            <Card className="border-amber-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
               <CardHeader className="flex flex-row items-center gap-4">
                 <div className="rounded-full bg-amber-500/10 p-2 border border-amber-500/20">
                   <AlertTriangle className="h-6 w-6 text-amber-500" />
@@ -469,7 +425,7 @@ function KrakenPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 space-y-2 border-l-4 border-l-red-500">
+                <div className="rounded-lg border border-red-500/20 bg-black/60 p-4 space-y-2 border-l-4 border-l-red-500">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] text-red-400 font-bold">INTEL: EXCLUSIVE ASSET</span>
                     <div className="flex gap-1">
@@ -533,7 +489,7 @@ function KrakenPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-blue-900/30 bg-black/80 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
+            <Card className="border-blue-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
                <CardHeader className="pb-2">
                  <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400">Tactical Shortcuts</CardTitle>
                </CardHeader>
@@ -556,7 +512,7 @@ function KrakenPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="p-4 rounded border border-red-500/20 bg-red-500/5 text-[10px] text-white/80 font-mono space-y-2"
+              className="p-4 rounded border border-red-500/20 bg-black/60 text-[10px] text-white/80 font-mono space-y-2"
             >
               <div className="font-bold text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
