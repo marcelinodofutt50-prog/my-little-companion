@@ -39,6 +39,20 @@ const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovab
 
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
+  head: () => ({
+    meta: [
+      { title: "Kraken 2.0 — Unidade Tática de Injeção" },
+      { name: "description", content: "Painel de controle da Kraken 2.0: status de licença, comandos táticos e diagnóstico em tempo real." },
+      { property: "og:title", content: "Kraken 2.0 — Unidade Tática de Injeção" },
+      { property: "og:description", content: "Painel de controle da Kraken 2.0 com status de licença e comandos táticos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [
+      // Preload da imagem de fundo para eliminar flicker no primeiro paint
+      { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
+    ],
+  }),
   component: () => (
     <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
       <ErrorBoundary name="KrakenPage">
@@ -47,6 +61,7 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
     </div>
   ),
 })
+
 
 function KrakenPage() {
   const [logs, setLogs] = useState<string[]>([]);
