@@ -1434,31 +1434,27 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // 1. Force PostgREST reload
+    // 1. Force PostgREST reload using the new SECURITY DEFINER function
     console.log("[admin] Force reload schema requested by", context.userId);
     
-    // We attempt to trigger a reload by notifying if the function exists
-    // Using any to bypass strict type checking for dynamic RPC
     try {
-      await (supabaseAdmin as any).rpc("notify_pgrst_reload");
+      // We use supabaseAdmin for this as it's a privileged operation
+      const { data, error } = await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      if (error) throw error;
+      return { ok: true, data };
     } catch (e) {
-      console.warn("[admin] notify_pgrst_reload failed, falling back to table touch");
+      console.warn("[admin] force_refresh_schema_permissions RPC failed, falling back to manual notify", e);
+      try {
+        await (supabaseAdmin as any).rpc("notify_pgrst_reload");
+      } catch (inner) {
+        // Ignore fallback failure
+      }
+      
+      const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads", "user_roles"];
+      const results = await Promise.allSettled(
+        tables.map(table => (supabaseAdmin as any).from(table).select("count", { count: "exact", head: true }))
+      );
+      
+      return { ok: true, touchResults: results.length };
     }
-
-    const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads", "user_roles"];
-    
-    // 2. Clear permissions cache by re-granting explicitly (even if it's already there)
-    // This is the most effective way to force a metadata refresh in Supabase/PostgREST
-    // when tables exist but return permission denied or not in cache errors.
-    try {
-      await supabaseAdmin.rpc("force_refresh_schema_permissions");
-    } catch (e) {
-      console.warn("[admin] force_refresh_schema_permissions RPC failed, using raw touches");
-    }
-
-    const results = await Promise.allSettled(
-      tables.map(table => (supabaseAdmin as any).from(table).select("count", { count: "exact", head: true }))
-    );
-
-    return { ok: true, touchResults: results.length };
   });

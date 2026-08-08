@@ -27,8 +27,12 @@ export async function validateAndFixSchema() {
 
         if (isCacheError) {
           console.warn(`[schema-validator] [CRITICAL] Table '${table}' missing from schema cache. Attempting forced sync...`);
-          // Note: In server functions we can't run 'NOTIFY', but we can trigger a reload by accessing a known function if available
-          // or simply logging it so the next deploy/migration knows it failed.
+          try {
+            await supabaseAdmin.rpc("force_refresh_schema_permissions");
+            console.log(`[schema-validator] Sync triggered for '${table}'`);
+          } catch (syncErr) {
+            console.error(`[schema-validator] Sync failed for '${table}':`, syncErr);
+          }
         }
 
         if (isPermissionError) {
