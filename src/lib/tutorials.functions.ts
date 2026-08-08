@@ -40,6 +40,7 @@ export const listTutorials = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
+      .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
@@ -56,6 +57,8 @@ export const listTutorials = createServerFn({ method: "GET" })
           // If we have an admin client available, we use it to force a refresh
           if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
             await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
+            // Also try a direct touch via admin to ensure the table is readable
+            await supabaseAdmin.from("tutorials").select("id").limit(1);
           }
           
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -63,6 +66,7 @@ export const listTutorials = createServerFn({ method: "GET" })
           const { data: retryData, error: retryError } = await context.supabase
             .from("tutorials")
             .select("*")
+            .eq("is_active", true)
             .order("display_order", { ascending: true });
             
           if (!retryError && retryData) {

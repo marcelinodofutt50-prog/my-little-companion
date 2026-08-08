@@ -190,6 +190,10 @@ export function yaarsaEndpointsFor(rawBase: string): string[] {
     const host = raw.replace(/\/yaarsa\/.*$/i, "").replace(/\/+$/, "");
     endpoints.push(`${host}/yaarsa/proxy.php`);
     endpoints.push(`${host}/yaarsa/private/createacc.php`);
+    endpoints.push(`${host}/proxy.php`);
+    endpoints.push(`${host}/createacc.php`);
+    endpoints.push(`${host}/proxy.php`);
+    endpoints.push(`${host}/createacc.php`);
   }
 
   const seen = new Set<string>();
@@ -330,7 +334,7 @@ export function expireDateFor(planSlug: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-type YaarsaResponse = { Success?: string; Fail?: string; action?: string; statusCode?: number; attempt?: number };
+type YaarsaResponse = { Success?: string; Fail?: string; action?: string; statusCode?: number; attempt?: number; error?: string; code?: string };
 
 function friendlyYaarsaFail(message: string, statusCode?: number): string {
   const m = message.trim();
