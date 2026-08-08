@@ -58,7 +58,7 @@ function KrakenPage() {
 
   const { data: krakenStatus, refetch: refetchStatus, isRefetching } = useQuery({
     queryKey: ['kraken-status'],
-    queryFn: () => fetchStatus({ data: undefined }),
+    queryFn: () => fetchStatus({ data: { metadata: { route: window.location.pathname } } }),
     refetchInterval: 30000, // Sync every 30s
   });
 

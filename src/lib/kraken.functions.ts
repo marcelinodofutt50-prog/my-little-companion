@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { trackSchemaFailure } from "./tutorials.functions";
 
 export const krakenInputSchema = z.object({
   command: z.string(),
@@ -20,19 +21,24 @@ export interface KrakenOutput {
  * Interface de comando para o Kraken Control.
  * Permite que o operador envie instruções táticas para os nodes da Shadow-Ops.
  */
-export const krakenHandler = async (args: { data: KrakenInput }) => {
+export const krakenHandler = async (args: { data: KrakenInput, context: any }) => {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const data = args.data;
     
     // Log tático no banco para rastreabilidade
     if (supabaseAdmin) {
-      await supabaseAdmin.from("integration_logs").insert({
+      const { error } = await (supabaseAdmin.from("integration_logs") as any).insert({
         source: "kraken-v2",
+        user_id: args.context?.userId,
         action: `command:${data.command}`,
         outcome: "success",
         context: { params: data.params } as any
       });
+      
+      if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache'))) {
+        await trackSchemaFailure(error, "krakenHandler", false, { command: data.command }, args.context?.userId);
+      }
     }
 
     const logStr = `[Kraken] Executing command: ${data.command}`;
