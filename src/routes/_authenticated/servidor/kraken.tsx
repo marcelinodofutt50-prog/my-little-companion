@@ -335,7 +335,7 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-white/10 bg-black/80 dark:bg-black/80 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
+          <Card className="lg:col-span-4 border-white/10 bg-black/90 dark:bg-black/90 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             <div className="w-full max-w-2xl mb-8 relative z-10 aspect-video rounded-lg overflow-hidden border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
@@ -362,14 +362,15 @@ function KrakenPage() {
             </div>
 
             <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/60 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+
                 <div className="flex items-center gap-2 mb-1">
                   <Shield className="h-4 w-4 text-red-500" />
                   <div className="text-[10px] text-red-400 font-mono uppercase font-bold">Protocolo Stealth</div>
                 </div>
                 <div className="text-[11px] text-foreground/90 dark:text-white/90 text-left font-mono">Bypass nativo indetectável por algoritmos heurísticos de IA.</div>
               </div>
-              <div className="p-4 rounded-lg border border-red-500/20 bg-red-500/5 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
+              <div className="p-4 rounded-lg border border-red-500/20 bg-black/60 backdrop-blur-sm group/item hover:border-red-500/50 transition-all">
                 <div className="flex items-center gap-2 mb-1">
                   <Zap className="h-4 w-4 text-amber-500" />
                   <div className="text-[10px] text-amber-400 font-mono uppercase font-bold">Kraken Dropper</div>
@@ -396,7 +397,7 @@ function KrakenPage() {
           </Card>
 
           <div className="lg:col-span-3 space-y-6">
-            <Card className="border-amber-900/30 bg-black/80 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
+            <Card className="border-amber-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
               <CardHeader className="flex flex-row items-center gap-4">
                 <div className="rounded-full bg-amber-500/10 p-2 border border-amber-500/20">
                   <AlertTriangle className="h-6 w-6 text-amber-500" />
@@ -488,7 +489,7 @@ function KrakenPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-blue-900/30 bg-black/80 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
+            <Card className="border-blue-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
                <CardHeader className="pb-2">
                  <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400">Tactical Shortcuts</CardTitle>
                </CardHeader>
