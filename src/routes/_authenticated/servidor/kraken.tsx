@@ -98,34 +98,62 @@ function KrakenPage() {
   });
 
   useEffect(() => {
-    // Verificação de renderização de imagens (Prefetch robusto)
-    const imagesToPrefetch = [
-      { key: 'core', url: krakenCore },
-      { key: 'bg4', url: krakenBg4 },
-      { key: 'bg5', url: krakenBg5 }
-    ];
+    let cancelled = false;
 
-    imagesToPrefetch.forEach(imgInfo => {
-      const img = new Image();
-      img.src = imgInfo.url;
-      
-      const setLoaded = () => {
-        setBgLoaded(prev => ({ ...prev, [imgInfo.key]: true }));
-      };
-
-      if (img.complete) {
-        setLoaded();
-      } else {
-        img.onload = setLoaded;
-        img.onerror = (e) => {
-          console.warn(`Kraken: Falha ao carregar ${imgInfo.key}, aplicando fallback.`, e);
-          // Set loaded anyway so fallback styles show up
-          setLoaded();
+    /**
+     * Valida cada candidato da cadeia: descarta 404 / erro de rede e também
+     * assets com proporção incompatível (ex.: recortes estreitos salvos por engano).
+     */
+    const validateCandidate = (url: string) =>
+      new Promise<boolean>((resolve) => {
+        const img = new Image();
+        const finish = (ok: boolean) => resolve(ok);
+        img.onload = () => {
+          const ratio = img.naturalWidth / Math.max(1, img.naturalHeight);
+          const isUsable = img.naturalWidth >= 900 && ratio >= 1.1 && ratio <= 3.2;
+          if (!isUsable) {
+            console.warn(
+              `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight}): ${url}`
+            );
+          }
+          finish(isUsable);
         };
+        img.onerror = () => {
+          console.warn(`[Kraken] Asset indisponível (404/erro de rede): ${url}`);
+          finish(false);
+        };
+        img.src = url;
+      });
+
+    const resolveBackground = async () => {
+      for (const candidate of KRAKEN_BG_CANDIDATES) {
+        if (cancelled) return;
+        const ok = await validateCandidate(candidate);
+        if (cancelled) return;
+        if (ok) {
+          setResolvedBg(candidate);
+          setBgLoaded((prev) => ({ ...prev, core: true }));
+          setBgLoadError(false);
+          return;
+        }
       }
-    });
+      // Nenhum candidato válido: mantém o gradiente tático como fundo definitivo
+      console.error("[Kraken] Nenhum asset de fundo válido. Usando fallback CSS.");
+      setBgLoadError(true);
+      setBgLoaded((prev) => ({ ...prev, core: false }));
+    };
+
+    resolveBackground();
+
+    // Camada de névoa (não crítica)
+    const mist = new Image();
+    mist.onload = () => setBgLoaded((prev) => ({ ...prev, bg5: true }));
+    mist.onerror = () => setBgLoaded((prev) => ({ ...prev, bg5: false }));
+    mist.src = krakenBg5;
 
     const timer = setTimeout(() => setShowEffects(true), 500);
+    
+
     
     // Web Audio API context para reprodução mais robusta
     let audioContext: AudioContext | null = null;
