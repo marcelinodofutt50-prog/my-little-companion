@@ -12,7 +12,20 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
       .select("tutorial_id")
       .eq("user_id", userId);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[tutorial_progress] Fetch error:", error);
+      const isSchemaError = error.message?.includes("schema cache") || 
+                           error.message?.includes("does not exist") ||
+                           error.code === 'PGRST108' ||
+                           error.code === '42P01';
+      
+      if (isSchemaError) {
+        const wrapped = new Error(error.message);
+        (wrapped as any)._schemaError = "public.tutorial_progress";
+        throw wrapped;
+      }
+      throw new Error(error.message);
+    }
     return (data ?? []).map((p: any) => p.tutorial_id);
   });
 
