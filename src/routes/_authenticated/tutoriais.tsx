@@ -89,28 +89,33 @@ function TutorialsPage() {
         addSyncLog('success', 'auto', 'Carregamento inicial bem-sucedido');
       }
     } catch (err: any) {
-      console.error("[tutorials] CRITICAL ERROR during data load:", err);
+      console.error("[tutorials] Data load failure:", err);
       
       const isSchemaError = err._schemaError || 
                            err.message?.includes("schema cache") || 
                            err.message?.includes("does not exist") ||
-                           err.code === 'PGRST108' ||
-                           err.message?.includes("PGRST108") ||
-                           err.message?.includes("PGRST116");
-                           
+                           err.code === 'PGRST108';
+                            
       if (isSchemaError) {
-        console.warn("[tutorials] Schema sync issue detected. Triggering deep recovery...");
-        toast.info("Instabilidade detectada (PGRST108)", {
-          description: "Iniciando reparo silencioso de alta disponibilidade...",
-          duration: 3000
-        });
-        addSyncLog('error', 'auto', `Detectada falha de cache PGRST108 na rota ${window.location.pathname}. Iniciando rastreamento e reparo...`);
+        addSyncLog('error', 'auto', `Schema sync instability (PGRST108) on ${window.location.pathname}. Triggering repair...`);
         
         try {
           const { supabase } = await import("@/integrations/supabase/client");
           if (supabase && typeof (supabase as any).rpc === 'function') {
             await (supabase as any).rpc("force_refresh_schema_permissions");
           }
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
+          setTutorials(retryTData || []);
+          setCompletedIds(retryPData || []);
+          addSyncLog('success', 'auto', 'Silent recovery successful');
+        } catch (repairErr: any) {
+          addSyncLog('error', 'auto', `Recovery failed: ${repairErr.message}`);
+        }
+      }
+    } finally {
           
           await new Promise(resolve => setTimeout(resolve, 800));
           
