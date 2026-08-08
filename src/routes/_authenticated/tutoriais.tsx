@@ -61,7 +61,7 @@ function TutorialsPage() {
         try {
           const { supabase } = await import("@/integrations/supabase/client");
           if (supabase && typeof (supabase as any).rpc === 'function') {
-            const { error: rpcErr } = await supabase.rpc("force_refresh_schema_permissions");
+            const { error: rpcErr } = await (supabase as any).rpc("force_refresh_schema_permissions");
             if (rpcErr) throw rpcErr;
           }
           
@@ -208,7 +208,7 @@ function TutorialsPage() {
                       try {
                         const { supabase } = await import("@/integrations/supabase/client");
                         if (supabase && typeof (supabase as any).rpc === 'function') {
-                          const { error: rpcErr } = await supabase.rpc("force_refresh_schema_permissions");
+                          const { error: rpcErr } = await (supabase as any).rpc("force_refresh_schema_permissions");
                           if (rpcErr) throw rpcErr;
                         }
                         
