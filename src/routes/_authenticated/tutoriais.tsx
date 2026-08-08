@@ -77,7 +77,7 @@ function TutorialsPage() {
     try {
       console.log("[tutorials] Starting tactical load cycle...");
       const [tData, pData] = await Promise.all([
-        listFn({ metadata: { route: typeof window !== 'undefined' ? window.location.pathname : 'server-ssr' } }), 
+        listFn({ data: { metadata: { route: typeof window !== 'undefined' ? window.location.pathname : 'server-ssr' } } }), 
         getProgressFn()
       ]);
       setTutorials(tData || []);

@@ -51,8 +51,14 @@ export async function trackSchemaFailure(
 }
 
 export const listTutorials = createServerFn({ method: "GET" })
+  .validator((d: unknown) => z.object({
+    metadata: z.object({
+      route: z.string().optional()
+    }).optional()
+  }).optional().parse(d || {}))
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<any[]> => {
+  .handler(async ({ input, context }): Promise<any[]> => {
+    const metadata = input?.metadata || {};
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
     console.log("[tutorials] Iniciando busca tática de módulos...");
@@ -72,7 +78,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01';
       
       if (isPGRST) {
-        await trackSchemaFailure(error, "listTutorials", false, { stage: "initial_fetch" }, context.userId);
+        await trackSchemaFailure(error, "listTutorials", false, { stage: "initial_fetch", ...metadata }, context.userId);
         
         try {
           console.warn("[tutorials] Schema sync issue detected. Triggering forced repair...");
@@ -88,11 +94,11 @@ export const listTutorials = createServerFn({ method: "GET" })
             .order("display_order", { ascending: true });
             
           if (!retryError) {
-            await trackSchemaFailure(error, "listTutorials", true, { stage: "retry_success" }, context.userId);
+            await trackSchemaFailure(error, "listTutorials", true, { stage: "retry_success", ...metadata }, context.userId);
             return retryData ?? [];
           }
           
-          await trackSchemaFailure(retryError, "listTutorials", false, { stage: "retry_failure", retry_error: retryError.message }, context.userId);
+          await trackSchemaFailure(retryError, "listTutorials", false, { stage: "retry_failure", retry_error: retryError.message, ...metadata }, context.userId);
         } catch (e) {
           console.error("[tutorials] Schema repair flow crashed:", e);
         }
