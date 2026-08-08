@@ -680,7 +680,7 @@ function DashboardPage() {
                       <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>
-                  <Link to="/planos" search={{ category: 'addon' }} className="absolute inset-0 z-10" />
+                  <Link to="/mercado" className="absolute inset-0 z-10" />
                 </div>
                 <div className="terminal-card p-4 relative overflow-hidden group">
                   <div className="flex items-start justify-between">
