@@ -40,7 +40,6 @@ export const listTutorials = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
-      .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
@@ -54,16 +53,16 @@ export const listTutorials = createServerFn({ method: "GET" })
       if (isSchemaError) {
         console.warn("[tutorials] Schema mismatch detected. Attempting repair...");
         try {
+          // If we have an admin client available, we use it to force a refresh
           if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-            const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
-            if (rpcErr) console.warn("[tutorials] Repair RPC error:", rpcErr);
+            await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
           }
+          
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          const { data: retryData, error: retryError } = await supabaseAdmin
+          const { data: retryData, error: retryError } = await context.supabase
             .from("tutorials")
             .select("*")
-            .eq("is_active", true)
             .order("display_order", { ascending: true });
             
           if (!retryError && retryData) {
@@ -74,7 +73,7 @@ export const listTutorials = createServerFn({ method: "GET" })
         }
       }
       
-      throw new Error(`Erro de Sincronização (PGRST108): A tabela de tutoriais não foi encontrada no cache do sistema. Por favor, utilize o botão de sincronização manual ou contate o suporte.`);
+      throw new Error(`Erro de Sincronização (PGRST108): A tabela de tutoriais não foi encontrada no cache do sistema. Por favor, utilize o botão de sincronização manual ou o Painel de Diagnóstico.`);
     }
 
     return data ?? [];

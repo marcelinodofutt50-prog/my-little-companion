@@ -7,6 +7,7 @@ export const testDatabaseConnection = createServerFn({ method: "POST" })
     const start = Date.now();
     try {
       // Test 1: Basic connection & schema cache
+      // We also try to touch the relation directly here to see if it triggers an error
       const { data, error, status } = await context.supabase
         .from("tutorials")
         .select("id")
@@ -15,6 +16,14 @@ export const testDatabaseConnection = createServerFn({ method: "POST" })
       const latency = Date.now() - start;
 
       if (error) {
+        // If error is PGRST108, attempt a repair via RPC before returning
+        if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+           if (supabaseAdmin) {
+              await supabaseAdmin.rpc("force_refresh_schema_permissions");
+           }
+        }
+        
         return {
           success: false,
           latency,

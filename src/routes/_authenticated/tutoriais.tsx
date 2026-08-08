@@ -32,7 +32,13 @@ function TutorialsPage() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Tudo");
-  const [syncHistory, setSyncHistory] = useState<{ time: string; status: 'success' | 'error'; type: 'auto' | 'manual'; message?: string }[]>([]);
+  const [syncHistory, setSyncHistory] = useState<{ time: string; status: 'success' | 'error'; type: 'auto' | 'manual'; message?: string }[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('shadow_sync_history');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [showSyncStatus, setShowSyncStatus] = useState(false);
   
   const [showDiagnostics, setShowDiagnostics] = useState(false);
@@ -40,12 +46,18 @@ function TutorialsPage() {
   const [diagLoading, setDiagLoading] = useState(false);
   
   const addSyncLog = (status: 'success' | 'error', type: 'auto' | 'manual', message?: string) => {
-    setSyncHistory(prev => [{
-      time: new Date().toLocaleTimeString('pt-BR'),
-      status,
-      type,
-      message
-    }, ...prev].slice(0, 5));
+    setSyncHistory(prev => {
+      const newHistory = [{
+        time: new Date().toLocaleTimeString('pt-BR'),
+        status,
+        type,
+        message
+      }, ...prev].slice(0, 10);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('shadow_sync_history', JSON.stringify(newHistory));
+      }
+      return newHistory;
+    });
   };
   
   const listFn = useServerFn(listTutorials);
@@ -124,7 +136,8 @@ function TutorialsPage() {
   }, [tutorials]);
 
   const filteredTutorials = useMemo(() => {
-    return tutorials.filter(t => {
+    return (tutorials || []).filter(t => {
+      if (!t) return false;
       const matchesSearch = (t.title?.toLowerCase() || "").includes(search.toLowerCase()) || 
                            (t.description?.toLowerCase() || "").includes(search.toLowerCase());
       const matchesCategory = activeCategory === "Tudo" || t.category === activeCategory;
