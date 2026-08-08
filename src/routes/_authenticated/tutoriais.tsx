@@ -15,6 +15,8 @@ import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progre
 import { toast } from "sonner";
 import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
+import { testDatabaseConnection } from "@/lib/diagnostics.functions";
+
 
 export const Route = createFileRoute("/_authenticated/tutoriais")({
   head: () => ({ meta: [{ title: "Tutorials Hub — Shadow" }] }),
