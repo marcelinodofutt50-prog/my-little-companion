@@ -82,7 +82,9 @@ function KrakenPage() {
   const [intensity, setIntensity] = useState(0.4); 
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
-  const [bgLoaded, setBgLoaded] = useState({ core: false, bg4: false, bg5: false });
+  const [bgLoaded, setBgLoaded] = useState({ core: false, bg5: false });
+  const [resolvedBg, setResolvedBg] = useState<string>(krakenCore);
+
 
   const logEndRef = useRef<HTMLDivElement>(null);
   const executeKraken = useServerFn(krakenCommand);
