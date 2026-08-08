@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Store, Zap, Shield, ShieldCheck, Rocket, ArrowRight, Info, Crown, Calendar, Lock } from "lucide-react";
@@ -14,6 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/mercado")({
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/auth" });
+  },
   head: () => ({ meta: [{ title: "Mercado Shadow — Módulos & Upgrades" }] }),
   component: MarketPage,
 });
