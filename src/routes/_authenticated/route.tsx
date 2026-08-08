@@ -18,7 +18,7 @@ function AuthenticatedLayout() {
   const triggerReload = useServerFn(forceReloadSchema);
 
   useEffect(() => {
-    // Silently attempt a schema touch/reload on mount of the authenticated area
+    // Implemente uma rotina de verificação automática do schema no carregamento do Centro de Treinamento para detectar e corrigir o cache antes que o usuário veja o erro.
     // to prevent common "relation not in cache" or permission stale errors
     // only if the user is likely staff (the function checks internally anyway)
     const checkAndReload = async () => {
