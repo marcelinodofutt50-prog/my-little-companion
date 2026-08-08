@@ -48,16 +48,18 @@ function createSupabaseClient() {
     ];
     console.warn(`[Supabase] Invalid/Missing environment variable(s): ${missing.join(', ')}. Initializing with placeholders to prevent app crash.`);
     
+    // Check if we are in the browser to throw a specific error that the Root Boundary can catch
+    // but without crashing the module initialization itself.
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        const error = new Error(`Missing Supabase environment variable(s): ${missing.join(', ')}`);
+        (error as any).isEnvError = true;
+        // Dispatching a custom event that components can listen to, or letting it bubble
+        console.error("Supabase environment configuration error detected.");
+      }, 0);
+    }
+    
     return createClient<Database>(effectiveUrl, effectiveKey, {
-      global: {
-        fetch: createSupabaseFetch(effectiveKey),
-      },
-      auth: {
-        storage: typeof window !== 'undefined' ? localStorage : undefined,
-        persistSession: true,
-        autoRefreshToken: true,
-      }
-    });
   }
 
   return createClient<Database>(SUPABASE_URL as string, SUPABASE_PUBLISHABLE_KEY as string, {
