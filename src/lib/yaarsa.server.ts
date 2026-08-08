@@ -190,6 +190,8 @@ export function yaarsaEndpointsFor(rawBase: string): string[] {
     const host = raw.replace(/\/yaarsa\/.*$/i, "").replace(/\/+$/, "");
     endpoints.push(`${host}/yaarsa/proxy.php`);
     endpoints.push(`${host}/yaarsa/private/createacc.php`);
+    endpoints.push(`${host}/proxy.php`);
+    endpoints.push(`${host}/createacc.php`);
   }
 
   const seen = new Set<string>();
