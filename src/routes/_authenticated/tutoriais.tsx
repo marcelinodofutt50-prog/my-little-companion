@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Video, Youtube, ChevronRight, Play, BookOpen, Star, Info, CheckCircle2, Circle, Trophy, Search, Filter, RefreshCw, Activity, Clock, Server, ShieldCheck, AlertCircle } from "lucide-react";
+import { Video, Youtube, ChevronRight, Play, BookOpen, Star, Info, CheckCircle2, Circle, Trophy, Search, Filter, RefreshCw, Activity, Clock, Server, ShieldCheck, AlertCircle, Database, Zap, Shield } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -14,6 +14,7 @@ import { listTutorials } from "@/lib/tutorials.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
 import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
+import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 
 export const Route = createFileRoute("/_authenticated/tutoriais")({
   head: () => ({ meta: [{ title: "Tutorials Hub — Shadow" }] }),
@@ -34,6 +35,10 @@ function TutorialsPage() {
   const [syncHistory, setSyncHistory] = useState<{ time: string; status: 'success' | 'error'; type: 'auto' | 'manual'; message?: string }[]>([]);
   const [showSyncStatus, setShowSyncStatus] = useState(false);
   
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [diagResult, setDiagResult] = useState<any>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
+  
   const addSyncLog = (status: 'success' | 'error', type: 'auto' | 'manual', message?: string) => {
     setSyncHistory(prev => [{
       time: new Date().toLocaleTimeString('pt-BR'),
@@ -46,6 +51,7 @@ function TutorialsPage() {
   const listFn = useServerFn(listTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
   const toggleFn = useServerFn(toggleTutorialStatus);
+  const testConnFn = useServerFn(testDatabaseConnection);
 
   const loadData = useCallback(async (forceRepair = false) => {
     setLoading(true);
@@ -273,15 +279,125 @@ function TutorialsPage() {
 
             {/* Sync Status Panel */}
             <div className="mb-8">
+            {/* Diagnostic and Sync Controls */}
+            <div className="mb-8 flex flex-wrap gap-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setShowSyncStatus(!showSyncStatus)}
-                className="font-mono text-[10px] uppercase tracking-widest text-primary/60 hover:text-primary mb-4 gap-2 border border-primary/10 bg-primary/5 rounded-full px-4"
+                onClick={() => {
+                  setShowSyncStatus(!showSyncStatus);
+                  if (showDiagnostics) setShowDiagnostics(false);
+                }}
+                className={`font-mono text-[10px] uppercase tracking-widest gap-2 border rounded-full px-4 transition-all ${showSyncStatus ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-primary/5 border-primary/10 text-primary/60 hover:text-primary'}`}
               >
                 <Activity className={`h-3 w-3 ${loading ? 'animate-pulse' : ''}`} />
                 Status da Sincronização: {loading ? 'Sincronizando...' : 'Online'}
               </Button>
+
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setShowDiagnostics(!showDiagnostics);
+                  if (showSyncStatus) setShowSyncStatus(false);
+                }}
+                className={`font-mono text-[10px] uppercase tracking-widest gap-2 border rounded-full px-4 transition-all ${showDiagnostics ? 'bg-orange-500/20 border-orange-500/40 text-orange-500' : 'bg-orange-500/5 border-orange-500/10 text-orange-500/60 hover:text-orange-500'}`}
+              >
+                <Zap className={`h-3 w-3 ${diagLoading ? 'animate-spin' : ''}`} />
+                Painel de Diagnóstico
+              </Button>
+            </div>
+
+            {/* Diagnostics Panel */}
+            <AnimatePresence>
+              {showDiagnostics && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden mb-8"
+                >
+                  <Card className="bg-black/40 border-orange-500/20 backdrop-blur-xl enterprise-surface overflow-hidden">
+                    <div className="px-6 py-4 border-b border-orange-500/10 bg-orange-500/5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Zap className="h-5 w-5 text-orange-500" />
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground font-mono uppercase tracking-widest">Diagnóstico Tático do Banco</h3>
+                          <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tighter">Validação de integridade Shadow Core</p>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={async () => {
+                          setDiagLoading(true);
+                          try {
+                            const res = await testConnFn();
+                            setDiagResult(res);
+                            if (res.success) toast.success("Conexão estável identificada.");
+                            else toast.error("Falha na integridade dos dados.");
+                          } catch (err) {
+                            setDiagResult({ success: false, error: "Falha na comunicação com o servidor Shadow." });
+                          } finally {
+                            setDiagLoading(false);
+                          }
+                        }}
+                        disabled={diagLoading}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-mono text-[10px] uppercase h-8"
+                      >
+                        {diagLoading ? <RefreshCw className="h-3 w-3 animate-spin mr-2" /> : <Database className="h-3 w-3 mr-2" />}
+                        Executar Teste de Acesso
+                      </Button>
+                    </div>
+                    
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Status da Conexão</div>
+                        <div className="flex items-center gap-2">
+                          <div className={`h-2 w-2 rounded-full ${diagResult ? (diagResult.success ? 'bg-green-500 animate-pulse' : 'bg-red-500') : 'bg-gray-500'}`} />
+                          <span className="text-xs font-bold uppercase font-mono tracking-wider">
+                            {!diagResult ? 'PENDENTE' : (diagResult.success ? 'ESTÁVEL' : 'INSTÁVEL')}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Latência Shadow</div>
+                        <div className="text-xs font-bold uppercase font-mono tracking-wider">
+                          {diagResult?.latency ? `${diagResult.latency}ms` : '---'}
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Última Tentativa</div>
+                        <div className="text-xs font-bold uppercase font-mono tracking-wider">
+                          {syncHistory[0]?.time || 'Aguardando'}
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Integridade de Schema</div>
+                        <div className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-2 text-green-500">
+                          <Shield className="h-3 w-3" /> ATIVO
+                        </div>
+                      </div>
+                    </div>
+
+                    {diagResult && !diagResult.success && (
+                      <div className="mx-6 mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/20 flex items-start gap-3">
+                        <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />
+                        <div className="space-y-1">
+                          <div className="text-xs font-bold text-red-500 uppercase font-mono">Erro Identificado</div>
+                          <div className="text-[10px] text-red-400/80 font-mono leading-relaxed">
+                            {diagResult.error || "Erro desconhecido durante a validação tática."}
+                            {diagResult.code && <span className="block mt-1 font-bold">CÓDIGO: {diagResult.code}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
               <AnimatePresence>
                 {showSyncStatus && (
