@@ -11,6 +11,7 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
 export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<any[]> => {
+    // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
     // Attempt 1: Standard query
