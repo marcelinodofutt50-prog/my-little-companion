@@ -116,31 +116,9 @@ function TutorialsPage() {
         }
       }
     } finally {
-          
-          await new Promise(resolve => setTimeout(resolve, 800));
-          
-          const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
-          setTutorials(retryTData || []);
-          setCompletedIds(retryPData || []);
-          toast.success("Conexão restaurada automaticamente!", {
-            description: "O cache do banco de dados foi sincronizado com sucesso.",
-            duration: 3000
-          });
-          addSyncLog('success', 'auto', 'Recuperação automática concluída com sucesso');
-        } catch (repairErr: any) {
-          console.error("[tutorials] Recovery flow FAILED:", repairErr);
-          addSyncLog('error', 'auto', `Falha persistente: ${repairErr.message || 'Erro desconhecido'}`);
-          
-          if (tutorials.length === 0) {
-            console.error("[tutorials] Reparo automático falhou. Notificando usuário.");
-          }
-        }
-      } else {
-        console.error("[tutorials] Generic error encountered:", err);
-      }
-    } finally {
       setLoading(false);
     }
+  }, [listFn, getProgressFn]);
 
   }, [listFn, getProgressFn]);
 
