@@ -121,7 +121,7 @@ html.theme-light body {
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.02 255);
 
-  /* Using a deep, authoritative blue for primary text in light mode instead of gold/yellow */
+  /* Deep blue for primary in light mode */
   --primary: oklch(0.45 0.22 260); 
   --primary-foreground: oklch(1 0 0);
 
@@ -130,7 +130,6 @@ html.theme-light body {
   --muted: oklch(0.98 0.005 255);
   --muted-foreground: oklch(0.35 0.02 255);
 
-  /* Fix for "buttons turning black" - ensure secondary buttons have readable colors in light mode */
   --accent: oklch(0.94 0.01 255);
   --accent-foreground: oklch(0.15 0.02 255);
 
@@ -162,14 +161,14 @@ html.theme-light body {
 }
 
 html.theme-light body {
-  background-color: #ffffff !important;
+  background-color: oklch(0.99 0.005 255) !important;
   background-image:
-    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(37, 99, 235, 0.05), transparent 62%),
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(37, 99, 235, 0.04), transparent 62%),
     radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.03), transparent 60%),
-    linear-gradient(to right, rgba(226, 232, 240, 0.3) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(226, 232, 240, 0.3) 1px, transparent 1px) !important;
+    linear-gradient(to right, oklch(0.45 0.22 260 / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.45 0.22 260 / 0.04) 1px, transparent 1px) !important;
   background-attachment: fixed !important;
-  color: #000000 !important;
+  color: oklch(0.12 0.02 255) !important;
 }
 
 /* Removido duplicata */
