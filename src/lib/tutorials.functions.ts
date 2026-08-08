@@ -12,11 +12,27 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
  * Sistema de Rastreamento Tático de Falhas de Schema (PGRST108)
  * Registra no banco de dados todas as ocorrências de cache corrompido e resultados de reparo.
  */
-async function trackSchemaFailure(error: any, context: string, recovered = false, metadata: any = {}) {
+/** 
+ * Sistema de Rastreamento Tático de Falhas de Schema (PGRST108)
+ * Registra no banco de dados todas as ocorrências de cache corrompido e resultados de reparo.
+ * Agora inclui correlação por usuário e rastreamento da rota para diagnósticos avançados.
+ */
+export async function trackSchemaFailure(
+  error: any, 
+  context: string, 
+  recovered = false, 
+  metadata: any = {},
+  userId?: string
+) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("integration_logs").insert({
+    
+    // Obter URL/Rota se estiver em um ambiente que permita
+    const route = metadata.route || "unknown_route";
+
+    await (supabaseAdmin.from("integration_logs") as any).insert({
       source: "shadow-core-db",
+      user_id: userId,
       action: "pgrst108_sync_error",
       outcome: recovered ? "recovered" : "failure",
       error: error.message || String(error),
@@ -24,6 +40,7 @@ async function trackSchemaFailure(error: any, context: string, recovered = false
         error_code: error.code || "UNKNOWN",
         location: context,
         recovered,
+        route,
         timestamp: new Date().toISOString(),
         ...metadata
       }
@@ -34,8 +51,14 @@ async function trackSchemaFailure(error: any, context: string, recovered = false
 }
 
 export const listTutorials = createServerFn({ method: "GET" })
+  .validator((d: unknown) => z.object({
+    metadata: z.object({
+      route: z.string().optional()
+    }).optional()
+  }).optional().parse(d || {}))
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<any[]> => {
+  .handler(async ({ data: input, context }): Promise<any[]> => {
+    const metadata = input?.metadata || {};
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
     console.log("[tutorials] Iniciando busca tática de módulos...");
@@ -55,7 +78,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01';
       
       if (isPGRST) {
-        await trackSchemaFailure(error, "listTutorials", false, { stage: "initial_fetch" });
+        await trackSchemaFailure(error, "listTutorials", false, { stage: "initial_fetch", ...metadata }, context.userId);
         
         try {
           console.warn("[tutorials] Schema sync issue detected. Triggering forced repair...");
@@ -71,11 +94,11 @@ export const listTutorials = createServerFn({ method: "GET" })
             .order("display_order", { ascending: true });
             
           if (!retryError) {
-            await trackSchemaFailure(error, "listTutorials", true, { stage: "retry_success" });
+            await trackSchemaFailure(error, "listTutorials", true, { stage: "retry_success", ...metadata }, context.userId);
             return retryData ?? [];
           }
           
-          await trackSchemaFailure(retryError, "listTutorials", false, { stage: "retry_failure", retry_error: retryError.message });
+          await trackSchemaFailure(retryError, "listTutorials", false, { stage: "retry_failure", retry_error: retryError.message, ...metadata }, context.userId);
         } catch (e) {
           console.error("[tutorials] Schema repair flow crashed:", e);
         }
@@ -112,7 +135,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
       console.error("[tutorials] Database error:", error);
       
       const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache');
-      if (isPGRST) await trackSchemaFailure(error, "adminSaveTutorial", false);
+      if (isPGRST) await trackSchemaFailure(error, "adminSaveTutorial", false, {}, context.userId);
 
       const wrapped = new Error(error.message);
       if (error.message?.includes("relation \"public.tutorials\" does not exist") || 

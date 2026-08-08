@@ -57,7 +57,8 @@ function TutorialsPage() {
         time: new Date().toLocaleTimeString('pt-BR'),
         status,
         type,
-        message
+        message,
+        route: window.location.pathname
       }, ...prev].slice(0, 10);
       if (typeof window !== 'undefined') {
         localStorage.setItem('shadow_sync_history', JSON.stringify(newHistory));
@@ -75,7 +76,10 @@ function TutorialsPage() {
     setLoading(true);
     try {
       console.log("[tutorials] Starting tactical load cycle...");
-      const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
+      const [tData, pData] = await Promise.all([
+        listFn({ data: { metadata: { route: typeof window !== 'undefined' ? window.location.pathname : 'server-ssr' } } }), 
+        getProgressFn()
+      ]);
       setTutorials(tData || []);
       setCompletedIds(pData || []);
       if (forceRepair) {
@@ -100,7 +104,7 @@ function TutorialsPage() {
           description: "Iniciando reparo silencioso de alta disponibilidade...",
           duration: 3000
         });
-        addSyncLog('error', 'auto', 'Detectada falha de cache PGRST108. Iniciando rastreamento e reparo...');
+        addSyncLog('error', 'auto', `Detectada falha de cache PGRST108 na rota ${window.location.pathname}. Iniciando rastreamento e reparo...`);
         
         try {
           const { supabase } = await import("@/integrations/supabase/client");
