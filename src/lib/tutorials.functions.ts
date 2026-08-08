@@ -15,44 +15,37 @@ export const listTutorials = createServerFn({ method: "GET" })
     
     console.log("[tutorials] Iniciando busca tática de módulos...");
     
-    // Tática de carregamento resiliente: tenta usuário -> tenta admin -> reporta
-    let { data, error } = await context.supabase
+    // Tática de carregamento resiliente: tenta admin diretamente para o Centro de Treinamento
+    // Isso evita o erro PGRST108 (schema cache) que afeta mais o cliente anon/user do que o admin key
+    const { data, error } = await supabaseAdmin
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
-      console.warn(`[tutorials] Busca padrão falhou (Código: ${error.code}). Acionando redundância Admin...`);
+      console.error(`[tutorials] FALHA CRÍTICA: Busca Admin falhou!`, error);
       
-      const { data: adminData, error: adminError } = await supabaseAdmin
-        .from("tutorials")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
-        
-      if (adminError) {
-        console.error(`[tutorials] FALHA CRÍTICA: Redundância Admin falhou!`, adminError);
-        throw new Error(`Erro de Sincronização Shadow (PGRST108). A infraestrutura de tutoriais está inacessível.`);
+      // Se falhou mesmo via Admin, tentamos um reparo forçado de schema antes de desistir
+      try {
+        await supabaseAdmin.rpc("force_refresh_schema_permissions");
+        const { data: retryData, error: retryError } = await supabaseAdmin
+          .from("tutorials")
+          .select("*")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
+          
+        if (!retryError) return retryData ?? [];
+      } catch (e) {
+        console.warn("[tutorials] Schema repair failed:", e);
       }
       
-      data = adminData;
-      
-      // Auto-reparo profundo em background
-      // .rpc() retorna um objeto com .then(), não é uma Promise direta em algumas versões do SDK/wrappers
-      // Usamos uma IIFE async para lidar com o reparo sem bloquear o retorno dos dados
-      (async () => {
-        try {
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          console.log("[tutorials] Auto-reparo concluído em background.");
-        } catch (e) {
-          console.warn("[tutorials] Falha no auto-reparo em background:", e);
-        }
-      })();
+      throw new Error(`Erro de Sincronização Shadow (PGRST108). A infraestrutura de tutoriais está inacessível.`);
     }
 
     return data ?? [];
   });
+
 
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })

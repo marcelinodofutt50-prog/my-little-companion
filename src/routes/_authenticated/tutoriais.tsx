@@ -90,29 +90,25 @@ function TutorialsPage() {
                            
       if (isSchemaError) {
         console.warn("[tutorials] Schema sync issue detected. Triggering deep recovery...");
-        const loadToast = toast.loading("Sincronizando tabelas do sistema...");
         
         try {
           const { supabase } = await import("@/integrations/supabase/client");
           if (supabase && typeof (supabase as any).rpc === 'function') {
-            const { error: rpcErr } = await (supabase as any).rpc("force_refresh_schema_permissions");
-            if (rpcErr) {
-              console.error("[tutorials] Recovery RPC error details:", rpcErr);
-              throw new Error(`Falha no RPC de recuperação: ${rpcErr.message || 'Erro desconhecido'}`);
-            }
-
+            await (supabase as any).rpc("force_refresh_schema_permissions");
           }
           
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 800));
           
           const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
           setTutorials(retryTData || []);
           setCompletedIds(retryPData || []);
-          toast.success("Módulos sincronizados!", { id: loadToast });
           addSyncLog('success', 'auto', 'Recuperação automática concluída');
         } catch (repairErr: any) {
           console.error("[tutorials] Recovery flow FAILED:", repairErr);
-          toast.error("Falha na sincronização. Tente atualizar a página.", { id: loadToast });
+          // Fallback UI silêncio: se falhou a recuperação, apenas mostramos o erro amigável se não tivermos nada
+          if (tutorials.length === 0) {
+            toast.error("Erro de Sincronização. Tente o botão de reparo manual.");
+          }
           addSyncLog('error', 'auto', repairErr.message || 'Falha na recuperação automática');
         }
       } else {
@@ -121,6 +117,7 @@ function TutorialsPage() {
     } finally {
       setLoading(false);
     }
+
   }, [listFn, getProgressFn]);
 
   useEffect(() => {
