@@ -431,6 +431,14 @@ function Index() {
             <div className="space-y-4">
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Ecossistema</h4>
               <ul className="space-y-2 text-xs font-mono">
+                <li><Link to="/planos" search={{ category: 'addon' }} className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Store className="h-3 w-3" /> {t('nav.market')}</Link></li>
+                <li><Link to="/dashboard" hash="referrals" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Users className="h-3 w-3" /> {t('nav.referrals')}</Link></li>
+                <li><Link to="/dashboard" hash="gifts" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Gift className="h-3 w-3" /> {t('nav.gifts')}</Link></li>
+              </ul>
+            </div>
+            <div className="space-y-4">
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Ecossistema</h4>
+              <ul className="space-y-2 text-xs font-mono">
               </ul>
             </div>
             <div className="space-y-4">
