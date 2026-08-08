@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { formatBrl } from "@/lib/plans";
 
-export const Route = createFileRoute("/_authenticated/indicacoes")({
+export const Route = createFileRoute("/indicacoes")({
   head: () => ({ meta: [{ title: "Indicações — Shadow" }] }),
   component: ReferralsPage,
 });

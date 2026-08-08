@@ -13,7 +13,7 @@ import { createCheckout } from "@/lib/checkout.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/mercado")({
+export const Route = createFileRoute("/mercado")({
   head: () => ({ meta: [{ title: "Mercado Shadow — Módulos & Upgrades" }] }),
   component: MarketPage,
 });

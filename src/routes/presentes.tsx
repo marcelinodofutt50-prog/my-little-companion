@@ -13,7 +13,7 @@ import { formatBrl } from "@/lib/plans";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_authenticated/presentes")({
+export const Route = createFileRoute("/presentes")({
   head: () => ({ meta: [{ title: "Presentes — Shadow" }] }),
   component: GiftsPage,
 });
