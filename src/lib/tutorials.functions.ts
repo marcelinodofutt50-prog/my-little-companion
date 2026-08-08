@@ -8,6 +8,31 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
   if (!admin && !mod) throw new Error("Forbidden");
 }
 
+/** 
+ * Sistema de Rastreamento Tático de Falhas de Schema (PGRST108)
+ * Registra no banco de dados todas as ocorrências de cache corrompido e resultados de reparo.
+ */
+async function trackSchemaFailure(error: any, context: string, recovered = false, metadata: any = {}) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("integration_logs").insert({
+      source: "shadow-core-db",
+      action: "pgrst108_sync_error",
+      outcome: recovered ? "recovered" : "failure",
+      error: error.message || String(error),
+      context: {
+        error_code: error.code || "UNKNOWN",
+        location: context,
+        recovered,
+        timestamp: new Date().toISOString(),
+        ...metadata
+      }
+    });
+  } catch (e) {
+    console.error("[tracking] Failed to log failure:", e);
+  }
+}
+
 export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<any[]> => {
@@ -16,7 +41,6 @@ export const listTutorials = createServerFn({ method: "GET" })
     console.log("[tutorials] Iniciando busca tática de módulos...");
     
     // Tática de carregamento resiliente: tenta admin diretamente para o Centro de Treinamento
-    // Isso evita o erro PGRST108 (schema cache) que afeta mais o cliente anon/user do que o admin key
     const { data, error } = await supabaseAdmin
       .from("tutorials")
       .select("*")
@@ -26,7 +50,9 @@ export const listTutorials = createServerFn({ method: "GET" })
     if (error) {
       console.error(`[tutorials] FALHA CRÍTICA: Busca Admin falhou!`, error);
       
-      // Se falhou mesmo via Admin, tentamos um reparo forçado de schema antes de desistir
+      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache');
+      
+      // Tentamos um reparo forçado de schema antes de desistir
       try {
         await supabaseAdmin.rpc("force_refresh_schema_permissions");
         const { data: retryData, error: retryError } = await supabaseAdmin
@@ -35,9 +61,15 @@ export const listTutorials = createServerFn({ method: "GET" })
           .eq("is_active", true)
           .order("display_order", { ascending: true });
           
-        if (!retryError) return retryData ?? [];
+        if (!retryError) {
+          if (isPGRST) await trackSchemaFailure(error, "listTutorials", true);
+          return retryData ?? [];
+        }
+        
+        if (isPGRST) await trackSchemaFailure(error, "listTutorials", false, { retry_error: retryError.message });
       } catch (e) {
         console.warn("[tutorials] Schema repair failed:", e);
+        if (isPGRST) await trackSchemaFailure(error, "listTutorials", false, { catch_error: String(e) });
       }
       
       throw new Error(`Erro de Sincronização Shadow (PGRST108). A infraestrutura de tutoriais está inacessível.`);
@@ -45,6 +77,7 @@ export const listTutorials = createServerFn({ method: "GET" })
 
     return data ?? [];
   });
+
 
 
 
@@ -69,9 +102,13 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
         .upsert({ ...data, created_by: context.userId });
     if (error) {
       console.error("[tutorials] Database error:", error);
+      
+      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache');
+      if (isPGRST) await trackSchemaFailure(error, "adminSaveTutorial", false);
+
       const wrapped = new Error(error.message);
       if (error.message?.includes("relation \"public.tutorials\" does not exist") || 
-          error.message?.includes("public.tutorials' in the schema cache")) {
+          isPGRST) {
         (wrapped as any)._schemaError = "public.tutorials";
       }
       throw wrapped;
@@ -79,6 +116,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
 
 export const adminDeleteTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
