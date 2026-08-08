@@ -415,7 +415,7 @@ function KrakenPage() {
                 size="sm" 
                 className="h-8 px-3 text-[9px] font-mono uppercase text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white border border-foreground/5 dark:border-white/5 hover:bg-foreground/5 dark:hover:bg-white/5"
                 onClick={() => {
-                  setBgLoaded({ core: false, bg4: false, bg5: false });
+                  setBgLoaded({ core: false, bg5: false });
                   refetchStatus();
                 }}
               >
