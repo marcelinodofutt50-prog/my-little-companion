@@ -5,9 +5,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getTutorialProgress = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<string[]> => {
-    const { supabase, userId } = context;
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data, error } = await supabase
+    // Mudança Crítica: Usamos supabaseAdmin para leitura do progresso para evitar PGRST108
+    const { data, error } = await supabaseAdmin
       .from("tutorial_progress")
       .select("tutorial_id")
       .eq("user_id", userId);
@@ -32,7 +34,7 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
           await new Promise(r => setTimeout(r, 500));
           
-          const { data: retryData, error: retryError } = await supabase
+          const { data: retryData, error: retryError } = await supabaseAdmin
             .from("tutorial_progress")
             .select("tutorial_id")
             .eq("user_id", userId);
