@@ -225,15 +225,15 @@ function TutorialsPage() {
                     variant="default" 
                     size="lg" 
                     onClick={async () => {
-                      const loadToast = toast.loading("Restaurando banco de dados...");
+                      const loadToast = toast.loading("Executando reparo tático...");
                       try {
-                        const { forceReloadSchema } = await import("@/lib/admin.functions");
-                        // Forçamos o reload e um pequeno touch na tabela
-                        await forceReloadSchema();
+                        const { supabase } = await import("@/integrations/supabase/client");
+                        if (supabase && typeof supabase.rpc === 'function') {
+                          await supabase.rpc("force_refresh_schema_permissions");
+                        }
                         
-                        toast.success("Sincronização concluída! Recarregando módulos...", { id: loadToast });
-                        
-                        // Recarregamos os dados localmente primeiro
+                        toast.success("Sincronização enviada! Recarregando...", { id: loadToast });
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                         await loadData();
                       } catch (err) {
                         toast.error("Erro ao executar script de reparo", { id: loadToast });
