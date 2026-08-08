@@ -1427,10 +1427,10 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
 export const forceReloadSchema = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Basic staff check first to prevent abuse
-    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    const { data: mod } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "moderator" });
-    if (!admin && !mod) throw new Error("Acesso negado");
+    // Otimização: A verificação de staff agora usa resolveRoles para evitar recursividade
+    const { resolveRoles } = await import("./roles.server");
+    const { isStaff } = await resolveRoles({ supabase: context.supabase, userId: context.userId });
+    if (!isStaff) throw new Error("Acesso negado");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     

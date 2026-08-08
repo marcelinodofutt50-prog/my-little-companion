@@ -14,6 +14,13 @@ export const listTutorials = createServerFn({ method: "GET" })
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
+    // Tentamos recarregar as permissões e o cache ANTES da query para evitar PGRST108
+    try {
+      await supabaseAdmin.rpc("force_refresh_schema_permissions");
+    } catch (e) {
+      console.warn("[tutorials] Pre-fetch schema refresh skipped:", e);
+    }
+    
     // Attempt 1: Standard query
     const { data, error } = await supabaseAdmin
       .from("tutorials")

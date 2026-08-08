@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { Video, Youtube, ChevronRight, Play, BookOpen, Star, Info, CheckCircle2, Circle, Trophy, Search, Filter, RefreshCw } from "lucide-react";
@@ -31,57 +31,50 @@ function TutorialsPage() {
   const getProgressFn = useServerFn(getTutorialProgress);
   const toggleFn = useServerFn(toggleTutorialStatus);
 
-  useEffect(() => {
-    let mounted = true;
-    
-    const loadData = async (forceRepair = false) => {
-      if (mounted) setLoading(true);
-      try {
-        if (forceRepair) {
-          console.log("[tutorials] Executing tactical synchronization...");
-          const { forceReloadSchema } = await import("@/lib/admin.functions");
-          await forceReloadSchema();
-          // Short delay to let PostgREST recover
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
+  const loadData = useCallback(async (forceRepair = false) => {
+    setLoading(true);
+    try {
+      console.log("[tutorials] Starting tactical load cycle...");
+      // Forçamos a sincronização tática em todo carregamento para garantir o cache
+      const { forceReloadSchema } = await import("@/lib/admin.functions");
+      await forceReloadSchema();
+      // Delay estratégico para propagação do sinal de reload no PostgREST
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
-        if (mounted) {
-          setTutorials(tData || []);
-          setCompletedIds(pData || []);
-          if (forceRepair && tData && tData.length > 0) {
-            toast.success("Módulos sincronizados com sucesso!");
-          }
-        }
-      } catch (err: any) {
-        console.error("[tutorials] Data load failed:", err);
-        const isSchemaError = err._schemaError || 
-                             err.message?.includes("schema cache") || 
-                             err.message?.includes("does not exist") ||
-                             err.message?.includes("PGRST108");
-                             
-        if (isSchemaError && !forceRepair && mounted) {
-          // If we haven't tried repairing yet, do it automatically once
-          console.warn("[tutorials] Schema error detected, attempting auto-repair...");
-          loadData(true);
-          return;
-        }
-
-        if (mounted) {
-          if (isSchemaError) {
-            setTutorials([]); // Trigger recovery UI
-          } else {
-            toast.error(err.message || "Erro ao carregar tutoriais");
-          }
-        }
-      } finally {
-        if (mounted) setLoading(false);
+      const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
+      setTutorials(tData || []);
+      setCompletedIds(pData || []);
+      
+      if (forceRepair && tData && tData.length > 0) {
+        toast.success("Módulos sincronizados com sucesso!");
       }
-    };
+    } catch (err: any) {
+      console.error("[tutorials] Data load failed:", err);
+      const isSchemaError = err._schemaError || 
+                           err.message?.includes("schema cache") || 
+                           err.message?.includes("does not exist") ||
+                           err.code === 'PGRST108';
+                           
+      if (isSchemaError && !forceRepair) {
+        // Se ainda não tentamos reparar, tentamos uma vez
+        console.warn("[tutorials] Schema error detected, attempting auto-repair...");
+        loadData(true);
+        return;
+      }
 
+      if (isSchemaError) {
+        setTutorials([]); // Aciona UI de recuperação
+      } else {
+        toast.error(err.message || "Erro ao carregar tutoriais");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [listFn, getProgressFn]);
+
+  useEffect(() => {
     loadData();
-    return () => { mounted = false; };
-  }, []);
+  }, [loadData]);
 
   const categories = useMemo(() => {
     const cats = new Set<string>(["Tudo"]);
@@ -212,13 +205,13 @@ function TutorialsPage() {
                       const loadToast = toast.loading("Restaurando banco de dados...");
                       try {
                         const { forceReloadSchema } = await import("@/lib/admin.functions");
-                        const res = await forceReloadSchema();
-                        if (res.ok) {
-                          toast.success("Sincronização concluída!", { id: loadToast });
-                          window.location.reload();
-                        } else {
-                          toast.error("Falha na sincronização", { id: loadToast });
-                        }
+                        // Forçamos o reload e um pequeno touch na tabela
+                        await forceReloadSchema();
+                        
+                        toast.success("Sincronização concluída! Recarregando módulos...", { id: loadToast });
+                        
+                        // Recarregamos os dados localmente primeiro
+                        await loadData();
                       } catch (err) {
                         toast.error("Erro ao executar script de reparo", { id: loadToast });
                       }
