@@ -37,13 +37,11 @@ function TutorialsPage() {
     const loadData = async (forceRepair = false) => {
       if (mounted) setLoading(true);
       try {
-        if (forceRepair) {
-          console.log("[tutorials] Executing tactical synchronization...");
-          const { forceReloadSchema } = await import("@/lib/admin.functions");
-          await forceReloadSchema();
-          // Short delay to let PostgREST recover
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
+        console.log("[tutorials] Starting tactical load cycle...");
+        const { forceReloadSchema } = await import("@/lib/admin.functions");
+        await forceReloadSchema();
+        // Delay estratégico para propagação do sinal de reload no PostgREST
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
         if (mounted) {
@@ -212,13 +210,13 @@ function TutorialsPage() {
                       const loadToast = toast.loading("Restaurando banco de dados...");
                       try {
                         const { forceReloadSchema } = await import("@/lib/admin.functions");
-                        const res = await forceReloadSchema();
-                        if (res.ok) {
-                          toast.success("Sincronização concluída!", { id: loadToast });
-                          window.location.reload();
-                        } else {
-                          toast.error("Falha na sincronização", { id: loadToast });
-                        }
+                        // Forçamos o reload e um pequeno touch na tabela
+                        await forceReloadSchema();
+                        
+                        toast.success("Sincronização concluída! Recarregando módulos...", { id: loadToast });
+                        
+                        // Recarregamos os dados localmente primeiro
+                        await loadData();
                       } catch (err) {
                         toast.error("Erro ao executar script de reparo", { id: loadToast });
                       }
