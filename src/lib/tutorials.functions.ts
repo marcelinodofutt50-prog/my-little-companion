@@ -27,7 +27,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       await Promise.allSettled([
         supabaseAdmin.from("tutorials").select("id").limit(1),
         supabaseAdmin.from("tutorial_progress").select("id").limit(1),
-        supabaseAdmin.rpc("force_refresh_schema_permissions")
+        typeof supabaseAdmin.rpc === 'function' ? supabaseAdmin.rpc("force_refresh_schema_permissions") : Promise.resolve()
       ]);
     } catch (e) {
       console.warn("[tutorials] Table touch/sync skipped:", e);
@@ -60,7 +60,11 @@ export const listTutorials = createServerFn({ method: "GET" })
         try {
           const repairStart = Date.now();
           // Chamada à função SECURITY DEFINER que garante permissões e reload
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          if (typeof supabaseAdmin.rpc === 'function') {
+            await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          } else {
+            console.error("[tutorials] supabaseAdmin.rpc missing during repair attempt.");
+          }
           
           console.log("[tutorials] Repair signal sent. Waiting 2000ms for PostgREST propagation...");
           await new Promise(resolve => setTimeout(resolve, 2000));
