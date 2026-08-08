@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { listTutorials } from "@/lib/tutorials.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
+import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
 
 export const Route = createFileRoute("/_authenticated/tutoriais")({
   head: () => ({ meta: [{ title: "Tutorials Hub — Shadow" }] }),
@@ -154,9 +155,22 @@ function TutorialsPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500">
-        <AppSidebar />
-        <main className="flex-1 overflow-y-auto">
+      <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative">
+        <div 
+          className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
+          style={{ 
+            backgroundImage: `url(${trainingBgAsset.url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'brightness(0.6) saturate(1.2)'
+          }}
+        />
+        <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-black/60 via-black/80 to-black" />
+
+        <div className="relative z-20">
+          <AppSidebar />
+        </div>
+        <main className="flex-1 overflow-y-auto relative z-10">
           <SiteHeader />
           <div className="container mx-auto px-4 py-8">
             <div className="mb-10">
