@@ -13,7 +13,7 @@ export const listTutorials = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<any[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // We use a broader selection in case some columns are expected by the UI but were missed in the partial creation
+    // Attempt 1: Standard query
     const { data, error } = await supabaseAdmin
       .from("tutorials")
       .select("*")
@@ -23,18 +23,38 @@ export const listTutorials = createServerFn({ method: "GET" })
     if (error) {
       console.error("[tutorials] List failed:", error);
       
-      // PGRST108: relation not found in cache
-      // 42P01: relation does not exist
       const isSchemaError = error.message?.includes("relation \"public.tutorials\" does not exist") || 
                            error.message?.includes("public.tutorials' in the schema cache") ||
                            error.code === 'PGRST108' ||
                            error.code === '42P01';
                            
-      const wrapped = new Error(error.message);
       if (isSchemaError) {
+        console.warn("[tutorials] Schema cache mismatch detected. Triggering forced repair...");
+        try {
+          // Attempt repair immediately on the server side
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          
+          // Wait a moment for PostgREST to pick up the notification
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Attempt 2: Retry once after repair
+          const { data: retryData, error: retryError } = await supabaseAdmin
+            .from("tutorials")
+            .select("*")
+            .eq("is_active", true)
+            .order("display_order", { ascending: true });
+            
+          if (!retryError) return (retryData ?? []) as any[];
+        } catch (repairErr) {
+          console.error("[tutorials] Repair attempt failed:", repairErr);
+        }
+        
+        const wrapped = new Error(error.message);
         (wrapped as any)._schemaError = "public.tutorials";
+        throw wrapped;
       }
-      throw wrapped;
+      
+      throw new Error(error.message);
     }
 
     return (data ?? []) as any[];
