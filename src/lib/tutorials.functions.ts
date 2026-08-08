@@ -11,13 +11,16 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
 export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<any[]> => {
+    // Verificação Admin/Staff é necessária para garantir que apenas autorizados acessem as funções de reparo
+    // No entanto, para LISTAR tutoriais publicamente (ou para usuários comuns), 
+    // precisamos de uma lógica que não quebre se o usuário não for staff.
+
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
     // Attempt to touch the schema cache
     try {
       if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-        // Direct call without .catch since RPC returns an object with { data, error }
         const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
         if (rpcErr) console.warn("[tutorials] Schema refresh RPC error:", rpcErr);
       }
