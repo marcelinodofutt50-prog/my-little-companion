@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ReferralsWidget } from "@/components/ReferralsWidget";
+import { HelpCenterWidget } from "@/components/HelpCenterWidget";
 
 
 import { useTheme } from '@/lib/theme'
