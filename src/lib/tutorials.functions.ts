@@ -22,10 +22,13 @@ export const listTutorials = createServerFn({ method: "GET" })
         
     if (error) {
       console.error("[tutorials] List failed:", error);
-      // If it's a schema cache error, we want to expose it clearly so the UI can show the recovery button
+      
+      // PGRST108: relation not found in cache
+      // 42P01: relation does not exist
       const isSchemaError = error.message?.includes("relation \"public.tutorials\" does not exist") || 
                            error.message?.includes("public.tutorials' in the schema cache") ||
-                           error.code === 'PGRST108'; // PostgREST code for "relation not found in cache"
+                           error.code === 'PGRST108' ||
+                           error.code === '42P01';
                            
       const wrapped = new Error(error.message);
       if (isSchemaError) {

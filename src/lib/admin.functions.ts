@@ -1445,7 +1445,17 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
       console.warn("[admin] notify_pgrst_reload failed, falling back to table touch");
     }
 
-    const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads"];
+    const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads", "user_roles"];
+    
+    // 2. Clear permissions cache by re-granting explicitly (even if it's already there)
+    // This is the most effective way to force a metadata refresh in Supabase/PostgREST
+    // when tables exist but return permission denied or not in cache errors.
+    try {
+      await supabaseAdmin.rpc("force_refresh_schema_permissions");
+    } catch (e) {
+      console.warn("[admin] force_refresh_schema_permissions RPC failed, using raw touches");
+    }
+
     const results = await Promise.allSettled(
       tables.map(table => (supabaseAdmin as any).from(table).select("count", { count: "exact", head: true }))
     );
