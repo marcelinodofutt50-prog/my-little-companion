@@ -23,17 +23,27 @@ import krakenBg6Asset from "@/assets/krakenbackground-6.jpg.asset.json";
 import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
-// Imagem central do Kraken v2
-// Prioriza a imagem enviada pelo usuário na última gravação (v11 -> v10 -> v8 -> etc)
-const KRAKEN_ASSETS = {
-  v11: "https://id-preview--aa5c6d4b-4a83-49d2-a5ba-32781957814c.lovable.app/lovable-uploads/39d33261-7100-474d-9372-5ca133cfc82c.png", // A partir da imagem krakenbackground-11.jpg
-  v10: "https://id-preview--aa5c6d4b-4a83-49d2-a5ba-32781957814c.lovable.app/lovable-uploads/2085777a-2415-46b7-8468-b3d9d6837861.png",
-  fallback: "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png"
-};
+// Imagem tática central da Kraken 2.0
+// Cadeia de candidatos validada em runtime: o primeiro asset que carregar (200 + proporção
+// compatível com um fundo widescreen) é adotado. Isso protege contra 404s em produção e
+// contra assets inválidos (ex.: recortes/telas de erro salvos por engano).
+const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg10Asset.url,
+  krakenTacticalBg.url,
+  krakenBg8Asset.url,
+  krakenBg7Asset.url,
+  krakenBg6Asset.url,
+  krakenBg4Asset.url,
+  krakenBg11Asset.url,
+  "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png",
+].filter(Boolean) as string[];
 
-const krakenCore = krakenBg11Asset.url || KRAKEN_ASSETS.v11 || krakenBg10Asset.url || KRAKEN_ASSETS.v10 || krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || KRAKEN_ASSETS.fallback;
-const krakenBg4 = krakenCore;
+// Fallback final puramente CSS-safe (nunca 404): último item da cadeia
+const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1];
+
+const krakenCore = KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK;
 const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
+
 
 
 
@@ -72,7 +82,9 @@ function KrakenPage() {
   const [intensity, setIntensity] = useState(0.4); 
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
-  const [bgLoaded, setBgLoaded] = useState({ core: false, bg4: false, bg5: false });
+  const [bgLoaded, setBgLoaded] = useState({ core: false, bg5: false });
+  const [resolvedBg, setResolvedBg] = useState<string>(krakenCore);
+
 
   const logEndRef = useRef<HTMLDivElement>(null);
   const executeKraken = useServerFn(krakenCommand);
@@ -86,34 +98,62 @@ function KrakenPage() {
   });
 
   useEffect(() => {
-    // Verificação de renderização de imagens (Prefetch robusto)
-    const imagesToPrefetch = [
-      { key: 'core', url: krakenCore },
-      { key: 'bg4', url: krakenBg4 },
-      { key: 'bg5', url: krakenBg5 }
-    ];
+    let cancelled = false;
 
-    imagesToPrefetch.forEach(imgInfo => {
-      const img = new Image();
-      img.src = imgInfo.url;
-      
-      const setLoaded = () => {
-        setBgLoaded(prev => ({ ...prev, [imgInfo.key]: true }));
-      };
-
-      if (img.complete) {
-        setLoaded();
-      } else {
-        img.onload = setLoaded;
-        img.onerror = (e) => {
-          console.warn(`Kraken: Falha ao carregar ${imgInfo.key}, aplicando fallback.`, e);
-          // Set loaded anyway so fallback styles show up
-          setLoaded();
+    /**
+     * Valida cada candidato da cadeia: descarta 404 / erro de rede e também
+     * assets com proporção incompatível (ex.: recortes estreitos salvos por engano).
+     */
+    const validateCandidate = (url: string) =>
+      new Promise<boolean>((resolve) => {
+        const img = new Image();
+        const finish = (ok: boolean) => resolve(ok);
+        img.onload = () => {
+          const ratio = img.naturalWidth / Math.max(1, img.naturalHeight);
+          const isUsable = img.naturalWidth >= 900 && ratio >= 1.1 && ratio <= 3.2;
+          if (!isUsable) {
+            console.warn(
+              `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight}): ${url}`
+            );
+          }
+          finish(isUsable);
         };
+        img.onerror = () => {
+          console.warn(`[Kraken] Asset indisponível (404/erro de rede): ${url}`);
+          finish(false);
+        };
+        img.src = url;
+      });
+
+    const resolveBackground = async () => {
+      for (const candidate of KRAKEN_BG_CANDIDATES) {
+        if (cancelled) return;
+        const ok = await validateCandidate(candidate);
+        if (cancelled) return;
+        if (ok) {
+          setResolvedBg(candidate);
+          setBgLoaded((prev) => ({ ...prev, core: true }));
+          setBgLoadError(false);
+          return;
+        }
       }
-    });
+      // Nenhum candidato válido: mantém o gradiente tático como fundo definitivo
+      console.error("[Kraken] Nenhum asset de fundo válido. Usando fallback CSS.");
+      setBgLoadError(true);
+      setBgLoaded((prev) => ({ ...prev, core: false }));
+    };
+
+    resolveBackground();
+
+    // Camada de névoa (não crítica)
+    const mist = new Image();
+    mist.onload = () => setBgLoaded((prev) => ({ ...prev, bg5: true }));
+    mist.onerror = () => setBgLoaded((prev) => ({ ...prev, bg5: false }));
+    mist.src = krakenBg5;
 
     const timer = setTimeout(() => setShowEffects(true), 500);
+    
+
     
     // Web Audio API context para reprodução mais robusta
     let audioContext: AudioContext | null = null;
@@ -189,7 +229,9 @@ function KrakenPage() {
     window.addEventListener('touchstart', unlockAudio);
     
     return () => {
+      cancelled = true;
       clearTimeout(timer);
+
       clearInterval(lightningInterval);
       window.removeEventListener('click', unlockAudio);
       window.removeEventListener('keydown', unlockAudio);
@@ -261,7 +303,7 @@ function KrakenPage() {
             bgLoaded.core ? "opacity-100" : "opacity-0"
           )}
           style={{ 
-            backgroundImage: `url(${krakenCore})`,
+            backgroundImage: `url(${resolvedBg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
@@ -375,7 +417,7 @@ function KrakenPage() {
                 size="sm" 
                 className="h-8 px-3 text-[9px] font-mono uppercase text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white border border-foreground/5 dark:border-white/5 hover:bg-foreground/5 dark:hover:bg-white/5"
                 onClick={() => {
-                  setBgLoaded({ core: false, bg4: false, bg5: false });
+                  setBgLoaded({ core: false, bg5: false });
                   refetchStatus();
                 }}
               >
