@@ -33,18 +33,24 @@ function createSupabaseClient() {
   const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : undefined);
   const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_PUBLISHABLE_KEY || process.env?.SUPABASE_PUBLISHABLE_KEY : undefined);
 
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  // Deep validation to avoid internal Supabase SDK throws which trigger root error boundaries
+  const isValidUrl = SUPABASE_URL && typeof SUPABASE_URL === 'string' && /^https?:\/\//.test(SUPABASE_URL);
+  const isValidKey = SUPABASE_PUBLISHABLE_KEY && typeof SUPABASE_PUBLISHABLE_KEY === 'string' && SUPABASE_PUBLISHABLE_KEY.length > 10;
+
+  // Final fallback values that satisfy the Supabase SDK constructor but indicate failure
+  const effectiveUrl = isValidUrl ? (SUPABASE_URL as string) : "https://placeholder.supabase.co";
+  const effectiveKey = isValidKey ? (SUPABASE_PUBLISHABLE_KEY as string) : "sb_publishable_placeholder";
+
+  if (!isValidUrl || !isValidKey) {
     const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
+      ...(!isValidUrl ? ['SUPABASE_URL'] : []),
+      ...(!isValidKey ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.warn(`[Supabase] ${message} Attempting to proceed with empty string for client stability.`);
-    // We return a non-working client instead of throwing to prevent total screen blanking
-    // if the variables are temporarily missing during build/HMR
-    return createClient<Database>(SUPABASE_URL || '', SUPABASE_PUBLISHABLE_KEY || '', {
+    console.warn(`[Supabase] Invalid/Missing environment variable(s): ${missing.join(', ')}. Initializing with placeholders to prevent app crash.`);
+    
+    return createClient<Database>(effectiveUrl, effectiveKey, {
       global: {
-        fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY || ''),
+        fetch: createSupabaseFetch(effectiveKey),
       },
       auth: {
         storage: typeof window !== 'undefined' ? localStorage : undefined,
@@ -54,9 +60,9 @@ function createSupabaseClient() {
     });
   }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  return createClient<Database>(SUPABASE_URL as string, SUPABASE_PUBLISHABLE_KEY as string, {
     global: {
-      fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),
+      fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY as string),
     },
     auth: {
       storage: typeof window !== 'undefined' ? localStorage : undefined,
@@ -76,4 +82,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
-
