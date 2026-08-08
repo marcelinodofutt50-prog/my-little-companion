@@ -285,6 +285,16 @@ export const adminAssumeThread = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    // Tentativa de limpar cache de schema caso a coluna não seja encontrada
+    try {
+      if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
+        await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
+      }
+    } catch (e) {
+      console.warn("[admin] Schema refresh attempt failed:", e);
+    }
+
     const { data: me } = await supabaseAdmin
       .from("profiles").select("full_name,email").eq("id", context.userId).maybeSingle();
     const name = (me?.full_name?.trim() || me?.email?.split("@")[0] || "Suporte");
