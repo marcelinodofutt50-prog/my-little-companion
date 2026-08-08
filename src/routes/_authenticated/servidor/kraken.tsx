@@ -210,8 +210,20 @@ function KrakenPage() {
   };
 
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black min-h-screen overflow-hidden theme-transition">
-      {/* Background Images with Fade */}
+    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
+      {/* Tactical Background Overlay - High Opacity for Vercel visibility */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-60"
+          style={{ backgroundImage: `url(${krakenBg4})` }}
+        />
+        <div 
+          className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-40"
+          style={{ backgroundImage: `url(${krakenBg5})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black" />
+      </div>
+
       <AnimatePresence>
         {showEffects && (
           <>
