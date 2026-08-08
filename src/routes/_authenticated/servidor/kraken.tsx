@@ -81,9 +81,9 @@ function KrakenPage() {
         setLoaded();
       } else {
         img.onload = setLoaded;
-        img.onerror = () => {
-          console.warn(`Kraken: Falha ao carregar ${imgInfo.key}, aplicando fallback.`);
-          // Forçamos o estado de carregado para mostrar o fallback visual
+        img.onerror = (e) => {
+          console.warn(`Kraken: Falha ao carregar ${imgInfo.key}, aplicando fallback.`, e);
+          // Set loaded anyway so fallback styles show up
           setLoaded();
         };
       }
@@ -214,39 +214,39 @@ function KrakenPage() {
   return (
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
       {/* Tactical Background Overlay - Full Viewport Image */}
-      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-background">
-        {/* Fallback visual base sempre visível */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-black opacity-100" />
+      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
+        {/* Base Fallback Gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-black opacity-100" />
         
-        {/* Camada principal da imagem Kraken (kraken-tactical-bg.png) */}
-        <div 
-          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700 select-none pointer-events-none", bgLoaded.core ? "opacity-100" : "opacity-0")}
-          style={{ 
-            backgroundImage: `url(${krakenCore})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center center',
-            backgroundRepeat: 'no-repeat',
-            filter: 'brightness(1.2) contrast(1.1) saturate(1.1)' 
-          }}
-        />
+        {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
+        {krakenCore && (
+          <div 
+            className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none", bgLoaded.core ? "opacity-100" : "opacity-0")}
+            style={{ 
+              backgroundImage: `url(${krakenCore})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center center',
+              backgroundRepeat: 'no-repeat',
+              filter: 'brightness(1.2) contrast(1.1) saturate(1.1)' 
+            }}
+          />
+        )}
         
-        {/* Camada de partículas e névoa tática - Mix-blend para não escurecer */}
-        <div 
-          className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
-          style={{ 
-            backgroundImage: `url(${krakenBg5})`,
-            filter: 'hue-rotate(180deg) brightness(1.2)' 
-          }}
-        />
+        {/* Mist/Particle Overlay Layer */}
+        {krakenBg5 && (
+          <div 
+            className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
+            style={{ 
+              backgroundImage: `url(${krakenBg5})`,
+              filter: 'hue-rotate(180deg) brightness(1.2)' 
+            }}
+          />
+        )}
         
-        {/* Luzes azuis táticas sem gradientes pretos por cima */}
+        {/* Tactical Overlays */}
         <div className="absolute inset-0 bg-blue-500/10 mix-blend-overlay pointer-events-none" />
-        
-        {/* Camada de brilho central para destacar a Kraken */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.15)_0%,_transparent_70%)] pointer-events-none" />
-        
-        {/* Vinheta ultra suave nas bordas - reduzida para 20% de opacidade */}
-        <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.2)] pointer-events-none" />
+        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.3)] pointer-events-none" />
       </div>
 
       {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
