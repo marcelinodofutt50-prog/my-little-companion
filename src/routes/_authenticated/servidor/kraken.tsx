@@ -218,6 +218,9 @@ function KrakenPage() {
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
       {/* Tactical Background Overlay - Full Viewport Image */}
       <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
+        {/* Fallback visual base sempre visível */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-black opacity-100" />
+        
         {/* Camada principal da imagem Kraken (kraken-tactical-bg.png) */}
         <div 
           className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-100" : "opacity-0")}
@@ -226,29 +229,24 @@ function KrakenPage() {
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            filter: 'brightness(1.1) contrast(1.05)' // Pequeno boost de visibilidade
+            filter: 'brightness(1.1) contrast(1.1) saturate(1.1)' 
           }}
         />
         
-        {/* Camada de partículas e névoa tática */}
+        {/* Camada de partículas e névoa tática - Mix-blend para não escurecer */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-40" : "opacity-0")}
+          className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
           style={{ 
             backgroundImage: `url(${krakenBg5})`,
-            filter: 'hue-rotate(180deg) brightness(0.8)' // Ajusta cores para bater com o azul do Kraken
+            filter: 'hue-rotate(180deg) brightness(1.2)' 
           }}
         />
         
-        {/* Gradiente de profundidade ULTRA suave para garantir que nada fique preto */}
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-950/20 via-transparent to-black/40" />
+        {/* Luzes azuis táticas sem gradientes pretos por cima */}
+        <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay" />
         
-        {/* Vinheta tática nas bordas */}
-        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.6)]" />
-
-        {/* Fallback visual caso falte imagem */}
-        {!bgLoaded.core && (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-black opacity-100" />
-        )}
+        {/* Vinheta ultra suave nas bordas para não escurecer o centro */}
+        <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)]" />
       </div>
 
       {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
@@ -299,7 +297,7 @@ function KrakenPage() {
 
         {/* User Status Bar */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-3 border-white/10 bg-black/70 dark:bg-black/70 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-blue-500">
+          <Card className="md:col-span-3 border-white/20 bg-black/40 dark:bg-black/40 backdrop-blur-xl px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-blue-500 shadow-lg shadow-blue-500/10">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
                 <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Status da Licença</span>
@@ -362,7 +360,7 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-white/10 bg-black/70 dark:bg-black/70 backdrop-blur-md shadow-2xl shadow-blue-900/20 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
+          <Card className="lg:col-span-4 border-white/20 bg-black/40 dark:bg-black/40 backdrop-blur-xl shadow-2xl shadow-blue-900/20 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             <div className="w-full max-w-2xl mb-8 relative z-10 aspect-video rounded-lg overflow-hidden border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">

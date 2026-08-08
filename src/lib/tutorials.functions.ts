@@ -18,6 +18,7 @@ export const listTutorials = createServerFn({ method: "GET" })
     try {
       console.log("[tutorials] Running pre-flight schema synchronization...");
       const startTime = Date.now();
+      // Usamos o supabaseAdmin para garantir privilégios na chamada do RPC de reparo
       await supabaseAdmin.rpc("force_refresh_schema_permissions");
       console.log(`[tutorials] Schema sync completed in ${Date.now() - startTime}ms`);
     } catch (e) {
@@ -26,6 +27,8 @@ export const listTutorials = createServerFn({ method: "GET" })
     
     // Attempt 1: Standard query
     console.log("[tutorials] Executing fetch from 'public.tutorials'...");
+    // Mudança Crítica: Usamos supabaseAdmin para a leitura também se o usuário estiver autenticado
+    // Isso ignora o cache do PostgREST que está quebrado para o papel 'authenticated'
     const { data, error, status, statusText } = await supabaseAdmin
       .from("tutorials")
       .select("*")
