@@ -214,7 +214,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const isConfigured = isSupabaseConfigured();
   
-  if (!isConfigured) {
+  if (!isConfigured && typeof window !== 'undefined') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="enterprise-surface max-w-lg p-10 shadow-2xl border-primary/20 bg-black/60 backdrop-blur-xl">
