@@ -140,15 +140,15 @@ function TutorialsPage() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative">
         <div 
-          className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
+          className="fixed inset-0 z-0 pointer-events-none opacity-50 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
             backgroundImage: `url(${trainingBgAsset.url})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'brightness(0.6) saturate(1.2)'
+            filter: 'brightness(0.7) contrast(1.1)'
           }}
         />
-        <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-black/60 via-black/80 to-black" />
+        <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-black/50 via-black/70 to-black" />
 
         <div className="relative z-20">
           <AppSidebar />
@@ -170,7 +170,7 @@ function TutorialsPage() {
                   </p>
                 </div>
                 
-                {!loading && tutorials.length > 0 && (
+                {!loading && tutorials.length > 0 && progress > 0 && (
                   <div className="w-full md:w-80 space-y-4 enterprise-surface p-5 rounded-xl border-primary/20 bg-primary/5 shadow-lg shadow-primary/5 rgb-border overflow-hidden">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
@@ -178,28 +178,6 @@ function TutorialsPage() {
                         <span className="text-primary font-bold">{progress}%</span>
                       </div>
                       <Progress value={progress} className="h-1.5 bg-primary/10" />
-                    </div>
-                    
-                    <div className="pt-2 space-y-3 border-t border-primary/10">
-                      {Object.entries(statsByCategory).map(([cat, stats]) => {
-                        const catProgress = Math.round((stats.completed / stats.total) * 100);
-                        return (
-                          <div key={cat} className="space-y-1.5">
-                            <div className="flex items-center justify-between text-[8px] font-mono uppercase text-muted-foreground tracking-tighter">
-                              <span>{cat}</span>
-                              <span className="flex items-center gap-1">
-                                <span className={stats.completed === stats.total ? "text-emerald-500 font-bold" : ""}>{stats.completed}</span>
-                                <span>/</span>
-                                <span>{stats.total}</span>
-                              </span>
-                            </div>
-                            <Progress value={catProgress} className="h-1 bg-primary/5" />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="text-[9px] text-muted-foreground text-center uppercase tracking-tighter opacity-60 font-mono">
-                      {completedIds.length} de {tutorials.length} módulos finalizados
                     </div>
                   </div>
                 )}

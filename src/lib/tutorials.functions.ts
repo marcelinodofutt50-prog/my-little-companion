@@ -27,19 +27,14 @@ export const listTutorials = createServerFn({ method: "GET" })
     // Attempt 1: Standard query
     console.log("[tutorials] Executing fetch from 'public.tutorials'...");
     
-    const { data, error, status, statusText } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
-      console.error(`[tutorials] Fetch FAILED! Status: ${status} (${statusText})`, {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
+      console.error(`[tutorials] Fetch FAILED! code: ${error.code}`, error);
       
       const isSchemaError = error.message?.includes("relation \"public.tutorials\" does not exist") || 
                            error.message?.includes("public.tutorials' in the schema cache") ||
@@ -47,18 +42,13 @@ export const listTutorials = createServerFn({ method: "GET" })
                            error.code === '42P01';
                            
       if (isSchemaError) {
-        console.warn("[tutorials] Schema cache mismatch detected. Triggering AGGRESSIVE server-side repair...");
+        console.warn("[tutorials] Schema mismatch detected. Attempting repair...");
         try {
-          const repairStart = Date.now();
-          // Chamada à função SECURITY DEFINER que garante permissões e reload
           if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
             await supabaseAdmin.rpc("force_refresh_schema_permissions");
           }
-          
-          console.log("[tutorials] Repair signal sent. Waiting 2000ms for PostgREST propagation...");
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          console.log("[tutorials] Retrying fetch after repair...");
           const { data: retryData, error: retryError } = await supabaseAdmin
             .from("tutorials")
             .select("*")
@@ -66,18 +56,16 @@ export const listTutorials = createServerFn({ method: "GET" })
             .order("display_order", { ascending: true });
             
           if (!retryError && retryData) {
-            console.log(`[tutorials] Repair SUCCESSFUL! Retrieved ${retryData.length} items.`);
             return retryData;
           }
         } catch (repairErr) {
-          console.error("[tutorials] Server-side repair routine crashed:", repairErr);
+          console.error("[tutorials] Repair routine crashed:", repairErr);
         }
       }
       
-      throw new Error(`Erro de Sincronização (PGRST108): ${error.message}. Tente usar o botão de sincronização manual ou forçar o reload da página.`);
+      throw new Error(`Erro de Sincronização (PGRST108). Tente usar o botão de sincronização manual.`);
     }
 
-    console.log(`[tutorials] Fetch successful. Returned ${data?.length} tutorials.`);
     return data ?? [];
   });
 

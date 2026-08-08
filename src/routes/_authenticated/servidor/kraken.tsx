@@ -40,12 +40,7 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
 })
 
 function KrakenPage() {
-  const [logs, setLogs] = useState<string[]>([
-    "[SYSTEM] Initializing Kraken environment...",
-    "[SYSTEM] Checking hardware acceleration...",
-    "[SYSTEM] Node 0xFA-88 synchronized.",
-    "[SYSTEM] Ready for operator commands."
-  ]);
+  const [logs, setLogs] = useState<string[]>([]);
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
@@ -336,18 +331,6 @@ function KrakenPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-2 py-1 rounded bg-foreground/5 dark:bg-white/5 border border-foreground/10 dark:border-white/10">
-                <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-tighter">Asset Health:</span>
-                <div className="flex gap-1">
-                  {Object.entries(bgLoaded).map(([key, loaded]) => (
-                    <div 
-                      key={key} 
-                      title={`${key}: ${loaded ? 'LOADED' : 'PENDING'}`}
-                      className={cn("h-1.5 w-1.5 rounded-full", loaded ? "bg-emerald-500" : "bg-red-500 animate-pulse")} 
-                    />
-                  ))}
-                </div>
-              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
