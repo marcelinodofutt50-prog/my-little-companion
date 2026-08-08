@@ -214,12 +214,12 @@ function KrakenPage() {
   };
 
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black theme-light:bg-background min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
+    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
       {/* Tactical Background Overlay - Full Viewport Image */}
-      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden">
+      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
         {/* Camada principal da imagem Kraken (krakenbackground-8.png) */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-90" : "opacity-0")}
+          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-100" : "opacity-0")}
           style={{ 
             backgroundImage: `url(${krakenCore})`,
             backgroundSize: 'cover',
@@ -230,16 +230,16 @@ function KrakenPage() {
         
         {/* Overlay tático adicional */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center mix-blend-overlay transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
+          className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
           style={{ backgroundImage: `url(${krakenBg5})` }}
         />
         
-        {/* Gradiente de profundidade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black" />
+        {/* Gradiente de profundidade ajustado para não escurecer demais a imagem */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
         
-        {/* Fallback visual */}
+        {/* Fallback visual suave */}
         {!bgLoaded.core && (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black opacity-80" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black opacity-80" />
         )}
       </div>
 
@@ -291,7 +291,7 @@ function KrakenPage() {
 
         {/* User Status Bar */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-3 border-red-900/20 bg-black/80 dark:bg-black/80 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-red-500">
+          <Card className="md:col-span-3 border-white/10 bg-black/70 dark:bg-black/70 backdrop-blur-md px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-blue-500">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
                 <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Status da Licença</span>
@@ -354,7 +354,7 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-white/10 bg-black/90 dark:bg-black/90 backdrop-blur-xl shadow-2xl shadow-red-900/40 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
+          <Card className="lg:col-span-4 border-white/10 bg-black/70 dark:bg-black/70 backdrop-blur-md shadow-2xl shadow-blue-900/20 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             <div className="w-full max-w-2xl mb-8 relative z-10 aspect-video rounded-lg overflow-hidden border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
@@ -416,7 +416,7 @@ function KrakenPage() {
           </Card>
 
           <div className="lg:col-span-3 space-y-6">
-            <Card className="border-amber-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
+            <Card className="border-amber-900/30 bg-black/70 backdrop-blur-md kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
               <CardHeader className="flex flex-row items-center gap-4">
                 <div className="rounded-full bg-amber-500/10 p-2 border border-amber-500/20">
                   <AlertTriangle className="h-6 w-6 text-amber-500" />
@@ -508,7 +508,7 @@ function KrakenPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-blue-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
+            <Card className="border-blue-900/30 bg-black/70 backdrop-blur-md kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
                <CardHeader className="pb-2">
                  <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400">Tactical Shortcuts</CardTitle>
                </CardHeader>
@@ -531,7 +531,7 @@ function KrakenPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="p-4 rounded border border-red-500/20 bg-black/60 text-[10px] text-white/80 font-mono space-y-2"
+              className="p-4 rounded border border-red-500/20 bg-black/70 backdrop-blur-md text-[10px] text-white/80 font-mono space-y-2"
             >
               <div className="font-bold text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
