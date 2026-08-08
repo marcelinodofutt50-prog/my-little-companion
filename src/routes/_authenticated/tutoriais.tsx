@@ -90,6 +90,10 @@ function TutorialsPage() {
                            
       if (isSchemaError) {
         console.warn("[tutorials] Schema sync issue detected. Triggering deep recovery...");
+        toast.info("Instabilidade detectada (PGRST108)", {
+          description: "Iniciando reparo silencioso de alta disponibilidade...",
+          duration: 3000
+        });
         addSyncLog('error', 'auto', 'Detectada falha de cache PGRST108. Iniciando rastreamento e reparo...');
         
         try {
@@ -103,6 +107,10 @@ function TutorialsPage() {
           const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
           setTutorials(retryTData || []);
           setCompletedIds(retryPData || []);
+          toast.success("Conexão restaurada automaticamente!", {
+            description: "O cache do banco de dados foi sincronizado com sucesso.",
+            duration: 5000
+          });
           addSyncLog('success', 'auto', 'Recuperação automática concluída com sucesso');
         } catch (repairErr: any) {
           console.error("[tutorials] Recovery flow FAILED:", repairErr);
