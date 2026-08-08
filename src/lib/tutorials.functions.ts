@@ -61,47 +61,48 @@ export const listTutorials = createServerFn({ method: "GET" })
     const metadata = input?.metadata || {};
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    console.log("[tutorials] Iniciando busca tática de módulos...");
-    
-    // Tática de carregamento ultra-resiliente via Admin para evitar PGRST108 no cliente
-    const { data, error } = await supabaseAdmin
-      .from("tutorials")
-      .select("*")
-      .order("display_order", { ascending: true });
-        
-    if (error) {
-      console.error(`[tutorials] FALHA CRÍTICA: Busca Admin falhou!`, error);
+    const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
+      console.log(`[tutorials] Busca tática de módulos (Tentativa ${attempt})...`);
       
-      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01';
-      
-      if (isPGRST) {
-        await trackSchemaFailure(error, "listTutorials", false, { stage: "initial_fetch", ...metadata }, context.userId);
-        
-        try {
-          console.warn("[tutorials] Schema sync issue detected. Triggering forced repair...");
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      // Tentativa inicial via Admin (Data Tunnel) para bypass de cache PostgREST
+      const { data, error } = await supabaseAdmin
+        .from("tutorials")
+        .select("*")
+        .order("display_order", { ascending: true });
           
-          await new Promise(resolve => setTimeout(resolve, 800));
-
-          const { data: retryData, error: retryError } = await supabaseAdmin
-            .from("tutorials")
-            .select("*")
-            .order("display_order", { ascending: true });
-            
-          if (!retryError) {
-            await trackSchemaFailure(error, "listTutorials", true, { stage: "retry_success", ...metadata }, context.userId);
-            return retryData ?? [];
+      if (error) {
+        const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01';
+        
+        if (isPGRST && attempt <= 3) {
+          console.warn(`[tutorials] Instabilidade de schema detectada (Tentativa ${attempt}). Iniciando backoff...`);
+          await trackSchemaFailure(error, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
+          
+          // Backoff exponencial: 800ms, 1600ms, 3200ms
+          const delay = 800 * Math.pow(2, attempt - 1);
+          
+          // Força reparo de schema antes da próxima tentativa
+          try {
+            await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          } catch (rpcErr) {
+            console.error("[tutorials] Falha ao disparar force_refresh:", rpcErr);
           }
           
-          await trackSchemaFailure(retryError, "listTutorials", false, { stage: "retry_failure", retry_error: retryError.message, ...metadata }, context.userId);
-        } catch (e) {
-          console.error("[tutorials] Schema repair flow crashed:", e);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return fetchWithRetry(attempt + 1);
         }
+        
+        console.error(`[tutorials] FALHA CRÍTICA após retentativas:`, error);
+        return [];
       }
-      return [];
-    }
 
-    return data ?? [];
+      if (attempt > 1) {
+        await trackSchemaFailure({ message: "Recovered via backoff" }, "listTutorials", true, { stage: `retry_${attempt}_success`, ...metadata }, context.userId);
+      }
+      
+      return data ?? [];
+    };
+
+    return fetchWithRetry();
   });
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })
