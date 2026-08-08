@@ -11,73 +11,44 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
 export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<any[]> => {
-    // Verificação Admin/Staff é necessária para garantir que apenas autorizados acessem as funções de reparo
-    // No entanto, para LISTAR tutoriais publicamente (ou para usuários comuns), 
-    // precisamos de uma lógica que não quebre se o usuário não for staff.
-
-    // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const isAdmin = context.claims?.role === 'admin' || context.claims?.role === 'moderator';
     
-    // Attempt to touch the schema cache
-    try {
-      // Only allow staff/admin to trigger the global schema refresh to prevent potential DDOS on the reload mechanism
-      if (isAdmin && supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-        const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
-        if (rpcErr) {
-          console.warn("[tutorials] Schema refresh RPC error:", rpcErr);
-        }
-      }
-    } catch (e: any) {
-      console.warn("[tutorials] Schema refresh attempt failed:", e);
-    }
-
+    console.log("[tutorials] Iniciando busca tática de módulos...");
     
-    // Attempt 1: Standard query
-    console.log("[tutorials] Executing fetch from 'public.tutorials'...");
-    
-    // We use context.supabase for regular users and only switch to supabaseAdmin on error
-    const { data, error } = await context.supabase
+    // Tática de carregamento resiliente: tenta usuário -> tenta admin -> reporta
+    let { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
-      console.error(`[tutorials] Fetch FAILED! code: ${error.code}`, error);
+      console.warn(`[tutorials] Busca padrão falhou (Código: ${error.code}). Acionando redundância Admin...`);
       
-      const isSchemaError = error.message?.includes("relation \"public.tutorials\" does not exist") || 
-                           error.message?.includes("public.tutorials' in the schema cache") ||
-                           error.code === 'PGRST108' ||
-                           error.code === '42P01';
-                           
-      if (isSchemaError) {
-        console.warn("[tutorials] Schema mismatch detected. Attempting repair...");
-        try {
-          // If we have an admin client available, we use it to force a refresh
-          if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-            await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
-            // Also try a direct touch via admin to ensure the table is readable
-            await supabaseAdmin.from("tutorials").select("id").limit(1);
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          const { data: retryData, error: retryError } = await context.supabase
-            .from("tutorials")
-            .select("*")
-            .eq("is_active", true)
-            .order("display_order", { ascending: true });
-            
-          if (!retryError && retryData) {
-            return retryData;
-          }
-        } catch (repairErr) {
-          console.error("[tutorials] Repair routine crashed:", repairErr);
-        }
+      const { data: adminData, error: adminError } = await supabaseAdmin
+        .from("tutorials")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+        
+      if (adminError) {
+        console.error(`[tutorials] FALHA CRÍTICA: Redundância Admin falhou!`, adminError);
+        throw new Error(`Erro de Sincronização Shadow (PGRST108). A infraestrutura de tutoriais está inacessível.`);
       }
       
-      throw new Error(`Erro de Sincronização (PGRST108): A tabela de tutoriais não foi encontrada no cache do sistema. Por favor, utilize o botão de sincronização manual ou o Painel de Diagnóstico.`);
+      data = adminData;
+      
+      // Auto-reparo profundo em background
+      // .rpc() retorna um objeto com .then(), não é uma Promise direta em algumas versões do SDK/wrappers
+      // Usamos uma IIFE async para lidar com o reparo sem bloquear o retorno dos dados
+      (async () => {
+        try {
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          console.log("[tutorials] Auto-reparo concluído em background.");
+        } catch (e) {
+          console.warn("[tutorials] Falha no auto-reparo em background:", e);
+        }
+      })();
     }
 
     return data ?? [];

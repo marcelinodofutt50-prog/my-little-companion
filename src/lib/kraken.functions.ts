@@ -22,23 +22,33 @@ export interface KrakenOutput {
  */
 export const krakenHandler = async (args: { data: KrakenInput }) => {
   try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const data = args.data;
-  // Implementação mock para o console tático
-  const logStr = `[Kraken] Executing command: ${data.command}`;
-  console.log(logStr);
-  
-  // Simulação de delay de processamento para feedback visual no terminal
-  await new Promise(r => setTimeout(r, 800));
-  
-  return {
-    success: true,
-    message: `Command '${data.command}' processed by Kraken Node 0xFA-88`,
-    timestamp: new Date().toISOString()
-  };
-} catch (err: any) {
-  console.error("[KRAKEN_ERR] handler:", err);
-  throw err;
-}
+    
+    // Log tático no banco para rastreabilidade
+    if (supabaseAdmin) {
+      await supabaseAdmin.from("integration_logs").insert({
+        source: "kraken-v2",
+        action: `command:${data.command}`,
+        outcome: "success",
+        context: { params: data.params } as any
+      });
+    }
+
+    const logStr = `[Kraken] Executing command: ${data.command}`;
+    console.log(logStr);
+    
+    await new Promise(r => setTimeout(r, 800));
+    
+    return {
+      success: true,
+      message: `Comando '${data.command}' processado pelo Kraken Node 0xFA-88`,
+      timestamp: new Date().toISOString()
+    };
+  } catch (err: any) {
+    console.error("[KRAKEN_ERR] handler:", err);
+    throw err;
+  }
 };
 
 export const krakenCommand = createServerFn({ method: "POST" })
