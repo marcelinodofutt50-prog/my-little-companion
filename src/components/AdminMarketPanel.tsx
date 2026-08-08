@@ -133,7 +133,7 @@ export function AdminMarketPanel() {
   return (
     <div className="space-y-6">
       {/* Form */}
-      <div className="terminal-card scanlines relative p-5">
+      <div className="terminal-card scanlines relative p-5 border-neon/30 bg-black/40">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Store className="h-4 w-4 text-neon" />
