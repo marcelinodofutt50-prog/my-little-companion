@@ -15,7 +15,7 @@ import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 
