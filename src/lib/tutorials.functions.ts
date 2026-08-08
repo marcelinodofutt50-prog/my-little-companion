@@ -13,38 +13,28 @@ export const listTutorials = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<any[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    const MAX_RETRIES = 3;
-    let lastError = null;
-    
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      if (attempt > 0) {
-        const delay = Math.pow(2, attempt) * 500 + Math.random() * 200;
-        console.log(`[tutorials] Retry attempt ${attempt} after ${delay.toFixed(0)}ms due to schema/cache error`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-
-      const { data, error } = await supabaseAdmin
-        .from("tutorials")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+    // We use a broader selection in case some columns are expected by the UI but were missed in the partial creation
+    const { data, error } = await supabaseAdmin
+      .from("tutorials")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
         
-      if (!error) return (data ?? []) as any[];
-      
-      lastError = error;
+    if (error) {
+      console.error("[tutorials] List failed:", error);
+      // If it's a schema cache error, we want to expose it clearly so the UI can show the recovery button
       const isSchemaError = error.message?.includes("relation \"public.tutorials\" does not exist") || 
-                           error.message?.includes("public.tutorials' in the schema cache");
+                           error.message?.includes("public.tutorials' in the schema cache") ||
+                           error.code === 'PGRST108'; // PostgREST code for "relation not found in cache"
                            
-      if (!isSchemaError) break;
+      const wrapped = new Error(error.message);
+      if (isSchemaError) {
+        (wrapped as any)._schemaError = "public.tutorials";
+      }
+      throw wrapped;
     }
-    
-    const wrapped = new Error(lastError?.message || "Erro desconhecido ao carregar tutoriais");
-    if (lastError?.message?.includes("relation \"public.tutorials\" does not exist") || 
-        lastError?.message?.includes("public.tutorials' in the schema cache")) {
-      (wrapped as any)._schemaError = "public.tutorials";
-    }
-    throw wrapped;
 
+    return (data ?? []) as any[];
   });
 
 

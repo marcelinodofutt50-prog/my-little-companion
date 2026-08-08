@@ -1423,3 +1423,32 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
 
 
 
+
+export const forceReloadSchema = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // Basic staff check first to prevent abuse
+    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: mod } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "moderator" });
+    if (!admin && !mod) throw new Error("Acesso negado");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    // 1. Force PostgREST reload
+    console.log("[admin] Force reload schema requested by", context.userId);
+    
+    // We attempt to trigger a reload by notifying if the function exists
+    // Using any to bypass strict type checking for dynamic RPC
+    try {
+      await (supabaseAdmin as any).rpc("notify_pgrst_reload");
+    } catch (e) {
+      console.warn("[admin] notify_pgrst_reload failed, falling back to table touch");
+    }
+
+    const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads"];
+    const results = await Promise.allSettled(
+      tables.map(table => (supabaseAdmin as any).from(table).select("count", { count: "exact", head: true }))
+    );
+
+    return { ok: true, touchResults: results.length };
+  });
