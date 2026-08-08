@@ -14,7 +14,7 @@ import { listTutorials } from "@/lib/tutorials.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
 import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
-import { testDatabaseConnection } from "@/lib/diagnostics.functions";
+import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 
 export const Route = createFileRoute("/_authenticated/tutoriais")({
   head: () => ({ meta: [{ title: "Tutorials Hub — Shadow" }] }),
@@ -71,6 +71,30 @@ function TutorialsPage() {
   const getProgressFn = useServerFn(getTutorialProgress);
   const toggleFn = useServerFn(toggleTutorialStatus);
   const testConnFn = useServerFn(testDatabaseConnection);
+  const healthCheckFn = useServerFn(runSchemaHealthCheck);
+
+  // Health check automático pós-deploy/carregamento
+  useEffect(() => {
+    const performHealthCheck = async () => {
+      try {
+        const res = await healthCheckFn();
+        if (res.status === 'unstable' || res.status === 'critical') {
+          console.warn("[Shadow-Ops] Inconsistência de schema detectada via Health Check.");
+          toast.info("Calibrando conexão tática...", {
+            description: "O sistema detectou uma instabilidade de sincronização e está auto-corrigindo.",
+            duration: 5000
+          });
+        }
+      } catch (e) {
+        // Silencioso em caso de erro de rede no check
+      }
+    };
+    
+    // Pequeno delay para garantir hidratação total
+    const timer = setTimeout(performHealthCheck, 3000);
+    return () => clearTimeout(timer);
+  }, [healthCheckFn]);
+
 
   const loadData = useCallback(async (forceRepair = false) => {
     setLoading(true);
