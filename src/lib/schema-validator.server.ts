@@ -12,7 +12,7 @@ export async function validateAndFixSchema() {
     // We attempt a generic RPC or notify if possible, but the best way is to trigger a query
     // and handle the specific "not in cache" error by retrying.
     
-    const tables = ["tutorials", "tutorial_progress", "support_messages", "user_roles", "licenses"];
+    const tables = ["tutorials", "tutorial_progress", "support_messages", "user_roles", "licenses", "profiles", "orders"];
     
     for (const table of tables) {
       console.log(`[schema-validator] Auditing table: ${table}`);
