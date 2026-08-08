@@ -321,22 +321,26 @@ html.theme-light .crt::after { display: none; }
   .rgb-button-animated {
     position: relative;
     border: none !important;
-    background: oklch(0.15 0.014 162) !important; /* var(--card) fallback */
+    background: #111111 !important; /* Ensure high contrast in light mode */
+    color: #ffffff !important;      /* White text even in light mode for tactical buttons */
     overflow: hidden;
+    z-index: 1;
   }
   
   .rgb-button-animated::before {
     content: "";
     position: absolute;
     inset: 0;
-    padding: 1px;
+    padding: 2px;
     background: linear-gradient(120deg, var(--neon), var(--cyan), var(--violet), var(--neon));
     background-size: 300% 100%;
     animation: rgb-slide 4s linear infinite;
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     -webkit-mask-composite: destination-out;
+    z-index: -1;
   }
+
 
   @keyframes rgb-slide {
     0% { background-position: 0% 50%; }

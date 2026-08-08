@@ -224,67 +224,8 @@ function KrakenPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black" />
       </div>
 
-      <AnimatePresence>
-        {showEffects && (
-          <>
-            {/* Camada Base Central (Fixa para evitar tela preta) */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: bgLoaded.core ? 1 : 0 }}
-              className="absolute inset-0 pointer-events-none"
-              style={{ 
-                backgroundImage: `url(${krakenCore})`, 
-                backgroundSize: 'cover', 
-                backgroundPosition: 'center',
-                zIndex: 0
-              }}
-            />
+      {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
 
-            {/* Fallback imediato se o core demorar muito (mais de 2s) ou falhar */}
-            <AnimatePresence>
-              {(!bgLoaded.core || !bgLoaded.bg4 || !bgLoaded.bg5) && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 pointer-events-none bg-black z-[1]"
-                />
-              )}
-            </AnimatePresence>
-
-            {!bgLoadError && (
-              <>
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: bgLoaded.bg4 ? 1 : 0 }}
-                  className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-                  style={{ 
-                    backgroundImage: `url(${krakenBg4})`, 
-                    backgroundSize: 'cover', 
-                    backgroundPosition: 'center',
-                    zIndex: 2
-                  }}
-                  onError={() => setBgLoadError(true)}
-                />
-
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: bgLoaded.bg5 ? 0.8 : 0 }}
-                  transition={{ delay: 1 }}
-                  className="absolute inset-0 pointer-events-none mix-blend-overlay transition-opacity duration-1000"
-                  style={{ 
-                    backgroundImage: `url(${krakenBg5})`, 
-                    backgroundSize: 'cover', 
-                    backgroundPosition: 'center',
-                    zIndex: 3
-                  }}
-                  onError={() => setBgLoadError(true)}
-                />
-              </>
-            )}
-          </>
-        )}
-      </AnimatePresence>
 
       {/* Lightning and flashing effects removed per user request to stop white screen flashes */}
 
