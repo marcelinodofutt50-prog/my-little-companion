@@ -23,8 +23,8 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem central do Kraken v2
 // Prioriza a imagem enviada pelo usuário na última gravação
-const krakenCore = krakenTacticalBg.url || krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg4 = krakenTacticalBg.url || krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenCore = krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg4 = krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
 const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
 
 
