@@ -216,7 +216,7 @@ function KrakenPage() {
       {/* Tactical Background Overlay - Full Viewport Image */}
       <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
         {/* Base Fallback Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-black opacity-100" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100" />
         
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
         {krakenCore && (
@@ -244,9 +244,9 @@ function KrakenPage() {
         )}
         
         {/* Tactical Overlays */}
-        <div className="absolute inset-0 bg-blue-500/10 mix-blend-overlay pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.15)_0%,_transparent_70%)] pointer-events-none" />
-        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.3)] pointer-events-none" />
+        <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.1)_0%,_transparent_80%)] pointer-events-none" />
+        <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.4)] pointer-events-none" />
       </div>
 
       {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
