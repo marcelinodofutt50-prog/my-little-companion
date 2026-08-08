@@ -119,7 +119,7 @@ function TutorialsPage() {
           setCompletedIds(retryPData || []);
           toast.success("Conexão restaurada automaticamente!", {
             description: "O cache do banco de dados foi sincronizado com sucesso.",
-            duration: 5000
+            duration: 3000
           });
           addSyncLog('success', 'auto', 'Recuperação automática concluída com sucesso');
         } catch (repairErr: any) {
