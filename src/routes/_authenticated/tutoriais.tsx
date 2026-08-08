@@ -94,26 +94,32 @@ function TutorialsPage() {
       const isSchemaError = err._schemaError || 
                            err.message?.includes("schema cache") || 
                            err.message?.includes("does not exist") ||
+                           err.message?.includes("relation") ||
                            err.code === 'PGRST108';
                             
       if (isSchemaError) {
-        addSyncLog('error', 'auto', `Schema sync instability (PGRST108) on ${window.location.pathname}. Triggering repair...`);
+        addSyncLog('error', 'auto', `Schema sync instability (PGRST108) on ${window.location.pathname}. Triggering background repair...`);
         
-        try {
-          const { supabase } = await import("@/integrations/supabase/client");
-          if (supabase && typeof (supabase as any).rpc === 'function') {
-            await (supabase as any).rpc("force_refresh_schema_permissions");
+        // Reparo silencioso em segundo plano
+        (async () => {
+          try {
+            const { supabase } = await import("@/integrations/supabase/client");
+            if (supabase && typeof (supabase as any).rpc === 'function') {
+              await (supabase as any).rpc("force_refresh_schema_permissions");
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
+            if (retryTData) {
+              setTutorials(retryTData);
+              setCompletedIds(retryPData || []);
+              addSyncLog('success', 'auto', 'Silent recovery successful');
+            }
+          } catch (repairErr: any) {
+            console.warn("[tutorials] Background recovery attempt failed silently.");
           }
-          
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
-          setTutorials(retryTData || []);
-          setCompletedIds(retryPData || []);
-          addSyncLog('success', 'auto', 'Silent recovery successful');
-        } catch (repairErr: any) {
-          addSyncLog('error', 'auto', `Recovery failed: ${repairErr.message}`);
-        }
+        })();
       }
     } finally {
       setLoading(false);

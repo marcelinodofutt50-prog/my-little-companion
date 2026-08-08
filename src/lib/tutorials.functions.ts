@@ -126,12 +126,30 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
     if (error) {
       console.error("[tutorials] Database error:", error);
       
-      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache');
-      if (isPGRST) await trackSchemaFailure(error, "adminSaveTutorial", false, {}, context.userId);
+      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01' || error.message?.includes('does not exist');
+      
+      if (isPGRST) {
+        await trackSchemaFailure(error, "adminSaveTutorial", false, { stage: "initial_upsert" }, context.userId);
+        
+        // Força refresh imediato no admin se falhar a escrita
+        try {
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          await new Promise(resolve => setTimeout(resolve, 800));
+          const { error: retryError } = await supabaseAdmin
+            .from("tutorials")
+            .upsert({ ...data, created_by: context.userId });
+            
+          if (!retryError) {
+             await trackSchemaFailure(error, "adminSaveTutorial", true, { stage: "retry_upsert_success" }, context.userId);
+             return { ok: true };
+          }
+        } catch (e) {
+          console.error("[tutorials] Admin upsert repair flow failed:", e);
+        }
+      }
 
       const wrapped = new Error(error.message);
-      if (error.message?.includes("relation \"public.tutorials\" does not exist") || 
-          isPGRST) {
+      if (error.message?.includes("relation \"public.tutorials\" does not exist") || isPGRST) {
         (wrapped as any)._schemaError = "public.tutorials";
       }
       throw wrapped;

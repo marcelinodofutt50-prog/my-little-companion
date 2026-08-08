@@ -16,8 +16,10 @@ import { trackSchemaFailure } from "./tutorials.functions";
 export const getOrCreateThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Tática de carregamento resiliente para evitar PGRST108
-    const { data: existing, error: existingError } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    // Tática de carregamento resiliente via Admin para evitar PGRST108
+    const fetchExisting = async (client: any) => client
       .from("support_threads")
       .select("*")
       .eq("user_id", context.userId)
@@ -26,10 +28,15 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
 
-    if (existingError) {
-      console.error("[getOrCreateThread] falha ao buscar atendimento:", existingError);
-      if (existingError.code === 'PGRST108' || existingError.message?.includes('schema cache')) {
-        await trackSchemaFailure(existingError, "getOrCreateThread", false, { stage: "check_existing" }, context.userId);
+    let { data: existing, error: existingError } = await fetchExisting(context.supabase);
+
+    if (existingError && (existingError.code === 'PGRST108' || existingError.message?.includes('schema cache'))) {
+      console.warn("[getOrCreateThread] Schema sync issue detected. Falling back to admin tunnel...");
+      await trackSchemaFailure(existingError, "getOrCreateThread", false, { stage: "check_existing_client" }, context.userId);
+      const adminResult = await fetchExisting(supabaseAdmin);
+      existing = adminResult.data;
+      if (!adminResult.error) {
+        await trackSchemaFailure(existingError, "getOrCreateThread", true, { stage: "check_existing_admin_success" }, context.userId);
       }
     }
 
@@ -43,38 +50,35 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
       priority: "normal"
     };
     
-    async function doCreate(p: any) {
-      return context.supabase.from("support_threads").insert(p).select("*").maybeSingle();
+    async function doCreate(client: any, p: any) {
+      return client.from("support_threads").insert(p).select("*").maybeSingle();
     }
 
-    let { data, error } = await doCreate(threadPayload);
+    // Tenta criar via Admin diretamente para maior estabilidade em escritas críticas de sistema
+    let { data, error } = await doCreate(supabaseAdmin, threadPayload);
     
-    // Fallback para colunas novas (category/priority) se o cache falhar
+    // Fallback para colunas novas (category/priority) se o cache falhar mesmo no Admin
     if (error && (error as any).code === "PGRST204") {
       const { category, priority, ...fallback } = threadPayload;
-      const retry = await doCreate(fallback);
+      const retry = await doCreate(supabaseAdmin, fallback);
       data = retry.data;
       error = retry.error;
     }
 
     // Duas chamadas simultâneas (ex.: StrictMode/HMR) podem tentar abrir o
     // mesmo atendimento. O índice do banco preserva apenas uma thread ativa;
-    // nesse caso devolvemos a que venceu a corrida em vez de deixar a tela
-    // presa em "abrindo...".
+    // nesse caso devolvemos a que venceu a corrida.
     if (error && (error as any).code === "23505") {
-      const { data: winner, error: winnerError } = await context.supabase
-        .from("support_threads")
-        .select("*")
-        .eq("user_id", context.userId)
-        .neq("status", "closed")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (winnerError) throw winnerError;
-      if (winner) return winner;
+      const winner = await fetchExisting(supabaseAdmin);
+      if (winner.error) throw winner.error;
+      if (winner.data) return winner.data;
     }
 
-    if (error) throw error;
+    if (error) {
+      await trackSchemaFailure(error, "getOrCreateThread", false, { stage: "final_creation_fail" }, context.userId);
+      throw error;
+    }
+    
     if (!data) throw new Error("Não foi possível abrir o atendimento");
     return data;
   });
@@ -351,8 +355,10 @@ export const setThreadCategory = createServerFn({ method: "POST" })
       subject: data.subject ?? `Suporte — ${data.category}`,
     };
 
-    async function run(payload: { category?: string; priority?: string; subject?: string }) {
-      return context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    async function run(client: any, payload: { category?: string; priority?: string; subject?: string }) {
+      return client
         .from("support_threads")
         .update(payload)
         .eq("id", data.threadId)
@@ -361,18 +367,23 @@ export const setThreadCategory = createServerFn({ method: "POST" })
         .maybeSingle();
     }
 
-    let { data: updated, error } = await run(patch);
+    // Usa Admin para atualizar categorias/assuntos para evitar PGRST108/PGRST204 no cliente
+    let { data: updated, error } = await run(supabaseAdmin, patch);
 
-    // Fallback: se o cache de schema do PostgREST estiver desatualizado
-    // (PGRST204 "Could not find the 'category' column"), o chat não pode
-    // travar — salvamos ao menos o assunto e seguimos o atendimento.
+    // Fallback se a coluna ainda não for visível no admin (cache persistente do workerd)
     if (error && (error as any).code === "PGRST204") {
-      const retry = await run({ subject: patch.subject });
+      const retry = await run(supabaseAdmin, { subject: patch.subject });
       updated = retry.data;
       error = retry.error;
     }
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+         await trackSchemaFailure(error, "setThreadCategory", false, { stage: "admin_update_fail" }, context.userId);
+      }
+      throw error;
+    }
+    
     if (!updated) throw new Error("Conversa não encontrada");
     return updated;
   });
