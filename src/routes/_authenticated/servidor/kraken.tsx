@@ -341,7 +341,7 @@ function KrakenPage() {
                   refetchStatus();
                 }}
               >
-                <RefreshCw className={cn("h-3 w-3 mr-2", (isRefetching || Object.values(bgLoaded).some(v => !v)) && "animate-spin")} />
+                <RefreshCw className={cn("h-3 w-3 mr-2", (isRefetching || Object.values(bgLoaded).some(v => !v)) && "animate-spin-slow")} />
                 Sync & Diagnostics
               </Button>
             </div>
