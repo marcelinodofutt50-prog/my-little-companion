@@ -33,9 +33,10 @@ function createSupabaseClient() {
   const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : undefined);
   const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_PUBLISHABLE_KEY || process.env?.SUPABASE_PUBLISHABLE_KEY : undefined);
 
-  // Fallback for development/pre-hydration environments
-  const effectiveUrl = SUPABASE_URL || "https://placeholder.supabase.co";
-  const effectiveKey = SUPABASE_PUBLISHABLE_KEY || "sb_publishable_placeholder";
+  // Deep validation to avoid internal Supabase SDK throws
+  const isValidUrl = SUPABASE_URL && /^https?:\/\//.test(SUPABASE_URL);
+  const isValidKey = SUPABASE_PUBLISHABLE_KEY && SUPABASE_PUBLISHABLE_KEY.length > 10;
+
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
