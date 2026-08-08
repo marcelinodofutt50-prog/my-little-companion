@@ -90,7 +90,7 @@ function TutorialsPage() {
                            
       if (isSchemaError) {
         console.warn("[tutorials] Schema sync issue detected. Triggering deep recovery...");
-        addSyncLog('warning', 'auto', 'Detectada falha de cache PGRST108. Iniciando rastreamento e reparo...');
+        addSyncLog('error', 'auto', 'Detectada falha de cache PGRST108. Iniciando rastreamento e reparo...');
         
         try {
           const { supabase } = await import("@/integrations/supabase/client");
