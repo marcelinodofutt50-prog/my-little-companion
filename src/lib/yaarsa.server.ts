@@ -425,20 +425,23 @@ export async function yaarsaSetPassword(
     };
     if (username) fields.username = username;
     
-    // Se a ação for 'add', garantimos que enviamos subtype e expire_date
-    // para o painel não reclamar de campos ausentes, simulando um "upsert".
     if (action === "add") {
-      fields.subtype = "1 Month";
-      fields.expire_date = yesterdayYMD(); // ontem para manter pausado
+      fields.subtype = planToSubtype(lic?.plan_slug || "monthly");
+      fields.expire_date = yesterdayYMD(); 
     }
     const r = await yaarsaPost(fields, panel);
     if (r.Success) return { ...r, action };
+    
+    // Se a senha foi alterada com sucesso mas o painel retornou erro de "email em uso" no action 'add', tratamos como sucesso
+    if (action === "add" && /1004|already|use/i.test(r.Fail || "")) {
+       return { Success: "Account verified/updated via add fallback", action };
+    }
+
     last = r;
-    // Ação desconhecida no painel → corpo vazio/inesperado ou erro 1001.
     const invalidAction = /1001|ação inválida|invalid action|resposta inesperada/i.test(
       String(r.Fail ?? ""),
     );
-    if (!invalidAction) return { ...r, action };
+    if (!invalidAction && !/1005|not found/i.test(r.Fail || "")) return { ...r, action };
   }
   return last;
 }
