@@ -158,7 +158,7 @@ function Index() {
       </section>
       
       {/* Enterprise Differential Section */}
-      <section className="py-20 relative bg-black/40">
+      <section className="py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">// diferenciais táticos</span>
