@@ -223,7 +223,7 @@ function KrakenPage() {
   return (
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
       {/* Tactical Background Overlay - Full Viewport Image */}
-      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
+      <div className="fixed inset-0 z-[-1] pointer-events-none w-screen h-screen overflow-hidden bg-black">
         {/* Base Fallback Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100" />
         
@@ -242,7 +242,6 @@ function KrakenPage() {
           }}
         />
 
-        
         {/* Mist/Particle Overlay Layer */}
         {krakenBg5 && (
           <div 
@@ -259,6 +258,7 @@ function KrakenPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.1)_0%,_transparent_80%)] pointer-events-none" />
         <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.4)] pointer-events-none" />
       </div>
+
 
       {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
 
