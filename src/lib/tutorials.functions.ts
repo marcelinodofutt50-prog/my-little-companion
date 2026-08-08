@@ -30,9 +30,9 @@ export async function trackSchemaFailure(
     // Obter URL/Rota se estiver em um ambiente que permita
     const route = metadata.route || "unknown_route";
 
-    await supabaseAdmin.from("integration_logs").insert({
+    await (supabaseAdmin.from("integration_logs") as any).insert({
       source: "shadow-core-db",
-      user_id: userId as any,
+      user_id: userId,
       action: "pgrst108_sync_error",
       outcome: recovered ? "recovered" : "failure",
       error: error.message || String(error),

@@ -35,8 +35,6 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
 
     if (existing) return existing;
 
-
-
     const threadPayload = {
       user_id: context.userId,
       subject: "Suporte Shadow",
@@ -103,6 +101,7 @@ export const listMyThreads = createServerFn({ method: "GET" })
         .eq("user_id", context.userId)
         .order("created_at", { ascending: false })
         .limit(50);
+      
       if (!adminError) {
         await trackSchemaFailure(error, "listMyThreads", true, { stage: "retry_success" }, context.userId);
         return adminData ?? [];
@@ -209,10 +208,13 @@ export const sendMessage = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const adminResult = await fetchThread(supabaseAdmin);
       thread = adminResult.data;
-      tErr = adminResult.error;
+      const error = adminResult.error;
+      if (!error) {
+        await trackSchemaFailure(tErr, "sendMessage", true, { stage: "retry_fetch_thread_success" }, context.userId);
+      }
     }
 
-    if (tErr) throw tErr;
+    if (tErr && !thread) throw tErr;
     if (!thread) throw new Error("Conversa não encontrada");
 
     // Non-staff can only post in their own non-closed thread.
@@ -251,8 +253,6 @@ export const sendMessage = createServerFn({ method: "POST" })
         if (nErr || !nt) throw nErr || new Error("Falha ao criar atendimento");
         effectiveThreadId = nt.id;
       }
-    } else {
-      // Staff sending into a closed thread is allowed (they may want to add a follow-up).
     }
 
     let url: string | null = null;
@@ -298,7 +298,6 @@ export const sendMessage = createServerFn({ method: "POST" })
       msg = retry.data;
       error = retry.error;
     }
-
 
     if (error) {
       console.error("[sendMessage] Insertion failed after fallback:", error);
