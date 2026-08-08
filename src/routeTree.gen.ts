@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as ShadowHubRouteImport } from './routes/shadow-hub'
 import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
 import { Route as RecuperarRouteImport } from './routes/recuperar'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -23,6 +24,7 @@ import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TutorialIdRouteImport } from './routes/tutorial.$id'
 import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso'
 import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
 import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
@@ -35,6 +37,7 @@ import { Route as AuthenticatedIndicacoesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder/index'
+import { Route as ApiPublicTutorialsRouteImport } from './routes/api/public/tutorials'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
@@ -59,6 +62,11 @@ const TutorialRoute = TutorialRouteImport.update({
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShadowHubRoute = ShadowHubRouteImport.update({
+  id: '/shadow-hub',
+  path: '/shadow-hub',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RenovarServidorRoute = RenovarServidorRouteImport.update({
@@ -120,6 +128,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TutorialIdRoute = TutorialIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TutorialRoute,
+} as any)
 const PagamentoSucessoRoute = PagamentoSucessoRouteImport.update({
   id: '/pagamento/sucesso',
   path: '/pagamento/sucesso',
@@ -179,6 +192,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 const ApiApkBuilderIndexRoute = ApiApkBuilderIndexRouteImport.update({
   id: '/api/apk-builder/',
   path: '/api/apk-builder/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTutorialsRoute = ApiPublicTutorialsRouteImport.update({
+  id: '/api/public/tutorials',
+  path: '/api/public/tutorials',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
@@ -280,8 +298,9 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
-  '/tutorial': typeof TutorialRoute
+  '/tutorial': typeof TutorialRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicacoes': typeof AuthenticatedIndicacoesRoute
@@ -293,11 +312,13 @@ export interface FileRoutesByFullPath {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/tutorial/$id': typeof TutorialIdRoute
   '/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -322,8 +343,9 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
-  '/tutorial': typeof TutorialRoute
+  '/tutorial': typeof TutorialRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicacoes': typeof AuthenticatedIndicacoesRoute
@@ -335,11 +357,13 @@ export interface FileRoutesByTo {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/tutorial/$id': typeof TutorialIdRoute
   '/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -366,8 +390,9 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/renovar-servidor': typeof RenovarServidorRoute
+  '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
-  '/tutorial': typeof TutorialRoute
+  '/tutorial': typeof TutorialRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/indicacoes': typeof AuthenticatedIndicacoesRoute
@@ -379,11 +404,13 @@ export interface FileRoutesById {
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
+  '/tutorial/$id': typeof TutorialIdRoute
   '/_authenticated/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/_authenticated/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -410,6 +437,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/recuperar'
     | '/renovar-servidor'
+    | '/shadow-hub'
     | '/termos'
     | '/tutorial'
     | '/admin'
@@ -423,11 +451,13 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/tutorial/$id'
     | '/servidor/kraken'
     | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
+    | '/api/public/tutorials'
     | '/api/apk-builder/'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -452,6 +482,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/recuperar'
     | '/renovar-servidor'
+    | '/shadow-hub'
     | '/termos'
     | '/tutorial'
     | '/admin'
@@ -465,11 +496,13 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/tutorial/$id'
     | '/servidor/kraken'
     | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
+    | '/api/public/tutorials'
     | '/api/apk-builder'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -495,6 +528,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/recuperar'
     | '/renovar-servidor'
+    | '/shadow-hub'
     | '/termos'
     | '/tutorial'
     | '/_authenticated/admin'
@@ -508,11 +542,13 @@ export interface FileRouteTypes {
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
+    | '/tutorial/$id'
     | '/_authenticated/servidor/kraken'
     | '/_authenticated/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
+    | '/api/public/tutorials'
     | '/api/apk-builder/'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -539,14 +575,16 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   RecuperarRoute: typeof RecuperarRoute
   RenovarServidorRoute: typeof RenovarServidorRoute
+  ShadowHubRoute: typeof ShadowHubRoute
   TermosRoute: typeof TermosRoute
-  TutorialRoute: typeof TutorialRoute
+  TutorialRoute: typeof TutorialRouteWithChildren
   PagamentoErroRoute: typeof PagamentoErroRoute
   PagamentoPendenteRoute: typeof PagamentoPendenteRoute
   PagamentoSucessoRoute: typeof PagamentoSucessoRoute
   ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
   ApiPublicBackendHealthRoute: typeof ApiPublicBackendHealthRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
+  ApiPublicTutorialsRoute: typeof ApiPublicTutorialsRoute
   ApiApkBuilderIndexRoute: typeof ApiApkBuilderIndexRoute
   ApiPublicHooksApkWorkerRoute: typeof ApiPublicHooksApkWorkerRoute
   ApiPublicHooksAutoCloseTicketsRoute: typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -574,6 +612,13 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shadow-hub': {
+      id: '/shadow-hub'
+      path: '/shadow-hub'
+      fullPath: '/shadow-hub'
+      preLoaderRoute: typeof ShadowHubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/renovar-servidor': {
@@ -660,6 +705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tutorial/$id': {
+      id: '/tutorial/$id'
+      path: '/$id'
+      fullPath: '/tutorial/$id'
+      preLoaderRoute: typeof TutorialIdRouteImport
+      parentRoute: typeof TutorialRoute
+    }
     '/pagamento/sucesso': {
       id: '/pagamento/sucesso'
       path: '/pagamento/sucesso'
@@ -742,6 +794,13 @@ declare module '@tanstack/react-router' {
       path: '/api/apk-builder'
       fullPath: '/api/apk-builder/'
       preLoaderRoute: typeof ApiApkBuilderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/tutorials': {
+      id: '/api/public/tutorials'
+      path: '/api/public/tutorials'
+      fullPath: '/api/public/tutorials'
+      preLoaderRoute: typeof ApiPublicTutorialsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/mp-webhook': {
@@ -890,6 +949,18 @@ const MercadoRouteChildren: MercadoRouteChildren = {
 const MercadoRouteWithChildren =
   MercadoRoute._addFileChildren(MercadoRouteChildren)
 
+interface TutorialRouteChildren {
+  TutorialIdRoute: typeof TutorialIdRoute
+}
+
+const TutorialRouteChildren: TutorialRouteChildren = {
+  TutorialIdRoute: TutorialIdRoute,
+}
+
+const TutorialRouteWithChildren = TutorialRoute._addFileChildren(
+  TutorialRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -903,14 +974,16 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   RecuperarRoute: RecuperarRoute,
   RenovarServidorRoute: RenovarServidorRoute,
+  ShadowHubRoute: ShadowHubRoute,
   TermosRoute: TermosRoute,
-  TutorialRoute: TutorialRoute,
+  TutorialRoute: TutorialRouteWithChildren,
   PagamentoErroRoute: PagamentoErroRoute,
   PagamentoPendenteRoute: PagamentoPendenteRoute,
   PagamentoSucessoRoute: PagamentoSucessoRoute,
   ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
   ApiPublicBackendHealthRoute: ApiPublicBackendHealthRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
+  ApiPublicTutorialsRoute: ApiPublicTutorialsRoute,
   ApiApkBuilderIndexRoute: ApiApkBuilderIndexRoute,
   ApiPublicHooksApkWorkerRoute: ApiPublicHooksApkWorkerRoute,
   ApiPublicHooksAutoCloseTicketsRoute: ApiPublicHooksAutoCloseTicketsRoute,
