@@ -18,9 +18,10 @@ import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem central do Kraken v2
-const krakenCore = "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg4 = "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg5 = "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
+// Fallback para URLs do GitHub caso os assets locais não carreguem (comum em builds intermitentes)
+const krakenCore = krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg4 = krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
 
 
 
