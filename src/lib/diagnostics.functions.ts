@@ -68,6 +68,7 @@ export const simulateSchemaFailure = createServerFn({ method: "POST" })
     // Importamos a função de tracking
     // Nota: Como listTutorials já tem essa lógica, podemos chamá-la ou apenas registrar o log manualmente
     try {
+      // 1. Registrar a simulação no log tático
       await supabaseAdmin.from("integration_logs").insert({
         source: "resilience-tester",
         action: "pgrst108_simulation",
@@ -76,34 +77,37 @@ export const simulateSchemaFailure = createServerFn({ method: "POST" })
         context: {
           simulated: true,
           timestamp: new Date().toISOString(),
-          target: "tutorials"
+          target: "tutorials",
+          test_type: "admin_bypass_validation"
         }
       });
       
-      // 2. Tentar recuperar dados via Admin (o que deve funcionar independente do cache do user)
+      // 2. Validar que a busca via Admin continua operacional (Bypass de Cache)
       const { data, error } = await supabaseAdmin
         .from("tutorials")
-        .select("id")
-        .limit(1);
+        .select("id, title")
+        .limit(5);
         
       if (error) {
         return { 
           success: false, 
-          error: "Falha catastrófica: Chave administrativa também falhou!", 
+          error: "FALHA NA RESILIÊNCIA: O túnel administrativo também foi bloqueado.", 
           details: error.message 
         };
       }
       
-      // 3. Forçar refresh para limpar o estado simulado
-      await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      // 3. Executar o reparo de schema para garantir limpeza do ambiente
+      const { error: rpcError } = await supabaseAdmin.rpc("force_refresh_schema_permissions");
       
       return { 
         success: true, 
-        message: "Resiliência validada. O sistema recuperou dados via Admin Tunnel.",
-        rowCount: data?.length ?? 0
+        message: "TESTE DE RESILIÊNCIA CONCLUÍDO: Dados recuperados via Admin Tunnel enquanto o cache do usuário estava instável.",
+        rowCount: data?.length ?? 0,
+        rpcStatus: rpcError ? "Repair failed but bypass worked" : "Full recovery successful"
       };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: false, error: "Erro interno no simulador: " + err.message };
     }
+
   });
 
