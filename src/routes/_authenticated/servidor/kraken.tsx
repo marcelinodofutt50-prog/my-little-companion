@@ -39,6 +39,20 @@ const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovab
 
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
+  head: () => ({
+    meta: [
+      { title: "Kraken 2.0 — Unidade Tática de Injeção" },
+      { name: "description", content: "Painel de controle da Kraken 2.0: status de licença, comandos táticos e diagnóstico em tempo real." },
+      { property: "og:title", content: "Kraken 2.0 — Unidade Tática de Injeção" },
+      { property: "og:description", content: "Painel de controle da Kraken 2.0 com status de licença e comandos táticos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [
+      // Preload da imagem de fundo para eliminar flicker no primeiro paint
+      { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
+    ],
+  }),
   component: () => (
     <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
       <ErrorBoundary name="KrakenPage">
@@ -47,6 +61,7 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
     </div>
   ),
 })
+
 
 function KrakenPage() {
   const [logs, setLogs] = useState<string[]>([]);
@@ -226,7 +241,19 @@ function KrakenPage() {
       <div className="fixed inset-0 z-[-1] pointer-events-none w-screen h-screen overflow-hidden bg-black">
         {/* Base Fallback Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100" />
-        
+
+        {/* Skeleton Placeholder — visível apenas enquanto a imagem principal carrega */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-0 transition-opacity duration-700",
+            bgLoaded.core ? "opacity-0" : "opacity-100"
+          )}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950/60 to-black" />
+          <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,rgba(59,130,246,0.14)_50%,transparent_65%)] bg-[length:200%_100%] animate-[shimmer_2.2s_linear_infinite]" />
+        </div>
+
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
         <div 
           className={cn(
@@ -241,6 +268,7 @@ function KrakenPage() {
             filter: 'brightness(1.2) contrast(1.1) saturate(1.1)' 
           }}
         />
+
 
         {/* Mist/Particle Overlay Layer */}
         {krakenBg5 && (
