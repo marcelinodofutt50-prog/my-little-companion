@@ -18,7 +18,6 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as MigracaoRouteImport } from './routes/migracao'
-import { Route as MercadoRouteImport } from './routes/mercado'
 import { Route as CryptoRouteImport } from './routes/crypto'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -28,7 +27,6 @@ import { Route as TutorialIdRouteImport } from './routes/tutorial.$id'
 import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso'
 import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
 import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
-import { Route as MercadoSucessoRouteImport } from './routes/mercado.sucesso'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
@@ -97,11 +95,6 @@ const MigracaoRoute = MigracaoRouteImport.update({
   path: '/migracao',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MercadoRoute = MercadoRouteImport.update({
-  id: '/mercado',
-  path: '/mercado',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CryptoRoute = CryptoRouteImport.update({
   id: '/crypto',
   path: '/crypto',
@@ -145,11 +138,6 @@ const PagamentoErroRoute = PagamentoErroRouteImport.update({
   id: '/pagamento/erro',
   path: '/pagamento/erro',
   getParentRoute: () => rootRouteImport,
-} as any)
-const MercadoSucessoRoute = MercadoSucessoRouteImport.update({
-  id: '/sucesso',
-  path: '/sucesso',
-  getParentRoute: () => MercadoRoute,
 } as any)
 const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
   id: '/tutoriais',
@@ -279,7 +267,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
-  '/mercado': typeof MercadoRouteWithChildren
   '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
@@ -294,7 +281,6 @@ export interface FileRoutesByFullPath {
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
-  '/mercado/sucesso': typeof MercadoSucessoRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -322,7 +308,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
-  '/mercado': typeof MercadoRouteWithChildren
   '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
@@ -337,7 +322,6 @@ export interface FileRoutesByTo {
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
-  '/mercado/sucesso': typeof MercadoSucessoRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -367,7 +351,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
-  '/mercado': typeof MercadoRouteWithChildren
   '/migracao': typeof MigracaoRoute
   '/planos': typeof PlanosRoute
   '/primeiros-passos': typeof PrimeirosPassosRoute
@@ -382,7 +365,6 @@ export interface FileRoutesById {
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
-  '/mercado/sucesso': typeof MercadoSucessoRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -412,7 +394,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
-    | '/mercado'
     | '/migracao'
     | '/planos'
     | '/primeiros-passos'
@@ -427,7 +408,6 @@ export interface FileRouteTypes {
     | '/play-protect'
     | '/suporte'
     | '/tutoriais'
-    | '/mercado/sucesso'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -455,7 +435,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
-    | '/mercado'
     | '/migracao'
     | '/planos'
     | '/primeiros-passos'
@@ -470,7 +449,6 @@ export interface FileRouteTypes {
     | '/play-protect'
     | '/suporte'
     | '/tutoriais'
-    | '/mercado/sucesso'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -499,7 +477,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
-    | '/mercado'
     | '/migracao'
     | '/planos'
     | '/primeiros-passos'
@@ -514,7 +491,6 @@ export interface FileRouteTypes {
     | '/_authenticated/play-protect'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
-    | '/mercado/sucesso'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -544,7 +520,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContatoRoute: typeof ContatoRoute
   CryptoRoute: typeof CryptoRoute
-  MercadoRoute: typeof MercadoRouteWithChildren
   MigracaoRoute: typeof MigracaoRoute
   PlanosRoute: typeof PlanosRoute
   PrimeirosPassosRoute: typeof PrimeirosPassosRoute
@@ -639,13 +614,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MigracaoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mercado': {
-      id: '/mercado'
-      path: '/mercado'
-      fullPath: '/mercado'
-      preLoaderRoute: typeof MercadoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/crypto': {
       id: '/crypto'
       path: '/crypto'
@@ -708,13 +676,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/pagamento/erro'
       preLoaderRoute: typeof PagamentoErroRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/mercado/sucesso': {
-      id: '/mercado/sucesso'
-      path: '/sucesso'
-      fullPath: '/mercado/sucesso'
-      preLoaderRoute: typeof MercadoSucessoRouteImport
-      parentRoute: typeof MercadoRoute
     }
     '/_authenticated/tutoriais': {
       id: '/_authenticated/tutoriais'
@@ -896,17 +857,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface MercadoRouteChildren {
-  MercadoSucessoRoute: typeof MercadoSucessoRoute
-}
-
-const MercadoRouteChildren: MercadoRouteChildren = {
-  MercadoSucessoRoute: MercadoSucessoRoute,
-}
-
-const MercadoRouteWithChildren =
-  MercadoRoute._addFileChildren(MercadoRouteChildren)
-
 interface TutorialRouteChildren {
   TutorialIdRoute: typeof TutorialIdRoute
 }
@@ -925,7 +875,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContatoRoute: ContatoRoute,
   CryptoRoute: CryptoRoute,
-  MercadoRoute: MercadoRouteWithChildren,
   MigracaoRoute: MigracaoRoute,
   PlanosRoute: PlanosRoute,
   PrimeirosPassosRoute: PrimeirosPassosRoute,
