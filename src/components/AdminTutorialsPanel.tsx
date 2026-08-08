@@ -501,7 +501,7 @@ export function AdminTutorialsPanel() {
               <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }}>
                 Cancelar
               </Button>
-              <Button onClick={handleSave} className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+              <Button onClick={() => handleSave()} className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                 <Save className="h-4 w-4" /> Salvar Tutorial
               </Button>
             </div>
