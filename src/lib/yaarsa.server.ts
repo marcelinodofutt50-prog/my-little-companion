@@ -192,6 +192,8 @@ export function yaarsaEndpointsFor(rawBase: string): string[] {
     endpoints.push(`${host}/yaarsa/private/createacc.php`);
     endpoints.push(`${host}/proxy.php`);
     endpoints.push(`${host}/createacc.php`);
+    endpoints.push(`${host}/proxy.php`);
+    endpoints.push(`${host}/createacc.php`);
   }
 
   const seen = new Set<string>();
