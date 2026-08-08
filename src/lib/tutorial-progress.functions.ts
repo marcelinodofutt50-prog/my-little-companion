@@ -13,18 +13,43 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
       .eq("user_id", userId);
 
     if (error) {
-      console.error("[tutorial_progress] Fetch error:", error);
+      console.error("[tutorial_progress] Fetch FAILED:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      
       const isSchemaError = error.message?.includes("schema cache") || 
                            error.message?.includes("does not exist") ||
                            error.code === 'PGRST108' ||
                            error.code === '42P01';
       
       if (isSchemaError) {
-        const wrapped = new Error(error.message);
+        console.warn("[tutorial_progress] Schema cache issue detected. Attempting recovery...");
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          await new Promise(r => setTimeout(r, 500));
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from("tutorial_progress")
+            .select("tutorial_id")
+            .eq("user_id", userId);
+            
+          if (!retryError) {
+            console.log("[tutorial_progress] Recovery SUCCESSFUL");
+            return (retryData ?? []).map((p: any) => p.tutorial_id);
+          }
+        } catch (e) {
+          console.error("[tutorial_progress] Recovery routine failed:", e);
+        }
+        
+        const wrapped = new Error(`Erro de Sincronização (Progresso): ${error.message}`);
         (wrapped as any)._schemaError = "public.tutorial_progress";
         throw wrapped;
       }
-      throw new Error(error.message);
+      throw new Error(`Erro no Progresso: ${error.message}`);
     }
     return (data ?? []).map((p: any) => p.tutorial_id);
   });
