@@ -300,7 +300,7 @@ function KrakenPage() {
 
         {/* User Status Bar */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-3 border-white/20 bg-black/40 dark:bg-black/40 backdrop-blur-xl px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-blue-500 shadow-lg shadow-blue-500/10">
+          <Card className="md:col-span-3 border-white/20 bg-black/80 dark:bg-black/90 backdrop-blur-3xl px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-blue-500 shadow-lg shadow-blue-500/10 transition-colors duration-500">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
                 <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Status da Licença</span>
@@ -363,7 +363,7 @@ function KrakenPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="lg:col-span-4 border-white/20 bg-black/40 dark:bg-black/40 backdrop-blur-xl shadow-2xl shadow-blue-900/20 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group">
+          <Card className="lg:col-span-4 border-white/20 bg-black/80 dark:bg-black/90 backdrop-blur-3xl shadow-2xl shadow-blue-900/20 kraken-fade-in flex flex-col items-center justify-center p-8 text-center min-h-[550px] relative overflow-hidden group transition-colors duration-500">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             <div className="w-full max-w-2xl mb-8 relative z-10 aspect-video rounded-lg overflow-hidden border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
@@ -437,14 +437,14 @@ function KrakenPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-1 group hover:border-emerald-500/30 transition-colors">
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/10 space-y-1 group hover:border-emerald-500/30 transition-colors">
                     <div className="text-[9px] text-muted-foreground uppercase font-mono">Encryption</div>
                     <div className="flex items-center gap-2">
                       <Shield className="h-3 w-3 text-emerald-500" />
                       <span className="text-[10px] font-mono font-bold">AES-256-XTS</span>
                     </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-1 group hover:border-amber-500/30 transition-colors">
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/10 space-y-1 group hover:border-amber-500/30 transition-colors">
                     <div className="text-[9px] text-muted-foreground uppercase font-mono">Throughput</div>
                     <div className="flex items-center gap-2">
                       <Activity className="h-3 w-3 text-amber-500" />
@@ -517,7 +517,7 @@ function KrakenPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-blue-900/30 bg-black/70 backdrop-blur-md kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
+            <Card className="border-blue-900/30 bg-black/80 dark:bg-black/90 backdrop-blur-3xl kraken-fade-in transition-colors duration-500" style={{ transitionDelay: '0.4s' }}>
                <CardHeader className="pb-2">
                  <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400">Tactical Shortcuts</CardTitle>
                </CardHeader>
@@ -540,7 +540,7 @@ function KrakenPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="p-4 rounded border border-red-500/20 bg-black/70 backdrop-blur-md text-[10px] text-white/80 font-mono space-y-2"
+              className="p-4 rounded border border-red-500/20 bg-black/80 dark:bg-black/90 backdrop-blur-3xl text-[10px] text-white/80 font-mono space-y-2 transition-colors duration-500"
             >
               <div className="font-bold text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />

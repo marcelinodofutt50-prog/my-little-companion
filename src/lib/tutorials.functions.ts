@@ -14,6 +14,12 @@ export const listTutorials = createServerFn({ method: "GET" })
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
+    // Verificamos se supabaseAdmin.rpc existe (evita erro de .catch is not a function)
+    if (typeof (supabaseAdmin as any).rpc !== 'function') {
+      console.error("[tutorials] supabaseAdmin.rpc is not a function. Check client initialization.");
+      throw new Error("Supabase Admin Client RPC initialization failure.");
+    }
+    
     // Fallback agressivo: Tentamos "tocar" as tabelas para forçar o carregamento do schema
     // se o RPC falhar ou se o cache estiver muito teimoso.
     try {
@@ -21,7 +27,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       await Promise.allSettled([
         supabaseAdmin.from("tutorials").select("id").limit(1),
         supabaseAdmin.from("tutorial_progress").select("id").limit(1),
-        supabaseAdmin.rpc("force_refresh_schema_permissions")
+        typeof supabaseAdmin.rpc === 'function' ? supabaseAdmin.rpc("force_refresh_schema_permissions") : Promise.resolve()
       ]);
     } catch (e) {
       console.warn("[tutorials] Table touch/sync skipped:", e);
@@ -54,7 +60,11 @@ export const listTutorials = createServerFn({ method: "GET" })
         try {
           const repairStart = Date.now();
           // Chamada à função SECURITY DEFINER que garante permissões e reload
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          if (typeof supabaseAdmin.rpc === 'function') {
+            await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          } else {
+            console.error("[tutorials] supabaseAdmin.rpc missing during repair attempt.");
+          }
           
           console.log("[tutorials] Repair signal sent. Waiting 2000ms for PostgREST propagation...");
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -75,7 +85,7 @@ export const listTutorials = createServerFn({ method: "GET" })
         }
       }
       
-      throw new Error(`Erro de Sincronização (PGRST108): ${error.message}`);
+      throw new Error(`Erro de Sincronização (PGRST108): ${error.message}. Tente usar o botão de sincronização manual.`);
     }
 
     console.log(`[tutorials] Fetch successful. Returned ${data?.length} tutorials.`);

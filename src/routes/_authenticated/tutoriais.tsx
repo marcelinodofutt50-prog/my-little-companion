@@ -150,7 +150,7 @@ function TutorialsPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-black">
+      <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500">
         <AppSidebar />
         <main className="flex-1 overflow-y-auto">
           <SiteHeader />
@@ -289,7 +289,7 @@ function TutorialsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-12"
                 >
-                  <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card/40 backdrop-blur-xl shadow-2xl">
+                  <div className="overflow-hidden rounded-2xl border border-primary/20 bg-black/90 dark:bg-black/95 backdrop-blur-3xl shadow-2xl transition-colors duration-500">
                     <div className="aspect-video w-full bg-black relative">
                       {selected.video_url ? (
                         <video 
@@ -361,8 +361,8 @@ function TutorialsPage() {
                   viewport={{ once: true }}
                   transition={{ delay: (idx % 4) * 0.1 }}
                 >
-                  <Card 
-                    className="group h-full cursor-pointer overflow-hidden border-border/40 bg-card/40 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
+                    <Card 
+                      className="group h-full cursor-pointer overflow-hidden border-border/40 bg-black/80 dark:bg-black/90 backdrop-blur-3xl transition-all duration-500 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                     onClick={() => {
                       setSelected(t);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
