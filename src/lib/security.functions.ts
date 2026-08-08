@@ -8,7 +8,7 @@ import { maskEmail } from "./antifraud.server";
  * Used by the client to verify if they are rate limited before attempting Supabase Auth.
  */
 export const checkAuthSecurity = createServerFn({ method: "POST" })
-  .inputValidator((input: { email: string; action: 'login' | 'signup' | 'recovery' }) => 
+  .validator((input: { email: string; action: 'login' | 'signup' | 'recovery' }) => 
     z.object({
       email: z.string().email(),
       action: z.enum(['login', 'signup', 'recovery'])
@@ -45,7 +45,7 @@ export const checkAuthSecurity = createServerFn({ method: "POST" })
  * Records a successful or failed auth attempt for security auditing.
  */
 export const reportAuthOutcome = createServerFn({ method: "POST" })
-  .inputValidator((input: { email: string; action: 'login' | 'signup' | 'recovery'; success: boolean }) => 
+  .validator((input: { email: string; action: 'login' | 'signup' | 'recovery'; success: boolean }) => 
     z.object({
       email: z.string().email(),
       action: z.enum(['login', 'signup', 'recovery']),

@@ -14,7 +14,7 @@ const HASH_RE = {
 
 export const submitCryptoPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({
       planSlug: z.enum(ALLOWED_PLAN_SLUGS),
       network: z.enum(NETWORKS),

@@ -31,7 +31,7 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
 
 export const toggleTutorialStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ tutorialId: z.string(), completed: z.boolean() }).parse(data)
   )
   .handler(async ({ data, context }) => {

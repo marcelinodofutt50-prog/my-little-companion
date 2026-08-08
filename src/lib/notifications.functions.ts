@@ -98,7 +98,7 @@ export const getNotificationSettings = createServerFn({ method: "GET" })
 
 
 export const updateNotificationSettings = createServerFn({ method: "POST" })
-  .inputValidator((d: any) => z.object({
+  .validator((d: any) => z.object({
     email_enabled: z.boolean(),
     webhook_enabled: z.boolean(),
     webhook_url: z.string().url().optional().or(z.literal("")),
@@ -112,7 +112,7 @@ export const updateNotificationSettings = createServerFn({ method: "POST" })
   });
 
 export const testWebhook = createServerFn({ method: "POST" })
-  .inputValidator((d: any) => z.object({ url: z.string().url() }).parse(d))
+  .validator((d: any) => z.object({ url: z.string().url() }).parse(d))
   .handler(async ({ data }) => {
     return { success: true };
   });

@@ -9,7 +9,7 @@ export type { EmailAvailability };
  * e um e-mail mascarado — nunca dados da conta.
  */
 export const checkEmailAvailability = createServerFn({ method: "POST" })
-  .inputValidator((input: { email: string }) => ({
+  .validator((input: { email: string }) => ({
     email: String(input?.email ?? "").trim().slice(0, 255).toLowerCase(),
   }))
   .handler(async ({ data }): Promise<EmailAvailability> => {
@@ -22,7 +22,7 @@ export const checkEmailAvailability = createServerFn({ method: "POST" })
  * exige confirmação de e-mail. Só afeta contas criadas nos últimos minutos.
  */
 export const confirmFreshSignupEmail = createServerFn({ method: "POST" })
-  .inputValidator((input: { email: string }) => ({
+  .validator((input: { email: string }) => ({
     email: String(input?.email ?? "").trim().slice(0, 255).toLowerCase(),
   }))
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
@@ -35,7 +35,7 @@ export const confirmFreshSignupEmail = createServerFn({ method: "POST" })
  * Cria a conta pela API administrativa para o cliente entrar na hora.
  */
 export const createAccountWhenEmailBlocked = createServerFn({ method: "POST" })
-  .inputValidator((input: { email: string; password: string }) => ({
+  .validator((input: { email: string; password: string }) => ({
     email: String(input?.email ?? "").trim().slice(0, 255).toLowerCase(),
     password: String(input?.password ?? "").slice(0, 200),
   }))

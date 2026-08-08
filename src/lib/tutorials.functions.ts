@@ -64,13 +64,13 @@ export const listTutorials = createServerFn({ method: "GET" })
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({
+  .validator((input: unknown) => z.object({
       id: z.string().uuid().optional(),
       title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
       description: z.string().min(5, "Descrição deve ter pelo menos 5 caracteres"),
-      video_url: z.string().url().optional(),
-      image_url: z.string().url().optional(),
-      youtube_url: z.string().url().optional(),
+      video_url: z.string().url().nullish(),
+      image_url: z.string().url().nullish(),
+      youtube_url: z.string().url().nullish(),
       category: z.string().min(2, "Categoria é obrigatória"),
       is_active: z.boolean().default(true),
       display_order: z.number().int().optional(),
@@ -96,7 +96,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
 
 export const adminDeleteTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -107,7 +107,7 @@ export const adminDeleteTutorial = createServerFn({ method: "POST" })
 
 export const updateTutorialOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.array(z.object({
+  .validator((input: unknown) => z.array(z.object({
     id: z.string().uuid(),
     display_order: z.number().int()
   })).parse(input))

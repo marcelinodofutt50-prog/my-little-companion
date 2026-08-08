@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const createCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({
       planSlug: z.string(),
       couponCode: z.string().optional(),
@@ -239,7 +239,7 @@ export const createCheckout = createServerFn({ method: "POST" })
 
 export const getOrderState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ orderId: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ orderId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: order } = await context.supabase
       .from("orders").select("*").eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();

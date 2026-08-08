@@ -155,7 +155,7 @@ const upsertSchema = z.object({
 
 export const adminSaveAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => upsertSchema.parse(input))
+  .validator((input: unknown) => upsertSchema.parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -198,7 +198,7 @@ export const adminSaveAnnouncement = createServerFn({ method: "POST" })
 
 export const adminToggleAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid(), is_active: z.boolean() }).parse(input))
+  .validator((input: unknown) => z.object({ id: z.string().uuid(), is_active: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -212,7 +212,7 @@ export const adminToggleAnnouncement = createServerFn({ method: "POST" })
 
 export const adminDeleteAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

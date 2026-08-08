@@ -34,7 +34,7 @@ export const getAccountSetupState = createServerFn({ method: "GET" })
 
 export const completeOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z
       .object({
         displayName: z.string().trim().max(40).optional(),

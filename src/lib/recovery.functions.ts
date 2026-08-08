@@ -74,7 +74,7 @@ export const generateRecoveryCodes = createServerFn({ method: "POST" })
  * Mensagens propositalmente genéricas para não revelar se o e-mail existe.
  */
 export const recoverAccountWithCode = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         email: z.string().trim().email("E-mail inválido").max(255),

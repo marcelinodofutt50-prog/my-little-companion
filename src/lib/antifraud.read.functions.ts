@@ -8,7 +8,7 @@ export type { SignupIpReport, SignupIpRow };
 /** Lista os cadastros registrados pelo antifraude (somente admin). */
 export const getSignupIpReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         days: z.number().int().min(1).max(90).default(7),

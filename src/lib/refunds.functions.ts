@@ -64,7 +64,7 @@ export const getRefundOverview = createServerFn({ method: "GET" })
 
 export const requestRefund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z
       .object({
         orderId: z.string().uuid(),
@@ -216,7 +216,7 @@ export const adminListRefunds = createServerFn({ method: "GET" })
 
 export const adminUpdateRefund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -274,7 +274,7 @@ export const adminUpdateRefund = createServerFn({ method: "POST" })
 // -------- Verificação automática (IA) do comprovante/pedido --------
 export const adminVerifyRefundAi = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
 

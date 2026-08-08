@@ -53,7 +53,7 @@ export const listMyUpdates = createServerFn({ method: "GET" })
 // ============ Signed download URL for a specific update ============
 export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
@@ -103,7 +103,7 @@ export const adminListUpdates = createServerFn({ method: "GET" })
 // Return a signed upload URL for the admin to PUT the file directly into storage.
 export const adminCreateUpdateUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({
       filename: z.string().min(1).max(200),
     }).parse(input),
@@ -122,7 +122,7 @@ export const adminCreateUpdateUpload = createServerFn({ method: "POST" })
 
 export const adminPublishUpdate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({
       title: z.string().trim().min(2).max(120),
       version: z.string().trim().min(1).max(40),
@@ -153,7 +153,7 @@ export const adminPublishUpdate = createServerFn({ method: "POST" })
 
 export const adminToggleUpdate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid(), is_active: z.boolean() }).parse(input))
+  .validator((input: unknown) => z.object({ id: z.string().uuid(), is_active: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -164,7 +164,7 @@ export const adminToggleUpdate = createServerFn({ method: "POST" })
 
 export const adminDeleteUpdate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

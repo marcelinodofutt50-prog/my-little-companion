@@ -47,7 +47,7 @@ export const getMyQuota = createServerFn({ method: "GET" })
 
 export const updateSupportQuota = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     targetUserId: z.string().uuid(),
     dailyLimit: z.number().int().min(0).max(100),
     monthlyLimit: z.number().int().min(0).max(1000),

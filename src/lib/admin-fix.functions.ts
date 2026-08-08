@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  * forçando uma atualização de expiração (+1 dia e volta).
  */
 export const fixLoginInconsistency = createServerFn({ method: "POST" })
-  .inputValidator((d: { licenseId: string }) => d)
+  .validator((d: { licenseId: string }) => d)
   .handler(async ({ data }) => {
     const { data: lic } = await supabaseAdmin.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic || lic.disabled_at) throw new Error("Licença inválida ou inexistente");

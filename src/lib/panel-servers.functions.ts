@@ -45,7 +45,7 @@ export const adminListPanelServers = createServerFn({ method: "GET" })
 /** Testa endereço + admin key sem gravar nada. */
 export const adminTestPanelServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         baseUrl: z.string().trim().min(4).max(300),
@@ -62,7 +62,7 @@ export const adminTestPanelServer = createServerFn({ method: "POST" })
 /** Cadastra ou substitui o servidor (VPS) de um painel. */
 export const adminSavePanelServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         panel: panelEnum,
@@ -179,7 +179,7 @@ export const adminSavePanelServer = createServerFn({ method: "POST" })
 /** Remove o override e volta a usar as variáveis de ambiente. */
 export const adminResetPanelServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
+  .validator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { deletePanelServer } = await import("@/lib/panel-servers.server");
@@ -192,7 +192,7 @@ export const adminResetPanelServer = createServerFn({ method: "POST" })
 /** Testa o servidor que está valendo agora para um painel. */
 export const adminTestCurrentPanel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
+  .validator((d: unknown) => z.object({ panel: panelEnum }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaLookupEmail } = await import("@/lib/yaarsa.server");
@@ -217,7 +217,7 @@ export const adminTestCurrentPanel = createServerFn({ method: "POST" })
  */
 export const adminFullPanelCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         panel: panelEnum,

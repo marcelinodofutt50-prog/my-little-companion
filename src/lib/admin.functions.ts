@@ -71,7 +71,7 @@ export const adminListLicenses = createServerFn({ method: "GET" })
 
 export const adminRevokeLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaRemoveAccount } = await import("./yaarsa.server");
@@ -84,7 +84,7 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
 
 export const adminExtendLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid(), newExpireDate: z.string() }).parse(i))
+  .validator((i: unknown) => z.object({ licenseId: z.string().uuid(), newExpireDate: z.string() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaExtend } = await import("./yaarsa.server");
@@ -106,7 +106,7 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
   */
 export const adminFixLoginBug = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
@@ -177,7 +177,7 @@ export const adminFixLoginBug = createServerFn({ method: "POST" })
 
 export const adminAnalyzeLoginBug = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
@@ -241,7 +241,7 @@ Instrução final: Dê um diagnóstico com 3 fatores numerados (ex: 1. Venciment
 
 export const adminListThreads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     filter: z.enum(["open", "mine", "closed", "all"]).default("open"),
   }).parse(i ?? {}))
   .handler(async ({ data, context }) => {
@@ -281,7 +281,7 @@ export const adminListThreads = createServerFn({ method: "GET" })
  */
 export const adminAssumeThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -311,7 +311,7 @@ export const adminAssumeThread = createServerFn({ method: "POST" })
  */
 export const adminCloseThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     threadId: z.string().uuid(),
     reason: z.string().trim().max(200).optional(),
   }).parse(i))
@@ -340,7 +340,7 @@ export const adminCloseThread = createServerFn({ method: "POST" })
 
 export const adminListThreadMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     threadId: z.string().uuid(),
     limit: z.number().int().min(5).max(100).optional(),
     before: z.string().optional(),
@@ -369,7 +369,7 @@ export const adminListThreadMessages = createServerFn({ method: "GET" })
 
 export const adminSendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     threadId: z.string().uuid(),
     body: z.string().trim().min(1).max(4000),
     replyToId: z.string().uuid().optional().nullable(),
@@ -435,7 +435,7 @@ export const adminStats = createServerFn({ method: "GET" })
 // ---- Staff management ----
 export const adminSetRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     userId: z.string().uuid(),
     role: z.enum(["admin", "moderator", "user"]),
   }).parse(i))
@@ -460,7 +460,7 @@ export const adminSetRole = createServerFn({ method: "POST" })
  */
 export const adminSetRoleByEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     email: z.string().trim().email().max(200),
     role: z.enum(["admin", "moderator", "user"]),
   }).parse(i))
@@ -502,7 +502,7 @@ export const adminListRoles = createServerFn({ method: "GET" })
 
 export const adminRenewClientServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -524,7 +524,7 @@ export const adminRenewClientServer = createServerFn({ method: "POST" })
 
 export const adminRecreateLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -574,7 +574,7 @@ export const adminRecreateLicense = createServerFn({ method: "POST" })
 // conta fresca. Uso: cliente reporta "não consigo usar meu trial".
 export const adminReplaceUserTrial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -640,7 +640,7 @@ export const adminReplaceUserTrial = createServerFn({ method: "POST" })
 // Busca usuários por e-mail, apelido, nome ou credenciais de painel.
 export const adminFindUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ query: z.string().trim().min(2).max(120) }).parse(i))
+  .validator((i: unknown) => z.object({ query: z.string().trim().min(2).max(120) }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -684,7 +684,7 @@ export const adminFindUsers = createServerFn({ method: "POST" })
 
 export const adminListLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({
       source: z.string().optional(),
       outcome: z.string().optional(),
@@ -711,7 +711,7 @@ export const adminListLogs = createServerFn({ method: "GET" })
 
 export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => CreateLicenseInput.parse(i))
+  .validator((i: unknown) => CreateLicenseInput.parse(i))
   .handler(async ({ data, context }) => {
     try {
       await assertStaff(context);
@@ -814,7 +814,7 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
 
 export const adminSetLicenseTier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({
+  .validator((i: unknown) => z.object({
     licenseId: z.string().uuid(),
     versionTier: z.enum(["weekly", "monthly_457", "lifetime_46"]),
     isLegacy: z.boolean().optional(),
@@ -838,7 +838,7 @@ export const adminSetLicenseTier = createServerFn({ method: "POST" })
 
 export const adminRegisterLegacyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => RegisterLegacyInput.parse(i))
+  .validator((i: unknown) => RegisterLegacyInput.parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -885,7 +885,7 @@ export const adminRegisterLegacyLicense = createServerFn({ method: "POST" })
 // ============ Licenças perto de vencer (para o admin ver) ============
 export const adminListExpiring = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ days: z.number().int().min(1).max(60).optional() }).parse(i ?? {}))
+  .validator((i: unknown) => z.object({ days: z.number().int().min(1).max(60).optional() }).parse(i ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -937,7 +937,7 @@ export const adminListReferrals = createServerFn({ method: "GET" })
 
 export const adminMarkReferralPaid = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({
       referralId: z.string().uuid(),
       status: z.enum(["pending", "granted", "paid"]),
@@ -1011,7 +1011,7 @@ export const adminGetAlerts = createServerFn({ method: "GET" })
 // ============ Lookup de email nos painéis Yaarsa (todos) ============
 export const adminLookupYaarsaEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ email: z.string().trim().email().max(255) }).parse(i))
+  .validator((i: unknown) => z.object({ email: z.string().trim().email().max(255) }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaLookupEmailAllPanels } = await import("./yaarsa.server");
@@ -1029,7 +1029,7 @@ export const adminLookupYaarsaEmail = createServerFn({ method: "POST" })
 
 export const adminMarkPaidExternally = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({
       licenseId: z.string().uuid(),
       untilDate: z.string().optional(), // YYYY-MM-DD; default = próximo dia 20
@@ -1076,7 +1076,7 @@ export const adminMarkPaidExternally = createServerFn({ method: "POST" })
 
 export const adminUnmarkPaidExternally = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -1201,7 +1201,7 @@ export const adminMetrics = createServerFn({ method: "GET" })
 // ============ Monitoramento de erros / regressões ============
 export const adminHealthMonitor = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ hours: z.number().int().min(1).max(72).optional() }).parse(i ?? {}))
+  .validator((i: unknown) => z.object({ hours: z.number().int().min(1).max(72).optional() }).parse(i ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -1326,7 +1326,7 @@ export const adminHealthMonitor = createServerFn({ method: "GET" })
 // ---------------------------------------------------------------------------
 export const adminGlobalSearch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ q: z.string() }).parse(i))
+  .validator((i: unknown) => z.object({ q: z.string() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const q = data.q.trim();
@@ -1372,7 +1372,7 @@ export const adminGlobalSearch = createServerFn({ method: "POST" })
 // Ficha 360º de um cliente: tudo que existe sobre ele em um lugar só.
 export const adminCustomer360 = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const uid = data.userId;

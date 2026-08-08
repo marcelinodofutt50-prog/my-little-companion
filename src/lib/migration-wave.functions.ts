@@ -67,7 +67,7 @@ export const getMyMigrationWave = createServerFn({ method: "GET" })
 /** Gera o(s) login(s) novo(s) no servidor atual do painel da onda. */
 export const claimMigrationWave = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const { claimWaveForUser } = await import("@/lib/migration-wave.server");
     return claimWaveForUser(data.waveId, context.userId);
@@ -85,7 +85,7 @@ export const adminListMigrationWaves = createServerFn({ method: "GET" })
 
 export const adminOpenMigrationWave = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z
       .object({
         panel: panelEnum,
@@ -109,7 +109,7 @@ export const adminOpenMigrationWave = createServerFn({ method: "POST" })
 
 export const adminCloseMigrationWave = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({ waveId: z.string().uuid(), revokeOld: z.boolean().default(false) }).parse(i),
   )
   .handler(async ({ data, context }) => {
@@ -123,7 +123,7 @@ export const adminCloseMigrationWave = createServerFn({ method: "POST" })
 /** Estado da votação do servidor de teste para o cliente logado. */
 export const getMigrationWaveVote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const { getVoteStateForUser } = await import("@/lib/migration-wave.server");
     return getVoteStateForUser(data.waveId, context.userId);
@@ -132,7 +132,7 @@ export const getMigrationWaveVote = createServerFn({ method: "POST" })
 /** Voto do cliente: o servidor de teste deve virar oficial? */
 export const voteMigrationWave = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z
       .object({
         waveId: z.string().uuid(),
@@ -149,7 +149,7 @@ export const voteMigrationWave = createServerFn({ method: "POST" })
 /** Feedback completo da votação (admin). */
 export const adminListMigrationWaveVotes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ waveId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { listWaveVotesForAdmin } = await import("@/lib/migration-wave.server");

@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 /** Libera manualmente uma conexão bloqueada pelo antifraude (somente admin). */
 export const allowSignupConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         ipHash: z.string().min(16).max(128),
@@ -34,7 +34,7 @@ export const allowSignupConnection = createServerFn({ method: "POST" })
 /** Remove a liberação manual de uma conexão (somente admin). */
 export const revokeSignupConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ ipHash: z.string().min(16).max(128) }).parse(input),
   )
   .handler(async ({ data, context }) => {
