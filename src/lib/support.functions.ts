@@ -151,9 +151,6 @@ export const listMessages = createServerFn({ method: "GET" })
       if (!error) {
         await trackSchemaFailure(error, "listMessages", true, { stage: "retry_success" }, context.userId);
       }
-      if (!error) {
-        await trackSchemaFailure(error, "listMessages", true, { stage: "retry_success" }, context.userId);
-      }
     }
 
     if (error) throw error;

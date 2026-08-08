@@ -32,7 +32,7 @@ export async function trackSchemaFailure(
 
     await supabaseAdmin.from("integration_logs").insert({
       source: "shadow-core-db",
-      user_id: userId,
+      user_id: userId as any,
       action: "pgrst108_sync_error",
       outcome: recovered ? "recovered" : "failure",
       error: error.message || String(error),
