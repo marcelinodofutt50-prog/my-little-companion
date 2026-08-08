@@ -663,6 +663,44 @@ function DashboardPage() {
                 </div>
               </section>
 
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <ReferralsWidget />
+                <div className="terminal-card p-4 relative overflow-hidden group">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Store className="h-4 w-4 text-primary" />
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t('nav.market')}</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[180px]">
+                        Módulos adicionais, upgrades de servidor e ativos digitais exclusivos.
+                      </p>
+                    </div>
+                    <div className="h-8 w-8 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <Link to="/planos" search={{ category: 'addon' }} className="absolute inset-0 z-10" />
+                </div>
+                <div className="terminal-card p-4 relative overflow-hidden group">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Gift className="h-4 w-4 text-primary" />
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t('nav.gifts')}</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[180px]">
+                        Gerencie seus cartões presente enviados e recebidos no ecossistema.
+                      </p>
+                    </div>
+                    <div className="h-8 w-8 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <Link to="/presentes" className="absolute inset-0 z-10" />
+                </div>
+              </div>
+
               <AnnouncementsSection />
             </div>
           </main>
