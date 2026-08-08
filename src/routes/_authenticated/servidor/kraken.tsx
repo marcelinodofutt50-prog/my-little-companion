@@ -190,7 +190,7 @@ function KrakenPage() {
     setIsExecuting(true);
 
     try {
-      const res = await executeKraken({ data: { command: cmd } });
+      const res = await executeKraken({ data: { command: cmd, metadata: { route: window.location.pathname } } as any });
       
       // Handle the response properly based on its structure
       const success = (res as any)?.success ?? false;

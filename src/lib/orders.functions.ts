@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type MyOrder = {
@@ -28,17 +29,34 @@ function stageOf(status: string, delivered: boolean): MyOrder["stage"] {
 /** Lista os pedidos do usuário logado com o estágio real da entrega. */
 export const listMyOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<MyOrder[]> => {
-    const [{ data: orders }, { data: licenses }, { data: plans }] = await Promise.all([
-      context.supabase
-        .from("orders")
-        .select("id, plan_slug, amount, status, created_at, paid_at, processing_at, metadata")
-        .eq("user_id", context.userId)
-        .order("created_at", { ascending: false })
-        .limit(100),
-      context.supabase.from("licenses").select("order_id, created_at").eq("user_id", context.userId),
-      context.supabase.from("plans").select("slug, name"),
+  .validator((d: unknown) => z.object({ metadata: z.record(z.string(), z.any()).optional() }).optional().parse(d))
+  .handler(async ({ data: input, context }): Promise<MyOrder[]> => {
+    const userId = context.userId;
+    const metadata = (input as any)?.metadata || {};
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const fetchAll = async (client: any) => Promise.all([
+      client.from("orders").select("id, plan_slug, amount, status, created_at, paid_at, processing_at, metadata").eq("user_id", userId).order("created_at", { ascending: false }).limit(100),
+      client.from("licenses").select("order_id, created_at").eq("user_id", userId),
+      client.from("plans").select("slug, name"),
     ]);
+
+    let results = await fetchAll(context.supabase);
+    let hasError = results.some(r => r.error);
+
+    if (hasError) {
+      const pgrstError = results.find(r => r.error && (r.error.code === 'PGRST108' || r.error.message?.includes('schema cache')))?.error;
+      if (pgrstError) {
+        const { trackSchemaFailure } = await import("./tutorials.functions");
+        await trackSchemaFailure(pgrstError, "listMyOrders", false, metadata, userId);
+        results = await fetchAll(supabaseAdmin);
+        if (!results.some(r => r.error)) {
+          await trackSchemaFailure(pgrstError, "listMyOrders", true, { stage: "retry_success" }, userId);
+        }
+      }
+    }
+
+    const [{ data: orders }, { data: licenses }, { data: plans }] = results;
 
     const licByOrder = new Map<string, string>();
     for (const l of (licenses ?? []) as any[]) {

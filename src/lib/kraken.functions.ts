@@ -33,11 +33,11 @@ export const krakenHandler = async (args: { data: KrakenInput, context: any }) =
         user_id: args.context?.userId,
         action: `command:${data.command}`,
         outcome: "success",
-        context: { params: data.params } as any
+        context: { params: data.params, metadata: (data as any).metadata } as any
       });
       
       if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache'))) {
-        await trackSchemaFailure(error, "krakenHandler", false, { command: data.command }, args.context?.userId);
+        await trackSchemaFailure(error, "krakenHandler", false, { command: data.command, ...(data as any).metadata }, args.context?.userId);
       }
     }
 
