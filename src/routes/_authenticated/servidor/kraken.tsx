@@ -191,16 +191,16 @@ function KrakenPage() {
     try {
       const res = await executeKraken({ data: { command: cmd } });
       
-      if (!res || typeof res.success === 'undefined') {
-        throw new Error("Resposta inválida do servidor");
-      }
+      // Handle the response properly based on its structure
+      const success = (res as any)?.success ?? false;
+      const message = (res as any)?.message ?? "Comando processado.";
 
-      setLogs(prev => [...prev, `[KRAKEN] ${res.message || "Comando processado."}`]);
+      setLogs(prev => [...prev, `[KRAKEN] ${message}`]);
       
-      if (res.success) {
+      if (success) {
         toast.success("Comando Kraken executado");
       } else {
-        toast.error(res.message || "Erro na execução do comando");
+        toast.error(message || "Erro na execução do comando");
       }
     } catch (err: any) {
       const errorMsg = err.message || "Falha na comunicação com o Kraken";

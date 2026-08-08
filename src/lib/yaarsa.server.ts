@@ -332,7 +332,7 @@ export function expireDateFor(planSlug: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-type YaarsaResponse = { Success?: string; Fail?: string; action?: string; statusCode?: number; attempt?: number };
+type YaarsaResponse = { Success?: string; Fail?: string; action?: string; statusCode?: number; attempt?: number; error?: string; code?: string };
 
 function friendlyYaarsaFail(message: string, statusCode?: number): string {
   const m = message.trim();
