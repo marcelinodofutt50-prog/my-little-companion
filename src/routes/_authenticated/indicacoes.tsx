@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Users, Copy, Check, TrendingUp, DollarSign, Clock, AlertCircle } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Link } from "@tanstack/react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,8 +103,8 @@ function ReferralsPage() {
               </Card>
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-2">
-              <div className="space-y-6">
+            <div className="grid gap-8 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
                 <Card className="bg-black/40 border-primary/20 backdrop-blur-xl border-l-4 border-l-primary">
                   <CardHeader>
                     <CardTitle className="text-sm font-mono uppercase tracking-widest">{t('ref.code_label')}</CardTitle>
@@ -150,7 +151,7 @@ function ReferralsPage() {
                 </Card>
               </div>
 
-              <Card className="bg-black/40 border-primary/10 backdrop-blur-sm">
+              <Card className="bg-black/40 border-primary/10 backdrop-blur-sm lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="text-sm font-mono uppercase tracking-widest">{t('ref.list_title')}</CardTitle>
                 </CardHeader>
