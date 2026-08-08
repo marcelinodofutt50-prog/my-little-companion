@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
+import krakenTacticalBg from "@/assets/kraken-tactical-bg.png.asset.json";
 import krakenBg8Asset from "@/assets/krakenbackground-8.png.asset.json";
 import krakenBg7Asset from "@/assets/krakenbackground-7.jpg.asset.json";
 import krakenBg6Asset from "@/assets/krakenbackground-6.jpg.asset.json";
@@ -21,9 +22,9 @@ import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem central do Kraken v2
-// Prioriza a imagem enviada pelo usuário (krakenbackground-8.png)
-const krakenCore = krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg4 = krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+// Prioriza a imagem enviada pelo usuário na última gravação
+const krakenCore = krakenTacticalBg.url || krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg4 = krakenTacticalBg.url || krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
 const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
 
 
@@ -217,29 +218,36 @@ function KrakenPage() {
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
       {/* Tactical Background Overlay - Full Viewport Image */}
       <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
-        {/* Camada principal da imagem Kraken (krakenbackground-8.png) */}
+        {/* Camada principal da imagem Kraken (kraken-tactical-bg.png) */}
         <div 
           className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-100" : "opacity-0")}
           style={{ 
             backgroundImage: `url(${krakenCore})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            filter: 'brightness(1.1) contrast(1.05)' // Pequeno boost de visibilidade
           }}
         />
         
-        {/* Overlay tático adicional */}
+        {/* Camada de partículas e névoa tática */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
-          style={{ backgroundImage: `url(${krakenBg5})` }}
+          className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-40" : "opacity-0")}
+          style={{ 
+            backgroundImage: `url(${krakenBg5})`,
+            filter: 'hue-rotate(180deg) brightness(0.8)' // Ajusta cores para bater com o azul do Kraken
+          }}
         />
         
-        {/* Gradiente de profundidade ajustado para não escurecer demais a imagem */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+        {/* Gradiente de profundidade ULTRA suave para garantir que nada fique preto */}
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-950/20 via-transparent to-black/40" />
         
-        {/* Fallback visual suave */}
+        {/* Vinheta tática nas bordas */}
+        <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(0,0,0,0.6)]" />
+
+        {/* Fallback visual caso falte imagem */}
         {!bgLoaded.core && (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black opacity-80" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-black opacity-100" />
         )}
       </div>
 
