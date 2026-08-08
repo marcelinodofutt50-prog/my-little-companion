@@ -33,18 +33,20 @@ function createSupabaseClient() {
   const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : undefined);
   const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_PUBLISHABLE_KEY || process.env?.SUPABASE_PUBLISHABLE_KEY : undefined);
 
+  // Fallback for development/pre-hydration environments
+  const effectiveUrl = SUPABASE_URL || "https://placeholder.supabase.co";
+  const effectiveKey = SUPABASE_PUBLISHABLE_KEY || "sb_publishable_placeholder";
+
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
       ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
       ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.warn(`[Supabase] ${message} Attempting to proceed with empty string for client stability.`);
-    // We return a non-working client instead of throwing to prevent total screen blanking
-    // if the variables are temporarily missing during build/HMR
-    return createClient<Database>(SUPABASE_URL || '', SUPABASE_PUBLISHABLE_KEY || '', {
+    console.warn(`[Supabase] Missing environment variable(s): ${missing.join(', ')}. Initializing with placeholder to prevent crash.`);
+    
+    return createClient<Database>(effectiveUrl, effectiveKey, {
       global: {
-        fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY || ''),
+        fetch: createSupabaseFetch(effectiveKey),
       },
       auth: {
         storage: typeof window !== 'undefined' ? localStorage : undefined,
@@ -53,6 +55,7 @@ function createSupabaseClient() {
       }
     });
   }
+
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
