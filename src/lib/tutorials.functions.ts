@@ -17,7 +17,9 @@ export const listTutorials = createServerFn({ method: "GET" })
     // Attempt to touch the schema cache
     try {
       if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-        await supabaseAdmin.rpc("force_refresh_schema_permissions");
+        // Direct call without .catch since RPC returns an object with { data, error }
+        const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
+        if (rpcErr) console.warn("[tutorials] Schema refresh RPC error:", rpcErr);
       }
     } catch (e) {
       console.warn("[tutorials] Schema refresh attempt failed:", e);
@@ -45,7 +47,8 @@ export const listTutorials = createServerFn({ method: "GET" })
         console.warn("[tutorials] Schema mismatch detected. Attempting repair...");
         try {
           if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-            await supabaseAdmin.rpc("force_refresh_schema_permissions");
+            const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
+            if (rpcErr) console.warn("[tutorials] Repair RPC error:", rpcErr);
           }
           await new Promise(resolve => setTimeout(resolve, 2000));
           
