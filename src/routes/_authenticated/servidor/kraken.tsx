@@ -18,9 +18,10 @@ import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem central do Kraken v2
-const krakenCore = "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg4 = "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg5 = "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
+// Fallback para URLs do GitHub caso os assets locais não carreguem (comum em builds intermitentes)
+const krakenCore = krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg4 = krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
 
 
 
@@ -214,14 +215,19 @@ function KrakenPage() {
       {/* Tactical Background Overlay - High Opacity for Vercel visibility */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div 
-          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-60"
+          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-1000", bgLoaded.bg4 ? "opacity-60" : "opacity-0")}
           style={{ backgroundImage: `url(${krakenBg4})` }}
         />
         <div 
-          className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-40"
+          className={cn("absolute inset-0 bg-cover bg-center mix-blend-overlay transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-40" : "opacity-0")}
           style={{ backgroundImage: `url(${krakenBg5})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black" />
+        
+        {/* Fallback pattern if images fail */}
+        {!bgLoaded.bg4 && !bgLoaded.bg5 && (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black opacity-50" />
+        )}
       </div>
 
       {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
