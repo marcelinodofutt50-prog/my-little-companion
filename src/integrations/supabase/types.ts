@@ -1801,7 +1801,7 @@ export type Database = {
       check_license_consistency: { Args: never; Returns: undefined }
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
       expire_stale_apk_jobs: { Args: never; Returns: number }
-      force_refresh_schema_permissions: { Args: never; Returns: undefined }
+      force_refresh_schema_permissions: { Args: never; Returns: Json }
       gen_referral_code: { Args: never; Returns: string }
       generate_my_recovery_codes: {
         Args: never
@@ -1818,6 +1818,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      notify_pgrst_reload: { Args: never; Returns: undefined }
       reactivate_server_licenses_for_user: {
         Args: { _paid_until: string; _user_id: string }
         Returns: {
