@@ -14,15 +14,16 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
+import krakenBg8Asset from "@/assets/krakenbackground-8.png.asset.json";
 import krakenBg7Asset from "@/assets/krakenbackground-7.jpg.asset.json";
 import krakenBg6Asset from "@/assets/krakenbackground-6.jpg.asset.json";
 import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem central do Kraken v2
-// Prioriza a imagem enviada pelo usuário (krakenbackground-7.jpg)
-const krakenCore = krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg4 = krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+// Prioriza a imagem enviada pelo usuário (krakenbackground-8.png)
+const krakenCore = krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg4 = krakenBg8Asset.url || krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
 const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
 
 
@@ -214,21 +215,31 @@ function KrakenPage() {
 
   return (
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black theme-light:bg-background min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
-      {/* Tactical Background Overlay - High Opacity for Vercel visibility */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      {/* Tactical Background Overlay - Full Viewport Image */}
+      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden">
+        {/* Camada principal da imagem Kraken (krakenbackground-8.png) */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-1000", bgLoaded.bg4 ? "opacity-60" : "opacity-0")}
-          style={{ backgroundImage: `url(${krakenBg4})` }}
+          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-90" : "opacity-0")}
+          style={{ 
+            backgroundImage: `url(${krakenCore})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat'
+          }}
         />
+        
+        {/* Overlay tático adicional */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center mix-blend-overlay transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-40" : "opacity-0")}
+          className={cn("absolute inset-0 bg-cover bg-center mix-blend-overlay transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
           style={{ backgroundImage: `url(${krakenBg5})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black" />
         
-        {/* Fallback pattern if images fail */}
-        {!bgLoaded.bg4 && !bgLoaded.bg5 && (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black opacity-50" />
+        {/* Gradiente de profundidade */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black" />
+        
+        {/* Fallback visual */}
+        {!bgLoaded.core && (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black opacity-80" />
         )}
       </div>
 
