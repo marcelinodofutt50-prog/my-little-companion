@@ -176,8 +176,8 @@ function DashboardPage() {
 
   const handleSync = async () => {
     // Exibição explicativa do que o botão faz
-    toast.info("Iniciando Verificação de Integridade: O sistema irá re-sincronizar suas datas de expiração e credenciais originais com o painel de autenticação central, corrigindo possíveis divergências de 'Licença Expirada'.", {
-      duration: 6000,
+    toast.info("Iniciando Verificação Tática: O sistema irá forçar a sincronização de credenciais e datas com os nós globais, corrigindo bloqueios de login e expirações indevidas.", {
+      duration: 5000,
     })
 
     setSyncing(true)
