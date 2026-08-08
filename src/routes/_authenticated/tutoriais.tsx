@@ -16,7 +16,11 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/tutoriais")({
   head: () => ({ meta: [{ title: "Tutorials Hub — Shadow" }] }),
-  component: TutorialsPage,
+  component: () => (
+    <div className="dark">
+      <TutorialsPage />
+    </div>
+  ),
 });
 
 function TutorialsPage() {

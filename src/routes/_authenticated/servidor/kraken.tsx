@@ -31,9 +31,11 @@ const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovab
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
   component: () => (
-    <ErrorBoundary name="KrakenPage">
-      <KrakenPage />
-    </ErrorBoundary>
+    <div className="dark">
+      <ErrorBoundary name="KrakenPage">
+        <KrakenPage />
+      </ErrorBoundary>
+    </div>
   ),
 })
 
