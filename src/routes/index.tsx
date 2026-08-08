@@ -445,7 +445,7 @@ function Index() {
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Suporte</h4>
               <ul className="space-y-2 text-xs font-mono">
                 <li><Link to="/suporte" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.support')}</Link></li>
-                <li><Link to="/shadow-hub" className="text-muted-foreground hover:text-primary transition-colors">Shadow Hub</Link></li>
+                <li><Link to="/shadow-hub" search={{ page: 1, category: 'Tudo', search: '' }} className="text-muted-foreground hover:text-primary transition-colors">Shadow Hub</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
