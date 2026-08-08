@@ -13,7 +13,7 @@ export function HelpCenterWidget() {
             <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t('nav.support')}</span>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[180px]">
-            Precisa de ajuda tática? Nossos agentes estão online 24/7.
+            Central de Atendimento: Precisa de suporte tático? Nossos agentes de elite estão online 24/7.
           </p>
         </div>
         <div className="h-8 w-8 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">

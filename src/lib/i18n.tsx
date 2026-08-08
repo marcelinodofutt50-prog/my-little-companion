@@ -90,7 +90,7 @@ const DICT: Dict = {
   // ===== Referrals =====
   "ref.program": { pt: "Programa de Indicações", en: "Referral Program" },
   "ref.kicker": { pt: "// referral program", en: "// referral program" },
-  "ref.lead": { pt: "Indique alguém e ganhe R$ 150 por cada compra que ela concluir.", en: "Refer someone and earn R$ 150 for every completed purchase." },
+  "ref.lead": { pt: "Indique novos operadores e receba R$ 150 por cada conversão confirmada. Saldo resgatável via PIX.", en: "Refer new operators and earn R$ 150 for each confirmed conversion. Balance withdrawable via PIX." },
   "ref.code_label": { pt: "seu código de indicação", en: "your referral code" },
   "ref.share_tip": { pt: "Compartilhe o link ou apenas o código. A pessoa digita seu código no checkout.", en: "Share the link or just the code. The person enters your code at checkout." },
   "ref.stats_total": { pt: "Indicações", en: "Referrals" },
