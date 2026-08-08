@@ -63,14 +63,10 @@ export const listTutorials = createServerFn({ method: "GET" })
     
     console.log("[tutorials] Iniciando busca tática de módulos...");
     
-    // Tática de carregamento resiliente: tenta admin diretamente para o Centro de Treinamento
-    // Usamos select("count") ou limit(1) primeiro para verificar se a relação existe
-    // e forçar o cache se necessário antes da query real.
-    // Tática de carregamento ultra-resiliente
-    let { data, error } = await supabaseAdmin
+    // Tática de carregamento ultra-resiliente via Admin para evitar PGRST108 no cliente
+    const { data, error } = await supabaseAdmin
       .from("tutorials")
       .select("*")
-      .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
@@ -85,13 +81,11 @@ export const listTutorials = createServerFn({ method: "GET" })
           console.warn("[tutorials] Schema sync issue detected. Triggering forced repair...");
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
           
-          // Pequeno delay para o PostgREST processar o reload
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 800));
 
           const { data: retryData, error: retryError } = await supabaseAdmin
             .from("tutorials")
             .select("*")
-            .eq("is_active", true)
             .order("display_order", { ascending: true });
             
           if (!retryError) {
@@ -104,9 +98,6 @@ export const listTutorials = createServerFn({ method: "GET" })
           console.error("[tutorials] Schema repair flow crashed:", e);
         }
       }
-      
-      // Retornamos array vazio para evitar que a UI mostre o erro fatal "Sync Error"
-      // A UI de TutorialsPage detecta array vazio e mostra o botão de sincronização tática
       return [];
     }
 
