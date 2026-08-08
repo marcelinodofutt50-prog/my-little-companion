@@ -16,20 +16,29 @@ export const listTutorials = createServerFn({ method: "GET" })
     
     // Tentamos recarregar as permissões e o cache ANTES da query para evitar PGRST108
     try {
+      console.log("[tutorials] Running pre-flight schema synchronization...");
+      const startTime = Date.now();
       await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      console.log(`[tutorials] Schema sync completed in ${Date.now() - startTime}ms`);
     } catch (e) {
-      console.warn("[tutorials] Pre-fetch schema refresh skipped:", e);
+      console.error("[tutorials] Pre-fetch schema sync failed! This might lead to PGRST108.", e);
     }
     
     // Attempt 1: Standard query
-    const { data, error } = await supabaseAdmin
+    console.log("[tutorials] Executing fetch from 'public.tutorials'...");
+    const { data, error, status, statusText } = await supabaseAdmin
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
-      console.error("[tutorials] List failed:", error);
+      console.error(`[tutorials] Fetch FAILED! Status: ${status} (${statusText})`, {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       
       const isSchemaError = error.message?.includes("relation \"public.tutorials\" does not exist") || 
                            error.message?.includes("public.tutorials' in the schema cache") ||
@@ -37,33 +46,44 @@ export const listTutorials = createServerFn({ method: "GET" })
                            error.code === '42P01';
                            
       if (isSchemaError) {
-        console.warn("[tutorials] Schema cache mismatch detected. Triggering forced repair...");
+        console.warn("[tutorials] Schema cache mismatch detected (PGRST108/42P01). Triggering AGGRESSIVE server-side repair...");
         try {
           // Attempt repair immediately on the server side
+          const repairStart = Date.now();
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
           
-          // Wait a moment for PostgREST to pick up the notification
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Wait a moment for PostgREST to pick up the notification (increased delay)
+          console.log("[tutorials] Repair signal sent. Waiting 1000ms for PostgREST propagation...");
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
           // Attempt 2: Retry once after repair
+          console.log("[tutorials] Retrying fetch after repair...");
           const { data: retryData, error: retryError } = await supabaseAdmin
             .from("tutorials")
             .select("*")
             .eq("is_active", true)
             .order("display_order", { ascending: true });
             
-          if (!retryError) return (retryData ?? []) as any[];
+          if (!retryError) {
+            console.log(`[tutorials] Repair SUCCESSFUL! Retrieved ${retryData?.length} items in ${Date.now() - repairStart}ms`);
+            return (retryData ?? []) as any[];
+          } else {
+            console.error("[tutorials] Retry also FAILED:", retryError);
+          }
         } catch (repairErr) {
-          console.error("[tutorials] Repair attempt failed:", repairErr);
+          console.error("[tutorials] Server-side repair routine crashed:", repairErr);
         }
         
-        const wrapped = new Error(error.message);
+        const wrapped = new Error(`Erro de Sincronização (PGRST108): ${error.message}. Detalhes: ${error.details || 'Nenhum'}`);
         (wrapped as any)._schemaError = "public.tutorials";
+        (wrapped as any)._errorDetails = error;
         throw wrapped;
       }
       
-      throw new Error(error.message);
+      throw new Error(`Erro no Banco de Dados: ${error.message} (Código: ${error.code})`);
     }
+
+    console.log(`[tutorials] Fetch successful. Returned ${data?.length} tutorials.`);
 
     return (data ?? []) as any[];
   });
