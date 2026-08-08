@@ -15,6 +15,7 @@ import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
 export const getOrCreateThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    // Tática de carregamento resiliente para evitar PGRST108
     const { data: existing, error: existingError } = await context.supabase
       .from("support_threads")
       .select("*")
@@ -89,6 +90,17 @@ export const listMyThreads = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(50);
+    
+    if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache'))) {
+      const { data: adminData, error: adminError } = await (await import("@/integrations/supabase/client.server")).supabaseAdmin
+        .from("support_threads")
+        .select("*")
+        .eq("user_id", context.userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (!adminError) return adminData ?? [];
+    }
+
     if (error) throw error;
     return data ?? [];
   });
@@ -109,14 +121,26 @@ export const listMessages = createServerFn({ method: "GET" })
   })
   .handler(async ({ data, context }) => {
     const limit = data.limit ?? 30;
-    let q = context.supabase
-      .from("support_messages")
-      .select("*")
-      .eq("thread_id", data.threadId)
-      .order("created_at", { ascending: false })
-      .limit(limit + 1);
-    if (data.before) q = q.lt("created_at", data.before);
-    const { data: rows, error } = await q;
+    const fetchMessages = async (client: any) => {
+      let q = client
+        .from("support_messages")
+        .select("*")
+        .eq("thread_id", data.threadId)
+        .order("created_at", { ascending: false })
+        .limit(limit + 1);
+      if (data.before) q = q.lt("created_at", data.before);
+      return q;
+    };
+
+    let { data: rows, error } = await fetchMessages(context.supabase);
+
+    if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache'))) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const adminResult = await fetchMessages(supabaseAdmin);
+      rows = adminResult.data;
+      error = adminResult.error;
+    }
+
     if (error) throw error;
     const { normalizeSupportMessages } = await import("./support-message");
     const list = normalizeSupportMessages(rows, data.threadId);
@@ -160,11 +184,21 @@ export const sendMessage = createServerFn({ method: "POST" })
     const { isStaff } = await resolveRoles(context);
 
     // Load thread once; validate access and closed-state.
-    const { data: thread, error: tErr } = await context.supabase
+    const fetchThread = async (client: any) => client
       .from("support_threads")
       .select("id, user_id, status")
       .eq("id", data.threadId)
       .maybeSingle();
+
+    let { data: thread, error: tErr } = await fetchThread(context.supabase);
+    
+    if (tErr && (tErr.code === 'PGRST108' || tErr.message?.includes('schema cache'))) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const adminResult = await fetchThread(supabaseAdmin);
+      thread = adminResult.data;
+      tErr = adminResult.error;
+    }
+
     if (tErr) throw tErr;
     if (!thread) throw new Error("Conversa não encontrada");
 
