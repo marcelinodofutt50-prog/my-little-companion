@@ -16,6 +16,7 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
     
     // Auto-repair schema if needed
     try {
+      console.log("[public-tutorials] Pre-flight schema check...");
       await supabaseAdmin.rpc("force_refresh_schema_permissions");
     } catch (e) {
       console.warn("[public-tutorials] Pre-fetch schema refresh skipped:", e);
@@ -30,9 +31,6 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
       query = query.eq("category", data.category);
     }
     
-    // Nível de dificuldade não existe na tabela atual, mas o usuário pediu. 
-    // Vamos ignorar ou adicionar via metadados se necessário futuramente.
-    
     if (data.search) {
       query = query.or(`title.ilike.%${data.search}%,description.ilike.%${data.search}%`);
     }
@@ -44,11 +42,39 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
       .order(data.orderBy, { ascending: data.orderDir === "asc" })
       .range(from, to);
 
-    const { data: tutorials, error, count } = await query;
+    const { data: tutorials, error, count, status, statusText } = await query;
 
     if (error) {
-      console.error("[public-tutorials] List failed:", error);
-      throw new Error(error.message);
+      console.error(`[public-tutorials] List FAILED! Status: ${status} (${statusText})`, {
+        code: error.code,
+        message: error.message,
+        details: error.details
+      });
+      
+      const isSchemaError = error.message?.includes("schema cache") || 
+                           error.message?.includes("does not exist") ||
+                           error.code === 'PGRST108';
+                           
+      if (isSchemaError) {
+        console.warn("[public-tutorials] Schema cache issue detected. Attempting recovery...");
+        try {
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          await new Promise(r => setTimeout(r, 1000));
+          const { data: retryData, error: retryError, count: retryCount } = await query;
+          if (!retryError) {
+            return {
+              items: retryData ?? [],
+              total: retryCount ?? 0,
+              page: data.page,
+              limit: data.limit
+            };
+          }
+        } catch (repairErr) {
+          console.error("[public-tutorials] Recovery failed:", repairErr);
+        }
+      }
+      
+      throw new Error(`Erro ao listar tutoriais: ${error.message} (${error.code})`);
     }
 
     return {
