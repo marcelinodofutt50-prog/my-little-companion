@@ -35,17 +35,15 @@ function TutorialsPage() {
     setLoading(true);
     try {
       console.log("[tutorials] Starting tactical load cycle...");
-      // Forçamos a sincronização tática em todo carregamento para garantir o cache
-      const { forceReloadSchema } = await import("@/lib/admin.functions");
-      await forceReloadSchema();
-      // Delay estratégico para propagação do sinal de reload no PostgREST
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      
+      // Tentativa 1: Fetch normal
       const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
+      
+      // Se chegamos aqui sem erro, os dados carregaram
       setTutorials(tData || []);
       setCompletedIds(pData || []);
       
-      if (forceRepair && tData && tData.length > 0) {
+      if (forceRepair) {
         toast.success("Módulos sincronizados com sucesso!");
       }
     } catch (err: any) {
@@ -55,15 +53,27 @@ function TutorialsPage() {
                            err.message?.includes("does not exist") ||
                            err.code === 'PGRST108';
                            
-      if (isSchemaError && !forceRepair) {
-        // Se ainda não tentamos reparar, tentamos uma vez
-        console.warn("[tutorials] Schema error detected, attempting auto-repair...");
-        loadData(true);
-        return;
-      }
-
       if (isSchemaError) {
-        setTutorials([]); // Aciona UI de recuperação
+        console.warn("[tutorials] Schema error detected. Triggering deep repair...");
+        const loadToast = toast.loading("Detectamos instabilidade no servidor. Sincronizando...");
+        
+        try {
+          const { forceReloadSchema } = await import("@/lib/admin.functions");
+          await forceReloadSchema();
+          
+          // Delay maior para garantir que o cache da Vercel/PostgREST limpe
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
+          setTutorials(retryTData || []);
+          setCompletedIds(retryPData || []);
+          
+          toast.success("Sistema restaurado!", { id: loadToast });
+        } catch (repairErr: any) {
+          console.error("[tutorials] Deep repair failed:", repairErr);
+          toast.error("Falha na sincronização automática. Tente o botão manual.", { id: loadToast });
+          setTutorials([]); // Garante que a UI de erro apareça
+        }
       } else {
         toast.error(err.message || "Erro ao carregar tutoriais");
       }
