@@ -14,23 +14,15 @@ export const listTutorials = createServerFn({ method: "GET" })
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // Verificamos se supabaseAdmin.rpc existe (evita erro de .catch is not a function)
-    if (typeof (supabaseAdmin as any).rpc !== 'function') {
-      console.error("[tutorials] supabaseAdmin.rpc is not a function. Check client initialization.");
-    }
-    
-    // Fallback agressivo: Tentamos "tocar" as tabelas para forçar o carregamento do schema
-    // se o RPC falhar ou se o cache estiver muito teimoso.
+    // Attempt to touch the schema cache
     try {
-      console.log("[tutorials] Performing tactical table touch...");
-      await Promise.allSettled([
-        supabaseAdmin.from("tutorials").select("id").limit(1),
-        supabaseAdmin.from("tutorial_progress").select("id").limit(1),
-        typeof supabaseAdmin.rpc === 'function' ? supabaseAdmin.rpc("force_refresh_schema_permissions") : Promise.resolve()
-      ]);
+      if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
+        await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      }
     } catch (e) {
-      console.warn("[tutorials] Table touch/sync skipped:", e);
+      console.warn("[tutorials] Schema refresh attempt failed:", e);
     }
+
     
     // Attempt 1: Standard query
     console.log("[tutorials] Executing fetch from 'public.tutorials'...");
@@ -59,10 +51,8 @@ export const listTutorials = createServerFn({ method: "GET" })
         try {
           const repairStart = Date.now();
           // Chamada à função SECURITY DEFINER que garante permissões e reload
-          if (typeof supabaseAdmin.rpc === 'function') {
+          if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
             await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          } else {
-            console.error("[tutorials] supabaseAdmin.rpc missing during repair attempt.");
           }
           
           console.log("[tutorials] Repair signal sent. Waiting 2000ms for PostgREST propagation...");

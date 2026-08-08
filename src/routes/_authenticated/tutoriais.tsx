@@ -40,56 +40,39 @@ function TutorialsPage() {
     setLoading(true);
     try {
       console.log("[tutorials] Starting tactical load cycle...");
-      
-      // Tentativa 1: Fetch normal
       const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
-      
-      // Se chegamos aqui sem erro, os dados carregaram
       setTutorials(tData || []);
       setCompletedIds(pData || []);
-      
-      if (forceRepair) {
-        toast.success("Módulos sincronizados com sucesso!");
-      }
+      if (forceRepair) toast.success("Módulos sincronizados com sucesso!");
     } catch (err: any) {
-      console.error("[tutorials] CRITICAL ERROR during data load:", {
-        message: err.message,
-        schemaError: err._schemaError,
-        details: err._errorDetails,
-        stack: err.stack
-      });
+      console.error("[tutorials] CRITICAL ERROR during data load:", err);
       
       const isSchemaError = err._schemaError || 
                            err.message?.includes("schema cache") || 
                            err.message?.includes("does not exist") ||
                            err.code === 'PGRST108' ||
-                           err.message?.includes("PGRST108");
+                           err.message?.includes("PGRST108") ||
+                           err.message?.includes("PGRST116");
                            
       if (isSchemaError) {
-        console.warn("[tutorials] Schema sync issue detected in UI. Initiating automated recovery flow...");
-        const loadToast = toast.loading("Sincronizando tabelas do sistema... (Aguarde)");
+        console.warn("[tutorials] Schema sync issue detected. Triggering deep recovery...");
+        const loadToast = toast.loading("Sincronizando tabelas do sistema...");
         
         try {
-          const { forceReloadSchema } = await import("@/lib/admin.functions");
-          const repairResult = await forceReloadSchema();
-          console.log("[tutorials] Repair function returned:", repairResult);
+          const { supabase } = await import("@/integrations/supabase/client");
+          if (supabase && typeof supabase.rpc === 'function') {
+            await supabase.rpc("force_refresh_schema_permissions");
+          }
           
-          // Wait for PostgREST cache clearing
-          console.log("[tutorials] Waiting for propagation...");
-          await new Promise(resolve => setTimeout(resolve, 2500));
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          console.log("[tutorials] Retrying data fetch...");
           const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
-          
           setTutorials(retryTData || []);
           setCompletedIds(retryPData || []);
-          
-          toast.success("Módulos sincronizados com sucesso!", { id: loadToast });
-          console.log("[tutorials] Recovery flow SUCCESSFUL");
+          toast.success("Módulos sincronizados!", { id: loadToast });
         } catch (repairErr: any) {
           console.error("[tutorials] Recovery flow FAILED:", repairErr);
-          toast.error(`Falha na sincronização: ${repairErr.message || 'Erro desconhecido'}. Tente o botão manual.`, { id: loadToast });
-          setTutorials([]); 
+          toast.error("Falha na sincronização. Tente atualizar a página.", { id: loadToast });
         }
       } else {
         toast.error(`Erro: ${err.message || "Erro ao carregar tutoriais"}`);
@@ -242,15 +225,15 @@ function TutorialsPage() {
                     variant="default" 
                     size="lg" 
                     onClick={async () => {
-                      const loadToast = toast.loading("Restaurando banco de dados...");
+                      const loadToast = toast.loading("Executando reparo tático...");
                       try {
-                        const { forceReloadSchema } = await import("@/lib/admin.functions");
-                        // Forçamos o reload e um pequeno touch na tabela
-                        await forceReloadSchema();
+                        const { supabase } = await import("@/integrations/supabase/client");
+                        if (supabase && typeof supabase.rpc === 'function') {
+                          await supabase.rpc("force_refresh_schema_permissions");
+                        }
                         
-                        toast.success("Sincronização concluída! Recarregando módulos...", { id: loadToast });
-                        
-                        // Recarregamos os dados localmente primeiro
+                        toast.success("Sincronização enviada! Recarregando...", { id: loadToast });
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                         await loadData();
                       } catch (err) {
                         toast.error("Erro ao executar script de reparo", { id: loadToast });
