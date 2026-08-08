@@ -35,6 +35,7 @@ import { Route as AuthenticatedIndicacoesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder/index'
+import { Route as ApiPublicTutorialsRouteImport } from './routes/api/public/tutorials'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
@@ -181,6 +182,11 @@ const ApiApkBuilderIndexRoute = ApiApkBuilderIndexRouteImport.update({
   path: '/api/apk-builder/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTutorialsRoute = ApiPublicTutorialsRouteImport.update({
+  id: '/api/public/tutorials',
+  path: '/api/public/tutorials',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   id: '/api/public/mp-webhook',
   path: '/api/public/mp-webhook',
@@ -298,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -340,6 +347,7 @@ export interface FileRoutesByTo {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -384,6 +392,7 @@ export interface FileRoutesById {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
   '/api/public/hooks/auto-close-tickets': typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
+    | '/api/public/tutorials'
     | '/api/apk-builder/'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
+    | '/api/public/tutorials'
     | '/api/apk-builder'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/mp-webhook'
+    | '/api/public/tutorials'
     | '/api/apk-builder/'
     | '/api/public/hooks/apk-worker'
     | '/api/public/hooks/auto-close-tickets'
@@ -547,6 +559,7 @@ export interface RootRouteChildren {
   ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
   ApiPublicBackendHealthRoute: typeof ApiPublicBackendHealthRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
+  ApiPublicTutorialsRoute: typeof ApiPublicTutorialsRoute
   ApiApkBuilderIndexRoute: typeof ApiApkBuilderIndexRoute
   ApiPublicHooksApkWorkerRoute: typeof ApiPublicHooksApkWorkerRoute
   ApiPublicHooksAutoCloseTicketsRoute: typeof ApiPublicHooksAutoCloseTicketsRoute
@@ -744,6 +757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiApkBuilderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/tutorials': {
+      id: '/api/public/tutorials'
+      path: '/api/public/tutorials'
+      fullPath: '/api/public/tutorials'
+      preLoaderRoute: typeof ApiPublicTutorialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mp-webhook': {
       id: '/api/public/mp-webhook'
       path: '/api/public/mp-webhook'
@@ -911,6 +931,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
   ApiPublicBackendHealthRoute: ApiPublicBackendHealthRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
+  ApiPublicTutorialsRoute: ApiPublicTutorialsRoute,
   ApiApkBuilderIndexRoute: ApiApkBuilderIndexRoute,
   ApiPublicHooksApkWorkerRoute: ApiPublicHooksApkWorkerRoute,
   ApiPublicHooksAutoCloseTicketsRoute: ApiPublicHooksAutoCloseTicketsRoute,
@@ -929,3 +950,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
