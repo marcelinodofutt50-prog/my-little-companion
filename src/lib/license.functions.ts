@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { trackSchemaFailure } from "./tutorials.functions";
 
 // Yaarsa expire_date format: YYYY-MM-DD. To block a login immediately we set
 // expire_date to yesterday; the PHP checker treats past dates as expired.
@@ -30,7 +31,12 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
-    if (error) throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
+    if (error) {
+      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+        await trackSchemaFailure(error, "suspendMyLicense", false, { stage: "initial_fetch" }, userId);
+      }
+      throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
+    }
     const { canPauseLicense } = await import("./license-pause-rules");
     const gate = canPauseLicense(lic as any);
     if (!gate.ok) throw new Error(gate.message);
@@ -136,7 +142,12 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
-    if (error) throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
+    if (error) {
+      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+        await trackSchemaFailure(error, "reactivateMyLicense", false, { stage: "initial_fetch" }, userId);
+      }
+      throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
+    }
     const { canResumeLicense } = await import("./license-pause-rules");
     const gate = canResumeLicense(lic as any);
     if (!gate.ok) throw new Error(gate.message);
@@ -264,7 +275,25 @@ export const listMyLicenses = createServerFn({ method: "GET" })
     const { decrypt } = await import("./yaarsa.server");
     const { data, error } = await context.supabase
       .from("licenses").select("*").eq("user_id", context.userId).order("created_at", { ascending: false });
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+        await trackSchemaFailure(error, "listMyLicenses", false, { stage: "initial_fetch" }, context.userId);
+        
+        // Fallback for listMyLicenses
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: adminData, error: adminError } = await supabaseAdmin
+           .from("licenses").select("*").eq("user_id", context.userId).order("created_at", { ascending: false });
+           
+        if (!adminError) {
+          await trackSchemaFailure(error, "listMyLicenses", true, { stage: "retry_success" }, context.userId);
+          return (adminData ?? []).map((row) => ({
+            ...row,
+            password: (() => { try { return decrypt(row.yaarsa_password_enc); } catch { return "***"; } })(),
+          }));
+        }
+      }
+      throw error;
+    }
     return (data ?? []).map((row) => ({
       ...row,
       password: (() => { try { return decrypt(row.yaarsa_password_enc); } catch { return "***"; } })(),

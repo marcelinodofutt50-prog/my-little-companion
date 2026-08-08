@@ -6,6 +6,7 @@ import { tierFromPlanSlug, type VersionTier } from "@/lib/plans";
 import { createGeminiProvider } from "./gemini-provider.server";
 import { assertAdmin, assertStaff, resolveOrInviteUser } from "@/lib/admin-helpers.server";
 import { computeExpiries, nextDay20, nextDay20Date, CreateLicenseInput, RegisterLegacyInput } from "@/lib/admin-shared";
+import { trackSchemaFailure } from "./tutorials.functions";
 
 
 export const adminListUsers = createServerFn({ method: "GET" })
@@ -262,8 +263,12 @@ export const adminListThreads = createServerFn({ method: "GET" })
       // Cache de schema desatualizado (PGRST204/PGRST205) ou coluna nova ausente:
       // tenta de novo só com o essencial em vez de devolver lista vazia.
       console.warn("[adminListThreads] falha na query completa:", error.message);
+      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+        await trackSchemaFailure(error, "adminListThreads", false, { stage: "initial_fetch", filter: data.filter }, context.userId);
+      }
       ({ data: threads, error } = await run("*"));
       if (error) throw new Error(`Não foi possível carregar as conversas: ${error.message}`);
+      await trackSchemaFailure(error, "adminListThreads", true, { stage: "retry_minimal_success" }, context.userId);
     }
     const list = threads ?? [];
     const userIds = Array.from(new Set(list.map((t: any) => t.user_id).filter(Boolean)));

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
+import { trackSchemaFailure } from "./tutorials.functions";
 
 /**
  * Retorna a thread aberta do usuário. Se a última thread estiver fechada
@@ -27,6 +28,9 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
 
     if (existingError) {
       console.error("[getOrCreateThread] falha ao buscar atendimento:", existingError);
+      if (existingError.code === 'PGRST108' || existingError.message?.includes('schema cache')) {
+        await trackSchemaFailure(existingError, "getOrCreateThread", false, { stage: "check_existing" }, context.userId);
+      }
     }
 
     if (existing) return existing;
@@ -92,13 +96,17 @@ export const listMyThreads = createServerFn({ method: "GET" })
       .limit(50);
     
     if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache'))) {
+      await trackSchemaFailure(error, "listMyThreads", false, { stage: "initial_fetch" }, context.userId);
       const { data: adminData, error: adminError } = await (await import("@/integrations/supabase/client.server")).supabaseAdmin
         .from("support_threads")
         .select("*")
         .eq("user_id", context.userId)
         .order("created_at", { ascending: false })
         .limit(50);
-      if (!adminError) return adminData ?? [];
+      if (!adminError) {
+        await trackSchemaFailure(error, "listMyThreads", true, { stage: "retry_success" }, context.userId);
+        return adminData ?? [];
+      }
     }
 
     if (error) throw error;
@@ -135,10 +143,17 @@ export const listMessages = createServerFn({ method: "GET" })
     let { data: rows, error } = await fetchMessages(context.supabase);
 
     if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache'))) {
+      await trackSchemaFailure(error, "listMessages", false, { stage: "initial_fetch" }, context.userId);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const adminResult = await fetchMessages(supabaseAdmin);
       rows = adminResult.data;
       error = adminResult.error;
+      if (!error) {
+        await trackSchemaFailure(tErr, "sendMessage", true, { stage: "retry_fetch_thread_success" }, context.userId);
+      }
+      if (!error) {
+        await trackSchemaFailure(error, "listMessages", true, { stage: "retry_success" }, context.userId);
+      }
     }
 
     if (error) throw error;
@@ -193,6 +208,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     let { data: thread, error: tErr } = await fetchThread(context.supabase);
     
     if (tErr && (tErr.code === 'PGRST108' || tErr.message?.includes('schema cache'))) {
+      await trackSchemaFailure(tErr, "sendMessage", false, { stage: "fetch_thread" }, context.userId);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const adminResult = await fetchThread(supabaseAdmin);
       thread = adminResult.data;
@@ -289,6 +305,9 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     if (error) {
       console.error("[sendMessage] Insertion failed after fallback:", error);
+      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+         await trackSchemaFailure(error, "sendMessage", false, { stage: "insertion_fail" }, context.userId);
+      }
       // Last resort fallback: minimal insert to ensure message is not lost
       const minimalPayload = { 
         thread_id: effectiveThreadId, 
