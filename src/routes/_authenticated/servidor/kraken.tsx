@@ -416,7 +416,7 @@ function KrakenPage() {
           </Card>
 
           <div className="lg:col-span-3 space-y-6">
-            <Card className="border-amber-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
+            <Card className="border-amber-900/30 bg-black/70 backdrop-blur-md kraken-fade-in" style={{ transitionDelay: '0.2s' }}>
               <CardHeader className="flex flex-row items-center gap-4">
                 <div className="rounded-full bg-amber-500/10 p-2 border border-amber-500/20">
                   <AlertTriangle className="h-6 w-6 text-amber-500" />
@@ -508,7 +508,7 @@ function KrakenPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-blue-900/30 bg-black/90 backdrop-blur-xl kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
+            <Card className="border-blue-900/30 bg-black/70 backdrop-blur-md kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
                <CardHeader className="pb-2">
                  <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400">Tactical Shortcuts</CardTitle>
                </CardHeader>
@@ -531,7 +531,7 @@ function KrakenPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="p-4 rounded border border-red-500/20 bg-black/60 text-[10px] text-white/80 font-mono space-y-2"
+              className="p-4 rounded border border-red-500/20 bg-black/70 backdrop-blur-md text-[10px] text-white/80 font-mono space-y-2"
             >
               <div className="font-bold text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
