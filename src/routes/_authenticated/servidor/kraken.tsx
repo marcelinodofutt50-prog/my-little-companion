@@ -425,7 +425,7 @@ function KrakenPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 space-y-2 border-l-4 border-l-red-500">
+                <div className="rounded-lg border border-red-500/20 bg-black/60 p-4 space-y-2 border-l-4 border-l-red-500">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] text-red-400 font-bold">INTEL: EXCLUSIVE ASSET</span>
                     <div className="flex gap-1">
@@ -512,7 +512,7 @@ function KrakenPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="p-4 rounded border border-red-500/20 bg-red-500/5 text-[10px] text-white/80 font-mono space-y-2"
+              className="p-4 rounded border border-red-500/20 bg-black/60 text-[10px] text-white/80 font-mono space-y-2"
             >
               <div className="font-bold text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
