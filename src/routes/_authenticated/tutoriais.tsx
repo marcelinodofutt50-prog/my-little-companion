@@ -127,8 +127,7 @@ function TutorialsPage() {
           }
         }
       } else {
-
-        toast.error(`Erro: ${err.message || "Erro ao carregar tutoriais"}`);
+        console.error("[tutorials] Generic error encountered:", err);
       }
     } finally {
       setLoading(false);
