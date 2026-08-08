@@ -66,7 +66,8 @@ export const listTutorials = createServerFn({ method: "GET" })
     // Tática de carregamento resiliente: tenta admin diretamente para o Centro de Treinamento
     // Usamos select("count") ou limit(1) primeiro para verificar se a relação existe
     // e forçar o cache se necessário antes da query real.
-    const { data, error } = await supabaseAdmin
+    // Tática de carregamento ultra-resiliente
+    let { data, error } = await supabaseAdmin
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
