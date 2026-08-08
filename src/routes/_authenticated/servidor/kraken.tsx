@@ -189,7 +189,7 @@ function KrakenPage() {
     setIsExecuting(true);
 
     try {
-      const res = (await executeKraken({ data: { command: cmd } })) as KrakenOutput;
+      const res = await executeKraken({ data: { command: cmd } });
       
       if (!res || typeof res.success === 'undefined') {
         throw new Error("Resposta inválida do servidor");

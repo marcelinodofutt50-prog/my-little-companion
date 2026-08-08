@@ -39,6 +39,8 @@ export const getKrakenStatus = createServerFn({ method: "GET" })
           // Se encontramos um pagamento aprovado que o webhook ainda não processou, 
           // disparamos o fulfillment em segundo plano e retornamos status positivo.
           const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+          // fulfillOrder is already robust, we just need to make sure the import is correct.
+          // Since it's a server file in a server function, we use the relative path.
           // Não aguardamos o fulfillOrder para não travar a UI, ele é idempotente.
           fulfillOrder(order.id).catch(console.error);
           

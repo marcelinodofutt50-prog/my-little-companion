@@ -40,6 +40,7 @@ export const listTutorials = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
+      .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
