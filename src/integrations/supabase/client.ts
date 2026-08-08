@@ -26,18 +26,24 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
+// Add a way to check if the client is in "safe mode"
+export const isSupabaseConfigured = () => {
+  const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : undefined);
+  const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_PUBLISHABLE_KEY || process.env?.SUPABASE_PUBLISHABLE_KEY : undefined);
+  
+  const isValidUrl = SUPABASE_URL && typeof SUPABASE_URL === 'string' && /^https?:\/\//.test(SUPABASE_URL);
+  const isValidKey = SUPABASE_PUBLISHABLE_KEY && typeof SUPABASE_PUBLISHABLE_KEY === 'string' && SUPABASE_PUBLISHABLE_KEY.length > 10;
+  
+  return !!(isValidUrl && isValidKey);
+};
 
 function createSupabaseClient() {
-  // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering)
   const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : undefined);
   const SUPABASE_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY || (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_PUBLISHABLE_KEY || process.env?.SUPABASE_PUBLISHABLE_KEY : undefined);
 
-  // Deep validation to avoid internal Supabase SDK throws which trigger root error boundaries
   const isValidUrl = SUPABASE_URL && typeof SUPABASE_URL === 'string' && /^https?:\/\//.test(SUPABASE_URL);
   const isValidKey = SUPABASE_PUBLISHABLE_KEY && typeof SUPABASE_PUBLISHABLE_KEY === 'string' && SUPABASE_PUBLISHABLE_KEY.length > 10;
 
-  // Final fallback values that satisfy the Supabase SDK constructor but indicate failure
   const effectiveUrl = isValidUrl ? (SUPABASE_URL as string) : "https://placeholder.supabase.co";
   const effectiveKey = isValidKey ? (SUPABASE_PUBLISHABLE_KEY as string) : "sb_publishable_placeholder";
 
@@ -47,24 +53,11 @@ function createSupabaseClient() {
       ...(!isValidKey ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
     console.warn(`[Supabase] Invalid/Missing environment variable(s): ${missing.join(', ')}. Initializing with placeholders to prevent app crash.`);
-    
-    // Check if we are in the browser to throw a specific error that the Root Boundary can catch
-    // but without crashing the module initialization itself.
-    if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        const error = new Error(`Missing Supabase environment variable(s): ${missing.join(', ')}`);
-        (error as any).isEnvError = true;
-        // Dispatching a custom event that components can listen to, or letting it bubble
-        console.error("Supabase environment configuration error detected.");
-      }, 0);
-    }
-    
-    return createClient<Database>(effectiveUrl, effectiveKey, {
   }
 
-  return createClient<Database>(SUPABASE_URL as string, SUPABASE_PUBLISHABLE_KEY as string, {
+  return createClient<Database>(effectiveUrl, effectiveKey, {
     global: {
-      fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY as string),
+      fetch: createSupabaseFetch(effectiveKey),
     },
     auth: {
       storage: typeof window !== 'undefined' ? localStorage : undefined,
@@ -76,8 +69,6 @@ function createSupabaseClient() {
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
   get(_, prop, receiver) {
     if (!_supabase) _supabase = createSupabaseClient();
