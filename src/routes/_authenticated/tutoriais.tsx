@@ -120,8 +120,6 @@ function TutorialsPage() {
     }
   }, [listFn, getProgressFn]);
 
-  }, [listFn, getProgressFn]);
-
   useEffect(() => {
     loadData();
   }, [loadData]);
