@@ -62,7 +62,11 @@ function TutorialsPage() {
           const { supabase } = await import("@/integrations/supabase/client");
           if (supabase && typeof (supabase as any).rpc === 'function') {
             const { error: rpcErr } = await (supabase as any).rpc("force_refresh_schema_permissions");
-            if (rpcErr) throw rpcErr;
+            if (rpcErr) {
+              console.error("[tutorials] Recovery RPC error details:", rpcErr);
+              throw new Error(`Falha no RPC de recuperação: ${rpcErr.message || 'Erro desconhecido'}`);
+            }
+
           }
           
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -213,6 +217,9 @@ function TutorialsPage() {
                         
                         if (rpcErr) {
                           console.error("[tutorials] Manual repair RPC error:", rpcErr);
+                          toast.error(`Erro no servidor: ${rpcErr.message || "Erro ao processar comando tático"}`);
+                        } else {
+                          toast.success("Comando de sincronização enviado com sucesso!");
                         }
                         
                         toast.success("Sincronização processada! Recarregando...", { id: loadToast });

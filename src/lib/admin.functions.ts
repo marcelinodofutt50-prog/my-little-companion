@@ -289,9 +289,10 @@ export const adminAssumeThread = createServerFn({ method: "POST" })
     // Tentativa de limpar cache de schema caso a coluna não seja encontrada
     try {
       if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-        await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
+        const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
+        if (rpcErr) console.warn("[admin] Schema refresh RPC error:", rpcErr);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn("[admin] Schema refresh attempt failed:", e);
     }
 
@@ -1459,7 +1460,8 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
         
         // Fallback: Notify manually and touch tables
         if (typeof (supabaseAdmin as any).rpc === 'function') {
-          await (supabaseAdmin as any).rpc("notify_pgrst_reload");
+          const { error: notifyErr } = await (supabaseAdmin as any).rpc("notify_pgrst_reload");
+          if (notifyErr) console.error("[admin] notify_pgrst_reload FAILED:", notifyErr);
         }
         
         const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads", "user_roles"];

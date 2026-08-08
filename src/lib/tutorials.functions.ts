@@ -22,9 +22,12 @@ export const listTutorials = createServerFn({ method: "GET" })
     try {
       if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
         const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
-        if (rpcErr) console.warn("[tutorials] Schema refresh RPC error:", rpcErr);
+        if (rpcErr) {
+          console.warn("[tutorials] Schema refresh RPC error:", rpcErr);
+          // Don't throw here to avoid breaking the main query if it's just a cache delay
+        }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn("[tutorials] Schema refresh attempt failed:", e);
     }
 
@@ -69,7 +72,7 @@ export const listTutorials = createServerFn({ method: "GET" })
         }
       }
       
-      throw new Error(`Erro de Sincronização (PGRST108). Tente usar o botão de sincronização manual.`);
+      throw new Error(`Erro de Sincronização (PGRST108): A tabela de tutoriais não foi encontrada no cache do sistema. Por favor, utilize o botão de sincronização manual ou contate o suporte.`);
     }
 
     return data ?? [];
