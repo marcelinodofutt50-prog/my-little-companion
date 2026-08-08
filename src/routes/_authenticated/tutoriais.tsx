@@ -45,8 +45,12 @@ function TutorialsPage() {
       } catch (err: any) {
         console.error("[tutorials] Data load failed:", err);
         if (mounted) {
-          toast.error(err.message || "Erro ao carregar tutoriais");
-          setTutorials([]);
+          const isSchemaError = err._schemaError || err.message?.includes("schema cache") || err.message?.includes("does not exist");
+          if (isSchemaError) {
+            setTutorials([]); // This will trigger the empty state with recovery button
+          } else {
+            toast.error(err.message || "Erro ao carregar tutoriais");
+          }
         }
       } finally {
         if (mounted) setLoading(false);
