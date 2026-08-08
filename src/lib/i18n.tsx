@@ -446,7 +446,7 @@ const DICT: Dict = {
     en: "Already a customer? Use the admin chat inside the dashboard — much faster replies.",
   },
   "contact.email.title": { pt: "E-mail oficial", en: "Official e-mail" },
-  "contact.chat.title": { pt: "Chat com Admin", en: "Admin chat" },
+  "contact.chat.title": { pt: "Central de atendimento", en: "Support center" },
   "contact.chat.desc": {
     pt: "Disponível dentro do painel após login.",
     en: "Available inside the dashboard after signing in.",

@@ -152,7 +152,7 @@ function Index() {
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
             <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> Suporte 24/7</div>
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> Central de atendimento: OK</div>
           </motion.div>
         </div>
       </section>
