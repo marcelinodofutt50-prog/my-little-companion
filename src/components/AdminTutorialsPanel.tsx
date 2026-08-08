@@ -29,7 +29,9 @@ export function AdminTutorialsPanel() {
     is_active: true
   });
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isOrdering, setIsOrdering] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const saveFn = useServerFn(adminSaveTutorial);
   const deleteFn = useServerFn(adminDeleteTutorial);
