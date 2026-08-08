@@ -172,7 +172,7 @@ export function AdminTutorialsPanel() {
       clearInterval(interval);
       setUploadProgress(100);
       
-      setCurrent(prev => ({ ...prev, [type === 'video' ? 'video_url' : 'image_url']: publicUrl }));
+      setCurrent((prev: any) => ({ ...prev, [type === 'video' ? 'video_url' : 'image_url']: publicUrl }));
       toast.success(`${type === 'video' ? 'Vídeo' : 'Capa'} enviado com sucesso!`);
     } catch (e: any) {
       toast.error("Erro no upload: " + e.message);
