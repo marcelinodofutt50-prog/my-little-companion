@@ -55,7 +55,7 @@ export const getPayoutOverview = createServerFn({ method: "GET" })
 
 export const requestPayout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({
       method: z.enum(["pix", "cashback"]),
       amount: z.number().positive().max(100000),
@@ -102,7 +102,7 @@ export const requestPayout = createServerFn({ method: "POST" })
 
 export const cancelPayout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     // Only allow cancelling a still-requested payout — must go through admin update to rejected.
@@ -121,7 +121,7 @@ export const cancelPayout = createServerFn({ method: "POST" })
 
 export const confirmPayoutReceipt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -159,7 +159,7 @@ export const adminListPayouts = createServerFn({ method: "GET" })
 
 export const adminUpdatePayout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({
       id: z.string().uuid(),
       status: z.enum(["requested", "approved", "paid", "rejected"]),

@@ -51,7 +51,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
 
 export const updateReferralPref = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({
       pref: z.enum(["cashback", "free_month", "pix"]),
       pixKey: z.string().trim().max(120).optional().nullable(),
@@ -72,7 +72,7 @@ export const updateReferralPref = createServerFn({ method: "POST" })
 
 export const validateReferralCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ code: z.string().trim().min(4).max(16) }).parse(i))
+  .validator((i: unknown) => z.object({ code: z.string().trim().min(4).max(16) }).parse(i))
   .handler(async ({ data, context }) => {
     const code = data.code.toUpperCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

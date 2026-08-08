@@ -9,7 +9,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const getWinbackOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ planSlug: z.string().trim().min(1).max(64) }).parse(input)
   )
   .handler(async ({ data, context }) => {
@@ -128,7 +128,7 @@ export const getWinbackOffer = createServerFn({ method: "POST" })
 // Cliente recusou a oferta (fechou no X) — o cupom deixa de existir.
 export const dismissWinbackOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ code: z.string().trim().max(64).optional() }).parse(input ?? {})
   )
   .handler(async ({ data, context }) => {

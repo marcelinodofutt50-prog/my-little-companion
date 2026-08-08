@@ -28,7 +28,7 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
  */
 export const runPurchaseSelfTest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z
       .object({
         mode: z.enum(["safe", "full"]).default("safe"),

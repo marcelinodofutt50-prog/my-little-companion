@@ -30,7 +30,7 @@ function maskEmail(email?: string) {
  * Não grava e-mail em claro, apenas versão mascarada.
  */
 export const logEmailEvent = createServerFn({ method: "POST" })
-  .inputValidator((input: EmailEventInput) => input)
+  .validator((input: EmailEventInput) => input)
   .handler(async ({ data }) => {
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -74,7 +74,7 @@ export type EmailMetrics = {
 /** Métricas agregadas de envio de e-mails (somente admin). */
 export const getEmailMetrics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { hours?: number } | undefined) => input ?? {})
+  .validator((input: { hours?: number } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
@@ -152,7 +152,7 @@ export type TestEmailResult = {
  */
 export const sendTestEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { email: string }) => {
+  .validator((input: { email: string }) => {
     const email = String(input?.email ?? "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
       throw new Error("E-mail inválido");

@@ -30,7 +30,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
 
 export const updateMyDisplayName = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({ displayName: z.union([nickSchema, z.literal("")]) }).parse(input),
   )
   .handler(async ({ data, context }) => {

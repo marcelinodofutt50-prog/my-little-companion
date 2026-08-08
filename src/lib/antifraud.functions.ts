@@ -8,7 +8,7 @@ export type { SignupGuardResult };
  * Público de propósito: roda antes de existir sessão. Nunca confia em dados do cliente.
  */
 export const checkSignupAllowed = createServerFn({ method: "POST" })
-  .inputValidator((input?: { email?: string }) => ({
+  .validator((input?: { email?: string }) => ({
     email: typeof input?.email === "string" ? input.email.slice(0, 255) : undefined,
   }))
   .handler(async ({ data }): Promise<SignupGuardResult> => {
@@ -18,7 +18,7 @@ export const checkSignupAllowed = createServerFn({ method: "POST" })
 
 /** Registra o cadastro concluído (hash do IP + e-mail mascarado) para revisão antifraude. */
 export const recordSignupIp = createServerFn({ method: "POST" })
-  .inputValidator((input: { email?: string; userId?: string | null }) => ({
+  .validator((input: { email?: string; userId?: string | null }) => ({
     email: typeof input?.email === "string" ? input.email.slice(0, 255) : undefined,
     userId: typeof input?.userId === "string" ? input.userId : null,
   }))

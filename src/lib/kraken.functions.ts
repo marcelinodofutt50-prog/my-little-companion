@@ -44,7 +44,7 @@ export const krakenHandler = async (args: { data: KrakenInput }) => {
 export const krakenCommand = createServerFn({ method: "POST" })
 
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => {
+  .validator((d: unknown) => {
     return krakenInputSchema.parse(d);
   })
   .handler(krakenHandler);

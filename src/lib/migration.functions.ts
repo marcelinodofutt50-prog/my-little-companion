@@ -31,7 +31,7 @@ export const getMyMigrationRequest = createServerFn({ method: "GET" })
 /** Cria a solicitação de migração com o checklist preenchido e os comprovantes. */
 export const submitMigrationRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => payload.parse(i))
+  .validator((i: unknown) => payload.parse(i))
   .handler(async ({ data, context }) => {
     if (data.proofPaths.length === 0) {
       throw new Error("Anexe pelo menos 1 comprovante de que você já usa outro servidor.");
@@ -102,7 +102,7 @@ export const submitMigrationRequest = createServerFn({ method: "POST" })
 /** Links temporários para o admin/usuário visualizar os comprovantes. */
 export const getMigrationProofUrls = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({ paths: z.array(z.string().min(1).max(400)).max(6) }).parse(i),
   )
   .handler(async ({ data, context }) => {
@@ -121,7 +121,7 @@ const MAX_TOTAL_PROOFS = 12;
 /** Adiciona comprovantes extras a uma solicitação já enviada (sem abrir novo chamado). */
 export const addMigrationProofs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z
       .object({
         requestId: z.string().uuid(),
