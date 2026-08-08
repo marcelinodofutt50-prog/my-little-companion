@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Video, Youtube, ChevronRight, Play, BookOpen, Star, Info, CheckCircle2, Circle, Trophy, Search, Filter, RefreshCw } from "lucide-react";
+import { Video, Youtube, ChevronRight, Play, BookOpen, Star, Info, CheckCircle2, Circle, Trophy, Search, Filter, RefreshCw, Activity, Clock, Server, ShieldCheck, AlertCircle } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -31,6 +31,17 @@ function TutorialsPage() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Tudo");
+  const [syncHistory, setSyncHistory] = useState<{ time: string; status: 'success' | 'error'; type: 'auto' | 'manual'; message?: string }[]>([]);
+  const [showSyncStatus, setShowSyncStatus] = useState(false);
+  
+  const addSyncLog = (status: 'success' | 'error', type: 'auto' | 'manual', message?: string) => {
+    setSyncHistory(prev => [{
+      time: new Date().toLocaleTimeString('pt-BR'),
+      status,
+      type,
+      message
+    }, ...prev].slice(0, 5));
+  };
   
   const listFn = useServerFn(listTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
@@ -43,7 +54,12 @@ function TutorialsPage() {
       const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
       setTutorials(tData || []);
       setCompletedIds(pData || []);
-      if (forceRepair) toast.success("Módulos sincronizados com sucesso!");
+      if (forceRepair) {
+        toast.success("Módulos sincronizados com sucesso!");
+        addSyncLog('success', 'manual', 'Sincronização forçada concluída');
+      } else {
+        addSyncLog('success', 'auto', 'Carregamento inicial bem-sucedido');
+      }
     } catch (err: any) {
       console.error("[tutorials] CRITICAL ERROR during data load:", err);
       
@@ -75,9 +91,11 @@ function TutorialsPage() {
           setTutorials(retryTData || []);
           setCompletedIds(retryPData || []);
           toast.success("Módulos sincronizados!", { id: loadToast });
+          addSyncLog('success', 'auto', 'Recuperação automática concluída');
         } catch (repairErr: any) {
           console.error("[tutorials] Recovery flow FAILED:", repairErr);
           toast.error("Falha na sincronização. Tente atualizar a página.", { id: loadToast });
+          addSyncLog('error', 'auto', repairErr.message || 'Falha na recuperação automática');
         }
       } else {
         toast.error(`Erro: ${err.message || "Erro ao carregar tutoriais"}`);
@@ -245,6 +263,110 @@ function TutorialsPage() {
                 </div>
               </div>
             )}
+
+            {/* Sync Status Panel */}
+            <div className="mb-8">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowSyncStatus(!showSyncStatus)}
+                className="font-mono text-[10px] uppercase tracking-widest text-primary/60 hover:text-primary mb-4 gap-2 border border-primary/10 bg-primary/5 rounded-full px-4"
+              >
+                <Activity className={`h-3 w-3 ${loading ? 'animate-pulse' : ''}`} />
+                Status da Sincronização: {loading ? 'Sincronizando...' : 'Online'}
+              </Button>
+
+              <AnimatePresence>
+                {showSyncStatus && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                            <Server className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-mono uppercase text-muted-foreground">Sistema</div>
+                            <div className="text-xs font-bold text-foreground">PostgREST Cache Bridge</div>
+                          </div>
+                        </div>
+                      </Card>
+
+                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                            <ShieldCheck className="h-4 w-4 text-green-500" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-mono uppercase text-muted-foreground">Status Atual</div>
+                            <div className="text-xs font-bold text-green-500">{loading ? 'Validando Schema...' : 'Sincronizado'}</div>
+                          </div>
+                        </div>
+                      </Card>
+
+                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-mono uppercase text-muted-foreground">Última Verificação</div>
+                            <div className="text-xs font-bold text-foreground">{syncHistory[0]?.time || 'Agora'}</div>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+
+                    <Card className="bg-black/40 border-primary/20 backdrop-blur-xl overflow-hidden enterprise-surface">
+                      <div className="px-4 py-2 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
+                        <div className="text-[10px] font-mono uppercase tracking-widest text-primary/80">Histórico de Tentativas Recentes</div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => loadData(true)}
+                          disabled={loading}
+                          className="h-6 text-[9px] font-mono uppercase hover:bg-primary/10"
+                        >
+                          <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} /> Forçar Flush
+                        </Button>
+                      </div>
+                      <div className="p-0">
+                        {syncHistory.length === 0 ? (
+                          <div className="p-8 text-center text-xs text-muted-foreground font-mono uppercase tracking-widest opacity-50">
+                            Nenhuma atividade registrada no ciclo atual.
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-primary/5">
+                            {syncHistory.map((log, i) => (
+                              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                                <div className="flex items-center gap-4">
+                                  <div className={`w-1.5 h-1.5 rounded-full ${log.status === 'success' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`} />
+                                  <div>
+                                    <div className="text-[10px] font-mono font-bold uppercase flex items-center gap-2">
+                                      {log.status === 'success' ? 'Operação Concluída' : 'Falha Detectada'}
+                                      <span className={`px-1.5 py-0.5 rounded text-[8px] border ${log.type === 'manual' ? 'border-orange-500/30 bg-orange-500/5 text-orange-500' : 'border-blue-500/30 bg-blue-500/5 text-blue-500'}`}>
+                                        {log.type.toUpperCase()}
+                                      </span>
+                                    </div>
+                                    <div className="text-[9px] text-muted-foreground font-mono mt-0.5">{log.message || 'Ciclo de validação de rotina.'}</div>
+                                  </div>
+                                </div>
+                                <div className="text-[10px] font-mono text-muted-foreground/60">{log.time}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Filter Bar */}
             <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
