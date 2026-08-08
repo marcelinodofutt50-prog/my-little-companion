@@ -63,11 +63,13 @@ export function AdminTutorialsPanel() {
     }
   }
 
-  async function handleSave() {
+  const handleSave = async (retryCount = 0) => {
     if (!current.title?.trim()) return toast.error("Título é obrigatório");
     if (!current.description?.trim()) return toast.error("Descrição é obrigatória");
     if (!current.category?.trim()) return toast.error("Categoria é obrigatória");
     if (!current.video_url && !current.youtube_url) return toast.error("É necessário um vídeo (upload ou link)");
+
+    setLoading(true);
     try {
       await saveFn({ data: current });
       toast.success(current.id ? "Tutorial atualizado!" : "Tutorial criado!");
@@ -76,9 +78,25 @@ export function AdminTutorialsPanel() {
       setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true });
       load();
     } catch (e: any) {
-      toast.error(e.message);
+      console.error(`Save attempt ${retryCount + 1} failed:`, e);
+      
+      const MAX_RETRIES = 3;
+      const isNetworkError = !navigator.onLine || e.message?.includes('fetch') || e.message?.includes('network');
+      const isSchemaError = e.message?.includes('PGRST108') || e.message?.includes('schema cache');
+
+      if (retryCount < MAX_RETRIES && (isNetworkError || isSchemaError)) {
+        const delay = Math.pow(2, retryCount + 1) * 1000;
+        toast.info(`Falha na publicação. Retentando em ${delay/1000}s...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return handleSave(retryCount + 1);
+      }
+      
+      toast.error("Erro ao salvar tutorial: " + e.message);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   async function handleDelete(id: string) {
     if (!confirm("Tem certeza que deseja excluir este tutorial?")) return;
@@ -146,21 +164,20 @@ export function AdminTutorialsPanel() {
     setUploading(true);
     setUploadProgress(0);
     
-    // Simulate progress for the UI
+    // Progress simulation with decay
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 98) return 98;
-        // Faster at beginning, slower at end
-        const increment = Math.max(0.1, (100 - prev) / 20);
+        const increment = Math.max(0.1, (100 - prev) / 30);
         return parseFloat((prev + increment).toFixed(1));
       });
-    }, 200);
+    }, 300);
 
     try {
       const ext = file.name.split('.').pop();
-      const path = `tutorials/${Date.now()}.${ext}`;
+      const path = `tutorials/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
       
-      const { data, error } = await supabase.storage.from('tutorials').upload(path, file, {
+      const { error } = await supabase.storage.from('tutorials').upload(path, file, {
         cacheControl: '3600',
         upsert: false
       });
@@ -178,20 +195,23 @@ export function AdminTutorialsPanel() {
       clearInterval(progressInterval);
       console.error(`Upload attempt ${retryCount + 1} failed:`, e);
       
-      if (retryCount < 2) {
-        toast.info(`Falha no upload. Re-tentando automaticamente (${retryCount + 1}/2)...`);
-        // Wait 2 seconds before retry
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      const MAX_RETRIES = 3;
+      if (retryCount < MAX_RETRIES) {
+        // Exponential backoff: 2s, 4s, 8s...
+        const delay = Math.pow(2, retryCount + 1) * 1000;
+        toast.info(`Falha no upload. Tentativa ${retryCount + 1}/${MAX_RETRIES} em ${delay/1000}s...`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
         return handleFileUpload(file, type, retryCount + 1);
       }
       
-      toast.error("Erro no upload após múltiplas tentativas: " + e.message);
+      toast.error("Erro crítico no upload: " + e.message);
     } finally {
-      if (retryCount >= 2 || !uploading) {
+      if (retryCount === 0 || !uploading) {
         setTimeout(() => {
           setUploading(false);
           setUploadProgress(0);
-        }, 500);
+        }, 800);
       }
     }
   };
@@ -481,7 +501,7 @@ export function AdminTutorialsPanel() {
               <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }}>
                 Cancelar
               </Button>
-              <Button onClick={handleSave} className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+              <Button onClick={() => handleSave()} className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                 <Save className="h-4 w-4" /> Salvar Tutorial
               </Button>
             </div>
