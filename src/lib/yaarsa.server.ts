@@ -426,7 +426,7 @@ export async function yaarsaSetPassword(
     if (username) fields.username = username;
     
     if (action === "add") {
-      fields.subtype = planToSubtype(lic?.plan_slug || "monthly");
+      fields.subtype = "1 Month";
       fields.expire_date = yesterdayYMD(); 
     }
     const r = await yaarsaPost(fields, panel);
