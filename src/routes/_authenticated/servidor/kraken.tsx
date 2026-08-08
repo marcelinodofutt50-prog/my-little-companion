@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 import krakenTacticalBg from "@/assets/kraken-tactical-bg.png.asset.json";
-import krakenBg8Asset from "@/assets/krakenbackground-8.png.asset.json";
+import krakenBg8Asset from "@/assets/krakenbackground-8.jpg.asset.json";
 import krakenBg7Asset from "@/assets/krakenbackground-7.jpg.asset.json";
 import krakenBg6Asset from "@/assets/krakenbackground-6.jpg.asset.json";
 import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
