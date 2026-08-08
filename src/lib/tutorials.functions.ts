@@ -15,7 +15,7 @@ export const listTutorials = createServerFn({ method: "GET" })
     
     console.log("[tutorials] Iniciando busca tática de módulos...");
     
-    // Tática de carregamento resiliente em multi-estágio
+    // Tática de carregamento resiliente: tenta usuário -> tenta admin -> reporta
     let { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
@@ -38,10 +38,17 @@ export const listTutorials = createServerFn({ method: "GET" })
       
       data = adminData;
       
-      // Gatilho de auto-reparo profundo em background
-      supabaseAdmin.rpc("force_refresh_schema_permissions").catch((e: any) => 
-        console.warn("[tutorials] Falha no auto-reparo profundo:", e)
-      );
+      // Auto-reparo profundo em background
+      // .rpc() retorna um objeto com .then(), não é uma Promise direta em algumas versões do SDK/wrappers
+      // Usamos uma IIFE async para lidar com o reparo sem bloquear o retorno dos dados
+      (async () => {
+        try {
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          console.log("[tutorials] Auto-reparo concluído em background.");
+        } catch (e) {
+          console.warn("[tutorials] Falha no auto-reparo em background:", e);
+        }
+      })();
     }
 
     return data ?? [];
