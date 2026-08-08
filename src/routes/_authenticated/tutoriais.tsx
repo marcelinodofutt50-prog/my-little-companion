@@ -175,17 +175,41 @@ function TutorialsPage() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Aguardando Sincronização</h3>
                   <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
-                    A base de dados está sendo sincronizada com a produção. Se o erro "schema cache" persistir, utilize o botão abaixo para forçar a atualização do sistema.
+                    Detectamos uma dessincronização no cache do servidor. Clique abaixo para forçar a restauração das permissões e tabelas do Centro de Treinamento.
                   </p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => window.location.reload()}
-                  className="font-mono text-[10px] uppercase border-primary/20"
-                >
-                  <RefreshCw className="h-3 w-3 mr-2" /> Recarregar Módulos
-                </Button>
+                <div className="flex flex-col gap-3 items-center">
+                  <Button 
+                    variant="default" 
+                    size="lg" 
+                    onClick={async () => {
+                      const loadToast = toast.loading("Restaurando banco de dados...");
+                      try {
+                        const { forceReloadSchema } = await import("@/lib/admin.functions");
+                        const res = await forceReloadSchema();
+                        if (res.ok) {
+                          toast.success("Sincronização concluída!", { id: loadToast });
+                          window.location.reload();
+                        } else {
+                          toast.error("Falha na sincronização", { id: loadToast });
+                        }
+                      } catch (err) {
+                        toast.error("Erro ao executar script de reparo", { id: loadToast });
+                      }
+                    }}
+                    className="font-mono text-xs uppercase bg-primary hover:bg-primary/90 text-primary-foreground px-8"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin-slow" /> Forçar Sincronização Tática
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => window.location.reload()}
+                    className="font-mono text-[10px] uppercase border-primary/20 opacity-60 hover:opacity-100"
+                  >
+                    Recarregar Página
+                  </Button>
+                </div>
               </div>
             )}
 
