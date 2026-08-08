@@ -17,14 +17,15 @@ export const listTutorials = createServerFn({ method: "GET" })
 
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const isAdmin = context.claims?.role === 'admin' || context.claims?.role === 'moderator';
     
     // Attempt to touch the schema cache
     try {
-      if (supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
+      // Only allow staff/admin to trigger the global schema refresh to prevent potential DDOS on the reload mechanism
+      if (isAdmin && supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
         const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
         if (rpcErr) {
           console.warn("[tutorials] Schema refresh RPC error:", rpcErr);
-          // Don't throw here to avoid breaking the main query if it's just a cache delay
         }
       }
     } catch (e: any) {
@@ -35,7 +36,8 @@ export const listTutorials = createServerFn({ method: "GET" })
     // Attempt 1: Standard query
     console.log("[tutorials] Executing fetch from 'public.tutorials'...");
     
-    const { data, error } = await supabaseAdmin
+    // We use context.supabase for regular users and only switch to supabaseAdmin on error
+    const { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
       .eq("is_active", true)

@@ -200,7 +200,14 @@ function TutorialsPage() {
                         <span className="flex items-center gap-2"><Trophy className="h-3 w-3 text-primary" /> Progresso Total</span>
                         <span className="text-primary font-bold">{progress}%</span>
                       </div>
-                      <Progress value={progress} className="h-1.5 bg-primary/10" />
+                      <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          className="h-full bg-primary shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                        />
+                      </div>
+
                     </div>
                   </div>
                 )}
@@ -218,7 +225,7 @@ function TutorialsPage() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Aguardando Sincronização</h3>
                   <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
-                    Detectamos uma instabilidade na conexão com o banco de dados (Cache de Schema). Clique abaixo para forçar a sincronização tática do Centro de Treinamento.
+                    O sistema está pronto, mas o cache do banco de dados ainda não reconheceu a tabela. Clique abaixo para forçar a sincronização tática do Centro de Treinamento.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 items-center">

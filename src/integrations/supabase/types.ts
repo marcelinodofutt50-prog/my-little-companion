@@ -1639,44 +1639,41 @@ export type Database = {
       }
       tutorials: {
         Row: {
-          category: string
-          created_at: string
+          category: string | null
+          created_at: string | null
           created_by: string | null
-          description: string
+          description: string | null
           display_order: number | null
           id: string
           image_url: string | null
           is_active: boolean | null
           title: string
-          updated_at: string
           video_url: string | null
           youtube_url: string | null
         }
         Insert: {
-          category?: string
-          created_at?: string
+          category?: string | null
+          created_at?: string | null
           created_by?: string | null
-          description: string
+          description?: string | null
           display_order?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           title: string
-          updated_at?: string
           video_url?: string | null
           youtube_url?: string | null
         }
         Update: {
-          category?: string
-          created_at?: string
+          category?: string | null
+          created_at?: string | null
           created_by?: string | null
-          description?: string
+          description?: string | null
           display_order?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           title?: string
-          updated_at?: string
           video_url?: string | null
           youtube_url?: string | null
         }
