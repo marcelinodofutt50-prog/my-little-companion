@@ -42,10 +42,10 @@ function TutorialDetailsPage() {
             <div className="aspect-video w-full bg-black relative">
               {tutorial.video_url ? (
                 <video 
-                  src={tutorial.video_url} 
+                  src={tutorial.video_url || undefined} 
                   controls 
                   className="h-full w-full object-contain"
-                  poster={tutorial.image_url}
+                  poster={tutorial.image_url || undefined}
                 />
               ) : tutorial.youtube_url ? (
                 <iframe
@@ -69,7 +69,7 @@ function TutorialDetailsPage() {
                   <Tag className="h-3 w-3" /> {tutorial.category}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-mono uppercase tracking-widest">
-                  <Calendar className="h-3 w-3" /> {new Date(tutorial.created_at).toLocaleDateString('pt-BR')}
+                  <Calendar className="h-3 w-3" /> {tutorial.created_at ? new Date(tutorial.created_at).toLocaleDateString('pt-BR') : 'Data não disponível'}
                 </div>
               </div>
 
