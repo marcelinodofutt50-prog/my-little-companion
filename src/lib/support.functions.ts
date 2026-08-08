@@ -149,7 +149,7 @@ export const listMessages = createServerFn({ method: "GET" })
       rows = adminResult.data;
       error = adminResult.error;
       if (!error) {
-        await trackSchemaFailure(tErr, "sendMessage", true, { stage: "retry_fetch_thread_success" }, context.userId);
+        await trackSchemaFailure(error, "listMessages", true, { stage: "retry_success" }, context.userId);
       }
       if (!error) {
         await trackSchemaFailure(error, "listMessages", true, { stage: "retry_success" }, context.userId);

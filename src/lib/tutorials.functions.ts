@@ -32,7 +32,7 @@ export async function trackSchemaFailure(
 
     await supabaseAdmin.from("integration_logs").insert({
       source: "shadow-core-db",
-      user_id: userId || null,
+      user_id: userId,
       action: "pgrst108_sync_error",
       outcome: recovered ? "recovered" : "failure",
       error: error.message || String(error),
@@ -57,7 +57,7 @@ export const listTutorials = createServerFn({ method: "GET" })
     }).optional()
   }).optional().parse(d || {}))
   .middleware([requireSupabaseAuth])
-  .handler(async ({ input, context }): Promise<any[]> => {
+  .handler(async ({ data: input, context }): Promise<any[]> => {
     const metadata = input?.metadata || {};
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
