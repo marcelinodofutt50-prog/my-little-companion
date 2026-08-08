@@ -224,7 +224,28 @@ export function AdminTutorialsPanel() {
       </div>
 
       {isEditing && (
-        <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
+        <Card className="border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden relative">
+          {uploading && (
+            <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-4 animate-in fade-in duration-300">
+              <div className="w-64 space-y-2">
+                <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest text-primary">
+                  <span>Enviando arquivo...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${uploadProgress}%` }}
+                    className="h-full bg-primary shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                  />
+                </div>
+              </div>
+              <p className="text-[9px] font-mono text-muted-foreground uppercase animate-pulse">
+                Não feche esta janela
+              </p>
+            </div>
+          )}
+          
           <CardHeader>
             <CardTitle>{current.id ? 'Editar Tutorial' : 'Novo Tutorial'}</CardTitle>
           </CardHeader>
@@ -261,79 +282,128 @@ export function AdminTutorialsPanel() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">URL do Vídeo (Direto ou YouTube)</label>
-                <div className="flex gap-2">
-                  <Video className="h-5 w-5 mt-2 text-muted-foreground" />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
+                    Mídia do Tutorial
+                    <span className="text-[10px] text-muted-foreground opacity-70">Max 500MB (MP4)</span>
+                  </label>
+                  
+                  <div 
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
+                    onDrop={(e) => onDrop(e, 'video')}
+                    className={cn(
+                      "relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3 group",
+                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-primary/5 hover:border-primary/40",
+                      current.video_url && "border-emerald-500/40 bg-emerald-500/5"
+                    )}
+                  >
+                    <Video className={cn(
+                      "h-8 w-8 transition-colors duration-300",
+                      isDraggingOver ? "text-primary" : "text-muted-foreground group-hover:text-primary/60",
+                      current.video_url && "text-emerald-500"
+                    )} />
+                    
+                    <div className="text-center">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-foreground/80">
+                        {current.video_url ? "Vídeo Carregado" : "Arraste o vídeo aqui"}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground mt-1">
+                        ou clique para selecionar
+                      </p>
+                    </div>
+
+                    <input 
+                      type="file" 
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'video');
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      disabled={uploading}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <LinkIcon className="h-3 w-3" /> Link do YouTube (Opcional)
+                  </label>
                   <Input 
-                    value={current.video_url || current.youtube_url} 
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val.includes("youtube.com") || val.includes("youtu.be")) {
-                        setCurrent({ ...current, youtube_url: val, video_url: "" });
-                      } else {
-                        setCurrent({ ...current, video_url: val, youtube_url: "" });
-                      }
-                    }}
-                    placeholder="https://..."
-                    className="bg-background/50 text-xs"
+                    value={current.youtube_url} 
+                    onChange={(e) => setCurrent({ ...current, youtube_url: e.target.value, video_url: "" })}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="bg-background/50 text-xs font-mono"
                   />
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">URL da Thumbnail</label>
-                <div className="flex gap-2">
-                  <ImageIcon className="h-5 w-5 mt-2 text-muted-foreground" />
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
+                    Capa do Vídeo
+                    <span className="text-[10px] text-muted-foreground opacity-70">Max 10MB</span>
+                  </label>
+                  
+                  <div 
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
+                    onDrop={(e) => onDrop(e, 'image')}
+                    className={cn(
+                      "relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3 group",
+                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-primary/5 hover:border-primary/40",
+                      current.image_url && "border-emerald-500/40 bg-emerald-500/5"
+                    )}
+                  >
+                    <ImageIcon className={cn(
+                      "h-8 w-8 transition-colors duration-300",
+                      isDraggingOver ? "text-primary" : "text-muted-foreground group-hover:text-primary/60",
+                      current.image_url && "text-emerald-500"
+                    )} />
+                    
+                    <div className="text-center">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-foreground/80">
+                        {current.image_url ? "Capa Carregada" : "Arraste a capa aqui"}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground mt-1">
+                        ou clique para selecionar
+                      </p>
+                    </div>
+
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, 'image');
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      disabled={uploading}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <LinkIcon className="h-3 w-3" /> Link da Thumbnail (Opcional)
+                  </label>
                   <Input 
                     value={current.image_url} 
                     onChange={(e) => setCurrent({ ...current, image_url: e.target.value })}
                     placeholder="https://.../thumb.jpg"
-                    className="bg-background/50 text-xs"
+                    className="bg-background/50 text-xs font-mono"
                   />
                 </div>
               </div>
             </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
-                    Upload MP4 <span className="text-[10px] text-muted-foreground opacity-70">Max 250MB</span>
-                  </label>
-                  <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
-                    <Video className="h-4 w-4 mr-2" />
-                    {uploading ? "Enviando..." : "Selecionar Vídeo"}
-                    <input 
-                      type="file" 
-                      accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska"
-                      onChange={(e) => handleFileUpload(e, 'video')}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-mono uppercase tracking-widest text-primary font-bold flex justify-between">
-                    Upload Capa <span className="text-[10px] text-muted-foreground opacity-70">Max 10MB</span>
-                  </label>
-                  <Button variant="outline" className="w-full relative overflow-hidden h-10" disabled={uploading}>
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    {uploading ? "Enviando..." : "Selecionar Foto"}
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, 'image')}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  </Button>
-                </div>
-              </div>
-
 
             {(current.video_url || current.youtube_url || current.image_url) && (
-              <div className="grid gap-4 md:grid-cols-2 mt-4 p-4 rounded-lg bg-black/20 border border-primary/10">
+              <div className="grid gap-4 md:grid-cols-2 mt-4 p-4 rounded-lg bg-black/20 border border-primary/10 animate-in zoom-in-95 duration-300">
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Preview da Mídia</label>
-                  <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center">
+                  <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center group">
                     {current.youtube_url ? (
                       <iframe 
                         src={`https://www.youtube.com/embed/${current.youtube_url.includes('v=') ? current.youtube_url.split('v=')[1].split('&')[0] : current.youtube_url.split('/').pop()}`}
@@ -352,12 +422,22 @@ export function AdminTutorialsPanel() {
                         <span className="text-[10px]">Nenhum vídeo selecionado</span>
                       </div>
                     )}
+                    { (current.video_url || current.youtube_url) && (
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setCurrent({ ...current, video_url: "", youtube_url: "" })}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Preview da Capa</label>
-                  <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center">
+                  <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center group">
                     {current.image_url ? (
                       <img 
                         src={current.image_url} 
@@ -370,6 +450,16 @@ export function AdminTutorialsPanel() {
                         <span className="text-[10px]">Nenhuma capa selecionada</span>
                       </div>
                     )}
+                    { current.image_url && (
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setCurrent({ ...current, image_url: "" })}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -379,7 +469,7 @@ export function AdminTutorialsPanel() {
               <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true }); }}>
                 Cancelar
               </Button>
-              <Button onClick={handleSave} className="gap-2 bg-primary hover:bg-primary/90">
+              <Button onClick={handleSave} className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                 <Save className="h-4 w-4" /> Salvar Tutorial
               </Button>
             </div>
