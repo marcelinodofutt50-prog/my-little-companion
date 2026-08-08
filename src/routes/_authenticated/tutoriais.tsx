@@ -150,7 +150,7 @@ function TutorialsPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-[#030711]">
+      <div className="flex min-h-screen w-full bg-black">
         <AppSidebar />
         <main className="flex-1 overflow-y-auto">
           <SiteHeader />
@@ -161,7 +161,7 @@ function TutorialsPage() {
                   <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                     Shadow Knowledge Base
                   </div>
-                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl rgb-text animate-rgb-text">
+                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl rgb-text animate-rgb-text uppercase italic">
                     Centro de Treinamento
                   </h1>
                   <p className="mt-4 max-w-2xl text-muted-foreground">

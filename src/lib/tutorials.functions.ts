@@ -30,14 +30,6 @@ export const listTutorials = createServerFn({ method: "GET" })
     // Attempt 1: Standard query
     console.log("[tutorials] Executing fetch from 'public.tutorials'...");
     
-    // Bypass: Tentamos forçar o reload do schema no PostgREST ANTES da leitura principal
-    // para garantir que ele esteja atualizado com as permissões aplicadas na migração.
-    try {
-      await supabaseAdmin.rpc("notify_pgrst_reload");
-    } catch (e) {
-      console.warn("[tutorials] Pre-fetch reload failed:", e);
-    }
-
     const { data, error, status, statusText } = await supabaseAdmin
       .from("tutorials")
       .select("*")
@@ -61,7 +53,7 @@ export const listTutorials = createServerFn({ method: "GET" })
         console.warn("[tutorials] Schema cache mismatch detected. Triggering AGGRESSIVE server-side repair...");
         try {
           const repairStart = Date.now();
-          // Chamada à nova função SECURITY DEFINER que garante permissões e reload
+          // Chamada à função SECURITY DEFINER que garante permissões e reload
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
           
           console.log("[tutorials] Repair signal sent. Waiting 2000ms for PostgREST propagation...");
@@ -78,13 +70,12 @@ export const listTutorials = createServerFn({ method: "GET" })
             console.log(`[tutorials] Repair SUCCESSFUL! Retrieved ${retryData.length} items.`);
             return retryData;
           }
-          if (retryError) console.error("[tutorials] Retry also FAILED:", retryError);
         } catch (repairErr) {
           console.error("[tutorials] Server-side repair routine crashed:", repairErr);
         }
       }
       
-      throw new Error(`Erro de Sincronização (PGRST108): ${error.message}. Detalhes: ${error.hint || 'Nenhum'}`);
+      throw new Error(`Erro de Sincronização (PGRST108): ${error.message}`);
     }
 
     console.log(`[tutorials] Fetch successful. Returned ${data?.length} tutorials.`);
