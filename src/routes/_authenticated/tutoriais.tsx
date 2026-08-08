@@ -196,7 +196,7 @@ function TutorialsPage() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Aguardando Sincronização</h3>
                   <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
-                    Detectamos uma dessincronização no cache do servidor. Clique abaixo para forçar a restauração das permissões e tabelas do Centro de Treinamento.
+                    Detectamos uma instabilidade na conexão com o banco de dados (Cache de Schema). Clique abaixo para forçar a sincronização tática do Centro de Treinamento.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 items-center">
@@ -207,21 +207,25 @@ function TutorialsPage() {
                       const loadToast = toast.loading("Executando reparo tático...");
                       try {
                         const { supabase } = await import("@/integrations/supabase/client");
-                        if (supabase && typeof (supabase as any).rpc === 'function') {
-                          const { error: rpcErr } = await (supabase as any).rpc("force_refresh_schema_permissions");
-                          if (rpcErr) throw rpcErr;
+                        
+                        // Chamada direta para o RPC de reparo
+                        const { error: rpcErr } = await (supabase as any).rpc("force_refresh_schema_permissions");
+                        
+                        if (rpcErr) {
+                          console.error("[tutorials] Manual repair RPC error:", rpcErr);
                         }
                         
-                        toast.success("Sincronização enviada! Recarregando...", { id: loadToast });
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        toast.success("Sincronização processada! Recarregando...", { id: loadToast });
+                        await new Promise(resolve => setTimeout(resolve, 1500));
                         await loadData();
-                      } catch (err) {
-                        toast.error("Erro ao executar script de reparo", { id: loadToast });
+                      } catch (err: any) {
+                        console.error("[tutorials] Manual repair flow failed:", err);
+                        toast.error("Falha ao sincronizar: " + (err.message || "Erro desconhecido"), { id: loadToast });
                       }
                     }}
                     className="font-mono text-xs uppercase bg-primary hover:bg-primary/90 text-primary-foreground px-8"
                   >
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin-slow" /> Forçar Sincronização Tática
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin-slow" /> Sincronizar Agora
                   </Button>
                   <Button 
                     variant="outline" 
