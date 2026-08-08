@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useSuspenseQuery } from "@tanstack/react-router";
-import { queryOptions } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { listPublicTutorials } from "@/lib/public-tutorials.functions";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,9 @@ export const Route = createFileRoute("/shadow-hub")({
     category: String(search.category || "Tudo"),
     search: String(search.search || ""),
   }),
-  loader: ({ context, search }) => 
-    context.queryClient.ensureQueryData(tutorialsQueryOptions(search)),
+  loader: ({ context, deps }) => 
+    context.queryClient.ensureQueryData(tutorialsQueryOptions(deps)),
+  loaderDeps: ({ search }) => search,
   component: ShadowHubPage,
 });
 

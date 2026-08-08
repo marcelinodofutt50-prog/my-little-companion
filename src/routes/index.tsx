@@ -375,11 +375,12 @@ function Index() {
       {/* Feature Grid */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-4">
             <FeatureCard 
-              icon={ShieldCheck} 
-              title={t('home.feat.signer.title')} 
-              desc={t('home.feat.signer.desc')}
+              icon={Zap} 
+              title="Shadow Hub" 
+              desc="Acesse nossa central pública de tutoriais e conhecimento técnico avançado."
+              link="/shadow-hub"
             />
             <FeatureCard 
               icon={Globe} 
@@ -428,9 +429,9 @@ function Index() {
   );
 }
 
-function FeatureCard({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
-  return (
-    <div className="group rounded-2xl border border-border/50 bg-card p-8 transition-all hover:border-primary/30 hover:bg-card/80">
+function FeatureCard({ icon: Icon, title, desc, link }: { icon: any, title: string, desc: string, link?: string }) {
+  const content = (
+    <div className="group rounded-2xl border border-border/50 bg-card p-8 transition-all hover:border-primary/30 hover:bg-card/80 h-full">
       <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
         <Icon className="h-6 w-6" />
       </div>
@@ -438,4 +439,10 @@ function FeatureCard({ icon: Icon, title, desc }: { icon: any, title: string, de
       <p className="text-muted-foreground leading-relaxed">{desc}</p>
     </div>
   );
+
+  if (link) {
+    return <Link to={link}>{content}</Link>;
+  }
+
+  return content;
 }
