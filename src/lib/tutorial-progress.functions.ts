@@ -32,8 +32,8 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           // Forçamos o toque na tabela via admin client
-          await supabaseAdmin.from("tutorial_progress").select("id").limit(1).catch(() => {});
-          await supabaseAdmin.rpc("force_refresh_schema_permissions").catch(() => {});
+          await supabaseAdmin.from("tutorial_progress").select("id").limit(1);
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
           await new Promise(r => setTimeout(r, 800));
           
           const { data: retryData, error: retryError } = await supabaseAdmin

@@ -21,7 +21,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       await Promise.allSettled([
         supabaseAdmin.from("tutorials").select("id").limit(1),
         supabaseAdmin.from("tutorial_progress").select("id").limit(1),
-        supabaseAdmin.rpc("force_refresh_schema_permissions").catch(() => {})
+        supabaseAdmin.rpc("force_refresh_schema_permissions")
       ]);
     } catch (e) {
       console.warn("[tutorials] Table touch/sync skipped:", e);
