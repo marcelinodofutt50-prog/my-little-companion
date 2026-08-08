@@ -330,7 +330,7 @@ function TutorialsPage() {
                   className="overflow-hidden mb-8"
                 >
                   <Card className="bg-black/40 border-orange-500/20 backdrop-blur-xl enterprise-surface overflow-hidden">
-                    <div className="px-6 py-4 border-b border-orange-500/10 bg-orange-500/5 flex items-center justify-between">
+                    <div className="px-6 py-4 border-b border-orange-500/10 bg-orange-500/5 flex items-center justify-between flex-wrap gap-4">
                       <div className="flex items-center gap-3">
                         <Zap className="h-5 w-5 text-orange-500" />
                         <div>
@@ -338,28 +338,54 @@ function TutorialsPage() {
                           <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tighter">Validação de integridade Shadow Core</p>
                         </div>
                       </div>
-                      <Button 
-                        size="sm" 
-                        onClick={async () => {
-                          setDiagLoading(true);
-                          try {
-                            const res = await testConnFn();
-                            setDiagResult(res);
-                            if (res.success) toast.success("Conexão estável identificada.");
-                            else toast.error("Falha na integridade dos dados.");
-                          } catch (err) {
-                            setDiagResult({ success: false, error: "Falha na comunicação com o servidor Shadow." });
-                          } finally {
-                            setDiagLoading(false);
-                          }
-                        }}
-                        disabled={diagLoading}
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-mono text-[10px] uppercase h-8"
-                      >
-                        {diagLoading ? <RefreshCw className="h-3 w-3 animate-spin mr-2" /> : <Database className="h-3 w-3 mr-2" />}
-                        Executar Teste de Acesso
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={async () => {
+                            setDiagLoading(true);
+                            try {
+                              const res = await testConnFn();
+                              setDiagResult(res);
+                              if (res.success) toast.success("Conexão estável identificada.");
+                              else toast.error("Falha na integridade dos dados.");
+                            } catch (err) {
+                              setDiagResult({ success: false, error: "Falha na comunicação com o servidor Shadow." });
+                            } finally {
+                              setDiagLoading(false);
+                            }
+                          }}
+                          disabled={diagLoading}
+                          className="bg-orange-500 hover:bg-orange-600 text-white font-mono text-[10px] uppercase h-8"
+                          aria-label="Executar Teste de Acesso"
+                        >
+                          {diagLoading ? <RefreshCw className="h-3 w-3 animate-spin mr-2" /> : <Database className="h-3 w-3 mr-2" />}
+                          Executar Teste
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={async () => {
+                            const loadToast = toast.loading("Simulando falha e reparo...");
+                            try {
+                              const { simulateSchemaFailure } = await import('@/lib/diagnostics.functions');
+                              const res = await simulateSchemaFailure();
+                              if (res.success) {
+                                toast.success("Teste de resiliência concluído!", { id: loadToast });
+                                await loadData();
+                              } else {
+                                toast.error("Falha no teste: " + res.error, { id: loadToast });
+                              }
+                            } catch (err: any) {
+                              toast.error("Erro no teste: " + err.message, { id: loadToast });
+                            }
+                          }}
+                          className="border-orange-500/30 text-orange-500 font-mono text-[10px] uppercase h-8 hover:bg-orange-500/10"
+                        >
+                          Simular Falha (Resiliência)
+                        </Button>
+                      </div>
                     </div>
+
                     
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
