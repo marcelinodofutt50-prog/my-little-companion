@@ -1427,34 +1427,50 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
 export const forceReloadSchema = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Otimização: A verificação de staff agora usa resolveRoles para evitar recursividade
-    const { resolveRoles } = await import("./roles.server");
-    const { isStaff } = await resolveRoles({ supabase: context.supabase, userId: context.userId });
-    if (!isStaff) throw new Error("Acesso negado");
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
-    // 1. Force PostgREST reload using the new SECURITY DEFINER function
-    console.log("[admin] Force reload schema requested by", context.userId);
-    
     try {
-      // We use supabaseAdmin for this as it's a privileged operation
-      const { data, error } = await supabaseAdmin.rpc("force_refresh_schema_permissions");
-      if (error) throw error;
-      return { ok: true, data };
-    } catch (e) {
-      console.warn("[admin] force_refresh_schema_permissions RPC failed, falling back to manual notify", e);
-      try {
-        await (supabaseAdmin as any).rpc("notify_pgrst_reload");
-      } catch (inner) {
-        // Ignore fallback failure
+      // Otimização: A verificação de staff agora usa resolveRoles para evitar recursividade
+      const { resolveRoles } = await import("./roles.server");
+      const { isStaff } = await resolveRoles({ supabase: context.supabase, userId: context.userId });
+      if (!isStaff) {
+        console.warn(`[admin] Unauthorized schema sync attempt by user ${context.userId}`);
+        throw new Error("Acesso negado");
       }
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
-      const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads", "user_roles"];
-      const results = await Promise.allSettled(
-        tables.map(table => (supabaseAdmin as any).from(table).select("count", { count: "exact", head: true }))
-      );
+      console.log(`[admin] AGGRESSIVE schema sync requested by Staff ${context.userId}`);
+      const startTime = Date.now();
       
-      return { ok: true, touchResults: results.length };
+      // 1. Force PostgREST reload using the new SECURITY DEFINER function
+      const { data, error } = await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      
+      if (error) {
+        console.error("[admin] force_refresh_schema_permissions FAILED:", error);
+        
+        // Fallback: Notify manually and touch tables
+        await (supabaseAdmin as any).rpc("notify_pgrst_reload").catch(() => {});
+        
+        const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads", "user_roles"];
+        await Promise.allSettled(
+          tables.map(table => (supabaseAdmin as any).from(table).select("count", { count: "exact", head: true }))
+        );
+        
+        throw new Error(`Falha na sincronização primária: ${error.message}. Tabelas foram "tocadas" manualmente.`);
+      }
+
+      console.log(`[admin] Aggressive schema sync SUCCESSFUL in ${Date.now() - startTime}ms`, data);
+      
+      // Trigger background validation for diagnostics
+      const { validateAndFixSchema } = await import("./schema-validator.server");
+      validateAndFixSchema().catch(e => console.error("[admin] Background validation error:", e));
+      
+      return { 
+        ok: true, 
+        duration: Date.now() - startTime,
+        rpcResult: data 
+      };
+    } catch (err: any) {
+      console.error("[admin] forceReloadSchema CRITICAL FAILURE:", err);
+      throw err;
     }
   });
