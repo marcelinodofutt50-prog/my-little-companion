@@ -34,20 +34,42 @@ function TutorialsPage() {
   useEffect(() => {
     let mounted = true;
     
-    const loadData = async () => {
-      setLoading(true);
+    const loadData = async (forceRepair = false) => {
+      if (mounted) setLoading(true);
       try {
+        if (forceRepair) {
+          console.log("[tutorials] Executing tactical synchronization...");
+          const { forceReloadSchema } = await import("@/lib/admin.functions");
+          await forceReloadSchema();
+          // Short delay to let PostgREST recover
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
         const [tData, pData] = await Promise.all([listFn(), getProgressFn()]);
         if (mounted) {
           setTutorials(tData || []);
           setCompletedIds(pData || []);
+          if (forceRepair && tData && tData.length > 0) {
+            toast.success("Módulos sincronizados com sucesso!");
+          }
         }
       } catch (err: any) {
         console.error("[tutorials] Data load failed:", err);
+        const isSchemaError = err._schemaError || 
+                             err.message?.includes("schema cache") || 
+                             err.message?.includes("does not exist") ||
+                             err.message?.includes("PGRST108");
+                             
+        if (isSchemaError && !forceRepair && mounted) {
+          // If we haven't tried repairing yet, do it automatically once
+          console.warn("[tutorials] Schema error detected, attempting auto-repair...");
+          loadData(true);
+          return;
+        }
+
         if (mounted) {
-          const isSchemaError = err._schemaError || err.message?.includes("schema cache") || err.message?.includes("does not exist");
           if (isSchemaError) {
-            setTutorials([]); // This will trigger the empty state with recovery button
+            setTutorials([]); // Trigger recovery UI
           } else {
             toast.error(err.message || "Erro ao carregar tutoriais");
           }
