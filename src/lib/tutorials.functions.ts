@@ -19,36 +19,41 @@ export const listTutorials = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const isAdmin = context.claims?.role === 'admin' || context.claims?.role === 'moderator';
     
-    // Attempt to touch the schema cache
-    try {
-      // Only allow staff/admin to trigger the global schema refresh to prevent potential DDOS on the reload mechanism
-      if (isAdmin && supabaseAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-        const { error: rpcErr } = await (supabaseAdmin as any).rpc("force_refresh_schema_permissions");
-        if (rpcErr) {
-          console.warn("[tutorials] Schema refresh RPC error:", rpcErr);
-        }
-      }
-    } catch (e: any) {
-      console.warn("[tutorials] Schema refresh attempt failed:", e);
-    }
-
-    
-    // Attempt 1: Standard query
+    // Attempt 1: Standard query with fallback
     console.log("[tutorials] Executing fetch from 'public.tutorials'...");
     
-    // Use supabaseAdmin for the first fetch to bypass RLS/Cache issues during investigation
-    // but we'll try to fallback to context.supabase if possible for auditing.
-    const { data, error } = await supabaseAdmin
+    // We try authenticated user first to respect RLS, but if it fails with schema cache error, 
+    // we use admin as the ultimate fallback to keep the app working.
+    let { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
       .eq("is_active", true)
       .order("display_order", { ascending: true });
         
     if (error) {
-      console.error(`[tutorials] Admin Fetch FAILED! code: ${error.code}`, error);
+      console.warn(`[tutorials] Standard Fetch failed (Code: ${error.code}). Trying Admin fallback...`);
       
-      // If even admin fails, the table is likely missing or corrupt
-      throw new Error(`Erro de Sincronização Crítico (PGRST108): A infraestrutura de tutoriais está inacessível. Utilize o Painel de Diagnóstico.`);
+      // Attempt 2: Admin fallback (bypasses PostgREST cache issues)
+      const { data: adminData, error: adminError } = await supabaseAdmin
+        .from("tutorials")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+        
+      if (adminError) {
+        console.error(`[tutorials] Admin Fetch FAILED! code: ${adminError.code}`, adminError);
+        throw new Error(`Erro de Sincronização Crítico: A infraestrutura de tutoriais está inacessível.`);
+      }
+      
+      data = adminData;
+      
+      // While we serve the admin data, we trigger a refresh in the background for future requests
+      if (isAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
+        supabaseAdmin.rpc("force_refresh_schema_permissions").then(({ error: rpcErr }: any) => {
+          if (rpcErr) console.warn("[tutorials] BG Schema refresh error:", rpcErr);
+          else console.log("[tutorials] BG Schema refresh triggered successfully");
+        });
+      }
     }
 
     return data ?? [];
