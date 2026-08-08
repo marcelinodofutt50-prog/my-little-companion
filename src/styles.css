@@ -171,21 +171,20 @@ html.theme-light body {
   color: oklch(0.12 0.02 255) !important;
 }
 
-/* Removido duplicata */
-
 html.theme-light .glow-neon { box-shadow: 0 0 18px oklch(0.45 0.22 260 / 0.12); }
 html.theme-light .glow-cyan { box-shadow: 0 0 18px oklch(0.55 0.18 200 / 0.12); }
 html.theme-light .glow-violet { box-shadow: 0 0 18px oklch(0.5 0.2 300 / 0.12); }
 html.theme-light .price-card {
   background: oklch(1 0 0);
-  border-color: oklch(0.9 0.01 255);
+  border-color: oklch(0.88 0.015 255);
 }
 html.theme-light .price-card-popular {
-  border-color: oklch(0.55 0.22 255 / 0.4);
+  border-color: oklch(0.45 0.22 260 / 0.4);
   background: oklch(0.98 0.005 255);
 }
-html.theme-light .paper-shadow { box-shadow: 0 20px 60px -28px rgba(0, 0, 0, 0.12); }
+html.theme-light .paper-shadow { box-shadow: 0 20px 60px -28px rgba(0, 0, 0, 0.08); }
 html.theme-light .crt::after { display: none; }
+html.theme-light .terminal-card { background: oklch(1 0 0 / 0.8); }
 
 @layer base {
   html, body {
@@ -320,8 +319,8 @@ html.theme-light .crt::after { display: none; }
   .rgb-button-animated {
     position: relative;
     border: none !important;
-    background: #111111 !important; /* Ensure high contrast in light mode */
-    color: #ffffff !important;      /* White text even in light mode for tactical buttons */
+    background: var(--card) !important;
+    color: var(--foreground) !important;
     overflow: hidden;
     z-index: 1;
   }
