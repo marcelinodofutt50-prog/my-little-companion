@@ -119,7 +119,7 @@ export function AdminTutorialsPanel() {
     if (!file) return;
 
     // Validations
-    const MAX_VIDEO_SIZE = 250 * 1024 * 1024; // 250MB (Aumentado para vídeos em 4K)
+    const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10MB
     const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska'];
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
