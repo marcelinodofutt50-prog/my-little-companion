@@ -31,7 +31,7 @@ const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovab
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
   component: () => (
-    <div className="dark min-h-screen bg-black overflow-x-hidden">
+    <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
       <ErrorBoundary name="KrakenPage">
         <KrakenPage />
       </ErrorBoundary>
@@ -212,9 +212,9 @@ function KrakenPage() {
   };
 
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
+    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
       {/* Tactical Background Overlay - Full Viewport Image */}
-      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
+      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-background">
         {/* Fallback visual base sempre visível */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-950 to-black opacity-100" />
         
