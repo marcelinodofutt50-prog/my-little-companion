@@ -23,17 +23,27 @@ import krakenBg6Asset from "@/assets/krakenbackground-6.jpg.asset.json";
 import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
-// Imagem central do Kraken v2
-// Prioriza a imagem enviada pelo usuário na última gravação (v11 -> v10 -> v8 -> etc)
-const KRAKEN_ASSETS = {
-  v11: "https://id-preview--aa5c6d4b-4a83-49d2-a5ba-32781957814c.lovable.app/lovable-uploads/39d33261-7100-474d-9372-5ca133cfc82c.png", // A partir da imagem krakenbackground-11.jpg
-  v10: "https://id-preview--aa5c6d4b-4a83-49d2-a5ba-32781957814c.lovable.app/lovable-uploads/2085777a-2415-46b7-8468-b3d9d6837861.png",
-  fallback: "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png"
-};
+// Imagem tática central da Kraken 2.0
+// Cadeia de candidatos validada em runtime: o primeiro asset que carregar (200 + proporção
+// compatível com um fundo widescreen) é adotado. Isso protege contra 404s em produção e
+// contra assets inválidos (ex.: recortes/telas de erro salvos por engano).
+const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg10Asset.url,
+  krakenTacticalBg.url,
+  krakenBg8Asset.url,
+  krakenBg7Asset.url,
+  krakenBg6Asset.url,
+  krakenBg4Asset.url,
+  krakenBg11Asset.url,
+  "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png",
+].filter(Boolean) as string[];
 
-const krakenCore = krakenBg11Asset.url || KRAKEN_ASSETS.v11 || krakenBg10Asset.url || KRAKEN_ASSETS.v10 || krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || KRAKEN_ASSETS.fallback;
-const krakenBg4 = krakenCore;
+// Fallback final puramente CSS-safe (nunca 404): último item da cadeia
+const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1];
+
+const krakenCore = KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK;
 const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
+
 
 
 
