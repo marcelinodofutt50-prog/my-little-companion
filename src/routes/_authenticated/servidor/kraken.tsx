@@ -437,14 +437,14 @@ function KrakenPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-1 group hover:border-emerald-500/30 transition-colors">
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/10 space-y-1 group hover:border-emerald-500/30 transition-colors">
                     <div className="text-[9px] text-muted-foreground uppercase font-mono">Encryption</div>
                     <div className="flex items-center gap-2">
                       <Shield className="h-3 w-3 text-emerald-500" />
                       <span className="text-[10px] font-mono font-bold">AES-256-XTS</span>
                     </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-1 group hover:border-amber-500/30 transition-colors">
+                  <div className="p-3 rounded-lg bg-black/40 border border-white/10 space-y-1 group hover:border-amber-500/30 transition-colors">
                     <div className="text-[9px] text-muted-foreground uppercase font-mono">Throughput</div>
                     <div className="flex items-center gap-2">
                       <Activity className="h-3 w-3 text-amber-500" />
@@ -517,7 +517,7 @@ function KrakenPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-blue-900/30 bg-black/70 backdrop-blur-md kraken-fade-in" style={{ transitionDelay: '0.4s' }}>
+            <Card className="border-blue-900/30 bg-black/80 dark:bg-black/90 backdrop-blur-3xl kraken-fade-in transition-colors duration-500" style={{ transitionDelay: '0.4s' }}>
                <CardHeader className="pb-2">
                  <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] text-blue-400">Tactical Shortcuts</CardTitle>
                </CardHeader>
@@ -540,7 +540,7 @@ function KrakenPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="p-4 rounded border border-red-500/20 bg-black/70 backdrop-blur-md text-[10px] text-white/80 font-mono space-y-2"
+              className="p-4 rounded border border-red-500/20 bg-black/80 dark:bg-black/90 backdrop-blur-3xl text-[10px] text-white/80 font-mono space-y-2 transition-colors duration-500"
             >
               <div className="font-bold text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 mb-4 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />

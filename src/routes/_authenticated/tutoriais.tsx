@@ -361,8 +361,8 @@ function TutorialsPage() {
                   viewport={{ once: true }}
                   transition={{ delay: (idx % 4) * 0.1 }}
                 >
-                  <Card 
-                    className="group h-full cursor-pointer overflow-hidden border-border/40 bg-card/40 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
+                    <Card 
+                      className="group h-full cursor-pointer overflow-hidden border-border/40 bg-black/80 dark:bg-black/90 backdrop-blur-3xl transition-all duration-500 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                     onClick={() => {
                       setSelected(t);
                       window.scrollTo({ top: 0, behavior: 'smooth' });

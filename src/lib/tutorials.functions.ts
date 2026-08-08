@@ -14,6 +14,12 @@ export const listTutorials = createServerFn({ method: "GET" })
     // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
+    // Verificamos se supabaseAdmin.rpc existe (evita erro de .catch is not a function)
+    if (typeof (supabaseAdmin as any).rpc !== 'function') {
+      console.error("[tutorials] supabaseAdmin.rpc is not a function. Check client initialization.");
+      throw new Error("Supabase Admin Client RPC initialization failure.");
+    }
+    
     // Fallback agressivo: Tentamos "tocar" as tabelas para forçar o carregamento do schema
     // se o RPC falhar ou se o cache estiver muito teimoso.
     try {
