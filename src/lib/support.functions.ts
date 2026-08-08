@@ -348,6 +348,7 @@ export const setThreadCategory = createServerFn({ method: "POST" })
     }).parse(i);
   })
   .handler(async ({ data, context }) => {
+    const priority = data.category === "servidor" || data.category === "pagamento" ? "alta" : "normal";
     const patch = {
       category: data.category,
       priority,
