@@ -75,7 +75,7 @@ export const listTutorials = createServerFn({ method: "GET" })
         }
       }
       
-      throw new Error(`Erro de Sincronização (PGRST108): ${error.message}`);
+      throw new Error(`Erro de Sincronização (PGRST108): ${error.message}. Tente usar o botão de sincronização manual.`);
     }
 
     console.log(`[tutorials] Fetch successful. Returned ${data?.length} tutorials.`);
