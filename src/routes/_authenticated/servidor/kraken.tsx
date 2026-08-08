@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 import krakenTacticalBg from "@/assets/kraken-tactical-bg.png.asset.json";
+import krakenBg10Asset from "@/assets/krakenbackground-10.jpg.asset.json";
 import krakenBg8Asset from "@/assets/krakenbackground-8.jpg.asset.json";
 import krakenBg7Asset from "@/assets/krakenbackground-7.jpg.asset.json";
 import krakenBg6Asset from "@/assets/krakenbackground-6.jpg.asset.json";
@@ -22,9 +23,9 @@ import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem central do Kraken v2
-// Prioriza a imagem enviada pelo usuário na última gravação
-const krakenCore = krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
-const krakenBg4 = krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+// Prioriza a imagem enviada pelo usuário na última gravação (v10 -> v8 -> etc)
+const krakenCore = krakenBg10Asset.url || krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
+const krakenBg4 = krakenBg10Asset.url || krakenBg8Asset.url || krakenTacticalBg.url || krakenBg7Asset.url || krakenBg6Asset.url || krakenBg4Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png";
 const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
 
 
