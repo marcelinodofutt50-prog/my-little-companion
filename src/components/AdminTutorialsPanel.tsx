@@ -116,8 +116,7 @@ export function AdminTutorialsPanel() {
     }
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'video' | 'image') {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (file: File, type: 'video' | 'image') => {
     if (!file) return;
 
     // Validations
@@ -131,7 +130,7 @@ export function AdminTutorialsPanel() {
         return toast.error("Apenas vídeos MP4, WebM, OGG, MOV ou MKV são permitidos.");
       }
       if (file.size > MAX_VIDEO_SIZE) {
-        return toast.error("O vídeo deve ter no máximo 250MB.");
+        return toast.error("O vídeo deve ter no máximo 500MB.");
       }
     } else {
       if (!allowedImageTypes.includes(file.type)) {
@@ -143,23 +142,65 @@ export function AdminTutorialsPanel() {
     }
 
     setUploading(true);
+    setUploadProgress(0);
     try {
       const ext = file.name.split('.').pop();
       const path = `tutorials/${Date.now()}.${ext}`;
       
-      const { data, error } = await supabase.storage.from('tutorials').upload(path, file);
+      const { data, error } = await supabase.storage.from('tutorials').upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
       if (error) throw error;
+
+      // Simulate progress for small files or use a real listener if the library supports it
+      // Standard Supabase storage doesn't provide progress events in the same call easily 
+      // without extra config, so we'll simulate it for better UX
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 95) {
+            clearInterval(interval);
+            return 95;
+          }
+          return prev + 5;
+        });
+      }, 100);
 
       const { data: { publicUrl } } = supabase.storage.from('tutorials').getPublicUrl(path);
       
-      setCurrent({ ...current, [type === 'video' ? 'video_url' : 'image_url']: publicUrl });
+      clearInterval(interval);
+      setUploadProgress(100);
+      
+      setCurrent(prev => ({ ...prev, [type === 'video' ? 'video_url' : 'image_url']: publicUrl }));
       toast.success(`${type === 'video' ? 'Vídeo' : 'Capa'} enviado com sucesso!`);
     } catch (e: any) {
       toast.error("Erro no upload: " + e.message);
     } finally {
-      setUploading(false);
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+      }, 500);
     }
-  }
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+
+  const onDragLeave = () => {
+    setIsDraggingOver(false);
+  };
+
+  const onDrop = async (e: React.DragEvent, type: 'video' | 'image') => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await handleFileUpload(file, type);
+    }
+  };
 
   return (
     <div className="space-y-6" ref={scrollRef}>
