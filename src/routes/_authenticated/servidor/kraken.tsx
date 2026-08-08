@@ -228,18 +228,20 @@ function KrakenPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100" />
         
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
-        {krakenCore && (
-          <div 
-            className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none", bgLoaded.core ? "opacity-100" : "opacity-0")}
-            style={{ 
-              backgroundImage: `url(${krakenCore})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center center',
-              backgroundRepeat: 'no-repeat',
-              filter: 'brightness(1.2) contrast(1.1) saturate(1.1)' 
-            }}
-          />
-        )}
+        <div 
+          className={cn(
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none",
+            bgLoaded.core ? "opacity-100" : "opacity-0"
+          )}
+          style={{ 
+            backgroundImage: `url(${krakenCore})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'brightness(1.2) contrast(1.1) saturate(1.1)' 
+          }}
+        />
+
         
         {/* Mist/Particle Overlay Layer */}
         {krakenBg5 && (
