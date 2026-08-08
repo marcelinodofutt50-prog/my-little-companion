@@ -31,7 +31,7 @@ const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovab
 
 export const Route = createFileRoute('/_authenticated/servidor/kraken')({
   component: () => (
-    <div className="dark">
+    <div className="dark min-h-screen bg-black overflow-x-hidden">
       <ErrorBoundary name="KrakenPage">
         <KrakenPage />
       </ErrorBoundary>
@@ -220,7 +220,7 @@ function KrakenPage() {
         
         {/* Camada principal da imagem Kraken (kraken-tactical-bg.png) */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-100" : "opacity-0")}
+          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700 select-none pointer-events-none", bgLoaded.core ? "opacity-100" : "opacity-0")}
           style={{ 
             backgroundImage: `url(${krakenCore})`,
             backgroundSize: 'cover',
@@ -297,7 +297,7 @@ function KrakenPage() {
 
         {/* User Status Bar */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="md:col-span-3 border-white/20 bg-black/80 dark:bg-black/90 backdrop-blur-3xl px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-blue-500 shadow-lg shadow-blue-500/10 transition-colors duration-500">
+          <Card className="md:col-span-3 border-white/20 bg-black/80 dark:bg-black/90 backdrop-blur-3xl px-6 py-3 flex items-center justify-between kraken-fade-in border-l-4 border-l-blue-500 shadow-lg shadow-blue-500/10 transition-all duration-500">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
                 <span className="text-[8px] font-mono text-foreground/40 dark:text-white/40 uppercase tracking-widest">Status da Licença</span>
