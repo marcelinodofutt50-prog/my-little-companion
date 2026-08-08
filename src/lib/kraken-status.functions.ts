@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { trackSchemaFailure } from "./tutorials.functions";
 
 export const getKrakenStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ metadata: z.record(z.string(), z.any()).optional() }).optional().parse(d))
   .handler(async ({ data: input, context }) => {
     const metadata = (input as any)?.metadata || {};
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
