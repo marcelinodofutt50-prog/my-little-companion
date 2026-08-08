@@ -31,6 +31,7 @@ import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
 import { Route as AuthenticatedPresentesRouteImport } from './routes/_authenticated/presentes'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
+import { Route as AuthenticatedMercadoRouteImport } from './routes/_authenticated/mercado'
 import { Route as AuthenticatedIndicacoesRouteImport } from './routes/_authenticated/indicacoes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -162,6 +163,11 @@ const AuthenticatedPlayProtectRoute =
     path: '/play-protect',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMercadoRoute = AuthenticatedMercadoRouteImport.update({
+  id: '/mercado',
+  path: '/mercado',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedIndicacoesRoute = AuthenticatedIndicacoesRouteImport.update({
   id: '/indicacoes',
   path: '/indicacoes',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicacoes': typeof AuthenticatedIndicacoesRoute
+  '/mercado': typeof AuthenticatedMercadoRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/presentes': typeof AuthenticatedPresentesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
@@ -334,6 +341,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/indicacoes': typeof AuthenticatedIndicacoesRoute
+  '/mercado': typeof AuthenticatedMercadoRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/presentes': typeof AuthenticatedPresentesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/indicacoes': typeof AuthenticatedIndicacoesRoute
+  '/_authenticated/mercado': typeof AuthenticatedMercadoRoute
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
   '/_authenticated/presentes': typeof AuthenticatedPresentesRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
@@ -424,6 +433,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/indicacoes'
+    | '/mercado'
     | '/play-protect'
     | '/presentes'
     | '/suporte'
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/indicacoes'
+    | '/mercado'
     | '/play-protect'
     | '/presentes'
     | '/suporte'
@@ -511,6 +522,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/indicacoes'
+    | '/_authenticated/mercado'
     | '/_authenticated/play-protect'
     | '/_authenticated/presentes'
     | '/_authenticated/suporte'
@@ -729,6 +741,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayProtectRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mercado': {
+      id: '/_authenticated/mercado'
+      path: '/mercado'
+      fullPath: '/mercado'
+      preLoaderRoute: typeof AuthenticatedMercadoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/indicacoes': {
       id: '/_authenticated/indicacoes'
       path: '/indicacoes'
@@ -876,6 +895,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedIndicacoesRoute: typeof AuthenticatedIndicacoesRoute
+  AuthenticatedMercadoRoute: typeof AuthenticatedMercadoRoute
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
   AuthenticatedPresentesRoute: typeof AuthenticatedPresentesRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
@@ -888,6 +908,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedIndicacoesRoute: AuthenticatedIndicacoesRoute,
+  AuthenticatedMercadoRoute: AuthenticatedMercadoRoute,
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
   AuthenticatedPresentesRoute: AuthenticatedPresentesRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
