@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
@@ -13,11 +13,17 @@ import { getMyReferralInfo, updateReferralPref } from "@/lib/referrals.functions
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { formatBrl } from "@/lib/plans";
+import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/indicacoes")({
+export const Route = createFileRoute("/indicacoes")({
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/auth" });
+  },
   head: () => ({ meta: [{ title: "Indicações — Shadow" }] }),
   component: ReferralsPage,
 });
+
 
 function ReferralsPage() {
   const { t } = useI18n();

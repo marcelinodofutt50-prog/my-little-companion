@@ -32,9 +32,10 @@ const primary: Item[] = [
   { title: "Service Recovery", url: "/servidor/status", icon: Server },
   { title: "Training Hub", url: "/tutoriais", icon: Video, tKey: "nav.tutorials" as const },
   { title: "Kraken (2.0)", url: "/servidor/kraken", icon: Skull, tKey: "nav.kraken" as const },
-  { title: "Marketplace", url: "/_authenticated/mercado", icon: Store, tKey: "nav.market" as const },
-  { title: "Affiliates", url: "/_authenticated/indicacoes", icon: Users, tKey: "nav.referrals" as const },
-  { title: "Gift Center", url: "/_authenticated/presentes", icon: Gift, tKey: "nav.gifts" as const },
+  { title: "Marketplace", url: "/mercado", icon: Store, tKey: "nav.market" as const },
+  { title: "Affiliates", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
+  { title: "Gift Center", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
+
 
 ];
 
