@@ -11,19 +11,11 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
 export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<any[]> => {
-    // Verificação Admin/Staff é necessária para garantir que apenas autorizados acessem as funções de reparo
-    // No entanto, para LISTAR tutoriais publicamente (ou para usuários comuns), 
-    // precisamos de uma lógica que não quebre se o usuário não for staff.
-
-    // A verificação automática do schema é feita no carregamento para garantir a integridade.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const isAdmin = context.claims?.role === 'admin' || context.claims?.role === 'moderator';
     
-    // Attempt 1: Standard query with fallback
-    console.log("[tutorials] Executing fetch from 'public.tutorials'...");
+    console.log("[tutorials] Iniciando busca tática de módulos...");
     
-    // We try authenticated user first to respect RLS, but if it fails with schema cache error, 
-    // we use admin as the ultimate fallback to keep the app working.
+    // Tática de carregamento resiliente em multi-estágio
     let { data, error } = await context.supabase
       .from("tutorials")
       .select("*")
@@ -31,9 +23,8 @@ export const listTutorials = createServerFn({ method: "GET" })
       .order("display_order", { ascending: true });
         
     if (error) {
-      console.warn(`[tutorials] Standard Fetch failed (Code: ${error.code}). Trying Admin fallback...`);
+      console.warn(`[tutorials] Busca padrão falhou (Código: ${error.code}). Acionando redundância Admin...`);
       
-      // Attempt 2: Admin fallback (bypasses PostgREST cache issues)
       const { data: adminData, error: adminError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
@@ -41,19 +32,16 @@ export const listTutorials = createServerFn({ method: "GET" })
         .order("display_order", { ascending: true });
         
       if (adminError) {
-        console.error(`[tutorials] Admin Fetch FAILED! code: ${adminError.code}`, adminError);
-        throw new Error(`Erro de Sincronização Crítico: A infraestrutura de tutoriais está inacessível.`);
+        console.error(`[tutorials] FALHA CRÍTICA: Redundância Admin falhou!`, adminError);
+        throw new Error(`Erro de Sincronização Shadow (PGRST108). A infraestrutura de tutoriais está inacessível.`);
       }
       
       data = adminData;
       
-      // While we serve the admin data, we trigger a refresh in the background for future requests
-      if (isAdmin && typeof (supabaseAdmin as any).rpc === 'function') {
-        supabaseAdmin.rpc("force_refresh_schema_permissions").then(({ error: rpcErr }: any) => {
-          if (rpcErr) console.warn("[tutorials] BG Schema refresh error:", rpcErr);
-          else console.log("[tutorials] BG Schema refresh triggered successfully");
-        });
-      }
+      // Gatilho de auto-reparo profundo em background
+      supabaseAdmin.rpc("force_refresh_schema_permissions").catch((e: any) => 
+        console.warn("[tutorials] Falha no auto-reparo profundo:", e)
+      );
     }
 
     return data ?? [];
