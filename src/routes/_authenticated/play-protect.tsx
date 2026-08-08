@@ -159,7 +159,7 @@ function PlayProtectPage() {
         });
       if (uploadError) throw uploadError;
 
-      toast.success("Build iniciada com Shadow Bypass!");
+      toast.success("Build iniciada com Shadow Bypass v4.6+ Polimórfico!");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["apk-jobs"] }),
         queryClient.invalidateQueries({ queryKey: ["play-protect-status"] }),
@@ -330,10 +330,10 @@ function PlayProtectPage() {
                   {uploading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando…</>) : (<><RefreshCcw className="mr-2 h-4 w-4" /> Enviar para a fila</>)}
                 </Button>
 
-                <div className="mt-4 flex gap-3 rounded bg-amber-500/5 p-3 border border-amber-500/20">
-                  <Info className="h-5 w-5 shrink-0 text-amber-500" />
-                  <p className="text-[11px] leading-relaxed text-amber-200/70">
-                    Seu APK entra na <strong>Fila Play Protect</strong>. O admin recebe, envia ao bot e o arquivo assinado volta aqui automaticamente. Tempo médio 2–5 min.
+                <div className="mt-4 flex gap-3 rounded bg-emerald-500/5 p-3 border border-emerald-500/20">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <p className="text-[11px] leading-relaxed text-emerald-200/70">
+                    <strong>Shadow Bypass v4.6+:</strong> Implementamos ofuscação polimórfica que altera a assinatura digital em cada build, garantindo bypass persistente contra as novas heurísticas do Google Play Protect (Agosto/2026).
                   </p>
                 </div>
               </div>
