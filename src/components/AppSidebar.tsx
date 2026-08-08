@@ -30,6 +30,9 @@ const primary: Item[] = [
   { title: "Service Agreements", url: "/planos", icon: Sparkles, tKey: "nav.plans" as const },
   { title: "Executive Support", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
   { title: "Service Recovery", url: "/servidor/status", icon: Server },
+  { title: "Strategic Assets", url: "/mercado", icon: Store, tKey: "nav.market" as const },
+  { title: "Affiliate Network", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
+  { title: "Token Redemption", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
   { title: "Training Hub", url: "/tutoriais", icon: Video, tKey: "nav.tutorials" as const },
   { title: "Kraken (2.0)", url: "/servidor/kraken", icon: Skull, tKey: "nav.kraken" as const },
 ];

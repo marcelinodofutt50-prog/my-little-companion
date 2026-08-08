@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Shield, Zap, Lock, HeadphonesIcon, ChevronRight, CheckCircle2, Terminal, Globe, ShieldCheck, Database, Server, Rocket, ArrowRight, UserCheck } from "lucide-react";
+import { Shield, Zap, Lock, HeadphonesIcon, ChevronRight, CheckCircle2, Terminal, Globe, ShieldCheck, Database, Server, Rocket, ArrowRight, UserCheck, Store, Users, Gift } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
@@ -423,6 +423,43 @@ function Index() {
           </div>
         </div>
       </section>
+
+      {/* Footer / Info Section */}
+      <footer className="py-12 border-t border-border/20 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Ecossistema</h4>
+              <ul className="space-y-2 text-xs font-mono">
+                <li><Link to="/mercado" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Store className="h-3 w-3" /> {t('nav.market')}</Link></li>
+                <li><Link to="/indicacoes" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Users className="h-3 w-3" /> {t('nav.referrals')}</Link></li>
+                <li><Link to="/presentes" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Gift className="h-3 w-3" /> {t('nav.gifts')}</Link></li>
+              </ul>
+            </div>
+            <div className="space-y-4">
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Suporte</h4>
+              <ul className="space-y-2 text-xs font-mono">
+                <li><Link to="/suporte" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.support')}</Link></li>
+                <li><Link to="/shadow-hub" className="text-muted-foreground hover:text-primary transition-colors">Shadow Hub</Link></li>
+              </ul>
+            </div>
+            <div className="space-y-4">
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Legal</h4>
+              <ul className="space-y-2 text-xs font-mono">
+                <li><Link to="/termos" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.home')}</Link></li>
+                <li><Link to="/privacidade" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.home')}</Link></li>
+              </ul>
+            </div>
+            <div className="space-y-4 text-right">
+              <div className="font-display text-xl tracking-tighter">SHADOW</div>
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                © 2026 Shadow Ops <br />
+                All Rights Reserved
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       <MobileStickyCTA label={t('home.cta.mobile')} to="/planos" />
     </div>
