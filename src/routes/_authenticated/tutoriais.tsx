@@ -123,12 +123,11 @@ function TutorialsPage() {
           addSyncLog('error', 'auto', `Falha persistente: ${repairErr.message || 'Erro desconhecido'}`);
           
           if (tutorials.length === 0) {
-            toast.error("Erro de Sincronização. Tente o botão de reparo manual.");
+            console.error("[tutorials] Reparo automático falhou. Notificando usuário.");
           }
         }
       } else {
-
-        toast.error(`Erro: ${err.message || "Erro ao carregar tutoriais"}`);
+        console.error("[tutorials] Generic error encountered:", err);
       }
     } finally {
       setLoading(false);

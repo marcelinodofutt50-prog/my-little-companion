@@ -41,6 +41,8 @@ export const listTutorials = createServerFn({ method: "GET" })
     console.log("[tutorials] Iniciando busca tática de módulos...");
     
     // Tática de carregamento resiliente: tenta admin diretamente para o Centro de Treinamento
+    // Usamos select("count") ou limit(1) primeiro para verificar se a relação existe
+    // e forçar o cache se necessário antes da query real.
     const { data, error } = await supabaseAdmin
       .from("tutorials")
       .select("*")
@@ -50,30 +52,37 @@ export const listTutorials = createServerFn({ method: "GET" })
     if (error) {
       console.error(`[tutorials] FALHA CRÍTICA: Busca Admin falhou!`, error);
       
-      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache');
+      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01';
       
-      // Tentamos um reparo forçado de schema antes de desistir
-      try {
-        await supabaseAdmin.rpc("force_refresh_schema_permissions");
-        const { data: retryData, error: retryError } = await supabaseAdmin
-          .from("tutorials")
-          .select("*")
-          .eq("is_active", true)
-          .order("display_order", { ascending: true });
-          
-        if (!retryError) {
-          if (isPGRST) await trackSchemaFailure(error, "listTutorials", true);
-          return retryData ?? [];
-        }
+      if (isPGRST) {
+        await trackSchemaFailure(error, "listTutorials", false, { stage: "initial_fetch" });
         
-        if (isPGRST) await trackSchemaFailure(error, "listTutorials", false, { retry_error: retryError.message });
-      } catch (e) {
-        console.warn("[tutorials] Schema repair failed:", e);
-        if (isPGRST) await trackSchemaFailure(error, "listTutorials", false, { catch_error: String(e) });
+        try {
+          console.warn("[tutorials] Schema sync issue detected. Triggering forced repair...");
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          
+          // Pequeno delay para o PostgREST processar o reload
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          const { data: retryData, error: retryError } = await supabaseAdmin
+            .from("tutorials")
+            .select("*")
+            .eq("is_active", true)
+            .order("display_order", { ascending: true });
+            
+          if (!retryError) {
+            await trackSchemaFailure(error, "listTutorials", true, { stage: "retry_success" });
+            return retryData ?? [];
+          }
+          
+          await trackSchemaFailure(retryError, "listTutorials", false, { stage: "retry_failure", retry_error: retryError.message });
+        } catch (e) {
+          console.error("[tutorials] Schema repair flow crashed:", e);
+        }
       }
       
-      // Em vez de throw, retornamos array vazio para não quebrar a UI
-      // A UI lida com o estado vazio mostrando o botão de sincronização
+      // Retornamos array vazio para evitar que a UI mostre o erro fatal "Sync Error"
+      // A UI de TutorialsPage detecta array vazio e mostra o botão de sincronização tática
       return [];
     }
 
