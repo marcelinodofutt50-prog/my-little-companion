@@ -1435,20 +1435,19 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
     // 1. Force PostgREST reload
-    // In some environments NOTIFY is restricted, so we use a fallback of querying all key tables 
-    // to trigger the cache mechanism.
     console.log("[admin] Force reload schema requested by", context.userId);
     
-    // Attempt NOTIFY
+    // We attempt to trigger a reload by notifying if the function exists
+    // Using any to bypass strict type checking for dynamic RPC
     try {
-      await supabaseAdmin.rpc("notify_pgrst_reload");
+      await (supabaseAdmin as any).rpc("notify_pgrst_reload");
     } catch (e) {
       console.warn("[admin] notify_pgrst_reload failed, falling back to table touch");
     }
 
     const tables = ["tutorials", "tutorial_progress", "profiles", "licenses", "orders", "support_threads"];
     const results = await Promise.allSettled(
-      tables.map(table => supabaseAdmin.from(table).select("count", { count: "exact", head: true }))
+      tables.map(table => (supabaseAdmin as any).from(table).select("count", { count: "exact", head: true }))
     );
 
     return { ok: true, touchResults: results.length };
