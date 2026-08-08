@@ -341,10 +341,6 @@ function DashboardPage() {
                 <TrialActivationCard onDone={() => void refetchLicenses()} />
               )}
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <ReferralsWidget />
-                <HelpCenterWidget />
-              </div>
 
               {licenses && licenses.length > 0 && (
                 <OnboardingChecklist
