@@ -33,7 +33,7 @@ function TutorialDetailsPage() {
           className="max-w-4xl mx-auto"
         >
           <Button variant="ghost" asChild className="mb-8 hover:bg-primary/5">
-            <Link to="/shadow-hub">
+            <Link to="/shadow-hub" search={{ page: 1, category: 'Tudo', search: '' }}>
               <ChevronLeft className="mr-2 h-4 w-4" /> Voltar para a Lista
             </Link>
           </Button>
