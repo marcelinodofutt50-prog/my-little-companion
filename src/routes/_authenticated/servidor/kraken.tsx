@@ -214,12 +214,12 @@ function KrakenPage() {
   };
 
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-black dark:bg-black theme-light:bg-background min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
+    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start">
       {/* Tactical Background Overlay - Full Viewport Image */}
-      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden">
+      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
         {/* Camada principal da imagem Kraken (krakenbackground-8.png) */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-90" : "opacity-0")}
+          className={cn("absolute inset-0 bg-cover bg-center transition-opacity duration-700", bgLoaded.core ? "opacity-100" : "opacity-0")}
           style={{ 
             backgroundImage: `url(${krakenCore})`,
             backgroundSize: 'cover',
@@ -230,16 +230,16 @@ function KrakenPage() {
         
         {/* Overlay tático adicional */}
         <div 
-          className={cn("absolute inset-0 bg-cover bg-center mix-blend-overlay transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
+          className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
           style={{ backgroundImage: `url(${krakenBg5})` }}
         />
         
-        {/* Gradiente de profundidade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black" />
+        {/* Gradiente de profundidade ajustado para não escurecer demais a imagem */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
         
-        {/* Fallback visual */}
+        {/* Fallback visual suave */}
         {!bgLoaded.core && (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black opacity-80" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black opacity-80" />
         )}
       </div>
 
