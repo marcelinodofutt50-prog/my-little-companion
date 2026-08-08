@@ -118,7 +118,7 @@ export function AdminTutorialsPanel() {
     }
   }
 
-  const handleFileUpload = async (file: File, type: 'video' | 'image') => {
+  const handleFileUpload = async (file: File, type: 'video' | 'image', retryCount = 0) => {
     if (!file) return;
 
     // Validations
@@ -145,6 +145,17 @@ export function AdminTutorialsPanel() {
 
     setUploading(true);
     setUploadProgress(0);
+    
+    // Simulate progress for the UI
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 98) return 98;
+        // Faster at beginning, slower at end
+        const increment = Math.max(0.1, (100 - prev) / 20);
+        return parseFloat((prev + increment).toFixed(1));
+      });
+    }, 200);
+
     try {
       const ext = file.name.split('.').pop();
       const path = `tutorials/${Date.now()}.${ext}`;
@@ -156,33 +167,32 @@ export function AdminTutorialsPanel() {
 
       if (error) throw error;
 
-      // Simulate progress for small files or use a real listener if the library supports it
-      // Standard Supabase storage doesn't provide progress events in the same call easily 
-      // without extra config, so we'll simulate it for better UX
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 95) {
-            clearInterval(interval);
-            return 95;
-          }
-          return prev + 5;
-        });
-      }, 100);
-
       const { data: { publicUrl } } = supabase.storage.from('tutorials').getPublicUrl(path);
       
-      clearInterval(interval);
+      clearInterval(progressInterval);
       setUploadProgress(100);
       
       setCurrent((prev: any) => ({ ...prev, [type === 'video' ? 'video_url' : 'image_url']: publicUrl }));
       toast.success(`${type === 'video' ? 'Vídeo' : 'Capa'} enviado com sucesso!`);
     } catch (e: any) {
-      toast.error("Erro no upload: " + e.message);
+      clearInterval(progressInterval);
+      console.error(`Upload attempt ${retryCount + 1} failed:`, e);
+      
+      if (retryCount < 2) {
+        toast.info(`Falha no upload. Re-tentando automaticamente (${retryCount + 1}/2)...`);
+        // Wait 2 seconds before retry
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return handleFileUpload(file, type, retryCount + 1);
+      }
+      
+      toast.error("Erro no upload após múltiplas tentativas: " + e.message);
     } finally {
-      setTimeout(() => {
-        setUploading(false);
-        setUploadProgress(0);
-      }, 500);
+      if (retryCount >= 2 || !uploading) {
+        setTimeout(() => {
+          setUploading(false);
+          setUploadProgress(0);
+        }, 500);
+      }
     }
   };
 
