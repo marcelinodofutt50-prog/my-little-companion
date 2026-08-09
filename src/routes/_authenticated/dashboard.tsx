@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck as ShieldIcon, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -300,7 +300,7 @@ function DashboardPage() {
                   <CardContent className="p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-red-500/20 p-2 rounded-full">
-                        <ShieldIcon className="h-5 w-5 text-red-500" />
+                        <ShieldCheck className="h-5 w-5 text-red-500" />
                       </div>
                       <div>
                         <h4 className="font-mono text-xs font-bold text-red-500 uppercase">Falha Crítica de Sincronização</h4>
@@ -325,7 +325,7 @@ function DashboardPage() {
                   { label: 'Crédito operacional', value: (profile as any)?.referral_balance ? `R$ ${(profile as any).referral_balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00', detail: 'Resgate disponível em PIX', icon: Activity, tone: 'text-primary' },
                   { label: 'Terminais ativos', value: String(licenses?.length || 0), detail: 'Nodes em sincronização', icon: Server, tone: 'text-cyan' },
                   { label: 'Tickets suporte', value: '0', detail: 'Sem alertas pendentes', icon: Ticket, tone: 'text-violet' },
-                  { label: 'Integridade Ops', value: '100%', detail: 'Protocolo AES-256 ativo', icon: ShieldIcon, tone: 'text-amber-500' },
+                  { label: 'Integridade Ops', value: '100%', detail: 'Protocolo AES-256 ativo', icon: ShieldCheck, tone: 'text-amber-500' },
                 ].map((stat) => (
                   <Card key={stat.label} className="enterprise-surface relative overflow-hidden border-border/60 shadow-none">
                     <CardContent className="p-5">
