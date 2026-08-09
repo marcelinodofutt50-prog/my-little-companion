@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 import krakenTacticalBg from "@/assets/kraken-tactical-bg.png.asset.json";
-import krakenBg12Asset from "@/assets/kraken-main-bg-v12.png.asset.json";
+import krakenBg12Asset from "@/assets/krakenbackground-12.jpg.asset.json";
 import krakenBg11Asset from "@/assets/krakenbackground-11.jpg.asset.json";
 import krakenBg10Asset from "@/assets/krakenbackground-10.jpg.asset.json";
 import krakenBg8Asset from "@/assets/krakenbackground-8.jpg.asset.json";
@@ -27,11 +27,10 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Imagem tática central da Kraken 2.0
 // Cadeia de candidatos validada em runtime: o primeiro asset que carregar (200 + proporção
 // compatível com um fundo widescreen) é adotado. Isso protege contra 404s em produção e
-// contra assets inválidos (ex.: recortes/telas de erro salvos por engano).
+// contra assets inválidos.
 const KRAKEN_BG_CANDIDATES: string[] = [
   krakenBg12Asset.url,
   krakenBg10Asset.url,
-  krakenTacticalBg.url,
   krakenBg8Asset.url,
   krakenBg7Asset.url,
   krakenBg6Asset.url,

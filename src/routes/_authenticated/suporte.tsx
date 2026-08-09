@@ -151,38 +151,46 @@ function SupportPage() {
     let cancelled = false;
     setMsgs([]);
     setHasMore(false);
-    listFn({ data: { threadId, limit: PAGE_SIZE } })
-      .then((r: any) => {
-        if (cancelled) return;
-        setMsgs((r?.messages ?? []) as Msg[]);
-        setHasMore(!!r?.hasMore);
-      })
-       .catch((error: any) => {
-         if (!cancelled) toast.error(error?.message ?? "Não foi possível carregar as mensagens");
-       });
+    
+    const loadMessages = async () => {
+      try {
+        const r: any = await listFn({ data: { threadId, limit: PAGE_SIZE } });
+        if (!cancelled) {
+          setMsgs((r?.messages ?? []) as Msg[]);
+          setHasMore(!!r?.hasMore);
+        }
+      } catch (error: any) {
+        if (!cancelled) toast.error(error?.message ?? "Erro ao carregar mensagens");
+      }
+    };
+
+    loadMessages();
     markReadFn({ data: { threadId } }).catch(() => {});
 
-    const ch = supabase.channel(`t-${threadId}`).on("postgres_changes",
-      { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
-      (payload) => {
-        const next = payload.new as Msg;
-        setMsgs((prev) => {
-          if (prev.some((x) => x.id === next.id)) return prev;
-          
-          // Som de notificação e alerta
-          playNotifyDing();
-          
-          if (next.is_admin && !next.is_system) {
-            // Se o usuário atual NÃO for o admin que enviou a mensagem (ou seja, é o cliente)
-            if (next.sender_id !== uid) {
+    // Canal Realtime reforçado
+    const ch = supabase.channel(`t-${threadId}`)
+      .on("postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
+        (payload) => {
+          const next = payload.new as Msg;
+          setMsgs((prev) => {
+            if (prev.some((x) => x.id === next.id)) return prev;
+            playNotifyDing();
+            if (next.is_admin && !next.is_system && next.sender_id !== uid) {
               if (document.hidden) showDesktopNotification("Suporte Shadow", next.body ?? "Nova mensagem do suporte");
               markReadFn({ data: { threadId } }).catch(() => {});
             }
-          }
-          return [...prev, next];
-        });
-      }
-    ).subscribe();
+            return [...prev, next];
+          });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') console.log(`[Suporte] Canal Realtime conectado: ${threadId}`);
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          console.warn("[Suporte] Realtime desconectado, tentando recarregar...");
+          if (!cancelled) setTimeout(loadMessages, 3000);
+        }
+      });
 
     return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [threadId, listFn, markReadFn]);
