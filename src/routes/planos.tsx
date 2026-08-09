@@ -35,7 +35,9 @@ import { siteUrl } from "@/lib/site-url";
 import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus, listMyLicenses } from "@/lib/license.functions";
 
 import { validateReferralCode } from "@/lib/referrals.functions";
-const shadowLupin = "/assets/shadow-hacker-lupin.jpg?v=v8-400";
+const shadowLupin = "/assets/shadow-logo-v10.png?v=v8-400";
+
+
 
 
 
@@ -49,8 +51,7 @@ export const Route = createFileRoute("/planos")({
       { property: "og:type", content: "website" },
       { property: "og:url", content: siteUrl("/planos") },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://www.shadowdashstore.com/assets/shadow-hero-classic.png" },
-      { property: "og:image", content: "https://www.shadowdashstore.com/assets/shadow-hero-classic.png" },
+
     ], 
     links: [{ rel: "canonical", href: siteUrl("/planos") }] 
   }),

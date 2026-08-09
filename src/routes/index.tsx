@@ -1,4 +1,5 @@
-// Executei um build completo em modo produção e confirmei que não há mais falhas relacionadas a assets ausentes.
+// shadow-hero-classic.png
+// essa foto esta no fundo da kraken, não é para essa foto nem exisitir aqui a imagem correta da kraken é essa que esta anexada
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
@@ -35,12 +36,11 @@ import {
 } from "lucide-react";
 // Hardcoded paths to public assets to ensure they load from the repository
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
-const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
-const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
 const btmobDashboard = "/assets/shadow-dashboard-real.png?v=v9-300";
 const assetMissing = "/assets/shadow-dashboard-real.png?v=v9-300";
 const btmob1 = "/assets/shadow-dashboard-real.png?v=v9-300";
 const btmob2 = "/assets/shadow-play-protect-new.png?v=v9-300";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
