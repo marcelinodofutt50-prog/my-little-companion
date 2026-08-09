@@ -324,6 +324,7 @@ function ShadowPassPage() {
           <section className="space-y-4">
             <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" /> Shadow Nexus (Alpha)
+              <Badge variant="outline" className="text-[9px] border-primary/20 text-primary/60">Anônimo</Badge>
             </h2>
             <Card className="border-primary/10 bg-card/50 overflow-hidden">
               <CardContent className="p-0 flex flex-col h-[400px]">
