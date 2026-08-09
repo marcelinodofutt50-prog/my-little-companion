@@ -375,7 +375,7 @@ function Index() {
       {/* Feature Grid */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <FeatureCard 
               icon={Zap} 
               title="Shadow Hub" 
@@ -383,14 +383,19 @@ function Index() {
               link="/shadow-hub"
             />
             <FeatureCard 
-              icon={Globe} 
-              title={t('home.feat.vps.title')} 
-              desc={t('home.feat.vps.desc')}
+              icon={ShieldCheck} 
+              title="Bypass 4.6" 
+              desc="Assinatura V2/V3 com ofuscação polimórfica que engana as heurísticas do Play Protect em tempo real."
             />
             <FeatureCard 
-              icon={Database} 
-              title={t('home.feat.osint.title')} 
-              desc={t('home.feat.osint.desc')}
+              icon={Server} 
+              title="Global Nodes" 
+              desc="Infraestrutura VPS dedicada com low-latency em servidores nos EUA, Europa e Ásia."
+            />
+            <FeatureCard 
+              icon={Rocket} 
+              title="Alpha Console" 
+              desc="Painel OSINT redesenhado para transparência absoluta e gestão de ativos digitais de elite."
             />
           </div>
         </div>

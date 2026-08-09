@@ -3,6 +3,7 @@ import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket,
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
+import { PromotionsWidget } from "@/components/PromotionsWidget";
 
 
 import { useTheme } from '@/lib/theme'
@@ -664,7 +665,8 @@ function DashboardPage() {
                 </div>
               </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <PromotionsWidget />
                 <ReferralsWidget />
                 <div className="terminal-card p-4 relative overflow-hidden group">
                   <div className="flex items-start justify-between">
@@ -673,11 +675,11 @@ function DashboardPage() {
                         <Store className="h-4 w-4 text-primary" />
                         <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t('nav.market')}</span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[180px]">
-                        Módulos adicionais, upgrades de servidor e ativos digitais exclusivos.
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Módulos adicionais e ativos exclusivos.
                       </p>
                     </div>
-                    <div className="h-8 w-8 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                    <div className="h-8 w-8 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors shrink-0">
                       <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>
@@ -690,11 +692,11 @@ function DashboardPage() {
                         <Gift className="h-4 w-4 text-primary" />
                         <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t('nav.gifts')}</span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[180px]">
-                        Gerencie seus cartões presente enviados e recebidos no ecossistema.
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Gerencie seus cartões presente.
                       </p>
                     </div>
-                    <div className="h-8 w-8 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                    <div className="h-8 w-8 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors shrink-0">
                       <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>

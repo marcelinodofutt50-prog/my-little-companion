@@ -256,7 +256,7 @@ export function AdminTutorialsPanel() {
       </div>
 
       {isEditing && (
-        <Card className="border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden relative">
+        <Card className="border-primary/20 bg-card backdrop-blur-sm overflow-hidden relative">
           {uploading && (
             <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-4 animate-in fade-in duration-300">
               <div className="w-64 space-y-2">
@@ -289,7 +289,7 @@ export function AdminTutorialsPanel() {
                   value={current.title} 
                   onChange={(e) => setCurrent({ ...current, title: e.target.value })}
                   placeholder="Ex: Como baixar o Shadow Signer"
-                  className="bg-background/50"
+                  className="bg-card"
                 />
               </div>
               <div className="space-y-2">
@@ -298,7 +298,7 @@ export function AdminTutorialsPanel() {
                   value={current.category} 
                   onChange={(e) => setCurrent({ ...current, category: e.target.value })}
                   placeholder="general, play-protect, yaarsa"
-                  className="bg-background/50"
+                  className="bg-card"
                 />
               </div>
             </div>
@@ -309,7 +309,7 @@ export function AdminTutorialsPanel() {
                 value={current.description} 
                 onChange={(e) => setCurrent({ ...current, description: e.target.value })}
                 placeholder="Explique o que o tutorial ensina..."
-                className="min-h-[100px] bg-background/50"
+                className="min-h-[100px] bg-card"
               />
             </div>
 
@@ -327,7 +327,7 @@ export function AdminTutorialsPanel() {
                     onDrop={(e) => onDrop(e, 'video')}
                     className={cn(
                       "relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3 group",
-                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-primary/5 hover:border-primary/40",
+                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-card hover:border-primary/40",
                       current.video_url && "border-emerald-500/40 bg-emerald-500/5"
                     )}
                   >
@@ -367,7 +367,7 @@ export function AdminTutorialsPanel() {
                     value={current.youtube_url} 
                     onChange={(e) => setCurrent({ ...current, youtube_url: e.target.value, video_url: "" })}
                     placeholder="https://youtube.com/watch?v=..."
-                    className="bg-background/50 text-xs font-mono"
+                    className="bg-card text-xs font-mono"
                   />
                 </div>
               </div>
@@ -385,7 +385,7 @@ export function AdminTutorialsPanel() {
                     onDrop={(e) => onDrop(e, 'image')}
                     className={cn(
                       "relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3 group",
-                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-primary/5 hover:border-primary/40",
+                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-card hover:border-primary/40",
                       current.image_url && "border-emerald-500/40 bg-emerald-500/5"
                     )}
                   >

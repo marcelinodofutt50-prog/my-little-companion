@@ -65,8 +65,8 @@ function OnboardingPage() {
                 <s.icon className="h-5 w-5 text-neon" />
               </div>
               <div className="min-w-0">
-                <h2 className="font-mono text-sm font-semibold uppercase tracking-wider">{s.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{s.body}</p>
+                <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-primary">{s.title}</h2>
+                <p className="mt-1 text-sm text-foreground leading-relaxed">{s.body}</p>
               </div>
             </li>
           ))}

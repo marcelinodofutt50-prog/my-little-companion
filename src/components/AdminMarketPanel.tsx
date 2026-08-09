@@ -141,7 +141,7 @@ export function AdminMarketPanel() {
   return (
     <div className="space-y-6">
       {/* Form */}
-      <div className="terminal-card scanlines relative p-5 border-neon/30 bg-black/40">
+      <div className="terminal-card scanlines relative p-5 border-primary/30 bg-card">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Store className="h-4 w-4 text-neon" />
@@ -199,7 +199,7 @@ export function AdminMarketPanel() {
             <select
               value={draft.status}
               onChange={(e) => setDraft({ ...draft, status: e.target.value as any })}
-              className="w-full rounded border border-input bg-background/60 p-2 font-mono text-sm text-foreground focus:border-neon/60 focus:outline-none"
+              className="w-full rounded border border-input bg-card p-2 font-mono text-sm text-foreground focus:border-primary/60 focus:outline-none"
             >
               <option value="published">Publicado</option>
               <option value="draft">Rascunho</option>
@@ -216,14 +216,14 @@ export function AdminMarketPanel() {
               rows={4}
               maxLength={2000}
               placeholder="O que o cliente recebe? Detalhes, envio, garantia..."
-              className="w-full rounded border border-input bg-background/60 p-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-neon/60 focus:outline-none"
+              className="w-full rounded border border-input bg-card p-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary/60 focus:outline-none"
             />
           </div>
 
           <div className="md:col-span-2">
             <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Imagem do produto</label>
             <div className="flex flex-wrap items-center gap-4">
-              <div className="grid h-28 w-28 place-items-center overflow-hidden rounded border border-dashed border-border/60 bg-background/40">
+              <div className="grid h-28 w-28 place-items-center overflow-hidden rounded border border-dashed border-border/60 bg-card">
                 {draft.preview ? (
                   <img loading="lazy" src={draft.preview} alt="preview" className="h-full w-full object-cover" />
                 ) : (
@@ -231,7 +231,7 @@ export function AdminMarketPanel() {
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded border border-border/60 bg-background/60 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider hover:border-neon/60">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded border border-border/60 bg-card px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider hover:border-primary/60">
                   {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
                   Enviar imagem
                   <input
