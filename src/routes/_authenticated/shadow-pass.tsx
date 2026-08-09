@@ -106,9 +106,9 @@ function ShadowPassPage() {
               </h2>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Loyalty Progress */}
-              <Card className="border-primary/10 bg-card/50 backdrop-blur-sm">
+              <Card className="border-primary/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between">
                     Loyalty Level <span>{Math.round(loyalty.progress)}%</span>
