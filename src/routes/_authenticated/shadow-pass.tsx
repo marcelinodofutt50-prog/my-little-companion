@@ -147,18 +147,6 @@ function ShadowPassPage() {
               </Button>
             </div>
           </div>
-              <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest border-primary/50 text-primary shrink-0">
-                ID: {identity.id.substring(0, 8)}
-              </Badge>
-              {staff.isEligible && (
-                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px] uppercase tracking-widest shrink-0">
-                  Equipe Elegível
-                </Badge>
-              )}
-            </div>
-            <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest">
-              // Membro desde {new Date(identity.joinedAt).toLocaleDateString()}
-            </p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-4">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 shrink-0">
                 <Trophy className="h-4 w-4 text-primary" />
