@@ -63,10 +63,10 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
       queueTotal,
       etaMinutes,
       currentStatus: (myOldest?.data?.status as string | undefined) ?? null,
-      canSubmit: (hasActive || consumed === 0) && pending === 0,
+      canSubmit: (hasActive || consumed === 0 || (consumed > 0 && total === 0)) && pending === 0,
       blockReason: pending > 0
         ? "Você já tem um APK sendo processado. Aguarde ele finalizar para enviar o próximo."
-        : (!hasActive && consumed > 0)
+        : (!hasActive && consumed > 0 && total > 0)
           ? "Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar."
           : null,
     };
