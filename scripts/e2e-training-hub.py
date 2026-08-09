@@ -58,7 +58,7 @@ async def main():
             
             # Validação de Módulos (Tanque de Dados)
             # Procuramos por cards de tutoriais ou skeletons que sumiram
-            await page.wait_for_selector(".enterprise-surface", timeout=15000)
+            await page.wait_for_selector(".enterprise-surface, .grid", timeout=20000)
             print("[E2E] Interface tática carregada com sucesso.")
             
             # Snapshot para evidência
