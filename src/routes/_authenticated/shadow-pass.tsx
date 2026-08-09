@@ -19,10 +19,11 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   loader: async ({ context }) => {
@@ -77,9 +78,48 @@ function ShadowPassPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(identity.nickname);
   const [isAnonymous, setIsAnonymous] = useState(!!(identity.isAnonymous || identity.metadata?.is_anonymous));
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     mutation.mutate({ nickname: editName, is_anonymous: isAnonymous });
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito pesada (máx 2MB)");
+      return;
+    }
+
+    const uploadToast = toast.loading("Enviando imagem tática...");
+    
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Não autenticado");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userData.user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload para o bucket 'avatars' (precisa existir ou usar public)
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      mutation.mutate({ avatar_url: publicUrl });
+      toast.success("Avatar atualizado com sucesso!", { id: uploadToast });
+    } catch (error: any) {
+      console.error("Erro no upload:", error);
+      toast.error("Falha no upload: " + error.message, { id: uploadToast });
+    }
   };
 
   const [showDiag, setShowDiag] = useState(false);
@@ -112,14 +152,25 @@ function ShadowPassPage() {
         </div>
         
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 relative z-10">
-          <div className="relative shrink-0">
-            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-            <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative">
-              <AvatarImage src={identity.avatar} />
+          <div className="relative shrink-0 group">
+            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/40 transition-colors" />
+            <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative cursor-pointer hover:scale-105 transition-transform overflow-hidden" onClick={() => fileRef.current?.click()}>
+              <AvatarImage src={identity.avatar} className="object-cover" />
               <AvatarFallback className="bg-muted text-2xl md:text-4xl">
                 {isAnonymous ? <Ghost className="h-12 w-12 text-primary" /> : identity.nickname?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
+              {/* Upload Overlay */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <Edit2 className="h-6 w-6 text-white" />
+              </div>
             </Avatar>
+            <input 
+              type="file" 
+              ref={fileRef} 
+              className="hidden" 
+              accept="image/*"
+              onChange={handleAvatarUpload}
+            />
             {vip.tier !== 'none' && (
               <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tighter border-2 border-card shadow-lg">
                 {vip.tier}
