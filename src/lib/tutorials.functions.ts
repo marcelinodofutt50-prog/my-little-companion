@@ -66,11 +66,11 @@ export const listTutorials = createServerFn({ method: "GET" })
     const metadata = input?.metadata || {};
     
     const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
-      console.log(`[tutorials] Busca de módulos via Cliente (Tentativa ${attempt})...`);
+      console.log(`[tutorials] Busca de módulos (Tentativa ${attempt})...`);
       
-      const { supabase } = context;
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
-      const { data: clientData, error: clientError } = await supabase
+      const { data: clientData, error: clientError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
         .order("display_order", { ascending: true });

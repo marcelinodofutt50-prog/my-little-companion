@@ -116,7 +116,9 @@
 /* ===== Tema claro (segue o tema do sistema por padrão) ===== */
 /* ===== Tema claro (segue o tema do sistema por padrão) ===== */
 html.theme-light, 
-html.theme-light body {
+html.theme-light body,
+html.theme-light .admin-enterprise,
+html.theme-light main {
   color-scheme: light;
 
   /* Refined light theme with extreme contrast and high readability */
