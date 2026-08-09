@@ -382,30 +382,30 @@ function ShadowPassPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className={cn(
                             "p-3 rounded-xl border flex flex-col gap-1",
-                            diagInfo.success && diagInfo.data && 'metadata' in diagInfo.data 
+                            (diagInfo as any).success && (diagInfo as any).data && 'metadata' in (diagInfo as any).data 
                               ? "bg-green-500/5 border-green-500/20" 
                               : "bg-red-500/5 border-red-500/20"
                           )}>
                             <span className="text-[9px] uppercase font-mono opacity-50">Coluna: metadata</span>
                             <span className="text-xs font-bold font-mono">
-                              {diagInfo.success && diagInfo.data && 'metadata' in diagInfo.data ? "DISPONÍVEL" : "NÃO ENCONTRADA"}
+                              {(diagInfo as any).success && (diagInfo as any).data && 'metadata' in (diagInfo as any).data ? "DISPONÍVEL" : "NÃO ENCONTRADA"}
                             </span>
                           </div>
                           
                           <div className={cn(
                             "p-3 rounded-xl border flex flex-col gap-1",
-                            diagInfo.success && diagInfo.data && 'vip_tier' in diagInfo.data 
+                            (diagInfo as any).success && (diagInfo as any).data && 'vip_tier' in (diagInfo as any).data 
                               ? "bg-green-500/5 border-green-500/20" 
                               : "bg-red-500/5 border-red-500/20"
                           )}>
                             <span className="text-[9px] uppercase font-mono opacity-50">Coluna: vip_tier</span>
                             <span className="text-xs font-bold font-mono">
-                              {diagInfo.success && diagInfo.data && 'vip_tier' in diagInfo.data ? "DISPONÍVEL" : "NÃO ENCONTRADA"}
+                              {(diagInfo as any).success && (diagInfo as any).data && 'vip_tier' in (diagInfo as any).data ? "DISPONÍVEL" : "NÃO ENCONTRADA"}
                             </span>
                           </div>
                         </div>
 
-                        {(!diagInfo.success || !diagInfo.data || !('metadata' in diagInfo.data)) && (
+                        {(!(diagInfo as any).success || !(diagInfo as any).data || !('metadata' in (diagInfo as any).data)) && (
                           <div className="flex items-start gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
                             <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                             <div className="space-y-1">
@@ -419,7 +419,7 @@ function ShadowPassPage() {
 
                         <div className="flex items-center justify-between gap-4 pt-2">
                           <div className="text-[8px] font-mono opacity-30 uppercase">
-                            LAST_SCAN: {diagInfo.timestamp}
+                            LAST_SCAN: {(diagInfo as any).timestamp}
                           </div>
                           <Button 
                             variant="outline" 
