@@ -120,8 +120,8 @@ function TutorialsPage() {
       setCompletedIds(pData || []);
       
       if (forceRepair) {
-        toast.success("Módulos sincronizados com o Shadow Core!", { id: "sync-toast" });
-        addSyncLog('success', 'manual', 'Sincronização forçada concluída');
+        toast.success("Shadow Core sincronizado com sucesso!", { id: "sync-toast" });
+        addSyncLog('success', 'manual', 'Reparo tático concluído com sucesso');
       } else if (validTutorials.length > 0) {
         console.log(`[tutorials] Sincronização bem-sucedida: ${validTutorials.length} módulos ativos.`);
         addSyncLog('success', 'auto', 'Carregamento tático concluído');
@@ -132,9 +132,10 @@ function TutorialsPage() {
       console.error("[tutorials] Falha no carregamento:", err);
       addSyncLog('error', 'auto', `Erro de sincronização: ${err.message || 'Falha de rede'}`);
       
-      // Se falhar mesmo com o bypass, tentamos uma última vez silenciosamente
+      // Se falhar mesmo com o bypass, tentamos uma última vez com um delay maior e força bruta
       if (!forceRepair) {
-        setTimeout(() => loadData(true), 2000);
+        console.warn("[tutorials] Falha persistente detectada. Acionando reparo de emergência em 3s...");
+        setTimeout(() => loadData(true), 3000);
       }
     } finally {
       setLoading(false);

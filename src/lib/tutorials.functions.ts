@@ -102,6 +102,7 @@ export const listTutorials = createServerFn({ method: "GET" })
           const delay = 800 * Math.pow(2, attempt - 1);
           
           try {
+            console.log(`[tutorials] Executando RPC de reparo tático (Tentativa ${attempt})...`);
             // Reparo tático forçado via Admin
             await supabaseAdmin.rpc("force_refresh_schema_permissions");
             // Pausa estratégica para propagação
