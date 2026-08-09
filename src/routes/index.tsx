@@ -1,4 +1,4 @@
-// Crie uma página de pré-publicação para tutoriais com validações e mensagens de erro caso ocorram bugs ou falhas ao publicar.
+// verifique novamente os erros do shadow pass
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
