@@ -2,7 +2,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
 import { useEffect, useState } from "react";
-import { useSearch, createFileRoute } from "@tanstack/react-router";
+import { useSearch, createFileRoute, Link } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { toast } from "sonner";
 import { SocialProofStrip } from "@/components/SocialProof";
@@ -16,6 +16,21 @@ import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
+import { motion } from "framer-motion";
+import { 
+  Shield, 
+  Zap, 
+  Lock, 
+  Globe, 
+  ShieldCheck, 
+  Server, 
+  Rocket, 
+  ArrowRight, 
+  CheckCircle2, 
+  Store, 
+  Users, 
+  Gift 
+} from "lucide-react";
 // Hardcoded paths to public assets to ensure they load from the repository
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
