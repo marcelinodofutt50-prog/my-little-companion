@@ -32,6 +32,7 @@ import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.penden
 import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
+import { Route as AuthenticatedShadowPassRouteImport } from './routes/_authenticated/shadow-pass'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
 import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authenticated/fidelidade'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -167,6 +168,11 @@ const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
 const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedShadowPassRoute = AuthenticatedShadowPassRouteImport.update({
+  id: '/shadow-pass',
+  path: '/shadow-pass',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPlayProtectRoute =
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
+  '/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/erro': typeof PagamentoErroRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
+  '/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/erro': typeof PagamentoErroRoute
@@ -407,6 +415,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
+  '/_authenticated/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/erro': typeof PagamentoErroRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/fidelidade'
     | '/play-protect'
+    | '/shadow-pass'
     | '/suporte'
     | '/tutoriais'
     | '/pagamento/erro'
@@ -501,6 +511,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/fidelidade'
     | '/play-protect'
+    | '/shadow-pass'
     | '/suporte'
     | '/tutoriais'
     | '/pagamento/erro'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/fidelidade'
     | '/_authenticated/play-protect'
+    | '/_authenticated/shadow-pass'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
     | '/pagamento/erro'
@@ -775,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuporteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/shadow-pass': {
+      id: '/_authenticated/shadow-pass'
+      path: '/shadow-pass'
+      fullPath: '/shadow-pass'
+      preLoaderRoute: typeof AuthenticatedShadowPassRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/play-protect': {
       id: '/_authenticated/play-protect'
       path: '/play-protect'
@@ -948,6 +967,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFidelidadeRoute: typeof AuthenticatedFidelidadeRoute
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
+  AuthenticatedShadowPassRoute: typeof AuthenticatedShadowPassRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
   AuthenticatedTutoriaisRoute: typeof AuthenticatedTutoriaisRoute
   AuthenticatedServidorKrakenRoute: typeof AuthenticatedServidorKrakenRoute
@@ -959,6 +979,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFidelidadeRoute: AuthenticatedFidelidadeRoute,
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
+  AuthenticatedShadowPassRoute: AuthenticatedShadowPassRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
   AuthenticatedTutoriaisRoute: AuthenticatedTutoriaisRoute,
   AuthenticatedServidorKrakenRoute: AuthenticatedServidorKrakenRoute,

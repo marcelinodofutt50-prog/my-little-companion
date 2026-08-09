@@ -13,7 +13,7 @@ const DICT: Dict = {
   "nav.downloads": { pt: "Downloads", en: "Downloads" },
   "nav.referrals": { pt: "Indicações", en: "Referrals" },
   
-  
+  "nav.shadowpass": { pt: "Shadow Pass", en: "Shadow Pass" },
   "nav.panel": { pt: "Painel", en: "Dashboard" },
   "nav.signin": { pt: "Entrar", en: "Sign in" },
   "nav.signout": { pt: "Sair", en: "Sign out" },
