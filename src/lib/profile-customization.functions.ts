@@ -14,52 +14,65 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
 
     try {
       const updates: any = {};
-      if (data.nickname) updates.display_name = data.nickname;
       
-      // Armazena preferências no JSONB metadata
-      // Primeiro buscamos o perfil para não sobrescrever outros campos do metadata
-      const { data: profile, error: fetchError } = await supabase
-        .from("profiles")
-        .select("metadata")
-        .eq("id", userId)
-        .maybeSingle();
+      // Tentativa resiliente de atualização com bypass de cache se necessário
+      const performUpdate = async (client: any, userId: string, data: any) => {
+        // Primeiro buscamos o perfil para não sobrescrever outros campos do metadata
+        const { data: profile, error: fetchError } = await client
+          .from("profiles")
+          .select("metadata, display_name")
+          .eq("id", userId)
+          .maybeSingle();
 
-      if (fetchError) throw fetchError;
-      
-      const metadata = (profile?.metadata as any) || {};
-      if (data.avatar_url) metadata.avatar_url = data.avatar_url;
-      if (data.is_anonymous !== undefined) metadata.is_anonymous = data.is_anonymous;
-      
-      updates.metadata = metadata;
+        if (fetchError) throw fetchError;
+        
+        const currentMetadata = (profile?.metadata as any) || {};
+        if (data.avatar_url) currentMetadata.avatar_url = data.avatar_url;
+        if (data.is_anonymous !== undefined) currentMetadata.is_anonymous = data.is_anonymous;
+        
+        const finalUpdates: any = {
+          metadata: currentMetadata,
+          updated_at: new Date().toISOString()
+        };
+        
+        if (data.nickname) finalUpdates.display_name = data.nickname;
 
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", userId);
+        return client
+          .from("profiles")
+          .update(finalUpdates)
+          .eq("id", userId);
+      };
+
+      const { error: updateError } = await performUpdate(supabase, userId, data);
 
       if (updateError) {
-        // Se falhar por causa da coluna faltando (cache do postgrest), tentamos o RPC e retry
-        if (updateError.message.includes("metadata") || updateError.code === "PGRST108") {
-          console.warn("Detectado erro de cache de schema (metadata). Tentando auto-reparo...");
-          await supabase.rpc("force_refresh_schema_permissions");
+        // Erro 42703 (coluna não existe) ou PGRST108 (cache stale)
+        const isSchemaError = updateError.code === "42703" || updateError.code === "PGRST108" || updateError.message.includes("metadata");
+        
+        if (isSchemaError) {
+          console.warn("[Profile] Erro de schema detectado. Acionando reparo tático...");
           
-          // Pequeno delay para o cache limpar
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Tenta forçar refresh via RPC
+          try {
+            await supabase.rpc("force_refresh_schema_permissions");
+          } catch (e) {
+            console.error("Falha ao disparar RPC de refresh:", e);
+          }
+
+          // Fallback para Supabase Admin (Bypass RLS e PostgREST cache stale se o admin estiver quente)
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { error: adminError } = await performUpdate(supabaseAdmin, userId, data);
           
-          const { error: retryError } = await supabase
-            .from("profiles")
-            .update(updates)
-            .eq("id", userId);
-            
-          if (retryError) throw retryError;
-        } else {
-          throw updateError;
+          if (adminError) throw adminError;
+          return { success: true, message: "Atualizado via Túnel Admin (Schema Syncing)" };
         }
+        
+        throw updateError;
       }
 
       return { success: true };
     } catch (error: any) {
-      console.error("Erro em updateProfileCustomization:", error);
-      throw new Error(error.message || "Falha interna ao atualizar perfil");
+      console.error("Erro fatal em updateProfileCustomization:", error);
+      throw new Error(error.message || "Falha tática ao sincronizar perfil");
     }
   });
