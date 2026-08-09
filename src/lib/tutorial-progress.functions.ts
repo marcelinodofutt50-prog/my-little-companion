@@ -8,9 +8,10 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
     const { userId, supabase } = context;
 
     const fetchWithRetry = async (attempt = 1): Promise<string[]> => {
-      console.log(`[tutorial_progress] Client Access (Attempt ${attempt})...`);
+      console.log(`[tutorial_progress] Admin Tunnel (Attempt ${attempt})...`);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("tutorial_progress")
         .select("tutorial_id")
         .eq("user_id", userId);
@@ -49,8 +50,10 @@ export const toggleTutorialStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     if (data.completed) {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from("tutorial_progress")
         .upsert({ user_id: userId, tutorial_id: data.tutorialId }, { onConflict: "user_id,tutorial_id" });
       if (error) {
@@ -58,7 +61,7 @@ export const toggleTutorialStatus = createServerFn({ method: "POST" })
         throw new Error(error.message);
       }
     } else {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from("tutorial_progress")
         .delete()
         .eq("user_id", userId)

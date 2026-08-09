@@ -106,10 +106,11 @@ function TutorialsPage() {
       if (forceRepair) {
         toast.loading("Sincronizando banco de dados...", { id: "sync-toast" });
         const { supabase } = await import("@/integrations/supabase/client");
-        // Tentativa de reparo múltiplo para PostgREST cache bridge
+        // Reparando via RPC direto e testando seletividade
         await (supabase as any).rpc("force_refresh_schema_permissions");
         await new Promise(resolve => setTimeout(resolve, 1500));
-        await (supabase as any).from("tutorial_progress").select("id").limit(1);
+        // Consulta dummy para forçar handshake
+        await (supabase as any).from("tutorials").select("id").limit(1);
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
