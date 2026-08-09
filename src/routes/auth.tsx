@@ -381,7 +381,8 @@ function AuthPage() {
           const { error: fbSignIn } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
           if (fbSignIn) throw fbSignIn;
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard" });
+          navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+
           return;
         }
         // O Supabase devolve um usuário "fantasma" (sem identities) quando o e-mail
@@ -399,13 +400,15 @@ function AuthPage() {
         // Entra direto no painel: a confirmação de e-mail é feita depois, pelo banner do dashboard.
         if (signUpData.session) {
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard" });
+          navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+
           return;
         }
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (!signInError) {
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard" });
+          navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+
           return;
         }
 
@@ -416,14 +419,16 @@ function AuthPage() {
             const retry = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
             if (!retry.error) {
               toast.success("Conta criada e liberada! Bem-vindo.");
-              navigate({ to: (next as any) || "/dashboard" });
+              navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+
               return;
             }
           }
         }
 
         toast.success("Conta criada! Redirecionando...");
-        navigate({ to: (next as any) || "/dashboard" });
+        navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) {
