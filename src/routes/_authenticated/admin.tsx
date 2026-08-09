@@ -85,6 +85,7 @@ import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 import { AdminTagline } from "@/components/AdminTagline";
 import { AdminTeamGuide } from "@/components/AdminTeamGuide";
 import { AdminPermissionsMatrix } from "@/components/AdminPermissionsMatrix";
+import { AdminTrialMonitorPanel } from "@/components/admin/AdminTrialMonitorPanel";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -193,7 +194,8 @@ type Tab =
   | "tutorials"
   | "refunds"
   | "quotas"
-  | "selftest";
+  | "selftest"
+  | "trial_monitor";
 
 
 // Explicação em linguagem simples de cada seção do painel.
@@ -221,6 +223,7 @@ const TAB_DESC: Record<Tab, string> = {
   servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
   quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
+  trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
 };
 
 
@@ -2203,7 +2206,8 @@ function AdminPage() {
             )}
             {tab === "tutorials" && <AdminTutorialsPanel />}
             {tab === "refunds" && <AdminRefundsPanel />}
-            {tab === "selftest" && <AdminSelfTestPanel />}
+              {tab === "selftest" && <AdminSelfTestPanel />}
+              {tab === "trial_monitor" && <AdminTrialMonitorPanel />}
               </motion.div>
             </AnimatePresence>
           </div>
