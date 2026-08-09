@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles, ArrowLeft } from "lucide-react"
+import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
 import { useState, useEffect, useRef } from "react"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { Button } from "@/components/ui/button"
@@ -34,6 +35,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime.
 // v20: Corrigindo a ordem para garantir que a imagem oficial (v18) seja a prioritária.
 const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg9Asset.url, // Oficial conforme solicitado
   krakenNewBgAsset.url,
   krakenBg18Asset.url,
   krakenBg17Asset.url,
