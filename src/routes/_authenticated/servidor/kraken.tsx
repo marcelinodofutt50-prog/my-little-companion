@@ -124,7 +124,7 @@ function KrakenPage() {
         const finish = (ok: boolean) => resolve(ok);
         img.onload = () => {
           const ratio = img.naturalWidth / Math.max(1, img.naturalHeight);
-          const isUsable = img.naturalWidth >= 900 && ratio >= 1.1 && ratio <= 3.2;
+          const isUsable = img.naturalWidth >= 400 && ratio >= 0.5 && ratio <= 4.0;
           if (!isUsable) {
             console.warn(
               `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight} | ratio: ${ratio.toFixed(2)}): ${url}`
