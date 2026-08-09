@@ -148,10 +148,13 @@ function TutorialsPage() {
             if (retryTData) {
               setTutorials(retryTData);
               setCompletedIds(retryPData || []);
-              addSyncLog('success', 'auto', 'Silent recovery successful');
+              addSyncLog('success', 'auto', 'Recuperado via reparo silencioso (Admin Tunnel)');
+            } else {
+              addSyncLog('error', 'auto', 'Falha na recuperação automática: Nenhum dado via Admin.');
             }
           } catch (repairErr: any) {
-            console.warn("[tutorials] Background recovery attempt failed silently.");
+             console.error("[tutorials] Background repair failure:", repairErr);
+             addSyncLog('error', 'auto', `Erro no túnel: ${repairErr.message || 'Falha de rede'}`);
           }
         })();
       }
