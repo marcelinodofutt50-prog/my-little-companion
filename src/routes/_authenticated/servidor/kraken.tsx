@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles, ArrowLeft } from "lucide-react"
 import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
-import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
+
 import { useState, useEffect, useRef } from "react"
 
 import { ErrorBoundary } from "@/components/ErrorBoundary"
