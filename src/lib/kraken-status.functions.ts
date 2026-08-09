@@ -23,14 +23,15 @@ export const getKrakenStatus = createServerFn({ method: "GET" })
 
     let { data: license, error: licenseError } = await fetchLicense(context.supabase);
     
-    // Auto-repair if cache fails
+    // Auto-repair only if cache fails, but keep using standard client
     if (licenseError && (licenseError.code === 'PGRST108' || licenseError.message?.includes('schema cache'))) {
-      await trackSchemaFailure(licenseError, "getKrakenStatus", false, { stage: "fetch_license", ...metadata }, userId);
-      const adminResult = await fetchLicense(supabaseAdmin);
-      license = adminResult.data;
-      if (!adminResult.error) {
-        await trackSchemaFailure(licenseError, "getKrakenStatus", true, { stage: "retry_license_success" }, userId);
-      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      await new Promise(r => setTimeout(r, 1000));
+      
+      const retryResult = await fetchLicense(context.supabase);
+      license = retryResult.data;
+      licenseError = retryResult.error;
     }
 
     // 2. Verificar o status do pagamento mais recente
