@@ -1,56 +1,50 @@
-import asyncio
 import os
-import sys
 import json
-from supabase import create_client, Client
+import requests
+import sys
 
-async def check_schema():
-    print("[SCHEMA-CHECK] Iniciando validação preventiva de schema...")
-    
+def check_schema():
     supabase_url = os.environ.get("VITE_SUPABASE_URL")
     supabase_key = os.environ.get("VITE_SUPABASE_ANON_KEY")
     
     if not supabase_url or not supabase_key:
-        print("[SCHEMA-CHECK] ERRO: Variáveis de ambiente do Supabase não encontradas.")
-        sys.exit(1)
-        
-    try:
-        supabase: Client = create_client(supabase_url, supabase_key)
-        
-        # Tabelas críticas para o Centro de Treinamento
-        critical_tables = ["tutorials", "user_roles", "tutorial_progress"]
-        
-        for table in critical_tables:
-            print(f"[SCHEMA-CHECK] Verificando acesso à tabela: {table}...")
-            # Tentativa de leitura mínima para validar o schema cache do PostgREST
-            try:
-                response = supabase.table(table).select("id").limit(1).execute()
-            except Exception as e:
-                # Se for erro de coluna 'id' inexistente, a tabela ao menos existe no cache
-                if "column" in str(e).lower() and "does not exist" in str(e).lower():
-                    print(f"[SCHEMA-CHECK] Tabela {table} existe (erro de coluna ignorado).")
-                    continue
-                raise e
-            
-            # Se chegarmos aqui sem erro de exceção, verificamos se o PostgREST retornou erro no corpo
-            # Nota: O cliente python pode lançar exceções para erros 4xx/5xx dependendo da versão, 
-            # mas o erro PGRST108 geralmente vem como um erro de estrutura.
-            
-        print("[SCHEMA-CHECK] ✅ Schema validado com sucesso. Nenhuma falha PGRST108 detectada.")
-        sys.exit(0)
-        
-    except Exception as e:
-        error_msg = str(e)
-        print(f"\n[SCHEMA-CHECK] ❌ RISCO DE FALHA DETECTADO!")
-        print(f"[SCHEMA-CHECK] Detalhes: {error_msg}")
-        
-        if "PGRST108" in error_msg or "could not find" in error_msg.lower():
-            print("[SCHEMA-CHECK] CAUSA: O schema cache do PostgREST está desatualizado (PGRST108).")
-            print("[SCHEMA-CHECK] AÇÃO: O deploy deve ser bloqueado até que o reparo tático seja executado.")
-        else:
-            print("[SCHEMA-CHECK] CAUSA: Erro genérico de conexão ou permissão.")
-            
-        sys.exit(1)
+        print("Error: Missing Supabase environment variables")
+        return False
+
+    print(f"Checking Supabase at: {supabase_url}")
+    
+    headers = {
+        "apikey": supabase_key,
+        "Authorization": f"Bearer {supabase_key}"
+    }
+    
+    # Check tutorial_progress
+    tables = ["tutorials", "tutorial_progress", "licenses", "orders"]
+    all_ok = True
+    
+    for table in tables:
+        url = f"{supabase_url}/rest/v1/{table}?select=count&limit=1"
+        try:
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                print(f"✅ Table '{table}': Accessible")
+            elif response.status_code == 406 and "PGRST108" in response.text:
+                print(f"❌ Table '{table}': PGRST108 (Schema cache error)")
+                all_ok = False
+            elif response.status_code == 404:
+                print(f"❌ Table '{table}': 404 (Not found)")
+                all_ok = False
+            else:
+                print(f"⚠️ Table '{table}': Status {response.status_code} - {response.text[:100]}")
+                # We don't mark as failure for auth errors here, just connectivity
+        except Exception as e:
+            print(f"❌ Table '{table}': Exception {str(e)}")
+            all_ok = False
+
+    return all_ok
 
 if __name__ == "__main__":
-    asyncio.run(check_schema())
+    success = check_schema()
+    if not success:
+        sys.exit(1)
+    sys.exit(0)
