@@ -37,7 +37,7 @@ export const staffUpdateApplication = createServerFn({ method: "POST" })
         reviewed_at: new Date().toISOString(),
         reviewer_id: context.userId,
         reviewer_notes: data.notes
-      })
+      } as any)
       .eq("id", data.id)
       .select()
       .single();
