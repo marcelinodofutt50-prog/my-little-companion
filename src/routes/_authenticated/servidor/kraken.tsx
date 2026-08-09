@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
-import krakenBg16Asset from "@/assets/krakenbackground-16.png.asset.json";
+import krakenBg16Asset from "@/assets/krakenbackground-16.jpg.asset.json";
 import krakenBg15Asset from "@/assets/krakenbackground-15.jpg.asset.json";
 import krakenBg14Asset from "@/assets/krakenbackground-14.jpg.asset.json";
 import krakenBg13Asset from "@/assets/krakenbackground-13.jpg.asset.json";

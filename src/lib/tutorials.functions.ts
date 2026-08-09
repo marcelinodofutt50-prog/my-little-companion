@@ -96,17 +96,22 @@ export const listTutorials = createServerFn({ method: "GET" })
         const isPGRST = adminError.code === 'PGRST108' || adminError.message?.includes('schema cache') || adminError.code === '42P01';
         
         if (isPGRST && attempt <= 3) {
-          console.warn(`[tutorials] Instabilidade de schema (PGRST108). Executando Reparo RPC...`);
+          console.warn(`[tutorials] Instabilidade crítica de schema (PGRST108). Iniciando reparo de força bruta...`);
           await trackSchemaFailure(adminError, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
           
-          const delay = 800 * Math.pow(2, attempt - 1);
+          const delay = 1000 * Math.pow(2, attempt - 1);
           
           try {
-            console.log(`[tutorials] Executando RPC de reparo tático (Tentativa ${attempt})...`);
             // Reparo tático forçado via Admin
             await supabaseAdmin.rpc("force_refresh_schema_permissions");
-            // Pausa estratégica para propagação
+            
+            // Bypass de cache adicional: aguarda propagação no plano de dados
             await new Promise(resolve => setTimeout(resolve, delay));
+            
+            // Se for a última tentativa, tenta um "ping" direto para forçar o cache do PostgREST
+            if (attempt === 3) {
+              await supabaseAdmin.from("tutorials").select("id").limit(1);
+            }
           } catch (rpcErr) {
             console.error("[tutorials] RPC Repair Failed:", rpcErr);
           }
