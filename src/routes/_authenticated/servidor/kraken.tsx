@@ -123,8 +123,10 @@ function KrakenPage() {
           const isUsable = img.naturalWidth >= 900 && ratio >= 1.1 && ratio <= 3.2;
           if (!isUsable) {
             console.warn(
-              `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight}): ${url}`
+              `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight} | ratio: ${ratio.toFixed(2)}): ${url}`
             );
+          } else {
+            console.log(`[Kraken] Asset validado com sucesso (${img.naturalWidth}x${img.naturalHeight}): ${url}`);
           }
           finish(isUsable);
         };
