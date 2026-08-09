@@ -298,8 +298,9 @@ function KrakenPage() {
     }
   };
 
+  console.log("[Kraken] Renderizando componente...");
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
+    <div id="kraken-viewport-root" className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
       {/* Tactical Background Overlay - Full Viewport Image */}
       <div id="kraken-bg-root" className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black kraken-bg-container">
         {/* Base Fallback Gradient */}
