@@ -12,6 +12,7 @@ import { ProofWall } from "@/components/ProofWall";
 import { ImpossibleProof } from "@/components/ImpossibleProof";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";

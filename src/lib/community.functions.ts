@@ -16,7 +16,7 @@ export const getCommunityMessages = createServerFn({ method: "GET" })
       console.error("[Community] Error fetching messages:", error);
       // Auto-heal attempt if schema is detected as stale
       if (error.message?.includes("schema cache")) {
-        await supabase.rpc('force_refresh_schema_permissions').catch(console.error);
+        await (supabase.rpc('force_refresh_schema_permissions') as any);
       }
       return [];
     }
@@ -49,7 +49,7 @@ export const sendCommunityMessage = createServerFn({ method: "POST" })
 
     if (error) {
        if (error.message?.includes("schema cache")) {
-        await supabase.rpc('force_refresh_schema_permissions').catch(console.error);
+        await (supabase.rpc('force_refresh_schema_permissions') as any);
       }
       throw error;
     }
@@ -67,7 +67,7 @@ export const getCommunityGoals = createServerFn({ method: "GET" })
 
     if (error) {
       if (error.message?.includes("schema cache")) {
-        await supabase.rpc('force_refresh_schema_permissions').catch(console.error);
+        await (supabase.rpc('force_refresh_schema_permissions') as any);
       }
       return [];
     }
