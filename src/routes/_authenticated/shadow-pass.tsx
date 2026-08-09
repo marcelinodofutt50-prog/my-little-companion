@@ -43,10 +43,10 @@ function ShadowPassPage() {
           <Shield className="h-64 w-64 rotate-12" />
         </div>
         
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="relative">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 relative z-10">
+          <div className="relative shrink-0">
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-            <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative">
+            <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative">
               <AvatarImage src={identity.avatar} />
               <AvatarFallback className="bg-muted text-2xl font-bold">
                 {identity.nickname?.substring(0, 2).toUpperCase()}
