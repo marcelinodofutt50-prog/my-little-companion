@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
+import krakenBg18Asset from "@/assets/krakenbackground-18.jpg.asset.json";
 import krakenBg17Asset from "@/assets/krakenbackground-17.jpg.asset.json";
 import krakenBg16Asset from "@/assets/krakenbackground-16.jpg.asset.json";
 import krakenBg15Asset from "@/assets/krakenbackground-15.jpg.asset.json";
@@ -32,6 +33,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime: o primeiro asset que carregar é adotado.
 // Priorizamos os assets locais registrados no código para garantir carregamento na Vercel.
 const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg18Asset.url,
   krakenBg17Asset.url,
   krakenBg16Asset.url,
   krakenBg15Asset.url,
@@ -53,8 +55,8 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Forçamos a versão v18 para garantir que o deploy da Vercel limpe caches antigos.
-  return `${url}${sep}v=v18`;
+  // Forçamos a versão v19 para garantir que o deploy da Vercel limpe caches antigos.
+  return `${url}${sep}v=v19`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
@@ -334,7 +336,7 @@ function KrakenPage() {
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
         <div 
           className={cn(
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1] kraken-bg-layer",
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1] kraken-bg-layer opacity-100",
             bgLoaded.core ? "opacity-100" : "opacity-0"
           )}
           style={{ 
@@ -342,7 +344,8 @@ function KrakenPage() {
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            filter: 'brightness(0.9) contrast(1.1) saturate(1.1)' 
+            filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
+            backgroundColor: 'black'
           }}
         />
 
