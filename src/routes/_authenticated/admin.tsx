@@ -130,7 +130,9 @@ import {
   adminRegisterLegacyLicense,
   adminListReferrals,
   adminMarkReferralPaid,
+  adminUpdateReferralStatus,
 } from "@/lib/admin.functions";
+
 import {
   getMyQuota,
   listSupportQuotas,
