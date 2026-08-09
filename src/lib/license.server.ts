@@ -74,7 +74,10 @@ export async function internalGenerateTrial(
     throw new Error(`Shadow Node Refusal: ${yr.Fail}`);
   }
 
-
+  // AUTO-HEAL: Se o Yaarsa disse que a conta existe, mas não temos o registro 
+  // na tabela 'licenses' (desync), nós prosseguimos para criar a linha no banco, 
+  // garantindo que o usuário tenha acesso aos dados que já estão no Yaarsa.
+  
   const expiresAt = new Date(); 
   expiresAt.setDate(expiresAt.getDate() + durationDays);
   
@@ -93,10 +96,15 @@ export async function internalGenerateTrial(
 
   const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
   if (licErr || !lic) {
+    // Se falhar a inserção da licença (ex: unique constraint no email), 
+    // precisamos limpar a intenção para não bloquear o usuário.
+    await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
     throw new Error(licErr?.message || "Falha ao gravar licença");
   }
 
+  // Vincula o trial à licença criada
   await supabaseAdmin.from("trials").update({ license_id: lic.id }).eq("user_id", userId);
+
 
   return {
     username: creds.username,
