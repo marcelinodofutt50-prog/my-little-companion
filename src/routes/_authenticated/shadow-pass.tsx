@@ -64,7 +64,7 @@ function ShadowPassPage() {
               <h1 className="text-2xl md:text-5xl font-bold tracking-tight font-display uppercase italic break-all">
                 {identity.nickname}
               </h1>
-              <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest border-primary/50 text-primary">
+              <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest border-primary/50 text-primary shrink-0">
                 ID: {identity.id.substring(0, 8)}
               </Badge>
               {staff.isEligible && (
