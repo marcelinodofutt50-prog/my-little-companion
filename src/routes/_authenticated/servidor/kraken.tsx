@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 import krakenTacticalBg from "@/assets/kraken-tactical-bg.png.asset.json";
+import krakenBg12Asset from "@/assets/kraken-main-bg-v12.png.asset.json";
 import krakenBg11Asset from "@/assets/krakenbackground-11.jpg.asset.json";
 import krakenBg10Asset from "@/assets/krakenbackground-10.jpg.asset.json";
 import krakenBg8Asset from "@/assets/krakenbackground-8.jpg.asset.json";
@@ -28,6 +29,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // compatível com um fundo widescreen) é adotado. Isso protege contra 404s em produção e
 // contra assets inválidos (ex.: recortes/telas de erro salvos por engano).
 const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg12Asset.url,
   krakenBg10Asset.url,
   krakenTacticalBg.url,
   krakenBg8Asset.url,
@@ -280,9 +282,9 @@ function KrakenPage() {
   return (
     <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
       {/* Tactical Background Overlay - Full Viewport Image */}
-      <div className="fixed inset-0 z-0 pointer-events-none w-screen h-screen overflow-hidden bg-black">
+      <div className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black">
         {/* Base Fallback Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100 z-[-2]" />
 
         {/* Skeleton Placeholder — visível apenas enquanto a imagem principal carrega */}
         <div
@@ -299,7 +301,7 @@ function KrakenPage() {
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
         <div 
           className={cn(
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none",
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1]",
             bgLoaded.core ? "opacity-100" : "opacity-0"
           )}
           style={{ 
@@ -307,7 +309,7 @@ function KrakenPage() {
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            filter: 'brightness(1.2) contrast(1.1) saturate(1.1)' 
+            filter: 'brightness(0.9) contrast(1.1) saturate(1.1)' 
           }}
         />
 
@@ -324,9 +326,9 @@ function KrakenPage() {
         )}
         
         {/* Tactical Overlays */}
-        <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.1)_0%,_transparent_80%)] pointer-events-none" />
-        <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.4)] pointer-events-none" />
+        <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay pointer-events-none z-[1]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.1)_0%,_transparent_80%)] pointer-events-none z-[2]" />
+        <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.4)] pointer-events-none z-[3]" />
       </div>
 
 
