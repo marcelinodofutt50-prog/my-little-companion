@@ -3,6 +3,7 @@ import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket,
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
+import { PromotionsWidget } from "@/components/PromotionsWidget";
 
 
 import { useTheme } from '@/lib/theme'
