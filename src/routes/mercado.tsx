@@ -37,7 +37,9 @@ function MarketPage() {
           .from("plans")
           .select("*")
           .eq("active", true)
-          .in("category", ["addon", "upgrade", "source"])
+          .eq("status", "published")
+          .in("category", ["addon", "upgrade", "source", "market"])
+
           .order("sort_order");
         
         if (error) {
@@ -54,7 +56,9 @@ function MarketPage() {
                 .from("plans")
                 .select("*")
                 .eq("active", true)
-                .in("category", ["addon", "upgrade", "source"])
+                .eq("status", "published")
+                .in("category", ["addon", "upgrade", "source", "market"])
+
                 .order("sort_order");
               if (!retryError) {
                 setPlans(retryData || []);
@@ -86,13 +90,15 @@ function MarketPage() {
     }
   };
 
-  const getIcon = (slug: string) => {
+  const getIcon = (slug: string, category: string) => {
     const s = slug.toLowerCase();
+    if (category === 'market') return Store;
     if (s.includes("upgrade")) return Crown;
     if (s.includes("signer") || s.includes("play-protect")) return ShieldCheck;
     if (s.includes("source")) return Rocket;
     return Zap;
   };
+
 
   return (
     <SidebarProvider>
@@ -122,8 +128,9 @@ function MarketPage() {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {plans.map((p) => {
-                  const Icon = getIcon(p.slug);
+                  const Icon = getIcon(p.slug, p.category);
                   const isUpgrade = p.category === 'upgrade';
+
                   return (
                     <Card key={p.slug} className={`bg-black/40 border-primary/10 backdrop-blur-sm group hover:border-primary/40 transition-all flex flex-col ${isUpgrade ? 'border-amber-500/20 shadow-lg shadow-amber-500/5' : ''}`}>
                       <CardHeader className="pb-4">
@@ -160,7 +167,7 @@ function MarketPage() {
                           disabled={buyingSlug === p.slug}
                           onClick={() => handleBuy(p.slug)}
                         >
-                          {buyingSlug === p.slug ? "Provisionando..." : "Adquirir Módulo"}
+                          {buyingSlug === p.slug ? "Provisionando..." : p.category === 'market' ? "Adquirir Produto" : "Adquirir Módulo"}
                           <ArrowRight className="h-3 w-3 ml-2" />
                         </Button>
                       </CardContent>
