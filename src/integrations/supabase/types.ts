@@ -1111,6 +1111,7 @@ export type Database = {
           price_brl: number
           slug: string
           sort_order: number | null
+          status: Database["public"]["Enums"]["plan_status"] | null
         }
         Insert: {
           active?: boolean
@@ -1123,6 +1124,7 @@ export type Database = {
           price_brl: number
           slug: string
           sort_order?: number | null
+          status?: Database["public"]["Enums"]["plan_status"] | null
         }
         Update: {
           active?: boolean
@@ -1135,6 +1137,7 @@ export type Database = {
           price_brl?: number
           slug?: string
           sort_order?: number | null
+          status?: Database["public"]["Enums"]["plan_status"] | null
         }
         Relationships: []
       }
@@ -1880,6 +1883,7 @@ export type Database = {
         | "expired"
         | "cancelled"
       app_role: "admin" | "user" | "moderator"
+      plan_status: "published" | "draft" | "hidden" | "sold_out"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2019,6 +2023,7 @@ export const Constants = {
         "cancelled",
       ],
       app_role: ["admin", "user", "moderator"],
+      plan_status: ["published", "draft", "hidden", "sold_out"],
     },
   },
 } as const
