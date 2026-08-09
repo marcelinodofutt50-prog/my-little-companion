@@ -124,7 +124,7 @@ export const activateTrialReward = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { generateTrial } = await import("./license.functions");
+    const { internalGenerateTrial } = await import("./license.server");
 
     // 1. Verifica se já tem uma licença ou trial ativo
     const { data: profile } = await supabaseAdmin
@@ -143,16 +143,14 @@ export const activateTrialReward = createServerFn({ method: "POST" })
     }
 
     // 2. Gera o Trial de 3 dias
-    // Note: generateTrial usually handles 24h, but we can override or handle it here
-    // For now, let's use the standard one but mark it as welcome trial
     try {
-      const trial = await generateTrial({ data: undefined, context });
+      const trial = await internalGenerateTrial(supabaseAdmin, userId, 3);
       
       // Marca como resgatado
       await supabaseAdmin
         .from("profiles")
         .update({
-          metadata: { ...metadata, welcome_trial_claimed: true } as any
+          metadata: { ...metadata, welcome_trial_claimed: true }
         } as any)
         .eq("id", userId);
 
@@ -167,7 +165,7 @@ export const activateTrialReward = createServerFn({ method: "POST" })
         await supabaseAdmin.from("referral_events").insert({
           referral_id: referral.id,
           event_type: 'trial_active',
-          metadata: { trial_id: (trial as any).id }
+          metadata: { trial_id: trial.id }
         });
 
         await supabaseAdmin
