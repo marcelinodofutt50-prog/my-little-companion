@@ -26,7 +26,9 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 type Item = { title: string; url: string; icon: any; hash?: string; tKey?: any };
 
 const primary: Item[] = [
+  { title: "Shadow Pass", url: "/shadow-pass", icon: User, tKey: "nav.shadowpass" as const },
   { title: "Enterprise Console", url: "/dashboard", icon: LayoutDashboard, tKey: "nav.panel" as const },
+  { title: "Shadow Loyalty", url: "/fidelidade", icon: Trophy, tKey: "nav.loyalty" as const },
   { title: "Asset Provisioning", url: "/play-protect", icon: ShieldCheck, tKey: "nav.playprotect" as const },
   { title: "Service Agreements", url: "/planos", icon: Sparkles, tKey: "nav.plans" as const },
   { title: "Executive Support", url: "/suporte", icon: LifeBuoy, tKey: "nav.support" as const },
@@ -36,11 +38,6 @@ const primary: Item[] = [
   { title: "Marketplace", url: "/mercado", icon: Store, tKey: "nav.market" as const },
   { title: "Affiliates", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
   { title: "Gift Center", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
-  { title: "Shadow Loyalty", url: "/fidelidade", icon: Trophy, tKey: "nav.loyalty" as const },
-  { title: "Shadow Pass", url: "/shadow-pass", icon: User, tKey: "nav.shadowpass" as const },
-
-
-
 ];
 
 
@@ -97,6 +94,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
                       {!collapsed && (
                         <span className={cn(
                           "text-sm",
+                          (item.tKey === "nav.shadowpass") && "text-primary font-bold tracking-tight",
                           (item.tKey === "nav.tutorials" || item.tKey === "nav.kraken") && "rgb-text animate-rgb-text font-bold"
                         )}>
                           {item.tKey ? t(item.tKey) : item.title}

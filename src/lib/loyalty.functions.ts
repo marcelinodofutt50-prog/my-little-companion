@@ -68,9 +68,20 @@ export const claimMissionReward = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({ missionId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    // Call the database function using context.supabase (which is RLS-bound)
-    // The complete_loyalty_mission function is SECURITY DEFINER, so it handles the logic securely
-    // while checking the caller's auth.uid().
+    
+    // Check if already completed to prevent duplicate clicks
+    const { data: existing } = await (supabase
+      .from("loyalty_history" as any)
+      .select("id")
+      .eq("user_id", userId)
+      .eq("action_type", "mission_complete")
+      .eq("reference_id", data.missionId)
+      .maybeSingle() as any);
+
+    if (existing) {
+      return { ok: false, message: "Missão já concluída anteriormente." };
+    }
+
     const { data: res, error } = await (supabase.rpc as any)('complete_loyalty_mission', {
       _mission_id: data.missionId
     });
@@ -79,4 +90,15 @@ export const claimMissionReward = createServerFn({ method: "POST" })
     const result = res as unknown as { ok: boolean; message?: string; points_earned?: number };
     
     return result;
+  });
+
+export const getVipBenefits = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data } = await (supabase
+      .from("vip_configs" as any)
+      .select("*")
+      .order("min_loyalty_points", { ascending: true }) as any);
+    return data || [];
   });

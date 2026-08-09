@@ -35,11 +35,11 @@ function LoyaltyPage() {
     <div className="container mx-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight font-display uppercase italic">
-            Shadow <span className="text-primary">Loyalty</span>
+          <h1 className="text-4xl md:text-6xl font-display font-black tracking-tighter uppercase italic">
+            Shadow <span className="text-primary underline decoration-primary decoration-4 underline-offset-8">Loyalty</span>
           </h1>
-          <p className="text-muted-foreground mt-2 font-mono text-sm uppercase tracking-widest">
-            // Programa de Fidelidade Alpha
+          <p className="text-muted-foreground mt-4 font-mono text-xs uppercase tracking-[0.2em]">
+            // Professional Rewards & Member Status
           </p>
         </div>
         <div className="flex items-center gap-3 bg-card border border-primary/20 p-4 rounded-xl shadow-lg">
@@ -143,7 +143,16 @@ function LoyaltyPage() {
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-primary font-mono font-bold text-sm">+{m.reward_points} pts</div>
-                    <Button variant="outline" size="sm" className="h-7 text-[9px] font-mono uppercase mt-2">Claim</Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[9px] font-mono uppercase mt-2 border-primary/30 hover:bg-primary/10"
+                      onClick={async () => {
+                        // To be implemented with useServerFn + toast
+                      }}
+                    >
+                      Resgatar
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
