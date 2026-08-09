@@ -36,17 +36,17 @@ function ShadowPassPage() {
   const { identity, loyalty, community, vip, reputation, staff } = data as any;
 
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500 max-w-6xl pb-24">
+    <div className="container mx-auto px-4 py-6 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-6xl pb-24 md:pb-8 overflow-x-hidden">
       {/* Header Profile */}
-      <header className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card p-6 md:p-10 shadow-2xl">
+      <header className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-primary/20 bg-card p-5 md:p-10 shadow-2xl">
         <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
           <Shield className="h-64 w-64 rotate-12" />
         </div>
         
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="relative">
+        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 relative z-10">
+          <div className="relative shrink-0">
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-            <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative">
+            <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative">
               <AvatarImage src={identity.avatar} />
               <AvatarFallback className="bg-muted text-2xl font-bold">
                 {identity.nickname?.substring(0, 2).toUpperCase()}
@@ -59,16 +59,16 @@ function ShadowPassPage() {
             )}
           </div>
           
-          <div className="text-center md:text-left space-y-2">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight font-display uppercase italic">
+          <div className="text-center md:text-left space-y-2 w-full">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
+              <h1 className="text-2xl md:text-5xl font-bold tracking-tight font-display uppercase italic break-all">
                 {identity.nickname}
               </h1>
-              <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest border-primary/50 text-primary">
+              <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest border-primary/50 text-primary shrink-0">
                 ID: {identity.id.substring(0, 8)}
               </Badge>
               {staff.isEligible && (
-                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px] uppercase tracking-widest">
+                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px] uppercase tracking-widest shrink-0">
                   Equipe Elegível
                 </Badge>
               )}
@@ -76,18 +76,18 @@ function ShadowPassPage() {
             <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest">
               // Membro desde {new Date(identity.joinedAt).toLocaleDateString()}
             </p>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 shrink-0">
                 <Trophy className="h-4 w-4 text-primary" />
-                <span className="text-xs font-bold font-mono uppercase tracking-tighter">{loyalty.tier}</span>
+                <span className="text-[10px] md:text-xs font-bold font-mono uppercase tracking-tighter">{loyalty.tier}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 shrink-0">
                 <Diamond className="h-4 w-4 text-yellow-500" />
-                <span className="text-xs font-bold font-mono uppercase tracking-tighter">{vip.tier.toUpperCase()}</span>
+                <span className="text-[10px] md:text-xs font-bold font-mono uppercase tracking-tighter">{vip.tier.toUpperCase()}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 shrink-0">
                 <Shield className="h-4 w-4 text-blue-500" />
-                <span className="text-xs font-bold font-mono uppercase tracking-tighter">Rep: {reputation.score}</span>
+                <span className="text-[10px] md:text-xs font-bold font-mono uppercase tracking-tighter">Rep: {reputation.score}</span>
               </div>
             </div>
           </div>
@@ -95,9 +95,9 @@ function ShadowPassPage() {
       </header>
 
       {/* Main Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
         {/* Left Column: Progress & Community */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6 md:space-y-8">
           {/* Progress Overview */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
@@ -106,19 +106,19 @@ function ShadowPassPage() {
               </h2>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Loyalty Progress */}
-              <Card className="border-primary/10 bg-card/50 backdrop-blur-sm">
+              <Card className="border-primary/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between">
-                    Loyalty Level <span>{Math.round(loyalty.progress)}%</span>
+                  <CardTitle className="text-[10px] md:text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between items-center">
+                    Loyalty Level <span className="text-primary font-bold">{Math.round(loyalty.progress)}%</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Progress value={loyalty.progress} className="h-2" />
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold">{loyalty.tier}</span>
-                    <span className="text-muted-foreground">Próximo: {loyalty.nextTier || 'Max'}</span>
+                    <span className="text-muted-foreground truncate ml-2">Próximo: {loyalty.nextTier || 'Max'}</span>
                   </div>
                   <div className="pt-2 border-t border-border/40 flex justify-between items-center">
                     <div className="text-center">
@@ -134,21 +134,21 @@ function ShadowPassPage() {
               </Card>
 
               {/* VIP Progress */}
-              <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm">
+              <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between">
-                    Shadow VIP <span>{vip.tier === 'elite' ? '100%' : '78%'}</span>
+                  <CardTitle className="text-[10px] md:text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between items-center">
+                    Shadow VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? '100%' : '78%'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold text-yellow-500 capitalize">{vip.tier}</span>
-                    <span className="text-muted-foreground">Próximo: {vip.next?.tier || 'Max'}</span>
+                    <span className="text-muted-foreground truncate ml-2">Próximo: {vip.next?.tier || 'Max'}</span>
                   </div>
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {vip.benefits.map((b: string, i: number) => (
-                      <Badge key={i} variant="secondary" className="text-[9px] font-mono px-1 py-0">{b}</Badge>
+                      <Badge key={i} variant="secondary" className="text-[9px] font-mono px-1 py-0 whitespace-nowrap">{b}</Badge>
                     ))}
                   </div>
                 </CardContent>
@@ -173,25 +173,25 @@ function ShadowPassPage() {
                   return (
                     <>
                       <div className="space-y-4">
-                        <div className="flex justify-between items-end">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                           <div>
                             <div className="text-sm font-mono uppercase text-primary mb-1">Meta Atual</div>
-                            <h3 className="text-2xl font-bold font-mono">{community.memberCount} / {nextGoal?.target_members || '???'} Membros</h3>
+                            <h3 className="text-xl md:text-2xl font-bold font-mono truncate">{community.memberCount} / {nextGoal?.target_members || '???'} Membros</h3>
                           </div>
-                          <div className="text-right">
+                          <div className="text-left sm:text-right w-full sm:w-auto">
                             <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Status</div>
-                            <Badge className="bg-primary/20 text-primary border-primary/30">{achievedGoals}/{totalGoals} Concluídas</Badge>
+                            <Badge className="bg-primary/20 text-primary border-primary/30 shrink-0">{achievedGoals}/{totalGoals} Concluídas</Badge>
                           </div>
                         </div>
                         <Progress value={progress} className="h-3" />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                           <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
                             <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Próxima Recompensa</div>
-                            <div className="text-sm font-bold flex items-center gap-2"><Gift className="h-4 w-4 text-primary" /> {nextGoal?.reward_description}</div>
+                            <div className="text-[13px] font-bold flex items-center gap-2"><Gift className="h-4 w-4 text-primary shrink-0" /> <span className="truncate">{nextGoal?.reward_description}</span></div>
                           </div>
                           <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
                             <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Benefício Adicional</div>
-                            <div className="text-sm font-bold flex items-center gap-2"><Star className="h-4 w-4 text-primary" /> {nextGoal?.benefit_description}</div>
+                            <div className="text-[13px] font-bold flex items-center gap-2"><Star className="h-4 w-4 text-primary shrink-0" /> <span className="truncate">{nextGoal?.benefit_description}</span></div>
                           </div>
                         </div>
                       </div>
@@ -205,16 +205,16 @@ function ShadowPassPage() {
                               "flex items-center justify-between p-3 rounded-xl border transition-all",
                               goal.achieved_at ? "bg-green-500/5 border-green-500/20" : "bg-muted/10 border-border/40 opacity-50"
                             )}>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0 flex-1 mr-2">
                                 <div className={cn(
                                   "h-8 w-8 rounded-full flex items-center justify-center",
                                   goal.achieved_at ? "bg-green-500/20 text-green-500" : "bg-muted text-muted-foreground"
                                 )}>
                                   {goal.achieved_at ? <CheckCircle2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                                 </div>
-                                <div>
-                                  <div className="text-sm font-bold">{goal.target_members} Membros</div>
-                                  <div className="text-[10px] text-muted-foreground font-mono">{goal.reward_description}</div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-sm font-bold truncate">{goal.target_members} Membros</div>
+                                  <div className="text-[10px] text-muted-foreground font-mono truncate">{goal.reward_description}</div>
                                 </div>
                               </div>
                               {goal.achieved_at && (
@@ -233,7 +233,7 @@ function ShadowPassPage() {
         </div>
 
         {/* Right Column: Reputation, Staff & Rewards */}
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
           {/* Reputation Score */}
           <section className="space-y-4">
             <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
@@ -258,7 +258,7 @@ function ShadowPassPage() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Sua reputação é calculada automaticamente com base no histórico e comportamento da sua conta.
                 </p>
-                <Badge variant="outline" className="text-[9px] font-mono uppercase text-primary border-primary/30">CONTA CONFIÁVEL</Badge>
+                <Badge variant="outline" className="text-[9px] font-mono uppercase text-primary border-primary/30 shrink-0">CONTA CONFIÁVEL</Badge>
               </CardContent>
             </Card>
           </section>
@@ -300,13 +300,13 @@ function ShadowPassPage() {
           </section>
 
           {/* Quick Stats */}
-          <section className="grid grid-cols-2 gap-4">
-             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1">
-               <div className="text-[10px] font-mono uppercase text-muted-foreground">Indicações</div>
+          <section className="grid grid-cols-2 gap-3 md:gap-4">
+             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1 overflow-hidden">
+               <div className="text-[10px] font-mono uppercase text-muted-foreground truncate">Indicações</div>
                <div className="text-xl font-bold font-mono">{community.referrals}</div>
              </div>
-             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1">
-               <div className="text-[10px] font-mono uppercase text-muted-foreground">Conversões</div>
+             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1 overflow-hidden">
+               <div className="text-[10px] font-mono uppercase text-muted-foreground truncate">Conversões</div>
                <div className="text-xl font-bold font-mono">{community.conversions}</div>
              </div>
           </section>
@@ -318,9 +318,9 @@ function ShadowPassPage() {
 
 function CriteriaItem({ label, met }: { label: string, met: boolean }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className={cn("text-xs font-mono uppercase tracking-tight", met ? "text-foreground" : "text-muted-foreground")}>{label}</span>
-      {met ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <div className="h-4 w-4 rounded-full border border-dashed border-muted-foreground/50" />}
+    <div className="flex items-center justify-between gap-2">
+      <span className={cn("text-xs font-mono uppercase tracking-tight truncate", met ? "text-foreground" : "text-muted-foreground")}>{label}</span>
+      {met ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" /> : <div className="h-4 w-4 rounded-full border border-dashed border-muted-foreground/50 shrink-0" />}
     </div>
   );
 }
