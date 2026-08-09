@@ -207,7 +207,7 @@ function TutorialsPage() {
         <div 
           className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
-            backgroundImage: `url(https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/assets/kraken_new_bg.jpg?v=v22)`,
+            backgroundImage: `url(${trainingBgAsset.url}?v=v23)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'brightness(0.6) contrast(1.2)'
