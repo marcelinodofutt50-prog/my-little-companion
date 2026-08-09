@@ -135,11 +135,11 @@ function Index() {
             
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button size="lg" variant="outline" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5 backdrop-blur-sm">
-                <Link to="/auth">
-
+                <Link to="/auth" search={{ mode: 'up', trial: 'true' }}>
                   Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary animate-pulse" />
                 </Link>
               </Button>
+
             </motion.div>
           </motion.div>
 

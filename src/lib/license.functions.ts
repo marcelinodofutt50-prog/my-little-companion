@@ -308,18 +308,34 @@ export const generateTrial = createServerFn({ method: "POST" })
     const { internalGenerateTrial } = await import("./license.server");
 
     // Antifraude: trial é por pessoa (conexão/aparelho), não por conta.
-    const { evaluateTrial } = await import("./trial-guard.server");
+    const { evaluateTrial, logBlock } = await import("./trial-guard.server");
     const guard = await evaluateTrial({ userId });
+    
     if (!guard.allowed) {
       throw new Error(
         `${guard.reason ?? "Teste indisponível para esta conta."} Se você acha que é um engano, fale com o suporte.`,
       );
     }
 
-    // Note: in a real environment we might want to record guard.ipHash/userAgent somewhere,
-    // but internalGenerateTrial focuses on the creation logic.
-    return internalGenerateTrial(supabaseAdmin, userId, 1);
+    // Provisionamento com resiliência: se falhar o Yaarsa, registramos o bloqueio para auditoria
+    try {
+      return await internalGenerateTrial(supabaseAdmin, userId, 1, guard.ipHash);
+    } catch (e: any) {
+      const msg = e.message || "Falha técnica no provisionamento.";
+      console.error("[generateTrial] Critical failure:", e);
+      
+      // Se falhou por erro de comunicação com o painel, logamos como bloqueio técnico
+      // para que o admin possa ver o que houve no log de auditoria.
+      await logBlock({ 
+        userId, 
+        ipHash: guard.ipHash, 
+        reason: `PROVISIONING_FAILED: ${msg.slice(0, 100)}` 
+      }).catch(() => {});
+      
+      throw new Error(`O servidor de licenças está instável no momento. Tente novamente em alguns minutos ou fale com o suporte técnico. (Código: YAARSA_REFUSAL)`);
+    }
   });
+
 
 
 export const getMyCashbackBalance = createServerFn({ method: "GET" })
