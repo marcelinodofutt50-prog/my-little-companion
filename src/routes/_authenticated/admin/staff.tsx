@@ -1,10 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Shield, Award, History, Settings, UserPlus, ClipboardList } from "lucide-react";
+import { Users, Shield, Award, History, Settings, UserPlus, ClipboardList, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { staffListApplications } from "@/lib/staff-admin.functions";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const Route = createFileRoute('/_authenticated/admin/staff')({
   component: AdminStaffPage,
