@@ -56,6 +56,92 @@ function MissionClaimButton({ missionId, isClaimed }: { missionId: string, isCla
   );
 }
 
+function SystemStatusPanel() {
+  const getStatus = useServerFn(getSystemStatus);
+  const { data: status, isLoading, refetch } = useQuery({
+    queryKey: ['system-status'],
+    queryFn: () => getStatus(),
+    refetchInterval: 30000 // 30s
+  });
+
+  if (!status) return null;
+
+  return (
+    <Card className="border-primary/10 bg-card/20 backdrop-blur-md overflow-hidden relative mb-8">
+      <div className="absolute top-0 right-0 p-2 opacity-5">
+        <Activity className="h-16 w-16" />
+      </div>
+      <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
+        <div>
+          <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] flex items-center gap-2">
+            <ShieldAlert className="h-3 w-3 text-primary" /> Core Engine Diagnostics
+          </CardTitle>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 text-muted-foreground hover:text-primary"
+          onClick={() => refetch()}
+          disabled={isLoading}
+        >
+          <RefreshCcw className={cn("h-3 w-3", isLoading && "animate-spin")} />
+        </Button>
+      </CardHeader>
+      <CardContent className="py-2 px-4 pb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-1">
+            <p className="text-[8px] font-mono uppercase text-muted-foreground">Database Uplink</p>
+            <div className="flex items-center gap-2">
+              <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", status.connection.status === 'healthy' ? "bg-green-500" : "bg-red-500")} />
+              <span className="text-xs font-mono font-bold uppercase">{status.connection.status}</span>
+              <span className="text-[9px] text-muted-foreground font-mono">{status.connection.latency}</span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[8px] font-mono uppercase text-muted-foreground">PostgREST Sync Cache</p>
+            <div className="flex items-center gap-2">
+              <Zap className={cn("h-3 w-3", parseInt(status.postgrest.failureRate) > 5 ? "text-yellow-500" : "text-primary")} />
+              <span className="text-xs font-mono font-bold">{status.postgrest.failureRate} <span className="text-[8px] text-muted-foreground font-normal">fail rate</span></span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[8px] font-mono uppercase text-muted-foreground">Shadow Resilience</p>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-3 w-3 text-green-500" />
+              <span className="text-xs font-mono font-bold uppercase">{status.postgrest.totalRepairs} <span className="text-[8px] text-muted-foreground font-normal">auto-heals</span></span>
+            </div>
+          </div>
+          <div className="space-y-1 text-right">
+            <p className="text-[8px] font-mono uppercase text-muted-foreground">Last Protocol Reset</p>
+            <p className="text-xs font-mono font-bold">
+              {status.postgrest.lastRepair 
+                ? formatDistanceToNow(new Date(status.postgrest.lastRepair), { addSuffix: true, locale: ptBR })
+                : "Nenhum reparo necessário"}
+            </p>
+          </div>
+        </div>
+        
+        {status.recentIncidents.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-primary/10">
+            <p className="text-[8px] font-mono uppercase text-muted-foreground mb-2">Logs de Telemetria Recentes</p>
+            <div className="space-y-1">
+              {status.recentIncidents.map((incident: any) => (
+                <div key={incident.id} className="flex items-center justify-between text-[9px] font-mono text-muted-foreground/80 hover:text-foreground transition-colors">
+                  <span className="flex items-center gap-2">
+                    {incident.recovered ? <Zap className="h-2.5 w-2.5 text-green-500" /> : <ZapOff className="h-2.5 w-2.5 text-red-500" />}
+                    [SYNC_ERR] AT {incident.context.toUpperCase()}
+                  </span>
+                  <span>{new Date(incident.time).toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function LoyaltyPage() {
   const { data } = useSuspenseQuery({
     queryKey: ['loyalty-dashboard'],
@@ -70,7 +156,7 @@ function LoyaltyPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <div>
           <h1 className="text-4xl md:text-6xl font-display font-black tracking-tighter uppercase italic">
             Shadow <span className="text-primary underline decoration-primary decoration-4 underline-offset-8">Loyalty</span>
@@ -89,6 +175,8 @@ function LoyaltyPage() {
           </div>
         </div>
       </header>
+
+      <SystemStatusPanel />
 
       <div className="grid md:grid-cols-3 gap-6">
         {/* Tier Card */}
