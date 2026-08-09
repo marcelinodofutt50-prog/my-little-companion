@@ -38,11 +38,16 @@ export async function trackSchemaFailure(
     });
 
     // Gatilho de reparo imediato no backend se detectarmos falha de esquema
-    if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+    if (error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01') {
       console.log("[tracking] Acionando reparo de esquema via RPC...");
-      await supabaseAdmin.rpc("force_refresh_schema_permissions");
-      // Toque tático na tabela para forçar o cache bridge
-      await supabaseAdmin.from("tutorial_progress").select("*", { count: 'exact', head: true }).limit(1);
+      try {
+        await supabaseAdmin.rpc("force_refresh_schema_permissions");
+        // Toque tático agressivo para invalidar caches de borda
+        await supabaseAdmin.from("tutorial_progress").select("*").limit(1).maybeSingle();
+        await supabaseAdmin.from("tutorials").select("*").limit(1).maybeSingle();
+      } catch (e) {
+        console.error("[tracking] Repair cycle failed:", e);
+      }
     }
   } catch (e) {
     console.error("[tracking] Failed to log failure:", e);
