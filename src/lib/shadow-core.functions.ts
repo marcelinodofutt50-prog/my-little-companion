@@ -8,11 +8,13 @@ export const getShadowPassData = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
 
     // 1. Core Profile (Identity + Reputation + VIP Tier)
-    const { data: profile } = await supabase
+    const { data: profile } = await (supabase
       .from("profiles")
       .select("id, email, display_name, full_name, created_at, vip_tier, reputation_score, conversions_count, referrals_valid_count, metadata")
       .eq("id", userId)
-      .maybeSingle();
+      .maybeSingle() as any);
+
+    const profileData = profile || {};
 
     // 2. Loyalty (Reusing loyalty system)
     const { data: loyalty } = await (supabase
@@ -35,11 +37,11 @@ export const getShadowPassData = createServerFn({ method: "GET" })
       .from("vip_configs" as any)
       .select("*") as any);
       
-    const currentVip = (vipConfig || []).find((v: any) => v.tier === (profile?.vip_tier || 'none'));
+    const currentVip = (vipConfig || []).find((v: any) => v.tier === (profileData.vip_tier || 'none'));
     const nextVip = (vipConfig || []).find((v: any) => 
-        profile?.vip_tier === 'none' ? v.tier === 'vip' : 
-        profile?.vip_tier === 'vip' ? v.tier === 'gold' : 
-        profile?.vip_tier === 'gold' ? v.tier === 'elite' : false
+        profileData.vip_tier === 'none' ? v.tier === 'vip' : 
+        profileData.vip_tier === 'vip' ? v.tier === 'gold' : 
+        profileData.vip_tier === 'gold' ? v.tier === 'elite' : false
     );
 
     // 4. Community Goals
@@ -52,30 +54,25 @@ export const getShadowPassData = createServerFn({ method: "GET" })
       .from("profiles")
       .select("count", { count: 'exact', head: true });
       
-    const currentMemberCount = activeMembers?.count || 0;
+    const currentMemberCount = (activeMembers as any)?.count || 0;
 
     // 5. Staff Eligibility (Logic from request)
-    // Loyalty: GOLD ✅ (Priority >= 2 assuming starter=0, silver=1, gold=2)
-    // Reputation: 90+ ✅
-    // Account: 6+ months ✅
-    // Community: 10 conversions ✅
-    
-    const monthsActive = profile?.created_at 
-      ? Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30))
+    const monthsActive = profileData.created_at 
+      ? Math.floor((new Date().getTime() - new Date(profileData.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30))
       : 0;
       
     const isStaffEligible = 
         (currentLoyaltyTier?.priority || 0) >= 2 &&
-        (profile?.reputation_score || 0) >= 90 &&
+        (profileData.reputation_score || 0) >= 90 &&
         monthsActive >= 6 &&
-        (profile?.conversions_count || 0) >= 10;
+        (profileData.conversions_count || 0) >= 10;
 
     return {
       identity: {
         id: userId,
-        nickname: profile?.display_name || profile?.full_name || profile?.email?.split('@')[0],
-        avatar: (profile?.metadata as any)?.avatar_url || null,
-        joinedAt: profile?.created_at,
+        nickname: profileData.display_name || profileData.full_name || profileData.email?.split('@')[0],
+        avatar: (profileData.metadata as any)?.avatar_url || null,
+        joinedAt: profileData.created_at || new Date().toISOString(),
         status: 'active'
       },
       loyalty: {
@@ -86,27 +83,27 @@ export const getShadowPassData = createServerFn({ method: "GET" })
         nextTier: nextLoyaltyTier?.name
       },
       community: {
-        referrals: profile?.referrals_valid_count || 0,
-        conversions: profile?.conversions_count || 0,
+        referrals: profileData.referrals_valid_count || 0,
+        conversions: profileData.conversions_count || 0,
         memberCount: currentMemberCount,
         goals: goals || []
       },
       vip: {
-        tier: profile?.vip_tier || 'none',
+        tier: profileData.vip_tier || 'none',
         config: currentVip,
         next: nextVip,
         benefits: currentVip?.benefits || []
       },
       reputation: {
-        score: profile?.reputation_score || 100
+        score: profileData.reputation_score || 100
       },
       staff: {
         isEligible: isStaffEligible,
         criteria: {
           loyalty: (currentLoyaltyTier?.priority || 0) >= 2,
-          reputation: (profile?.reputation_score || 0) >= 90,
+          reputation: (profileData.reputation_score || 0) >= 90,
           seniority: monthsActive >= 6,
-          conversions: (profile?.conversions_count || 0) >= 10
+          conversions: (profileData.conversions_count || 0) >= 10
         }
       }
     };
@@ -120,10 +117,10 @@ export const updateVipStatus = createServerFn({ method: "POST" })
     
     if (error) throw error;
     
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase
       .from("profiles")
-      .update({ vip_tier: newTier })
-      .eq("id", userId);
+      .update({ vip_tier: newTier } as any)
+      .eq("id", userId) as any);
       
     if (updateError) throw updateError;
     
