@@ -22,12 +22,15 @@ export const Route = createFileRoute("/auth")({
     code?: string;
     type?: string;
     error?: string;
+    trial?: string;
   } => ({
     next: typeof s.next === "string" ? s.next : undefined,
     code: typeof s.code === "string" ? s.code : undefined,
     type: typeof s.type === "string" ? s.type : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
+    trial: typeof s.trial === "string" ? s.trial : undefined,
   }),
+
   head: () => ({
     meta: [
       { title: "Login — Shadow" },
@@ -381,7 +384,8 @@ function AuthPage() {
           const { error: fbSignIn } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
           if (fbSignIn) throw fbSignIn;
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+          navigate({ to: (next as any) || "/dashboard", search: trial === 'true' ? { trial: 'true' } : undefined });
+
 
           return;
         }
@@ -400,14 +404,16 @@ function AuthPage() {
         // Entra direto no painel: a confirmação de e-mail é feita depois, pelo banner do dashboard.
         if (signUpData.session) {
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+          navigate({ to: (next as any) || "/dashboard", search: trial === 'true' ? { trial: 'true' } : undefined });
+
 
           return;
         }
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (!signInError) {
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+          navigate({ to: (next as any) || "/dashboard", search: trial === 'true' ? { trial: 'true' } : undefined });
+
 
           return;
         }
@@ -419,7 +425,8 @@ function AuthPage() {
             const retry = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
             if (!retry.error) {
               toast.success("Conta criada e liberada! Bem-vindo.");
-              navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+              navigate({ to: (next as any) || "/dashboard", search: trial === 'true' ? { trial: 'true' } : undefined });
+
 
               return;
             }
@@ -427,7 +434,7 @@ function AuthPage() {
         }
 
         toast.success("Conta criada! Redirecionando...");
-        navigate({ to: (next as any) || "/dashboard", search: (search as any)?.trial === 'true' ? { trial: 'true' } : undefined });
+        navigate({ to: (next as any) || "/dashboard", search: trial === 'true' ? { trial: 'true' } : undefined });
 
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
