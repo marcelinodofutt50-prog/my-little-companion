@@ -118,7 +118,7 @@ function ShadowPassPage() {
                   <Progress value={loyalty.progress} className="h-2" />
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold">{loyalty.tier}</span>
-                    <span className="text-muted-foreground">Próximo: {loyalty.nextTier || 'Max'}</span>
+                    <span className="text-muted-foreground truncate ml-2">Próximo: {loyalty.nextTier || 'Max'}</span>
                   </div>
                   <div className="pt-2 border-t border-border/40 flex justify-between items-center">
                     <div className="text-center">
