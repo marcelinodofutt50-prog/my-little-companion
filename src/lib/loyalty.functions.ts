@@ -91,14 +91,18 @@ export const claimMissionReward = createServerFn({ method: "POST" })
       .gt("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) as any);
 
     if ((recent?.length || 0) >= 3) {
-      return { ok: false, message: "Limite semanal atingido para esta missão." };
+      return { ok: false, message: "Limite semanal de 3 recompensas atingido para esta missão." };
     }
 
     const { data: res, error } = await (supabase.rpc as any)('complete_loyalty_mission', {
       _mission_id: data.missionId
     });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[Loyalty] RPC Error:", error);
+      throw new Error(error.message);
+    }
+    
     const result = res as unknown as { ok: boolean; message?: string; points_earned?: number };
     
     return result;

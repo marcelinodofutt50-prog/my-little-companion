@@ -205,12 +205,12 @@ function TutorialsPage() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative">
         <div 
-          className="fixed inset-0 z-0 pointer-events-none opacity-50 bg-cover bg-center transition-opacity duration-1000"
+          className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
-            backgroundImage: `url(${trainingBgAsset.url}?v=v17)`,
+            backgroundImage: `url(https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/assets/kraken_new_bg.jpg?v=v22)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'brightness(0.7) contrast(1.1)'
+            filter: 'brightness(0.6) contrast(1.2)'
           }}
         />
         <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-black/50 via-black/70 to-black" />
@@ -623,15 +623,20 @@ function TutorialsPage() {
                           key={selected.video_url}
                           src={selected.video_url} 
                           controls 
+                          playsInline
+                          controlsList="nodownload"
                           className="h-full w-full object-contain"
                           poster={selected.image_url}
                           autoPlay
-                        />
+                        >
+                          <source src={selected.video_url} type="video/mp4" />
+                          Seu navegador não suporta a reprodução de vídeos.
+                        </video>
                       ) : selected.youtube_url ? (
                         <iframe
                           key={selected.youtube_url}
                           className="h-full w-full"
-                          src={selected.youtube_url.includes("embed") ? selected.youtube_url : selected.youtube_url.replace("watch?v=", "embed/") + "?autoplay=1"}
+                          src={selected.youtube_url.includes("embed") ? selected.youtube_url : selected.youtube_url.replace("watch?v=", "embed/") + "?autoplay=1&rel=0"}
                           title={selected.title}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen

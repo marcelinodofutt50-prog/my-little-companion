@@ -111,9 +111,6 @@ function ShadowPassPage() {
                   </Button>
                 </div>
               )}
-              <Badge variant="outline" className="border-primary/40 text-primary bg-primary/5 uppercase font-mono tracking-widest text-[10px]">
-                REPUTATION: {reputation.score}
-              </Badge>
             </div>
             
             <p className="text-muted-foreground text-sm md:text-base font-medium flex items-center justify-center md:justify-start gap-2">
