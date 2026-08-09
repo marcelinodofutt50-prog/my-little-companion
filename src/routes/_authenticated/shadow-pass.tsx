@@ -173,7 +173,7 @@ function ShadowPassPage() {
                   return (
                     <>
                       <div className="space-y-4">
-                        <div className="flex justify-between items-end">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                           <div>
                             <div className="text-sm font-mono uppercase text-primary mb-1">Meta Atual</div>
                             <h3 className="text-2xl font-bold font-mono">{community.memberCount} / {nextGoal?.target_members || '???'} Membros</h3>
