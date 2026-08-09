@@ -141,7 +141,7 @@ function ShadowPassPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10" indicatorClassName="bg-yellow-500" />
+                  <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold text-yellow-500 capitalize">{vip.tier}</span>
                     <span className="text-muted-foreground">Próximo: {vip.next?.tier || 'Max'}</span>
