@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Trophy, Users, Award, Gift, Diamond, Shield, Bell, 
   ChevronRight, CheckCircle2, Star, Zap, Clock, TrendingUp,
-  Lock, ExternalLink, Info, BadgeCheck, Heart, Edit2, Save, X, Ghost, UserCircle, Send, MessageSquare, RefreshCw
+  Lock, ExternalLink, Info, BadgeCheck, Heart, Edit2, Save, X, Ghost, UserCircle, Send, MessageSquare, RefreshCw, Activity, Database, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tansta
 import { getShadowPassData } from '@/lib/shadow-core.functions';
 import { updateProfileCustomization } from '@/lib/profile-customization.functions';
 import { getCommunityMessages, sendCommunityMessage, getCommunityGoals } from '@/lib/community.functions';
+import { getDiagnosticData, triggerManualSchemaRefresh } from '@/lib/diagnostics.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -79,6 +80,27 @@ function ShadowPassPage() {
 
   const handleSave = () => {
     mutation.mutate({ nickname: editName, is_anonymous: isAnonymous });
+  };
+
+  const [showDiag, setShowDiag] = useState(false);
+  const getDiagFn = useServerFn(getDiagnosticData);
+  const refreshSchemaFn = useServerFn(triggerManualSchemaRefresh);
+
+  const { data: diagInfo, refetch: refetchDiag, isFetching: isFetchingDiag } = useQuery({
+    queryKey: ['profile-diagnostics'],
+    queryFn: () => getDiagFn(),
+    enabled: showDiag
+  });
+
+  const handleManualRefresh = async () => {
+    toast.loading("Disparando atualização forçada...", { id: 'refresh-schema' });
+    try {
+      await refreshSchemaFn();
+      toast.success("Comando enviado! O cache do PostgREST deve atualizar em instantes.", { id: 'refresh-schema' });
+      setTimeout(() => refetchDiag(), 2000);
+    } catch (e: any) {
+      toast.error("Falha ao atualizar: " + e.message, { id: 'refresh-schema' });
+    }
   };
 
   return (
@@ -319,6 +341,106 @@ function ShadowPassPage() {
               </CardContent>
             </Card>
           </section>
+
+          {/* Diagnóstico de Infraestrutura (Botão Discreto) */}
+          <div className="flex justify-center pt-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowDiag(!showDiag)}
+              className="text-[9px] uppercase font-mono tracking-[0.3em] opacity-30 hover:opacity-100 transition-opacity"
+            >
+              <Activity className="h-3 w-3 mr-2" /> 
+              {showDiag ? "Ocultar Diagnóstico Shadow" : "Executar Diagnóstico Shadow"}
+            </Button>
+          </div>
+
+          <AnimatePresence>
+            {showDiag && (
+              <motion.section
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4 overflow-hidden"
+              >
+                <Card className="border-orange-500/20 bg-orange-500/5 backdrop-blur-xl">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs font-mono uppercase tracking-widest flex items-center gap-2 text-orange-500">
+                      <Database className="h-4 w-4" /> Relatório de Integridade de Schema
+                    </CardTitle>
+                    <CardDescription className="text-[10px] uppercase font-mono opacity-50">
+                      Verificação técnica das colunas do sistema Shadow Core
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {isFetchingDiag ? (
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-orange-500/70">
+                        <RefreshCw className="h-3 w-3 animate-spin" /> Escaneando tabelas...
+                      </div>
+                    ) : diagInfo ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className={cn(
+                            "p-3 rounded-xl border flex flex-col gap-1",
+                            diagInfo.success && diagInfo.data && 'metadata' in diagInfo.data 
+                              ? "bg-green-500/5 border-green-500/20" 
+                              : "bg-red-500/5 border-red-500/20"
+                          )}>
+                            <span className="text-[9px] uppercase font-mono opacity-50">Coluna: metadata</span>
+                            <span className="text-xs font-bold font-mono">
+                              {diagInfo.success && diagInfo.data && 'metadata' in diagInfo.data ? "DISPONÍVEL" : "NÃO ENCONTRADA"}
+                            </span>
+                          </div>
+                          
+                          <div className={cn(
+                            "p-3 rounded-xl border flex flex-col gap-1",
+                            diagInfo.success && diagInfo.data && 'vip_tier' in diagInfo.data 
+                              ? "bg-green-500/5 border-green-500/20" 
+                              : "bg-red-500/5 border-red-500/20"
+                          )}>
+                            <span className="text-[9px] uppercase font-mono opacity-50">Coluna: vip_tier</span>
+                            <span className="text-xs font-bold font-mono">
+                              {diagInfo.success && diagInfo.data && 'vip_tier' in diagInfo.data ? "DISPONÍVEL" : "NÃO ENCONTRADA"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {(!diagInfo.success || !diagInfo.data || !('metadata' in diagInfo.data)) && (
+                          <div className="flex items-start gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                            <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-bold text-red-500 uppercase">Inconsistência Detectada</p>
+                              <p className="text-[9px] leading-relaxed text-red-400">
+                                O cache do PostgREST (PGRST108) está obsoleto. As colunas existem fisicamente no banco, mas a API ainda não as reconheceu.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between gap-4 pt-2">
+                          <div className="text-[8px] font-mono opacity-30 uppercase">
+                            LAST_SCAN: {diagInfo.timestamp}
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleManualRefresh}
+                            className="h-7 text-[9px] uppercase font-mono tracking-tighter border-orange-500/30 hover:bg-orange-500/10 text-orange-500"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1.5" /> Forçar Refresh de Schema
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] font-mono text-red-500">
+                        Falha ao obter dados de diagnóstico.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.section>
+            )}
+          </AnimatePresence>
 
           {/* Mini Comunidade Anônima */}
           <section className="space-y-4">
