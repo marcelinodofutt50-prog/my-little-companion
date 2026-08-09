@@ -47,10 +47,9 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Em produção, queremos cache determinístico. Usamos o timestamp do momento do build
-  // (ou um valor fixo por sessão) para evitar downloads repetidos em navegação SPA,
-  // mas ainda garantir cache-busting entre deploys.
-  return `${url}${sep}v=v12-production-stable`;
+  // Incrementamos a versão para v13 para forçar um refresh total na CDN da Vercel.
+  // O uso de um valor fixo por deploy garante consistência durante a sessão.
+  return `${url}${sep}v=v13-${new Date().getTime()}`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);

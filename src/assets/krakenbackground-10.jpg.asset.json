@@ -7,5 +7,9 @@
   "original_filename": "krakenbackground-10.jpg",
   "size": 363561,
   "content_type": "image/jpeg",
-  "created_at": "2026-08-08T03:56:33Z"
+  "created_at": "2026-08-08T03:56:33Z",
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
 }

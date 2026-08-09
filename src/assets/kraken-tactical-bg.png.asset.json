@@ -7,5 +7,9 @@
   "original_filename": "kraken-tactical-bg.png",
   "size": 503954,
   "content_type": "image/png",
-  "created_at": "2026-08-08T01:25:21Z"
+  "created_at": "2026-08-08T01:25:21Z",
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
 }
