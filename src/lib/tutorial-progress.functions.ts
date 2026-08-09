@@ -9,9 +9,20 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const fetchWithRetry = async (attempt = 1): Promise<string[]> => {
-      console.log(`[tutorial_progress] Busca tática de progresso (Tentativa ${attempt})...`);
+      console.log(`[tutorial_progress] Admin Tunnel Access (Attempt ${attempt})...`);
       
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      // Stage 0: If it's a retry, try to force a schema refresh first
+      if (attempt > 1) {
+        try {
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          // Tactical wait for cache propagation
+          await new Promise(r => setTimeout(r, 800 * attempt));
+        } catch (e) {
+          console.warn("[tutorial_progress] Refresh RPC failed during retry:", e);
+        }
+      }
 
       const { data, error } = await supabaseAdmin
         .from("tutorial_progress")
@@ -19,36 +30,28 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
         .eq("user_id", userId);
 
       if (error) {
-        console.error(`[tutorial_progress] Erro no Admin Tunnel (Tentativa ${attempt}):`, error);
+        console.error(`[tutorial_progress] Admin Tunnel Error (Attempt ${attempt}):`, error);
         
-        const isSchemaError = error.message?.includes("schema cache") || 
+        const isSchemaError = error.code === 'PGRST108' || 
+                             error.message?.includes("schema cache") || 
                              error.message?.includes("does not exist") ||
-                             error.code === 'PGRST108' ||
                              error.code === '42P01';
         
         if (isSchemaError && attempt <= 3) {
-          console.warn("[tutorial_progress] Falha de schema detectada. Acionando reparo tático...");
-          try {
-            await supabaseAdmin.rpc("force_refresh_schema_permissions");
-            // Toque tático na tabela
-            await supabaseAdmin.from("tutorial_progress").select("*", { count: 'exact', head: true }).limit(1);
-            await new Promise(r => setTimeout(r, 1000 * attempt));
-            return fetchWithRetry(attempt + 1);
-          } catch (e) {
-            console.error("[tutorial_progress] Routine de reparo falhou:", e);
-          }
+          return fetchWithRetry(attempt + 1);
         }
         
+        // Final failure handling
         if (isSchemaError) {
-          const wrapped = new Error(`Erro de Sincronização (Progresso): ${error.message}`);
+          const wrapped = new Error(`Falha de Sincronização Crítica: ${error.message}`);
           (wrapped as any)._schemaError = "public.tutorial_progress";
           throw wrapped;
         }
-        throw new Error(`Erro no Progresso: ${error.message}`);
+        throw new Error(`Erro de Banco: ${error.message}`);
       }
       
       const results = (data ?? []).map((p: any) => p.tutorial_id);
-      console.log(`[tutorial_progress] Admin Tunnel retornou ${results.length} itens de progresso.`);
+      console.log(`[tutorial_progress] Admin Tunnel SUCCESS: ${results.length} items.`);
       return results;
     };
 
