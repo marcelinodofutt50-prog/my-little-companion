@@ -1,21 +1,26 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Trophy, Users, Award, Gift, Diamond, Shield, Bell, 
   ChevronRight, CheckCircle2, Star, Zap, Clock, TrendingUp,
-  Lock, ExternalLink, Info, BadgeCheck, Heart
+  Lock, ExternalLink, Info, BadgeCheck, Heart, Edit2, Save, X, Ghost, UserCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getShadowPassData } from '@/lib/shadow-core.functions';
+import { updateProfileCustomization } from '@/lib/profile-customization.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { useServerFn } from '@tanstack/react-start';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   loader: async ({ context }) => {
@@ -28,12 +33,31 @@ export const Route = createFileRoute('/_authenticated/shadow-pass')({
 });
 
 function ShadowPassPage() {
+  const queryClient = useQueryClient();
   const { data } = useSuspenseQuery({
     queryKey: ['shadow-pass-data'],
     queryFn: () => getShadowPassData(),
   });
 
+  const updateProfileFn = useServerFn(updateProfileCustomization);
+  const mutation = useMutation({
+    mutationFn: (vars: any) => updateProfileFn({ data: vars }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+      toast.success("Perfil atualizado!");
+      setIsEditing(false);
+    },
+    onError: (e: any) => toast.error("Falha ao atualizar: " + e.message)
+  });
+
   const { identity, loyalty, community, vip, reputation, staff } = data as any;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(identity.nickname);
+  const [isAnonymous, setIsAnonymous] = useState(!!identity.isAnonymous);
+
+  const handleSave = () => {
+    mutation.mutate({ nickname: editName, is_anonymous: isAnonymous });
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-6xl pb-24 md:pb-8 overflow-x-hidden">
