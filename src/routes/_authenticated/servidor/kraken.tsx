@@ -109,6 +109,7 @@ function KrakenPage() {
 
   useEffect(() => {
     let cancelled = false;
+    console.log("[Kraken] Iniciando resolveBackground...");
 
     /**
      * Valida cada candidato da cadeia: descarta 404 / erro de rede e também
