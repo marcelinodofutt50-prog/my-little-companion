@@ -100,8 +100,8 @@ export const listTutorials = createServerFn({ method: "GET" })
         return [];
       }
 
-      if (attempt > 1) {
-        await trackSchemaFailure({ message: "Recovered via backoff" }, "listTutorials", true, { stage: `retry_${attempt}_success`, ...metadata }, context.userId);
+      if (attempt > 1 || (data && data.length > 0)) {
+        await trackSchemaFailure({ message: attempt > 1 ? "Recovered via backoff" : "Successful fetch" }, "listTutorials", true, { stage: `retry_${attempt}_success`, ...metadata, row_count: data?.length }, context.userId);
       }
       
       // Validar dados recebidos (evitar itens nulos por corrupção parcial)

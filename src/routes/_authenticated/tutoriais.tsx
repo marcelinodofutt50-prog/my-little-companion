@@ -102,25 +102,31 @@ function TutorialsPage() {
     setLoading(true);
     try {
       console.log("[tutorials] Starting tactical load cycle...");
+      
+      // Se for reparo manual, disparar o RPC antes da busca
+      if (forceRepair) {
+        const { supabase } = await import("@/integrations/supabase/client");
+        await (supabase as any).rpc("force_refresh_schema_permissions");
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
       const [tData, pData] = await Promise.all([
-        listFn({ data: { metadata: { route: typeof window !== 'undefined' ? window.location.pathname : 'server-ssr' } } }), 
+        listFn({ data: { metadata: { route: typeof window !== 'undefined' ? window.location.pathname : 'server-ssr', force_repair: forceRepair } } }), 
         getProgressFn()
       ]);
+      
       const validTutorials = (tData || []).filter(t => t && t.id);
       setTutorials(validTutorials);
       setCompletedIds(pData || []);
       
-      // Se carregamos dados, resetamos qualquer estado de erro visual
-      if (validTutorials.length > 0) {
-        setLoading(false);
-      }
       if (forceRepair) {
         toast.success("Módulos sincronizados com sucesso!");
         addSyncLog('success', 'manual', 'Sincronização forçada concluída');
       } else if (validTutorials.length > 0) {
         addSyncLog('success', 'auto', 'Carregamento inicial bem-sucedido');
       } else {
-        console.warn("[tutorials] Carregamento retornou 0 itens. Verificando logs...");
+        console.warn("[tutorials] Carregamento retornou 0 itens.");
+        addSyncLog('error', 'auto', 'Nenhum tutorial encontrado (Banco vazio ou falha de acesso)');
       }
     } catch (err: any) {
       console.error("[tutorials] Data load failure:", err);
@@ -294,21 +300,8 @@ function TutorialsPage() {
                     onClick={async () => {
                       const loadToast = toast.loading("Executando reparo tático...");
                       try {
-                        const { supabase } = await import("@/integrations/supabase/client");
-                        
-                        // Chamada direta para o RPC de reparo
-                        const { error: rpcErr } = await (supabase as any).rpc("force_refresh_schema_permissions");
-                        
-                        if (rpcErr) {
-                          console.error("[tutorials] Manual repair RPC error:", rpcErr);
-                          toast.error(`Erro no servidor: ${rpcErr.message || "Erro ao processar comando tático"}`);
-                        } else {
-                          toast.success("Comando de sincronização enviado com sucesso!");
-                        }
-                        
-                        toast.success("Sincronização processada! Recarregando...", { id: loadToast });
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        await loadData();
+                        await loadData(true);
+                        toast.success("Sincronização processada com sucesso!", { id: loadToast });
                       } catch (err: any) {
                         console.error("[tutorials] Manual repair flow failed:", err);
                         toast.error("Falha ao sincronizar: " + (err.message || "Erro desconhecido"), { id: loadToast });
