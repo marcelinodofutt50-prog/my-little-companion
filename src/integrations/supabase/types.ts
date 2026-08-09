@@ -1225,6 +1225,51 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_levels: {
+        Row: {
+          benefits: Json | null
+          created_at: string | null
+          id: string
+          min_conversions: number
+          name: string
+        }
+        Insert: {
+          benefits?: Json | null
+          created_at?: string | null
+          id?: string
+          min_conversions: number
+          name: string
+        }
+        Update: {
+          benefits?: Json | null
+          created_at?: string | null
+          id?: string
+          min_conversions?: number
+          name?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
@@ -1386,6 +1431,36 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "staff_permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "staff_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signup_attempts: {
         Row: {
           created_at: string
@@ -1440,6 +1515,152 @@ export type Database = {
           suspicious?: boolean
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      staff_applications: {
+        Row: {
+          admin_notes: string | null
+          area: string | null
+          availability: string | null
+          created_at: string | null
+          discord_tag: string | null
+          experience: string | null
+          full_name: string
+          id: string
+          motivation: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          area?: string | null
+          availability?: string | null
+          created_at?: string | null
+          discord_tag?: string | null
+          experience?: string | null
+          full_name: string
+          id?: string
+          motivation?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          area?: string | null
+          availability?: string | null
+          created_at?: string | null
+          discord_tag?: string | null
+          experience?: string | null
+          full_name?: string
+          id?: string
+          motivation?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      staff_audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          executor_id: string
+          id: string
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          executor_id: string
+          id?: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          executor_id?: string
+          id?: string
+          target_id?: string | null
+        }
+        Relationships: []
+      }
+      staff_members: {
+        Row: {
+          id: string
+          joined_at: string | null
+          role_id: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          role_id?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          role_id?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_members_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "staff_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      staff_roles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          hierarchy_level: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          hierarchy_level: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          hierarchy_level?: number
+          id?: string
+          name?: string
         }
         Relationships: []
       }
