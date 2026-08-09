@@ -1,13 +1,8 @@
-// ShadowDash Store — Evolução da Infraestrutura v7.3 (Shadow Pass Validado)
-import { createFileRoute, Link } from "@tanstack/react-router";
-
-import { motion } from "framer-motion";
-import { Shield, Zap, Lock, HeadphonesIcon, ChevronRight, CheckCircle2, Terminal, Globe, ShieldCheck, Database, Server, Rocket, ArrowRight, UserCheck, Store, Users, Gift } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
 import { useEffect, useState } from "react";
-import { useSearch } from "@tanstack/react-router";
+import { useSearch, createFileRoute } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { toast } from "sonner";
 import { SocialProofStrip } from "@/components/SocialProof";
