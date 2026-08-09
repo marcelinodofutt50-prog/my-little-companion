@@ -18,12 +18,19 @@ async def check_schema():
         supabase: Client = create_client(supabase_url, supabase_key)
         
         # Tabelas críticas para o Centro de Treinamento
-        critical_tables = ["tutorials", "user_roles"]
+        critical_tables = ["tutorials", "user_roles", "tutorial_progress"]
         
         for table in critical_tables:
             print(f"[SCHEMA-CHECK] Verificando acesso à tabela: {table}...")
             # Tentativa de leitura mínima para validar o schema cache do PostgREST
-            response = supabase.table(table).select("count", count="exact").limit(1).execute()
+            try:
+                response = supabase.table(table).select("id").limit(1).execute()
+            except Exception as e:
+                # Se for erro de coluna 'id' inexistente, a tabela ao menos existe no cache
+                if "column" in str(e).lower() and "does not exist" in str(e).lower():
+                    print(f"[SCHEMA-CHECK] Tabela {table} existe (erro de coluna ignorado).")
+                    continue
+                raise e
             
             # Se chegarmos aqui sem erro de exceção, verificamos se o PostgREST retornou erro no corpo
             # Nota: O cliente python pode lançar exceções para erros 4xx/5xx dependendo da versão, 
