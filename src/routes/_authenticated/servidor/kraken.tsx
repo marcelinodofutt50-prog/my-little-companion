@@ -148,7 +148,7 @@ function KrakenPage() {
         const ok = await validateCandidate(candidate);
         if (cancelled) return;
         if (ok) {
-          setResolvedBg(candidate + (candidate.includes("?") ? "&" : "?") + "v=" + new Date().getTime());
+          setResolvedBg(getUrlWithBust(candidate));
           setBgLoaded((prev) => ({ ...prev, core: true }));
           setBgLoadError(false);
           console.log(`[Kraken] Fundo resolvido: ${candidate}`);
