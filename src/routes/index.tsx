@@ -1,5 +1,4 @@
-// shadow-hero-classic.png
-// essa foto esta no fundo da kraken, não é para essa foto nem exisitir aqui a imagem correta da kraken é essa que esta anexada
+// Verifique se a imagem correta do Kraken está sendo usada em todas as rotas e componentes relacionados, sem imagens obsoletas aparecendo no fundo.
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
