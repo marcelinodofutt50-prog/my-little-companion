@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { getTutorials } from "@/lib/tutorial-loader.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
-import trainingBgAsset from "@/assets/kraken_v26_final.png.asset.json";
+import trainingBgAsset from "@/assets/kraken_v27_final.png.asset.json";
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 
