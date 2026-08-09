@@ -15,8 +15,10 @@ export interface TrialResult {
 export async function internalGenerateTrial(
   supabaseAdmin: SupabaseClient<Database>,
   userId: string,
-  durationDays: number = 1
+  durationDays: number = 1,
+  ipHash?: string | null
 ): Promise<TrialResult> {
+
   const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, panelFromPlanSlug } = await import("./yaarsa.server");
   
   const creds = deriveCredentials(`shadow-trial:v2:${userId}`); // v2 to avoid conflicts with old trial logic if needed, or stick to v1
@@ -43,15 +45,19 @@ export async function internalGenerateTrial(
   // 1.5) Antifraude evaluation could go here or remain in the calling function
   // For internal calls, we assume evaluation is done or not needed (e.g., welcome gift)
 
-  // 2) Claim trial
-  const { data: claim, error: claimErr } = await supabaseAdmin.from("trials").insert({ 
+  // 2) Claim trial - Garante que o registro da intenção ocorra via Admin 
+  // para evitar problemas de RLS durante o provisionamento inicial.
+  const { data: claim, error: claimErr } = await supabaseAdmin.from("trials").upsert({ 
     user_id: userId,
-    license_id: null
-  }).select("*").maybeSingle();
+    license_id: null,
+    ip_hash: creds.ipHash || null
+  }, { onConflict: 'user_id' }).select("*").maybeSingle();
 
-  if (claimErr && !/duplicate key|unique/i.test(claimErr.message)) {
+  if (claimErr) {
+    console.error("[internalGenerateTrial] Intent registration failed:", claimErr);
     throw new Error("Erro ao registrar intenção de teste: " + claimErr.message);
   }
+
 
   // 3) Call Yaarsa
   const yr = await yaarsaCreateAccount({

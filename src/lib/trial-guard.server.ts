@@ -107,8 +107,11 @@ export async function evaluateTrial(input: {
     }
 
     return { allowed: true, ipHash, userAgent };
-  } catch {
-    // Erro no antifraude nunca derruba o fluxo do cliente legítimo.
+  } catch (err: any) {
+    console.error("[trial-guard] Critical error in evaluateTrial:", err);
+    // Erro no antifraude NUNCA deve travar um cliente se o sistema de logs/db falhar,
+    // mas logamos o erro para depuração técnica.
     return { allowed: true, ipHash, userAgent };
   }
+
 }
