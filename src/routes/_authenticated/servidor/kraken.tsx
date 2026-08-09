@@ -55,8 +55,8 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Forçamos a versão v18 para garantir que o deploy da Vercel limpe caches antigos.
-  return `${url}${sep}v=v18`;
+  // Forçamos a versão v19 para garantir que o deploy da Vercel limpe caches antigos.
+  return `${url}${sep}v=v19`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
