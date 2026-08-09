@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-// import { listTutorials } from "@/lib/tutorials.functions";
+import { getTutorials } from "@/lib/tutorial-loader.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
 import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
@@ -69,7 +69,7 @@ function TutorialsPage() {
     });
   };
   
-  const listFn = useServerFn(require('@/lib/tutorial-loader.functions').getTutorials);
+  const listFn = useServerFn(getTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
   const toggleFn = useServerFn(toggleTutorialStatus);
   const testConnFn = useServerFn(testDatabaseConnection);
@@ -119,7 +119,7 @@ function TutorialsPage() {
         getProgressFn()
       ]);
       
-      const validTutorials = (tData || []).filter(t => t && t.id && (t.title || t.category));
+      const validTutorials = (tData || []).filter((t: any) => t && t.id && (t.title || t.category));
       setTutorials(validTutorials);
       setCompletedIds(pData || []);
       
