@@ -258,7 +258,7 @@ export function AdminTutorialsPanel() {
       {isEditing && (
         <Card className="border-primary/20 bg-card backdrop-blur-sm overflow-hidden relative">
           {uploading && (
-            <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-4 animate-in fade-in duration-300">
+            <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center space-y-4 animate-in fade-in duration-300">
               <div className="w-64 space-y-2">
                 <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest text-primary">
                   <span>Enviando arquivo...</span>
