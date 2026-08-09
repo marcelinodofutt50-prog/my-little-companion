@@ -162,7 +162,6 @@ function KrakenPage() {
       
       // Fallback manual se a validação falhar: tenta forçar o primeiro candidato sem validação de proporção
       if (KRAKEN_BG_CANDIDATES.length > 0) {
-      if (KRAKEN_BG_CANDIDATES.length > 0) {
         console.warn("[Kraken] Tentando carregamento de emergência sem validação estrita...");
         const emergencyUrl = getUrlWithBust(KRAKEN_BG_CANDIDATES[0]);
         setResolvedBg(emergencyUrl);
