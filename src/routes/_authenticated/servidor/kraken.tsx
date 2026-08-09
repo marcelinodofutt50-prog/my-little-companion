@@ -321,7 +321,7 @@ function KrakenPage() {
         {/* Base Fallback Gradient - Always visible as a safety layer */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100 z-[-2] block" />
 
-        {/* Skeleton Placeholder — visível apenas enquanto a imagem principal carrega */}
+        {/* Skeleton Placeholder */}
         <div
           aria-hidden="true"
           className={cn(
@@ -336,11 +336,11 @@ function KrakenPage() {
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
         <div 
           className={cn(
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1] kraken-bg-layer opacity-100",
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1] kraken-bg-layer",
             bgLoaded.core ? "opacity-100" : "opacity-0"
           )}
           style={{ 
-            backgroundImage: resolvedBg ? `url('${resolvedBg}')` : 'none',
+            backgroundImage: `url('${resolvedBg}')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
@@ -348,6 +348,7 @@ function KrakenPage() {
             backgroundColor: 'black'
           }}
         />
+
 
 
         {/* Mist/Particle Overlay Layer */}

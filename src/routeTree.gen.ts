@@ -42,6 +42,7 @@ import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
 import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authenticated/servidor/status'
 import { Route as AuthenticatedServidorKrakenRouteImport } from './routes/_authenticated/servidor/kraken'
+import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
@@ -220,6 +221,11 @@ const AuthenticatedServidorKrakenRoute =
     path: '/servidor/kraken',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const ApiPublicHooksVerifyExternalPayersRoute =
   ApiPublicHooksVerifyExternalPayersRouteImport.update({
     id: '/api/public/hooks/verify-external-payers',
@@ -297,7 +303,7 @@ export interface FileRoutesByFullPath {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/suporte': typeof AuthenticatedSuporteRoute
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
   '/tutorial/$id': typeof TutorialIdRoute
+  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
@@ -341,7 +348,7 @@ export interface FileRoutesByTo {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/suporte': typeof AuthenticatedSuporteRoute
@@ -350,6 +357,7 @@ export interface FileRoutesByTo {
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
   '/tutorial/$id': typeof TutorialIdRoute
+  '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
@@ -387,7 +395,7 @@ export interface FileRoutesById {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
@@ -396,6 +404,7 @@ export interface FileRoutesById {
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
   '/tutorial/$id': typeof TutorialIdRoute
+  '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/servidor/kraken': typeof AuthenticatedServidorKrakenRoute
   '/_authenticated/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
@@ -442,6 +451,7 @@ export interface FileRouteTypes {
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
     | '/tutorial/$id'
+    | '/admin/staff'
     | '/servidor/kraken'
     | '/servidor/status'
     | '/api/chat/license-ai'
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
     | '/tutorial/$id'
+    | '/admin/staff'
     | '/servidor/kraken'
     | '/servidor/status'
     | '/api/chat/license-ai'
@@ -531,6 +542,7 @@ export interface FileRouteTypes {
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
     | '/tutorial/$id'
+    | '/_authenticated/admin/staff'
     | '/_authenticated/servidor/kraken'
     | '/_authenticated/servidor/status'
     | '/api/chat/license-ai'
@@ -821,6 +833,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServidorKrakenRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/staff': {
+      id: '/_authenticated/admin/staff'
+      path: '/staff'
+      fullPath: '/admin/staff'
+      preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/hooks/verify-external-payers': {
       id: '/api/public/hooks/verify-external-payers'
       path: '/api/public/hooks/verify-external-payers'
@@ -894,8 +913,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
@@ -905,7 +935,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,

@@ -14,6 +14,12 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       .eq("id", userId)
       .maybeSingle();
 
+    const { data: referralCode } = await supabase
+      .from("referral_codes")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
     const { data: referrals } = await supabase
       .from("referrals")
       .select("*")
@@ -22,8 +28,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
 
     const rows = (referrals ?? []) as any[];
     const referredIds = rows.map((r) => r.referred_id);
-    // Privacidade: o indicador nunca vê o e-mail real de quem indicou.
-    // Mostramos apelido público quando existir, senão e-mail mascarado.
+    
     let labelMap: Record<string, string> = {};
     if (referredIds.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -34,20 +39,27 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       );
     }
 
-    const totalGranted = rows.filter((r) => r.reward_status !== "pending").length;
-    const totalPending = rows.filter((r) => r.reward_status === "pending").length;
-    const totalCashback = rows
-      .filter((r) => r.reward_type === "cashback" && r.reward_status !== "pending")
-      .reduce((s, r) => s + Number(r.reward_amount), 0);
+    const { data: level } = await supabase
+      .from("referral_levels")
+      .select("*")
+      .lte("min_conversions", rows.filter(r => r.status === 'converted').length)
+      .order("min_conversions", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const totalGranted = rows.filter((r) => r.status === "converted").length;
+    const totalPending = rows.filter((r) => r.status === "pending").length;
 
     return {
-      code: (profile?.referral_code as string) ?? null,
+      code: referralCode?.code ?? profile?.referral_code ?? null,
       pref: (profile?.referral_reward_pref as "cashback" | "free_month" | "pix") ?? "cashback",
       pixKey: (profile?.pix_key as string) ?? null,
       referrals: rows.map((r) => ({ ...r, referred_label: labelMap[r.referred_id] ?? "Membro Shadow" })),
-      stats: { total: rows.length, granted: totalGranted, pending: totalPending, cashback: totalCashback },
+      stats: { total: rows.length, granted: totalGranted, pending: totalPending },
+      level: level ?? { name: "Novato", min_conversions: 0 }
     };
   });
+
 
 export const updateReferralPref = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
