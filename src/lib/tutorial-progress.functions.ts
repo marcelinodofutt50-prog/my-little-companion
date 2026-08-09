@@ -64,20 +64,27 @@ export const toggleTutorialStatus = createServerFn({ method: "POST" })
     z.object({ tutorialId: z.string(), completed: z.boolean() }).parse(data)
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     if (data.completed) {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from("tutorial_progress")
-        .upsert({ user_id: userId, tutorial_id: data.tutorialId });
-      if (error) throw new Error(error.message);
+        .upsert({ user_id: userId, tutorial_id: data.tutorialId }, { onConflict: "user_id,tutorial_id" });
+      if (error) {
+        console.error("[tutorial_progress] Upsert failure via Admin Tunnel:", error);
+        throw new Error(error.message);
+      }
     } else {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from("tutorial_progress")
         .delete()
         .eq("user_id", userId)
         .eq("tutorial_id", data.tutorialId);
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("[tutorial_progress] Delete failure via Admin Tunnel:", error);
+        throw new Error(error.message);
+      }
     }
 
     return { success: true };
