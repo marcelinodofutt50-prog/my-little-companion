@@ -205,7 +205,7 @@ function ShadowPassPage() {
                               "flex items-center justify-between p-3 rounded-xl border transition-all",
                               goal.achieved_at ? "bg-green-500/5 border-green-500/20" : "bg-muted/10 border-border/40 opacity-50"
                             )}>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0 flex-1 mr-2">
                                 <div className={cn(
                                   "h-8 w-8 rounded-full flex items-center justify-center",
                                   goal.achieved_at ? "bg-green-500/20 text-green-500" : "bg-muted text-muted-foreground"
