@@ -47,6 +47,7 @@ const KRAKEN_BG_CANDIDATES: string[] = [
   krakenBg4Asset.url,
   krakenBg11Asset.url,
   "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png",
+  "/assets/shadow-hero-classic.png", // Fallback local garantido
 ].filter(Boolean) as string[];
 
 // Fallback final puramente CSS-safe (nunca 404): último item da cadeia
