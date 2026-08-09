@@ -21,10 +21,10 @@ async def main():
         if cookies_json:
             cookies = json.loads(cookies_json)
             for c in cookies:
-                c["url"] = "http://localhost:8080"
+                c["url"] = "https://www.shadowdashstore.com"
             await context.add_cookies(cookies)
 
-        await page.goto("http://localhost:8080")
+        await page.goto("https://www.shadowdashstore.com")
         if storage_key and session_json:
             await page.evaluate(
                 f"window.localStorage.setItem({json.dumps(storage_key)}, {json.dumps(session_json)})"
@@ -33,7 +33,7 @@ async def main():
         print("--- AUDITORIA LOYALTY ---")
 
         # 2. Test Loyalty Dashboard
-        await page.goto("http://localhost:8080/fidelidade")
+        await page.goto("https://www.shadowdashstore.com/fidelidade")
         await page.wait_for_load_state("networkidle")
         await page.screenshot(path=str(SCREENSHOTS / "1_loyalty_dashboard.png"))
         print("Dashboard Fidelidade carregado.")
