@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { adminListThreads, adminAssumeThread, adminCloseThread } from "@/lib/admin.functions";
+import { Loader2 } from "lucide-react";
 import { adminSetThreadPriority, adminUpdateThreadCategory } from "@/lib/support-admin.functions";
 import { SupportChat } from "./SupportChat";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";

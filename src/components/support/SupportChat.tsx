@@ -146,7 +146,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, onNewMessage }:
         {msgs.map(m => (
           <div key={m.id} className={`flex ${m.sender_id === userId ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-              m.is_system ? "bg-muted/30 border border-border/40 text-muted-foreground italic mx-auto" :
+              m.is_system ? "bg-cyan/10 border border-cyan/40 text-cyan mx-auto text-center" :
               m.sender_id === userId ? "bg-primary text-primary-foreground" : "bg-muted/50 border border-border/40"
             }`}>
               <div className="flex items-center gap-2 mb-1 opacity-60 text-[10px] font-mono uppercase">
