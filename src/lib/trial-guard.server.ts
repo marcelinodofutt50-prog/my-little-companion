@@ -13,7 +13,7 @@ export type TrialGuard = {
   userAgent: string | null;
 };
 
-async function logBlock(input: {
+export async function logBlock(input: {
   userId: string;
   ipHash: string | null;
   email?: string | null;
@@ -27,10 +27,11 @@ async function logBlock(input: {
       email_masked: maskEmail(input.email ?? undefined),
       reason: input.reason,
     });
-  } catch {
-    /* log nunca quebra o fluxo */
+  } catch (e) {
+    console.error("[trial-guard] Failed to log block:", e);
   }
 }
+
 
 export async function evaluateTrial(input: {
   userId: string;

@@ -65,10 +65,15 @@ export async function internalGenerateTrial(
   });
   
   const alreadyExists = !!yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
+  
+  // Resiliência agressiva: se o Yaarsa falhar com timeout ou rede, 
+  // tentamos garantir que o registro no banco não trave o usuário em um limbo.
   if (yr.Fail && !alreadyExists) {
+    // Removemos a intenção de trial se falhar no Yaarsa, para permitir retry imediato.
     await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
-    throw new Error(`Painel: ${yr.Fail}`);
+    throw new Error(`Shadow Node Refusal: ${yr.Fail}`);
   }
+
 
   const expiresAt = new Date(); 
   expiresAt.setDate(expiresAt.getDate() + durationDays);
