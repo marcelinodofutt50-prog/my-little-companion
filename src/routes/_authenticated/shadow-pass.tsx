@@ -147,22 +147,8 @@ function ShadowPassPage() {
               </Button>
             </div>
           </div>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 shrink-0">
-                <Trophy className="h-4 w-4 text-primary" />
-                <span className="text-[10px] md:text-xs font-bold font-mono uppercase tracking-tighter">{loyalty.tier}</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 shrink-0">
-                <Diamond className="h-4 w-4 text-yellow-500" />
-                <span className="text-[10px] md:text-xs font-bold font-mono uppercase tracking-tighter">{vip.tier.toUpperCase()}</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 shrink-0">
-                <Shield className="h-4 w-4 text-blue-500" />
-                <span className="text-[10px] md:text-xs font-bold font-mono uppercase tracking-tighter">Rep: {reputation.score}</span>
-              </div>
-            </div>
-          </div>
         </div>
+      </header>
       </header>
 
       {/* Main Grid */}
