@@ -565,16 +565,14 @@ function KrakenPage() {
 
                   <div className="pt-4 border-t border-red-500/10 mt-2 space-y-4">
                     <p className="text-[9px] text-muted-foreground uppercase font-mono">Select Plan:</p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1 flex flex-col h-auto p-4 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black group transition-all"
+                    <div className="flex flex-col sm:flex-row gap-4 w-full">
+                      <Button
+                        className="group relative flex-1 h-20 overflow-hidden rounded-xl border border-neon/30 bg-black/60 hover:bg-neon/10 transition-all duration-500 flex flex-col items-center justify-center"
                         onClick={async () => {
                           try {
-                            setLogs(prev => [...prev, "[SYSTEM] Iniciando checkout Kraken Mensal..."]);
-                            const r = await checkoutFn({ data: { 
-                              planSlug: 'kraken-monthly', 
-                              returnOrigin: window.location.origin 
+                            const r = await checkoutFn({ data: {
+                              planSlug: 'kraken-monthly',
+                              returnOrigin: window.location.origin
                             }});
                             window.location.href = r.initPoint;
                           } catch (err: any) {
@@ -583,20 +581,18 @@ function KrakenPage() {
                         }}
                         aria-label="Adquirir Plano Mensal Kraken por 20 mil reais no Mercado Pago"
                       >
-                        <span className="text-[10px] text-amber-400 font-bold tracking-widest uppercase">MENSAL</span>
+                        <span className="text-[10px] text-neon font-bold tracking-widest uppercase">MENSAL</span>
                         <span className="text-xl font-black text-white group-hover:scale-110 transition-transform">R$ 20.000</span>
-                        <span className="text-[9px] text-amber-200/80 uppercase mt-1 font-medium">Checkout Mensal</span>
+                        <span className="text-[9px] text-neon/80 uppercase mt-1 font-medium">Checkout Mensal</span>
                       </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        className="flex-1 flex flex-col h-auto p-4 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black group transition-all"
+
+                      <Button
+                        className="group relative flex-1 h-20 overflow-hidden rounded-xl border border-emerald-500/30 bg-black/60 hover:bg-emerald-500/10 transition-all duration-500 flex flex-col items-center justify-center"
                         onClick={async () => {
                           try {
-                            setLogs(prev => [...prev, "[SYSTEM] Iniciando checkout Kraken Vitalício..."]);
-                            const r = await checkoutFn({ data: { 
-                              planSlug: 'kraken-lifetime', 
-                              returnOrigin: window.location.origin 
+                            const r = await checkoutFn({ data: {
+                              planSlug: 'kraken-lifetime',
+                              returnOrigin: window.location.origin
                             }});
                             window.location.href = r.initPoint;
                           } catch (err: any) {
@@ -610,6 +606,7 @@ function KrakenPage() {
                         <span className="text-[9px] text-emerald-200/80 uppercase mt-1 font-medium">Checkout Vitalício</span>
                       </Button>
                     </div>
+
                   </div>
 
                 </div>
