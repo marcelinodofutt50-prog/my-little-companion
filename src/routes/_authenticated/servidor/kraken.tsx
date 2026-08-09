@@ -33,6 +33,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime: o primeiro asset que carregar é adotado.
 // Priorizamos os assets locais registrados no código para garantir carregamento na Vercel.
 const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg18Asset.url,
   krakenBg17Asset.url,
   krakenBg16Asset.url,
   krakenBg15Asset.url,
