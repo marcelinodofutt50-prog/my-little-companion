@@ -73,13 +73,16 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
       { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
     ],
   }),
-  component: () => (
-    <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
-      <ErrorBoundary name="KrakenPage">
-        <KrakenPage />
-      </ErrorBoundary>
-    </div>
-  ),
+  component: () => {
+    console.log("[Kraken] Renderizando componente de rota...");
+    return (
+      <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
+        <ErrorBoundary name="KrakenPage">
+          <KrakenPage />
+        </ErrorBoundary>
+      </div>
+    );
+  },
 })
 
 
