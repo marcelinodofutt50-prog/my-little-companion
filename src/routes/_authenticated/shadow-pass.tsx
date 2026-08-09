@@ -148,7 +148,7 @@ function ShadowPassPage() {
                   </div>
                   <div className="flex gap-2 mt-2">
                     {vip.benefits.map((b: string, i: number) => (
-                      <Badge key={i} variant="secondary" className="text-[9px] font-mono px-1 py-0">{b}</Badge>
+                      <Badge key={i} variant="secondary" className="text-[9px] font-mono px-1 py-0 whitespace-nowrap">{b}</Badge>
                     ))}
                   </div>
                 </CardContent>
