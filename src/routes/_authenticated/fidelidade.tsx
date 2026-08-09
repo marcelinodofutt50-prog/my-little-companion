@@ -25,7 +25,7 @@ function LoyaltyPage() {
     queryFn: () => getLoyaltyDashboard(),
   });
 
-  const { loyalty, currentTier, nextTier, missions, history, rewards, profile } = data;
+  const { loyalty, currentTier, nextTier, missions, history, rewards, profile } = data as any;
 
   const progress = nextTier 
     ? Math.min(100, (loyalty.points / nextTier.min_points) * 100) 

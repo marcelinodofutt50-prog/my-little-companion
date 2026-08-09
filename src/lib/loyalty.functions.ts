@@ -9,19 +9,19 @@ export const getLoyaltyDashboard = createServerFn({ method: "GET" })
 
     // 1. Get Loyalty State
     const { data: loyalty } = await supabase
-      .from("user_loyalty")
+      .from("user_loyalty" as any)
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
 
     // 2. Get Configs
     const { data: tiers } = await supabase
-      .from("loyalty_tier_config")
+      .from("loyalty_tier_config" as any)
       .select("*")
       .order("priority", { ascending: true });
 
     const { data: missions } = await supabase
-      .from("loyalty_missions")
+      .from("loyalty_missions" as any)
       .select("*")
       .eq("active", true)
       .order("created_at", { ascending: false });
@@ -38,7 +38,7 @@ export const getLoyaltyDashboard = createServerFn({ method: "GET" })
 
     // 4. History and Rewards
     const { data: history } = await supabase
-      .from("loyalty_history")
+      .from("loyalty_history" as any)
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
