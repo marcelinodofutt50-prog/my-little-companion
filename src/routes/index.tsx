@@ -1,4 +1,4 @@
-// verifique se nao tem erros ou bugs no site, principalmente na hora de publicar os tutotirais, na aba de centro de treinamento, e se esta aparecendo a imagem correta de funda da kraken agora
+// Crie uma página de pré-publicação para tutoriais com validações e mensagens de erro caso ocorram bugs ou falhas ao publicar.
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
