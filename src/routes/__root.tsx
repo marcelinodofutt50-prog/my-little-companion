@@ -278,6 +278,25 @@ function RootComponent() {
   // app renderizar `null` até um efeito rodar, qualquer falha de hidratação
   // deixa a página totalmente preta.
   useEffect(() => {
+    // 0. Audio Unlock Interaction
+    const handleFirstInteraction = () => {
+      const unlock = async () => {
+        try {
+          const { unlockNotifySound } = await import('@/lib/notify-sound');
+          unlockNotifySound();
+        } catch (e) {
+          console.warn("Failed to unlock notify sound", e);
+        }
+      };
+      unlock();
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+    window.addEventListener('click', handleFirstInteraction);
+    window.addEventListener('keydown', handleFirstInteraction);
+    window.addEventListener('touchstart', handleFirstInteraction);
+
     // 1. Redireciona de localhost se necessário
     const canonicalUrl = redirectLocalhostAuthToCanonical();
     if (canonicalUrl) {
