@@ -13,13 +13,15 @@ export const getAuditSummary = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // 1. Verificar tabelas críticas
+    // Tabelas críticas mapeadas para auditoria
     const tables = ["tutorials", "tutorial_progress", "integration_logs", "plans", "licenses"];
     const results: Record<string, any> = {};
 
     for (const table of tables) {
-      const { error, count } = await (supabaseAdmin.from(table) as any)
+      // Usamos any para evitar erros de tipagem com tabelas dinâmicas/recentes
+      const { error, count } = await (supabaseAdmin.from(table as any) as any)
         .select("*", { count: "exact", head: true });
+      
       results[table] = { 
         status: error ? "ERROR" : "OK", 
         count: count ?? 0,
@@ -32,6 +34,34 @@ export const getAuditSummary = createServerFn({ method: "GET" })
       database: results,
       environment: process.env.NODE_ENV || "production"
     };
+  });
+
+export const getAuditLogs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { userId } = context;
+
+    // Busca logs de integração para o usuário atual (RLS aplicado via supabase client)
+    const { data, error } = await supabase
+      .from("integration_logs")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error("[AuditLogs] Erro ao buscar logs:", error);
+      return [];
+    }
+
+    return (data || []).map((log: any) => ({
+      id: log.id,
+      event: log.action || "System Event",
+      decision: log.outcome === "success" ? "SUCCESS" : "FAILED",
+      reason: log.source || "kraken-v2",
+      timestamp: log.created_at
+    }));
   });
 
 export const triggerEmergencyRepair = createServerFn({ method: "POST" })
