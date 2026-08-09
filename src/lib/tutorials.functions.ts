@@ -99,7 +99,8 @@ export const listTutorials = createServerFn({ method: "GET" })
         await trackSchemaFailure({ message: "Recovered via backoff" }, "listTutorials", true, { stage: `retry_${attempt}_success`, ...metadata }, context.userId);
       }
       
-      return data ?? [];
+      // Validar dados recebidos (evitar itens nulos por corrupção parcial)
+      return (data || []).filter(item => item && item.id && item.title);
     };
 
     return fetchWithRetry();

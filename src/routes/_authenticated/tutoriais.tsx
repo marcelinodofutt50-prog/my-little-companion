@@ -106,8 +106,14 @@ function TutorialsPage() {
         listFn({ data: { metadata: { route: typeof window !== 'undefined' ? window.location.pathname : 'server-ssr' } } }), 
         getProgressFn()
       ]);
-      setTutorials(tData || []);
+      const validTutorials = (tData || []).filter(t => t && t.id);
+      setTutorials(validTutorials);
       setCompletedIds(pData || []);
+      
+      // Se carregamos dados, resetamos qualquer estado de erro visual
+      if (validTutorials.length > 0) {
+        setLoading(false);
+      }
       if (forceRepair) {
         toast.success("Módulos sincronizados com sucesso!");
         addSyncLog('success', 'manual', 'Sincronização forçada concluída');
