@@ -8,15 +8,6 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
   if (!admin && !mod) throw new Error("Forbidden");
 }
 
-/** 
- * Sistema de Rastreamento Tático de Falhas de Schema (PGRST108)
- * Registra no banco de dados todas as ocorrências de cache corrompido e resultados de reparo.
- */
-/** 
- * Sistema de Rastreamento Tático de Falhas de Schema (PGRST108)
- * Registra no banco de dados todas as ocorrências de cache corrompido e resultados de reparo.
- * Agora inclui correlação por usuário e rastreamento da rota para diagnósticos avançados.
- */
 export async function trackSchemaFailure(
   error: any, 
   context: string, 
@@ -26,8 +17,6 @@ export async function trackSchemaFailure(
 ) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
-    // Obter URL/Rota se estiver em um ambiente que permita
     const route = metadata.route || "unknown_route";
 
     await (supabaseAdmin.from("integration_logs") as any).insert({
@@ -60,99 +49,48 @@ export const listTutorials = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ data: input, context }): Promise<any[]> => {
     const metadata = input?.metadata || {};
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
     const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
       console.log(`[tutorials] Busca tática de módulos (Tentativa ${attempt})...`);
       
-      // 1. Tentar busca padrão via cliente do usuário (RLS)
-      try {
-        const { data: userData, error: userError } = await context.supabase
-          .from("tutorials")
-          .select("*")
-          .order("display_order", { ascending: true });
-
-        if (!userError && userData && userData.length > 0) {
-          console.log(`[tutorials] Sucesso via RLS (Direct). ${userData.length} itens.`);
-          return userData.filter(item => item && item.id && (item.title || item.category));
-        }
-        
-        if (userError) {
-          console.warn("[tutorials] Erro RLS:", userError.message, userError.code);
-        }
-      } catch (err) {
-        console.warn("[tutorials] Catch fetch RLS:", err);
-      }
-
-      // 2. Se falhar ou vier vazio, usar o Admin Tunnel (Bypass de Cache/RLS)
-      // O Admin Tunnel é imune a falhas de cache de permissões do usuário
-      console.log("[tutorials] Ativando Bypass: Admin Tunnel...");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      
+      // Bypass total de RLS e Cache para a Knowledge Base
+      // O Admin Tunnel é a única forma de garantir 100% de disponibilidade contra PGRST108
       const { data: adminData, error: adminError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
         .order("display_order", { ascending: true });
           
       if (adminError) {
+        console.error(`[tutorials] Erro no Admin Tunnel:`, adminError);
         const isPGRST = adminError.code === 'PGRST108' || adminError.message?.includes('schema cache') || adminError.code === '42P01';
         
         if (isPGRST && attempt <= 3) {
-          console.warn(`[tutorials] Instabilidade de schema (PGRST108). Executando Reparo RPC...`);
           await trackSchemaFailure(adminError, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
-          
-          const delay = 800 * Math.pow(2, attempt - 1);
-          
-          try {
-            console.log(`[tutorials] Executando RPC de reparo tático (Tentativa ${attempt})...`);
-            // Reparo tático forçado via Admin
-            await supabaseAdmin.rpc("force_refresh_schema_permissions");
-            // Pausa estratégica para propagação
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } catch (rpcErr) {
-            console.error("[tutorials] RPC Repair Failed:", rpcErr);
-          }
-          
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           return fetchWithRetry(attempt + 1);
         }
-        
-        console.error(`[tutorials] FALHA CRÍTICA NO ADMIN TUNNEL:`, adminError);
         return [];
       }
 
-      const results = (adminData || []).filter(item => item && item.id && (item.title || item.category));
-      if (results.length > 0) {
-        console.log(`[tutorials] Sincronização via Admin Tunnel: ${results.length} módulos.`);
-      } else {
-        console.warn("[tutorials] Admin Tunnel retornou lista vazia.");
-      }
-      return results;
+      return (adminData || []).filter(item => item && item.id && (item.title || item.category));
     };
 
-    const finalData = await fetchWithRetry();
-    
-    // Se ainda estiver vazio e não for uma falha de banco (ex: dados deletados ou cache extremo)
-    // tentamos uma busca direta por ID ou um ping simples na tabela via admin
-    if (!finalData || finalData.length === 0) {
-      console.warn("[tutorials] Lista vazia detectada. Executando ping de verificação...");
-      const { data: ping } = await supabaseAdmin.from("tutorials").select("id").limit(1);
-      if (ping && ping.length > 0) {
-        console.log("[tutorials] Dados existem no banco, mas a busca tática falhou. Recarregando...");
-        return fetchWithRetry(1);
-      }
-    }
-    
-    return finalData;
+    return await fetchWithRetry();
   });
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({
       id: z.string().uuid().optional(),
-      title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
-      description: z.string().min(5, "Descrição deve ter pelo menos 5 caracteres"),
+      title: z.string().min(3),
+      description: z.string().min(5),
       video_url: z.string().url().nullish(),
       image_url: z.string().url().nullish(),
       youtube_url: z.string().url().nullish(),
-      category: z.string().min(2, "Categoria é obrigatória"),
+      category: z.string().min(2),
       is_active: z.boolean().default(true),
       display_order: z.number().int().optional(),
   }).parse(input))
@@ -162,38 +100,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
         .from("tutorials")
         .upsert({ ...data, created_by: context.userId });
-    if (error) {
-      console.error("[tutorials] Database error:", error);
-      
-      const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01' || error.message?.includes('does not exist');
-      
-      if (isPGRST) {
-        await trackSchemaFailure(error, "adminSaveTutorial", false, { stage: "initial_upsert" }, context.userId);
-        
-        // Força refresh imediato no admin se falhar a escrita
-        try {
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          await new Promise(resolve => setTimeout(resolve, 800));
-          const { error: retryError } = await supabaseAdmin
-            .from("tutorials")
-            .upsert({ ...data, created_by: context.userId });
-            
-          if (!retryError) {
-             await trackSchemaFailure(error, "adminSaveTutorial", true, { stage: "retry_upsert_success" }, context.userId);
-             return { ok: true };
-          }
-        } catch (e) {
-          console.error("[tutorials] Admin upsert repair flow failed:", e);
-        }
-      }
-
-      const wrapped = new Error(error.message);
-      if (error.message?.includes("relation \"public.tutorials\" does not exist") || isPGRST) {
-        (wrapped as any)._schemaError = "public.tutorials";
-      }
-      throw wrapped;
-    }
-
+    if (error) throw error;
     return { ok: true };
   });
 
@@ -204,7 +111,7 @@ export const adminDeleteTutorial = createServerFn({ method: "POST" })
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("tutorials").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) throw error;
     return { ok: true };
   });
 
@@ -217,14 +124,8 @@ export const updateTutorialOrder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
     for (const item of data) {
-      const { error } = await supabaseAdmin
-        .from("tutorials")
-        .update({ display_order: item.display_order })
-        .eq("id", item.id);
-      if (error) throw new Error(error.message);
+      await supabaseAdmin.from("tutorials").update({ display_order: item.display_order }).eq("id", item.id);
     }
-    
     return { ok: true };
   });

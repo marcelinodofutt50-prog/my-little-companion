@@ -107,7 +107,8 @@ function TutorialsPage() {
         toast.loading("Sincronizando banco de dados...", { id: "sync-toast" });
         const { supabase } = await import("@/integrations/supabase/client");
         await (supabase as any).rpc("force_refresh_schema_permissions");
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        // Delay estendido para garantir que a Vercel/PostgREST atualize o cache do esquema
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
       const [tData, pData] = await Promise.all([
