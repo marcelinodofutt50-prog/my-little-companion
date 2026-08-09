@@ -2463,6 +2463,7 @@ export type Database = {
       }
       check_license_consistency: { Args: never; Returns: undefined }
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
+      complete_loyalty_mission: { Args: { _mission_id: string }; Returns: Json }
       expire_stale_apk_jobs: { Args: never; Returns: number }
       force_refresh_schema_permissions: { Args: never; Returns: undefined }
       gen_referral_code: { Args: never; Returns: string }
