@@ -2457,12 +2457,10 @@ export type Database = {
       }
     }
     Functions: {
-      calculate_license_status: {
-        Args: { _license_id: string }
-        Returns: Database["public"]["Enums"]["license_status"]
-      }
+      calculate_license_status: { Args: { lic_id: string }; Returns: string }
       check_license_consistency: { Args: never; Returns: undefined }
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
+      check_rls_enabled: { Args: { target_table: string }; Returns: boolean }
       complete_loyalty_mission: { Args: { _mission_id: string }; Returns: Json }
       expire_stale_apk_jobs: { Args: never; Returns: number }
       force_refresh_schema_permissions: { Args: never; Returns: undefined }
