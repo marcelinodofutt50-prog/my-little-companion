@@ -95,9 +95,9 @@ function ShadowPassPage() {
       </header>
 
       {/* Main Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
         {/* Left Column: Progress & Community */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6 md:space-y-8">
           {/* Progress Overview */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
