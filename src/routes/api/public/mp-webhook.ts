@@ -387,6 +387,9 @@ async function fulfillOrderInner(orderId: string) {
     is_legacy: false,
     panel: targetPanel,
     server_ip: serverIpForPanel,
+    status: 'active',
+    origin_type: 'purchase',
+    metadata: { order_id: order.id, buyer_id: order.user_id }
   } as any);
 
   // Auto-deliver credentials in the customer's support chat as a system message.
