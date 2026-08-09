@@ -155,6 +155,13 @@ function KrakenPage() {
       console.error("[Kraken] Nenhum asset de fundo válido. Usando fallback CSS.");
       setBgLoadError(true);
       setBgLoaded((prev) => ({ ...prev, core: false }));
+      
+      // Fallback manual se a validação falhar: tenta forçar o primeiro candidato sem validação de proporção
+      if (KRAKEN_BG_CANDIDATES.length > 0) {
+        console.warn("[Kraken] Tentando carregamento de emergência sem validação estrita...");
+        setResolvedBg(getUrlWithBust(KRAKEN_BG_CANDIDATES[0]));
+        setBgLoaded((prev) => ({ ...prev, core: true }));
+      }
     };
 
     resolveBackground();
