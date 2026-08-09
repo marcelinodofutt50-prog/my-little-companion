@@ -361,7 +361,7 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
 
   console.log("[Kraken] Renderizando componente...");
   return (
-    <div id="kraken-viewport-root" className="relative z-10 flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
+    <div id="kraken-viewport-root" className="relative z-10 flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen theme-transition flex flex-col items-center justify-start text-foreground w-full max-w-full overflow-hidden">
       {/* Container background removed from here to be placed at the root level for proper z-index and filling */}
 
 
