@@ -61,6 +61,7 @@ import { AdminMarketPanel } from "@/components/AdminMarketPanel";
 import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
 import { AdminTutorialsPanel } from "@/components/AdminTutorialsPanel";
 import { AdminAnnouncementsPanel } from "@/components/AdminAnnouncementsPanel";
+import { AdminSupportPanel } from "@/components/support/AdminSupportPanel";
 import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { RevenueSparkline } from "@/components/RevenueSparkline";
@@ -1295,7 +1296,7 @@ function AdminPage() {
                 );
               })()}
 
-            {tab === "chat" && <AdminChatPanel />}
+            {tab === "chat" && <AdminSupportPanel />}
             {tab === "issue" && (
               <IssueLicensePanel
                 onIssued={() =>
