@@ -34,7 +34,9 @@ import { createCheckout } from "@/lib/checkout.functions";
 import { siteUrl } from "@/lib/site-url";
 import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus, listMyLicenses } from "@/lib/license.functions";
 
+import { validateReferralCode } from "@/lib/referrals.functions";
 const shadowLupin = "/assets/shadow-logo-v10.png?v=v8-400";
+
 
 
 
