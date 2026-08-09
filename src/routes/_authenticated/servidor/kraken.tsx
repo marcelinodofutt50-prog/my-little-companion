@@ -162,9 +162,14 @@ function KrakenPage() {
       
       // Fallback manual se a validação falhar: tenta forçar o primeiro candidato sem validação de proporção
       if (KRAKEN_BG_CANDIDATES.length > 0) {
+      if (KRAKEN_BG_CANDIDATES.length > 0) {
         console.warn("[Kraken] Tentando carregamento de emergência sem validação estrita...");
-        setResolvedBg(getUrlWithBust(KRAKEN_BG_CANDIDATES[0]));
+        const emergencyUrl = getUrlWithBust(KRAKEN_BG_CANDIDATES[0]);
+        setResolvedBg(emergencyUrl);
         setBgLoaded((prev) => ({ ...prev, core: true }));
+        // Força o carregamento no DOM
+        const preloader = new Image();
+        preloader.src = emergencyUrl;
       }
     };
 
