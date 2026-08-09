@@ -68,7 +68,7 @@ const getUrlWithBust = (url: string) => {
 
 const krakenCore = getUrlWithBust(krakenV26Asset.url || krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
 
-const krakenBg5 = getUrlWithBust(krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
+const krakenBg5 = getUrlWithBust("https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
 
 
