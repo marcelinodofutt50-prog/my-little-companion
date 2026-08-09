@@ -319,7 +319,7 @@ export const generateTrial = createServerFn({ method: "POST" })
 
     // Provisionamento com resiliência: se falhar o Yaarsa, registramos o bloqueio para auditoria
     try {
-      return await internalGenerateTrial(supabaseAdmin, userId, 1);
+      return await internalGenerateTrial(supabaseAdmin, userId, 1, guard.ipHash);
     } catch (e: any) {
       const msg = e.message || "Falha técnica no provisionamento.";
       console.error("[generateTrial] Critical failure:", e);

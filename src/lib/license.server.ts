@@ -50,7 +50,8 @@ export async function internalGenerateTrial(
   const { data: claim, error: claimErr } = await supabaseAdmin.from("trials").upsert({ 
     user_id: userId,
     license_id: null,
-    ip_hash: creds.ipHash || null
+    ip_hash: ipHash || null
+
   }, { onConflict: 'user_id' }).select("*").maybeSingle();
 
   if (claimErr) {
