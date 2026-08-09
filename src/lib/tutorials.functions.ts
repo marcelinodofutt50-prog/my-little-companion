@@ -53,7 +53,8 @@ export async function trackSchemaFailure(
 export const listTutorials = createServerFn({ method: "GET" })
   .validator((d: unknown) => z.object({
     metadata: z.object({
-      route: z.string().optional()
+      route: z.string().optional(),
+      force_repair: z.boolean().optional()
     }).optional()
   }).optional().parse(d || {}))
   .middleware([requireSupabaseAuth])
