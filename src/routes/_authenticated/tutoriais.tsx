@@ -222,7 +222,7 @@ function TutorialsPage() {
                   <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                     Shadow Knowledge Base
                   </div>
-                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl rgb-text animate-rgb-text uppercase italic" data-testid="training-hub-title">
+                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl rgb-text animate-rgb-text uppercase italic">
                     Centro de Treinamento
                   </h1>
                   <p className="mt-4 max-w-2xl text-muted-foreground">
