@@ -8,9 +8,10 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
+    // 1. Perfil e Stats
     const { data: profile } = await supabase
       .from("profiles")
-      .select("referral_code, referral_reward_pref, pix_key, reward_points, current_level, trust_score, referrals_valid_count, conversions_count")
+      .select("referral_code, referral_reward_pref, pix_key, reward_points, current_level, trust_score, referrals_valid_count, conversions_count, referred_by")
       .eq("id", userId)
       .maybeSingle();
 
@@ -20,6 +21,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .maybeSingle();
 
+    // 2. Indicações e Labels
     const { data: referrals } = await supabase
       .from("referrals")
       .select("*")
@@ -39,6 +41,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       );
     }
 
+    // 3. Níveis e Progressão
     const { data: levels } = await supabase
       .from("reward_level_config")
       .select("*")
@@ -47,11 +50,29 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
     const currentLevel = (levels ?? []).find(l => l.level === (profile?.current_level || 'novato')) || (levels ?? [])[0];
     const nextLevel = (levels ?? []).find(l => l.min_conversions > (profile?.conversions_count || 0));
 
+    // 4. Recompensas e Missões
     const { data: userRewards } = await supabase
       .from("user_rewards")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
+
+    const { data: missions } = await supabase
+      .from("reward_missions")
+      .select("*")
+      .eq("active", true)
+      .order("priority", { ascending: false });
+
+    const { data: missionProgress } = await supabase
+      .from("user_mission_progress")
+      .select("*")
+      .eq("user_id", userId);
+
+    const { data: communityGoals } = await supabase
+      .from("promotions")
+      .select("*")
+      .eq("promo_type", "community_goal")
+      .eq("active", true);
 
     return {
       code: referralCode?.code ?? profile?.referral_code ?? null,
@@ -67,10 +88,15 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
         trust: profile?.trust_score || 100
       },
       level: currentLevel,
-      nextLevel: nextLevel
+      nextLevel: nextLevel,
+      missions: (missions ?? []).map(m => ({
+        ...m,
+        progress: (missionProgress ?? []).find(p => p.mission_id === m.id) || null
+      })),
+      communityGoals: communityGoals || [],
+      referredBy: profile?.referred_by || null
     };
   });
-
 
 export const updateReferralPref = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -93,6 +119,67 @@ export const updateReferralPref = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const activateTrialReward = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { internalGenerateTrial } = await import("./license.server");
+
+    // 1. Verifica se já tem uma licença ou trial ativo
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("referred_by, metadata")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!profile?.referred_by) {
+      throw new Error("Este benefício é exclusivo para membros convidados.");
+    }
+
+    const metadata = (profile.metadata as any) || {};
+    if (metadata.welcome_trial_claimed) {
+      throw new Error("Você já resgatou seu benefício de boas-vindas.");
+    }
+
+    // 2. Gera o Trial de 3 dias
+    try {
+      const trial = await internalGenerateTrial(supabaseAdmin, userId, 3);
+      
+      // Marca como resgatado
+      await supabaseAdmin
+        .from("profiles")
+        .update({
+          metadata: { ...metadata, welcome_trial_claimed: true }
+        } as any)
+        .eq("id", userId);
+
+      // Registra o evento de indicação
+      const { data: referral } = await supabaseAdmin
+        .from("referrals")
+        .select("id")
+        .eq("referred_id", userId)
+        .maybeSingle();
+
+      if (referral) {
+        await supabaseAdmin.from("referral_events").insert({
+          referral_id: referral.id,
+          event_type: 'trial_active',
+          metadata: { trial_id: trial.id }
+        });
+
+        await supabaseAdmin
+          .from("referrals")
+          .update({ status: 'trial_active' } as any)
+          .eq("id", referral.id);
+      }
+
+      return { ok: true, trial };
+    } catch (err: any) {
+      throw new Error(err.message || "Erro ao ativar trial.");
+    }
+  });
+
 export const validateReferralCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ code: z.string().trim().min(4).max(16) }).parse(i))
@@ -103,19 +190,4 @@ export const validateReferralCode = createServerFn({ method: "POST" })
       .from("profiles").select("id, display_name").eq("referral_code", code).maybeSingle();
     if (!prof || prof.id === context.userId) return { valid: false };
     return { valid: true, referrerName: (prof as any).display_name || "Membro Shadow" };
-  });
-
-export const adminMarkReferralPaid = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((i: unknown) => z.object({ referralId: z.string().uuid() }).parse(i))
-  .handler(async ({ data, context }) => {
-    const { assertAdmin } = await import("./admin-helpers.server");
-    await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("referrals")
-      .update({ reward_status: "paid", paid_at: new Date().toISOString() })
-      .eq("id", data.referralId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
   });

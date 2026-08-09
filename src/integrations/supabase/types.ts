@@ -1209,6 +1209,7 @@ export type Database = {
           legacy_checked_at: string | null
           legacy_panel_hits: Json | null
           legacy_status: string
+          metadata: Json | null
           onboarding_answers: Json
           onboarding_completed_at: string | null
           pix_key: string | null
@@ -1216,6 +1217,7 @@ export type Database = {
           referral_code: string | null
           referral_reward_pref: string
           referrals_valid_count: number | null
+          referred_by: string | null
           reward_points: number | null
           security_ack_at: string | null
           trust_score: number | null
@@ -1235,6 +1237,7 @@ export type Database = {
           legacy_checked_at?: string | null
           legacy_panel_hits?: Json | null
           legacy_status?: string
+          metadata?: Json | null
           onboarding_answers?: Json
           onboarding_completed_at?: string | null
           pix_key?: string | null
@@ -1242,6 +1245,7 @@ export type Database = {
           referral_code?: string | null
           referral_reward_pref?: string
           referrals_valid_count?: number | null
+          referred_by?: string | null
           reward_points?: number | null
           security_ack_at?: string | null
           trust_score?: number | null
@@ -1261,6 +1265,7 @@ export type Database = {
           legacy_checked_at?: string | null
           legacy_panel_hits?: Json | null
           legacy_status?: string
+          metadata?: Json | null
           onboarding_answers?: Json
           onboarding_completed_at?: string | null
           pix_key?: string | null
@@ -1268,6 +1273,7 @@ export type Database = {
           referral_code?: string | null
           referral_reward_pref?: string
           referrals_valid_count?: number | null
+          referred_by?: string | null
           reward_points?: number | null
           security_ack_at?: string | null
           trust_score?: number | null
@@ -1516,6 +1522,7 @@ export type Database = {
           reward_amount: number
           reward_status: string
           reward_type: string
+          status: Database["public"]["Enums"]["referral_status_new"] | null
           updated_at: string
         }
         Insert: {
@@ -1530,6 +1537,7 @@ export type Database = {
           reward_amount?: number
           reward_status?: string
           reward_type: string
+          status?: Database["public"]["Enums"]["referral_status_new"] | null
           updated_at?: string
         }
         Update: {
@@ -1544,6 +1552,7 @@ export type Database = {
           reward_amount?: number
           reward_status?: string
           reward_type?: string
+          status?: Database["public"]["Enums"]["referral_status_new"] | null
           updated_at?: string
         }
         Relationships: [
@@ -1733,6 +1742,48 @@ export type Database = {
           min_referrals?: number
           name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reward_missions: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          priority: number | null
+          requirement_type: string
+          requirement_value: number
+          reward_type: string
+          reward_value: Json
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          priority?: number | null
+          requirement_type: string
+          requirement_value: number
+          reward_type: string
+          reward_value: Json
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          priority?: number | null
+          requirement_type?: string
+          requirement_value?: number
+          reward_type?: string
+          reward_value?: Json
         }
         Relationships: []
       }
@@ -2253,6 +2304,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mission_progress: {
+        Row: {
+          completed_at: string | null
+          current_value: number | null
+          id: string
+          mission_id: string
+          reward_granted: boolean | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          current_value?: number | null
+          id?: string
+          mission_id: string
+          reward_granted?: boolean | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          current_value?: number | null
+          id?: string
+          mission_id?: string
+          reward_granted?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mission_progress_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "reward_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_rewards: {
         Row: {
           claimed_at: string | null
@@ -2479,6 +2565,15 @@ export type Database = {
         | "cancelled"
         | "revogated"
       referral_reward_type: "points" | "cashback" | "coupon" | "level_up"
+      referral_status_new:
+        | "clicked"
+        | "registered"
+        | "verified"
+        | "trial_active"
+        | "converted"
+        | "rewarded"
+        | "cancelled"
+        | "flagged"
       shadow_reward_level:
         | "novato"
         | "bronze"
@@ -2645,6 +2740,16 @@ export const Constants = {
         "revogated",
       ],
       referral_reward_type: ["points", "cashback", "coupon", "level_up"],
+      referral_status_new: [
+        "clicked",
+        "registered",
+        "verified",
+        "trial_active",
+        "converted",
+        "rewarded",
+        "cancelled",
+        "flagged",
+      ],
       shadow_reward_level: [
         "novato",
         "bronze",
