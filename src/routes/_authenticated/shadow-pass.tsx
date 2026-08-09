@@ -258,7 +258,7 @@ function ShadowPassPage() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Sua reputação é calculada automaticamente com base no histórico e comportamento da sua conta.
                 </p>
-                <Badge variant="outline" className="text-[9px] font-mono uppercase text-primary border-primary/30">CONTA CONFIÁVEL</Badge>
+                <Badge variant="outline" className="text-[9px] font-mono uppercase text-primary border-primary/30 shrink-0">CONTA CONFIÁVEL</Badge>
               </CardContent>
             </Card>
           </section>
