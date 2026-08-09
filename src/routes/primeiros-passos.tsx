@@ -20,13 +20,13 @@ export const Route = createFileRoute("/primeiros-passos")({
 const steps = [
   {
     icon: Download,
-    title: "1. Baixe o Shadow Builder",
-    body: "No seu painel, seção Downloads, clique na versão do seu plano (Regular, Premium ou Turbo) para baixar o APK builder mais recente.",
+    title: "1. Download e Antivírus",
+    body: "Baixe o Shadow Builder no painel. Importante: desative o Windows Defender/Antivírus ou adicione uma pasta de exclusão para evitar que o Windows apague o executável por engano.",
   },
   {
     icon: Settings,
-    title: "2. Faça login com suas credenciais",
-    body: "Abra o app e use o usuário/senha entregues logo após o pagamento. Eles ficam sempre disponíveis no seu dashboard, na aba Licenças.",
+    title: "2. Adicionar Servidor",
+    body: "Entre no painel e vá na opção 'Add Server'. Insira seus dados de acesso e utilize qualquer Connection Key (exemplos populares: TxTxT, BTMOB ou 123456).",
   },
   {
     icon: Shield,

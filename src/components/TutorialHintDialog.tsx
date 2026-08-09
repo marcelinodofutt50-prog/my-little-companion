@@ -7,7 +7,7 @@ export const YT_CHANNEL_URL = "https://www.youtube.com/@krebgulin";
 export function TutorialHintDialog({
   open,
   onClose,
-  title = "Tem dúvidas?",
+  title = "Como usar sua licença",
   message = "O processo é simples: compre sua licença ou ative o trial, baixe o arquivo e configure uma pasta de exclusão no Windows Defender para evitar que ele apague o app. No painel, use 'Add Server' com qualquer Connection Key (ex: TxTxT, BTMOB ou 123456).",
 }: {
   open: boolean;
@@ -43,8 +43,8 @@ export function TutorialHintDialog({
               <X className="h-4 w-4" />
             </button>
             <div className="relative p-6">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-red-400">
-                <Youtube className="h-3.5 w-3.5" /> tutoriais em vídeo
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">
+                Configuração inicial
               </div>
               <h3 className="font-display text-2xl font-semibold tracking-tight">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{message}</p>
@@ -52,15 +52,15 @@ export function TutorialHintDialog({
               <div className="mt-5 grid gap-2 rounded border border-border/60 bg-background/40 p-3 text-[12px] text-muted-foreground">
                 <div className="flex items-start gap-2">
                   <span className="mt-0.5 font-mono text-[10px] text-neon">01</span>
-                  Como baixar o programa sem ser bloqueado pelo antivírus
+                  Baixe o arquivo e desative o Antivírus/Windows Defender
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="mt-0.5 font-mono text-[10px] text-neon">02</span>
-                  Passo a passo para colocar o login e ativar
+                  Adicione a pasta de instalação nas exclusões do Antivírus
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="mt-0.5 font-mono text-[10px] text-neon">03</span>
-                  Bypass do Play Protect e build do APK
+                  No painel, vá em 'Add Server' e use qualquer Connection Key
                 </div>
               </div>
 
