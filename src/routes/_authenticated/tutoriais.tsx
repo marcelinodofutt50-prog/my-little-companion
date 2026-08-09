@@ -167,7 +167,7 @@ function TutorialsPage() {
     } finally {
       setLoading(false);
     }
-  }, [listFn, getProgressFn]);
+  }, [listFn, getProgressFn, addSyncLog]);
 
   useEffect(() => {
     loadData();
