@@ -73,18 +73,20 @@ export const listTutorials = createServerFn({ method: "GET" })
           .order("display_order", { ascending: true });
 
         if (!userError && userData && userData.length > 0) {
-          return userData.filter(item => item && item.id && item.title);
+          console.log(`[tutorials] Sucesso via RLS (Direct). ${userData.length} itens.`);
+          return userData.filter(item => item && item.id && (item.title || item.category));
         }
         
         if (userError) {
-          console.warn("[tutorials] Erro no cliente do usuário:", userError.message);
+          console.warn("[tutorials] Erro RLS:", userError.message, userError.code);
         }
       } catch (err) {
-        console.warn("[tutorials] Catch no fetch inicial:", err);
+        console.warn("[tutorials] Catch fetch RLS:", err);
       }
 
       // 2. Se falhar ou vier vazio, usar o Admin Tunnel (Bypass de Cache/RLS)
-      // O Admin Tunnel é mais estável contra PGRST108
+      // O Admin Tunnel é imune a falhas de cache de permissões do usuário
+      console.log("[tutorials] Ativando Bypass: Admin Tunnel...");
       const { data: adminData, error: adminError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
@@ -94,15 +96,15 @@ export const listTutorials = createServerFn({ method: "GET" })
         const isPGRST = adminError.code === 'PGRST108' || adminError.message?.includes('schema cache') || adminError.code === '42P01';
         
         if (isPGRST && attempt <= 3) {
-          console.warn(`[tutorials] Instabilidade crítica de schema (Tentativa ${attempt}). Executando RPC Repair...`);
+          console.warn(`[tutorials] Instabilidade de schema (PGRST108). Executando Reparo RPC...`);
           await trackSchemaFailure(adminError, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
           
-          const delay = 500 * Math.pow(2, attempt - 1);
+          const delay = 800 * Math.pow(2, attempt - 1);
           
           try {
             // Reparo tático forçado via Admin
             await supabaseAdmin.rpc("force_refresh_schema_permissions");
-            // Pequena pausa para o banco propagar as permissões
+            // Pausa estratégica para propagação
             await new Promise(resolve => setTimeout(resolve, delay));
           } catch (rpcErr) {
             console.error("[tutorials] RPC Repair Failed:", rpcErr);
@@ -115,11 +117,11 @@ export const listTutorials = createServerFn({ method: "GET" })
         return [];
       }
 
-      const results = (adminData || []).filter(item => item && item.id && item.title);
+      const results = (adminData || []).filter(item => item && item.id && (item.title || item.category));
       if (results.length > 0) {
-        console.log(`[tutorials] Sincronização via Admin Tunnel concluída com ${results.length} módulos.`);
+        console.log(`[tutorials] Sincronização via Admin Tunnel: ${results.length} módulos.`);
       } else {
-        console.warn("[tutorials] Admin Tunnel retornou lista vazia. Verifique se há dados no banco.");
+        console.warn("[tutorials] Admin Tunnel retornou lista vazia.");
       }
       return results;
     };
