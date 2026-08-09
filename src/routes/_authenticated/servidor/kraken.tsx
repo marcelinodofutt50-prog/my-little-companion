@@ -103,12 +103,6 @@ function KrakenRouteComponent() {
           backgroundColor: 'black'
         }}
       >
-            backgroundPosition: 'center center',
-            backgroundRepeat: 'no-repeat',
-            filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
-            backgroundColor: 'black'
-          }}
-        >
           {/* Tactical Background Overlay - Base safety layer */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100 z-[-2] block" />
           
