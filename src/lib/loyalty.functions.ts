@@ -153,3 +153,52 @@ export const getVipBenefits = createServerFn({ method: "GET" })
       .order("min_loyalty_points", { ascending: true }) as any);
     return data || [];
   });
+
+export const getSystemStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    // Buscar logs de falha recentes (PGRST108)
+    const { data: logs } = await supabaseAdmin
+      .from("integration_logs")
+      .select("*")
+      .eq("action", "pgrst108_sync_error")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    // Calcular taxa de falhas (mock-up baseado em logs reais se disponíveis ou heurística)
+    const { count: totalLogs } = await supabaseAdmin
+      .from("integration_logs")
+      .select("*", { count: 'exact', head: true });
+    
+    const { count: failLogs } = await supabaseAdmin
+      .from("integration_logs")
+      .select("*", { count: 'exact', head: true })
+      .eq("outcome", "failure");
+
+    // Verificar conexão atual
+    const startTime = Date.now();
+    const { error: connError } = await supabase.from("profiles").select("id").limit(1).maybeSingle();
+    const latency = Date.now() - startTime;
+
+    return {
+      connection: {
+        status: connError ? 'unstable' : 'healthy',
+        latency: `${latency}ms`,
+        lastChecked: new Date().toISOString()
+      },
+      postgrest: {
+        failureRate: totalLogs ? `${Math.round(((failLogs || 0) / (totalLogs || 1)) * 100)}%` : '0%',
+        lastRepair: logs?.[0]?.created_at || null,
+        totalRepairs: totalLogs || 0
+      },
+      recentIncidents: (logs || []).map((l: any) => ({
+        id: l.id,
+        time: l.created_at,
+        context: l.context?.location || 'unknown',
+        recovered: l.outcome === 'recovered'
+      }))
+    };
+  });
