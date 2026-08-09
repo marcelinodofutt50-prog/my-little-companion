@@ -18,7 +18,7 @@ async def check_schema():
         supabase: Client = create_client(supabase_url, supabase_key)
         
         # Tabelas críticas para o Centro de Treinamento
-        critical_tables = ["tutorials", "user_roles"]
+        critical_tables = ["tutorials", "user_roles", "tutorial_progress"]
         
         for table in critical_tables:
             print(f"[SCHEMA-CHECK] Verificando acesso à tabela: {table}...")

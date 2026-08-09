@@ -116,7 +116,7 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
         .from("tutorials")
-        .upsert({ ...data, created_by: context.userId });
+        .upsert({ ...data, created_by: context.userId }, { onConflict: 'id' });
     if (error) throw error;
     return { ok: true };
   });
