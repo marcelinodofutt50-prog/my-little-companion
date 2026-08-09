@@ -395,6 +395,8 @@ export const generateTrial = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: expiresAt.toISOString(),
       is_trial: true,
+      status: 'trial',
+      origin_type: 'trial',
       panel: panelFromPlanSlug("trial") || "v455", // Fallback to v455 for trials if slug detection fails
     };
 
