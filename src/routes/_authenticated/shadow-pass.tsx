@@ -68,7 +68,7 @@ function ShadowPassPage() {
                 ID: {identity.id.substring(0, 8)}
               </Badge>
               {staff.isEligible && (
-                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px] uppercase tracking-widest">
+                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px] uppercase tracking-widest shrink-0">
                   Equipe Elegível
                 </Badge>
               )}
