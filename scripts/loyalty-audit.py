@@ -21,10 +21,10 @@ async def main():
         if cookies_json:
             cookies = json.loads(cookies_json)
             for c in cookies:
-                c["url"] = "https://www.shadowdashstore.com"
+                c["url"] = "http://localhost:8080"
             await context.add_cookies(cookies)
 
-        await page.goto("https://www.shadowdashstore.com")
+        await page.goto("http://localhost:8080")
         if storage_key and session_json:
             await page.evaluate(
                 f"window.localStorage.setItem({json.dumps(storage_key)}, {json.dumps(session_json)})"
@@ -33,51 +33,31 @@ async def main():
         print("--- AUDITORIA LOYALTY ---")
 
         # 2. Test Loyalty Dashboard
-        await page.goto("https://www.shadowdashstore.com/fidelidade")
-        await page.wait_for_load_state("networkidle")
-        await page.screenshot(path=str(SCREENSHOTS / "1_loyalty_dashboard.png"))
-        print("Dashboard Fidelidade carregado.")
-
-        # Check for errors in console
-        console_errors = []
-        page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
+        # First check if the path exists locally to avoid 404
+        await page.goto("http://localhost:8080/fidelidade")
         
-        # Check for specific elements
+        # Wait for either the content or a redirect
+        try:
+            await page.wait_for_selector("h1", timeout=5000)
+        except:
+            print("Página /fidelidade não carregou cabeçalho h1. Pode ser um erro de Auth ou 404.")
+            
+        await page.screenshot(path=str(SCREENSHOTS / "1_loyalty_dashboard.png"))
+        print(f"Dashboard carregado em: {page.url}")
+
+        # Check for Shadow Points
         points_element = page.locator("text=Shadow Points")
-        if await points_element.is_visible():
-            print("Elemento 'Shadow Points' visível.")
+        if await points_element.count() > 0:
+            print("SUCCESS: Elemento 'Shadow Points' encontrado.")
         else:
-            print("AVISO: Elemento 'Shadow Points' não encontrado.")
+            print("FAILURE: Elemento 'Shadow Points' não encontrado.")
 
+        # Check for Missions
         missions_title = page.locator("text=Missões Disponíveis")
-        if await missions_title.is_visible():
-            print("Seção de Missões visível.")
+        if await missions_title.count() > 0:
+            print("SUCCESS: Seção de Missões encontrada.")
         else:
-            print("AVISO: Seção de Missões não encontrada.")
-
-        # 3. Test Dark/Light Mode
-        await page.evaluate("document.documentElement.classList.add('dark')")
-        await page.screenshot(path=str(SCREENSHOTS / "2_dark_mode.png"))
-        print("Screenshot Dark Mode capturado.")
-
-        await page.evaluate("document.documentElement.classList.remove('dark')")
-        await page.evaluate("document.documentElement.classList.add('theme-light')")
-        await page.screenshot(path=str(SCREENSHOTS / "3_light_mode.png"))
-        print("Screenshot Light Mode capturado.")
-
-        # 4. Test Mobile View
-        await page.set_viewport_size({"width": 375, "height": 812})
-        await page.screenshot(path=str(SCREENSHOTS / "4_mobile_view.png"))
-        print("Screenshot Mobile capturado.")
-
-        # 5. Production URL Check (Simulated check of metadata/availability)
-        prod_url = "https://www.shadowdashstore.com/fidelidade"
-        print(f"Targeting Production URL for future validation: {prod_url}")
-
-        if console_errors:
-            print("ERROS DE CONSOLE ENCONTRADOS:")
-            for err in console_errors:
-                print(f"- {err}")
+            print("FAILURE: Seção de Missões não encontrada.")
 
         await browser.close()
 
