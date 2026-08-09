@@ -24,8 +24,8 @@ export function PromotionsWidget() {
 
   if (isLoading || !promotions) return null;
 
-  const progress = Math.min(100, (promotions.goal_current_value / promotions.goal_target_value) * 100);
-  const remaining = promotions.goal_target_value - promotions.goal_current_value;
+  const progress = Math.min(100, ((promotions.goal_current_value || 0) / (promotions.goal_target_value || 1)) * 100);
+  const remaining = (promotions.goal_target_value || 0) - (promotions.goal_current_value || 0);
 
   return (
     <motion.div 
