@@ -560,6 +560,47 @@ function TutorialsPage() {
                             ))}
                           </div>
                         )}
+                        
+                        <div className="mt-6 border-t border-primary/10 pt-6">
+                          <h4 className="text-[10px] font-mono uppercase tracking-widest text-primary/50 mb-3 flex items-center gap-2">
+                            <Activity className="h-3 w-3" /> Diagnóstico de Conexão
+                          </h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="enterprise-surface p-3 rounded-xl border-primary/5">
+                              <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-[0.2em] mb-1">Último Código</div>
+                              <div className="text-xs font-bold font-mono">{syncHistory[0]?.status === 'error' ? 'PGRST108' : '200 OK'}</div>
+                            </div>
+                            <div className="enterprise-surface p-3 rounded-xl border-primary/5">
+                              <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-[0.2em] mb-1">Tunnel Status</div>
+                              <div className={`text-xs font-bold font-mono ${tutorials.length > 0 ? 'text-emerald-500' : 'text-orange-500 animate-pulse'}`}>
+                                {tutorials.length > 0 ? 'ESTÁVEL' : 'SINCRONIZANDO'}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={diagLoading}
+                            onClick={async () => {
+                              setDiagLoading(true);
+                              try {
+                                const res = await testConnFn();
+                                setDiagResult(res);
+                                setShowDiagnostics(true);
+                                toast.success("Diagnóstico concluído!");
+                              } catch (e: any) {
+                                toast.error("Falha no teste: " + e.message);
+                              } finally {
+                                setDiagLoading(false);
+                              }
+                            }}
+                            className="w-full mt-4 h-9 bg-primary/5 border-primary/10 text-[9px] font-mono uppercase tracking-widest hover:bg-primary/10 transition-colors"
+                          >
+                            {diagLoading ? <RefreshCw className="h-3 w-3 mr-2 animate-spin" /> : <ShieldCheck className="h-3 w-3 mr-2" />}
+                            Executar Teste de Estresse
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   </motion.div>

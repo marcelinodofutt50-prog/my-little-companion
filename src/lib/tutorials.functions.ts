@@ -92,6 +92,11 @@ export const listTutorials = createServerFn({ method: "GET" })
         }
         
         console.error(`[tutorials] FALHA CRÍTICA após retentativas:`, error);
+        // Telemetria final de falha total
+        await trackSchemaFailure(error, "listTutorials_FINAL_FAILURE", false, { 
+          total_attempts: attempt,
+          metadata 
+        }, context.userId);
         return [];
       }
 
