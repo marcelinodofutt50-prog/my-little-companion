@@ -16,18 +16,11 @@ import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 
 import krakenV26Asset from "@/assets/kraken_v26_final.png.asset.json";
-import krakenNewBgAsset from "@/assets/kraken_new_bg.png.asset.json";
-import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
-import krakenBg18Asset from "@/assets/krakenbackground-18.jpg.asset.json";
 
 // Imagem tática central da Kraken 2.0
-// v27: Priorizando kraken_v26_final.png como fundo oficial e limpando candidatos obsoletos.
+// v28: Definindo kraken_v26_final.png como a única imagem de fundo oficial.
 const KRAKEN_BG_CANDIDATES: string[] = [
-  krakenV26Asset.url, 
-  krakenNewBgAsset.url, 
-  krakenBg9Asset.url,
-  krakenBg18Asset.url,
-  "/assets/shadow-hero-classic.png",
+  krakenV26Asset.url,
 ].filter(Boolean) as string[];
 
 const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1];
@@ -39,7 +32,7 @@ const getUrlWithBust = (url: string) => {
   return `${url}${sep}v=v26`;
 };
 
-const krakenCore = getUrlWithBust(krakenV26Asset.url || krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenV26Asset.url || KRAKEN_BG_FALLBACK);
 
 const krakenBg5 = getUrlWithBust("https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
