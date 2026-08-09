@@ -131,14 +131,15 @@ function ReferralsPage() {
                           <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-tighter">Seu link de indicação único:</span>
                           <div className="flex items-center gap-2">
                             <code className="flex-1 text-[10px] truncate bg-black/40 p-2 rounded border border-white/5 text-primary">
-                              {window.location.origin}/auth?ref={data.code}
+                              {window.location.origin.includes('lovableproject.com') ? 'https://btmob.pro' : window.location.origin}/auth?ref={data.code}
                             </code>
                             <Button 
                               size="sm" 
                               variant="ghost" 
                               className="h-8 px-2"
                               onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/auth?ref=${data.code}`);
+                                const base = window.location.origin.includes('lovableproject.com') ? 'https://btmob.pro' : window.location.origin;
+                                navigator.clipboard.writeText(`${base}/auth?ref=${data.code}`);
                                 toast.success("Link copiado!");
                               }}
                             >
@@ -147,6 +148,7 @@ function ReferralsPage() {
                           </div>
                         </div>
                       )}
+
                     </div>
                     <p className="text-xs text-muted-foreground italic mt-2">
                       {t('ref.share_tip')}
