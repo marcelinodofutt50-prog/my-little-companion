@@ -669,6 +669,12 @@ function AdminPage() {
           icon: Activity,
           hint: "fluxo PIX ponta a ponta",
         },
+        {
+          id: "trial_monitor",
+          label: "Monitor de Trials",
+          icon: Activity,
+          hint: "sucessos & bloqueios",
+        },
       ],
     },
   ];
