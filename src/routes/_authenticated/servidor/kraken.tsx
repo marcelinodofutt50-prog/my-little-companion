@@ -141,7 +141,7 @@ function KrakenPage() {
         const ok = await validateCandidate(candidate);
         if (cancelled) return;
         if (ok) {
-          setResolvedBg(candidate);
+          setResolvedBg(candidate + (candidate.includes("?") ? "&" : "?") + "v=" + new Date().getTime());
           setBgLoaded((prev) => ({ ...prev, core: true }));
           setBgLoadError(false);
           return;
