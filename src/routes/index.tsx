@@ -37,11 +37,10 @@ import {
 // Hardcoded paths to public assets to ensure they load from the repository
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 const btmobDashboard = "/assets/shadow-dashboard-real.png?v=v9-300";
-
-const btmobDashboard = "/assets/shadow-dashboard-real.png?v=v9-300";
 const assetMissing = "/assets/shadow-dashboard-real.png?v=v9-300";
 const btmob1 = "/assets/shadow-dashboard-real.png?v=v9-300";
 const btmob2 = "/assets/shadow-play-protect-new.png?v=v9-300";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
