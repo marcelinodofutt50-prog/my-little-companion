@@ -178,7 +178,7 @@ function ShadowPassPage() {
                             <div className="text-sm font-mono uppercase text-primary mb-1">Meta Atual</div>
                             <h3 className="text-2xl font-bold font-mono">{community.memberCount} / {nextGoal?.target_members || '???'} Membros</h3>
                           </div>
-                          <div className="text-right">
+                          <div className="text-left sm:text-right w-full sm:w-auto">
                             <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Status</div>
                             <Badge className="bg-primary/20 text-primary border-primary/30">{achievedGoals}/{totalGoals} Concluídas</Badge>
                           </div>
