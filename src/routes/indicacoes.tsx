@@ -81,8 +81,28 @@ function ReferralsPage() {
                 {t('ref.lead')}
               </p>
             </div>
+            
+            <div className="mb-8">
+              <Link to="/fidelidade">
+                <Button variant="outline" className="w-full border-primary/20 bg-primary/5 hover:bg-primary/10 group h-auto py-4">
+                  <div className="flex items-center justify-between w-full px-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <Trophy className="h-6 w-6" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-display font-bold uppercase tracking-tight">Ver Meu Progresso de Fidelidade</div>
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mt-0.5">Suba de nível e ganhe benefícios exclusivos</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-primary group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Button>
+              </Link>
+            </div>
 
             <div className="grid gap-6 md:grid-cols-4 mb-8">
+
               <Card className="bg-card border-border backdrop-blur-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
