@@ -321,7 +321,6 @@ export const generateTrial = createServerFn({ method: "POST" })
     return internalGenerateTrial(supabaseAdmin, userId, 1);
   });
 
-  });
 
 export const getMyCashbackBalance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
