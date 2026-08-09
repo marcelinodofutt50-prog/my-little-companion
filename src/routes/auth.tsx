@@ -23,6 +23,7 @@ export const Route = createFileRoute("/auth")({
     type?: string;
     error?: string;
     trial?: string;
+    mode?: string;
   } => ({
     next: typeof s.next === "string" ? s.next : undefined,
     code: typeof s.code === "string" ? s.code : undefined,
