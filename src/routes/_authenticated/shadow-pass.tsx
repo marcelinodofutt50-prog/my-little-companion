@@ -59,9 +59,9 @@ function ShadowPassPage() {
             )}
           </div>
           
-          <div className="text-center md:text-left space-y-2">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight font-display uppercase italic">
+          <div className="text-center md:text-left space-y-2 w-full">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
+              <h1 className="text-2xl md:text-5xl font-bold tracking-tight font-display uppercase italic break-all">
                 {identity.nickname}
               </h1>
               <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest border-primary/50 text-primary">
