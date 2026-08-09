@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+// ShadowDash Store — Evolução da Infraestrutura v7.3 (Shadow Pass Validado)
 import { motion } from "framer-motion";
 import { Shield, Zap, Lock, HeadphonesIcon, ChevronRight, CheckCircle2, Terminal, Globe, ShieldCheck, Database, Server, Rocket, ArrowRight, UserCheck, Store, Users, Gift } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
