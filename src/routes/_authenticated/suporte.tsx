@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { ONBOARDING_STEP, markOnboardingStep } from "@/components/OnboardingChecklist";
 import { getOrCreateThread, listMessages, sendMessage, markThreadReadByCustomer, setThreadCategory } from "@/lib/support.functions";
+import { SupportChat } from "@/components/support/SupportChat";
 import { SUPPORT_CATEGORY_META, categoryMeta, type SupportCategory } from "@/lib/support-categories";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
@@ -426,158 +427,19 @@ function SupportPage() {
           </div>
         )}
 
-        <div className="mt-5 terminal-card scanlines relative flex h-[58vh] flex-col overflow-hidden">
-          {/* Botão de Correção para Clientes */}
-          {!isAdminRef.current && thread?.id && (
-            <div className="absolute right-4 top-4 z-20 flex flex-wrap justify-end gap-2">
-              <Link to="/servidor/status">
-                <Button size="sm" variant="outline" className="h-8 gap-1.5 border-cyan/40 bg-cyan/10 font-mono text-[10px] uppercase tracking-wider text-cyan shadow-sm backdrop-blur-md transition-all hover:bg-cyan/20">
-                  <Server className="h-3 w-3" /> Status do Servidor
-                </Button>
-              </Link>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 gap-1.5 border-primary/40 bg-primary/10 font-mono text-[10px] uppercase tracking-wider text-primary shadow-sm backdrop-blur-md transition-all hover:bg-primary/20"
-                onClick={() => {
-                  setBody("Estou com erro no meu login (senha inválida ou expirada). Pode corrigir para mim?");
-                  composerRef.current?.focus();
-                  toast.info("Gatilho de correção ativado", {
-                    description: "Envie a mensagem agora para que a Shadow IA tente corrigir seu login automaticamente.",
-                  });
-                }}
-              >
-                <Sparkles className="h-3 w-3 animate-pulse" /> 
-                Reparar Acesso
-              </Button>
+        <div className="mt-5 terminal-card scanlines relative h-[65vh] overflow-hidden flex flex-col">
+          {thread?.id && uid ? (
+            <SupportChat 
+              threadId={thread.id} 
+              userId={uid} 
+              onNewMessage={() => markReadFn({ data: { threadId: thread.id } })}
+            />
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+              <Loader2 className="h-8 w-8 animate-spin mb-4" />
+              <p className="font-mono text-xs uppercase">Inicializando canal seguro...</p>
             </div>
           )}
-
-          {hasNewAdmin && (
-            <button
-              type="button"
-              onClick={() => { 
-                setLastSeenAdminAt(Date.now()); 
-                listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); 
-              }}
-              className="absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-full border border-primary/40 bg-primary/20 px-4 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-primary shadow-lg backdrop-blur-md transition-all hover:bg-primary/30"
-            >
-              <Sparkles className="mr-2 inline-block h-3.5 w-3.5 animate-pulse" />
-              nova resposta do suporte
-            </button>
-          )}
-          <div ref={listRef} onScroll={onListScroll} className="flex-1 space-y-3 overflow-y-auto p-4">
-            {(hasMore || loadingOlder) && (
-              <div className="flex justify-center pb-1">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 gap-1 px-3 text-[10px] font-mono uppercase tracking-wider"
-                  disabled={loadingOlder}
-                  onClick={() => void loadOlder()}
-                >
-                  {loadingOlder ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />}
-                  {loadingOlder ? "carregando..." : "carregar mensagens antigas"}
-                </Button>
-              </div>
-            )}
-
-            {msgs.length === 0 && pending.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
-                <div className="text-3xl" aria-hidden>{active.emoji}</div>
-                <div className="text-sm font-medium">{active.label}</div>
-                <div className="text-xs text-muted-foreground">
-                  {!thread && isAdminRef.current
-                    ? "Como administrador, você não possui um ticket de suporte ativo. Use o Painel Admin para responder clientes."
-                    : "Descreva o que aconteceu ou toque em uma mensagem rápida acima."}
-                </div>
-
-              </div>
-            )}
-            {msgs.map((m) => {
-              if (m.is_system) {
-                return (
-                  <div key={m.id} className="flex justify-center">
-                    <div className="max-w-[85%] rounded-lg border border-cyan/30 bg-cyan/5 px-4 py-2 font-mono text-xs text-cyan whitespace-pre-wrap text-center">
-                      {m.body}
-                    </div>
-                  </div>
-                );
-              }
-              const mine = m.sender_id === uid && !m.is_admin;
-              const fromAdmin = m.is_admin && m.sender_id !== uid;
-              const label = mine ? "você" : fromAdmin ? "admin" : "suporte";
-              return (
-                <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${mine ? "border border-neon/40 bg-neon/10" : "border border-violet/40 bg-violet/10"}`}>
-                    <div className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase text-muted-foreground">
-                      <span>{label} · {new Date(m.created_at).toLocaleTimeString("pt-BR")}</span>
-                      {mine && <CheckCheck className="h-3 w-3 text-neon" aria-label="Enviada" />}
-                    </div>
-                    {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
-                    {m.attachment_url && (
-                      m.attachment_type?.startsWith("image/") ? <img loading="lazy" src={m.attachment_url} alt="anexo" className="mt-2 max-h-64 rounded" />
-                      : m.attachment_type?.startsWith("video/") ? <video src={m.attachment_url} controls className="mt-2 max-h-64 rounded" />
-                      : <a href={m.attachment_url} target="_blank" rel="noreferrer" className="mt-2 block text-cyan underline">Baixar anexo</a>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-            {pending.map((p) => {
-              const failed = p.status === "failed";
-              return (
-                <div key={p.clientId} className="flex justify-end">
-                  <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm border ${failed ? "border-destructive/50 bg-destructive/10" : "border-neon/30 bg-neon/5 opacity-80"}`}>
-                    <div className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase text-muted-foreground">
-                      <span>você · {new Date(p.created_at).toLocaleTimeString("pt-BR")}</span>
-                      {failed ? (
-                        <span className="flex items-center gap-1 text-destructive"><AlertCircle className="h-3 w-3" /> falhou</span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3 animate-pulse" /> enviando</span>
-                      )}
-                    </div>
-                    {p.body && <div className="whitespace-pre-wrap break-words">{p.body}</div>}
-                    {p.attachmentPath && (
-                      <div className="mt-1 text-[10px] text-muted-foreground italic">
-                        {p.attachmentType?.startsWith("image/") ? "imagem" : p.attachmentType?.startsWith("video/") ? "vídeo" : "arquivo"} anexado
-                      </div>
-                    )}
-                    {failed && (
-                      <div className="mt-2 flex items-center justify-between gap-2 border-t border-destructive/30 pt-2">
-                        <span className="text-[10px] text-destructive/90 truncate">{p.error ?? "Erro desconhecido"}</span>
-                        <div className="flex gap-1 shrink-0">
-                          <Button type="button" size="sm" variant="outline" className="h-6 gap-1 px-2 text-[10px]" onClick={() => retry(p.clientId)}>
-                            <RotateCw className="h-3 w-3" /> tentar novamente
-                          </Button>
-                          <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => discard(p.clientId)}>
-                            descartar
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <form className="flex items-center gap-2 border-t border-border/40 p-3" onSubmit={(e) => { e.preventDefault(); unlockNotifySound(); send(); }}>
-            <input ref={fileRef} type="file" hidden onChange={pickFile} accept="image/*,video/*,.pdf,.txt,.log,.zip" />
-            <Button type="button" size="icon" variant="outline" onClick={() => { unlockNotifySound(); fileRef.current?.click(); }} disabled={uploading}>
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-            </Button>
-            <Input ref={composerRef} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Digite sua mensagem..." />
-            <Button type="submit" size="icon" disabled={sending || uploading || !body.trim()}>
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </form>
-          <div className="border-t border-border/40 bg-card/50 px-3 py-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground flex items-center gap-3">
-            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> enviando</span>
-            <span className="flex items-center gap-1"><Check className="h-3 w-3" /> enviada</span>
-            <span className="flex items-center gap-1 text-neon"><CheckCheck className="h-3 w-3" /> confirmada</span>
-            <span className="flex items-center gap-1 text-destructive"><AlertCircle className="h-3 w-3" /> falhou</span>
-          </div>
         </div>
       </main>
     </div>
