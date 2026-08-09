@@ -17,7 +17,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
-import krakenNewBgAsset from "@/assets/kraken_new_bg.jpg.asset.json";
+import krakenV26Asset from "@/assets/kraken_v26_final.png.asset.json";
+import krakenNewBgAsset from "@/assets/kraken_new_bg.png.asset.json";
+import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
 import krakenBg18Asset from "@/assets/krakenbackground-18.jpg.asset.json";
 import krakenBg17Asset from "@/assets/krakenbackground-17.jpg.asset.json";
 import krakenBg16Asset from "@/assets/krakenbackground-16.jpg.asset.json";
@@ -37,8 +39,9 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime.
 // v20: Corrigindo a ordem para garantir que a imagem oficial (v18) seja a prioritária.
 const KRAKEN_BG_CANDIDATES: string[] = [
-  krakenNewBgAsset.url, // Nova imagem enviada pelo usuário como prioridade
-  krakenBg9Asset.url, // Oficial anterior
+  krakenV26Asset.url, // Imagem enviada v26 - Prioridade Máxima
+  krakenNewBgAsset.url, 
+  krakenBg9Asset.url,
   krakenBg18Asset.url,
   krakenBg17Asset.url,
   krakenBg16Asset.url,
@@ -61,11 +64,11 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Incrementado para v25 para forçar invalidação total na CDN Vercel e Edge
-  return `${url}${sep}v=v25`;
+  // Incrementado para v26 para forçar invalidação total
+  return `${url}${sep}v=v26`;
 };
 
-const krakenCore = getUrlWithBust(krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenV26Asset.url || krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
 
 const krakenBg5 = getUrlWithBust(krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
