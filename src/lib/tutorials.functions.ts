@@ -41,6 +41,8 @@ export async function trackSchemaFailure(
     if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
       console.log("[tracking] Acionando reparo de esquema via RPC...");
       await supabaseAdmin.rpc("force_refresh_schema_permissions");
+      // Toque tático na tabela para forçar o cache bridge
+      await supabaseAdmin.from("tutorial_progress").select("*", { count: 'exact', head: true }).limit(1);
     }
   } catch (e) {
     console.error("[tracking] Failed to log failure:", e);
