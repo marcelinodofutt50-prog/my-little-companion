@@ -45,11 +45,11 @@ export const getLoyaltyDashboard = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(20) as any);
 
-    const { data: rewards } = await supabase
+    const { data: rewards } = await (supabase
       .from("user_rewards" as any)
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }) as any);
 
     return {
       loyalty: loyalty || { points: 0, current_tier: 'starter', days_active: 0 },
@@ -68,14 +68,14 @@ export const claimMissionReward = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({ missionId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    // Call the database function
-    const { data: res, error } = await supabase.rpc('complete_loyalty_mission', {
+    // Call the database function (cast rpc name to any because it's new)
+    const { data: res, error } = await (supabase.rpc as any)('complete_loyalty_mission', {
       _user_id: userId,
       _mission_id: data.missionId
     });
 
     if (error) throw new Error(error.message);
-    const result = res as { ok: boolean; message?: string; points_earned?: number };
+    const result = res as unknown as { ok: boolean; message?: string; points_earned?: number };
     
     return result;
   });
