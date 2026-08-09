@@ -134,7 +134,7 @@ function ShadowPassPage() {
               </Card>
 
               {/* VIP Progress */}
-              <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm">
+              <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between">
                     Shadow VIP <span>{vip.tier === 'elite' ? '100%' : '78%'}</span>
