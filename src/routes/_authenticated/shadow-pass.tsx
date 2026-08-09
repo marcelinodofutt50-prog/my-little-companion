@@ -301,15 +301,46 @@ function ShadowPassPage() {
 
           {/* Quick Stats */}
           <section className="grid grid-cols-2 gap-3 md:gap-4">
-             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1 overflow-hidden">
-               <div className="text-[10px] font-mono uppercase text-muted-foreground truncate">Indicações</div>
-               <div className="text-xl font-bold font-mono">{community.referrals}</div>
+             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1 overflow-hidden group hover:border-primary/30 transition-colors">
+               <div className="text-[10px] font-mono uppercase text-muted-foreground truncate flex items-center gap-1">
+                 <Users className="h-3 w-3" /> Indicações
+               </div>
+               <div className="text-xl font-bold font-mono group-hover:text-primary transition-colors">{community.referrals}</div>
              </div>
-             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1 overflow-hidden">
-               <div className="text-[10px] font-mono uppercase text-muted-foreground truncate">Conversões</div>
-               <div className="text-xl font-bold font-mono">{community.conversions}</div>
+             <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1 overflow-hidden group hover:border-primary/30 transition-colors">
+               <div className="text-[10px] font-mono uppercase text-muted-foreground truncate flex items-center gap-1">
+                 <Zap className="h-3 w-3" /> Conversões
+               </div>
+               <div className="text-xl font-bold font-mono group-hover:text-primary transition-colors">{community.conversions}</div>
              </div>
-          </section>
+           </section>
+
+           {/* Rewards / VIP Store Section */}
+           <section className="space-y-4">
+             <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
+               <Gift className="h-5 w-5 text-primary" /> Shadow Rewards
+             </h2>
+             <Card className="border-primary/10 bg-card/50 overflow-hidden">
+               <CardContent className="p-6 space-y-4">
+                 <p className="text-xs text-muted-foreground italic">
+                   Benefícios exclusivos baseados no seu nível VIP e Shadow Points.
+                 </p>
+                 <div className="grid gap-3">
+                   {vip.benefits.map((benefit: string, idx: number) => (
+                     <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10 group hover:bg-primary/10 transition-colors">
+                       <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                         <Star className="h-3 w-3" />
+                       </div>
+                       <span className="text-xs font-bold truncate">{benefit}</span>
+                     </div>
+                   ))}
+                 </div>
+                 <Button variant="outline" className="w-full mt-4 text-[10px] font-mono uppercase border-primary/20 hover:bg-primary/5">
+                   Acessar Marketplace VIP
+                 </Button>
+               </CardContent>
+             </Card>
+           </section>
         </div>
       </div>
     </div>
