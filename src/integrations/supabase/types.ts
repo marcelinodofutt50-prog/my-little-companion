@@ -358,6 +358,42 @@ export type Database = {
           },
         ]
       }
+      community_goals: {
+        Row: {
+          achieved_at: string | null
+          benefit_description: string | null
+          created_at: string | null
+          current_members: number | null
+          id: string
+          is_active: boolean | null
+          reward_description: string
+          target_members: number
+          updated_at: string | null
+        }
+        Insert: {
+          achieved_at?: string | null
+          benefit_description?: string | null
+          created_at?: string | null
+          current_members?: number | null
+          id?: string
+          is_active?: boolean | null
+          reward_description: string
+          target_members: number
+          updated_at?: string | null
+        }
+        Update: {
+          achieved_at?: string | null
+          benefit_description?: string | null
+          created_at?: string | null
+          current_members?: number | null
+          id?: string
+          is_active?: boolean | null
+          reward_description?: string
+          target_members?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           active: boolean
@@ -792,6 +828,120 @@ export type Database = {
           },
         ]
       }
+      loyalty_history: {
+        Row: {
+          action_type: string
+          amount: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          amount?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          amount?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_missions: {
+        Row: {
+          active: boolean | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          limit_per_user: number | null
+          requirement_type: string
+          requirement_value: number
+          reward_metadata: Json | null
+          reward_points: number
+          starts_at: string | null
+          title: string
+        }
+        Insert: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          limit_per_user?: number | null
+          requirement_type: string
+          requirement_value: number
+          reward_metadata?: Json | null
+          reward_points?: number
+          starts_at?: string | null
+          title: string
+        }
+        Update: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          limit_per_user?: number | null
+          requirement_type?: string
+          requirement_value?: number
+          reward_metadata?: Json | null
+          reward_points?: number
+          starts_at?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      loyalty_tier_config: {
+        Row: {
+          badge_url: string | null
+          benefits: Json | null
+          created_at: string | null
+          id: string
+          min_days_active: number
+          min_points: number
+          name: string
+          priority: number
+          tier: Database["public"]["Enums"]["loyalty_tier"]
+        }
+        Insert: {
+          badge_url?: string | null
+          benefits?: Json | null
+          created_at?: string | null
+          id?: string
+          min_days_active?: number
+          min_points?: number
+          name: string
+          priority?: number
+          tier: Database["public"]["Enums"]["loyalty_tier"]
+        }
+        Update: {
+          badge_url?: string | null
+          benefits?: Json | null
+          created_at?: string | null
+          id?: string
+          min_days_active?: number
+          min_points?: number
+          name?: string
+          priority?: number
+          tier?: Database["public"]["Enums"]["loyalty_tier"]
+        }
+        Relationships: []
+      }
       migration_requests: {
         Row: {
           admin_notes: string | null
@@ -1221,10 +1371,13 @@ export type Database = {
           referral_reward_pref: string
           referrals_valid_count: number | null
           referred_by: string | null
+          reputation_score: number | null
           reward_points: number | null
           security_ack_at: string | null
+          total_points_earned: number | null
           trust_score: number | null
           updated_at: string
+          vip_tier: Database["public"]["Enums"]["vip_tier"] | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1249,10 +1402,13 @@ export type Database = {
           referral_reward_pref?: string
           referrals_valid_count?: number | null
           referred_by?: string | null
+          reputation_score?: number | null
           reward_points?: number | null
           security_ack_at?: string | null
+          total_points_earned?: number | null
           trust_score?: number | null
           updated_at?: string
+          vip_tier?: Database["public"]["Enums"]["vip_tier"] | null
         }
         Update: {
           avatar_url?: string | null
@@ -1277,10 +1433,13 @@ export type Database = {
           referral_reward_pref?: string
           referrals_valid_count?: number | null
           referred_by?: string | null
+          reputation_score?: number | null
           reward_points?: number | null
           security_ack_at?: string | null
+          total_points_earned?: number | null
           trust_score?: number | null
           updated_at?: string
+          vip_tier?: Database["public"]["Enums"]["vip_tier"] | null
         }
         Relationships: []
       }
@@ -2307,6 +2466,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_loyalty: {
+        Row: {
+          created_at: string | null
+          current_tier: Database["public"]["Enums"]["loyalty_tier"]
+          days_active: number
+          last_action_at: string | null
+          metadata: Json | null
+          points: number
+          total_spent: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_tier?: Database["public"]["Enums"]["loyalty_tier"]
+          days_active?: number
+          last_action_at?: string | null
+          metadata?: Json | null
+          points?: number
+          total_spent?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_tier?: Database["public"]["Enums"]["loyalty_tier"]
+          days_active?: number
+          last_action_at?: string | null
+          metadata?: Json | null
+          points?: number
+          total_spent?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_mission_progress: {
         Row: {
           completed_at: string | null
@@ -2404,6 +2596,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vip_configs: {
+        Row: {
+          benefits: Json | null
+          min_conversions: number | null
+          min_loyalty_points: number
+          min_months_active: number | null
+          min_reputation: number | null
+          tier: Database["public"]["Enums"]["vip_tier"]
+          weight_loyalty: number | null
+          weight_referral: number | null
+          weight_reputation: number | null
+        }
+        Insert: {
+          benefits?: Json | null
+          min_conversions?: number | null
+          min_loyalty_points: number
+          min_months_active?: number | null
+          min_reputation?: number | null
+          tier: Database["public"]["Enums"]["vip_tier"]
+          weight_loyalty?: number | null
+          weight_referral?: number | null
+          weight_reputation?: number | null
+        }
+        Update: {
+          benefits?: Json | null
+          min_conversions?: number | null
+          min_loyalty_points?: number
+          min_months_active?: number | null
+          min_reputation?: number | null
+          tier?: Database["public"]["Enums"]["vip_tier"]
+          weight_loyalty?: number | null
+          weight_referral?: number | null
+          weight_reputation?: number | null
         }
         Relationships: []
       }
@@ -2557,6 +2785,15 @@ export type Database = {
         | "cancelled"
         | "revoked"
         | "suspended"
+      loyalty_status: "pending" | "available" | "used" | "expired" | "revoked"
+      loyalty_tier:
+        | "starter"
+        | "member"
+        | "bronze"
+        | "silver"
+        | "gold"
+        | "vip"
+        | "elite"
       plan_status: "published" | "draft" | "hidden" | "sold_out"
       promo_discount_type: "percentage" | "fixed_amount"
       promo_type: "automatic" | "coupon" | "community_goal"
@@ -2583,6 +2820,7 @@ export type Database = {
         | "ouro"
         | "elite"
         | "legend"
+      vip_tier: "none" | "vip" | "gold" | "elite"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2731,6 +2969,16 @@ export const Constants = {
         "revoked",
         "suspended",
       ],
+      loyalty_status: ["pending", "available", "used", "expired", "revoked"],
+      loyalty_tier: [
+        "starter",
+        "member",
+        "bronze",
+        "silver",
+        "gold",
+        "vip",
+        "elite",
+      ],
       plan_status: ["published", "draft", "hidden", "sold_out"],
       promo_discount_type: ["percentage", "fixed_amount"],
       promo_type: ["automatic", "coupon", "community_goal"],
@@ -2760,6 +3008,7 @@ export const Constants = {
         "elite",
         "legend",
       ],
+      vip_tier: ["none", "vip", "gold", "elite"],
     },
   },
 } as const
