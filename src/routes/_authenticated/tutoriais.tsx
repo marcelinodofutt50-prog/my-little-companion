@@ -198,7 +198,7 @@ function TutorialsPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative">
+      <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative" data-testid="training-hub-container">
         <div 
           className="fixed inset-0 z-0 pointer-events-none opacity-50 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
