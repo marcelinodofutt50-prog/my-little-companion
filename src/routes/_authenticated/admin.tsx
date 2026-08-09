@@ -4748,7 +4748,7 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
 // ============ ReferralsAdminPanel ============
 function ReferralsAdminPanel() {
   const listFn = useServerFn(adminListReferrals);
-  const payFn = useServerFn(adminMarkReferralPaid);
+  const updateStatusFn = useServerFn(adminUpdateReferralStatus);
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "paid">("all");
@@ -4767,15 +4767,16 @@ function ReferralsAdminPanel() {
     load(); /* eslint-disable-next-line */
   }, []);
 
-  async function updateStatus(id: string, status: "pending" | "granted" | "paid") {
+  async function updateStatus(id: string, status: "pending" | "granted" | "paid" | "rejected") {
     try {
-      await payFn({ data: { referralId: id, status } });
+      await updateStatusFn({ data: { referralId: id, status } });
       toast.success("Atualizado");
       await load();
     } catch (e: any) {
       toast.error(e.message);
     }
   }
+
 
   const filtered = rows.filter((r) =>
     filter === "all"
