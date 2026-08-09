@@ -116,18 +116,43 @@ function ReferralsPage() {
                     <CardTitle className="text-sm font-mono uppercase tracking-widest">{t('ref.code_label')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 bg-primary/5 border border-primary/20 rounded-lg p-4 font-mono text-2xl font-black tracking-tighter text-center">
-                        {loading ? "..." : data?.code}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 bg-primary/5 border border-primary/20 rounded-lg p-4 font-mono text-2xl font-black tracking-tighter text-center">
+                          {loading ? "..." : data?.code}
+                        </div>
+                        <Button onClick={copyCode} size="lg" className="h-full px-8">
+                          {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                        </Button>
                       </div>
-                      <Button onClick={copyCode} size="lg" className="h-full px-8">
-                        {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                      </Button>
+                      
+                      {data?.code && (
+                        <div className="rounded border border-primary/10 bg-primary/5 p-3 flex flex-col gap-2">
+                          <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-tighter">Seu link de indicação único:</span>
+                          <div className="flex items-center gap-2">
+                            <code className="flex-1 text-[10px] truncate bg-black/40 p-2 rounded border border-white/5 text-primary">
+                              {window.location.origin}/auth?ref={data.code}
+                            </code>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 px-2"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/auth?ref=${data.code}`);
+                                toast.success("Link copiado!");
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground italic mt-2">
                       {t('ref.share_tip')}
                     </p>
                   </CardContent>
+
                 </Card>
 
                 <Card className="bg-black/40 border-primary/10 backdrop-blur-sm">

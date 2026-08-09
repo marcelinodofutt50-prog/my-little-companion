@@ -81,3 +81,19 @@ export const validateReferralCode = createServerFn({ method: "POST" })
     if (!prof || prof.id === context.userId) return { valid: false };
     return { valid: true, referrerName: (prof as any).display_name || "Membro Shadow" };
   });
+
+export const adminMarkReferralPaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) => z.object({ referralId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("./admin-helpers.server");
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("referrals")
+      .update({ reward_status: "paid", paid_at: new Date().toISOString() })
+      .eq("id", data.referralId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
