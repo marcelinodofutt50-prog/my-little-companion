@@ -32,7 +32,7 @@ const getUrlWithBust = (url: string) => {
   return `${url}${sep}v=v26`;
 };
 
-const krakenCore = getUrlWithBust(krakenV26Asset.url || krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenV26Asset.url || KRAKEN_BG_FALLBACK);
 
 const krakenBg5 = getUrlWithBust("https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
