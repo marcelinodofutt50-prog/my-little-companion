@@ -4,6 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "test:e2e": "bun run scripts/e2e-training-hub.ts",
     "dev": "vite dev",
     "validate-assets": "bun run scripts/validate-assets.ts",
     "build": "bun run validate-assets && vite build",
