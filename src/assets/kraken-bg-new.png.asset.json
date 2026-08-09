@@ -7,5 +7,9 @@
   "original_filename": "kraken-bg-new.png",
   "size": 1127031,
   "content_type": "image/png",
-  "created_at": "2026-08-07T00:54:24Z"
+  "created_at": "2026-08-07T00:54:24Z",
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
 }

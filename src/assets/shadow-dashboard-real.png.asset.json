@@ -7,5 +7,9 @@
   "original_filename": "shadow-dashboard-real.png",
   "size": 437903,
   "content_type": "image/png",
-  "created_at": "2026-08-05T04:06:03Z"
+  "created_at": "2026-08-05T04:06:03Z",
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
 }
