@@ -1,4 +1,4 @@
-// Verifique se a imagem correta do Kraken está sendo usada em todas as rotas e componentes relacionados, sem imagens obsoletas aparecendo no fundo.
+// verifique se nao tem erros ou bugs no site, principalmente na hora de publicar os tutotirais, na aba de centro de treinamento, e se esta aparecendo a imagem correta de funda da kraken agora
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
