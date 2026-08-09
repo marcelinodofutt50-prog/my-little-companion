@@ -233,7 +233,7 @@ function ShadowPassPage() {
         </div>
 
         {/* Right Column: Reputation, Staff & Rewards */}
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
           {/* Reputation Score */}
           <section className="space-y-4">
             <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
