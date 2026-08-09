@@ -1,36 +1,80 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/**
+ * Módulo de Auditoria Forense e Reparo Ativo (Shadow Core v5.1)
+ * Este arquivo contém funções táticas para garantir a integridade do banco
+ * e o funcionamento dos sistemas críticos em produção.
+ */
+
+export const getAuditSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    
+    // Tabelas críticas mapeadas para auditoria
+    const tables = ["tutorials", "tutorial_progress", "integration_logs", "plans", "licenses"];
+    const results: Record<string, any> = {};
+
+    for (const table of tables) {
+      // Usamos cast para any para contornar limitações do gerador de tipos
+      const { error, count } = await (supabaseAdmin.from(table as any) as any)
+        .select("*", { count: "exact", head: true });
+      
+      results[table] = { 
+        status: error ? "ERROR" : "OK", 
+        count: count ?? 0,
+        error: error?.message 
+      };
+    }
+
+    return {
+      timestamp: new Date().toISOString(),
+      database: results,
+      environment: process.env.NODE_ENV || "production"
+    };
+  });
 
 export const getAuditLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Apenas staff pode ver logs de auditoria detalhados
-    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    const { data: mod } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "moderator" });
-    
-    if (!admin && !mod) throw new Error("Não autorizado");
+    const { supabase, userId } = context;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("audit_logs")
+    // Busca logs de integração para o usuário atual (RLS aplicado via supabase client)
+    const { data, error } = await (supabase.from("integration_logs" as any) as any)
       .select("*")
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(20);
 
-    if (error || !data || data.length === 0) {
-      // Fallback para mock apenas se a tabela ainda não existir ou estiver vazia
-      return [
-        {
-          id: "1",
-          event: "VALIDATION_CHECK",
-          decision: "APPROVED",
-          reason: "Active license detected.",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-          system: "Shadow Auth Guard"
-        }
-      ];
+    if (error) {
+      console.error("[AuditLogs] Erro ao buscar logs:", error);
+      return [];
     }
-    return data;
+
+    return (data || []).map((log: any) => ({
+      id: log.id,
+      event: log.action || "System Event",
+      decision: log.outcome === "success" ? "SUCCESS" : "FAILED",
+      reason: log.source || "kraken-v2",
+      timestamp: log.created_at
+    }));
+  });
+
+export const triggerEmergencyRepair = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    console.log("[EmergencyRepair] Iniciando atualização forçada de permissões...");
+    
+    try {
+      const { error } = await supabaseAdmin.rpc("force_refresh_schema_permissions" as any);
+      if (error) throw error;
+      
+      return { success: true, message: "Esquema e permissões sincronizados com sucesso." };
+    } catch (err: any) {
+      console.error("[EmergencyRepair] Falha no reparo:", err);
+      return { success: false, error: err.message };
+    }
   });

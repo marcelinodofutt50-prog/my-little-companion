@@ -40,15 +40,20 @@ const shadowLupin = "/assets/shadow-hacker-lupin.jpg?v=v8-400";
 
 
 export const Route = createFileRoute("/planos")({
-  head: () => ({ meta: [
-    { title: "Planos Shadow — Licenças, servidor e código-fonte" },
-    { name: "description", content: "Pagamento oficial via PIX Mercado Pago. Ativação automática em menos de 1 minuto. Cupom BTMOB40 entrega 40% de cashback no primeiro depósito." },
-    { property: "og:title", content: "Planos Shadow — Licenças, servidor e código-fonte" },
-    { property: "og:description", content: "PIX oficial Mercado Pago, ativação automática em menos de 1 minuto e garantia de 7 dias." },
-    { property: "og:type", content: "website" },
-    { property: "og:url", content: siteUrl("/planos") },
-    { name: "twitter:card", content: "summary_large_image" },
-  ], links: [{ rel: "canonical", href: siteUrl("/planos") }] }),
+  head: () => ({ 
+    meta: [
+      { title: "Planos Shadow — Licenças, servidor e código-fonte" },
+      { name: "description", content: "Pagamento oficial via PIX Mercado Pago. Ativação automática em menos de 1 minuto. Shadow 4.6+ com Shadow Signer e Bypass Dropper inclusos." },
+      { property: "og:title", content: "Planos Shadow — Licenças, servidor e código-fonte" },
+      { property: "og:description", content: "PIX oficial Mercado Pago, ativação automática em menos de 1 minuto e garantia de 7 dias." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: siteUrl("/planos") },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://www.shadowdashstore.com/assets/shadow-hero-classic.png" },
+      { property: "og:image", content: "https://www.shadowdashstore.com/assets/shadow-hero-classic.png" },
+    ], 
+    links: [{ rel: "canonical", href: siteUrl("/planos") }] 
+  }),
 
   component: PlansPage,
 });
