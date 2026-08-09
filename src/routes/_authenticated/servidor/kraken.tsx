@@ -91,7 +91,7 @@ function KrakenRouteComponent() {
 
   console.log("[Kraken] Renderizando componente de rota...");
   return (
-    <div className="min-h-screen bg-black overflow-x-hidden theme-transition relative">
+    <div className="min-h-screen bg-background overflow-x-hidden theme-transition relative">
       <div 
         className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black kraken-bg-container"
         style={{ 
