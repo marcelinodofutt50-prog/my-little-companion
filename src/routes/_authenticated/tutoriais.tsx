@@ -101,17 +101,17 @@ function TutorialsPage() {
   const loadData = useCallback(async (forceRepair = false) => {
     setLoading(true);
     try {
-      console.log("[tutorials] Starting tactical load cycle...");
+      console.log("[tutorials] Iniciando ciclo de carregamento resiliente...");
       
-      // Se for reparo manual, disparar o RPC antes da busca
       if (forceRepair) {
+        toast.loading("Sincronizando banco de dados...", { id: "sync-toast" });
         const { supabase } = await import("@/integrations/supabase/client");
         await (supabase as any).rpc("force_refresh_schema_permissions");
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1200));
       }
 
       const [tData, pData] = await Promise.all([
-        listFn({ data: { metadata: { route: typeof window !== 'undefined' ? window.location.pathname : 'server-ssr', force_repair: forceRepair } } }), 
+        listFn({ data: { metadata: { route: window.location.pathname, force_repair: forceRepair } } }), 
         getProgressFn()
       ]);
       
@@ -120,49 +120,18 @@ function TutorialsPage() {
       setCompletedIds(pData || []);
       
       if (forceRepair) {
-        toast.success("Módulos sincronizados com sucesso!");
+        toast.success("Módulos sincronizados com o Shadow Core!", { id: "sync-toast" });
         addSyncLog('success', 'manual', 'Sincronização forçada concluída');
       } else if (validTutorials.length > 0) {
-        addSyncLog('success', 'auto', 'Carregamento inicial bem-sucedido');
-      } else {
-        console.warn("[tutorials] Carregamento retornou 0 itens.");
-        addSyncLog('error', 'auto', 'Nenhum tutorial encontrado (Banco vazio ou falha de acesso)');
+        addSyncLog('success', 'auto', 'Carregamento tático concluído');
       }
     } catch (err: any) {
-      console.error("[tutorials] Data load failure:", err);
+      console.error("[tutorials] Falha no carregamento:", err);
+      addSyncLog('error', 'auto', `Erro de sincronização: ${err.message || 'Falha de rede'}`);
       
-      const isSchemaError = err._schemaError || 
-                           err.message?.includes("schema cache") || 
-                           err.message?.includes("does not exist") ||
-                           err.message?.includes("relation") ||
-                           err.code === 'PGRST108';
-                            
-      if (isSchemaError) {
-        addSyncLog('error', 'auto', `Schema sync instability (PGRST108) on ${window.location.pathname}. Triggering background repair...`);
-        
-        // Reparo silencioso em segundo plano
-        (async () => {
-          try {
-            const { supabase } = await import("@/integrations/supabase/client");
-            if (supabase && typeof (supabase as any).rpc === 'function') {
-              await (supabase as any).rpc("force_refresh_schema_permissions");
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const [retryTData, retryPData] = await Promise.all([listFn(), getProgressFn()]);
-            if (retryTData) {
-              setTutorials(retryTData);
-              setCompletedIds(retryPData || []);
-              addSyncLog('success', 'auto', 'Recuperado via reparo silencioso (Admin Tunnel)');
-            } else {
-              addSyncLog('error', 'auto', 'Falha na recuperação automática: Nenhum dado via Admin.');
-            }
-          } catch (repairErr: any) {
-             console.error("[tutorials] Background repair failure:", repairErr);
-             addSyncLog('error', 'auto', `Erro no túnel: ${repairErr.message || 'Falha de rede'}`);
-          }
-        })();
+      // Se falhar mesmo com o bypass, tentamos uma última vez silenciosamente
+      if (!forceRepair) {
+        setTimeout(() => loadData(true), 2000);
       }
     } finally {
       setLoading(false);

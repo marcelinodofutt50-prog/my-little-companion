@@ -65,48 +65,46 @@ export const listTutorials = createServerFn({ method: "GET" })
     const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
       console.log(`[tutorials] Busca tática de módulos (Tentativa ${attempt})...`);
       
-      // Tentativa inicial via Admin (Data Tunnel) para bypass de cache PostgREST
-      const { data, error } = await supabaseAdmin
+      // 1. Tentar busca padrão via cliente do usuário (RLS)
+      const { data: userData, error: userError } = await context.supabase
+        .from("tutorials")
+        .select("*")
+        .order("display_order", { ascending: true });
+
+      if (!userError && userData && userData.length > 0) {
+        return userData.filter(item => item && item.id && item.title);
+      }
+
+      // 2. Se falhar ou vier vazio, usar o Admin Tunnel (Bypass de Cache/RLS)
+      const { data: adminData, error: adminError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
         .order("display_order", { ascending: true });
           
-      if (error) {
-        const isPGRST = error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01';
+      if (adminError) {
+        const isPGRST = adminError.code === 'PGRST108' || adminError.message?.includes('schema cache') || adminError.code === '42P01';
         
         if (isPGRST && attempt <= 3) {
-          console.warn(`[tutorials] Instabilidade de schema detectada (Tentativa ${attempt}). Iniciando backoff...`);
-          await trackSchemaFailure(error, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
+          console.warn(`[tutorials] Instabilidade crítica de schema (Tentativa ${attempt}).`);
+          await trackSchemaFailure(adminError, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
           
-          // Backoff exponencial: 800ms, 1600ms, 3200ms
           const delay = 800 * Math.pow(2, attempt - 1);
           
-          // Força reparo de schema antes da próxima tentativa
           try {
             await supabaseAdmin.rpc("force_refresh_schema_permissions");
           } catch (rpcErr) {
-            console.error("[tutorials] Falha ao disparar force_refresh:", rpcErr);
+            console.error("[tutorials] RPC Repair Failed:", rpcErr);
           }
           
           await new Promise(resolve => setTimeout(resolve, delay));
           return fetchWithRetry(attempt + 1);
         }
         
-        console.error(`[tutorials] FALHA CRÍTICA após retentativas:`, error);
-        // Telemetria final de falha total
-        await trackSchemaFailure(error, "listTutorials_FINAL_FAILURE", false, { 
-          total_attempts: attempt,
-          metadata 
-        }, context.userId);
+        console.error(`[tutorials] FALHA CRÍTICA:`, adminError);
         return [];
       }
 
-      if (attempt > 1 || (data && data.length > 0)) {
-        await trackSchemaFailure({ message: attempt > 1 ? "Recovered via backoff" : "Successful fetch" }, "listTutorials", true, { stage: `retry_${attempt}_success`, ...metadata, row_count: data?.length }, context.userId);
-      }
-      
-      // Validar dados recebidos (evitar itens nulos por corrupção parcial)
-      return (data || []).filter(item => item && item.id && item.title);
+      return (adminData || []).filter(item => item && item.id && item.title);
     };
 
     return fetchWithRetry();
