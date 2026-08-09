@@ -542,6 +542,7 @@ export type Database = {
           response_body: string | null
           source: string
           url: string | null
+          user_id: string | null
         }
         Insert: {
           action?: string | null
@@ -558,6 +559,7 @@ export type Database = {
           response_body?: string | null
           source: string
           url?: string | null
+          user_id?: string | null
         }
         Update: {
           action?: string | null
@@ -574,6 +576,7 @@ export type Database = {
           response_body?: string | null
           source?: string
           url?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
