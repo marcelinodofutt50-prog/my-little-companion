@@ -19,9 +19,10 @@ import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 
 
 export const Route = createFileRoute("/_authenticated/tutoriais")({
-  head: () => ({ title: "Shadow Knowledge Base — Centro de Treinamento" }),
+  head: () => ({ meta: [{ title: "Shadow Knowledge Base — Centro de Treinamento" }] }),
   component: TutorialsPage,
 });
+
 
 
 function TutorialsPage() {
