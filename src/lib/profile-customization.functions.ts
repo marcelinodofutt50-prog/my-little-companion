@@ -33,6 +33,13 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
       .update(updates)
       .eq("id", userId);
 
-    if (error) throw error;
+    if (error) {
+      if (error.message.includes("metadata")) {
+        // Tentativa de reparo silencioso em caso de stale cache bridge
+        await supabase.rpc("force_refresh_schema_permissions");
+      }
+      throw error;
+    }
+
     return { success: true };
   });

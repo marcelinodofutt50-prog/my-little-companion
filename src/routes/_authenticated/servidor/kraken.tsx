@@ -2,7 +2,9 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles, ArrowLeft } from "lucide-react"
 import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
+
 import { useState, useEffect, useRef } from "react"
+
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -59,11 +61,12 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Incrementado para v20 para forçar invalidação na Vercel
-  return `${url}${sep}v=v21`;
+  // Incrementado para v22 para forçar invalidação tática na Vercel
+  return `${url}${sep}v=v22`;
 };
 
-const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
+
 const krakenBg5 = getUrlWithBust(krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
 

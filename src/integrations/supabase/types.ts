@@ -2381,20 +2381,26 @@ export type Database = {
       }
       tutorial_progress: {
         Row: {
-          completed_at: string | null
+          completed: boolean | null
           id: string
+          last_watched_at: string | null
+          metadata: Json | null
           tutorial_id: string
           user_id: string
         }
         Insert: {
-          completed_at?: string | null
+          completed?: boolean | null
           id?: string
+          last_watched_at?: string | null
+          metadata?: Json | null
           tutorial_id: string
           user_id: string
         }
         Update: {
-          completed_at?: string | null
+          completed?: boolean | null
           id?: string
+          last_watched_at?: string | null
+          metadata?: Json | null
           tutorial_id?: string
           user_id?: string
         }
