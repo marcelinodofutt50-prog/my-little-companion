@@ -4810,17 +4810,18 @@ function ReferralsAdminPanel() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        {(["all", "pending", "paid"] as const).map((f) => (
+        {(["all", "pending", "paid", "rejected"] as const).map((f) => (
           <Button
             key={f}
             size="sm"
             variant={filter === f ? "default" : "outline"}
-            onClick={() => setFilter(f)}
+            onClick={() => setFilter(f as any)}
             className="font-mono text-[10px] uppercase"
           >
-            {f === "all" ? "Todos" : f === "pending" ? "Pendentes" : "Pagos"}
+            {f === "all" ? "Todos" : f === "pending" ? "Pendentes" : f === "paid" ? "Pagos" : "Recusados"}
           </Button>
         ))}
+
         <Button
           size="sm"
           variant="ghost"
@@ -4890,27 +4891,39 @@ function ReferralsAdminPanel() {
                       {r.reward_status}
                     </td>
                     <td className="p-3">
-                      {r.reward_type === "pix" && r.reward_status === "pending" ? (
-                        <Button
-                          size="sm"
-                          onClick={() => updateStatus(r.id, "paid")}
-                          className="font-mono text-[10px] uppercase"
-                        >
-                          <Check className="mr-1 h-3 w-3" /> Pago
-                        </Button>
-                      ) : r.reward_status !== "pending" ? (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => updateStatus(r.id, "pending")}
-                          className="font-mono text-[10px] uppercase"
-                        >
-                          Reabrir
-                        </Button>
-                      ) : (
-                        <span className="font-mono text-[10px] text-muted-foreground">—</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {r.reward_status === "pending" && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => updateStatus(r.id, "paid")}
+                              className="bg-emerald-600 hover:bg-emerald-500 font-mono text-[10px] uppercase"
+                            >
+                              <Check className="mr-1 h-3 w-3" /> Pagar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => updateStatus(r.id, "rejected")}
+                              className="text-red-400 hover:text-red-300 font-mono text-[10px] uppercase"
+                            >
+                              <Ban className="mr-1 h-3 w-3" /> Recusar
+                            </Button>
+                          </>
+                        )}
+                        {r.reward_status !== "pending" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => updateStatus(r.id, "pending")}
+                            className="font-mono text-[10px] uppercase"
+                          >
+                            Reabrir
+                          </Button>
+                        )}
+                      </div>
                     </td>
+
                   </tr>
                 ))}
               </tbody>

@@ -210,9 +210,16 @@ function ReferralsPage() {
                               <tr key={r.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
                                 <td className="py-3 text-foreground font-medium">{r.referred_label}</td>
                                 <td className="py-3 text-center">
-                                  <span className={`px-2 py-0.5 rounded ${r.reward_status === 'pending' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                                    {r.reward_status}
+                                  <span className={`px-2 py-0.5 rounded ${
+                                    r.reward_status === 'pending' ? 'bg-amber-500/10 text-amber-500' : 
+                                    r.reward_status === 'rejected' ? 'bg-red-500/10 text-red-500' :
+                                    'bg-emerald-500/10 text-emerald-500'
+                                  }`}>
+                                    {r.reward_status === 'pending' ? 'Pendente' : 
+                                     r.reward_status === 'rejected' ? 'Recusado' : 
+                                     r.reward_status === 'paid' ? 'Pago' : 'Liberado'}
                                   </span>
+
                                 </td>
                                 <td className="py-3 text-right font-bold text-primary">{formatBrl(r.reward_amount)}</td>
                               </tr>
