@@ -146,7 +146,7 @@ export const activateTrialReward = createServerFn({ method: "POST" })
     // Note: generateTrial usually handles 24h, but we can override or handle it here
     // For now, let's use the standard one but mark it as welcome trial
     try {
-      const trial = await generateTrial({ data: {}, context });
+      const trial = await generateTrial({ data: undefined, context });
       
       // Marca como resgatado
       await supabaseAdmin
