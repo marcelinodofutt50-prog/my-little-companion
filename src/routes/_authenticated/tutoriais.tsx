@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { getTutorials } from "@/lib/tutorial-loader.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
-import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
+import trainingBgAsset from "@/assets/kraken_v26_final.png.asset.json";
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 
@@ -207,7 +207,7 @@ function TutorialsPage() {
         <div 
           className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
-            backgroundImage: `url(${trainingBgAsset.url}?v=v25)`,
+            backgroundImage: `url(${trainingBgAsset.url}?v=v26)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'brightness(0.6) contrast(1.2)'
