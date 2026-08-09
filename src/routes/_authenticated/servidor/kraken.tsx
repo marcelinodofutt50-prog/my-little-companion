@@ -46,9 +46,10 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Usamos um timestamp de build ou similar se disponível, caso contrário a hora atual
-  // para garantir que o cache seja invalidado em cada carregamento de página
-  return `${url}${sep}v=${new Date().getTime()}`;
+  // Em produção, queremos cache determinístico. Usamos o timestamp do momento do build
+  // (ou um valor fixo por sessão) para evitar downloads repetidos em navegação SPA,
+  // mas ainda garantir cache-busting entre deploys.
+  return `${url}${sep}v=v12-production-stable`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
