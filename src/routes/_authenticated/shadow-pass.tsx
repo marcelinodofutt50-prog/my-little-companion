@@ -10,9 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { getShadowPassData } from '@/lib/shadow-core.functions';
 import { updateProfileCustomization } from '@/lib/profile-customization.functions';
+import { getCommunityMessages, sendCommunityMessage } from '@/lib/community.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,27 @@ function ShadowPassPage() {
   const { data } = useSuspenseQuery({
     queryKey: ['shadow-pass-data'],
     queryFn: () => getShadowPassData(),
+  });
+
+  const [messageText, setMessageText] = useState("");
+  const fetchMessages = useServerFn(getCommunityMessages);
+  const sendMsgFn = useServerFn(sendCommunityMessage);
+
+  const { data: messagesData } = useQuery({
+    queryKey: ['community-messages'],
+    queryFn: () => fetchMessages({}),
+    refetchInterval: 5000,
+  });
+
+  const messages = messagesData || [];
+
+  const sendMessageMutation = useMutation({
+    mutationFn: (vars: { content: string }) => sendMsgFn({ data: vars }),
+    onSuccess: () => {
+      setMessageText("");
+      queryClient.invalidateQueries({ queryKey: ['community-messages'] });
+    },
+    onError: (e: any) => toast.error("Falha ao enviar: " + e.message)
   });
 
   const updateProfileFn = useServerFn(updateProfileCustomization);
@@ -294,6 +316,78 @@ function ShadowPassPage() {
                     </>
                   );
                 })()}
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Mini Comunidade Anônima */}
+          <section className="space-y-4">
+            <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" /> Shadow Nexus (Alpha)
+            </h2>
+            <Card className="border-primary/10 bg-card/50 overflow-hidden">
+              <CardContent className="p-0 flex flex-col h-[400px]">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                  <AnimatePresence initial={false}>
+                    {messages.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 space-y-2">
+                        <Ghost className="h-8 w-8" />
+                        <p className="text-[10px] font-mono uppercase tracking-widest">Silêncio no vácuo...</p>
+                      </div>
+                    ) : (
+                      messages.map((msg: any) => (
+                        <motion.div 
+                          key={msg.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex flex-col space-y-1"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-tighter">
+                              {msg.profiles?.metadata?.is_anonymous ? "Agente Anônimo" : msg.profiles?.display_name || "Membro"}
+                            </span>
+                            <span className="text-[8px] text-muted-foreground font-mono">
+                              {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ptBR })}
+                            </span>
+                          </div>
+                          <div className="bg-primary/5 border border-primary/10 rounded-2xl rounded-tl-none px-3 py-2 text-xs leading-relaxed max-w-[90%] break-words">
+                            {msg.content}
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </AnimatePresence>
+                </div>
+                
+                <div className="p-4 border-t border-primary/10 bg-black/20">
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (messageText.trim()) {
+                        sendMessageMutation.mutate({ content: messageText });
+                      }
+                    }}
+                    className="flex gap-2"
+                  >
+                    <Input 
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      placeholder="Transmissão criptografada..."
+                      className="h-9 text-xs bg-background/50 border-primary/20 focus:border-primary/40"
+                      disabled={sendMessageMutation.isPending}
+                    />
+                    <Button 
+                      size="icon" 
+                      className="h-9 w-9 shrink-0" 
+                      disabled={sendMessageMutation.isPending || !messageText.trim()}
+                    >
+                      {sendMessageMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
+                  </form>
+                  <p className="mt-2 text-[8px] font-mono uppercase text-muted-foreground/60 text-center tracking-widest">
+                    O anonimato é garantido pelo protocolo Shadow Core
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </section>
