@@ -432,7 +432,7 @@ export function AdminTutorialsPanel() {
             </div>
 
             {(current.video_url || current.youtube_url || current.image_url) && (
-              <div className="grid gap-4 md:grid-cols-2 mt-4 p-4 rounded-lg bg-black/20 border border-primary/10 animate-in zoom-in-95 duration-300">
+              <div className="grid gap-4 md:grid-cols-2 mt-4 p-4 rounded-lg bg-muted/30 border border-primary/10 animate-in zoom-in-95 duration-300">
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Preview da Mídia</label>
                   <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center group">
