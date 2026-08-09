@@ -70,6 +70,12 @@ export const listTutorials = createServerFn({ method: "GET" })
       
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
+      // Invalidação de cache manual se for um reparo forçado
+      if (input?.metadata?.force_repair) {
+        await supabaseAdmin.rpc("force_refresh_schema_permissions");
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       const { data: clientData, error: clientError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
@@ -80,7 +86,6 @@ export const listTutorials = createServerFn({ method: "GET" })
         const isPGRST = clientError.code === 'PGRST108' || clientError.message?.includes('schema cache') || clientError.code === '42P01';
         
         if (isPGRST && attempt <= 3) {
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           return fetchWithRetry(attempt + 1);
