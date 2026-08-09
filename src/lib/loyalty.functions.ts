@@ -82,6 +82,18 @@ export const claimMissionReward = createServerFn({ method: "POST" })
       return { ok: false, message: "Missão já concluída anteriormente." };
     }
 
+    // Adicionando proteção contra spam e limites semanais táticos
+    const { data: recent } = await (supabase
+      .from("loyalty_history" as any)
+      .select("id")
+      .eq("user_id", userId)
+      .eq("reference_id", data.missionId)
+      .gt("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) as any);
+
+    if ((recent?.length || 0) >= 3) {
+      return { ok: false, message: "Limite semanal atingido para esta missão." };
+    }
+
     const { data: res, error } = await (supabase.rpc as any)('complete_loyalty_mission', {
       _mission_id: data.missionId
     });
