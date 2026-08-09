@@ -19,41 +19,14 @@ import krakenV26Asset from "@/assets/kraken_v26_final.png.asset.json";
 import krakenNewBgAsset from "@/assets/kraken_new_bg.png.asset.json";
 import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
 import krakenBg18Asset from "@/assets/krakenbackground-18.jpg.asset.json";
-import krakenBg17Asset from "@/assets/krakenbackground-17.jpg.asset.json";
-import krakenBg16Asset from "@/assets/krakenbackground-16.jpg.asset.json";
-import krakenBg15Asset from "@/assets/krakenbackground-15.jpg.asset.json";
-import krakenBg14Asset from "@/assets/krakenbackground-14.jpg.asset.json";
-import krakenBg13Asset from "@/assets/krakenbackground-13.jpg.asset.json";
-import krakenBg12Asset from "@/assets/krakenbackground-12.jpg.asset.json";
-import krakenBg11Asset from "@/assets/krakenbackground-11.jpg.asset.json";
-import krakenBg10Asset from "@/assets/krakenbackground-10.jpg.asset.json";
-import krakenBg8Asset from "@/assets/krakenbackground-8.jpg.asset.json";
-import krakenBg7Asset from "@/assets/krakenbackground-7.jpg.asset.json";
-import krakenBg6Asset from "@/assets/krakenbackground-6.jpg.asset.json";
-import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
-import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem tática central da Kraken 2.0
-// Cadeia de candidatos validada em runtime.
-// v20: Corrigindo a ordem para garantir que a imagem oficial (v18) seja a prioritária.
+// v27: Priorizando kraken_v26_final.png como fundo oficial e limpando candidatos obsoletos.
 const KRAKEN_BG_CANDIDATES: string[] = [
-  krakenV26Asset.url, // Imagem enviada v26 - Prioridade Máxima
+  krakenV26Asset.url, 
   krakenNewBgAsset.url, 
   krakenBg9Asset.url,
   krakenBg18Asset.url,
-  krakenBg17Asset.url,
-  krakenBg16Asset.url,
-  krakenBg15Asset.url,
-  krakenBg14Asset.url,
-  krakenBg13Asset.url,
-  krakenBg12Asset.url,
-  krakenBg11Asset.url,
-  krakenBg10Asset.url,
-  krakenBg8Asset.url,
-  krakenBg7Asset.url,
-  krakenBg6Asset.url,
-  krakenBg4Asset.url,
-  "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png",
   "/assets/shadow-hero-classic.png",
 ].filter(Boolean) as string[];
 
@@ -68,7 +41,7 @@ const getUrlWithBust = (url: string) => {
 
 const krakenCore = getUrlWithBust(krakenV26Asset.url || krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
 
-const krakenBg5 = getUrlWithBust(krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
+const krakenBg5 = getUrlWithBust("https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
 
 
