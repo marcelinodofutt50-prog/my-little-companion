@@ -75,7 +75,7 @@ function ShadowPassPage() {
   const { identity, loyalty, community, vip, reputation, staff } = data as any;
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(identity.nickname);
-  const [isAnonymous, setIsAnonymous] = useState(!!identity.isAnonymous);
+  const [isAnonymous, setIsAnonymous] = useState(!!(identity.isAnonymous || identity.metadata?.is_anonymous));
 
   const handleSave = () => {
     mutation.mutate({ nickname: editName, is_anonymous: isAnonymous });

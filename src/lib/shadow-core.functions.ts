@@ -76,6 +76,7 @@ export const getShadowPassData = createServerFn({ method: "GET" })
         nickname: profileData.display_name || profileData.full_name || profileData.email?.split('@')[0],
         avatar: (profileData.metadata as any)?.avatar_url || null,
         joinedAt: profileData.created_at || new Date().toISOString(),
+        metadata: profileData.metadata,
         status: 'active'
       },
       loyalty: {
