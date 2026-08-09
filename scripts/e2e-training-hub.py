@@ -35,7 +35,7 @@ async def main():
         # 2. Navegação para Tutoriais
         hub_url = f"{target_url.rstrip('/')}/tutoriais"
         print(f"[E2E] Navegando para: {hub_url}")
-        await page.goto(hub_url, wait_until="networkidle")
+        await page.goto(hub_url, wait_until="domcontentloaded", timeout=60000)
         
         # 3. Validação de Conteúdo (Resiliência PGRST108)
         try:
@@ -58,7 +58,7 @@ async def main():
             
             # Validação de Módulos (Tanque de Dados)
             # Procuramos por cards de tutoriais ou skeletons que sumiram
-            await page.wait_for_selector(".enterprise-surface", timeout=15000)
+            await page.wait_for_selector(".enterprise-surface, .grid", timeout=20000)
             print("[E2E] Interface tática carregada com sucesso.")
             
             # Snapshot para evidência

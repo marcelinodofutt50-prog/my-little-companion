@@ -8,54 +8,54 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Mudança Crítica: Usamos supabaseAdmin para leitura do progresso para evitar PGRST108
-    const { data, error } = await supabaseAdmin
-      .from("tutorial_progress")
-      .select("tutorial_id")
-      .eq("user_id", userId);
+    const fetchWithRetry = async (attempt = 1): Promise<string[]> => {
+      console.log(`[tutorial_progress] Admin Tunnel Access (Attempt ${attempt})...`);
+      
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    if (error) {
-      console.error("[tutorial_progress] Fetch FAILED:", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
-      
-      const isSchemaError = error.message?.includes("schema cache") || 
-                           error.message?.includes("does not exist") ||
-                           error.code === 'PGRST108' ||
-                           error.code === '42P01';
-      
-      if (isSchemaError) {
-        console.warn("[tutorial_progress] Schema cache issue detected. Attempting recovery...");
+      // Stage 0: If it's a retry, try to force a schema refresh first
+      if (attempt > 1) {
         try {
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          // Forçamos o toque na tabela via admin client
-          await supabaseAdmin.from("tutorial_progress").select("id").limit(1);
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          await new Promise(r => setTimeout(r, 800));
-          
-          const { data: retryData, error: retryError } = await supabaseAdmin
-            .from("tutorial_progress")
-            .select("tutorial_id")
-            .eq("user_id", userId);
-            
-          if (!retryError) {
-            console.log("[tutorial_progress] Recovery SUCCESSFUL");
-            return (retryData ?? []).map((p: any) => p.tutorial_id);
-          }
+          // Tactical wait for cache propagation
+          await new Promise(r => setTimeout(r, 800 * attempt));
         } catch (e) {
-          console.error("[tutorial_progress] Recovery routine failed:", e);
+          console.warn("[tutorial_progress] Refresh RPC failed during retry:", e);
+        }
+      }
+
+      const { data, error } = await supabaseAdmin
+        .from("tutorial_progress")
+        .select("tutorial_id")
+        .eq("user_id", userId);
+
+      if (error) {
+        console.error(`[tutorial_progress] Admin Tunnel Error (Attempt ${attempt}):`, error);
+        
+        const isSchemaError = error.code === 'PGRST108' || 
+                             error.message?.includes("schema cache") || 
+                             error.message?.includes("does not exist") ||
+                             error.code === '42P01';
+        
+        if (isSchemaError && attempt <= 3) {
+          return fetchWithRetry(attempt + 1);
         }
         
-        const wrapped = new Error(`Erro de Sincronização (Progresso): ${error.message}`);
-        (wrapped as any)._schemaError = "public.tutorial_progress";
-        throw wrapped;
+        // Final failure handling
+        if (isSchemaError) {
+          const wrapped = new Error(`Falha de Sincronização Crítica: ${error.message}`);
+          (wrapped as any)._schemaError = "public.tutorial_progress";
+          throw wrapped;
+        }
+        throw new Error(`Erro de Banco: ${error.message}`);
       }
-      throw new Error(`Erro no Progresso: ${error.message}`);
-    }
-    return (data ?? []).map((p: any) => p.tutorial_id);
+      
+      const results = (data ?? []).map((p: any) => p.tutorial_id);
+      console.log(`[tutorial_progress] Admin Tunnel SUCCESS: ${results.length} items.`);
+      return results;
+    };
+
+    return await fetchWithRetry();
   });
 
 export const toggleTutorialStatus = createServerFn({ method: "POST" })
