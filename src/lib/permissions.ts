@@ -88,6 +88,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   updates: "view.updates",
   tutorials: "tutorials.manage",
   selftest: "system.selftest",
+  trial_monitor: "view.system",
 };
 
 /** Linhas exibidas na matriz visual (Equipe → Matriz de permissões). */
