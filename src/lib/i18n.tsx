@@ -30,6 +30,8 @@ const DICT: Dict = {
   // ===== Dashboard =====
   "dash.client_panel": { pt: "Painel do cliente", en: "Customer Dashboard" },
   "dash.access_level": { pt: "Nível de Acesso", en: "Access Level" },
+  "nav.loyalty": { pt: "Fidelidade", en: "Loyalty" },
+
   "dash.license_days": { pt: "dias de licença", en: "license days" },
   "dash.expires_today": { pt: "expira hoje", en: "expires today" },
   "dash.offline": { pt: "acesso offline", en: "offline access" },
