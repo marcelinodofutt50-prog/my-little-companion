@@ -37,8 +37,8 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime.
 // v20: Corrigindo a ordem para garantir que a imagem oficial (v18) seja a prioritária.
 const KRAKEN_BG_CANDIDATES: string[] = [
-  krakenBg9Asset.url, // Oficial conforme solicitado
-  krakenNewBgAsset.url,
+  krakenNewBgAsset.url, // Nova imagem enviada pelo usuário como prioridade
+  krakenBg9Asset.url, // Oficial anterior
   krakenBg18Asset.url,
   krakenBg17Asset.url,
   krakenBg16Asset.url,
@@ -65,7 +65,7 @@ const getUrlWithBust = (url: string) => {
   return `${url}${sep}v=v22`;
 };
 
-const krakenCore = getUrlWithBust(krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
 
 const krakenBg5 = getUrlWithBust(krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
