@@ -82,30 +82,75 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
       { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
     ],
   }),
-  component: () => {
-    console.log("[Kraken] Renderizando componente de rota...");
-    return (
-      <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
+  component: KrakenRouteComponent,
+});
+
+function KrakenRouteComponent() {
+  const [resolvedBg, setResolvedBg] = useState<string>(krakenCore);
+  const [bgLoaded, setBgLoaded] = useState({ core: false, bg5: false });
+
+  console.log("[Kraken] Renderizando componente de rota...");
+  return (
+    <div className="min-h-screen bg-black overflow-x-hidden theme-transition relative">
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black kraken-bg-container"
+        style={{ 
+          backgroundImage: `url('${resolvedBg}')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
+          backgroundColor: 'black'
+        }}
+      >
+          {/* Tactical Background Overlay - Base safety layer */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100 z-[-2] block" />
+          
+          {/* Skeleton Placeholder */}
+          <div
+            aria-hidden="true"
+            className={cn(
+              "absolute inset-0 transition-opacity duration-700",
+              bgLoaded.core ? "opacity-0" : "opacity-100"
+            )}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950/60 to-black" />
+            <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,rgba(59,130,246,0.14)_50%,transparent_65%)] bg-[length:200%_100%] animate-[shimmer_2.2s_linear_infinite]" />
+          </div>
+
+          {/* Tactical Overlays */}
+          <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay pointer-events-none z-[1]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.1)_0%,_transparent_80%)] pointer-events-none z-[2]" />
+          <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.4)] pointer-events-none z-[3]" />
+        </div>
+        
         <ErrorBoundary name="KrakenPage">
-          <KrakenPage />
+          <KrakenPage 
+            resolvedBg={resolvedBg} 
+            setResolvedBg={setResolvedBg}
+            bgLoaded={bgLoaded}
+            setBgLoaded={setBgLoaded}
+          />
         </ErrorBoundary>
       </div>
     );
-  },
-})
+}
 
+interface KrakenPageProps {
+  resolvedBg: string;
+  setResolvedBg: (url: string) => void;
+  bgLoaded: { core: boolean; bg5: boolean };
+  setBgLoaded: (val: any) => void;
+}
 
-function KrakenPage() {
+function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: KrakenPageProps) {
   const [logs, setLogs] = useState<string[]>([]);
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Mantém ativo por padrão para incentivar o clique do usuário
-  const [intensity, setIntensity] = useState(0.4); 
+  const [isMuted, setIsMuted] = useState(false);
   const [audioDelay, setAudioDelay] = useState(0);
   const [bgLoadError, setBgLoadError] = useState(false);
-  const [bgLoaded, setBgLoaded] = useState({ core: false, bg5: false });
-  const [resolvedBg, setResolvedBg] = useState<string>(krakenCore);
 
 
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -157,7 +202,7 @@ function KrakenPage() {
         if (cancelled) return;
         if (ok) {
           setResolvedBg(getUrlWithBust(candidate));
-          setBgLoaded((prev) => ({ ...prev, core: true }));
+          setBgLoaded((prev: any) => ({ ...prev, core: true }));
           setBgLoadError(false);
           console.log(`[Kraken] Fundo resolvido: ${candidate}`);
           return;
@@ -166,14 +211,14 @@ function KrakenPage() {
       // Nenhum candidato válido: mantém o gradiente tático como fundo definitivo
       console.error("[Kraken] Nenhum asset de fundo válido. Usando fallback CSS.");
       setBgLoadError(true);
-      setBgLoaded((prev) => ({ ...prev, core: false }));
+      setBgLoaded((prev: any) => ({ ...prev, core: false }));
       
       // Fallback manual se a validação falhar: tenta forçar o primeiro candidato sem validação de proporção
       if (KRAKEN_BG_CANDIDATES.length > 0) {
         console.warn("[Kraken] Tentando carregamento de emergência sem validação estrita...");
         const emergencyUrl = getUrlWithBust(KRAKEN_BG_CANDIDATES[0]);
         setResolvedBg(emergencyUrl);
-        setBgLoaded((prev) => ({ ...prev, core: true }));
+        setBgLoaded((prev: any) => ({ ...prev, core: true }));
         // Força o carregamento no DOM
         const preloader = new Image();
         preloader.src = emergencyUrl;
@@ -184,8 +229,8 @@ function KrakenPage() {
 
     // Camada de névoa (não crítica)
     const mist = new Image();
-    mist.onload = () => setBgLoaded((prev) => ({ ...prev, bg5: true }));
-    mist.onerror = () => setBgLoaded((prev) => ({ ...prev, bg5: false }));
+    mist.onload = () => setBgLoaded((prev: any) => ({ ...prev, bg5: true }));
+    mist.onerror = () => setBgLoaded((prev: any) => ({ ...prev, bg5: false }));
     mist.src = krakenBg5;
 
     const timer = setTimeout(() => setShowEffects(true), 500);
@@ -316,64 +361,8 @@ function KrakenPage() {
 
   console.log("[Kraken] Renderizando componente...");
   return (
-    <div id="kraken-viewport-root" className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
-      {/* Tactical Background Overlay - Full Viewport Image */}
-      <div id="kraken-bg-root" className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black kraken-bg-container">
-        {/* Base Fallback Gradient - Always visible as a safety layer */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100 z-[-2] block" />
-
-        {/* Skeleton Placeholder */}
-        <div
-          aria-hidden="true"
-          className={cn(
-            "absolute inset-0 transition-opacity duration-700",
-            bgLoaded.core ? "opacity-0" : "opacity-100"
-          )}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950/60 to-black" />
-          <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,rgba(59,130,246,0.14)_50%,transparent_65%)] bg-[length:200%_100%] animate-[shimmer_2.2s_linear_infinite]" />
-        </div>
-
-        {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
-        <div 
-          className={cn(
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1] kraken-bg-layer",
-            bgLoaded.core ? "opacity-100" : "opacity-0"
-          )}
-          style={{ 
-            backgroundImage: `url('${resolvedBg}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center center',
-            backgroundRepeat: 'no-repeat',
-            filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
-            backgroundColor: 'black'
-          }}
-        />
-
-
-
-        {/* Mist/Particle Overlay Layer */}
-        {krakenBg5 && (
-          <div 
-            className={cn("absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000", bgLoaded.bg5 ? "opacity-30" : "opacity-0")}
-            style={{ 
-              backgroundImage: `url(${krakenBg5})`,
-              filter: 'hue-rotate(180deg) brightness(1.2)' 
-            }}
-          />
-        )}
-        
-        {/* Tactical Overlays */}
-        <div className="absolute inset-0 bg-blue-500/5 mix-blend-overlay pointer-events-none z-[1]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.1)_0%,_transparent_80%)] pointer-events-none z-[2]" />
-        <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(0,0,0,0.4)] pointer-events-none z-[3]" />
-      </div>
-
-
-      {/* AnimatePresence for dynamic background states removed to prioritize direct CSS visibility */}
-
-
-      {/* Lightning and flashing effects removed per user request to stop white screen flashes */}
+    <div id="kraken-viewport-root" className="relative z-10 flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
+      {/* Container background removed from here to be placed at the root level for proper z-index and filling */}
 
 
       {/* Navigation back to Dashboard */}
