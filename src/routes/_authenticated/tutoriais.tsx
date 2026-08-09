@@ -106,9 +106,11 @@ function TutorialsPage() {
       if (forceRepair) {
         toast.loading("Sincronizando banco de dados...", { id: "sync-toast" });
         const { supabase } = await import("@/integrations/supabase/client");
+        // Tentativa de reparo múltiplo para PostgREST cache bridge
         await (supabase as any).rpc("force_refresh_schema_permissions");
-        // Delay estendido para garantir que a Vercel/PostgREST atualize o cache do esquema
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        await (supabase as any).from("tutorial_progress").select("id").limit(1);
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
       const [tData, pData] = await Promise.all([
