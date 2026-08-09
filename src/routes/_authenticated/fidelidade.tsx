@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import { Award, Star, Zap, Clock, Users, Gift, ChevronRight, CheckCircle2, Trophy, Flame, Loader2 } from 'lucide-react';
+import { Award, Star, Zap, Clock, Users, Gift, ChevronRight, CheckCircle2, Trophy, Flame, Loader2, Activity, ShieldAlert, ZapOff, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getLoyaltyDashboard, claimMissionReward } from '@/lib/loyalty.functions';
+import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { getLoyaltyDashboard, claimMissionReward, getSystemStatus } from '@/lib/loyalty.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
