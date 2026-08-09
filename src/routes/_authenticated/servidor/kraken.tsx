@@ -570,9 +570,9 @@ function KrakenPage() {
 
                   <div className="pt-4 border-t border-red-500/10 mt-2 space-y-4">
                     <p className="text-[9px] text-muted-foreground uppercase font-mono">Select Plan:</p>
-                    <div className="flex flex-col sm:flex-row gap-4 w-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                       <Button
-                        className="group relative flex-1 h-20 overflow-hidden rounded-xl border border-neon/30 bg-black/60 hover:bg-neon/10 transition-all duration-500 flex flex-col items-center justify-center"
+                        className="group relative h-20 overflow-hidden rounded-xl border border-neon/30 bg-black/60 hover:bg-neon/10 transition-all duration-500 flex flex-col items-center justify-center"
                         onClick={async () => {
                           try {
                             const r = await checkoutFn({ data: {
@@ -592,7 +592,7 @@ function KrakenPage() {
                       </Button>
 
                       <Button
-                        className="group relative flex-1 h-20 overflow-hidden rounded-xl border border-emerald-500/30 bg-black/60 hover:bg-emerald-500/10 transition-all duration-500 flex flex-col items-center justify-center"
+                        className="group relative h-20 overflow-hidden rounded-xl border border-emerald-500/30 bg-black/60 hover:bg-emerald-500/10 transition-all duration-500 flex flex-col items-center justify-center"
                         onClick={async () => {
                           try {
                             const r = await checkoutFn({ data: {
