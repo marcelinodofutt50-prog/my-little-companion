@@ -327,7 +327,7 @@ export function AdminTutorialsPanel() {
                     onDrop={(e) => onDrop(e, 'video')}
                     className={cn(
                       "relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3 group",
-                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-primary/5 hover:border-primary/40",
+                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-card hover:border-primary/40",
                       current.video_url && "border-emerald-500/40 bg-emerald-500/5"
                     )}
                   >
@@ -367,7 +367,7 @@ export function AdminTutorialsPanel() {
                     value={current.youtube_url} 
                     onChange={(e) => setCurrent({ ...current, youtube_url: e.target.value, video_url: "" })}
                     placeholder="https://youtube.com/watch?v=..."
-                    className="bg-background/50 text-xs font-mono"
+                    className="bg-card text-xs font-mono"
                   />
                 </div>
               </div>
@@ -385,7 +385,7 @@ export function AdminTutorialsPanel() {
                     onDrop={(e) => onDrop(e, 'image')}
                     className={cn(
                       "relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 flex flex-col items-center justify-center gap-3 group",
-                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-primary/5 hover:border-primary/40",
+                      isDraggingOver ? "border-primary bg-primary/5 scale-[0.98]" : "border-primary/20 bg-card hover:border-primary/40",
                       current.image_url && "border-emerald-500/40 bg-emerald-500/5"
                     )}
                   >
