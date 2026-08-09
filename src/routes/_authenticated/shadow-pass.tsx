@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { getShadowPassData } from '@/lib/shadow-core.functions';
 import { updateProfileCustomization } from '@/lib/profile-customization.functions';
-import { getCommunityMessages, sendCommunityMessage } from '@/lib/community.functions';
+import { getCommunityMessages, sendCommunityMessage, getCommunityGoals } from '@/lib/community.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

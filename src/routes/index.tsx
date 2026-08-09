@@ -2,7 +2,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
 import { useEffect, useState } from "react";
-import { useSearch, createFileRoute } from "@tanstack/react-router";
+import { useSearch, createFileRoute, Link } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { toast } from "sonner";
 import { SocialProofStrip } from "@/components/SocialProof";
@@ -12,10 +12,26 @@ import { ProofWall } from "@/components/ProofWall";
 import { ImpossibleProof } from "@/components/ImpossibleProof";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
+import { motion } from "framer-motion";
+import { 
+  Shield, 
+  Zap, 
+  Lock, 
+  Globe, 
+  ShieldCheck, 
+  Server, 
+  Rocket, 
+  ArrowRight, 
+  CheckCircle2, 
+  Store, 
+  Users, 
+  Gift 
+} from "lucide-react";
 // Hardcoded paths to public assets to ensure they load from the repository
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
@@ -369,6 +385,59 @@ function Index() {
 
       <SocialProofStrip />
 
+      {/* Community Goals Section */}
+      <section className="py-20 relative bg-black/60 dark:bg-black/60">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.3em] text-primary mb-4"
+            >
+              <Users className="h-3 w-3" /> Community Evolution
+            </motion.div>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter">Objetivos da <span className="italic text-primary">Comunidade Shadow.</span></h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+              Juntos somos mais fortes. Desbloqueie recompensas globais para todos os membros atingindo marcos de crescimento.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+            {[
+              { target: "2.5k", reward: "Shadow Nexus 2.0", benefit: "Redução de latência global", icon: Zap, progress: 85 },
+              { target: "5k", reward: "VIP Giveaway", benefit: "50 licenças vitalícias", icon: Gift, progress: 42 },
+              { target: "10k", reward: "Satellite Uplink", benefit: "Bypass via satélite", icon: Globe, progress: 12 },
+            ].map((goal, i) => (
+              <motion.div
+                key={goal.target}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <goal.icon className="h-24 w-24 rotate-12" />
+                </div>
+                <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                  <goal.icon className="h-6 w-6" />
+                </div>
+                <div className="flex justify-between items-end mb-2">
+                  <h3 className="text-2xl font-bold font-mono text-foreground">{goal.target}</h3>
+                  <span className="text-[10px] font-mono text-muted-foreground uppercase">Membros</span>
+                </div>
+                <div className="space-y-4">
+                  <Progress value={goal.progress} className="h-2 bg-primary/5 [&>div]:bg-primary" />
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-foreground truncate">{goal.reward}</div>
+                    <div className="text-[10px] text-muted-foreground truncate uppercase tracking-tighter">{goal.benefit}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Feature Grid */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
@@ -397,6 +466,7 @@ function Index() {
           </div>
         </div>
       </section>
+
 
       <div className="container mx-auto px-4 py-20 space-y-32">
         <BeforeAfter />
