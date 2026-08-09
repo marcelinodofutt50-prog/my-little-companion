@@ -577,6 +577,47 @@ export type Database = {
         }
         Relationships: []
       }
+      license_history: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          license_id: string
+          status_from: Database["public"]["Enums"]["license_status"] | null
+          status_to: Database["public"]["Enums"]["license_status"] | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          license_id: string
+          status_from?: Database["public"]["Enums"]["license_status"] | null
+          status_to?: Database["public"]["Enums"]["license_status"] | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          license_id?: string
+          status_from?: Database["public"]["Enums"]["license_status"] | null
+          status_to?: Database["public"]["Enums"]["license_status"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "license_history_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       license_monitoring_logs: {
         Row: {
           created_at: string | null
@@ -622,7 +663,9 @@ export type Database = {
           is_legacy: boolean
           is_trial: boolean
           legacy_server_fee_brl: number | null
+          metadata: Json | null
           order_id: string | null
+          origin_type: string | null
           paid_externally: boolean
           paid_externally_last_check_at: string | null
           paid_externally_last_check_status: string | null
@@ -635,9 +678,11 @@ export type Database = {
           server_ip: string
           server_overdue_at: string | null
           server_paid_until: string | null
+          status: Database["public"]["Enums"]["license_status"] | null
           suspend_password_fingerprint: string | null
           suspended_at: string | null
           suspended_by: string | null
+          trial_duration_hours: number | null
           updated_at: string
           upgraded_from_license_id: string | null
           user_id: string
@@ -655,7 +700,9 @@ export type Database = {
           is_legacy?: boolean
           is_trial?: boolean
           legacy_server_fee_brl?: number | null
+          metadata?: Json | null
           order_id?: string | null
+          origin_type?: string | null
           paid_externally?: boolean
           paid_externally_last_check_at?: string | null
           paid_externally_last_check_status?: string | null
@@ -668,9 +715,11 @@ export type Database = {
           server_ip?: string
           server_overdue_at?: string | null
           server_paid_until?: string | null
+          status?: Database["public"]["Enums"]["license_status"] | null
           suspend_password_fingerprint?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
+          trial_duration_hours?: number | null
           updated_at?: string
           upgraded_from_license_id?: string | null
           user_id: string
@@ -688,7 +737,9 @@ export type Database = {
           is_legacy?: boolean
           is_trial?: boolean
           legacy_server_fee_brl?: number | null
+          metadata?: Json | null
           order_id?: string | null
+          origin_type?: string | null
           paid_externally?: boolean
           paid_externally_last_check_at?: string | null
           paid_externally_last_check_status?: string | null
@@ -701,9 +752,11 @@ export type Database = {
           server_ip?: string
           server_overdue_at?: string | null
           server_paid_until?: string | null
+          status?: Database["public"]["Enums"]["license_status"] | null
           suspend_password_fingerprint?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
+          trial_duration_hours?: number | null
           updated_at?: string
           upgraded_from_license_id?: string | null
           user_id?: string
@@ -1219,6 +1272,130 @@ export type Database = {
           security_ack_at?: string | null
           trust_score?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          created_at: string
+          discount_applied: number
+          id: string
+          order_id: string | null
+          promo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discount_applied: number
+          id?: string
+          order_id?: string | null
+          promo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discount_applied?: number
+          id?: string
+          order_id?: string | null
+          promo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_redemptions_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotions: {
+        Row: {
+          active: boolean
+          banner_url: string | null
+          code: string | null
+          created_at: string
+          description: string | null
+          discount_type: Database["public"]["Enums"]["promo_discount_type"]
+          discount_value: number
+          eligible_plans: string[] | null
+          end_at: string | null
+          goal_current_value: number | null
+          goal_reached_at: string | null
+          goal_target_value: number | null
+          id: string
+          limit_per_user: number | null
+          max_uses: number | null
+          metadata: Json | null
+          name: string
+          priority: number | null
+          promo_type: Database["public"]["Enums"]["promo_type"]
+          start_at: string
+          updated_at: string
+          uses_count: number | null
+        }
+        Insert: {
+          active?: boolean
+          banner_url?: string | null
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          discount_type?: Database["public"]["Enums"]["promo_discount_type"]
+          discount_value: number
+          eligible_plans?: string[] | null
+          end_at?: string | null
+          goal_current_value?: number | null
+          goal_reached_at?: string | null
+          goal_target_value?: number | null
+          id?: string
+          limit_per_user?: number | null
+          max_uses?: number | null
+          metadata?: Json | null
+          name: string
+          priority?: number | null
+          promo_type?: Database["public"]["Enums"]["promo_type"]
+          start_at?: string
+          updated_at?: string
+          uses_count?: number | null
+        }
+        Update: {
+          active?: boolean
+          banner_url?: string | null
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          discount_type?: Database["public"]["Enums"]["promo_discount_type"]
+          discount_value?: number
+          eligible_plans?: string[] | null
+          end_at?: string | null
+          goal_current_value?: number | null
+          goal_reached_at?: string | null
+          goal_target_value?: number | null
+          id?: string
+          limit_per_user?: number | null
+          max_uses?: number | null
+          metadata?: Json | null
+          name?: string
+          priority?: number | null
+          promo_type?: Database["public"]["Enums"]["promo_type"]
+          start_at?: string
+          updated_at?: string
+          uses_count?: number | null
         }
         Relationships: []
       }
@@ -2191,6 +2368,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_license_status: {
+        Args: { _license_id: string }
+        Returns: Database["public"]["Enums"]["license_status"]
+      }
       check_license_consistency: { Args: never; Returns: undefined }
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
       expire_stale_apk_jobs: { Args: never; Returns: number }
@@ -2223,7 +2404,9 @@ export type Database = {
           is_legacy: boolean
           is_trial: boolean
           legacy_server_fee_brl: number | null
+          metadata: Json | null
           order_id: string | null
+          origin_type: string | null
           paid_externally: boolean
           paid_externally_last_check_at: string | null
           paid_externally_last_check_status: string | null
@@ -2236,9 +2419,11 @@ export type Database = {
           server_ip: string
           server_overdue_at: string | null
           server_paid_until: string | null
+          status: Database["public"]["Enums"]["license_status"] | null
           suspend_password_fingerprint: string | null
           suspended_at: string | null
           suspended_by: string | null
+          trial_duration_hours: number | null
           updated_at: string
           upgraded_from_license_id: string | null
           user_id: string
@@ -2276,7 +2461,17 @@ export type Database = {
         | "expired"
         | "cancelled"
       app_role: "admin" | "user" | "moderator"
+      license_status:
+        | "trial"
+        | "active"
+        | "expiring_soon"
+        | "expired"
+        | "cancelled"
+        | "revoked"
+        | "suspended"
       plan_status: "published" | "draft" | "hidden" | "sold_out"
+      promo_discount_type: "percentage" | "fixed_amount"
+      promo_type: "automatic" | "coupon" | "community_goal"
       referral_reward_status:
         | "pending"
         | "confirmed"
@@ -2430,7 +2625,18 @@ export const Constants = {
         "cancelled",
       ],
       app_role: ["admin", "user", "moderator"],
+      license_status: [
+        "trial",
+        "active",
+        "expiring_soon",
+        "expired",
+        "cancelled",
+        "revoked",
+        "suspended",
+      ],
       plan_status: ["published", "draft", "hidden", "sold_out"],
+      promo_discount_type: ["percentage", "fixed_amount"],
+      promo_type: ["automatic", "coupon", "community_goal"],
       referral_reward_status: [
         "pending",
         "confirmed",
