@@ -43,8 +43,16 @@ const KRAKEN_BG_CANDIDATES: string[] = [
 // Fallback final puramente CSS-safe (nunca 404): último item da cadeia
 const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1];
 
-const krakenCore = KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK;
-const krakenBg5 = krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-5.png";
+const getUrlWithBust = (url: string) => {
+  if (!url) return "";
+  const sep = url.includes("?") ? "&" : "?";
+  // Usamos um timestamp de build ou similar se disponível, caso contrário a hora atual
+  // para garantir que o cache seja invalidado em cada carregamento de página
+  return `${url}${sep}v=${new Date().getTime()}`;
+};
+
+const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
+const krakenBg5 = getUrlWithBust(krakenBg5Asset.url || "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
 
 
@@ -133,7 +141,7 @@ function KrakenPage() {
         const ok = await validateCandidate(candidate);
         if (cancelled) return;
         if (ok) {
-          setResolvedBg(candidate);
+          setResolvedBg(candidate + (candidate.includes("?") ? "&" : "?") + "v=" + new Date().getTime());
           setBgLoaded((prev) => ({ ...prev, core: true }));
           setBgLoadError(false);
           return;
