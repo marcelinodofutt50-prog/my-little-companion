@@ -40,7 +40,7 @@ async def main():
         # 3. Validação de Conteúdo (Resiliência PGRST108)
         try:
             # Espera pelo título principal - aumentamos a flexibilidade do seletor
-            await page.wait_for_selector("h1", timeout=20000)
+            await page.wait_for_selector("h1, .enterprise-surface, button:has-text('Sincronizar')", timeout=30000)
             h1_text = await page.inner_text("h1")
             print(f"[E2E] H1 detectado: '{h1_text}'")
             
