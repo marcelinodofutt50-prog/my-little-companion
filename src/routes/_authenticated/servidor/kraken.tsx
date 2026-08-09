@@ -30,6 +30,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Priorizamos os assets locais registrados no código para garantir carregamento na Vercel.
 const KRAKEN_BG_CANDIDATES: string[] = [
   krakenBg14Asset.url,
+  "/assets/krakenbackground-14.jpg",
   krakenBg13Asset.url,
   krakenBg12Asset.url,
   krakenBg10Asset.url,
