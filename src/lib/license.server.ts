@@ -1,0 +1,106 @@
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "@/integrations/supabase/types";
+
+export interface TrialResult {
+  username: string;
+  email: string;
+  password?: string;
+  server_ip?: string | null;
+  expires_at: string | null;
+  expire_date_yaarsa: string;
+  retried: boolean;
+  id?: string;
+}
+
+export async function internalGenerateTrial(
+  supabaseAdmin: SupabaseClient<Database>,
+  userId: string,
+  durationDays: number = 1
+): Promise<TrialResult> {
+  const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, panelFromPlanSlug } = await import("./yaarsa.server");
+  
+  const creds = deriveCredentials(`shadow-trial:v2:${userId}`); // v2 to avoid conflicts with old trial logic if needed, or stick to v1
+
+  // 1) If the trial license row already exists, return it
+  const { data: existingLic } = await supabaseAdmin
+    .from("licenses").select("*")
+    .eq("user_id", userId).eq("is_trial", true).maybeSingle();
+    
+  if (existingLic) {
+    const pwd = (() => { try { return decrypt(existingLic.yaarsa_password_enc); } catch { return "***"; } })();
+    return {
+      username: existingLic.yaarsa_username || "",
+      email: existingLic.yaarsa_email || "",
+      password: pwd,
+      server_ip: existingLic.server_ip,
+      expires_at: existingLic.expires_at,
+      expire_date_yaarsa: expireDateFor("trial"),
+      retried: true,
+      id: existingLic.id
+    };
+  }
+
+  // 1.5) Antifraude evaluation could go here or remain in the calling function
+  // For internal calls, we assume evaluation is done or not needed (e.g., welcome gift)
+
+  // 2) Claim trial
+  const { data: claim, error: claimErr } = await supabaseAdmin.from("trials").insert({ 
+    user_id: userId,
+    license_id: null
+  }).select("*").maybeSingle();
+
+  if (claimErr && !/duplicate key|unique/i.test(claimErr.message)) {
+    throw new Error("Erro ao registrar intenção de teste: " + claimErr.message);
+  }
+
+  // 3) Call Yaarsa
+  const yr = await yaarsaCreateAccount({
+    username: creds.username,
+    email: creds.email,
+    password: creds.password,
+    planSlug: "trial",
+    totalPaid: 0,
+    additionalInfo: "shadow-trial",
+    panel: panelFromPlanSlug("trial"),
+  });
+  
+  const alreadyExists = yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
+  if (yr.Fail && !alreadyExists) {
+    await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
+    throw new Error(`Painel: ${yr.Fail}`);
+  }
+
+  const expiresAt = new Date(); 
+  expiresAt.setDate(expiresAt.getDate() + durationDays);
+  
+  const licPayload: any = {
+    user_id: userId,
+    plan_slug: "trial",
+    yaarsa_username: creds.username,
+    yaarsa_email: creds.email,
+    yaarsa_password_enc: encrypt(creds.password),
+    expires_at: expiresAt.toISOString(),
+    is_trial: true,
+    status: 'trial',
+    origin_type: 'trial',
+    panel: panelFromPlanSlug("trial") || "v455",
+  };
+
+  const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
+  if (licErr || !lic) {
+    throw new Error(licErr?.message || "Falha ao gravar licença");
+  }
+
+  await supabaseAdmin.from("trials").update({ license_id: lic.id }).eq("user_id", userId);
+
+  return {
+    username: creds.username,
+    email: creds.email,
+    password: creds.password,
+    server_ip: lic.server_ip,
+    expires_at: lic.expires_at,
+    expire_date_yaarsa: expireDateFor("trial"),
+    retried: alreadyExists ?? false,
+    id: lic.id
+  };
+}
