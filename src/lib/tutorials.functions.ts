@@ -124,7 +124,20 @@ export const listTutorials = createServerFn({ method: "GET" })
       return results;
     };
 
-    return fetchWithRetry();
+    const finalData = await fetchWithRetry();
+    
+    // Se ainda estiver vazio e não for uma falha de banco (ex: dados deletados ou cache extremo)
+    // tentamos uma busca direta por ID ou um ping simples na tabela via admin
+    if (!finalData || finalData.length === 0) {
+      console.warn("[tutorials] Lista vazia detectada. Executando ping de verificação...");
+      const { data: ping } = await supabaseAdmin.from("tutorials").select("id").limit(1);
+      if (ping && ping.length > 0) {
+        console.log("[tutorials] Dados existem no banco, mas a busca tática falhou. Recarregando...");
+        return fetchWithRetry(1);
+      }
+    }
+    
+    return finalData;
   });
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })

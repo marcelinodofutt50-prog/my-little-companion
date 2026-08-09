@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
+import krakenBg14Asset from "@/assets/krakenbackground-14.jpg.asset.json";
 import krakenBg13Asset from "@/assets/krakenbackground-13.jpg.asset.json";
 import krakenBg12Asset from "@/assets/krakenbackground-12.jpg.asset.json";
 import krakenBg11Asset from "@/assets/krakenbackground-11.jpg.asset.json";
@@ -28,6 +29,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime: o primeiro asset que carregar é adotado.
 // Priorizamos os assets locais registrados no código para garantir carregamento na Vercel.
 const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg14Asset.url,
   krakenBg13Asset.url,
   krakenBg12Asset.url,
   krakenBg10Asset.url,
