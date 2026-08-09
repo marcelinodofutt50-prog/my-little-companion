@@ -19,6 +19,8 @@ export async function trackSchemaFailure(
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const route = metadata.route || "unknown_route";
 
+    console.warn(`[tracking] Registrando falha de sincronização (${error.code || 'ERR'}):`, error.message);
+
     await (supabaseAdmin.from("integration_logs") as any).insert({
       source: "shadow-core-db",
       user_id: userId,
@@ -34,6 +36,12 @@ export async function trackSchemaFailure(
         ...metadata
       }
     });
+
+    // Gatilho de reparo imediato no backend se detectarmos falha de esquema
+    if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+      console.log("[tracking] Acionando reparo de esquema via RPC...");
+      await supabaseAdmin.rpc("force_refresh_schema_permissions");
+    }
   } catch (e) {
     console.error("[tracking] Failed to log failure:", e);
   }
