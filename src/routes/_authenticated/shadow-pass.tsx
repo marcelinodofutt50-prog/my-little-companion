@@ -184,14 +184,14 @@ function ShadowPassPage() {
                           </div>
                         </div>
                         <Progress value={progress} className="h-3" />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                           <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
                             <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Próxima Recompensa</div>
-                            <div className="text-sm font-bold flex items-center gap-2"><Gift className="h-4 w-4 text-primary" /> {nextGoal?.reward_description}</div>
+                            <div className="text-[13px] font-bold flex items-center gap-2"><Gift className="h-4 w-4 text-primary shrink-0" /> <span className="truncate">{nextGoal?.reward_description}</span></div>
                           </div>
                           <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
                             <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Benefício Adicional</div>
-                            <div className="text-sm font-bold flex items-center gap-2"><Star className="h-4 w-4 text-primary" /> {nextGoal?.benefit_description}</div>
+                            <div className="text-[13px] font-bold flex items-center gap-2"><Star className="h-4 w-4 text-primary shrink-0" /> <span className="truncate">{nextGoal?.benefit_description}</span></div>
                           </div>
                         </div>
                       </div>
