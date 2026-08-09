@@ -30,7 +30,15 @@ const DICT: Dict = {
   // ===== Dashboard =====
   "dash.client_panel": { pt: "Painel do cliente", en: "Customer Dashboard" },
   "dash.access_level": { pt: "Nível de Acesso", en: "Access Level" },
-  "nav.loyalty": { pt: "Fidelidade", en: "Loyalty" },
+  "nav.loyalty": { pt: "Shadow Loyalty", en: "Shadow Loyalty" },
+  "loyalty.title": { pt: "Shadow Loyalty Center", en: "Shadow Loyalty Center" },
+  "loyalty.missions": { pt: "Missões de Sombra", en: "Shadow Missions" },
+  "loyalty.rewards": { pt: "Recompensas", en: "Rewards" },
+  "loyalty.vip_status": { pt: "Status VIP", en: "VIP Status" },
+  "vip.none": { pt: "Nenhum", en: "None" },
+  "vip.vip": { pt: "Shadow VIP", en: "Shadow VIP" },
+  "vip.gold": { pt: "Shadow GOLD", en: "Shadow GOLD" },
+  "vip.elite": { pt: "Shadow ELITE", en: "Shadow ELITE" },
 
   "dash.license_days": { pt: "dias de licença", en: "license days" },
   "dash.expires_today": { pt: "expira hoje", en: "expires today" },
