@@ -1,10 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skull, AlertTriangle, Shield, Terminal, Zap, Activity, Volume2, VolumeX, RefreshCw, Sliders, Sparkles, ArrowLeft } from "lucide-react"
-import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
-
 import { useState, useEffect, useRef } from "react"
-
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
+
 import krakenV26Asset from "@/assets/kraken_v26_final.png.asset.json";
 import krakenNewBgAsset from "@/assets/kraken_new_bg.png.asset.json";
 import krakenBg9Asset from "@/assets/krakenbackground-9.jpg.asset.json";
