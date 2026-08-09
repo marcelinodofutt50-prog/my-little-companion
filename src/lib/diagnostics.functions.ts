@@ -57,5 +57,5 @@ export const testDatabaseConnection = createServerFn({ method: "GET" })
 export const simulateSchemaFailure = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    return { success: true, message: "Simulação concluída." };
+    return { success: true, message: "Simulação concluída.", error: null };
   });
