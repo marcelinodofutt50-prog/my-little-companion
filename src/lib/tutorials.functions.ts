@@ -66,39 +66,30 @@ export const listTutorials = createServerFn({ method: "GET" })
     const metadata = input?.metadata || {};
     
     const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
-      console.log(`[tutorials] Busca tática de módulos (Tentativa ${attempt})...`);
+      console.log(`[tutorials] Busca de módulos via Cliente (Tentativa ${attempt})...`);
       
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { supabase } = context;
       
-      // Se for uma tentativa de reparo forçado, executamos o RPC antes da busca
-      if (input?.metadata?.force_repair && attempt === 1) {
-        console.log("[tutorials] Executando reparo forçado via RPC no Admin Tunnel...");
-        await supabaseAdmin.rpc("force_refresh_schema_permissions");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      // Bypass total de RLS e Cache para a Knowledge Base
-      // Tentativa de acessar a tabela tutorial_progress no Shadow Core
-      const { data: adminData, error: adminError } = await supabaseAdmin
+      const { data: clientData, error: clientError } = await supabase
         .from("tutorials")
         .select("*")
         .order("display_order", { ascending: true });
           
-      if (adminError) {
-        console.error(`[tutorials] Erro no Admin Tunnel:`, adminError);
-        const isPGRST = adminError.code === 'PGRST108' || adminError.message?.includes('schema cache') || adminError.code === '42P01';
+      if (clientError) {
+        console.error(`[tutorials] Erro no Cliente:`, clientError);
+        const isPGRST = clientError.code === 'PGRST108' || clientError.message?.includes('schema cache') || clientError.code === '42P01';
         
         if (isPGRST && attempt <= 3) {
-          await trackSchemaFailure(adminError, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
-          // O trackSchemaFailure já aciona o RPC agora
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           return fetchWithRetry(attempt + 1);
         }
         return [];
       }
 
-      const results = (adminData || []).filter(item => item && item.id && (item.title || item.category));
-      console.log(`[tutorials] Admin Tunnel retornou ${results.length} módulos.`);
+      const results = (clientData || []).filter(item => item && item.id && (item.title || item.category));
+      console.log(`[tutorials] Cliente retornou ${results.length} módulos.`);
       return results;
     };
 
