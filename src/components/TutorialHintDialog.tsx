@@ -8,7 +8,7 @@ export function TutorialHintDialog({
   open,
   onClose,
   title = "Tem dúvidas?",
-  message = "Veja nosso canal no YouTube — ali você encontra tutoriais passo a passo para instalar o programa, desativar o antivírus e configurar tudo certinho.",
+  message = "O processo é simples: compre sua licença ou ative o trial, baixe o arquivo e configure uma pasta de exclusão no Windows Defender para evitar que ele apague o app. No painel, use 'Add Server' com qualquer Connection Key (ex: TxTxT, BTMOB ou 123456).",
 }: {
   open: boolean;
   onClose: () => void;
