@@ -312,7 +312,7 @@ function KrakenPage() {
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
         <div 
           className={cn(
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1]",
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1] kraken-bg-layer",
             bgLoaded.core ? "opacity-100" : "opacity-0"
           )}
           style={{ 
