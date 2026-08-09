@@ -8,4 +8,8 @@
   "size": 149158,
   "content_type": "image/png",
   "created_at": "2026-08-09T01:39:34Z"
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
 }

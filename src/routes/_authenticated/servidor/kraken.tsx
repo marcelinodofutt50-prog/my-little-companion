@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
+import krakenBg15Asset from "@/assets/krakenbackground-15.jpg.asset.json";
 import krakenBg14Asset from "@/assets/krakenbackground-14.jpg.asset.json";
 import krakenBg13Asset from "@/assets/krakenbackground-13.jpg.asset.json";
 import krakenBg12Asset from "@/assets/krakenbackground-12.jpg.asset.json";
@@ -29,6 +30,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime: o primeiro asset que carregar é adotado.
 // Priorizamos os assets locais registrados no código para garantir carregamento na Vercel.
 const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenBg15Asset.url,
   krakenBg14Asset.url,
   krakenBg13Asset.url,
   krakenBg12Asset.url,
@@ -47,8 +49,8 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Forçamos a versão v14 para garantir que o deploy da Vercel limpe caches antigos.
-  return `${url}${sep}v=v14`;
+  // Forçamos a versão v15 para garantir que o deploy da Vercel limpe caches antigos.
+  return `${url}${sep}v=v15`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
