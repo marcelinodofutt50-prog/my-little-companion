@@ -115,7 +115,7 @@ function TutorialsPage() {
         getProgressFn()
       ]);
       
-      const validTutorials = (tData || []).filter(t => t && t.id);
+      const validTutorials = (tData || []).filter(t => t && t.id && (t.title || t.category));
       setTutorials(validTutorials);
       setCompletedIds(pData || []);
       
@@ -123,7 +123,10 @@ function TutorialsPage() {
         toast.success("Módulos sincronizados com o Shadow Core!", { id: "sync-toast" });
         addSyncLog('success', 'manual', 'Sincronização forçada concluída');
       } else if (validTutorials.length > 0) {
+        console.log(`[tutorials] Sincronização bem-sucedida: ${validTutorials.length} módulos ativos.`);
         addSyncLog('success', 'auto', 'Carregamento tático concluído');
+      } else {
+        console.warn("[tutorials] Sincronização retornou lista vazia ou inválida.");
       }
     } catch (err: any) {
       console.error("[tutorials] Falha no carregamento:", err);
