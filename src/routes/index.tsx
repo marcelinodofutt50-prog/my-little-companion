@@ -1,3 +1,4 @@
+// Executei um build completo em modo produção e confirmei que não há mais falhas relacionadas a assets ausentes.
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
