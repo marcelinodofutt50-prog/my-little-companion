@@ -84,7 +84,8 @@ function PlayProtectPage() {
     retry: 2,
   });
 
-  const hasAccess = Boolean(accessStatus?.hasActivePlan || accessStatus?.canSubmit || isAdmin);
+  const isTrial = Boolean(accessStatus?.freeTrialUsed && !accessStatus?.hasActivePlan);
+  const hasAccess = Boolean(accessStatus?.hasActivePlan || accessStatus?.canSubmit || isAdmin || isTrial);
   const canDownload = Boolean(accessStatus?.hasActivePlan || accessStatus?.freeTrialUsed || isAdmin);
 
   const { data: jobs } = useSuspenseQuery({
