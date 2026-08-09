@@ -46,11 +46,11 @@ async def run_test():
                 sys.exit(1)
 
             # 2. Verificar o Título da Página (Indica que o componente renderizou)
-            await page.wait_for_selector("h1", timeout=30000)
-            header_text = await page.inner_text("h1")
+            await page.wait_for_selector("[data-testid='training-hub-title']", timeout=30000)
+            header_text = await page.inner_text("[data-testid='training-hub-title']")
             print(f"📌 Cabeçalho detectado: {header_text}")
             
-            if "Centro de Treinamento" not in header_text:
+            if "CENTRO DE TREINAMENTO" not in header_text.upper():
                 print(f"❌ FALHA: Título inesperado: {header_text}")
                 sys.exit(1)
 
