@@ -146,6 +146,7 @@ function KrakenPage() {
           setResolvedBg(candidate + (candidate.includes("?") ? "&" : "?") + "v=" + new Date().getTime());
           setBgLoaded((prev) => ({ ...prev, core: true }));
           setBgLoadError(false);
+          console.log(`[Kraken] Fundo resolvido: ${candidate}`);
           return;
         }
       }
