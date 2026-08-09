@@ -146,7 +146,7 @@ function ShadowPassPage() {
                     <span className="font-bold text-yellow-500 capitalize">{vip.tier}</span>
                     <span className="text-muted-foreground">Próximo: {vip.next?.tier || 'Max'}</span>
                   </div>
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {vip.benefits.map((b: string, i: number) => (
                       <Badge key={i} variant="secondary" className="text-[9px] font-mono px-1 py-0 whitespace-nowrap">{b}</Badge>
                     ))}
