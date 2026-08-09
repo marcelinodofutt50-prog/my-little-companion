@@ -212,9 +212,9 @@ function ShadowPassPage() {
                                 )}>
                                   {goal.achieved_at ? <CheckCircle2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                                 </div>
-                                <div>
-                                  <div className="text-sm font-bold">{goal.target_members} Membros</div>
-                                  <div className="text-[10px] text-muted-foreground font-mono">{goal.reward_description}</div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-sm font-bold truncate">{goal.target_members} Membros</div>
+                                  <div className="text-[10px] text-muted-foreground font-mono truncate">{goal.reward_description}</div>
                                 </div>
                               </div>
                               {goal.achieved_at && (
