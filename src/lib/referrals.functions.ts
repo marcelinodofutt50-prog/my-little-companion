@@ -152,7 +152,7 @@ export const activateTrialReward = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("profiles")
         .update({
-          metadata: { ...metadata, welcome_trial_claimed: true }
+          metadata: { ...metadata, welcome_trial_claimed: true } as any
         } as any)
         .eq("id", userId);
 
