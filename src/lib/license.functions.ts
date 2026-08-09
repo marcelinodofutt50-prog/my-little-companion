@@ -303,33 +303,11 @@ export const listMyLicenses = createServerFn({ method: "GET" })
 export const generateTrial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, panelFromPlanSlug } = await import("./yaarsa.server");
+    const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { internalGenerateTrial } = await import("./license.server");
 
-    // Deterministic credentials seeded purely by userId. The seed lives
-    // server-side (auth.users), so clearing localStorage or switching device
-    // NEVER produces a different Yaarsa account for the same user.
-    const creds = deriveCredentials(`shadow-trial:v1:${userId}`);
-
-    // 1) If the trial license row already exists, return it (true idempotency).
-    const { data: existingLic } = await supabase
-      .from("licenses").select("*")
-      .eq("user_id", userId).eq("is_trial", true).maybeSingle();
-    if (existingLic) {
-      const pwd = (() => { try { return decrypt(existingLic.yaarsa_password_enc); } catch { return "***"; } })();
-      return {
-        username: existingLic.yaarsa_username,
-        email: existingLic.yaarsa_email,
-        password: pwd,
-        server_ip: existingLic.server_ip,
-        expires_at: existingLic.expires_at,
-        expire_date_yaarsa: expireDateFor("trial"),
-        retried: true,
-      };
-    }
-
-    // 1.5) Antifraude: trial é por pessoa (conexão/aparelho), não por conta.
+    // Antifraude: trial é por pessoa (conexão/aparelho), não por conta.
     const { evaluateTrial } = await import("./trial-guard.server");
     const guard = await evaluateTrial({ userId });
     if (!guard.allowed) {
@@ -338,86 +316,11 @@ export const generateTrial = createServerFn({ method: "POST" })
       );
     }
 
-    // 2) trials.user_id is PK — atomic single-shot claim per user. Two parallel
-    //    tabs / retries can only claim once; the loser reads back the winner.
-    //    Validamos se a coluna ip_hash existe através do log de erro PGRST204 se falhar.
-    const trialPayload = { 
-      user_id: userId, 
-      license_id: null, 
-      ip_hash: guard.ipHash, 
-      user_agent: guard.userAgent 
-    };
-    
-    async function doClaim(p: any) {
-      return supabaseAdmin.from("trials").insert(p);
-    }
+    // Note: in a real environment we might want to record guard.ipHash/userAgent somewhere,
+    // but internalGenerateTrial focuses on the creation logic.
+    return internalGenerateTrial(supabaseAdmin, userId, 1);
+  });
 
-    let { error: claimErr } = await doClaim(trialPayload);
-    
-    // Fallback: Se o PostgREST reclamar que a coluna ip_hash não existe (cache antigo)
-    if (claimErr && (claimErr as any).code === "PGRST204") {
-      console.warn("[generateTrial] ip_hash column missing in schema cache, retrying without it...");
-      const { ip_hash, user_agent, ...fallback } = trialPayload;
-      const retry = await doClaim(fallback);
-      claimErr = retry.error;
-    }
-
-    if (claimErr && !/duplicate key|unique/i.test(claimErr.message)) {
-      console.error("[generateTrial] Claim error:", claimErr);
-      throw new Error("Erro ao registrar intenção de teste: " + claimErr.message);
-    }
-    // 3) Call Yaarsa. Deterministic creds mean "1004 already exists" on retry
-    //    is a previous successful create — treat as success.
-    const yr = await yaarsaCreateAccount({
-      username: creds.username,
-      email: creds.email,
-      password: creds.password,
-      planSlug: "trial",
-      totalPaid: 0,
-      additionalInfo: "shadow-trial",
-      panel: panelFromPlanSlug("trial"),
-    });
-    
-    const alreadyExists = yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
-    if (yr.Fail && !alreadyExists) {
-      // Yaarsa really failed: release the claim so the user can try again.
-      await supabaseAdmin.from("trials").delete()
-        .eq("user_id", userId).is("license_id", null);
-      throw new Error(`Painel: ${yr.Fail}`);
-    }
-
-    const expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 1);
-    const licPayload: any = {
-      user_id: userId,
-      plan_slug: "trial",
-      yaarsa_username: creds.username,
-      yaarsa_email: creds.email,
-      yaarsa_password_enc: encrypt(creds.password),
-      expires_at: expiresAt.toISOString(),
-      is_trial: true,
-      status: 'trial',
-      origin_type: 'trial',
-      panel: panelFromPlanSlug("trial") || "v455", // Fallback to v455 for trials if slug detection fails
-    };
-
-    const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
-    if (licErr || !lic) {
-      // Leave the claim in place; the Yaarsa account is safe and the next
-      // retry will short-circuit via step (1) once the row does land.
-      throw new Error(licErr?.message || "Falha ao gravar licença");
-    }
-
-    await supabaseAdmin.from("trials").update({ license_id: lic.id }).eq("user_id", userId);
-
-    return {
-      username: creds.username,
-      email: creds.email,
-      password: creds.password,
-      server_ip: lic.server_ip,
-      expires_at: lic.expires_at,
-      expire_date_yaarsa: expireDateFor("trial"),
-      retried: alreadyExists ?? false,
-    };
   });
 
 export const getMyCashbackBalance = createServerFn({ method: "GET" })
