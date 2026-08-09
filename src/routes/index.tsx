@@ -38,8 +38,8 @@ const heroRestore = "/assets/shadow-hero-classic.png?v=v8-400";
 const heroClassic = "/assets/shadow-hero-classic.png?v=v8-400";
 const btmobDashboard = "/assets/shadow-dashboard-real.png?v=v9-300";
 const assetMissing = "/assets/shadow-dashboard-real.png?v=v9-300";
-const btmob1 = "/assets/btmob-conexxion-1.png?v=v9-300";
-const btmob2 = "/assets/btmob-conexxion-2.png?v=v9-300";
+const btmob1 = "/assets/shadow-dashboard-real.png?v=v9-300";
+const btmob2 = "/assets/shadow-play-protect-new.png?v=v9-300";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
