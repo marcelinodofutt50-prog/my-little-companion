@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { listTutorials } from "@/lib/tutorials.functions";
+// import { listTutorials } from "@/lib/tutorials.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
 import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
@@ -69,7 +69,7 @@ function TutorialsPage() {
     });
   };
   
-  const listFn = useServerFn(listTutorials);
+  const listFn = useServerFn(require('@/lib/tutorial-loader.functions').getTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
   const toggleFn = useServerFn(toggleTutorialStatus);
   const testConnFn = useServerFn(testDatabaseConnection);
@@ -115,7 +115,7 @@ function TutorialsPage() {
       }
 
       const [tData, pData] = await Promise.all([
-        listFn({ data: { metadata: { route: window.location.pathname, force_repair: forceRepair } } }), 
+        listFn({}), 
         getProgressFn()
       ]);
       
