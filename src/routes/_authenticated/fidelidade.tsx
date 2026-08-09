@@ -1,13 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import { Award, Star, Zap, Clock, Users, Gift, ChevronRight, CheckCircle2, Trophy, Flame } from 'lucide-react';
+import { Award, Star, Zap, Clock, Users, Gift, ChevronRight, CheckCircle2, Trophy, Flame, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { getLoyaltyDashboard } from '@/lib/loyalty.functions';
+import { Badge } from '@/components/ui/badge';
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getLoyaltyDashboard, claimMissionReward } from '@/lib/loyalty.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { useServerFn } from '@tanstack/react-start';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_authenticated/fidelidade')({
   loader: async ({ context }) => {
@@ -18,6 +22,39 @@ export const Route = createFileRoute('/_authenticated/fidelidade')({
   },
   component: LoyaltyPage,
 });
+
+function MissionClaimButton({ missionId, isClaimed }: { missionId: string, isClaimed: boolean }) {
+  const queryClient = useQueryClient();
+  const claimFn = useServerFn(claimMissionReward);
+  
+  const mutation = useMutation({
+    mutationFn: (vars: { missionId: string }) => claimFn({ data: vars }),
+    onSuccess: (res) => {
+      if (res.ok) {
+        toast.success(res.message || "Recompensa resgatada!");
+        queryClient.invalidateQueries({ queryKey: ['loyalty-dashboard'] });
+      } else {
+        toast.error(res.message || "Falha ao resgatar.");
+      }
+    },
+    onError: (e: any) => toast.error("Erro tático: " + e.message)
+  });
+
+  return (
+    <Button 
+      variant={isClaimed ? "secondary" : "outline"}
+      size="sm" 
+      disabled={isClaimed || mutation.isPending}
+      className={cn(
+        "h-7 text-[9px] font-mono uppercase mt-2",
+        !isClaimed && "border-primary/30 hover:bg-primary/10"
+      )}
+      onClick={() => mutation.mutate({ missionId })}
+    >
+      {mutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : isClaimed ? "Resgatado" : "Resgatar"}
+    </Button>
+  );
+}
 
 function LoyaltyPage() {
   const { data } = useSuspenseQuery({
@@ -129,34 +166,34 @@ function LoyaltyPage() {
             </Button>
           </div>
           <div className="grid gap-4">
-            {missions.length > 0 ? missions.map((m: any) => (
-              <Card key={m.id} className="border-border/40 hover:border-primary/20 transition-colors group">
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                      <Zap className="h-5 w-5" />
+            {missions.length > 0 ? missions.map((m: any) => {
+              const isClaimed = history.some((h: any) => h.action_type === 'mission_complete' && h.reference_id === m.id);
+              return (
+                <Card key={m.id} className={cn("border-border/40 hover:border-primary/20 transition-colors group", isClaimed && "opacity-60 bg-muted/5")}>
+                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "h-10 w-10 rounded-lg flex items-center justify-center transition-colors",
+                        isClaimed ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                      )}>
+                        {isClaimed ? <CheckCircle2 className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm leading-none flex items-center gap-2">
+                          {m.title}
+                          {isClaimed && <Badge variant="outline" className="text-[8px] h-4 border-green-500/30 text-green-500 uppercase font-mono">Concluído</Badge>}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">{m.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-sm leading-none">{m.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{m.description}</p>
+                    <div className="text-right shrink-0">
+                      <div className="text-primary font-mono font-bold text-sm">+{m.reward_points} pts</div>
+                      <MissionClaimButton missionId={m.id} isClaimed={isClaimed} />
                     </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-primary font-mono font-bold text-sm">+{m.reward_points} pts</div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7 text-[9px] font-mono uppercase mt-2 border-primary/30 hover:bg-primary/10"
-                      onClick={async () => {
-                        // To be implemented with useServerFn + toast
-                      }}
-                    >
-                      Resgatar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )) : (
+                  </CardContent>
+                </Card>
+              );
+            }) : (
               <div className="text-center py-8 border border-dashed rounded-xl text-muted-foreground text-sm font-mono">
                 Nenhuma missão disponível no momento.
               </div>
