@@ -144,7 +144,7 @@ function ShadowPassPage() {
                   <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold text-yellow-500 capitalize">{vip.tier}</span>
-                    <span className="text-muted-foreground">Próximo: {vip.next?.tier || 'Max'}</span>
+                    <span className="text-muted-foreground truncate ml-2">Próximo: {vip.next?.tier || 'Max'}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {vip.benefits.map((b: string, i: number) => (
