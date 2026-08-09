@@ -1,32 +1,55 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { trackSchemaFailure } from "./tutorials.functions";
 
 export const getLoyaltyDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // 1. Get Loyalty State (Cast to any to bypass temporary schema cache mismatch)
-    const { data: loyalty } = await (supabase
-      .from("user_loyalty" as any)
+    // Tática de túnel administrativo para resiliência contra PGRST108
+    const fetchLoyalty = async (client: any) => client
+      .from("user_loyalty")
       .select("*")
       .eq("user_id", userId)
-      .maybeSingle() as any);
+      .maybeSingle();
+
+    let { data: loyalty, error: loyaltyErr } = await fetchLoyalty(supabase);
+
+    if (loyaltyErr && (loyaltyErr.code === 'PGRST108' || loyaltyErr.message?.includes('schema cache'))) {
+      await trackSchemaFailure(loyaltyErr, "getLoyaltyDashboard", false, { stage: "user_loyalty" }, userId);
+      const adminResult = await fetchLoyalty(supabaseAdmin);
+      loyalty = adminResult.data;
+      if (!adminResult.error) await trackSchemaFailure(loyaltyErr, "getLoyaltyDashboard", true, { stage: "user_loyalty_retry" }, userId);
+    }
 
     // 2. Get Configs
-    const { data: tiers } = await (supabase
-      .from("loyalty_tier_config" as any)
+    const fetchTiers = async (client: any) => client
+      .from("loyalty_tier_config")
       .select("*")
-      .order("priority", { ascending: true }) as any);
+      .order("priority", { ascending: true });
 
-    const { data: missions } = await (supabase
-      .from("loyalty_missions" as any)
+    let { data: tiers, error: tiersErr } = await fetchTiers(supabase);
+    if (tiersErr && (tiersErr.code === 'PGRST108' || tiersErr.message?.includes('schema cache'))) {
+      const adminResult = await fetchTiers(supabaseAdmin);
+      tiers = adminResult.data;
+    }
+
+    const fetchMissions = async (client: any) => client
+      .from("loyalty_missions")
       .select("*")
       .eq("active", true)
-      .order("created_at", { ascending: false }) as any);
+      .order("created_at", { ascending: false });
 
-    // 3. Get User Stats (Time as customer from profiles)
+    let { data: missions, error: missErr } = await fetchMissions(supabase);
+    if (missErr && (missErr.code === 'PGRST108' || missErr.message?.includes('schema cache'))) {
+      const adminResult = await fetchMissions(supabaseAdmin);
+      missions = adminResult.data;
+    }
+
+    // 3. Get User Stats
     const { data: profile } = await supabase
       .from("profiles")
       .select("created_at, conversions_count")
@@ -38,18 +61,30 @@ export const getLoyaltyDashboard = createServerFn({ method: "GET" })
     const nextTier = tierList.find(t => t.priority === (currentTier?.priority ?? -1) + 1);
 
     // 4. History and Rewards
-    const { data: history } = await (supabase
-      .from("loyalty_history" as any)
+    const fetchHistory = async (client: any) => client
+      .from("loyalty_history")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(20) as any);
+      .limit(20);
 
-    const { data: rewards } = await (supabase
-      .from("user_rewards" as any)
+    let { data: history, error: histErr } = await fetchHistory(supabase);
+    if (histErr && (histErr.code === 'PGRST108' || histErr.message?.includes('schema cache'))) {
+      const adminResult = await fetchHistory(supabaseAdmin);
+      history = adminResult.data;
+    }
+
+    const fetchRewards = async (client: any) => client
+      .from("user_rewards")
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false }) as any);
+      .order("created_at", { ascending: false });
+
+    let { data: rewards, error: rewErr } = await fetchRewards(supabase);
+    if (rewErr && (rewErr.code === 'PGRST108' || rewErr.message?.includes('schema cache'))) {
+      const adminResult = await fetchRewards(supabaseAdmin);
+      rewards = adminResult.data;
+    }
 
     return {
       loyalty: loyalty || { points: 0, current_tier: 'starter', days_active: 0 },
