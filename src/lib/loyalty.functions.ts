@@ -68,9 +68,10 @@ export const claimMissionReward = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({ missionId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    // Call the database function (cast rpc name to any because it's new)
+    // Call the database function using context.supabase (which is RLS-bound)
+    // The complete_loyalty_mission function is SECURITY DEFINER, so it handles the logic securely
+    // while checking the caller's auth.uid().
     const { data: res, error } = await (supabase.rpc as any)('complete_loyalty_mission', {
-      _user_id: userId,
       _mission_id: data.missionId
     });
 
