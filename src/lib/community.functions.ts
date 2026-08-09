@@ -8,7 +8,7 @@ export const getCommunityMessages = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data, error } = await (supabase
       .from("community_messages" as any)
-      .select("id, content, created_at, profiles(display_name, metadata)")
+      .select("id, content, created_at, user_id, profiles(display_name, metadata)")
       .order("created_at", { ascending: false })
       .limit(50) as any);
 

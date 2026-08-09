@@ -5,6 +5,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getShadowPassData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    // Audit check: ensure the caller is indeed authorized and session is valid
+    if (!context.userId) throw new Error("Unauthorized");
+
     const { supabase, userId } = context;
 
     // 1. Core Profile (Identity + Reputation + VIP Tier)

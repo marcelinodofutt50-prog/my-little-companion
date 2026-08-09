@@ -207,7 +207,7 @@ function TutorialsPage() {
         <div 
           className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
-            backgroundImage: `url(https://id-preview--aa5c6d4b-4a83-49d2-a5ba-32781957814c.lovable.app/__l5e/assets-v1/4c945148-c298-4a97-b2e5-01569ca41f26/krakenbackground-9.jpg?v=v24)`,
+            backgroundImage: `url(/assets/krakenbackground-9.jpg?v=v25)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'brightness(0.6) contrast(1.2)'
