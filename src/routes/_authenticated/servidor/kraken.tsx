@@ -61,8 +61,8 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Incrementado para v22 para forçar invalidação tática na Vercel
-  return `${url}${sep}v=v22`;
+  // Incrementado para v25 para forçar invalidação total na CDN Vercel e Edge
+  return `${url}${sep}v=v25`;
 };
 
 const krakenCore = getUrlWithBust(krakenNewBgAsset.url || krakenBg9Asset.url || KRAKEN_BG_FALLBACK);
