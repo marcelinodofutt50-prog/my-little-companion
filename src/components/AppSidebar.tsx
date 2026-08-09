@@ -37,6 +37,7 @@ const primary: Item[] = [
   { title: "Affiliates", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
   { title: "Gift Center", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
   { title: "Shadow Loyalty", url: "/fidelidade", icon: Trophy, tKey: "nav.loyalty" as const },
+  { title: "Shadow Pass", url: "/shadow-pass", icon: User, tKey: "nav.shadowpass" as const },
 
 
 
