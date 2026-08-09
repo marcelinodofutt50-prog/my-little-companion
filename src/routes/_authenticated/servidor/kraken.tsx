@@ -30,8 +30,8 @@ import krakenBg4Asset from "@/assets/kraken-bg-4.png.asset.json";
 import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 
 // Imagem tática central da Kraken 2.0
-// Cadeia de candidatos validada em runtime: o primeiro asset que carregar é adotado.
-// Priorizamos os assets locais registrados no código para garantir carregamento na Vercel.
+// Cadeia de candidatos validada em runtime.
+// v20: Corrigindo a ordem para garantir que a imagem oficial (v18) seja a prioritária.
 const KRAKEN_BG_CANDIDATES: string[] = [
   krakenBg18Asset.url,
   krakenBg17Asset.url,
@@ -40,24 +40,23 @@ const KRAKEN_BG_CANDIDATES: string[] = [
   krakenBg14Asset.url,
   krakenBg13Asset.url,
   krakenBg12Asset.url,
+  krakenBg11Asset.url,
   krakenBg10Asset.url,
   krakenBg8Asset.url,
   krakenBg7Asset.url,
   krakenBg6Asset.url,
   krakenBg4Asset.url,
-  krakenBg11Asset.url,
   "https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png",
-  "/assets/shadow-hero-classic.png", // Fallback local garantido
+  "/assets/shadow-hero-classic.png",
 ].filter(Boolean) as string[];
 
-// Fallback final puramente CSS-safe (nunca 404): último item da cadeia
 const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1];
 
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Forçamos a versão v19 para garantir que o deploy da Vercel limpe caches antigos.
-  return `${url}${sep}v=v19`;
+  // Incrementado para v20 para forçar invalidação na Vercel
+  return `${url}${sep}v=v20`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
