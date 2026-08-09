@@ -143,7 +143,16 @@ function LoyaltyPage() {
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-primary font-mono font-bold text-sm">+{m.reward_points} pts</div>
-                    <Button variant="outline" size="sm" className="h-7 text-[9px] font-mono uppercase mt-2">Claim</Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[9px] font-mono uppercase mt-2 border-primary/30 hover:bg-primary/10"
+                      onClick={async () => {
+                        // To be implemented with useServerFn + toast
+                      }}
+                    >
+                      Resgatar
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
