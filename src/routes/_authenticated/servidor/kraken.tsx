@@ -148,6 +148,9 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [audioDelay, setAudioDelay] = useState(0);
+  const [bgLoadError, setBgLoadError] = useState(false);
 
 
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -199,7 +202,7 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
         if (cancelled) return;
         if (ok) {
           setResolvedBg(getUrlWithBust(candidate));
-          setBgLoaded((prev) => ({ ...prev, core: true }));
+          setBgLoaded((prev: any) => ({ ...prev, core: true }));
           setBgLoadError(false);
           console.log(`[Kraken] Fundo resolvido: ${candidate}`);
           return;
@@ -208,14 +211,14 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
       // Nenhum candidato válido: mantém o gradiente tático como fundo definitivo
       console.error("[Kraken] Nenhum asset de fundo válido. Usando fallback CSS.");
       setBgLoadError(true);
-      setBgLoaded((prev) => ({ ...prev, core: false }));
+      setBgLoaded((prev: any) => ({ ...prev, core: false }));
       
       // Fallback manual se a validação falhar: tenta forçar o primeiro candidato sem validação de proporção
       if (KRAKEN_BG_CANDIDATES.length > 0) {
         console.warn("[Kraken] Tentando carregamento de emergência sem validação estrita...");
         const emergencyUrl = getUrlWithBust(KRAKEN_BG_CANDIDATES[0]);
         setResolvedBg(emergencyUrl);
-        setBgLoaded((prev) => ({ ...prev, core: true }));
+        setBgLoaded((prev: any) => ({ ...prev, core: true }));
         // Força o carregamento no DOM
         const preloader = new Image();
         preloader.src = emergencyUrl;
@@ -226,8 +229,8 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
 
     // Camada de névoa (não crítica)
     const mist = new Image();
-    mist.onload = () => setBgLoaded((prev) => ({ ...prev, bg5: true }));
-    mist.onerror = () => setBgLoaded((prev) => ({ ...prev, bg5: false }));
+    mist.onload = () => setBgLoaded((prev: any) => ({ ...prev, bg5: true }));
+    mist.onerror = () => setBgLoaded((prev: any) => ({ ...prev, bg5: false }));
     mist.src = krakenBg5;
 
     const timer = setTimeout(() => setShowEffects(true), 500);
