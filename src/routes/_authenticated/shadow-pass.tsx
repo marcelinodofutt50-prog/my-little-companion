@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Trophy, Users, Award, Gift, Diamond, Shield, Bell, 
   ChevronRight, CheckCircle2, Star, Zap, Clock, TrendingUp,
-  Lock, ExternalLink, Info, BadgeCheck, Heart, Edit2, Save, X, Ghost, UserCircle, Send, MessageSquare
+  Lock, ExternalLink, Info, BadgeCheck, Heart, Edit2, Save, X, Ghost, UserCircle, Send, MessageSquare, RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
