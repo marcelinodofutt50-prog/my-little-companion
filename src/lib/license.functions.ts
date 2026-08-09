@@ -387,7 +387,7 @@ export const generateTrial = createServerFn({ method: "POST" })
     }
 
     const expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 1);
-    const licPayload = {
+    const licPayload: any = {
       user_id: userId,
       plan_slug: "trial",
       yaarsa_username: creds.username,
