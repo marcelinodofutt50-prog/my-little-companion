@@ -117,8 +117,10 @@ function TutorialsPage() {
       if (forceRepair) {
         toast.success("Módulos sincronizados com sucesso!");
         addSyncLog('success', 'manual', 'Sincronização forçada concluída');
-      } else {
+      } else if (validTutorials.length > 0) {
         addSyncLog('success', 'auto', 'Carregamento inicial bem-sucedido');
+      } else {
+        console.warn("[tutorials] Carregamento retornou 0 itens. Verificando logs...");
       }
     } catch (err: any) {
       console.error("[tutorials] Data load failure:", err);
