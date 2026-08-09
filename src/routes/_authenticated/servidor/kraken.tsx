@@ -82,15 +82,27 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
       { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
     ],
   }),
-  component: () => {
-    console.log("[Kraken] Renderizando componente de rota...");
-    return (
-      <div className="min-h-screen bg-black overflow-x-hidden theme-transition relative">
-        <div 
-          className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black kraken-bg-container"
-          style={{ 
-            backgroundImage: `url('${resolvedBg}')`,
-            backgroundSize: 'cover',
+  component: KrakenRouteComponent,
+});
+
+function KrakenRouteComponent() {
+  const [resolvedBg, setResolvedBg] = useState<string>(krakenCore);
+  const [bgLoaded, setBgLoaded] = useState({ core: false, bg5: false });
+
+  console.log("[Kraken] Renderizando componente de rota...");
+  return (
+    <div className="min-h-screen bg-black overflow-x-hidden theme-transition relative">
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black kraken-bg-container"
+        style={{ 
+          backgroundImage: `url('${resolvedBg}')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
+          backgroundColor: 'black'
+        }}
+      >
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
             filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
@@ -119,25 +131,29 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
         </div>
         
         <ErrorBoundary name="KrakenPage">
-          <KrakenPage />
+          <KrakenPage 
+            resolvedBg={resolvedBg} 
+            setResolvedBg={setResolvedBg}
+            bgLoaded={bgLoaded}
+            setBgLoaded={setBgLoaded}
+          />
         </ErrorBoundary>
       </div>
     );
-  },
-})
+}
 
+interface KrakenPageProps {
+  resolvedBg: string;
+  setResolvedBg: (url: string) => void;
+  bgLoaded: { core: boolean; bg5: boolean };
+  setBgLoaded: (val: any) => void;
+}
 
-function KrakenPage() {
+function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: KrakenPageProps) {
   const [logs, setLogs] = useState<string[]>([]);
   const [command, setCommand] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
   const [showEffects, setShowEffects] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Mantém ativo por padrão para incentivar o clique do usuário
-  const [intensity, setIntensity] = useState(0.4); 
-  const [audioDelay, setAudioDelay] = useState(0);
-  const [bgLoadError, setBgLoadError] = useState(false);
-  const [bgLoaded, setBgLoaded] = useState({ core: false, bg5: false });
-  const [resolvedBg, setResolvedBg] = useState<string>(krakenCore);
 
 
   const logEndRef = useRef<HTMLDivElement>(null);
