@@ -204,7 +204,7 @@ function TutorialsPage() {
         <div 
           className="fixed inset-0 z-0 pointer-events-none opacity-50 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
-            backgroundImage: `url(${trainingBgAsset.url})`,
+            backgroundImage: `url(${trainingBgAsset.url}?v=v17)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'brightness(0.7) contrast(1.1)'

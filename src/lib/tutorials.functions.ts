@@ -71,6 +71,7 @@ export const listTutorials = createServerFn({ method: "GET" })
       }
 
       // Bypass total de RLS e Cache para a Knowledge Base
+      // Tentativa de acessar a tabela tutorial_progress no Shadow Core
       const { data: adminData, error: adminError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
