@@ -333,7 +333,7 @@ function KrakenPage() {
             bgLoaded.core ? "opacity-100" : "opacity-0"
           )}
           style={{ 
-            backgroundImage: `url(${resolvedBg})`,
+            backgroundImage: `url('${resolvedBg}')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
