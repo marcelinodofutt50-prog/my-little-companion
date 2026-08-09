@@ -121,7 +121,7 @@ function formatTime(ts: number): string {
 
 function AuthPage() {
   const shadowMark = "/assets/shadow-mark.png?v=v8-400";
-  const { next, code, type } = Route.useSearch();
+  const { next, code, type, trial } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");

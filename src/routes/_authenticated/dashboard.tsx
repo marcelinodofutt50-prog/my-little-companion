@@ -53,7 +53,9 @@ export const Route = createFileRoute('/_authenticated/dashboard')({
 })
 
 function DashboardPage() {
+  const { trial: trialParam } = Route.useSearch() as any;
   const { t } = useI18n()
+
   const { resolved } = useTheme()
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [user, setUser] = useState<any>(undefined)
@@ -249,6 +251,12 @@ function DashboardPage() {
         <SidebarInset>
           <main className="flex-1 p-4 md:p-8 pt-6 relative">
             <div className="mx-auto max-w-7xl space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
+                <div className="mb-4">
+                  <TrialActivationCard onDone={() => void refetchLicenses()} />
+                </div>
+              )}
+
               <section className="enterprise-surface relative overflow-hidden p-5 md:p-6">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-5">
@@ -339,9 +347,10 @@ function DashboardPage() {
                 ))}
               </div>
 
-              {!licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
+              {!licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && trialParam !== 'true' && (
                 <TrialActivationCard onDone={() => void refetchLicenses()} />
               )}
+
 
 
               {licenses && licenses.length > 0 && (
