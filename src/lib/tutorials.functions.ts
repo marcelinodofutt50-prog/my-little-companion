@@ -102,10 +102,9 @@ export const listTutorials = createServerFn({ method: "GET" })
           const delay = 800 * Math.pow(2, attempt - 1);
           
           try {
-            console.log(`[tutorials] Executando RPC de reparo e ANALYZE físico (Tentativa ${attempt})...`);
-            // Reparo tático forçado via Admin com comando de limpeza de cache física
+            console.log(`[tutorials] Executando RPC de reparo tático (Tentativa ${attempt})...`);
+            // Reparo tático forçado via Admin
             await supabaseAdmin.rpc("force_refresh_schema_permissions");
-            await supabaseAdmin.rpc("emergency_schema_analyze"); // Tenta um ANALYZE se disponível
             // Pausa estratégica para propagação
             await new Promise(resolve => setTimeout(resolve, delay));
           } catch (rpcErr) {
