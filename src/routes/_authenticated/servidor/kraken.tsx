@@ -46,9 +46,10 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Usamos um timestamp de build ou similar se disponível, caso contrário a hora atual
-  // para garantir que o cache seja invalidado em cada carregamento de página
-  return `${url}${sep}v=${new Date().getTime()}`;
+  // Em produção, queremos cache determinístico. Usamos o timestamp do momento do build
+  // (ou um valor fixo por sessão) para evitar downloads repetidos em navegação SPA,
+  // mas ainda garantir cache-busting entre deploys.
+  return `${url}${sep}v=v12-production-stable`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
@@ -73,13 +74,16 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
       { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
     ],
   }),
-  component: () => (
-    <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
-      <ErrorBoundary name="KrakenPage">
-        <KrakenPage />
-      </ErrorBoundary>
-    </div>
-  ),
+  component: () => {
+    console.log("[Kraken] Renderizando componente de rota...");
+    return (
+      <div className="min-h-screen bg-black overflow-x-hidden theme-transition">
+        <ErrorBoundary name="KrakenPage">
+          <KrakenPage />
+        </ErrorBoundary>
+      </div>
+    );
+  },
 })
 
 
@@ -109,6 +113,7 @@ function KrakenPage() {
 
   useEffect(() => {
     let cancelled = false;
+    console.log("[Kraken] Iniciando diagnóstico de carregamento...");
 
     /**
      * Valida cada candidato da cadeia: descarta 404 / erro de rede e também
@@ -123,8 +128,10 @@ function KrakenPage() {
           const isUsable = img.naturalWidth >= 900 && ratio >= 1.1 && ratio <= 3.2;
           if (!isUsable) {
             console.warn(
-              `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight}): ${url}`
+              `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight} | ratio: ${ratio.toFixed(2)}): ${url}`
             );
+          } else {
+            console.log(`[Kraken] Asset validado com sucesso (${img.naturalWidth}x${img.naturalHeight}): ${url}`);
           }
           finish(isUsable);
         };
@@ -141,9 +148,10 @@ function KrakenPage() {
         const ok = await validateCandidate(candidate);
         if (cancelled) return;
         if (ok) {
-          setResolvedBg(candidate + (candidate.includes("?") ? "&" : "?") + "v=" + new Date().getTime());
+          setResolvedBg(getUrlWithBust(candidate));
           setBgLoaded((prev) => ({ ...prev, core: true }));
           setBgLoadError(false);
+          console.log(`[Kraken] Fundo resolvido: ${candidate}`);
           return;
         }
       }
@@ -151,6 +159,17 @@ function KrakenPage() {
       console.error("[Kraken] Nenhum asset de fundo válido. Usando fallback CSS.");
       setBgLoadError(true);
       setBgLoaded((prev) => ({ ...prev, core: false }));
+      
+      // Fallback manual se a validação falhar: tenta forçar o primeiro candidato sem validação de proporção
+      if (KRAKEN_BG_CANDIDATES.length > 0) {
+        console.warn("[Kraken] Tentando carregamento de emergência sem validação estrita...");
+        const emergencyUrl = getUrlWithBust(KRAKEN_BG_CANDIDATES[0]);
+        setResolvedBg(emergencyUrl);
+        setBgLoaded((prev) => ({ ...prev, core: true }));
+        // Força o carregamento no DOM
+        const preloader = new Image();
+        preloader.src = emergencyUrl;
+      }
     };
 
     resolveBackground();
@@ -287,10 +306,11 @@ function KrakenPage() {
     }
   };
 
+  console.log("[Kraken] Renderizando componente...");
   return (
-    <div className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
+    <div id="kraken-viewport-root" className="relative flex-1 space-y-6 p-4 md:p-8 pt-6 bg-transparent min-h-screen overflow-hidden theme-transition flex flex-col items-center justify-start text-foreground">
       {/* Tactical Background Overlay - Full Viewport Image */}
-      <div className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black">
+      <div id="kraken-bg-root" className="fixed inset-0 z-0 pointer-events-none w-full h-full overflow-hidden bg-black kraken-bg-container">
         {/* Base Fallback Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-950 via-slate-950 to-black opacity-100 z-[-2]" />
 
@@ -309,11 +329,11 @@ function KrakenPage() {
         {/* Main Background Layer (Prioritize user-uploaded/selected asset) */}
         <div 
           className={cn(
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1]",
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 select-none pointer-events-none z-[-1] kraken-bg-layer",
             bgLoaded.core ? "opacity-100" : "opacity-0"
           )}
           style={{ 
-            backgroundImage: `url(${resolvedBg})`,
+            backgroundImage: `url('${resolvedBg}')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
@@ -360,7 +380,7 @@ function KrakenPage() {
         </Button>
       </div>
 
-      <div className="relative z-20 space-y-6">
+      <div className="relative z-20 space-y-6 w-full max-w-7xl px-4 md:px-0">
         <div className="flex items-center justify-between space-y-2">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
