@@ -34,7 +34,6 @@ const getUrlWithBust = (url: string) => {
 
 const krakenCore = getUrlWithBust(krakenV26Asset.url || KRAKEN_BG_FALLBACK);
 
-const krakenBg5 = getUrlWithBust("https://raw.githubusercontent.com/lovable-ai-projects/shadow-assets/main/kraken-bg-4.png");
 
 
 
@@ -200,11 +199,6 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
 
     resolveBackground();
 
-    // Camada de névoa (não crítica)
-    const mist = new Image();
-    mist.onload = () => setBgLoaded((prev: any) => ({ ...prev, bg5: true }));
-    mist.onerror = () => setBgLoaded((prev: any) => ({ ...prev, bg5: false }));
-    mist.src = krakenBg5;
 
     const timer = setTimeout(() => setShowEffects(true), 500);
     
