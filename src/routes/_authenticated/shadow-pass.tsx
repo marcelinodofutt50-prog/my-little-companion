@@ -180,7 +180,7 @@ function ShadowPassPage() {
                           </div>
                           <div className="text-left sm:text-right w-full sm:w-auto">
                             <div className="text-[10px] font-mono uppercase text-muted-foreground mb-1">Status</div>
-                            <Badge className="bg-primary/20 text-primary border-primary/30">{achievedGoals}/{totalGoals} Concluídas</Badge>
+                            <Badge className="bg-primary/20 text-primary border-primary/30 shrink-0">{achievedGoals}/{totalGoals} Concluídas</Badge>
                           </div>
                         </div>
                         <Progress value={progress} className="h-3" />
