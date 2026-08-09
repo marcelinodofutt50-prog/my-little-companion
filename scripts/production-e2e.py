@@ -51,7 +51,7 @@ async def run_e2e_production():
             await page.goto(f"{PRODUCTION_URL}/planos", wait_until="networkidle")
             await page.screenshot(path=str(SCREENSHOTS / "2_planos.png"))
             
-            has_plans = await page.locator("text=Vitalício").is_visible()
+            has_plans = await page.locator("button:has-text('Vitalício')").first.is_visible()
             audit_log.append(f"Planos: {'OK' if has_plans else 'CONTENT_MISSING'}")
 
             # --- FASE 3: Autenticação & Session Guard ---
