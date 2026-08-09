@@ -10,7 +10,7 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("referral_code, referral_reward_pref, pix_key")
+      .select("referral_code, referral_reward_pref, pix_key, reward_points, current_level, trust_score, referrals_valid_count, conversions_count")
       .eq("id", userId)
       .maybeSingle();
 
@@ -39,24 +39,35 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       );
     }
 
-    const { data: level } = await supabase
-      .from("referral_levels")
+    const { data: levels } = await supabase
+      .from("reward_level_config")
       .select("*")
-      .lte("min_conversions", rows.filter(r => r.status === 'converted').length)
-      .order("min_conversions", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("min_conversions", { ascending: true });
 
-    const totalGranted = rows.filter((r) => r.status === "converted").length;
-    const totalPending = rows.filter((r) => r.status === "pending").length;
+    const currentLevel = (levels ?? []).find(l => l.level === (profile?.current_level || 'novato')) || (levels ?? [])[0];
+    const nextLevel = (levels ?? []).find(l => l.min_conversions > (profile?.conversions_count || 0));
+
+    const { data: userRewards } = await supabase
+      .from("user_rewards")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     return {
       code: referralCode?.code ?? profile?.referral_code ?? null,
       pref: (profile?.referral_reward_pref as "cashback" | "free_month" | "pix") ?? "cashback",
       pixKey: (profile?.pix_key as string) ?? null,
       referrals: rows.map((r) => ({ ...r, referred_label: labelMap[r.referred_id] ?? "Membro Shadow" })),
-      stats: { total: rows.length, granted: totalGranted, pending: totalPending },
-      level: level ?? { name: "Novato", min_conversions: 0 }
+      rewards: userRewards || [],
+      stats: { 
+        total: rows.length, 
+        granted: profile?.referrals_valid_count || 0, 
+        conversions: profile?.conversions_count || 0,
+        points: profile?.reward_points || 0,
+        trust: profile?.trust_score || 100
+      },
+      level: currentLevel,
+      nextLevel: nextLevel
     };
   });
 

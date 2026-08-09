@@ -1144,7 +1144,11 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          conversions_count: number | null
           created_at: string
+          current_level:
+            | Database["public"]["Enums"]["shadow_reward_level"]
+            | null
           display_name: string | null
           email: string
           full_name: string | null
@@ -1158,12 +1162,19 @@ export type Database = {
           recovery_codes_generated_at: string | null
           referral_code: string | null
           referral_reward_pref: string
+          referrals_valid_count: number | null
+          reward_points: number | null
           security_ack_at: string | null
+          trust_score: number | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          conversions_count?: number | null
           created_at?: string
+          current_level?:
+            | Database["public"]["Enums"]["shadow_reward_level"]
+            | null
           display_name?: string | null
           email: string
           full_name?: string | null
@@ -1177,12 +1188,19 @@ export type Database = {
           recovery_codes_generated_at?: string | null
           referral_code?: string | null
           referral_reward_pref?: string
+          referrals_valid_count?: number | null
+          reward_points?: number | null
           security_ack_at?: string | null
+          trust_score?: number | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          conversions_count?: number | null
           created_at?: string
+          current_level?:
+            | Database["public"]["Enums"]["shadow_reward_level"]
+            | null
           display_name?: string | null
           email?: string
           full_name?: string | null
@@ -1196,7 +1214,10 @@ export type Database = {
           recovery_codes_generated_at?: string | null
           referral_code?: string | null
           referral_reward_pref?: string
+          referrals_valid_count?: number | null
+          reward_points?: number | null
           security_ack_at?: string | null
+          trust_score?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -1245,6 +1266,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      referral_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          referral_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          referral_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          referral_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_events_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referral_levels: {
         Row: {
@@ -1428,6 +1484,78 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      reward_config: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          requirement_type: string
+          requirement_value: number
+          reward_type: Database["public"]["Enums"]["referral_reward_type"]
+          reward_value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          requirement_type: string
+          requirement_value: number
+          reward_type: Database["public"]["Enums"]["referral_reward_type"]
+          reward_value: Json
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          requirement_type?: string
+          requirement_value?: number
+          reward_type?: Database["public"]["Enums"]["referral_reward_type"]
+          reward_value?: Json
+        }
+        Relationships: []
+      }
+      reward_level_config: {
+        Row: {
+          badge_url: string | null
+          benefits: string[] | null
+          created_at: string | null
+          id: string
+          level: Database["public"]["Enums"]["shadow_reward_level"]
+          min_conversions: number
+          min_referrals: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          badge_url?: string | null
+          benefits?: string[] | null
+          created_at?: string | null
+          id?: string
+          level: Database["public"]["Enums"]["shadow_reward_level"]
+          min_conversions?: number
+          min_referrals?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          badge_url?: string | null
+          benefits?: string[] | null
+          created_at?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["shadow_reward_level"]
+          min_conversions?: number
+          min_referrals?: number
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1948,6 +2076,50 @@ export type Database = {
         }
         Relationships: []
       }
+      user_rewards: {
+        Row: {
+          claimed_at: string | null
+          config_id: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          status: Database["public"]["Enums"]["referral_reward_status"]
+          type: Database["public"]["Enums"]["referral_reward_type"]
+          user_id: string
+          value: Json
+        }
+        Insert: {
+          claimed_at?: string | null
+          config_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["referral_reward_status"]
+          type: Database["public"]["Enums"]["referral_reward_type"]
+          user_id: string
+          value: Json
+        }
+        Update: {
+          claimed_at?: string | null
+          config_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["referral_reward_status"]
+          type?: Database["public"]["Enums"]["referral_reward_type"]
+          user_id?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rewards_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "reward_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2105,6 +2277,20 @@ export type Database = {
         | "cancelled"
       app_role: "admin" | "user" | "moderator"
       plan_status: "published" | "draft" | "hidden" | "sold_out"
+      referral_reward_status:
+        | "pending"
+        | "confirmed"
+        | "released"
+        | "cancelled"
+        | "revogated"
+      referral_reward_type: "points" | "cashback" | "coupon" | "level_up"
+      shadow_reward_level:
+        | "novato"
+        | "bronze"
+        | "prata"
+        | "ouro"
+        | "elite"
+        | "legend"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2245,6 +2431,22 @@ export const Constants = {
       ],
       app_role: ["admin", "user", "moderator"],
       plan_status: ["published", "draft", "hidden", "sold_out"],
+      referral_reward_status: [
+        "pending",
+        "confirmed",
+        "released",
+        "cancelled",
+        "revogated",
+      ],
+      referral_reward_type: ["points", "cashback", "coupon", "level_up"],
+      shadow_reward_level: [
+        "novato",
+        "bronze",
+        "prata",
+        "ouro",
+        "elite",
+        "legend",
+      ],
     },
   },
 } as const
