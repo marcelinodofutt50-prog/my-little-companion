@@ -318,9 +318,9 @@ function ShadowPassPage() {
 
 function CriteriaItem({ label, met }: { label: string, met: boolean }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className={cn("text-xs font-mono uppercase tracking-tight", met ? "text-foreground" : "text-muted-foreground")}>{label}</span>
-      {met ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <div className="h-4 w-4 rounded-full border border-dashed border-muted-foreground/50" />}
+    <div className="flex items-center justify-between gap-2">
+      <span className={cn("text-xs font-mono uppercase tracking-tight truncate", met ? "text-foreground" : "text-muted-foreground")}>{label}</span>
+      {met ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" /> : <div className="h-4 w-4 rounded-full border border-dashed border-muted-foreground/50 shrink-0" />}
     </div>
   );
 }
