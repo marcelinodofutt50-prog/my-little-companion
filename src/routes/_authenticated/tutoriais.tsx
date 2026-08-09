@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { listTutorials } from "@/lib/tutorials.functions";
+import { getTutorials } from "@/lib/tutorial-loader.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { toast } from "sonner";
 import trainingBgAsset from "@/assets/krakenbackground-9.jpg.asset.json";
@@ -69,7 +69,7 @@ function TutorialsPage() {
     });
   };
   
-  const listFn = useServerFn(listTutorials);
+  const listFn = useServerFn(getTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
   const toggleFn = useServerFn(toggleTutorialStatus);
   const testConnFn = useServerFn(testDatabaseConnection);
@@ -115,11 +115,11 @@ function TutorialsPage() {
       }
 
       const [tData, pData] = await Promise.all([
-        listFn({ data: { metadata: { route: window.location.pathname, force_repair: forceRepair } } }), 
+        listFn({}), 
         getProgressFn()
       ]);
       
-      const validTutorials = (tData || []).filter(t => t && t.id && (t.title || t.category));
+      const validTutorials = (tData || []).filter((t: any) => t && t.id && (t.title || t.category));
       setTutorials(validTutorials);
       setCompletedIds(pData || []);
       
@@ -205,12 +205,12 @@ function TutorialsPage() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative">
         <div 
-          className="fixed inset-0 z-0 pointer-events-none opacity-50 bg-cover bg-center transition-opacity duration-1000"
+          className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
           style={{ 
-            backgroundImage: `url(${trainingBgAsset.url}?v=v17)`,
+            backgroundImage: `url(https://yvvjaoqzhjqnchhwhwvy.supabase.co/storage/v1/object/public/assets/kraken_new_bg.jpg?v=v22)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'brightness(0.7) contrast(1.1)'
+            filter: 'brightness(0.6) contrast(1.2)'
           }}
         />
         <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-black/50 via-black/70 to-black" />
@@ -623,15 +623,20 @@ function TutorialsPage() {
                           key={selected.video_url}
                           src={selected.video_url} 
                           controls 
+                          playsInline
+                          controlsList="nodownload"
                           className="h-full w-full object-contain"
                           poster={selected.image_url}
                           autoPlay
-                        />
+                        >
+                          <source src={selected.video_url} type="video/mp4" />
+                          Seu navegador não suporta a reprodução de vídeos.
+                        </video>
                       ) : selected.youtube_url ? (
                         <iframe
                           key={selected.youtube_url}
                           className="h-full w-full"
-                          src={selected.youtube_url.includes("embed") ? selected.youtube_url : selected.youtube_url.replace("watch?v=", "embed/") + "?autoplay=1"}
+                          src={selected.youtube_url.includes("embed") ? selected.youtube_url : selected.youtube_url.replace("watch?v=", "embed/") + "?autoplay=1&rel=0"}
                           title={selected.title}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen

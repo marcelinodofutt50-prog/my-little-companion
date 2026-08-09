@@ -1,21 +1,26 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Trophy, Users, Award, Gift, Diamond, Shield, Bell, 
   ChevronRight, CheckCircle2, Star, Zap, Clock, TrendingUp,
-  Lock, ExternalLink, Info, BadgeCheck, Heart
+  Lock, ExternalLink, Info, BadgeCheck, Heart, Edit2, Save, X, Ghost, UserCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getShadowPassData } from '@/lib/shadow-core.functions';
+import { updateProfileCustomization } from '@/lib/profile-customization.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { useServerFn } from '@tanstack/react-start';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   loader: async ({ context }) => {
@@ -28,12 +33,31 @@ export const Route = createFileRoute('/_authenticated/shadow-pass')({
 });
 
 function ShadowPassPage() {
+  const queryClient = useQueryClient();
   const { data } = useSuspenseQuery({
     queryKey: ['shadow-pass-data'],
     queryFn: () => getShadowPassData(),
   });
 
+  const updateProfileFn = useServerFn(updateProfileCustomization);
+  const mutation = useMutation({
+    mutationFn: (vars: any) => updateProfileFn({ data: vars }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+      toast.success("Perfil atualizado!");
+      setIsEditing(false);
+    },
+    onError: (e: any) => toast.error("Falha ao atualizar: " + e.message)
+  });
+
   const { identity, loyalty, community, vip, reputation, staff } = data as any;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(identity.nickname);
+  const [isAnonymous, setIsAnonymous] = useState(!!identity.isAnonymous);
+
+  const handleSave = () => {
+    mutation.mutate({ nickname: editName, is_anonymous: isAnonymous });
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-6xl pb-24 md:pb-8 overflow-x-hidden">
@@ -48,34 +72,77 @@ function ShadowPassPage() {
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
             <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative">
               <AvatarImage src={identity.avatar} />
-              <AvatarFallback className="bg-muted text-2xl font-bold">
-                {identity.nickname?.substring(0, 2).toUpperCase()}
+              <AvatarFallback className="bg-muted text-2xl md:text-4xl">
+                {isAnonymous ? <Ghost className="h-12 w-12 text-primary" /> : identity.nickname?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             {vip.tier !== 'none' && (
-              <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2 rounded-full shadow-lg">
-                <Diamond className="h-5 w-5" />
+              <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tighter border-2 border-card shadow-lg">
+                {vip.tier}
               </div>
             )}
           </div>
           
-          <div className="text-center md:text-left space-y-2 w-full">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
-              <h1 className="text-2xl md:text-5xl font-bold tracking-tight font-display uppercase italic break-all">
-                {identity.nickname}
-              </h1>
-              <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-widest border-primary/50 text-primary shrink-0">
-                ID: {identity.id.substring(0, 8)}
-              </Badge>
-              {staff.isEligible && (
-                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px] uppercase tracking-widest shrink-0">
-                  Equipe Elegível
-                </Badge>
+          <div className="flex-1 text-center md:text-left space-y-2 md:space-y-3">
+            <div className="flex flex-col md:flex-row items-center gap-3">
+              {isEditing ? (
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <Input 
+                    value={editName} 
+                    onChange={e => setEditName(e.target.value)}
+                    className="h-10 w-full md:w-64 bg-background/50 border-primary/30"
+                    placeholder="Seu codinome..."
+                    autoFocus
+                  />
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-500 shrink-0" onClick={handleSave} disabled={mutation.isPending}>
+                    <Save className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => setIsEditing(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase italic break-all">
+                    {isAnonymous ? "Membro Anônimo" : identity.nickname}
+                  </h1>
+                  <Button size="icon" variant="ghost" className="h-6 w-6 opacity-40 hover:opacity-100" onClick={() => setIsEditing(true)}>
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                </div>
               )}
             </div>
-            <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest">
-              // Membro desde {new Date(identity.joinedAt).toLocaleDateString()}
+            
+            <p className="text-muted-foreground text-sm md:text-base font-medium flex items-center justify-center md:justify-start gap-2">
+              {isAnonymous ? (
+                <span className="flex items-center gap-1.5 text-primary/80 uppercase font-mono text-[10px] tracking-widest">
+                  <Ghost className="h-4 w-4" /> Identidade Oculta
+                </span>
+              ) : (
+                <>
+                  <BadgeCheck className="h-4 w-4 text-primary" />
+                  <span className="uppercase font-mono text-[10px] tracking-widest">
+                    Desde {formatDistanceToNow(new Date(identity.joinedAt), { addSuffix: true, locale: ptBR })}
+                  </span>
+                </>
+              )}
             </p>
+            
+            <div className="flex items-center justify-center md:justify-start gap-2 pt-2">
+               <Button 
+                variant="outline" 
+                size="sm" 
+                className={cn("h-7 text-[10px] uppercase font-bold tracking-widest", isAnonymous ? "border-primary bg-primary/10" : "border-muted-foreground/20")}
+                onClick={() => {
+                  const nextAnon = !isAnonymous;
+                  setIsAnonymous(nextAnon);
+                  mutation.mutate({ is_anonymous: nextAnon });
+                }}
+              >
+                {isAnonymous ? <UserCircle className="mr-1 h-3 w-3" /> : <Ghost className="mr-1 h-3 w-3" />}
+                {isAnonymous ? "Revelar Identidade" : "Tornar-se Anônimo"}
+              </Button>
+            </div>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-4">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 shrink-0">
                 <Trophy className="h-4 w-4 text-primary" />

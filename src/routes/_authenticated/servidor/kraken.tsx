@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
+import krakenNewBgAsset from "@/assets/kraken_new_bg.jpg.asset.json";
 import krakenBg18Asset from "@/assets/krakenbackground-18.jpg.asset.json";
 import krakenBg17Asset from "@/assets/krakenbackground-17.jpg.asset.json";
 import krakenBg16Asset from "@/assets/krakenbackground-16.jpg.asset.json";
@@ -33,6 +34,7 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Cadeia de candidatos validada em runtime.
 // v20: Corrigindo a ordem para garantir que a imagem oficial (v18) seja a prioritária.
 const KRAKEN_BG_CANDIDATES: string[] = [
+  krakenNewBgAsset.url,
   krakenBg18Asset.url,
   krakenBg17Asset.url,
   krakenBg16Asset.url,
@@ -56,7 +58,7 @@ const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
   // Incrementado para v20 para forçar invalidação na Vercel
-  return `${url}${sep}v=v20`;
+  return `${url}${sep}v=v21`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
