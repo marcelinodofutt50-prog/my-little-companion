@@ -82,8 +82,8 @@ function ReferralsPage() {
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3 mb-8">
-              <Card className="bg-black/40 border-primary/10 backdrop-blur-sm">
+            <div className="grid gap-6 md:grid-cols-4 mb-8">
+              <Card className="bg-card border-border backdrop-blur-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono text-muted-foreground uppercase">{t('ref.stats_total')}</span>
@@ -92,24 +92,44 @@ function ReferralsPage() {
                   <div className="text-3xl font-bold">{data?.stats?.total ?? 0}</div>
                 </CardContent>
               </Card>
-              <Card className="bg-black/40 border-primary/10 backdrop-blur-sm">
+              <Card className="bg-card border-border backdrop-blur-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-mono text-muted-foreground uppercase">{t('ref.stats_granted')}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase">Indicações Válidas</span>
                     <Check className="h-4 w-4 text-emerald-500" />
                   </div>
                   <div className="text-3xl font-bold">{data?.stats?.granted ?? 0}</div>
                 </CardContent>
               </Card>
-              <Card className="bg-black/40 border-primary/10 backdrop-blur-sm">
+              <Card className="bg-card border-border backdrop-blur-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-mono text-muted-foreground uppercase">{t('ref.stats_cashback')}</span>
-                    <DollarSign className="h-4 w-4 text-primary" />
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase">Shadow Pontos</span>
+                    <Trophy className="h-4 w-4 text-amber-500" />
                   </div>
-                  <div className="text-3xl font-bold">{formatBrl(data?.stats?.cashback ?? 0)}</div>
+                  <div className="text-3xl font-bold">{data?.stats?.points ?? 0}</div>
                 </CardContent>
               </Card>
+              <Card className="bg-card border-border backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase">Trust Score</span>
+                    <ShieldCheck className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className="text-3xl font-bold">{data?.stats?.trust ?? 100}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="mb-8 p-6 bg-card border rounded-xl">
+               <div className="flex items-center justify-between mb-4">
+                 <div>
+                    <h3 className="font-display text-xl font-bold">{data?.level?.name || "Novato"}</h3>
+                    <p className="text-sm text-muted-foreground">Próximo nível: {data?.nextLevel?.name || "Lendário"}</p>
+                 </div>
+                 <Badge variant="outline" className="px-3 py-1 font-mono">{data?.stats?.conversions ?? 0} Conversões</Badge>
+               </div>
+               <Progress value={Math.min(100, ((data?.stats?.conversions ?? 0) / (data?.nextLevel?.min_conversions || 1)) * 100)} className="h-2" />
             </div>
 
             <div className="grid gap-8 lg:grid-cols-3">
