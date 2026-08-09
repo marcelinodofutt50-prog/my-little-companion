@@ -63,8 +63,14 @@ export const listTutorials = createServerFn({ method: "GET" })
       
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
+      // Se for uma tentativa de reparo forçado, executamos o RPC antes da busca
+      if (input?.metadata?.force_repair && attempt === 1) {
+        console.log("[tutorials] Executando reparo forçado via RPC no Admin Tunnel...");
+        await supabaseAdmin.rpc("force_refresh_schema_permissions");
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
       // Bypass total de RLS e Cache para a Knowledge Base
-      // O Admin Tunnel é a única forma de garantir 100% de disponibilidade contra PGRST108
       const { data: adminData, error: adminError } = await supabaseAdmin
         .from("tutorials")
         .select("*")
@@ -76,14 +82,16 @@ export const listTutorials = createServerFn({ method: "GET" })
         
         if (isPGRST && attempt <= 3) {
           await trackSchemaFailure(adminError, "listTutorials", false, { stage: `retry_${attempt}`, ...metadata }, context.userId);
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          // O trackSchemaFailure já aciona o RPC agora
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           return fetchWithRetry(attempt + 1);
         }
         return [];
       }
 
-      return (adminData || []).filter(item => item && item.id && (item.title || item.category));
+      const results = (adminData || []).filter(item => item && item.id && (item.title || item.category));
+      console.log(`[tutorials] Admin Tunnel retornou ${results.length} módulos.`);
+      return results;
     };
 
     return await fetchWithRetry();
