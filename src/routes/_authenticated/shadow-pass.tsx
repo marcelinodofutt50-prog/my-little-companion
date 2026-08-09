@@ -300,7 +300,7 @@ function ShadowPassPage() {
           </section>
 
           {/* Quick Stats */}
-          <section className="grid grid-cols-2 gap-4">
+          <section className="grid grid-cols-2 gap-3 md:gap-4">
              <div className="p-4 rounded-2xl bg-card border border-border/40 space-y-1">
                <div className="text-[10px] font-mono uppercase text-muted-foreground">Indicações</div>
                <div className="text-xl font-bold font-mono">{community.referrals}</div>
