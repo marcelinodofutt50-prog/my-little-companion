@@ -21,7 +21,9 @@ type Row = {
   image_signed_url: string | null;
   sort_order: number | null;
   active: boolean;
+  status: "published" | "draft" | "hidden" | "sold_out";
 };
+
 
 type Draft = {
   slug: string;
@@ -31,11 +33,13 @@ type Draft = {
   image_url: string;
   sort_order: string;
   active: boolean;
+  status: "published" | "draft" | "hidden" | "sold_out";
   original_slug?: string;
   preview?: string | null;
 };
 
-const EMPTY: Draft = { slug: "", name: "", description: "", price_brl: "", image_url: "", sort_order: "0", active: true };
+
+const EMPTY: Draft = { slug: "", name: "", description: "", price_brl: "", image_url: "", sort_order: "0", active: true, status: "published" };
 
 function slugify(v: string) {
   return v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -75,9 +79,11 @@ export function AdminMarketPanel() {
       image_url: r.image_url ?? "",
       sort_order: String(r.sort_order ?? 0),
       active: r.active,
+      status: r.status || "published",
       original_slug: r.slug,
       preview: r.image_signed_url ?? null,
     });
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -111,8 +117,10 @@ export function AdminMarketPanel() {
         image_url: draft.image_url || null,
         sort_order: Number(draft.sort_order) || 0,
         active: draft.active,
+        status: draft.status,
         original_slug: draft.original_slug,
-      } });
+      } as any });
+
       toast.success(draft.original_slug ? "Produto atualizado" : "Produto criado");
       setDraft(EMPTY);
       load();
@@ -186,6 +194,20 @@ export function AdminMarketPanel() {
               inputMode="numeric"
             />
           </div>
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Status no Catálogo</label>
+            <select
+              value={draft.status}
+              onChange={(e) => setDraft({ ...draft, status: e.target.value as any })}
+              className="w-full rounded border border-input bg-background/60 p-2 font-mono text-sm text-foreground focus:border-neon/60 focus:outline-none"
+            >
+              <option value="published">Publicado</option>
+              <option value="draft">Rascunho</option>
+              <option value="hidden">Oculto</option>
+              <option value="sold_out">Esgotado</option>
+            </select>
+          </div>
+
           <div className="md:col-span-2">
             <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</label>
             <textarea
@@ -274,8 +296,16 @@ export function AdminMarketPanel() {
                     </div>
                     <div className="text-right">
                       <div className="font-display text-sm text-neon">{formatBrl(Number(r.price_brl))}</div>
-                      <div className="font-mono text-[9px] uppercase text-muted-foreground">{r.active ? "ativo" : "oculto"}</div>
+                      <div className={`font-mono text-[9px] uppercase ${
+                        r.status === 'published' ? 'text-emerald-400' : 
+                        r.status === 'sold_out' ? 'text-red-400' : 'text-muted-foreground'
+                      }`}>
+                        {r.status === 'published' ? 'publicado' : 
+                         r.status === 'draft' ? 'rascunho' :
+                         r.status === 'hidden' ? 'oculto' : 'esgotado'}
+                      </div>
                     </div>
+
                   </div>
                   <div className="mt-2 flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => editRow(r)} className="font-mono text-[10px] uppercase">Editar</Button>
