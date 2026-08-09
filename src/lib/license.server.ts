@@ -64,7 +64,7 @@ export async function internalGenerateTrial(
     panel: panelFromPlanSlug("trial"),
   });
   
-  const alreadyExists = yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
+  const alreadyExists = !!yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
   if (yr.Fail && !alreadyExists) {
     await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
     throw new Error(`Painel: ${yr.Fail}`);
