@@ -364,7 +364,7 @@ function KrakenPage() {
         </Button>
       </div>
 
-      <div className="relative z-20 space-y-6">
+      <div className="relative z-20 space-y-6 w-full max-w-7xl px-4 md:px-0">
         <div className="flex items-center justify-between space-y-2">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
