@@ -30,8 +30,11 @@ import krakenBg5Asset from "@/assets/kraken-bg-5.png.asset.json";
 // Priorizamos os assets locais registrados no código para garantir carregamento na Vercel.
 const KRAKEN_BG_CANDIDATES: string[] = [
   krakenBg14Asset.url,
+  "/assets/krakenbackground-14.jpg",
   krakenBg13Asset.url,
+  "/assets/krakenbackground-13.jpg",
   krakenBg12Asset.url,
+  "/assets/krakenbackground-12.jpg",
   krakenBg10Asset.url,
   krakenBg8Asset.url,
   krakenBg7Asset.url,
@@ -47,9 +50,8 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Incrementamos a versão para v13 para forçar um refresh total na CDN da Vercel.
-  // O uso de um valor fixo por deploy garante consistência durante a sessão.
-  return `${url}${sep}v=v13-${new Date().getTime()}`;
+  // Forçamos a versão v14 para garantir que o deploy da Vercel limpe caches antigos.
+  return `${url}${sep}v=v14`;
 };
 
 const krakenCore = getUrlWithBust(KRAKEN_BG_CANDIDATES[0] || KRAKEN_BG_FALLBACK);
@@ -125,7 +127,7 @@ function KrakenPage() {
         const finish = (ok: boolean) => resolve(ok);
         img.onload = () => {
           const ratio = img.naturalWidth / Math.max(1, img.naturalHeight);
-          const isUsable = img.naturalWidth >= 900 && ratio >= 1.1 && ratio <= 3.2;
+          const isUsable = img.naturalWidth >= 400 && ratio >= 0.5 && ratio <= 4.0;
           if (!isUsable) {
             console.warn(
               `[Kraken] Asset descartado (proporção inválida ${img.naturalWidth}x${img.naturalHeight} | ratio: ${ratio.toFixed(2)}): ${url}`
