@@ -15,12 +15,12 @@ import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 
-import krakenV28Asset from "@/assets/kraken_v28_final.webp.asset.json";
+import krakenV29Asset from "@/assets/kraken_v29_final.jpg.asset.json";
 
 // Imagem tática central da Kraken 2.0
-// v28: Definindo kraken_v28_final.webp como a única imagem de fundo oficial.
+// v29: Definindo kraken_v29_final.jpg como a única imagem de fundo oficial.
 const KRAKEN_BG_CANDIDATES: string[] = [
-  krakenV28Asset.url,
+  krakenV29Asset.url,
 ].filter(Boolean) as string[];
 
 const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1];
@@ -28,11 +28,11 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // v28.1: Cache-busting calibrado para a nova infraestrutura
-  return `${url}${sep}v=v28.1`;
+  // v29.1: Cache-busting calibrado para a nova infraestrutura
+  return `${url}${sep}v=v29.1`;
 };
 
-const krakenCore = getUrlWithBust(krakenV28Asset.url || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenV29Asset.url || KRAKEN_BG_FALLBACK);
 
 
 
