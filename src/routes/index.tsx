@@ -3,6 +3,7 @@
 // Resultado: Erros PGRST205 resolvidos. tutorial_progress sincronizado.
 // INFRAESTRUTURA: Sincronização de Banco de Dados OK.
 // CENTRAL DE TREINAMENTO ESTA FUNCIONANDO AGORA NA VERCEL? ESTA 100%?
+// CENTRO DE TREINAMENTO ESTA FUNCIONANDO???
 // Add a real-time status widget on the Training Center page that reads `/api/public/health` and shows database connectivity and sync health.
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
 
