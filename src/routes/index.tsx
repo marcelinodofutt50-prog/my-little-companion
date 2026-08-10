@@ -1,5 +1,5 @@
-// Shadow Protocol v8.1: Infraestrutura e Assets restaurados. Diagnóstico de perfil e missões otimizados.
-// Localização do Centro de Treinamento: src/routes/_authenticated/tutoriais.tsx (Frontend) | src/lib/tutorials.functions.ts (Backend)
+// Shadow Protocol v8.2: Infraestrutura e Assets finalizados. Correção de PGRST108 via Admin Tunnel 2.0.
+// Fluxo Tutoriais: src/routes/_authenticated/tutoriais.tsx (UI) -> src/lib/tutorials.functions.ts (RPC/Admin) -> public.tutorials/public.tutorial_progress (DB)
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
