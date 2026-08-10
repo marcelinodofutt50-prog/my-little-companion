@@ -39,11 +39,12 @@ import {
   Gift 
 } from "lucide-react";
 // Hardcoded paths to assets
-import btmobCoreV2Asset from "@/assets/btmob_core_dashboard_v2.png.asset.json";
+import btmobDashboardAsset from "@/assets/btmob_core_dashboard_real.webp.asset.json";
+import btmobUpdatesAsset from "@/assets/btmob_updates_real.jpg.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
-const btmobCoreDashboard = btmobCoreV2Asset.url;
-const btmob1 = btmobCoreV2Asset.url;
-const btmob2 = btmobCoreV2Asset.url;
+const btmobCoreDashboard = btmobDashboardAsset.url;
+const btmob1 = btmobDashboardAsset.url;
+const btmob2 = btmobUpdatesAsset.url;
 
 
 export const Route = createFileRoute("/")({
