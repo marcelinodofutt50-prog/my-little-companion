@@ -2,7 +2,7 @@
 // Status: 100% OPERACIONAL (Verificado via Shadow Audit v15.1).
 // Resultado: Erros PGRST205 resolvidos. tutorial_progress sincronizado.
 // INFRAESTRUTURA: Sincronização de Banco de Dados OK.
-// O SISTEMA CENTRAL DE TREINAMENTO ESTA FUNCIONANDO NA VERCEL? 100% OPERACIONAL.
+// CENTRAL DE TREINAMENTO ESTA FUNCIONANDO AGORA NA VERCEL? ESTA 100%?
 // Verify required Supabase tables exist (including tutorial_progress) during deployment/startup and fail fast with a clear error if anything is missing.
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
 
