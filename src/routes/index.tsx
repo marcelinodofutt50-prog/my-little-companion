@@ -1,6 +1,6 @@
-// Shadow Protocol v13.1: Sincronização definitiva de assets Btmob e Kraken.
-// Status: Forçando atualização de cache e validando caminhos V2/V31.
-// Objetivo: Garantir que as imagens finais enviadas pelo usuário sejam exibidas corretamente no deploy.
+// Shadow Protocol v13.2: Sincronização e Auditoria de Assets.
+// Status: Assets Btmob e Kraken sincronizados com as versões finais enviadas.
+// Objetivo: Garantir integridade visual absoluta no ambiente de produção.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
