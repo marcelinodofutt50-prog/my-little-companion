@@ -1,4 +1,4 @@
-// Shadow Protocol v9.0: Auditoria Tática Vercel vs Preview concluída.
+// Shadow Protocol v9.1: Imagens reais do Btmob Conexion (Dashboard e Updates) restauradas com sucesso.
 // Relatório de Produção: 
 // 1. Variáveis: Sincronizadas (SUPABASE_SERVICE_ROLE detectada). 
 // 2. Admin Tunnel: Ativo em Shadow Pass, Tutoriais e Nexus para bypass de cache PostgREST.
