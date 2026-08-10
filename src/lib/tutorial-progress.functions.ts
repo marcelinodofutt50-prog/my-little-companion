@@ -8,30 +8,39 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
     const { userId, supabase } = context;
 
     const fetchWithRetry = async (attempt = 1): Promise<string[]> => {
-      console.log(`[tutorial_progress] Admin Tunnel (Attempt ${attempt})...`);
+      const timestamp = new Date().toISOString();
+      console.log(`[tutorial_progress] [${timestamp}] [DEBUG] Iniciando tentativa ${attempt} para o usuário ${userId}`);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
-      const { data, error } = await supabaseAdmin
+      const { data, error, status, statusText } = await supabaseAdmin
         .from("tutorial_progress")
         .select("tutorial_id")
         .eq("user_id", userId);
 
       if (error) {
-        console.error(`[tutorial_progress] Client Error (Attempt ${attempt}):`, error);
+        console.error(`[tutorial_progress] [${timestamp}] [ERROR] Falha na tentativa ${attempt}:`, {
+          code: error.code,
+          message: error.message,
+          hint: error.hint,
+          details: error.details,
+          http_status: status,
+          http_text: statusText
+        });
         
         const isSchemaError = error.code === 'PGRST108' || 
                              error.message?.includes("schema cache") || 
                              error.message?.includes("does not exist") ||
-                             error.code === '42P01';
+                             error.code === '42P01' ||
+                             error.code === '42703';
         
         if (isSchemaError && attempt <= 3) {
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          console.warn(`[tutorial_progress] [${timestamp}] [RECOVERY] Erro de schema detectado. Acionando force_refresh_schema_permissions...`);
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          await new Promise(r => setTimeout(r, 800 * attempt));
+          await new Promise(r => setTimeout(r, 1000 * attempt));
           return fetchWithRetry(attempt + 1);
         }
         
-        throw new Error(`Erro de Banco: ${error.message}`);
+        throw new Error(`[tutorial_progress] [${error.code}] Erro Fatal: ${error.message} (Status: ${status})`);
       }
       
       const results = (data ?? []).map((p: any) => p.tutorial_id);
