@@ -1,6 +1,7 @@
-// Shadow Protocol v9.3: Logs de Telemetria Forense implementados em Shadow Pass e Centro de Treinamento.
-// 1. Logs: Agora incluem Timestamps (ISO), códigos de erro Postgres (42703, 42P01, PGRST108), status HTTP e hints de banco.
-// 2. Diagnóstico: Server functions exportam detalhes completos para o console do navegador e logs do servidor (Vercel).
+// Shadow Protocol v9.4: Interface unificada do Btmob Conexion restaurada com a imagem real enviada.
+// 1. UI: A seção "Gestão Empresarial" agora exibe o layout duplo oficial.
+// 2. Telemetria: Logs forenses ativos para Shadow Pass e Tutoriais.
+
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
 
