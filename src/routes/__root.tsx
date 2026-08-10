@@ -276,6 +276,8 @@ function RootComponent() {
 }
 
 function InnerRootComponent() {
+  const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
 
   // Fallback: se o usuário abriu um link de confirmação de e-mail que ainda
   // aponta para localhost (Supabase Site URL desatualizado), redireciona para
