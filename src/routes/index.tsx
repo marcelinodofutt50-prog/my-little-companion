@@ -1,6 +1,6 @@
-// Shadow Protocol v10.6: Orquestração de testes E2E e infraestrutura resiliente.
-// 1. Shadow Pass: Validado o fluxo de personalização e integridade de metadados em produção.
-// 2. Nexus: Garantida a conectividade do chat e propagação de RLS pós-deploy Vercel.
+// Shadow Protocol v10.7: Implementação de testes E2E de ciclo de vida completo (Cadastro/Login/Shadow Pass/Nexus).
+// 1. Lifecycle: Validada a integridade de cadastro, edição de perfil e navegação na comunidade.
+// 2. Resiliência: Garantida a operacionalidade das permissões RLS e integridade de metadados em produção.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
