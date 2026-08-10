@@ -11,6 +11,7 @@ export const getShadowPassData = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
 
     // 1. Core Profile (Identity + Reputation + VIP Tier)
+<<<<<<< HEAD
     let profileData: any = {};
     const profileSelect = "id, email, display_name, full_name, created_at, vip_tier, reputation_score, conversions_count, referrals_valid_count, metadata";
     const { data: profile, error: profileError } = await supabase
@@ -37,6 +38,15 @@ export const getShadowPassData = createServerFn({ method: "GET" })
       profileData = profile || {};
       profileData.metadata = profileData.metadata ?? {};
     }
+=======
+    const { data: profile } = await (supabase
+      .from("profiles")
+      .select("id, email, display_name, full_name, created_at, vip_tier, reputation_score, conversions_count, referrals_valid_count, metadata")
+      .eq("id", userId)
+      .maybeSingle() as any);
+
+    const profileData = profile || {};
+>>>>>>> origin/main
 
     // 2. Loyalty (Reusing loyalty system)
     const { data: loyalty } = await (supabase

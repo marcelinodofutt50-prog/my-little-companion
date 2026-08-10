@@ -12,6 +12,7 @@ export const getTutorials = createServerFn({ method: "GET" })
       .select("*")
       .order("display_order", { ascending: true });
 
+<<<<<<< HEAD
     if (!error) {
       return data || [];
     }
@@ -46,4 +47,17 @@ export const getTutorials = createServerFn({ method: "GET" })
     }
 
     return adminData || [];
+=======
+    if (error) {
+      console.error("[Tutorials] Erro no acesso:", error);
+      // Fallback para admin/reparo se falhar
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: adminData } = await supabaseAdmin
+        .from("tutorials")
+        .select("*")
+        .order("display_order", { ascending: true });
+      return adminData || [];
+    }
+    return data || [];
+>>>>>>> origin/main
   });

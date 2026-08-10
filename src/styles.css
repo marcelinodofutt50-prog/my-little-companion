@@ -486,22 +486,40 @@ html.theme-light .terminal-card {
   }
 
   html.theme-light .admin-enterprise {
+<<<<<<< HEAD
     --background: oklch(1 0 0);
     --foreground: oklch(0.1 0.01 255);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.1 0.01 255);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.1 0.01 255);
+=======
+    --background: oklch(0.96 0.008 255);
+    --foreground: oklch(0.25 0.025 255);
+    --card: oklch(0.995 0.002 255);
+    --card-foreground: oklch(0.25 0.025 255);
+    --popover: oklch(0.995 0.002 255);
+    --popover-foreground: oklch(0.25 0.025 255);
+>>>>>>> origin/main
     --primary: oklch(0.43 0.055 255);
     --primary-foreground: oklch(0.985 0.002 255);
     --secondary: oklch(0.92 0.012 255);
     --secondary-foreground: oklch(0.31 0.03 255);
+<<<<<<< HEAD
     --muted: oklch(0.99 0.002 255);
     --muted-foreground: oklch(0.25 0.02 255);
     --accent: oklch(0.9 0.02 255);
     --accent-foreground: oklch(0.3 0.035 255);
     --border: oklch(0.92 0.01 255);
     --input: oklch(1 0 0);
+=======
+    --muted: oklch(0.93 0.01 255);
+    --muted-foreground: oklch(0.52 0.025 255);
+    --accent: oklch(0.9 0.02 255);
+    --accent-foreground: oklch(0.3 0.035 255);
+    --border: oklch(0.86 0.015 255);
+    --input: oklch(0.86 0.015 255);
+>>>>>>> origin/main
     --ring: oklch(0.52 0.055 255 / 45%);
     --neon: oklch(0.48 0.055 255);
     --cyan: oklch(0.52 0.045 235);
@@ -509,6 +527,7 @@ html.theme-light .terminal-card {
     color-scheme: light;
   }
 
+<<<<<<< HEAD
   html.theme-light .admin-enterprise .osint-panel,
   html.theme-light .admin-enterprise .enterprise-surface,
   html.theme-light .admin-enterprise .terminal-card,
@@ -519,6 +538,8 @@ html.theme-light .terminal-card {
     background: oklch(1 0 0) !important;
     border-color: oklch(0.92 0.01 255 / 0.55) !important;
   }
+=======
+>>>>>>> origin/main
 
   .enterprise-surface {
     border: 1px solid var(--border);

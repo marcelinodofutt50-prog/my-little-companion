@@ -12,6 +12,7 @@ export const getDiagnosticData = createServerFn({ method: "GET" })
       .eq("id", userId)
       .maybeSingle();
 
+<<<<<<< HEAD
     let diagnosticData: any = null;
     let diagnosticError: any = null;
     let responseStatus = status;
@@ -63,6 +64,23 @@ export const getDiagnosticData = createServerFn({ method: "GET" })
       status: responseStatus,
       timestamp: new Date().toISOString(),
       userId,
+=======
+    return {
+      success: !error,
+      data: data ? {
+        metadata: data.metadata,
+        vip_tier: data.vip_tier
+      } : null,
+      error: error ? {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      } : null,
+      status,
+      timestamp: new Date().toISOString(),
+      userId
+>>>>>>> origin/main
     };
   });
 

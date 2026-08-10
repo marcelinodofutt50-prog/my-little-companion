@@ -5,13 +5,21 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getTutorialProgress = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<string[]> => {
+<<<<<<< HEAD
     const { userId } = context;
+=======
+    const { userId, supabase } = context;
+>>>>>>> origin/main
 
     const fetchWithRetry = async (attempt = 1): Promise<string[]> => {
       const timestamp = new Date().toISOString();
       console.log(`[tutorial_progress] [${timestamp}] [DEBUG] Iniciando tentativa ${attempt} para o usuário ${userId}`);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> origin/main
       const { data, error, status, statusText } = await supabaseAdmin
         .from("tutorial_progress")
         .select("tutorial_id")
@@ -24,6 +32,7 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
           hint: error.hint,
           details: error.details,
           http_status: status,
+<<<<<<< HEAD
           http_text: statusText,
         });
 
@@ -50,6 +59,27 @@ export const getTutorialProgress = createServerFn({ method: "GET" })
         return [];
       }
 
+=======
+          http_text: statusText
+        });
+        
+        const isSchemaError = error.code === 'PGRST108' || 
+                             error.message?.includes("schema cache") || 
+                             error.message?.includes("does not exist") ||
+                             error.code === '42P01' ||
+                             error.code === '42703';
+        
+        if (isSchemaError && attempt <= 3) {
+          console.warn(`[tutorial_progress] [${timestamp}] [RECOVERY] Erro de schema detectado. Acionando force_refresh_schema_permissions...`);
+          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+          return fetchWithRetry(attempt + 1);
+        }
+        
+        throw new Error(`[tutorial_progress] [${error.code}] Erro Fatal: ${error.message} (Status: ${status})`);
+      }
+      
+>>>>>>> origin/main
       const results = (data ?? []).map((p: any) => p.tutorial_id);
       console.log(`[tutorial_progress] Client SUCCESS: ${results.length} items.`);
       return results;
