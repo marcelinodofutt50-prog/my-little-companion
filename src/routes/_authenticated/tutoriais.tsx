@@ -226,6 +226,7 @@ function TutorialsPage() {
         </div>
         <main className="flex-1 overflow-y-auto relative z-10">
           <SiteHeader />
+          <HealthWidget />
           <div className="container mx-auto px-4 py-8">
             <div className="mb-10">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
