@@ -226,6 +226,7 @@ function TutorialsPage() {
         </div>
         <main className="flex-1 overflow-y-auto relative z-10">
           <SiteHeader />
+          <HealthWidget />
           <div className="container mx-auto px-4 py-8">
             <div className="mb-10">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -805,5 +806,51 @@ function TutorialThumb({ url, title }: { url: string; title: string }) {
       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
       loading="lazy"
     />
+  );
+}
+
+function HealthWidget() {
+  const [health, setHealth] = useState<any>(null);
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const res = await fetch('/api/public/health');
+        if (!res.ok) throw new Error('Health check failed');
+        const data = await res.json();
+        setHealth(data);
+      } catch (e) {
+        console.error("Health check failed", e);
+      }
+    };
+    check();
+    const timer = setInterval(check, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!health) return null;
+
+  const isHealthy = health.status === 'healthy';
+
+  return (
+    <div className="bg-black/40 border-b border-white/5 py-2 px-4 flex items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
+      <div className="flex items-center gap-2">
+        <Database className={`h-3 w-3 ${isHealthy ? 'text-green-500' : 'text-red-500'}`} />
+        <span className="text-muted-foreground">DB STATUS:</span>
+        <span className={isHealthy ? 'text-green-500' : 'text-red-500'}>{health.status}</span>
+      </div>
+      <div className="h-3 w-[1px] bg-white/10" />
+      <div className="flex items-center gap-2">
+        <Activity className="h-3 w-3 text-primary" />
+        <span className="text-muted-foreground">SYNC:</span>
+        <span className="text-primary">{health.tables?.tutorial_progress?.accessible ? 'OPERATIONAL' : 'ERROR'}</span>
+      </div>
+      <div className="h-3 w-[1px] bg-white/10" />
+      <div className="flex items-center gap-2">
+        <Server className="h-3 w-3 text-muted-foreground" />
+        <span className="text-muted-foreground">INFRA:</span>
+        <span className="text-white">VERCEL-EDGE</span>
+      </div>
+    </div>
   );
 }
