@@ -1,4 +1,4 @@
-// Shadow Protocol v9.0: Auditoria Tática Vercel vs Preview concluída.
+// Shadow Protocol v9.1: Imagens reais do Btmob Conexion (Dashboard e Updates) restauradas com sucesso.
 // Relatório de Produção: 
 // 1. Variáveis: Sincronizadas (SUPABASE_SERVICE_ROLE detectada). 
 // 2. Admin Tunnel: Ativo em Shadow Pass, Tutoriais e Nexus para bypass de cache PostgREST.
@@ -39,11 +39,12 @@ import {
   Gift 
 } from "lucide-react";
 // Hardcoded paths to assets
-import btmobCoreV2Asset from "@/assets/btmob_core_dashboard_v2.png.asset.json";
+import btmobDashboardAsset from "@/assets/btmob_core_dashboard_real.webp.asset.json";
+import btmobUpdatesAsset from "@/assets/btmob_updates_real.jpg.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
-const btmobCoreDashboard = btmobCoreV2Asset.url;
-const btmob1 = btmobCoreV2Asset.url;
-const btmob2 = btmobCoreV2Asset.url;
+const btmobCoreDashboard = btmobDashboardAsset.url;
+const btmob1 = btmobDashboardAsset.url;
+const btmob2 = btmobUpdatesAsset.url;
 
 
 export const Route = createFileRoute("/")({
