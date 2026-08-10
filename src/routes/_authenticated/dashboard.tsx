@@ -249,7 +249,7 @@ function DashboardPage() {
       <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
         <AppSidebar />
         <SidebarInset>
-          <main className="flex-1 p-4 md:p-8 pt-6 relative">
+          <main className="flex-1 p-4 md:p-8 pt-6 relative client-enterprise">
             <div className="mx-auto max-w-7xl space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
               {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">

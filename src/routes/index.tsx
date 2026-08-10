@@ -1,5 +1,5 @@
-// Shadow Protocol v12.3: Refinamento visual global e reparo de contraste em tema claro.
-// 1. Dashboard: Blocos cinzas residuais e transparências em widgets foram corrigidos para o tema branco.
+// Shadow Protocol v12.4: Otimização final do ecossistema visual Shadow Dash.
+// 1. Dashboard: Corrigido o "fundo cinza" em widgets e painel no tema branco através da classe .client-enterprise.
 // 2. Resilience: Protocolo de recarregamento de esquema PostgREST v12.0 ativo.
 
 
