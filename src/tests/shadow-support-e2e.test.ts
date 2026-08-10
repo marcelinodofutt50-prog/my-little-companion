@@ -9,12 +9,15 @@ import { supabase } from '@/integrations/supabase/client';
 const reportFailure = async (testName: string, error: any) => {
   try {
     const { generateDiagnosticReport } = await import('@/lib/reporting.functions');
-    await generateDiagnosticReport({
-      testName,
-      error: error?.message || String(error),
-      stack: error?.stack,
-      context: "Vitest E2E Environment",
-      payload: { timestamp: new Date().toISOString() }
+    // Usamos .invoke() para chamar a função de servidor com o input correto
+    await (generateDiagnosticReport as any)({
+      data: {
+        testName,
+        error: error?.message || String(error),
+        stack: error?.stack,
+        context: "Vitest E2E Environment",
+        payload: { timestamp: new Date().toISOString() }
+      }
     });
     console.log(`[Shadow Report] Relatório automático enviado para: ${testName}`);
   } catch (e) {
