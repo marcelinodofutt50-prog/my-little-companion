@@ -593,7 +593,6 @@ function ShadowPassPage() {
           </section>
         </div>
 
-        {/* Right Column: Reputation, Staff & Rewards */}
         <div className="space-y-6 md:space-y-8">
           {/* Reputation Score */}
           <section className="space-y-4">
@@ -702,7 +701,7 @@ function ShadowPassPage() {
                </CardContent>
              </Card>
             </section>
-          </div>
+            </div>
           </div>
         </TabsContent>
 
