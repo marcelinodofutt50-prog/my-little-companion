@@ -30,7 +30,7 @@ describe('Shadow E2E User Journey', () => {
       .select(`
         id, 
         content,
-        profiles(display_name)
+        profiles!community_messages_user_id_fkey(display_name)
       `)
       .limit(5);
 
