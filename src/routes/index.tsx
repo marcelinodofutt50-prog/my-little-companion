@@ -1,6 +1,6 @@
-// Shadow Protocol v10.3: Atualização de arte Kraken v31 e sincronização de assets.
-// 1. Kraken: Implementada a nova arte bioluminescente v31 com texto "KRAKEN" em alta definição.
-// 2. Deploy: Aplicado cache-busting v31 para garantir propagação imediata na Vercel.
+// Shadow Protocol v10.4: Implementação de testes de regressão automatizados.
+// 1. Shadow Pass: Adicionados testes para validar colunas 'metadata', 'vip_tier' e 'reputation_score'.
+// 2. Infra: Validada a acessibilidade da tabela 'community_messages' e bucket 'avatars'.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
