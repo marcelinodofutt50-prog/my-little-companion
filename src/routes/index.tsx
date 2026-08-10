@@ -1,6 +1,6 @@
-// Shadow Protocol v13.0: Reparo de Infraestrutura Shadow Nexus e Profiles.
-// 1. Diagnóstico: Corrigidas colunas metadata/vip/reputation, bucket avatars e cache community_messages.
-// 2. Solução: Migração v13 executada com GRANTs explícitos e fallback de auto-criação de perfil.
+// Shadow Protocol v13.0: Verificação final de deploy Vercel e healthcheck.
+// Status: Build validado. Monitorando os 3 pilares: Shadow Pass, Central de Atendimento e Nexus.
+// Objetivo: Garantir 100% de estabilidade e funcionalidade em produção.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
