@@ -1,7 +1,7 @@
 // Shadow Protocol v14.0: Shadow Pass & Ecosystem Integrity.
 // Status: 100% OPERACIONAL.
 // Resultado: Shadow Pass estabilizado (Avatar, Codinome, Nexus e VIP) e Assets Definidos.
-// quais sao os beneficios do vip?
+// quais sao os beneficios do vip? como o usuario pode chegar no vip? coloca todas essas informações no site, verifica se nao tem nenhum error ou bug, eu quero esse sistema funcionando sem nenhum tipo de error, quero funcional 100%!!!!
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
