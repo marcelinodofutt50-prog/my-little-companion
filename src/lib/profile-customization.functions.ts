@@ -13,7 +13,7 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Shadow Core v13.3: Estratégia de Atualização de Metadados Resiliente
+    // Shadow Core v13.4: Estratégia de Atualização de Metadados Resiliente
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("*")
@@ -32,6 +32,7 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString()
     };
 
+    // Atualizar display_name explicitamente para garantir que aparece no Nexus e Shadow Pass
     if (data.nickname) {
       updates.display_name = data.nickname;
     }
