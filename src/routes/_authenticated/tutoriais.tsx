@@ -15,7 +15,7 @@ import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progre
 import { useTutorialMedia } from "@/lib/tutorial-media";
 
 import { toast } from "sonner";
-import trainingBgAsset from "@/assets/kraken_v27_final.png.asset.json";
+import trainingBgAsset from "@/assets/kraken_v29_final.jpg.asset.json";
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 
