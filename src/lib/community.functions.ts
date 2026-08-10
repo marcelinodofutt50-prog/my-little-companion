@@ -58,7 +58,7 @@ export const sendCommunityMessage = createServerFn({ method: "POST" })
     const isAnonymous = (profile?.metadata as any)?.is_anonymous ?? false;
 
     // 2. Tentar inserção com cliente padrão
-    const insertPayload = {
+    const insertPayload: any = {
       user_id: userId,
       content: data.content,
     };
@@ -105,4 +105,3 @@ export const getCommunityGoals = createServerFn({ method: "GET" })
 
     return data || [];
   });
-

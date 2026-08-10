@@ -18,15 +18,39 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
       // 1. Fetch current data via Admin Tunnel for absolute precision
       const { data: profile, error: fetchError } = await supabaseAdmin
         .from("profiles")
-        .select("metadata, display_name")
+        .select("metadata, display_name, email")
         .eq("id", userId)
         .maybeSingle();
 
-      if (fetchError || !profile) {
+      if (fetchError) {
         console.error("[Profile Audit] Fetch Error:", fetchError);
-        // Fallback for new profiles if they don't exist yet
-        if (!profile) console.warn("[Profile Audit] Profile not found for user:", userId);
-        throw new Error(`Erro ao recuperar perfil: ${fetchError?.message || 'Perfil inexistente'}`);
+        throw new Error(`Erro ao recuperar perfil: ${fetchError.message}`);
+      }
+      
+      // Fallback for missing profile record - create it if it doesn't exist
+      if (!profile) {
+        console.warn("[Profile Audit] Profile not found, creating...", userId);
+        
+        // Obter email do auth.users se não estiver no profile
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+        const email = authUser?.user?.email || "unknown@shadow.dash";
+
+        const newMetadata = { 
+            avatar_url: data.avatar_url || null, 
+            is_anonymous: data.is_anonymous || false 
+        };
+        
+        const insertPayload: any = {
+            id: userId,
+            email: email,
+            display_name: data.nickname || "Shadow Agent",
+            metadata: newMetadata,
+            vip_tier: 'none',
+            reputation_score: 100
+        };
+
+        await supabaseAdmin.from("profiles").insert(insertPayload);
+        return { success: true, created: true };
       }
       
       const currentMetadata = (profile?.metadata as any) || {};
@@ -39,33 +63,17 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
       };
       
       if (data.nickname) finalUpdates.display_name = data.nickname;
-      // 2. Perform Update via Admin Tunnel to bypass PostgREST cache issues
-      const timestamp = new Date().toISOString();
-      console.log(`[Profile Audit] [${timestamp}] [DEBUG] Executando Update para:`, userId, finalUpdates);
-      const { data: updateRes, error: updateError, status, statusText } = await supabaseAdmin
+      
+      const { data: updateRes, error: updateError } = await supabaseAdmin
         .from("profiles")
         .update(finalUpdates)
         .eq("id", userId)
         .select();
 
       if (updateError) {
-        console.error(`[Profile Audit] [${timestamp}] [ERROR] Update Failed:`, {
-          code: updateError.code,
-          message: updateError.message,
-          hint: updateError.hint,
-          details: updateError.details,
-          http_status: status,
-          http_text: statusText,
-          userId
-        });
-        
-        if (updateError.code === "42703") {
-            throw new Error(`[Profile] Coluna inexistente (${updateError.code}): ${updateError.message}. Execute a sincronização de schema.`);
-        }
-        throw new Error(`[Profile] Erro no banco (${updateError.code}): ${updateError.message} (HTTP ${status})`);
+        throw new Error(`[Profile] Erro ao atualizar: ${updateError.message}`);
       }
 
-      console.log("[Profile Audit] Update Success:", updateRes);
       return { success: true, updated: updateRes };
     } catch (error: any) {
       console.error("Erro Crítico em updateProfileCustomization:", error);

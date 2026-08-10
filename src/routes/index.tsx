@@ -1,6 +1,6 @@
-// apartir de agora eu vou pedir para voce fazer as coisas e voce vai fazer exatamente oque eu pedi, e oque e so vai finalizar a tarefa quando o que eu pedi for 100% resolvido ou entregue como foi pedido, ok? Btmob core conexxion tem duas imagens, eu quero que voce altere as duas imagens que esta atuamente para essas duas imagens que esta anexada. Verifique novamente se essas duas imagens estao na aba btmob conexion.
-// Shadow Protocol v12.9: Refinamento de Ativos Btmob e Correção de Sincronia.
-// 1. Diagnóstico: Usuário informou que imagens anteriores não foram aplicadas corretamente; atualizando ponteiros para v2.
+// Shadow Protocol v13.0: Reparo de Infraestrutura Shadow Nexus e Profiles.
+// 1. Diagnóstico: Corrigidas colunas metadata/vip/reputation, bucket avatars e cache community_messages.
+// 2. Solução: Migração v13 executada com GRANTs explícitos e fallback de auto-criação de perfil.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
