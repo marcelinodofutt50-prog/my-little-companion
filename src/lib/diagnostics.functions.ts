@@ -12,59 +12,6 @@ export const getDiagnosticData = createServerFn({ method: "GET" })
       .eq("id", userId)
       .maybeSingle();
 
-<<<<<<< HEAD
-    let diagnosticData: any = null;
-    let diagnosticError: any = null;
-    let responseStatus = status;
-    let fallbackData: any = null;
-
-    if (error && (error.code === "42703" || String(error.message).includes("metadata"))) {
-      const { data: fetchedFallbackData, error: fallbackError, status: fallbackStatus } = await supabase
-        .from("profiles")
-        .select("vip_tier")
-        .eq("id", userId)
-        .maybeSingle();
-
-      fallbackData = fetchedFallbackData;
-      diagnosticData = fallbackData
-        ? { metadata: null, vip_tier: fallbackData.vip_tier }
-        : null;
-      diagnosticError = fallbackError
-        ? {
-            message: fallbackError.message,
-            code: fallbackError.code,
-            details: fallbackError.details,
-            hint: fallbackError.hint,
-          }
-        : {
-            message: error.message,
-            code: error.code,
-            details: error.details,
-            hint: error.hint,
-          };
-      responseStatus = fallbackStatus ?? status;
-    } else {
-      diagnosticData = data
-        ? { metadata: data.metadata, vip_tier: data.vip_tier }
-        : null;
-      diagnosticError = error
-        ? {
-            message: error.message,
-            code: error.code,
-            details: error.details,
-            hint: error.hint,
-          }
-        : null;
-    }
-
-    return {
-      success: !error || !!fallbackData,
-      data: diagnosticData,
-      error: diagnosticError,
-      status: responseStatus,
-      timestamp: new Date().toISOString(),
-      userId,
-=======
     return {
       success: !error,
       data: data ? {
@@ -80,7 +27,7 @@ export const getDiagnosticData = createServerFn({ method: "GET" })
       status,
       timestamp: new Date().toISOString(),
       userId
->>>>>>> origin/main
+    };
     };
   });
 
