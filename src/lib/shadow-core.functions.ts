@@ -8,8 +8,9 @@ export const getShadowPassData = createServerFn({ method: "GET" })
     // Audit check: ensure the caller is indeed authorized and session is valid
     if (!context.userId) throw new Error("Unauthorized");
 
+    const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
+
     // 1. Core Profile (Identity + Reputation + VIP Tier)
     // Shadow Protocol v14.1: Using Admin Tunnel by default to bypass schema cache issues (PGRST108)
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -22,7 +23,7 @@ export const getShadowPassData = createServerFn({ method: "GET" })
        console.error("[ShadowCore] Profile fetch failed even with Admin Tunnel:", profileError);
     }
 
-    const profileData = profile || {};
+    const profileData: any = profile || {};
 
     // 2. Loyalty (Reusing loyalty system)
     const { data: loyalty } = await (supabase
