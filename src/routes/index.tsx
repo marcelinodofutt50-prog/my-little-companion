@@ -1,6 +1,6 @@
 // Shadow Protocol v12.8: Auditoria Completa e Estabilização Total.
 // 1. Diagnóstico: Suíte de testes validada com 100% de sucesso para Shadow Pass e Central de Atendimento.
-// 2. Integridade: Correção de conflitos git e CSS concluída; build Vercel íntegro.
+// 2. Integridade: Implementei testes E2E para ShadowPass e Central de Atendimento cobrindo fluxos críticos, para garantir que nada quebre após deploy.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
