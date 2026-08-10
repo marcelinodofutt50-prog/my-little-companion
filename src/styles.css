@@ -118,7 +118,8 @@
 html.theme-light, 
 html.theme-light body,
 html.theme-light .admin-enterprise,
-html.theme-light main {
+html.theme-light main,
+html.theme-light section {
   color-scheme: light;
 
   /* Refined light theme with extreme contrast and high readability */
