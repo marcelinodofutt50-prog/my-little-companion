@@ -70,6 +70,9 @@ function TutorialsPage() {
       return newHistory;
     });
   }, []);
+  
+  const selectedVideoUrl = useTutorialMedia(selected?.video_url);
+  const selectedPosterUrl = useTutorialMedia(selected?.image_url);
 
   
   const listFn = useServerFn(getTutorials);
