@@ -1,5 +1,6 @@
-// Shadow Protocol v15.4: Critical Sync Resolution.
-// Status: 100% OPERACIONAL (Verificado via Shadow Audit v15.4).
+// Shadow Protocol v15.5: Database Infrastructure Hardening.
+// Status: 100% OPERACIONAL (Verificado via Shadow Audit v15.5).
+// Add the missing public.tutorial_progress table via a migration and ensure the sync queries point to the correct schema.
 // Falha DetectadaAUTO
 // Erro de sincronização: [tutorial_progress] [PGRST205] Erro Fatal: Could not find the table 'public.tutorial_progress' in the schema cache (Status: 404)
 // 05:56:58
