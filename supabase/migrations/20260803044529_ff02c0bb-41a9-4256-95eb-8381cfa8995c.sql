@@ -1,0 +1,1 @@
+UPDATE public.plans SET price_brl = 450.00 WHERE slug = 'trial';

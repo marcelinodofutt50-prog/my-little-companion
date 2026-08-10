@@ -1,0 +1,35 @@
+# Variáveis de ambiente para Vercel — Shadow / www.shadowdashstore.com
+# Cole essas chaves no Vercel Dashboard: Project Settings → Environment Variables
+
+# --- Domínio oficial (corrige links de confirmação de e-mail) ---
+VITE_SITE_URL=https://www.shadowdashstore.com
+
+# --- Supabase (use os valores do seu projeto externo conectado) ---
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_PROJECT_ID=
+SUPABASE_DB_URL=
+
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+VITE_SUPABASE_PROJECT_ID=
+
+# --- Mercado Pago ---
+MP_ACCESS_TOKEN=
+MP_WEBHOOK_SECRET=
+
+# --- Yaarsa Panels ---
+YAARSA_BASE_URL=
+YAARSA_ADMIN_KEY=
+YAARSA_V46_BASE_URL=
+YAARSA_V46_ADMIN_KEY=
+
+# --- Outros segredos do projeto ---
+LICENSE_ENC_KEY=
+CRON_TRIGGER_TOKEN=
+APK_WORKER_HMAC_SECRET=
+LOVABLE_API_KEY=
+
+# Nota: após colar as variáveis, clique em "Deploy" novamente para a Vercel
+# repassar os valores ao build do Vite.

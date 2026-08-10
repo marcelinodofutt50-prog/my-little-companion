@@ -1,0 +1,1 @@
+UPDATE public.licenses SET server_ip = '200.9.154.103' WHERE panel = 'v46' AND server_ip <> '200.9.154.103';

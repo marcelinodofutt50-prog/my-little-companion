@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "asset_id": "5136a7d9-7728-407b-b852-d8e29e17cf2d",
+  "project_id": "aa5c6d4b-4a83-49d2-a5ba-32781957814c",
+  "url": "/__l5e/assets-v1/5136a7d9-7728-407b-b852-d8e29e17cf2d/krakenbackground-7.jpg",
+  "r2_key": "a/v1/aa5c6d4b-4a83-49d2-a5ba-32781957814c/5136a7d9-7728-407b-b852-d8e29e17cf2d/krakenbackground-7.jpg",
+  "original_filename": "krakenbackground-7.jpg",
+  "size": 5085,
+  "content_type": "image/png",
+  "created_at": "2026-08-08T01:06:31Z",
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
+}

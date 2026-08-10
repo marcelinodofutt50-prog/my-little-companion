@@ -1,0 +1,1 @@
+INSERT INTO public.coupons (code, discount_pct, cashback_pct, active) VALUES ('BTMOB40', 0, 40, true) ON CONFLICT (code) DO UPDATE SET cashback_pct = EXCLUDED.cashback_pct, active = true;

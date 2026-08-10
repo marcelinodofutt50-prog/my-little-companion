@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /_authenticated/
+Disallow: /api/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /suporte
+Disallow: /indicacoes
+Disallow: /play-protect
+Disallow: /pagamento/
+
+Sitemap: https://www.shadowdashstore.com/sitemap.xml

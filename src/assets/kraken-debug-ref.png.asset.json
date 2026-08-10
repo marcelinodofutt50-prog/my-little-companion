@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "asset_id": "7985e688-d678-42d6-8c2b-a4b89824e5d7",
+  "project_id": "aa5c6d4b-4a83-49d2-a5ba-32781957814c",
+  "url": "/__l5e/assets-v1/7985e688-d678-42d6-8c2b-a4b89824e5d7/kraken-debug-ref.png",
+  "r2_key": "a/v1/aa5c6d4b-4a83-49d2-a5ba-32781957814c/7985e688-d678-42d6-8c2b-a4b89824e5d7/kraken-debug-ref.png",
+  "original_filename": "kraken-debug-ref.png",
+  "size": 300169,
+  "content_type": "image/png",
+  "created_at": "2026-08-09T01:23:10Z",
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
+}

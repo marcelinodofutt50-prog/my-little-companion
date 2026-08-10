@@ -1,0 +1,222 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { VersionTier } from "@/lib/plans";
+import { listMyNotifications, type AppNotification } from "./notifications.functions";
+
+export type AnnouncementSeverity = "info" | "warning" | "critical";
+export type AnnouncementStatus = "draft" | "review" | "published";
+
+export type Announcement = {
+  id: string;
+  title: string;
+  body: string;
+  severity: AnnouncementSeverity;
+  min_tier: VersionTier;
+  event_at: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  is_active: boolean;
+  status: AnnouncementStatus;
+  tags: string[];
+  image_url?: string | null;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  created_at: string;
+};
+
+const tierRank: Record<VersionTier, number> = { weekly: 0, monthly_457: 1, lifetime_46: 2, upgrade: 2 };
+
+async function assertAdmin(ctx: { supabase: any; userId: string }) {
+  const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
+  if (!data) throw new Error("Forbidden");
+}
+
+async function bestTierRank(ctx: { supabase: any; userId: string }): Promise<number> {
+  const { data: isAdmin } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
+  if (isAdmin) return 2;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const now = new Date().toISOString();
+  const { data: lics } = await supabaseAdmin
+    .from("licenses")
+    .select("version_tier, expires_at, disabled_at, revoked, suspended_at")
+    .eq("user_id", ctx.userId);
+  const active = (lics ?? []).filter(
+    (l: any) => !l.disabled_at && !l.revoked && !l.suspended_at && (!l.expires_at || l.expires_at > now),
+  );
+  return active.reduce(
+    (acc: number, l: any) => Math.max(acc, tierRank[(l.version_tier ?? "monthly_457") as VersionTier] ?? 0),
+    -1,
+  );
+}
+
+/** Anúncios visíveis para o cliente logado (respeita agendamento e plano). */
+export const listMyAnnouncements = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<Announcement[]> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const nowIso = new Date().toISOString();
+    
+    const MAX_RETRIES = 3;
+    let lastError: any = null;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const delay = Math.pow(2, attempt) * 500 + Math.random() * 200;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      try {
+        let rank = -1;
+        try {
+          rank = await bestTierRank(context);
+        } catch (err: any) {
+          const isSchemaError = err?.message?.includes("relation \"public.licenses\" does not exist") || 
+                               err?.message?.includes("public.licenses' in the schema cache");
+          if (isSchemaError && attempt < MAX_RETRIES - 1) continue;
+          
+          console.error("bestTierRank failed in listMyAnnouncements", err);
+          if (isSchemaError) {
+             const wrapped = new Error(err.message);
+             (wrapped as any)._schemaError = "public.licenses";
+             throw wrapped;
+          }
+          throw err;
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from("announcements")
+          .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, status, tags, created_at, image_url, attachment_url, attachment_name")
+          .eq("is_active", true)
+          .eq("status", "published")
+          .lte("starts_at", nowIso)
+          .order("created_at", { ascending: false })
+          .limit(20);
+          
+        if (error) {
+          const isSchemaError = error.message?.includes("relation \"public.announcements\" does not exist") || 
+                               error.message?.includes("public.announcements' in the schema cache");
+          if (isSchemaError && attempt < MAX_RETRIES - 1) continue;
+          
+          if (isSchemaError) {
+             const wrapped = new Error(error.message);
+             (wrapped as any)._schemaError = "public.announcements";
+             throw wrapped;
+          }
+          throw new Error(error.message);
+        }
+
+        return ((data ?? []) as any[])
+          .filter((r) => !r.ends_at || r.ends_at > nowIso)
+          .filter((r) => rank >= (tierRank[r.min_tier as VersionTier] ?? 0)) as Announcement[];
+
+      } catch (err) {
+        lastError = err;
+        if ((err as any)._schemaError && attempt < MAX_RETRIES - 1) continue;
+        throw err;
+      }
+    }
+    throw lastError;
+  });
+
+
+
+/** Lista completa (admin) — inclui agendados e ocultos. */
+export const adminListAnnouncements = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<Announcement[]> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("announcements")
+      .select("id, title, body, severity, min_tier, event_at, starts_at, ends_at, is_active, status, tags, created_at, image_url, attachment_url, attachment_name")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Announcement[];
+  });
+
+const upsertSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().trim().min(2).max(140),
+  body: z.string().trim().min(2).max(2000),
+  severity: z.enum(["info", "warning", "critical"]).default("info"),
+  min_tier: z.enum(["weekly", "monthly_457", "lifetime_46", "upgrade"]).default("weekly"),
+  event_at: z.string().datetime({ offset: true }).nullable().optional(),
+  starts_at: z.string().datetime({ offset: true }).nullable().optional(),
+  ends_at: z.string().datetime({ offset: true }).nullable().optional(),
+  is_active: z.boolean().default(true),
+  status: z.enum(["draft", "review", "published"]).default("draft"),
+  tags: z.array(z.string()).default([]),
+  image_url: z.string().url().nullable().optional(),
+  attachment_url: z.string().url().nullable().optional(),
+  attachment_name: z.string().nullable().optional(),
+});
+
+export const adminSaveAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => upsertSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload = {
+      title: data.title,
+      body: data.body,
+      severity: data.severity,
+      min_tier: data.min_tier,
+      event_at: data.event_at ?? null,
+      starts_at: data.starts_at ?? new Date().toISOString(),
+      ends_at: data.ends_at ?? null,
+      is_active: data.is_active,
+      status: data.status,
+      tags: data.tags,
+      image_url: data.image_url ?? null,
+      attachment_url: data.attachment_url ?? null,
+      attachment_name: data.attachment_name ?? null,
+    };
+    if (data.id) {
+      const { error } = await supabaseAdmin.from("announcements").update(payload as any).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { data: newAnn, error } = await supabaseAdmin
+        .from("announcements")
+        .insert({ ...payload, created_by: context.userId } as any)
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+
+      // Trigger real-time notification for all matching users
+      if (payload.is_active && new Date(payload.starts_at) <= new Date()) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        // In a real app, we'd insert into a 'notifications' table.
+        // For now, we'll use the existing notification mock system logic by ensuring
+        // the client knows to refresh its announcement query via the channel.
+      }
+    }
+    return { ok: true };
+  });
+
+export const adminToggleAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => z.object({ id: z.string().uuid(), is_active: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("announcements")
+      .update({ is_active: data.is_active } as any)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteAnnouncement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("announcements").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

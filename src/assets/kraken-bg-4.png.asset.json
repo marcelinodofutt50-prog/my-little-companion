@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "asset_id": "d7059787-a08f-4ad6-9d33-1a4e0a14ecd5",
+  "project_id": "aa5c6d4b-4a83-49d2-a5ba-32781957814c",
+  "url": "/__l5e/assets-v1/d7059787-a08f-4ad6-9d33-1a4e0a14ecd5/kraken-bg-4.png",
+  "r2_key": "a/v1/aa5c6d4b-4a83-49d2-a5ba-32781957814c/d7059787-a08f-4ad6-9d33-1a4e0a14ecd5/kraken-bg-4.png",
+  "original_filename": "kraken-bg-4.png",
+  "size": 363561,
+  "content_type": "image/jpeg",
+  "created_at": "2026-08-06T03:09:32Z",
+  "headers": {
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=59",
+    "Vary": "Accept-Encoding"
+  }
+}

@@ -1,0 +1,87 @@
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+
+export type ThemeMode = "system" | "dark" | "light";
+export type ResolvedTheme = "dark" | "light";
+
+const KEY = "shadow-theme";
+
+function readSaved(): ThemeMode {
+  if (typeof window === "undefined") return "system";
+  try {
+    const v = localStorage.getItem(KEY);
+    if (v === "light" || v === "dark" || v === "system") return v as ThemeMode;
+  } catch {
+    /* storage bloqueado */
+  }
+  return "system";
+}
+
+function systemTheme(): ResolvedTheme {
+  if (typeof window === "undefined" || !window.matchMedia) return "dark";
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+type Ctx = { mode: ThemeMode; resolved: ResolvedTheme; setMode: (m: ThemeMode) => void };
+
+const ThemeContext = createContext<Ctx>({ mode: "system", resolved: "dark", setMode: () => {} });
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [mode, setModeState] = useState<ThemeMode>("system");
+  const [resolved, setResolved] = useState<ResolvedTheme>(() => {
+    if (typeof document === "undefined") return "dark";
+    return document.documentElement.classList.contains("theme-light") ? "light" : "dark";
+  });
+
+  // Lê preferência salva depois da hidratação (evita mismatch de SSR)
+  useEffect(() => {
+    setModeState(readSaved());
+  }, []);
+
+  // Resolve tema e acompanha mudanças do sistema operacional em tempo real
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const apply = () => setResolved(mode === "system" ? systemTheme() : mode);
+    apply();
+    if (mode !== "system" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [mode]);
+
+  // Aplica no <html> e atualiza meta theme-color
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+
+    // Sincroniza classes e CSS variables
+    const isLight = resolved === "light";
+    root.classList.toggle("theme-light", isLight);
+    root.classList.toggle("dark", !isLight);
+    root.style.setProperty('color-scheme', resolved);
+
+    // Força o body a seguir o background do tema para evitar flashes
+    document.body.style.backgroundColor = isLight ? "#ffffff" : "var(--background)";
+
+    // Atualiza meta theme-color para acompanhar o tema
+    const themeColor = isLight ? "#f9f7f2" : "#0a0a0b";
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && meta.getAttribute('content') !== themeColor) {
+      meta.setAttribute('content', themeColor);
+    }
+  }, [resolved]);
+
+  const setMode = useCallback((m: ThemeMode) => {
+    setModeState(m);
+    try {
+      localStorage.setItem(KEY, m);
+    } catch {
+      /* storage bloqueado */
+    }
+  }, []);
+
+  return <ThemeContext.Provider value={{ mode, resolved, setMode }}>{children}</ThemeContext.Provider>;
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}

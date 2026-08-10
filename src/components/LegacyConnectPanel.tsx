@@ -1,0 +1,576 @@
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { Crown, ShieldCheck, Search, KeyRound, Loader2, CheckCircle2, ChevronDown, LifeBuoy, Sparkles, Server, RefreshCw, AlertTriangle, Copy, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { checkLegacyEmail, claimLegacyLicense } from "@/lib/license.functions";
+
+type Panel = "v457" | "v46";
+
+const panelMeta: Record<Panel, { label: string; version: string; tone: string; ip: string }> = {
+  v46: { label: "Shadow 4.6", version: "Vitalício · prioridade", tone: "text-primary", ip: "200.9.154.103" },
+  v457: { label: "Shadow 4.5.7", version: "Mensal · legacy", tone: "text-cyan", ip: "191.96.78.81" },
+};
+
+type ErrCategory = "network" | "credential" | "not_found" | "duplicate" | "server" | "database" | "auth" | "generic";
+type CategorizedError = {
+  title: string;
+  message: string;
+  fixes: string[];
+  category: ErrCategory;
+  retryable: boolean;
+  code: string;
+  raw: string;
+};
+
+const CATEGORY_LABEL: Record<ErrCategory, string> = {
+  network: "Conexão",
+  credential: "Senha do painel",
+  not_found: "Email não encontrado",
+  duplicate: "Já vinculado",
+  server: "Painel indisponível",
+  database: "Registro da licença",
+  auth: "Sessão expirada",
+  generic: "Erro inesperado",
+};
+
+function categorize(raw: string): CategorizedError {
+  const r = String(raw || "").trim();
+  const m = r.toLowerCase();
+  const base = { raw: r };
+
+  if (/legacy_already_claimed/.test(m)) {
+    return {
+      ...base, code: "LEGACY_ALREADY_CLAIMED", category: "duplicate", retryable: false,
+      title: "Este login antigo já pertence a outra conta",
+      message: "O email informado já foi vinculado ao dashboard por outra conta. Por segurança, um login só pode ficar em uma conta.",
+      fixes: [
+        "Entre na conta que você usou primeiro (verifique outros emails de cadastro).",
+        "Se você perdeu o acesso àquela conta, use /recuperar com seus códigos de recuperação.",
+        "Se acha que alguém vinculou seu login indevidamente, abra um chamado em /suporte agora.",
+      ],
+    };
+  }
+  if (/legacy_email_not_in_panel|not found|não encontrado|nao encontrado|inexistente/.test(m)) {
+    return {
+      ...base, code: "LEGACY_EMAIL_NOT_IN_PANEL", category: "not_found", retryable: false,
+      title: "Email não localizado no painel escolhido",
+      message: r.includes(":") ? r.split(":").slice(1).join(":").trim() : "Não encontramos esse email no painel selecionado.",
+      fixes: [
+        "Confira se digitou o email exatamente como no painel (sem espaços e sem maiúsculas).",
+        "Tente o outro painel: quem comprou antes costuma estar na 4.5.7, e as compras novas na 4.6.",
+        "Nunca comprou antes? Escolha um plano novo em /planos.",
+      ],
+    };
+  }
+  if (/legacy_bad_password|senha|password|invalid credential|unauthorized|401/.test(m)) {
+    return {
+      ...base, code: "LEGACY_BAD_PASSWORD", category: "credential", retryable: true,
+      title: "Senha do painel incorreta",
+      message: "O painel recusou a senha informada para esse email.",
+      fixes: [
+        "Digite a senha atual do painel Shadow (não é a senha do site).",
+        "Cuidado com Caps Lock e espaços colados ao copiar/colar.",
+        "Não lembra a senha? Peça a redefinição em /suporte informando o email do painel.",
+      ],
+    };
+  }
+  if (/legacy_panel_unreachable|legacy_panel_rejected|painel:|yaarsa|500|502|503|504|internal|bad gateway/.test(m)) {
+    return {
+      ...base, code: /rejected/.test(m) ? "LEGACY_PANEL_REJECTED" : "LEGACY_PANEL_UNREACHABLE", category: "server", retryable: true,
+      title: "O painel de licenças não respondeu",
+      message: r.includes(":") ? r.split(":").slice(1).join(":").trim() : "Servidor de licenças temporariamente indisponível.",
+      fixes: [
+        "Aguarde cerca de 1 minuto e clique em Tentar novamente.",
+        "Nada foi cobrado e nenhuma licença foi alterada nessa tentativa.",
+        "Se persistir por mais de 10 minutos, abra um chamado em /suporte com o código do erro abaixo.",
+      ],
+    };
+  }
+  if (/legacy_db_error|duplicate key|violates|constraint|permission denied|rls/.test(m)) {
+    return {
+      ...base, code: "LEGACY_DB_ERROR", category: "database", retryable: true,
+      title: "Não conseguimos registrar a licença na sua conta",
+      message: r.includes(":") ? r.split(":").slice(1).join(":").trim() : "O painel aceitou, mas o registro no dashboard falhou.",
+      fixes: [
+        "Clique em Tentar novamente — a operação é segura e não duplica licença.",
+        "Se continuar, abra /suporte com o email do painel; nosso time vincula manualmente em minutos.",
+      ],
+    };
+  }
+  if (/unauthorized|jwt|sess|token|logged/.test(m) && /401|expired|missing/.test(m)) {
+    return {
+      ...base, code: "AUTH_EXPIRED", category: "auth", retryable: false,
+      title: "Sua sessão expirou",
+      message: "Você precisa estar logado para vincular um login antigo.",
+      fixes: ["Recarregue a página e faça login novamente.", "Depois abra este painel e repita os 3 passos."],
+    };
+  }
+  if (/network|fetch|failed to fetch|timeout|econnre|socket|offline/.test(m)) {
+    return {
+      ...base, code: "NETWORK", category: "network", retryable: true,
+      title: "Sem conexão com o servidor",
+      message: "Sua internet caiu ou a requisição não chegou até nós.",
+      fixes: [
+        "Verifique o Wi-Fi ou os dados móveis.",
+        "Desative VPN/proxy caso esteja usando e tente de novo.",
+        "Clique em Tentar novamente — nada foi perdido.",
+      ],
+    };
+  }
+  return {
+    ...base, code: "UNKNOWN", category: "generic", retryable: true,
+    title: "Falha inesperada na sincronização",
+    message: r || "Não conseguimos concluir a sincronização do login antigo.",
+    fixes: [
+      "Tente novamente em alguns segundos.",
+      "Se repetir, copie o código do erro abaixo e envie em /suporte.",
+    ],
+  };
+}
+
+
+function formatBrDate(ymd: string | null): string {
+  if (!ymd) return "—";
+  const [y, m, d] = ymd.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+type ClaimResult = {
+  ok: boolean;
+  licenseId: string;
+  already: boolean;
+  panel: Panel;
+  email: string;
+  server_ip: string;
+  next_renewal: string | null;
+  version_tier: string;
+};
+
+export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultOpen?: boolean; onLinked?: () => void }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [email, setEmail] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState<CategorizedError | null>(null);
+  const [attempts, setAttempts] = React.useState(0);
+  const [result, setResult] = React.useState<{ found: boolean; panels: Panel[] } | null>(null);
+  const [selectedPanel, setSelectedPanel] = React.useState<Panel | "">("");
+  const [password, setPassword] = React.useState("");
+  const [claiming, setClaiming] = React.useState(false);
+  const [claimed, setClaimed] = React.useState<ClaimResult | null>(null);
+
+  function copy(txt: string, label: string) {
+    navigator.clipboard.writeText(txt).then(() => toast.success(`${label} copiado`)).catch(() => toast.error("Falha ao copiar"));
+  }
+
+  function validationError(
+    category: ErrCategory,
+    title: string,
+    message: string,
+    fixes: string[],
+  ): CategorizedError {
+    return { category, title, message, fixes, retryable: false, code: "VALIDATION", raw: message };
+  }
+
+  function fail(ce: CategorizedError) {
+    setErr(ce);
+    toast.error(ce.title, {
+      description: `${ce.message}${ce.fixes[0] ? ` — ${ce.fixes[0]}` : ""}`,
+      duration: 9000,
+      action: ce.category === "not_found"
+        ? { label: "Ver planos", onClick: () => { window.location.href = "/planos"; } }
+        : { label: "Suporte", onClick: () => { window.location.href = "/suporte"; } },
+    });
+  }
+
+  async function verify() {
+    if (!email.trim()) {
+      fail(validationError("generic", "Informe o email do login antigo", "O campo de email está vazio.", [
+        "Digite o mesmo email que você usa para entrar no painel Shadow.",
+      ]));
+      return;
+    }
+    setBusy(true); setErr(null); setResult(null); setAttempts((n) => n + 1);
+    try {
+      const r = await checkLegacyEmail({ data: { email: email.trim().toLowerCase() } });
+      const panels = r.panels as Panel[];
+      setResult({ found: r.found, panels });
+      if (r.found) {
+        setStep(2); setAttempts(0);
+        if (panels.length === 1) setSelectedPanel(panels[0]);
+        toast.success("Login encontrado no painel", {
+          description: panels.length === 1
+            ? `Detectamos sua conta em ${panelMeta[panels[0]].label}. Agora confirme a senha do painel.`
+            : "Seu email existe em mais de um painel. Escolha qual deseja vincular.",
+        });
+      } else {
+        fail(categorize(`LEGACY_EMAIL_NOT_IN_PANEL: não encontramos ${email.trim().toLowerCase()} em nenhum painel (4.5.7 ou 4.6)`));
+      }
+    } catch (e: any) { fail(categorize(e?.message)); }
+    finally { setBusy(false); }
+  }
+
+  async function claim() {
+    if (!selectedPanel) {
+      fail(validationError("generic", "Escolha o painel", "Nenhum painel foi selecionado.", [
+        "Toque em Shadow 4.6 ou Shadow 4.5.7 antes de continuar.",
+      ]));
+      return;
+    }
+    if (!password.trim()) {
+      fail(validationError("credential", "Informe a senha do painel", "O campo de senha está vazio.", [
+        "Use a senha atual do painel Shadow — não é a senha do site.",
+        "Esqueceu? Peça a redefinição em /suporte.",
+      ]));
+      return;
+    }
+    setClaiming(true); setErr(null); setAttempts((n) => n + 1);
+    try {
+      const r = await claimLegacyLicense({
+        data: { email: email.trim().toLowerCase(), password: password.trim(), panel: selectedPanel as Panel },
+      }) as ClaimResult;
+      setClaimed(r); setStep(3); setAttempts(0);
+      onLinked?.();
+      if (r.already) toast.info("Essa licença já estava vinculada", { description: "Atualizando seu dashboard com os dados existentes." });
+      else toast.success("Licença vinculada com sucesso", { description: "Preço legacy garantido. Veja os detalhes na tela." });
+    } catch (e: any) { fail(categorize(e?.message)); }
+    finally { setClaiming(false); }
+  }
+
+
+  function reset() {
+    setStep(1); setEmail(""); setPassword(""); setResult(null); setSelectedPanel("");
+    setClaimed(null); setErr(null); setAttempts(0);
+  }
+
+  const retryAction = step === 1 ? verify : claim;
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-background via-background to-primary/[0.03] shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset,0_20px_60px_-40px_rgba(212,175,55,0.35)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="group flex w-full items-start justify-between gap-4 px-5 py-4 text-left transition hover:bg-primary/[0.04] md:px-6"
+      >
+        <div className="flex items-start gap-4">
+          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-primary/30 bg-primary/10">
+            <Crown className="h-5 w-5 text-primary" />
+            <div className="absolute inset-0 rounded-lg bg-primary/10 blur-xl" aria-hidden />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-serif text-base font-semibold tracking-tight text-foreground md:text-lg">
+                Vincular conta de cliente antigo
+              </h3>
+              <Badge variant="outline" className="border-primary/40 bg-primary/5 font-mono text-[10px] uppercase tracking-wider text-primary">
+                Legacy · R$ 250/mês
+              </Badge>
+              {claimed && (
+                <Badge className="bg-primary/20 font-mono text-[10px] uppercase text-primary hover:bg-primary/20">
+                  <CheckCircle2 className="mr-1 h-3 w-3" /> Vinculada
+                </Badge>
+              )}
+            </div>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Já possui login em <span className="text-foreground/80">Shadow 4.5.7</span> ou <span className="text-foreground/80">4.6</span>? Conecte sua licença existente em 3 passos e mantenha o preço legacy.
+            </p>
+          </div>
+        </div>
+        <ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            <div className="border-t border-border/40 px-5 pb-6 pt-5 md:px-6">
+              {/* STEP INDICATOR */}
+              <ol className="mb-6 grid grid-cols-3 gap-2">
+                {[
+                  { n: 1, label: "Verificar email", icon: Search },
+                  { n: 2, label: "Confirmar senha", icon: KeyRound },
+                  { n: 3, label: "Vinculada", icon: CheckCircle2 },
+                ].map((s) => {
+                  const active = step === s.n;
+                  const passed = step > s.n;
+                  const Icon = s.icon;
+                  return (
+                    <li key={s.n} className={`flex items-center gap-2 rounded-md border px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider transition md:text-[11px] ${
+                      passed ? "border-primary/50 bg-primary/10 text-primary"
+                      : active ? "border-primary/40 bg-primary/5 text-foreground"
+                      : "border-border/50 bg-muted/20 text-muted-foreground"
+                    }`}>
+                      <Icon className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">{s.n}. {s.label}</span>
+                      <span className="sm:hidden">{s.n}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              {step !== 3 && (
+                <div className="mb-5 grid gap-2 rounded-lg border border-border/40 bg-muted/10 p-3 md:grid-cols-3">
+                  <BenefitRow icon={ShieldCheck} title="Preço legacy garantido" desc="R$ 250/mês em vez de R$ 450" />
+                  <BenefitRow icon={Server} title="Migração automática" desc="Servidor detectado e roteado" />
+                  <BenefitRow icon={Sparkles} title="Sem reinstalação" desc="Mesmas credenciais do painel" />
+                </div>
+              )}
+
+              {/* STEP 1 */}
+              {step === 1 && (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="legacy-email" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Email do seu login antigo
+                    </Label>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        id="legacy-email"
+                        type="email"
+                        placeholder="voce@exemplo.com"
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); setErr(null); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") verify(); }}
+                        className="flex-1 font-mono text-sm"
+                        autoComplete="email"
+                      />
+                      <Button onClick={verify} disabled={busy} className="font-mono uppercase tracking-wider">
+                        {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+                        Verificar
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Verificamos automaticamente nos painéis Shadow 4.5.7 e 4.6.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2 */}
+              {step === 2 && result?.found && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 font-mono text-xs text-primary">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Login localizado · {result.panels.length > 1 ? "selecione o painel" : "painel confirmado"}
+                  </div>
+
+                  {result.panels.length > 1 && (
+                    <div className="space-y-2">
+                      <Label className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Painel</Label>
+                      <div className="grid gap-2 md:grid-cols-2">
+                        {result.panels.map((p) => {
+                          const meta = panelMeta[p];
+                          const sel = selectedPanel === p;
+                          return (
+                            <button
+                              key={p} type="button" onClick={() => setSelectedPanel(p)}
+                              className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition ${
+                                sel ? "border-primary bg-primary/10 shadow-[0_0_0_1px_hsl(var(--primary)/0.4)]" : "border-border/50 hover:border-primary/50"
+                              }`}
+                            >
+                              <div>
+                                <div className={`text-sm font-semibold ${meta.tone}`}>{meta.label}</div>
+                                <div className="font-mono text-[10px] uppercase text-muted-foreground">{meta.version}</div>
+                              </div>
+                              <div className={`h-3 w-3 rounded-full border ${sel ? "border-primary bg-primary" : "border-border"}`} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="legacy-pass" className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Senha atual do painel
+                    </Label>
+                    <Input
+                      id="legacy-pass" type="password" placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); setErr(null); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") claim(); }}
+                      className="font-mono text-sm" autoComplete="off"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Guardada criptografada. Sem lembrar? Fale com o suporte em <a href="/suporte" className="text-primary hover:underline">/suporte</a>.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                    <Button variant="ghost" onClick={() => { setStep(1); setResult(null); setPassword(""); setSelectedPanel(""); setErr(null); }} className="font-mono text-xs uppercase">
+                      ← Trocar email
+                    </Button>
+                    <Button onClick={claim} disabled={claiming || !selectedPanel || !password.trim()} className="font-mono uppercase tracking-wider">
+                      {claiming ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+                      Vincular ao dashboard
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3 — SUCCESS DETAIL */}
+              {step === 3 && claimed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 rounded-lg border border-primary/40 bg-primary/[0.06] p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/50 bg-primary/15">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-serif text-lg font-semibold text-foreground">
+                        {claimed.already ? "Licença já estava vinculada" : "Licença vinculada com sucesso"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Sua conta antiga foi conectada ao dashboard. Detalhes abaixo:
+                      </div>
+                    </div>
+                  </div>
+
+                  <dl className="grid gap-2 rounded-md border border-border/40 bg-background/40 p-3 text-sm md:grid-cols-2">
+                    <SuccessRow label="Painel" value={panelMeta[claimed.panel].label} tone={panelMeta[claimed.panel].tone} />
+                    <SuccessRow label="Versão" value={claimed.version_tier === "lifetime_46" ? "Vitalício · 4.6" : "Mensal · 4.5.7"} />
+                    <SuccessRow label="Email" value={claimed.email} copyable onCopy={() => copy(claimed.email, "Email")} />
+                    <SuccessRow label="Servidor" value={claimed.server_ip} copyable onCopy={() => copy(claimed.server_ip, "IP")} mono />
+                    <SuccessRow label="Próxima renovação" value={formatBrDate(claimed.next_renewal)} />
+                    <SuccessRow label="Taxa legacy" value="R$ 250 / mês" tone="text-primary" />
+                  </dl>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button onClick={() => window.location.reload()} className="flex-1 font-mono uppercase tracking-wider">
+                      <RefreshCw className="mr-2 h-4 w-4" /> Atualizar dashboard
+                    </Button>
+                    <Button variant="outline" onClick={reset} className="font-mono uppercase tracking-wider">
+                      Vincular outra
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ERROR + RETRY */}
+              {err && step !== 3 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 p-3"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-destructive/90">
+                          {CATEGORY_LABEL[err.category]}
+                        </span>
+                        {attempts > 1 && (
+                          <span className="font-mono text-[10px] text-destructive/60">tentativa {attempts}</span>
+                        )}
+                      </div>
+
+                      <div className="text-sm font-semibold text-destructive">{err.title}</div>
+                      <div className="text-xs text-destructive/90">{err.message}</div>
+
+                      {err.fixes.length > 0 && (
+                        <div className="rounded-md border border-destructive/25 bg-background/40 p-2.5">
+                          <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Como resolver
+                          </div>
+                          <ol className="space-y-1">
+                            {err.fixes.map((f, i) => (
+                              <li key={i} className="flex gap-2 text-[11px] leading-relaxed text-foreground/80">
+                                <span className="font-mono text-destructive/70">{i + 1}.</span>
+                                <span>{f}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                        {err.retryable && (
+                          <Button
+                            size="sm" variant="outline" onClick={retryAction}
+                            disabled={busy || claiming}
+                            className="border-destructive/40 font-mono text-xs uppercase text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            {(busy || claiming) ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-2 h-3 w-3" />}
+                            Tentar novamente
+                          </Button>
+                        )}
+                        {err.category === "not_found" ? (
+                          <a href="/planos" className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline">
+                            Ver planos novos <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <a href="/suporte" className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline">
+                            <LifeBuoy className="h-3 w-3" /> Falar com o suporte
+                          </a>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => copy(
+                          `Erro sincronização legacy\ncódigo: ${err.code}\ncategoria: ${err.category}\nemail: ${email || "—"}\npainel: ${selectedPanel || "—"}\npasso: ${step}\ndetalhe: ${err.raw || err.message}\nhora: ${new Date().toISOString()}`,
+                          "Diagnóstico",
+                        )}
+                        className="flex w-full items-center justify-between gap-2 rounded border border-border/40 bg-muted/20 px-2 py-1.5 text-left font-mono text-[10px] text-muted-foreground hover:border-primary/40 hover:text-primary"
+                      >
+                        <span className="truncate">
+                          cód. {err.code} · painel {selectedPanel || "—"} · passo {step}
+                        </span>
+                        <span className="inline-flex shrink-0 items-center gap-1 uppercase">
+                          <Copy className="h-3 w-3" /> copiar p/ suporte
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function SuccessRow({ label, value, tone, mono, copyable, onCopy }: {
+  label: string; value: string; tone?: string; mono?: boolean; copyable?: boolean; onCopy?: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 border-b border-border/30 py-1.5 last:border-none md:border-none md:py-0">
+      <dt className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
+      <dd className={`flex items-center gap-1.5 ${mono ? "font-mono" : ""} text-sm ${tone || "text-foreground"} truncate`}>
+        <span className="truncate">{value}</span>
+        {copyable && (
+          <button type="button" onClick={onCopy} className="text-muted-foreground hover:text-primary" aria-label={`Copiar ${label}`}>
+            <Copy className="h-3 w-3" />
+          </button>
+        )}
+      </dd>
+    </div>
+  );
+}
+
+function BenefitRow({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary/30 bg-primary/5">
+        <Icon className="h-3.5 w-3.5 text-primary" />
+      </div>
+      <div>
+        <div className="text-xs font-semibold text-foreground">{title}</div>
+        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{desc}</div>
+      </div>
+    </div>
+  );
+}
