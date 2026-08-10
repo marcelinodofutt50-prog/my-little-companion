@@ -31,7 +31,7 @@ describe('Shadow Production Stability Final Audit', () => {
       .select(`
         id, 
         content,
-        profiles!community_messages_user_id_fkey(display_name, metadata)
+        profiles!user_id(display_name, metadata)
       `)
       .limit(1);
 
