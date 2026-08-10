@@ -15,23 +15,11 @@ import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 
-<<<<<<< HEAD
-import krakenNewBgPngAsset from "@/assets/kraken_new_bg.png.asset.json";
-import krakenNewBgAsset from "@/assets/kraken_new_bg.jpg.asset.json";
-import krakenV31Asset from "@/assets/kraken_v31_final.webp.asset.json";
-
-// Imagem tática central da Kraken 2.0
-// Agora usando o novo fundo Kraken enviado pelo usuário como prioridade.
-const KRAKEN_BG_CANDIDATES: string[] = [
-  krakenNewBgPngAsset.url,
-  krakenNewBgAsset.url,
-=======
 import krakenV31Asset from "@/assets/kraken_v31_final.webp.asset.json";
 
 // Imagem tática central da Kraken 2.0
 // v31: Atualizando para a arte bioluminescente v31 (KRAKEN text) enviada pelo usuário.
 const KRAKEN_BG_CANDIDATES: string[] = [
->>>>>>> origin/main
   krakenV31Asset.url,
 ].filter(Boolean) as string[];
 
@@ -83,14 +71,8 @@ function KrakenRouteComponent() {
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
-<<<<<<< HEAD
-          filter: 'brightness(0.95) contrast(1.08) saturate(1.15)',
-          backgroundColor: 'black',
-          backgroundBlendMode: 'overlay'
-=======
           filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
           backgroundColor: 'black'
->>>>>>> origin/main
         }}
       >
           {/* Tactical Background Overlay - Base safety layer */}

@@ -12,42 +12,6 @@ export const getTutorials = createServerFn({ method: "GET" })
       .select("*")
       .order("display_order", { ascending: true });
 
-<<<<<<< HEAD
-    if (!error) {
-      return data || [];
-    }
-
-    console.error("[Tutorials] Erro no acesso:", error);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const isSchemaError =
-      error.code === "PGRST108" ||
-      error.code === "PGRST205" ||
-      error.message?.includes("schema cache") ||
-      error.message?.includes("does not exist") ||
-      error.code === "42703" ||
-      error.code === "42P01";
-
-    if (isSchemaError) {
-      try {
-        await supabaseAdmin.rpc("force_refresh_schema_permissions");
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-      } catch (refreshError) {
-        console.warn("[Tutorials] Refresh schema falhou:", refreshError);
-      }
-    }
-
-    const { data: adminData, error: adminError } = await supabaseAdmin
-      .from("tutorials")
-      .select("*")
-      .order("display_order", { ascending: true });
-
-    if (adminError) {
-      console.error("[Tutorials] Admin fallback failed:", adminError);
-      return [];
-    }
-
-    return adminData || [];
-=======
     if (error) {
       console.error("[Tutorials] Erro no acesso:", error);
       // Fallback para admin/reparo se falhar
@@ -59,5 +23,4 @@ export const getTutorials = createServerFn({ method: "GET" })
       return adminData || [];
     }
     return data || [];
->>>>>>> origin/main
   });
