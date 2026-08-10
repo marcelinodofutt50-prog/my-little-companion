@@ -714,13 +714,9 @@ function TutorialsPage() {
                   >
                     <div className="relative aspect-video w-full overflow-hidden">
                       {t.image_url ? (
-                        <img 
-                          src={t.image_url} 
-                          alt={t.title} 
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                          loading="lazy"
-                        />
+                        <TutorialThumb url={t.image_url} title={t.title} />
                       ) : (
+
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted/20 to-primary/5">
                           <Video className="h-8 w-8 text-primary/20 group-hover:text-primary/40 transition-colors" />
                         </div>
