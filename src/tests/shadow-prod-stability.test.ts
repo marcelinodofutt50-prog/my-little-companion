@@ -59,8 +59,9 @@ describe('Shadow Production Stability Final Audit', () => {
       .select('id')
       .limit(1);
       
+    // Verificamos a tabela correta conforme o schema (loyalty_tier_config)
     const { error: tiersError } = await supabase
-      .from('loyalty_tiers')
+      .from('loyalty_tier_config')
       .select('id')
       .limit(1);
 
