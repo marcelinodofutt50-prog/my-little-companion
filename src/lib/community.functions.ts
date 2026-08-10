@@ -56,13 +56,11 @@ export const sendCommunityMessage = createServerFn({ method: "POST" })
       .maybeSingle();
       
     const isAnonymous = (profile?.metadata as any)?.is_anonymous ?? false;
-    const displayName = isAnonymous ? "Membro Anônimo" : (profile as any)?.display_name || "Shadow Agent";
 
     // 2. Tentar inserção com cliente padrão
-    const insertPayload = {
+    const insertPayload: any = {
       user_id: userId,
       content: data.content,
-      is_anonymous: isAnonymous
     };
 
     let { error } = await supabase.from("community_messages").insert(insertPayload);
@@ -107,4 +105,3 @@ export const getCommunityGoals = createServerFn({ method: "GET" })
 
     return data || [];
   });
-
