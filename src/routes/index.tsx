@@ -3,7 +3,7 @@
 // Resultado: Todos os sistemas (Shadow Pass, Kraken, Treinamento) estabilizados na Vercel.
 // INFRAESTRUTURA: Sincronização de Banco de Dados OK.
 // O SISTEMA CENTRAL DE TREINAMENTO ESTA FUNCIONANDO NA VERCEL? EU QUERO O SISTEMA FUNCIONANDO SEM ERROR OU FALHAS!!!
-//
+// Implemente um endpoint de health check e exiba o status real do sistema na Vercel.
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
 
 
