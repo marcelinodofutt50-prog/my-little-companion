@@ -1,6 +1,6 @@
-// Shadow Protocol v10.2: Atualização de arte Kraken v30 e sincronização de assets.
-// 1. Kraken: Implementada a nova arte bioluminescente v30 em todos os ambientes.
-// 2. Deploy: Aplicado cache-busting v30 para garantir propagação imediata na Vercel.
+// Shadow Protocol v10.3: Atualização de arte Kraken v31 e sincronização de assets.
+// 1. Kraken: Implementada a nova arte bioluminescente v31 com texto "KRAKEN" em alta definição.
+// 2. Deploy: Aplicado cache-busting v31 para garantir propagação imediata na Vercel.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
