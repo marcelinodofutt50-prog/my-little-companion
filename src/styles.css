@@ -118,11 +118,12 @@
 html.theme-light, 
 html.theme-light body,
 html.theme-light .admin-enterprise,
+html.theme-light .client-enterprise,
 html.theme-light .enterprise-surface,
 html.theme-light .osint-panel,
+html.theme-light .terminal-card,
 html.theme-light main,
-html.theme-light section,
-html.theme-light .terminal-card {
+html.theme-light section {
   color-scheme: light;
 
   /* Refined light theme with extreme contrast and high readability */
