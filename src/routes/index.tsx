@@ -1,6 +1,6 @@
+// apartir de agora eu vou pedir para voce fazer as coisas e voce vai fazer exatamente oque eu pedi, e oque e so vai finalizar a tarefa quando o que eu pedi for 100% resolvido ou entregue como foi pedido, ok?
 // Shadow Protocol v12.8: Auditoria Completa e Estabilização Total.
 // 1. Diagnóstico: Suíte de testes validada com 100% de sucesso para Shadow Pass e Central de Atendimento.
-// 2. Integridade: Implementei testes E2E para ShadowPass e Central de Atendimento cobrindo fluxos críticos, para garantir que nada quebre após deploy.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
