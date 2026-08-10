@@ -48,7 +48,7 @@ describe('Shadow Full User Lifecycle', () => {
       .select(`
         id,
         content,
-        profiles!community_messages_user_id_fkey(display_name)
+        profiles!user_id(display_name)
       `)
       .limit(1);
 
