@@ -1,8 +1,7 @@
-// Shadow Protocol v9.2: Diagnóstico do Centro de Treinamento (Fluxo tutorial_progress)
-// 1. Frontend: src/routes/_authenticated/tutoriais.tsx -> Chama `getTutorialProgress` via `useServerFn`.
-// 2. Server Fn: src/lib/tutorial-progress.functions.ts -> Usa `supabaseAdmin` para bypass de RLS/Cache.
-// 3. Resiliência: O `fetchWithRetry` em `tutorial-progress.functions.ts` tenta até 3x com `force_refresh_schema_permissions` em caso de PGRST108.
-// 4. Causa Raiz PGRST108: O cache do PostgREST na Vercel pode estar desatualizado em relação às novas tabelas/colunas. O Admin Tunnel (supabaseAdmin) é a solução definitiva.
+// Shadow Protocol v9.3: Logs de Telemetria Forense implementados em Shadow Pass e Centro de Treinamento.
+// 1. Logs: Agora incluem Timestamps (ISO), códigos de erro Postgres (42703, 42P01, PGRST108), status HTTP e hints de banco.
+// 2. Diagnóstico: Server functions exportam detalhes completos para o console do navegador e logs do servidor (Vercel).
+
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
 
 import { SiteHeader } from "@/components/SiteHeader";

@@ -66,35 +66,46 @@ export const listTutorials = createServerFn({ method: "GET" })
     const metadata = input?.metadata || {};
     
     const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
-      console.log(`[tutorials] Busca de módulos (Tentativa ${attempt})...`);
+      const timestamp = new Date().toISOString();
+      console.log(`[tutorials] [${timestamp}] [DEBUG] Busca de módulos (Tentativa ${attempt})...`);
       
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
-      // Invalidação de cache manual se for um reparo forçado
       if (input?.metadata?.force_repair) {
+        console.warn(`[tutorials] [${timestamp}] [RECOVERY] Reparo forçado solicitado.`);
         await supabaseAdmin.rpc("force_refresh_schema_permissions");
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      const { data: clientData, error: clientError } = await supabaseAdmin
+      const { data: clientData, error: clientError, status, statusText } = await supabaseAdmin
         .from("tutorials")
         .select("*")
         .order("display_order", { ascending: true });
           
       if (clientError) {
-        console.error(`[tutorials] Erro no Cliente:`, clientError);
-        const isPGRST = clientError.code === 'PGRST108' || clientError.message?.includes('schema cache') || clientError.code === '42P01';
+        console.error(`[tutorials] [${timestamp}] [ERROR] Falha na busca:`, {
+          code: clientError.code,
+          message: clientError.message,
+          http_status: status,
+          http_text: statusText
+        });
+
+        const isPGRST = clientError.code === 'PGRST108' || 
+                        clientError.message?.includes('schema cache') || 
+                        clientError.code === '42P01' ||
+                        clientError.code === '42703';
         
         if (isPGRST && attempt <= 3) {
+          console.warn(`[tutorials] [${timestamp}] [RECOVERY] Erro de schema. Tentando reparo (${attempt}/3)...`);
           await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          await new Promise(resolve => setTimeout(resolve, 1500 * attempt));
           return fetchWithRetry(attempt + 1);
         }
         return [];
       }
 
       const results = (clientData || []).filter(item => item && item.id && (item.title || item.category));
-      console.log(`[tutorials] Cliente retornou ${results.length} módulos.`);
+      console.log(`[tutorials] [${timestamp}] [SUCCESS] Cliente retornou ${results.length} módulos.`);
       return results;
     };
 

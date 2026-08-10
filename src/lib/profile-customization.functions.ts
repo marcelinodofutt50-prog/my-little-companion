@@ -39,20 +39,29 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
       if (data.nickname) finalUpdates.display_name = data.nickname;
 
       // 2. Perform Update via Admin Tunnel to bypass PostgREST cache issues
-      console.log("[ Profile Audit] Executando Update para:", userId, finalUpdates);
-      const { data: updateRes, error: updateError } = await supabaseAdmin
+      const timestamp = new Date().toISOString();
+      console.log(`[Profile Audit] [${timestamp}] [DEBUG] Executando Update para:`, userId, finalUpdates);
+      const { data: updateRes, error: updateError, status, statusText } = await supabaseAdmin
         .from("profiles")
         .update(finalUpdates)
         .eq("id", userId)
         .select();
 
       if (updateError) {
-        console.error("[Profile Audit] Update Error Root Cause:", updateError);
-        // If it's a specific column error, we provide detail
+        console.error(`[Profile Audit] [${timestamp}] [ERROR] Update Failed:`, {
+          code: updateError.code,
+          message: updateError.message,
+          hint: updateError.hint,
+          details: updateError.details,
+          http_status: status,
+          http_text: statusText,
+          userId
+        });
+        
         if (updateError.code === "42703") {
-            throw new Error(`Coluna inexistente no banco: ${updateError.message}. Execute a sincronização de schema.`);
+            throw new Error(`[Profile] Coluna inexistente (${updateError.code}): ${updateError.message}. Execute a sincronização de schema.`);
         }
-        throw new Error(`Erro no banco de dados (${updateError.code}): ${updateError.message}`);
+        throw new Error(`[Profile] Erro no banco (${updateError.code}): ${updateError.message} (HTTP ${status})`);
       }
 
       console.log("[Profile Audit] Update Success:", updateRes);
