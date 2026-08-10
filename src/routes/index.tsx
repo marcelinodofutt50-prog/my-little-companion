@@ -1,6 +1,6 @@
-// Shadow Protocol v12.0: Reparo Definitivo de Infraestrutura Shadow Pass e Comunidade.
-// 1. Shadow Pass: Colunas críticas e permissões GRANT sincronizadas via migração v12.0.
-// 2. Resilience: Túnel administrativo reforçado e auditoria de esquema ativa para evitar PGRST108.
+// Shadow Protocol v12.1: Memória técnica sincronizada com a infraestrutura Shadow Pass.
+// 1. Shadow Pass: Colunas críticas, permissões GRANT e fluxo de túnel administrativo auditados (mem://features/infra-v12).
+// 2. Resilience: Protocolo de recarregamento de esquema PostgREST v12.0 ativo.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
