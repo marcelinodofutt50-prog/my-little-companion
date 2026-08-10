@@ -13,66 +13,52 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
 
     try {
-      const updates: any = {};
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      // 1. Fetch current data to preserve metadata fields
+      const { data: profile, error: fetchError } = await supabaseAdmin
+        .from("profiles")
+        .select("metadata, display_name")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("[Profile Audit] Fetch Error:", fetchError);
+        throw new Error(`Erro ao recuperar perfil: ${fetchError.message}`);
+      }
       
-      // Tentativa resiliente de atualização com bypass de cache se necessário
-      const performUpdate = async (client: any, userId: string, data: any) => {
-        // Primeiro buscamos o perfil para não sobrescrever outros campos do metadata
-        const { data: profile, error: fetchError } = await client
-          .from("profiles")
-          .select("metadata, display_name")
-          .eq("id", userId)
-          .maybeSingle();
-
-        if (fetchError) throw fetchError;
-        
-        const currentMetadata = (profile?.metadata as any) || {};
-        if (data.avatar_url) currentMetadata.avatar_url = data.avatar_url;
-        if (data.is_anonymous !== undefined) currentMetadata.is_anonymous = data.is_anonymous;
-        
-        const finalUpdates: any = {
-          metadata: currentMetadata,
-          updated_at: new Date().toISOString()
-        };
-        
-        if (data.nickname) finalUpdates.display_name = data.nickname;
-
-        return client
-          .from("profiles")
-          .update(finalUpdates)
-          .eq("id", userId);
+      const currentMetadata = (profile?.metadata as any) || {};
+      if (data.avatar_url) currentMetadata.avatar_url = data.avatar_url;
+      if (data.is_anonymous !== undefined) currentMetadata.is_anonymous = data.is_anonymous;
+      
+      const finalUpdates: any = {
+        metadata: currentMetadata,
+        updated_at: new Date().toISOString()
       };
+      
+      if (data.nickname) finalUpdates.display_name = data.nickname;
 
-      const { error: updateError } = await performUpdate(supabase, userId, data);
+      // 2. Perform Update via Admin Tunnel to bypass PostgREST cache issues
+      console.log("[ Profile Audit] Executando Update para:", userId, finalUpdates);
+      const { data: updateRes, error: updateError } = await supabaseAdmin
+        .from("profiles")
+        .update(finalUpdates)
+        .eq("id", userId)
+        .select();
 
       if (updateError) {
-        // Erro 42703 (coluna não existe) ou PGRST108 (cache stale)
-        const isSchemaError = updateError.code === "42703" || updateError.code === "PGRST108" || updateError.message.includes("metadata");
-        
-        if (isSchemaError) {
-          console.warn("[Profile] Erro de schema detectado. Acionando reparo tático...");
-          
-          // Tenta forçar refresh via RPC
-          try {
-            await supabase.rpc("force_refresh_schema_permissions");
-          } catch (e) {
-            console.error("Falha ao disparar RPC de refresh:", e);
-          }
-
-          // Fallback para Supabase Admin (Bypass RLS e PostgREST cache stale se o admin estiver quente)
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { error: adminError } = await performUpdate(supabaseAdmin, userId, data);
-          
-          if (adminError) throw adminError;
-          return { success: true, message: "Atualizado via Túnel Admin (Schema Syncing)" };
+        console.error("[Profile Audit] Update Error Root Cause:", updateError);
+        // If it's a specific column error, we provide detail
+        if (updateError.code === "42703") {
+            throw new Error(`Coluna inexistente no banco: ${updateError.message}. Execute a sincronização de schema.`);
         }
-        
-        throw updateError;
+        throw new Error(`Erro no banco de dados (${updateError.code}): ${updateError.message}`);
       }
 
-      return { success: true };
+      console.log("[Profile Audit] Update Success:", updateRes);
+      return { success: true, updated: updateRes };
     } catch (error: any) {
-      console.error("Erro fatal em updateProfileCustomization:", error);
-      throw new Error(error.message || "Falha tática ao sincronizar perfil");
+      console.error("Erro Crítico em updateProfileCustomization:", error);
+      throw new Error(error.message || "Falha técnica ao sincronizar perfil");
     }
   });
