@@ -41,8 +41,9 @@ import {
 // Hardcoded paths to assets
 import btmobDashboardAsset from "@/assets/btmob_core_dashboard_real.webp.asset.json";
 import btmobUpdatesAsset from "@/assets/btmob_updates_real.jpg.asset.json";
+import btmobDualAsset from "@/assets/btmob_dual_dashboard.png.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
-const btmobCoreDashboard = btmobDashboardAsset.url;
+const btmobCoreDashboard = btmobDualAsset.url;
 const btmob1 = btmobDashboardAsset.url;
 const btmob2 = btmobUpdatesAsset.url;
 
