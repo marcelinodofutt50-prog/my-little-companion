@@ -1,6 +1,6 @@
-// Shadow Protocol v10.7: Implementação de testes E2E de ciclo de vida completo (Cadastro/Login/Shadow Pass/Nexus).
-// 1. Lifecycle: Validada a integridade de cadastro, edição de perfil e navegação na comunidade.
-// 2. Resiliência: Garantida a operacionalidade das permissões RLS e integridade de metadados em produção.
+// Shadow Protocol v10.8: Auditoria final de estabilidade e sincronização de infraestrutura.
+// 1. Stability: Validada a integridade de esquemas, RLS e túneis administrativos em produção.
+// 2. Deploy: Garantida a operacionalidade total do Shadow Pass, Loyalty e Nexus na Vercel.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
