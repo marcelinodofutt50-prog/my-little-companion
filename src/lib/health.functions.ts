@@ -21,6 +21,7 @@ export const performHealthCheck = createServerFn({ method: "POST" })
         support_messages: { accessible: false },
         apk_build_jobs: { accessible: false },
         trials: { accessible: false },
+        tutorial_progress: { accessible: false },
       },
       timestamp: new Date().toISOString(),
       schema: { reply_to_id: false },
@@ -71,6 +72,7 @@ export const performHealthCheck = createServerFn({ method: "POST" })
         { scope: "Suporte", table: "support_messages" as const },
         { scope: "Play Protect", table: "apk_build_jobs" as const },
         { scope: "Trials", table: "trials" as const },
+        { scope: "Treinamento", table: "tutorial_progress" as const },
       ];
 
       const responses = await Promise.all(
