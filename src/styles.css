@@ -118,6 +118,10 @@
 html.theme-light, 
 html.theme-light body,
 html.theme-light .admin-enterprise,
+html.theme-light .client-enterprise,
+html.theme-light .enterprise-surface,
+html.theme-light .osint-panel,
+html.theme-light .terminal-card,
 html.theme-light main,
 html.theme-light section {
   color-scheme: light;
@@ -194,7 +198,10 @@ html.theme-light .price-card-popular {
 }
 html.theme-light .paper-shadow { box-shadow: 0 20px 60px -28px rgba(0, 0, 0, 0.08); }
 html.theme-light .crt::after { display: none; }
-html.theme-light .terminal-card { background: oklch(1 0 0 / 0.8); }
+html.theme-light .terminal-card { 
+  background: oklch(0.99 0.002 255 / 0.95);
+  border-color: oklch(0.85 0.01 255);
+}
 
 @layer base {
   html, body {

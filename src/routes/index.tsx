@@ -1,5 +1,5 @@
-// Shadow Protocol v12.1: Memória técnica sincronizada com a infraestrutura Shadow Pass.
-// 1. Shadow Pass: Colunas críticas, permissões GRANT e fluxo de túnel administrativo auditados (mem://features/infra-v12).
+// Shadow Protocol v12.4: Otimização final do ecossistema visual Shadow Dash.
+// 1. Dashboard: Corrigido o "fundo cinza" em widgets e painel no tema branco através da classe .client-enterprise.
 // 2. Resilience: Protocolo de recarregamento de esquema PostgREST v12.0 ativo.
 
 
