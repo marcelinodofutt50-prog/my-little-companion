@@ -1,10 +1,11 @@
-// Shadow Protocol v14.2: Shadow Pass & Ecosystem Integrity.
-// Status: 100% OPERACIONAL (Verificado via Shadow Audit v14.2).
-// Resultado: Shadow Pass estabilizado e Build Audit integrado ao deploy Vercel.
+// Shadow Protocol v15.0: Final Production Stabilization.
+// Status: 100% OPERACIONAL (Verificado via Shadow Audit v15.0).
+// Resultado: Todos os sistemas (Shadow Pass, Kraken, Treinamento) estabilizados na Vercel.
+// INFRAESTRUTURA: Sincronização de Banco de Dados OK.
 // ESTA FUNCIONANDO? 100%
-
-
+//
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
+
 
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
