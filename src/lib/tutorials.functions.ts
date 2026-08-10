@@ -103,26 +103,35 @@ export const listTutorials = createServerFn({ method: "GET" })
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: unknown) => z.object({
+  .validator((input: unknown) => {
+    const emptyToNull = z.preprocess(
+      (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+      z.string().url().nullish()
+    );
+    return z.object({
       id: z.string().uuid().optional(),
       title: z.string().min(3),
       description: z.string().min(5),
-      video_url: z.string().url().nullish(),
-      image_url: z.string().url().nullish(),
-      youtube_url: z.string().url().nullish(),
+      video_url: emptyToNull,
+      image_url: emptyToNull,
+      youtube_url: emptyToNull,
       category: z.string().min(2),
       is_active: z.boolean().default(true),
       display_order: z.number().int().optional(),
-  }).parse(input))
+    }).parse(input);
+  })
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload: Record<string, any> = { ...data, created_by: context.userId };
+    if (!payload.id) delete payload.id;
     const { error } = await supabaseAdmin
         .from("tutorials")
-        .upsert({ ...data, created_by: context.userId }, { onConflict: 'id' });
+        .upsert(payload, { onConflict: 'id' });
     if (error) throw error;
     return { ok: true };
   });
+
 
 export const adminDeleteTutorial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

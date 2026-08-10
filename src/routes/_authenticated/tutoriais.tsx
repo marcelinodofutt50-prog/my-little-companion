@@ -12,6 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { getTutorials } from "@/lib/tutorial-loader.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
+import { useTutorialMedia } from "@/lib/tutorial-media";
+
 import { toast } from "sonner";
 import trainingBgAsset from "@/assets/kraken_v27_final.png.asset.json";
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
@@ -53,21 +55,25 @@ function TutorialsPage() {
   const [diagResult, setDiagResult] = useState<any>(null);
   const [diagLoading, setDiagLoading] = useState(false);
   
-  const addSyncLog = (status: 'success' | 'error', type: 'auto' | 'manual', message?: string) => {
+  const addSyncLog = useCallback((status: 'success' | 'error', type: 'auto' | 'manual', message?: string) => {
     setSyncHistory(prev => {
       const newHistory = [{
         time: new Date().toLocaleTimeString('pt-BR'),
         status,
         type,
         message,
-        route: window.location.pathname
+        route: typeof window !== 'undefined' ? window.location.pathname : ''
       }, ...prev].slice(0, 10);
       if (typeof window !== 'undefined') {
         localStorage.setItem('shadow_sync_history', JSON.stringify(newHistory));
       }
       return newHistory;
     });
-  };
+  }, []);
+  
+  const selectedVideoUrl = useTutorialMedia(selected?.video_url);
+  const selectedPosterUrl = useTutorialMedia(selected?.image_url);
+
   
   const listFn = useServerFn(getTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
@@ -619,20 +625,26 @@ function TutorialsPage() {
                   <div className="overflow-hidden rounded-2xl border border-primary/20 bg-black/90 dark:bg-black/95 backdrop-blur-3xl shadow-2xl transition-colors duration-500">
                     <div className="aspect-video w-full bg-black relative">
                       {selected.video_url ? (
-                        <video 
-                          key={selected.video_url}
-                          src={selected.video_url} 
-                          controls 
-                          playsInline
-                          controlsList="nodownload"
-                          className="h-full w-full object-contain"
-                          poster={selected.image_url}
-                          autoPlay
-                        >
-                          <source src={selected.video_url} type="video/mp4" />
-                          Seu navegador não suporta a reprodução de vídeos.
-                        </video>
+                        selectedVideoUrl ? (
+                          <video 
+                            key={selectedVideoUrl}
+                            src={selectedVideoUrl} 
+                            controls 
+                            playsInline
+                            controlsList="nodownload"
+                            className="h-full w-full object-contain"
+                            poster={selectedPosterUrl || undefined}
+                            autoPlay
+                          >
+                            Seu navegador não suporta a reprodução de vídeos.
+                          </video>
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                            <RefreshCw className="h-6 w-6 animate-spin text-primary/60" />
+                          </div>
+                        )
                       ) : selected.youtube_url ? (
+
                         <iframe
                           key={selected.youtube_url}
                           className="h-full w-full"
@@ -702,13 +714,9 @@ function TutorialsPage() {
                   >
                     <div className="relative aspect-video w-full overflow-hidden">
                       {t.image_url ? (
-                        <img 
-                          src={t.image_url} 
-                          alt={t.title} 
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                          loading="lazy"
-                        />
+                        <TutorialThumb url={t.image_url} title={t.title} />
                       ) : (
+
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted/20 to-primary/5">
                           <Video className="h-8 w-8 text-primary/20 group-hover:text-primary/40 transition-colors" />
                         </div>
@@ -782,5 +790,20 @@ function TutorialsPage() {
         </main>
       </div>
     </SidebarProvider>
+  );
+}
+
+function TutorialThumb({ url, title }: { url: string; title: string }) {
+  const resolved = useTutorialMedia(url);
+  if (!resolved) {
+    return <div className="h-full w-full animate-pulse bg-gradient-to-br from-muted/20 to-primary/5" />;
+  }
+  return (
+    <img
+      src={resolved}
+      alt={title}
+      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+      loading="lazy"
+    />
   );
 }
