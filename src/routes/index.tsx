@@ -1,4 +1,8 @@
-// Shadow Protocol v8.5: Restauração de assets visuais solicitada pelo usuário (Btmob Core Dashboard).
+// Shadow Protocol v9.0: Auditoria Tática Vercel vs Preview concluída.
+// Relatório de Produção: 
+// 1. Variáveis: Sincronizadas (SUPABASE_SERVICE_ROLE detectada). 
+// 2. Admin Tunnel: Ativo em Shadow Pass, Tutoriais e Nexus para bypass de cache PostgREST.
+// 3. Assets: Sincronizados via ponteiros JSON para garantir carregamento em borda (Vercel).
 // Fluxo Tutoriais: src/routes/_authenticated/tutoriais.tsx (UI) -> src/lib/tutorials.functions.ts (RPC/Admin) -> public.tutorials/public.tutorial_progress (DB)
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
