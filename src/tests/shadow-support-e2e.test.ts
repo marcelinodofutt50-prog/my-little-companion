@@ -7,22 +7,12 @@ import { supabase } from '@/integrations/supabase/client';
  */
 
 const reportFailure = async (testName: string, error: any) => {
-  try {
-    const { generateDiagnosticReport } = await import('@/lib/reporting.functions');
-    // Usamos .invoke() para chamar a função de servidor com o input correto
-    await (generateDiagnosticReport as any)({
-      data: {
-        testName,
-        error: error?.message || String(error),
-        stack: error?.stack,
-        context: "Vitest E2E Environment",
-        payload: { timestamp: new Date().toISOString() }
-      }
-    });
-    console.log(`[Shadow Report] Relatório automático enviado para: ${testName}`);
-  } catch (e) {
-    console.error("[Shadow Report] Falha ao enviar relatório automático:", e);
-  }
+  console.error(`[Shadow Report] Falha crítica em "${testName}":`, error);
+  console.error(`[Shadow Report] Stack Trace:`, error?.stack);
+  
+  // Como o ambiente Vitest não tem acesso ao TanStack Start runtime context durante testes unitários puros,
+  // logs detalhados no console são nossa primeira linha de defesa forense.
+  // Em produção, a função 'generateDiagnosticReport' cuidará da persistência no banco.
 };
 
 describe('Shadow Support Center E2E', () => {
