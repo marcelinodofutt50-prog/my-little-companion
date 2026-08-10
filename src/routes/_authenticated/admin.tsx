@@ -474,7 +474,7 @@ function AdminPage() {
       if (loadedRef.current.licenses) loadLicenses();
       if (loadedRef.current.users) loadUsers();
       if (loadedRef.current.roles) loadRoles();
-    }, 90000);
+    }, 60000); // Polling reduzido de 90s para 60s para maior precisão operacional.
 
     return () => {
       clearInterval(poll);
