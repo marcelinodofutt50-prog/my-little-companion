@@ -1,6 +1,6 @@
-// Shadow Protocol v10.0: Auditoria de produção concluída. Imagens Btmob validadas e infraestrutura de metadados blindada.
-// 1. UI: A seção "Gestão Empresarial" agora exibe o layout duplo oficial.
-// 2. Telemetria: Logs forenses ativos para Shadow Pass e Tutoriais.
+// Shadow Protocol v10.1: Refinamento visual do tema claro e correção de fundos cinza.
+// 1. UI: Seção de objetivos da comunidade e áreas de gestão agora respeitam o fundo branco puro no tema claro.
+// 2. CSS: Forçado background transparente em seções para evitar blocos cinzas residuais.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
@@ -179,7 +179,7 @@ function Index() {
       </section>
       
       {/* Enterprise Differential Section */}
-      <section className="py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-white/5">
+      <section className="py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-transparent">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">// diferenciais táticos</span>
@@ -209,7 +209,7 @@ function Index() {
       {/* Enterprise Management Section - Integrated Real UI Elements */}
 
 
-      <section className="py-20 relative border-y border-border/40 bg-card/20 overflow-hidden">
+      <section className="py-20 relative border-y border-border/40 bg-card/20 theme-light:bg-transparent overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
@@ -394,7 +394,7 @@ function Index() {
       <SocialProofStrip />
 
       {/* Community Goals Section */}
-      <section className="py-20 relative bg-black/60 dark:bg-black/60">
+      <section className="py-20 relative bg-black/60 dark:bg-black/60 theme-light:bg-transparent">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <motion.div
