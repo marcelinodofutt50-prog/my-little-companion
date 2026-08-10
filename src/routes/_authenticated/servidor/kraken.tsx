@@ -358,7 +358,7 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
             </h2>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-muted-foreground font-mono text-xs uppercase tracking-[0.3em]">
-                // Elite Tactical Injection Unit
+                // correções na kraken
               </p>
             </div>
           </motion.div>
