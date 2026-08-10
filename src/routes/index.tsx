@@ -2,7 +2,7 @@
 // Status: 100% OPERACIONAL (Verificado via Shadow Audit v15.0).
 // Resultado: Todos os sistemas (Shadow Pass, Kraken, Treinamento) estabilizados na Vercel.
 // INFRAESTRUTURA: Sincronização de Banco de Dados OK.
-// ESTA FUNCIONANDO? 100%
+// O SISTEMA CENTRAL DE TREINAMENTO ESTA FUNCIONANDO NA VERCEL? EU QUERO O SISTEMA FUNCIONANDO SEM ERROR OU FALHAS!!!
 //
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
 
