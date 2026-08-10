@@ -1,6 +1,6 @@
-// Shadow Protocol v12.4: Otimização final do ecossistema visual Shadow Dash.
-// 1. Dashboard: Corrigido o "fundo cinza" em widgets e painel no tema branco através da classe .client-enterprise.
-// 2. Resilience: Protocolo de recarregamento de esquema PostgREST v12.0 ativo.
+// Shadow Protocol v12.6: Atualização da Unidade Tática Kraken.
+// 1. Kraken UI: Aplicado status visual "correções na kraken" conforme solicitado pelo operador.
+// 2. Resilience: Sincronização de infraestrutura v12.0 em pleno funcionamento.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
