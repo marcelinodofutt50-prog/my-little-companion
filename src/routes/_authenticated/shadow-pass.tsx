@@ -771,7 +771,7 @@ function ShadowPassPage() {
                     ACERVO ALPHA LIBERADO
                   </Badge>
                   <p className="text-[10px] text-muted-foreground leading-tight">
-                    Suba de nível VIP (VIP -> Gold -> Elite) através de conversões válidas e tempo de atividade no Shadow Dash.
+                    Suba de nível VIP (VIP {"->"} Gold {"->"} Elite) através de conversões válidas e tempo de atividade no Shadow Dash.
                   </p>
                 </div>
               </CardContent>
