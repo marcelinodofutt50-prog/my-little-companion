@@ -1,4 +1,4 @@
-// Shadow Protocol v9.4: Interface unificada do Btmob Conexion restaurada com a imagem real enviada.
+// Shadow Protocol v10.0: Auditoria de produção concluída. Imagens Btmob validadas e infraestrutura de metadados blindada.
 // 1. UI: A seção "Gestão Empresarial" agora exibe o layout duplo oficial.
 // 2. Telemetria: Logs forenses ativos para Shadow Pass e Tutoriais.
 
@@ -40,8 +40,8 @@ import {
   Gift 
 } from "lucide-react";
 // Hardcoded paths to assets
-import btmobDashboardAsset from "@/assets/btmob_core_dashboard_real.webp.asset.json";
-import btmobUpdatesAsset from "@/assets/btmob_updates_real.jpg.asset.json";
+import btmobDashboardAsset from "@/assets/btmob_client_manager_real.jpg.asset.json";
+import btmobUpdatesAsset from "@/assets/btmob_updates_real_v2.webp.asset.json";
 import btmobDualAsset from "@/assets/btmob_dual_dashboard.png.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
 const btmobCoreDashboard = btmobDualAsset.url;
