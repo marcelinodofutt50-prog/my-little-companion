@@ -1,4 +1,4 @@
-// Shadow Protocol v8.2: Infraestrutura e Assets finalizados. Correção de PGRST108 via Admin Tunnel 2.0.
+// Shadow Protocol v8.3: Assets validados e sincronizados. Build de produção íntegro.
 // Fluxo Tutoriais: src/routes/_authenticated/tutoriais.tsx (UI) -> src/lib/tutorials.functions.ts (RPC/Admin) -> public.tutorials/public.tutorial_progress (DB)
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
