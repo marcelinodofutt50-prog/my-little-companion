@@ -1,4 +1,4 @@
-// Shadow Protocol v8.4: Auditoria de Schema concluída. Migração de colunas metadata/vip_tier aplicada.
+// Shadow Protocol v8.5: Restauração de assets visuais solicitada pelo usuário (Btmob Core Dashboard).
 // Fluxo Tutoriais: src/routes/_authenticated/tutoriais.tsx (UI) -> src/lib/tutorials.functions.ts (RPC/Admin) -> public.tutorials/public.tutorial_progress (DB)
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
