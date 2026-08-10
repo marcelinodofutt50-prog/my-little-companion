@@ -1,6 +1,6 @@
-// Shadow Protocol v11.0: Auditoria de suporte e testes E2E integrados.
-// 1. Support: Implementados testes E2E e telemetria forense na central de atendimento.
-// 2. Resilience: Túnel administrativo reforçado para persistência de leitura/escrita no suporte.
+// Shadow Protocol v12.0: Reparo Definitivo de Infraestrutura Shadow Pass e Comunidade.
+// 1. Shadow Pass: Colunas críticas e permissões GRANT sincronizadas via migração v12.0.
+// 2. Resilience: Túnel administrativo reforçado e auditoria de esquema ativa para evitar PGRST108.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
