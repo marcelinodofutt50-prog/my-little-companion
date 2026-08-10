@@ -703,6 +703,7 @@ function ShadowPassPage() {
              </Card>
             </section>
           </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="vip-benefits" className="m-0">
