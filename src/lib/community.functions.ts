@@ -16,7 +16,7 @@ export const getCommunityMessages = createServerFn({ method: "GET" })
         content, 
         created_at, 
         user_id, 
-        profiles!community_messages_user_id_fkey(display_name, metadata)
+        profiles!user_id(display_name, metadata)
       `)
       .order("created_at", { ascending: false })
       .limit(50);
