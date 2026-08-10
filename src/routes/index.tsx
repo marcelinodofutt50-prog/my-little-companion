@@ -1,9 +1,10 @@
-// Shadow Protocol v9.1: Imagens reais do Btmob Conexion (Dashboard e Updates) restauradas com sucesso.
-// Relatório de Produção: 
-// 1. Variáveis: Sincronizadas (SUPABASE_SERVICE_ROLE detectada). 
-// 2. Admin Tunnel: Ativo em Shadow Pass, Tutoriais e Nexus para bypass de cache PostgREST.
-// 3. Assets: Sincronizados via ponteiros JSON para garantir carregamento em borda (Vercel).
-// Fluxo Tutoriais: src/routes/_authenticated/tutoriais.tsx (UI) -> src/lib/tutorials.functions.ts (RPC/Admin) -> public.tutorials/public.tutorial_progress (DB)
+// Shadow Protocol v9.2: Diagnóstico do Centro de Treinamento (Fluxo tutorial_progress)
+// 1. Frontend: src/routes/_authenticated/tutoriais.tsx -> Chama `getTutorialProgress` via `useServerFn`.
+// 2. Server Fn: src/lib/tutorial-progress.functions.ts -> Usa `supabaseAdmin` para bypass de RLS/Cache.
+// 3. Resiliência: O `fetchWithRetry` em `tutorial-progress.functions.ts` tenta até 3x com `force_refresh_schema_permissions` em caso de PGRST108.
+// 4. Causa Raiz PGRST108: O cache do PostgREST na Vercel pode estar desatualizado em relação às novas tabelas/colunas. O Admin Tunnel (supabaseAdmin) é a solução definitiva.
+// 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
+
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
