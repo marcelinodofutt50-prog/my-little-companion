@@ -622,20 +622,26 @@ function TutorialsPage() {
                   <div className="overflow-hidden rounded-2xl border border-primary/20 bg-black/90 dark:bg-black/95 backdrop-blur-3xl shadow-2xl transition-colors duration-500">
                     <div className="aspect-video w-full bg-black relative">
                       {selected.video_url ? (
-                        <video 
-                          key={selected.video_url}
-                          src={selected.video_url} 
-                          controls 
-                          playsInline
-                          controlsList="nodownload"
-                          className="h-full w-full object-contain"
-                          poster={selected.image_url}
-                          autoPlay
-                        >
-                          <source src={selected.video_url} type="video/mp4" />
-                          Seu navegador não suporta a reprodução de vídeos.
-                        </video>
+                        selectedVideoUrl ? (
+                          <video 
+                            key={selectedVideoUrl}
+                            src={selectedVideoUrl} 
+                            controls 
+                            playsInline
+                            controlsList="nodownload"
+                            className="h-full w-full object-contain"
+                            poster={selectedPosterUrl || undefined}
+                            autoPlay
+                          >
+                            Seu navegador não suporta a reprodução de vídeos.
+                          </video>
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                            <RefreshCw className="h-6 w-6 animate-spin text-primary/60" />
+                          </div>
+                        )
                       ) : selected.youtube_url ? (
+
                         <iframe
                           key={selected.youtube_url}
                           className="h-full w-full"
