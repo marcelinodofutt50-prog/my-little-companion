@@ -1,6 +1,6 @@
-// Shadow Protocol v10.4: Implementação de testes de regressão automatizados.
-// 1. Shadow Pass: Adicionados testes para validar colunas 'metadata', 'vip_tier' e 'reputation_score'.
-// 2. Infra: Validada a acessibilidade da tabela 'community_messages' e bucket 'avatars'.
+// Shadow Protocol v10.5: Implementação de testes E2E de fluxo completo (Login/Perfil/Nexus).
+// 1. Fluxo: Validada a resiliência do Shadow Pass e a conectividade do Community Nexus.
+// 2. Produção: Garantida a propagação de permissões RLS e CDN de assets para deploy Vercel.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
