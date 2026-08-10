@@ -1,6 +1,6 @@
-// Shadow Protocol v13.0: Verificação final de deploy Vercel e healthcheck.
-// Status: Build validado. Monitorando os 3 pilares: Shadow Pass, Central de Atendimento e Nexus.
-// Objetivo: Garantir 100% de estabilidade e funcionalidade em produção.
+// Shadow Protocol v13.1: Sincronização definitiva de assets Btmob e Kraken.
+// Status: Forçando atualização de cache e validando caminhos V2/V31.
+// Objetivo: Garantir que as imagens finais enviadas pelo usuário sejam exibidas corretamente no deploy.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
