@@ -71,14 +71,8 @@ function KrakenRouteComponent() {
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
-<<<<<<< HEAD
-          filter: 'brightness(0.95) contrast(1.08) saturate(1.15)',
-          backgroundColor: 'black',
-          backgroundBlendMode: 'overlay'
-=======
           filter: 'brightness(0.9) contrast(1.1) saturate(1.1)',
           backgroundColor: 'black'
->>>>>>> origin/main
         }}
       >
           {/* Tactical Background Overlay - Base safety layer */}
