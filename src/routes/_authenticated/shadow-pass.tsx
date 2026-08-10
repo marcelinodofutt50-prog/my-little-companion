@@ -592,8 +592,8 @@ function ShadowPassPage() {
             </Card>
           </section>
         </div>
-      </div>
-    </TabsContent>
+
+        <div className="space-y-6 md:space-y-8">
         <div className="space-y-6 md:space-y-8">
           {/* Reputation Score */}
           <section className="space-y-4">
