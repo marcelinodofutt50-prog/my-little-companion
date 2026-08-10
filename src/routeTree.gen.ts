@@ -40,6 +40,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder/index'
 import { Route as ApiPublicTutorialsRouteImport } from './routes/api/public/tutorials'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
 import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authenticated/servidor/status'
@@ -211,6 +212,11 @@ const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   path: '/api/public/mp-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBackendHealthRoute = ApiPublicBackendHealthRouteImport.update({
   id: '/api/public/backend-health',
   path: '/api/public/backend-health',
@@ -331,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
@@ -378,6 +385,7 @@ export interface FileRoutesByTo {
   '/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder': typeof ApiApkBuilderIndexRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/_authenticated/servidor/status': typeof AuthenticatedServidorStatusRoute
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
@@ -476,6 +485,7 @@ export interface FileRouteTypes {
     | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
+    | '/api/public/health'
     | '/api/public/mp-webhook'
     | '/api/public/tutorials'
     | '/api/apk-builder/'
@@ -523,6 +533,7 @@ export interface FileRouteTypes {
     | '/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
+    | '/api/public/health'
     | '/api/public/mp-webhook'
     | '/api/public/tutorials'
     | '/api/apk-builder'
@@ -571,6 +582,7 @@ export interface FileRouteTypes {
     | '/_authenticated/servidor/status'
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
+    | '/api/public/health'
     | '/api/public/mp-webhook'
     | '/api/public/tutorials'
     | '/api/apk-builder/'
@@ -609,6 +621,7 @@ export interface RootRouteChildren {
   PagamentoSucessoRoute: typeof PagamentoSucessoRoute
   ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
   ApiPublicBackendHealthRoute: typeof ApiPublicBackendHealthRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicTutorialsRoute: typeof ApiPublicTutorialsRoute
   ApiApkBuilderIndexRoute: typeof ApiApkBuilderIndexRoute
@@ -843,6 +856,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/backend-health': {
       id: '/api/public/backend-health'
       path: '/api/public/backend-health'
@@ -1024,6 +1044,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagamentoSucessoRoute: PagamentoSucessoRoute,
   ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
   ApiPublicBackendHealthRoute: ApiPublicBackendHealthRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicTutorialsRoute: ApiPublicTutorialsRoute,
   ApiApkBuilderIndexRoute: ApiApkBuilderIndexRoute,
@@ -1044,13 +1065,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
