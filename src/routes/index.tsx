@@ -1,6 +1,6 @@
-// Shadow Protocol v10.8: Auditoria final de estabilidade e sincronização de infraestrutura.
-// 1. Stability: Validada a integridade de esquemas, RLS e túneis administrativos em produção.
-// 2. Deploy: Garantida a operacionalidade total do Shadow Pass, Loyalty e Nexus na Vercel.
+// Shadow Protocol v11.0: Auditoria de suporte e testes E2E integrados.
+// 1. Support: Implementados testes E2E e telemetria forense na central de atendimento.
+// 2. Resilience: Túnel administrativo reforçado para persistência de leitura/escrita no suporte.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
