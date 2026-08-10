@@ -1,6 +1,6 @@
-// Shadow Protocol v13.7: Certificação Final de Produção.
-// Status: 100% RESOLVIDO. Infraestrutura validada, build estabilizado e deploy Vercel-ready.
-// Resultado: Perfil, Storage, Nexus e Btmob operando em sincronia total sem falhas de cache ou permissão.
+// Shadow Protocol v13.8: Asset Sync Definitive.
+// Status: 100% RESOLVIDO. Sincronização de assets (Btmob v4.6 e Kraken v32) concluída via GitHub.
+// Resultado: Novas imagens do Btmob Core Conexxion e fundo Kraken bioluminescente v32 integrados.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
@@ -40,13 +40,13 @@ import {
   Gift 
 } from "lucide-react";
 // Hardcoded paths to assets
-import btmobDashboardAsset from "@/assets/btmob_client_manager_final_v2.jpg.asset.json";
-import btmobUpdatesAsset from "@/assets/btmob_updates_final_v2.jpg.asset.json";
+import btmobDashboardAsset from "@/assets/btmob_conexion_1_v2.png";
+import btmobUpdatesAsset from "@/assets/btmob_conexion_2_v2.png";
 import btmobDualAsset from "@/assets/btmob_dual_dashboard_v2.png.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
 const btmobCoreDashboard = btmobDualAsset.url;
-const btmob1 = btmobDashboardAsset.url;
-const btmob2 = btmobUpdatesAsset.url;
+const btmob1 = btmobDashboardAsset;
+const btmob2 = btmobUpdatesAsset;
 
 
 export const Route = createFileRoute("/")({
