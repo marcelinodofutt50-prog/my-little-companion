@@ -28,7 +28,6 @@ export const getDiagnosticData = createServerFn({ method: "GET" })
       timestamp: new Date().toISOString(),
       userId
     };
-    };
   });
 
 export const triggerManualSchemaRefresh = createServerFn({ method: "POST" })
