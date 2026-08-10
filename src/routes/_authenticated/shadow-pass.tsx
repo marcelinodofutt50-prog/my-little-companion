@@ -721,8 +721,13 @@ function ShadowPassPage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Sua transmissão é priorizada no vácuo. Operadores VIP têm tempo de resposta garantido inferior a 15 minutos em dias úteis.
                 </p>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-yellow-500 uppercase tracking-tighter">
-                  <CheckCircle2 className="h-4 w-4" /> Resposta em Tempo Real
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-yellow-500 uppercase tracking-tighter">
+                    <CheckCircle2 className="h-4 w-4" /> Resposta em Tempo Real
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-tighter">
+                    <Info className="h-4 w-4" /> Como chegar: VIP Tier via Compras ou Conquistas
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -761,9 +766,14 @@ function ShadowPassPage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Acesso antecipado a exploits zero-day, bases de dados vazadas e ferramentas personalizadas de staff.
                 </p>
-                <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 text-[9px] font-mono">
-                  ACERVO ALPHA LIBERADO
-                </Badge>
+                <div className="flex flex-col gap-2">
+                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 text-[9px] font-mono w-fit">
+                    ACERVO ALPHA LIBERADO
+                  </Badge>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Suba de nível VIP (VIP {"->"} Gold {"->"} Elite) através de conversões válidas e tempo de atividade no Shadow Dash.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
