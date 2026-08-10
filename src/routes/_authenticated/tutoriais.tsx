@@ -792,3 +792,18 @@ function TutorialsPage() {
     </SidebarProvider>
   );
 }
+
+function TutorialThumb({ url, title }: { url: string; title: string }) {
+  const resolved = useTutorialMedia(url);
+  if (!resolved) {
+    return <div className="h-full w-full animate-pulse bg-gradient-to-br from-muted/20 to-primary/5" />;
+  }
+  return (
+    <img
+      src={resolved}
+      alt={title}
+      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+      loading="lazy"
+    />
+  );
+}
