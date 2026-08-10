@@ -1,6 +1,6 @@
-// Shadow Protocol v13.2: Sincronização e Auditoria de Assets.
-// Status: Assets Btmob e Kraken sincronizados com as versões finais enviadas.
-// Objetivo: Garantir integridade visual absoluta no ambiente de produção.
+// Shadow Protocol v13.3: Estabilização do Shadow Pass.
+// Status: Auditoria forense no Shadow Pass concluída. Bucket 'avatars' e Nexus Nexus sincronizados.
+// Objetivo: Garantir anonimato absoluto e persistência de metadados no perfil do usuário.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
