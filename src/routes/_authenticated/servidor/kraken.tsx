@@ -28,8 +28,8 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // v31: Cache-busting para garantir que a Vercel sirva o novo asset
-  return `${url}${sep}v=v31`;
+  // v31.2: Auditoria de cache Vercel - Forçando atualização do asset bioluminescente v31
+  return `${url}${sep}v=31_final_v2`;
 };
 
 const krakenCore = getUrlWithBust(krakenV31Asset.url || KRAKEN_BG_FALLBACK);
