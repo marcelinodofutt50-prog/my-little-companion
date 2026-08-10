@@ -16,17 +16,33 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
       // 1. Fetch current data via Admin Tunnel for absolute precision
+      // Optimized for resilient metadata and display_name retrieval
       const { data: profile, error: fetchError } = await supabaseAdmin
         .from("profiles")
         .select("metadata, display_name")
         .eq("id", userId)
         .maybeSingle();
 
-      if (fetchError || !profile) {
+      if (fetchError) {
         console.error("[Profile Audit] Fetch Error:", fetchError);
-        // Fallback for new profiles if they don't exist yet
-        if (!profile) console.warn("[Profile Audit] Profile not found for user:", userId);
-        throw new Error(`Erro ao recuperar perfil: ${fetchError?.message || 'Perfil inexistente'}`);
+        throw new Error(`Erro ao recuperar perfil: ${fetchError.message}`);
+      }
+      
+      // Fallback for missing profile record - create it if it doesn't exist
+      if (!profile) {
+        console.warn("[Profile Audit] Profile not found, creating...", userId);
+        const newMetadata = { 
+            avatar_url: data.avatar_url || null, 
+            is_anonymous: data.is_anonymous || false 
+        };
+        await supabaseAdmin.from("profiles").insert({
+            id: userId,
+            display_name: data.nickname || "Shadow Agent",
+            metadata: newMetadata,
+            vip_tier: 'none',
+            reputation_score: 100
+        });
+        return { success: true, created: true };
       }
       
       const currentMetadata = (profile?.metadata as any) || {};
