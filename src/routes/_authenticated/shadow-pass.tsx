@@ -60,7 +60,10 @@ function ShadowPassPage() {
       setMessageText("");
       queryClient.invalidateQueries({ queryKey: ['community-messages'] });
     },
-    onError: (e: any) => toast.error("Falha ao enviar: " + e.message)
+    onError: (e: any) => {
+      console.error("Mutation Error:", e);
+      toast.error("Falha ao enviar: " + e.message);
+    }
   });
 
   const updateProfileFn = useServerFn(updateProfileCustomization);
@@ -71,7 +74,10 @@ function ShadowPassPage() {
       toast.success("Perfil atualizado!");
       setIsEditing(false);
     },
-    onError: (e: any) => toast.error("Falha ao atualizar: " + e.message)
+    onError: (e: any) => {
+      console.error("Profile Update Error:", e);
+      toast.error("Falha ao atualizar: " + e.message);
+    }
   });
 
   const { identity, loyalty, community, vip, reputation, staff } = data as any;
@@ -171,7 +177,7 @@ function ShadowPassPage() {
               accept="image/*"
               onChange={handleAvatarUpload}
             />
-            {vip.tier !== 'none' && (
+            {vip.tier !== 'none' && vip.tier !== undefined && (
               <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tighter border-2 border-card shadow-lg">
                 {vip.tier}
               </div>
@@ -264,7 +270,7 @@ function ShadowPassPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" /> Evolução de Carreira
+                <TrendingUp className="h-5 w-5 text-primary" /> Evolução de Carreira e Missões
               </h2>
             </div>
             

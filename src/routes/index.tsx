@@ -1,4 +1,5 @@
-// verifique novamente os erros do shadow pass
+// Shadow Protocol v8.1: Infraestrutura e Assets restaurados. Diagnóstico de perfil e missões otimizados.
+// Localização do Centro de Treinamento: src/routes/_authenticated/tutoriais.tsx (Frontend) | src/lib/tutorials.functions.ts (Backend)
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
@@ -36,7 +37,7 @@ import {
 // Hardcoded paths to public assets to ensure they load from the repository
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 const btmobDashboard = "/assets/shadow-dashboard-real.png?v=v9-300";
-const assetMissing = "/assets/shadow-dashboard-real.png?v=v9-300";
+const btmobCoreDashboard = "/assets/btmob_core_dashboard.png?v=v1";
 const btmob1 = "/assets/shadow-dashboard-real.png?v=v9-300";
 const btmob2 = "/assets/shadow-play-protect-new.png?v=v9-300";
 
@@ -171,7 +172,7 @@ function Index() {
       </section>
       
       {/* Enterprise Differential Section */}
-      <section className="py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-muted/30">
+      <section className="py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-white/5">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">// diferenciais táticos</span>
@@ -235,7 +236,7 @@ function Index() {
                 whileInView={{ opacity: 1, x: 0 }}
                 className="rounded-2xl border border-primary/20 bg-background/50 p-1 shadow-2xl overflow-hidden"
               >
-                <ProgressiveImage src={assetMissing} alt="BTMob Dashboard UI" className="w-full h-auto rounded-xl" />
+                <ProgressiveImage src={btmobCoreDashboard} alt="BTMob Core Dashboard UI" className="w-full h-auto rounded-xl" />
               </motion.div>
               
               {/* Floating tactical stats */}
@@ -319,7 +320,7 @@ function Index() {
                   whileHover={{ y: -6, scale: 1.015 }}
                   transition={{ duration: 0.7, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }}
                   viewport={{ once: true, margin: "-50px" }}
-                  className="group relative rounded-xl border border-border/50 overflow-hidden bg-background/30 p-1 shadow-[0_10px_40px_-20px_oklch(0.78_0.13_82/0.4)] hover:border-primary/40 hover:shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.6)] transition-all duration-500"
+                  className="group relative rounded-xl border border-border/50 overflow-hidden bg-background/50 p-1 shadow-[0_10px_40px_-20px_oklch(0.78_0.13_82/0.4)] hover:border-primary/40 hover:shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.6)] transition-all duration-500"
                   style={{ perspective: "1000px" }}
                 >
                   {/* Scanline effect on hover */}
