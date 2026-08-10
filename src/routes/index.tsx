@@ -1,6 +1,6 @@
-// Shadow Protocol v12.5: Reparo visual e diagnóstico da Unidade Kraken.
-// 1. Dashboard: Manutenção de fundos cinzas e visibilidade em tema claro via .client-enterprise.
-// 2. Kraken 2.0: Sincronização de assets bioluminescentes v31 para bypass de cache em produção.
+// Shadow Protocol v12.6: Atualização da Unidade Tática Kraken.
+// 1. Kraken UI: Aplicado status visual "correções na kraken" conforme solicitado pelo operador.
+// 2. Resilience: Sincronização de infraestrutura v12.0 em pleno funcionamento.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
