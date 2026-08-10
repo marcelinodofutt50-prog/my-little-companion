@@ -119,29 +119,6 @@ function ShadowPassPage() {
 
       if (uploadError) throw uploadError;
 
-<<<<<<< HEAD
-      const { data: publicUrlData, error: publicUrlError } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      if (publicUrlError || !publicUrlData?.publicUrl) {
-        throw new Error(publicUrlError?.message || 'Não foi possível gerar URL pública do avatar.');
-      }
-
-      mutation.mutate({ avatar_url: publicUrlData.publicUrl });
-      toast.success("Avatar atualizado com sucesso!", { id: uploadToast });
-    } catch (error: any) {
-      console.error("Erro no upload:", error);
-      const message = error?.message || "Erro desconhecido";
-      if (message.includes("Bucket not found") || message.includes("bucket does not exist")) {
-        toast.error(
-          "Falha no upload: bucket 'avatars' não encontrado. Verifique o Storage Supabase e crie o bucket 'avatars'.",
-          { id: uploadToast }
-        );
-      } else {
-        toast.error("Falha no upload: " + message, { id: uploadToast });
-      }
-=======
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
@@ -151,7 +128,6 @@ function ShadowPassPage() {
     } catch (error: any) {
       console.error("Erro no upload:", error);
       toast.error("Falha no upload: " + error.message, { id: uploadToast });
->>>>>>> origin/main
     }
   };
 
