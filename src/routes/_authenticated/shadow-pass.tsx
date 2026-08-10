@@ -265,10 +265,27 @@ function ShadowPassPage() {
         </div>
       </header>
 
-      {/* Main Grid */}
-      <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
-        {/* Left Column: Progress & Community */}
-        <div className="lg:col-span-2 space-y-6 md:space-y-8">
+      {/* Main Content with Tabs */}
+      <Tabs defaultValue="progress" className="w-full space-y-6 md:space-y-8">
+        <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-8 mb-4">
+          <TabsTrigger 
+            value="progress" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
+          >
+            Progresso & Nexus
+          </TabsTrigger>
+          <TabsTrigger 
+            value="vip-benefits" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
+          >
+            Benefícios VIP
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="progress" className="m-0">
+          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
+            {/* Left Column: Progress & Community */}
+            <div className="lg:col-span-2 space-y-6 md:space-y-8">
           {/* Progress Overview */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
@@ -684,9 +701,74 @@ function ShadowPassPage() {
                  </Button>
                </CardContent>
              </Card>
-           </section>
-        </div>
-      </div>
+            </section>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="vip-benefits" className="m-0">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <Card className="border-yellow-500/20 bg-card/50 backdrop-blur-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
+                <Diamond className="h-32 w-32 text-yellow-500" />
+              </div>
+              <CardHeader>
+                <CardTitle className="text-lg font-mono uppercase tracking-tight flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-yellow-500" /> Prioridade no Suporte
+                </CardTitle>
+                <CardDescription className="text-xs uppercase font-mono opacity-50">Exclusivo VIP</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Sua transmissão é priorizada no vácuo. Operadores VIP têm tempo de resposta garantido inferior a 15 minutos em dias úteis.
+                </p>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-yellow-500 uppercase tracking-tighter">
+                  <CheckCircle2 className="h-4 w-4" /> Resposta em Tempo Real
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-card/50 backdrop-blur-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
+                <Zap className="h-32 w-32 text-primary" />
+              </div>
+              <CardHeader>
+                <CardTitle className="text-lg font-mono uppercase tracking-tight flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" /> Play Protect Trial
+                </CardTitle>
+                <CardDescription className="text-xs uppercase font-mono opacity-50">Mensal · VIP+</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Resgate 7 dias gratuitos de Shadow Signer (Bypass Play Protect) uma vez por mês para testar novos vetores de ataque.
+                </p>
+                <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-[10px] uppercase">
+                  Resgatar 7 Dias Grátis
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-emerald-500/20 bg-card/50 backdrop-blur-sm relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
+                <Gift className="h-32 w-32 text-emerald-500" />
+              </div>
+              <CardHeader>
+                <CardTitle className="text-lg font-mono uppercase tracking-tight flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-emerald-500" /> Marketplace Exclusivo
+                </CardTitle>
+                <CardDescription className="text-xs uppercase font-mono opacity-50">Itens Raros</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Acesso antecipado a exploits zero-day, bases de dados vazadas e ferramentas personalizadas de staff.
+                </p>
+                <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 text-[9px] font-mono">
+                  ACERVO ALPHA LIBERADO
+                </Badge>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
