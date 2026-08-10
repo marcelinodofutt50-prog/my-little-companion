@@ -702,7 +702,7 @@ function ShadowPassPage() {
                </CardContent>
              </Card>
             </section>
-          </div>
+            </div>
           </div>
         </TabsContent>
 
