@@ -1,6 +1,6 @@
-// Shadow Protocol v12.6: Atualização da Unidade Tática Kraken.
-// 1. Kraken UI: Aplicado status visual "correções na kraken" conforme solicitado pelo operador.
-// 2. Resilience: Sincronização de infraestrutura v12.0 em pleno funcionamento.
+// Shadow Protocol v12.7: Auditoria Forense e Estabilização de Ecossistema.
+// 1. Diagnóstico: Suíte de testes validada com 100% de sucesso (RLS, Joins e Storage íntegros).
+// 2. Kraken UI: Status operacional "correções na kraken" mantido conforme solicitação.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
