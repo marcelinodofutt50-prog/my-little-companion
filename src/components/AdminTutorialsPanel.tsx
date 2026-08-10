@@ -64,19 +64,38 @@ export function AdminTutorialsPanel() {
   }
 
   const handleSave = async (retryCount = 0) => {
-    if (!current.title?.trim()) return toast.error("Título é obrigatório");
-    if (!current.description?.trim()) return toast.error("Descrição é obrigatória");
-    if (!current.category?.trim()) return toast.error("Categoria é obrigatória");
+    if (!current.title?.trim() || current.title.trim().length < 3) return toast.error("Título é obrigatório (mín. 3 caracteres)");
+    if (!current.description?.trim() || current.description.trim().length < 5) return toast.error("Descrição é obrigatória (mín. 5 caracteres)");
+    if (!current.category?.trim() || current.category.trim().length < 2) return toast.error("Categoria é obrigatória (mín. 2 caracteres)");
     if (!current.video_url && !current.youtube_url) return toast.error("É necessário um vídeo (upload ou link)");
+
+    const clean = (v: any) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
+    const youtube = clean(current.youtube_url);
+    if (youtube && !/^https?:\/\//i.test(youtube)) {
+      return toast.error("O link do YouTube precisa começar com https://");
+    }
+
+    const payload: Record<string, any> = {
+      title: current.title.trim(),
+      description: current.description.trim(),
+      category: current.category.trim(),
+      video_url: clean(current.video_url),
+      image_url: clean(current.image_url),
+      youtube_url: youtube,
+      is_active: current.is_active !== false,
+    };
+    if (current.id) payload.id = current.id;
+    if (typeof current.display_order === "number") payload.display_order = current.display_order;
 
     setLoading(true);
     try {
-      await saveFn({ data: current });
+      await saveFn({ data: payload });
       toast.success(current.id ? "Tutorial atualizado!" : "Tutorial criado!");
       setIsEditing(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setCurrent({ title: "", description: "", video_url: "", image_url: "", youtube_url: "", category: "general", is_active: true });
       load();
+
     } catch (e: any) {
       console.error(`Save attempt ${retryCount + 1} failed:`, e);
       
