@@ -1,5 +1,5 @@
-// Shadow Protocol v12.2: Otimização visual para tema claro e painel operacional.
-// 1. Dashboard: Corrigida transparência de blocos cinzas no tema branco para visibilidade 100%.
+// Shadow Protocol v12.3: Refinamento visual global e reparo de contraste em tema claro.
+// 1. Dashboard: Blocos cinzas residuais e transparências em widgets foram corrigidos para o tema branco.
 // 2. Resilience: Protocolo de recarregamento de esquema PostgREST v12.0 ativo.
 
 
