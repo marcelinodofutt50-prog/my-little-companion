@@ -40,8 +40,8 @@ import {
   Gift 
 } from "lucide-react";
 // Hardcoded paths to assets
-import btmobDashboardAsset from "@/assets/btmob_client_manager_real_v3.jpg.asset.json";
-import btmobUpdatesAsset from "@/assets/btmob_updates_real_v4.jpg.asset.json";
+import btmobDashboardAsset from "@/assets/btmob_client_manager_final.jpg.asset.json";
+import btmobUpdatesAsset from "@/assets/btmob_updates_final.jpg.asset.json";
 import btmobDualAsset from "@/assets/btmob_dual_dashboard.png.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
 const btmobCoreDashboard = btmobDualAsset.url;
