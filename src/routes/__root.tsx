@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode, Suspense } from "react";
 import { redirectLocalhostAuthToCanonical } from "@/lib/site-url";
 import { Toaster } from "sonner";
 import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
@@ -268,8 +268,14 @@ function RootComponent() {
     );
   }
 
-  const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
+  return (
+    <Suspense>
+      <InnerRootComponent />
+    </Suspense>
+  );
+}
+
+function InnerRootComponent() {
 
   // Fallback: se o usuário abriu um link de confirmação de e-mail que ainda
   // aponta para localhost (Supabase Site URL desatualizado), redireciona para
