@@ -1,6 +1,6 @@
-// Shadow Protocol v10.1: Refinamento visual do tema claro e correção de fundos cinza.
-// 1. UI: Seção de objetivos da comunidade e áreas de gestão agora respeitam o fundo branco puro no tema claro.
-// 2. CSS: Forçado background transparente em seções para evitar blocos cinzas residuais.
+// Shadow Protocol v10.2: Atualização de arte Kraken v30 e sincronização de assets.
+// 1. Kraken: Implementada a nova arte bioluminescente v30 em todos os ambientes.
+// 2. Deploy: Aplicado cache-busting v30 para garantir propagação imediata na Vercel.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
