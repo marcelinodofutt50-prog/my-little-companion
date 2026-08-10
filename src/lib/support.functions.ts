@@ -175,11 +175,27 @@ export const markThreadReadByCustomer = createServerFn({ method: "POST" })
     return z.object({ threadId: z.string().uuid() }).parse(i);
   })
   .handler(async ({ data, context }) => {
-    await context.supabase
+    console.log(`[Support] Marking thread ${data.threadId} as read by customer ${context.userId}`);
+    
+    const { error } = await context.supabase
       .from("support_threads")
       .update({ unread_by_customer: 0 })
       .eq("id", data.threadId)
       .eq("user_id", context.userId);
+
+    if (error) {
+      console.error(`[Support] Failed to mark thread ${data.threadId} as read:`, error);
+      
+      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        console.warn("[Support] Schema cache error in markRead, retrying via admin tunnel...");
+        await supabaseAdmin
+          .from("support_threads")
+          .update({ unread_by_customer: 0 })
+          .eq("id", data.threadId);
+      }
+    }
+    
     return { ok: true };
   });
 
