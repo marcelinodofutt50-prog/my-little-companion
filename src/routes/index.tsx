@@ -1,4 +1,4 @@
-// Shadow Protocol v9.4: Interface unificada do Btmob Conexion restaurada com a imagem real enviada.
+// Shadow Protocol v9.5: Imagens do Btmob Conexion validadas e atualizadas conforme o pedido mais recente.
 // 1. UI: A seção "Gestão Empresarial" agora exibe o layout duplo oficial.
 // 2. Telemetria: Logs forenses ativos para Shadow Pass e Tutoriais.
 
