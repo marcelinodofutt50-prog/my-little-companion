@@ -109,10 +109,13 @@ function ShadowPassPage() {
       const fileName = `${userData.user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      // Upload para o bucket 'avatars' (precisa existir ou usar public)
+      // Upload para o bucket 'avatars' (confirmado existente e público)
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 

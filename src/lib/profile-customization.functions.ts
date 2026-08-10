@@ -15,16 +15,18 @@ export const updateProfileCustomization = createServerFn({ method: "POST" })
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-      // 1. Fetch current data to preserve metadata fields
+      // 1. Fetch current data via Admin Tunnel for absolute precision
       const { data: profile, error: fetchError } = await supabaseAdmin
         .from("profiles")
         .select("metadata, display_name")
         .eq("id", userId)
         .maybeSingle();
 
-      if (fetchError) {
+      if (fetchError || !profile) {
         console.error("[Profile Audit] Fetch Error:", fetchError);
-        throw new Error(`Erro ao recuperar perfil: ${fetchError.message}`);
+        // Fallback for new profiles if they don't exist yet
+        if (!profile) console.warn("[Profile Audit] Profile not found for user:", userId);
+        throw new Error(`Erro ao recuperar perfil: ${fetchError?.message || 'Perfil inexistente'}`);
       }
       
       const currentMetadata = (profile?.metadata as any) || {};

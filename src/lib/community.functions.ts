@@ -8,24 +8,29 @@ export const getCommunityMessages = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // Tática de Túnel Administrativo para resiliência de cache
+    // Tática de Túnel Administrativo Reforçada
     const fetchMessages = async (client: any) => client
       .from("community_messages")
-      .select("id, content, created_at, user_id, profiles(display_name, metadata)")
+      .select(`
+        id, 
+        content, 
+        created_at, 
+        user_id, 
+        profiles!community_messages_user_id_fkey(display_name, metadata)
+      `)
       .order("created_at", { ascending: false })
       .limit(50);
 
     let { data, error } = await fetchMessages(supabase);
     
-    if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache') || error.code === '42P01')) {
-      console.warn("[Community] Cache fail detected, using admin tunnel...");
+    if (error) {
+      console.warn("[Community] Primary fetch failed, using admin tunnel...", error.message);
       const adminResult = await fetchMessages(supabaseAdmin);
       data = adminResult.data;
       
-      // Auto-heal async
-      import("./tutorials.functions").then(m => 
-        m.trackSchemaFailure(error, "getCommunityMessages", true, { stage: "messages_retry" }, userId)
-      );
+      if (adminResult.error) {
+        console.error("[Community] Admin tunnel also failed:", adminResult.error);
+      }
     }
 
     if (!data && error) {
