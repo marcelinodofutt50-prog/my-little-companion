@@ -32,7 +32,7 @@ const getUrlWithBust = (url: string) => {
   return `${url}${sep}v=v30`;
 };
 
-const krakenCore = getUrlWithBust(krakenV29Asset.url || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenV30Asset.url || KRAKEN_BG_FALLBACK);
 
 
 
