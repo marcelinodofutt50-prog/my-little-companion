@@ -1,6 +1,6 @@
 // apartir de agora eu vou pedir para voce fazer as coisas e voce vai fazer exatamente oque eu pedi, e oque e so vai finalizar a tarefa quando o que eu pedi for 100% resolvido ou entregue como foi pedido, ok? Btmob core conexxion tem duas imagens, eu quero que voce altere as duas imagens que esta atuamente para essas duas imagens que esta anexada. Verifique novamente se essas duas imagens estao na aba btmob conexion.
-// Shadow Protocol v12.8: Auditoria Completa e Estabilização Total.
-// 1. Diagnóstico: Suíte de testes validada com 100% de sucesso para Shadow Pass e Central de Atendimento.
+// Shadow Protocol v12.9: Refinamento de Ativos Btmob e Correção de Sincronia.
+// 1. Diagnóstico: Usuário informou que imagens anteriores não foram aplicadas corretamente; atualizando ponteiros para v2.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
@@ -40,9 +40,9 @@ import {
   Gift 
 } from "lucide-react";
 // Hardcoded paths to assets
-import btmobDashboardAsset from "@/assets/btmob_client_manager_final.jpg.asset.json";
-import btmobUpdatesAsset from "@/assets/btmob_updates_final.jpg.asset.json";
-import btmobDualAsset from "@/assets/btmob_dual_dashboard.png.asset.json";
+import btmobDashboardAsset from "@/assets/btmob_client_manager_final_v2.jpg.asset.json";
+import btmobUpdatesAsset from "@/assets/btmob_updates_final_v2.jpg.asset.json";
+import btmobDualAsset from "@/assets/btmob_dual_dashboard_v2.png.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
 const btmobCoreDashboard = btmobDualAsset.url;
 const btmob1 = btmobDashboardAsset.url;
