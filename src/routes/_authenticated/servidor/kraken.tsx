@@ -28,8 +28,8 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // Incrementado para v28 para forçar invalidação total
-  return `${url}${sep}v=v28`;
+  // v28.1: Cache-busting calibrado para a nova infraestrutura
+  return `${url}${sep}v=v28.1`;
 };
 
 const krakenCore = getUrlWithBust(krakenV28Asset.url || KRAKEN_BG_FALLBACK);
