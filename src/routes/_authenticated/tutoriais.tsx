@@ -53,21 +53,22 @@ function TutorialsPage() {
   const [diagResult, setDiagResult] = useState<any>(null);
   const [diagLoading, setDiagLoading] = useState(false);
   
-  const addSyncLog = (status: 'success' | 'error', type: 'auto' | 'manual', message?: string) => {
+  const addSyncLog = useCallback((status: 'success' | 'error', type: 'auto' | 'manual', message?: string) => {
     setSyncHistory(prev => {
       const newHistory = [{
         time: new Date().toLocaleTimeString('pt-BR'),
         status,
         type,
         message,
-        route: window.location.pathname
+        route: typeof window !== 'undefined' ? window.location.pathname : ''
       }, ...prev].slice(0, 10);
       if (typeof window !== 'undefined') {
         localStorage.setItem('shadow_sync_history', JSON.stringify(newHistory));
       }
       return newHistory;
     });
-  };
+  }, []);
+
   
   const listFn = useServerFn(getTutorials);
   const getProgressFn = useServerFn(getTutorialProgress);
