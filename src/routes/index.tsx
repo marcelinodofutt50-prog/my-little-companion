@@ -1,7 +1,7 @@
 // Shadow Protocol v14.0: Shadow Pass & Ecosystem Integrity.
 // Status: 100% OPERACIONAL.
 // Resultado: Shadow Pass estabilizado (Avatar, Codinome, Nexus e VIP) e Assets Definidos.
-// verifique se sta 100% na vercel, eu quero que esteja 100% na vercel
+// verifique se o shadow pass esta 100% funcionando na vercel !
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).
