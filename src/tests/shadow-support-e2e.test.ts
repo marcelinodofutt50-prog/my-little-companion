@@ -77,14 +77,19 @@ describe('Shadow Support Center E2E', () => {
   });
 });
 
-
   it('should validate support AI trigger metadata compatibility', async () => {
-    // A IA de suporte lê o campo metadata do perfil para contexto
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('metadata')
-      .limit(1);
-      
-    expect(error?.code).not.toBe('42703');
+    try {
+      // A IA de suporte lê o campo metadata do perfil para contexto
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('metadata')
+        .limit(1);
+        
+      if (error && error.code !== '42501') throw error;
+      expect(error?.code).not.toBe('42703');
+    } catch (e) {
+      await reportFailure('support_ai_metadata', e);
+      throw e;
+    }
   });
 });
