@@ -15,12 +15,12 @@ import { useQuery } from "@tanstack/react-query"
 import { getKrakenStatus } from "@/lib/kraken-status.functions"
 import { cn } from "@/lib/utils"
 
-import krakenV30Asset from "@/assets/kraken_v30_bg.webp.asset.json";
+import krakenV31Asset from "@/assets/kraken_v31_final.webp.asset.json";
 
 // Imagem tática central da Kraken 2.0
-// v30: Atualizando para a arte bioluminescente v30 enviada pelo usuário.
+// v31: Atualizando para a arte bioluminescente v31 (KRAKEN text) enviada pelo usuário.
 const KRAKEN_BG_CANDIDATES: string[] = [
-  krakenV30Asset.url,
+  krakenV31Asset.url,
 ].filter(Boolean) as string[];
 
 const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1];
@@ -28,11 +28,11 @@ const KRAKEN_BG_FALLBACK = KRAKEN_BG_CANDIDATES[KRAKEN_BG_CANDIDATES.length - 1]
 const getUrlWithBust = (url: string) => {
   if (!url) return "";
   const sep = url.includes("?") ? "&" : "?";
-  // v30: Cache-busting para garantir que a Vercel sirva o novo asset
-  return `${url}${sep}v=v30`;
+  // v31: Cache-busting para garantir que a Vercel sirva o novo asset
+  return `${url}${sep}v=v31`;
 };
 
-const krakenCore = getUrlWithBust(krakenV30Asset.url || KRAKEN_BG_FALLBACK);
+const krakenCore = getUrlWithBust(krakenV31Asset.url || KRAKEN_BG_FALLBACK);
 
 
 
