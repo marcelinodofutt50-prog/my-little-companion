@@ -8,7 +8,7 @@ export const getCommunityMessages = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // Tática de Túnel Administrativo Reforçada
+    // Tática de Túnel Administrativo Reforçada (v13.5)
     const fetchMessages = async (client: any) => client
       .from("community_messages")
       .select(`
@@ -16,7 +16,12 @@ export const getCommunityMessages = createServerFn({ method: "GET" })
         content, 
         created_at, 
         user_id, 
-        profiles!user_id(display_name, metadata)
+        profiles!user_id(
+          display_name, 
+          full_name,
+          email,
+          metadata
+        )
       `)
       .order("created_at", { ascending: false })
       .limit(50);

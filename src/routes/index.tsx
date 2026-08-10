@@ -1,6 +1,6 @@
-// Shadow Protocol v13.4: Estabilização do Shadow Pass.
-// Status: Auditoria forense no Shadow Pass concluída. Bucket 'avatars' e Nexus Nexus sincronizados.
-// Objetivo: Garantir anonimato absoluto e persistência de metadados no perfil do usuário.
+// Shadow Protocol v13.5: Auditoria Final Nexus & Shadow Pass.
+// Status: Validação de sincronização de avatares e codinomes no Nexus.
+// Objetivo: Garantir que usuários sejam buscados e exibidos corretamente pelo nome e foto de perfil.
 
 
 // 5. Tabelas Envolvidas: public.tutorials (módulos) e public.tutorial_progress (progresso do usuário).

@@ -164,9 +164,9 @@ function ShadowPassPage() {
           <div className="relative shrink-0 group">
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/40 transition-colors" />
             <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative cursor-pointer hover:scale-105 transition-transform overflow-hidden" onClick={() => fileRef.current?.click()}>
-              <AvatarImage src={identity.avatar} className="object-cover" />
+              <AvatarImage src={identity.avatar || (identity.metadata as any)?.avatar_url} className="object-cover" />
               <AvatarFallback className="bg-muted text-2xl md:text-4xl">
-                {isAnonymous ? <Ghost className="h-12 w-12 text-primary" /> : identity.nickname?.substring(0, 2).toUpperCase()}
+                {isAnonymous ? <Ghost className="h-12 w-12 text-primary" /> : (identity.nickname || identity.display_name || "?")?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
               {/* Upload Overlay */}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
