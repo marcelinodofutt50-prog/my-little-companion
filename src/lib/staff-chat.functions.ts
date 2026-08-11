@@ -10,7 +10,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
     const { channel } = input;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // 1. Role verification
+    // 1. Strict Role verification (Server-side)
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -19,10 +19,11 @@ export const getStaffMessages = createServerFn({ method: "GET" })
 
     const allowedRoles = ['admin', 'moderator', 'support'];
     if (!roleData || !allowedRoles.includes(roleData.role)) {
-      throw new Error("403: Acesso negado. Apenas membros da equipe podem acessar este chat.");
+      console.error(`[StaffNexus] Unauthorized access attempt by ${userId} with role ${roleData?.role}`);
+      throw new Error("403: Acesso negado. O Staff Nexus é exclusivo para a equipe interna.");
     }
 
-    // 2. Fetch messages
+    // 2. Fetch messages with explicit profile join
     const { data, error } = await supabaseAdmin
       .from("staff_messages")
       .select(`
@@ -34,11 +35,14 @@ export const getStaffMessages = createServerFn({ method: "GET" })
           display_name,
           full_name,
           metadata
+        ),
+        user_roles!sender_id (
+          role
         )
       `)
       .eq("channel", channel)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (error) throw error;
     return data || [];
@@ -55,7 +59,7 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
     const { content, channel } = input;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // 1. Role verification
+    // 1. Strict Role verification (Server-side)
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -73,7 +77,8 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
       .insert({
         sender_id: userId,
         content,
-        channel
+        channel,
+        metadata: { role: roleData.role }
       })
       .select()
       .single();
