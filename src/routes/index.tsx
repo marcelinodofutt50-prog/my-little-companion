@@ -567,3 +567,22 @@ function FeatureCard({ icon: Icon, title, desc, link }: { icon: any, title: stri
 
   return content;
 }
+
+
+function FeatureCard({ icon: Icon, title, desc, link }: { icon: any, title: string, desc: string, link?: string }) {
+  const content = (
+    <div className="group rounded-2xl border border-border/50 bg-card p-8 transition-all hover:border-primary/30 hover:bg-card/80 h-full">
+      <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="mb-4 text-xl font-bold text-foreground">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed">{desc}</p>
+    </div>
+  );
+
+  if (link) {
+    return <Link to={link}>{content}</Link>;
+  }
+
+  return content;
+}
