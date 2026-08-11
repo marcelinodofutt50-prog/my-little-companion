@@ -17,7 +17,7 @@ async function repairProd() {
   // 1. Repair Profiles Columns
   console.log("1. Repairing profiles table...");
   try {
-      const { error: colErr } = await supabase.rpc('exec_sql', {
+      const res = await supabase.rpc('exec_sql', {
         sql: `
           ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
           ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ;
@@ -27,8 +27,8 @@ async function repairProd() {
         `
       });
 
-      if (colErr) {
-        console.warn("   ⚠️ RPC exec_sql reported error:", colErr.message);
+      if (res.error) {
+        console.warn("   ⚠️ RPC exec_sql reported error:", res.error.message);
       } else {
         console.log("   ✅ Columns repaired.");
       }
@@ -38,8 +38,8 @@ async function repairProd() {
 
   // 2. Ensure community_messages exists
   console.log("2. Checking community_messages...");
-  const { error: msgErr } = await supabase.from('community_messages').select('id').limit(1);
-  if (msgErr && msgErr.code === '42P01') {
+  const msgRes = await supabase.from('community_messages').select('id').limit(1);
+  if (msgRes.error && msgRes.error.code === '42P01') {
     console.error("   ❌ Tabela community_messages NÃO existe no banco físico.");
   } else {
     console.log("   ✅ community_messages OK.");
