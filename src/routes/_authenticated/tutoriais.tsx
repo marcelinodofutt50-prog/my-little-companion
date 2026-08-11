@@ -71,6 +71,8 @@ function TutorialsPage() {
     });
   }, []);
   
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const selectedVideoUrl = useTutorialMedia(selected?.video_url);
   const selectedPosterUrl = useTutorialMedia(selected?.image_url);
 
@@ -108,27 +110,29 @@ function TutorialsPage() {
     setLoading(true);
     try {
       console.log("[tutorials] Iniciando ciclo de carregamento resiliente...");
-      
+
       if (forceRepair) {
         toast.loading("Sincronizando banco de dados...", { id: "sync-toast" });
         const { supabase } = await import("@/integrations/supabase/client");
-        // Reparando via RPC direto e testando seletividade
         await (supabase as any).rpc("force_refresh_schema_permissions");
         await new Promise(resolve => setTimeout(resolve, 1500));
-        // Consulta dummy para forçar handshake
         await (supabase as any).from("tutorials").select("id").limit(1);
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
-      const [tData, pData] = await Promise.all([
-        listFn({}), 
-        getProgressFn()
-      ]);
-      
-      const validTutorials = (tData || []).filter((t: any) => t && t.id && (t.title || t.category));
+      // A lista e o progresso são independentes: uma falha de progresso
+      // não pode mais esconder todo o Centro de Treinamento.
+      const [tRes, pRes] = await Promise.allSettled([listFn({}), getProgressFn()]);
+
+      if (tRes.status === "rejected") throw tRes.reason;
+
+      const validTutorials = ((tRes.value as any[]) || []).filter(
+        (t: any) => t && t.id && (t.title || t.category),
+      );
       setTutorials(validTutorials);
-      setCompletedIds(pData || []);
-      
+      setLoadError(null);
+      setCompletedIds(pRes.status === "fulfilled" ? ((pRes.value as string[]) || []) : []);
+
       if (forceRepair) {
         toast.success("Shadow Core sincronizado com sucesso!", { id: "sync-toast" });
         addSyncLog('success', 'manual', 'Reparo tático concluído com sucesso');
@@ -136,13 +140,14 @@ function TutorialsPage() {
         console.log(`[tutorials] Sincronização bem-sucedida: ${validTutorials.length} módulos ativos.`);
         addSyncLog('success', 'auto', 'Carregamento tático concluído');
       } else {
-        console.warn("[tutorials] Sincronização retornou lista vazia ou inválida.");
+        console.log("[tutorials] Conexão OK, mas nenhum módulo publicado ainda.");
+        addSyncLog('success', 'auto', 'Conexão OK — nenhum módulo publicado');
       }
     } catch (err: any) {
       console.error("[tutorials] Falha no carregamento:", err);
+      setLoadError(err?.message || "Falha de rede");
       addSyncLog('error', 'auto', `Erro de sincronização: ${err.message || 'Falha de rede'}`);
-      
-      // Se falhar mesmo com o bypass, tentamos uma última vez com um delay maior e força bruta
+
       if (!forceRepair) {
         console.warn("[tutorials] Falha persistente detectada. Acionando reparo de emergência em 3s...");
         setTimeout(() => loadData(true), 3000);
@@ -263,7 +268,7 @@ function TutorialsPage() {
               </div>
             </div>
 
-            {!loading && tutorials.length === 0 && (
+            {!loading && tutorials.length === 0 && loadError && (
               <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-6 mb-10">
                 <div className="flex justify-center">
                   <div className="p-4 rounded-full bg-primary/5 border border-primary/10 relative">
