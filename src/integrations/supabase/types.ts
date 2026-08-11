@@ -1421,6 +1421,8 @@ export type Database = {
           total_points_earned: number | null
           trial_7d_expires_at: string | null
           trial_7d_started_at: string | null
+          trial_expires_at: string | null
+          trial_started_at: string | null
           trust_score: number | null
           updated_at: string
           vip_tier: Database["public"]["Enums"]["vip_tier"] | null
@@ -1454,6 +1456,8 @@ export type Database = {
           total_points_earned?: number | null
           trial_7d_expires_at?: string | null
           trial_7d_started_at?: string | null
+          trial_expires_at?: string | null
+          trial_started_at?: string | null
           trust_score?: number | null
           updated_at?: string
           vip_tier?: Database["public"]["Enums"]["vip_tier"] | null
@@ -1487,6 +1491,8 @@ export type Database = {
           total_points_earned?: number | null
           trial_7d_expires_at?: string | null
           trial_7d_started_at?: string | null
+          trial_expires_at?: string | null
+          trial_started_at?: string | null
           trust_score?: number | null
           updated_at?: string
           vip_tier?: Database["public"]["Enums"]["vip_tier"] | null
