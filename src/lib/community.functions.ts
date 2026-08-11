@@ -42,7 +42,9 @@ export const getCommunityMessages = createServerFn({ method: "GET" })
       
       // Attempt background schema repair if cache error
       if (isCacheError) {
-        supabaseAdmin.rpc("force_refresh_schema_permissions").catch(() => {});
+        (async () => {
+           try { await supabaseAdmin.rpc("force_refresh_schema_permissions"); } catch(e) {}
+        })();
       }
     }
 
@@ -118,7 +120,9 @@ export const getCommunityGoals = createServerFn({ method: "GET" })
     if (error && (error.code === 'PGRST108' || error.code === 'PGRST205' || error.message?.includes('schema cache') || error.code === '42P01')) {
       const adminResult = await fetchGoals(supabaseAdmin);
       data = adminResult.data;
-      supabaseAdmin.rpc("force_refresh_schema_permissions").catch(() => {});
+      (async () => {
+         try { await supabaseAdmin.rpc("force_refresh_schema_permissions"); } catch(e) {}
+      })();
     }
 
     return data || [];
