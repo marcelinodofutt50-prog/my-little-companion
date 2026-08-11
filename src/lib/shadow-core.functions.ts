@@ -75,7 +75,7 @@ export const getShadowPassData = createServerFn({ method: "GET" })
         .from("tutorial_progress")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
-        .not("completed_at", "is", null),
+        .eq("completed", true),
     ]);
 
     const meta = (profileData.metadata as any) || {};
