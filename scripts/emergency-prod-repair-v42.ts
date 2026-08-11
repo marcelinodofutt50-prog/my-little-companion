@@ -16,20 +16,24 @@ async function repairProd() {
 
   // 1. Repair Profiles Columns
   console.log("1. Repairing profiles table...");
-  const { error: colErr } = await supabase.rpc('exec_sql', {
-    sql: `
-      ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
-      ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ;
-      ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
-      ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS vip_tier TEXT DEFAULT 'none';
-      ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS reputation_score INTEGER DEFAULT 100;
-    `
-  }).catch(() => ({ error: { message: "RPC exec_sql missing" } }));
+  try {
+      const { error: colErr } = await supabase.rpc('exec_sql', {
+        sql: `
+          ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
+          ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ;
+          ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
+          ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS vip_tier TEXT DEFAULT 'none';
+          ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS reputation_score INTEGER DEFAULT 100;
+        `
+      });
 
-  if (colErr) {
-    console.warn("   ⚠️ RPC exec_sql failed, the build might need to apply the migration naturally.");
-  } else {
-    console.log("   ✅ Columns repaired.");
+      if (colErr) {
+        console.warn("   ⚠️ RPC exec_sql reported error:", colErr.message);
+      } else {
+        console.log("   ✅ Columns repaired.");
+      }
+  } catch (e: any) {
+      console.warn("   ⚠️ RPC exec_sql call failed (likely missing):", e.message);
   }
 
   // 2. Ensure community_messages exists
@@ -38,12 +42,17 @@ async function repairProd() {
   if (msgErr && msgErr.code === '42P01') {
     console.error("   ❌ Tabela community_messages NÃO existe no banco físico.");
   } else {
-    console.log("   ✅ community_messages exists.");
+    console.log("   ✅ community_messages OK.");
   }
 
-  // 3. Clear Schema Cache
+  // 3. Reload Schema Cache
   console.log("3. Reloading schema cache...");
-  await supabase.rpc('force_refresh_schema_permissions').catch(() => {});
+  try {
+    await supabase.rpc('force_refresh_schema_permissions');
+    console.log("   ✅ Schema refresh triggered.");
+  } catch (e) {
+    console.warn("   ⚠️ Schema refresh failed.");
+  }
   
   console.log("--- REPAIR COMPLETE ---");
 }
