@@ -725,6 +725,63 @@ function ShadowPassPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="missions" className="m-0">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {(data.missions || []).map((m: any) => (
+              <Card key={m.id} className={cn(
+                "border-primary/20 bg-card/50 backdrop-blur-sm relative overflow-hidden group transition-all",
+                m.completed && "opacity-60 border-green-500/20"
+              )}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-sm font-mono uppercase tracking-tight flex items-center gap-2">
+                      {m.completed ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-primary" />}
+                      {m.title}
+                    </CardTitle>
+                    <Badge variant="outline" className="text-[9px] font-mono border-yellow-500/30 text-yellow-500">
+                      +{m.reward_points} XP
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-[10px] font-mono leading-relaxed mt-1">
+                    {m.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {!m.completed && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[8px] font-mono uppercase text-muted-foreground">
+                        <span>Progresso</span>
+                        <span>{m.progress || 0}%</span>
+                      </div>
+                      <Progress value={m.progress || 0} className="h-1" />
+                    </div>
+                  )}
+                  <Button 
+                    variant={m.completed ? "outline" : "default"} 
+                    className="w-full h-8 text-[10px] font-mono uppercase"
+                    disabled={m.completed || (m.progress || 0) < 100}
+                    onClick={() => {
+                      toast.promise(claimRewardFn({ data: { missionId: m.id } }), {
+                        loading: 'Resgatando XP...',
+                        success: (res: any) => {
+                          if (res.ok) {
+                            queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+                            return res.message;
+                          }
+                          throw new Error(res.message);
+                        },
+                        error: (err) => err.message
+                      });
+                    }}
+                  >
+                    {m.completed ? "Recompensa Resgatada" : (m.progress || 0) < 100 ? "Em Andamento" : "Resgatar Recompensa"}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
         <TabsContent value="vip-benefits" className="m-0">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             <Card className="border-yellow-500/20 bg-card/50 backdrop-blur-sm relative overflow-hidden group">
