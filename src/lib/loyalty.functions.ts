@@ -75,14 +75,19 @@ export const claimMissionReward = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     try {
+      const { loadMissionMetrics, missionProgress, vipRank } = await import(
+        "@/lib/mission-progress.server"
+      );
+
       // 1. Fetch mission
       const { data: mission } = await supabaseAdmin
         .from("loyalty_missions")
         .select("*")
         .eq("id", missionId)
-        .single();
+        .maybeSingle();
 
       if (!mission) return { ok: false, message: "Missão não encontrada." };
+      if (mission.status !== "active") return { ok: false, message: "Missão inativa." };
 
       // 2. Check if already claimed
       const { data: existing } = await supabaseAdmin
@@ -96,6 +101,16 @@ export const claimMissionReward = createServerFn({ method: "POST" })
         return { ok: false, message: "Recompensa já resgatada." };
       }
 
+      // 2.1 Valida no servidor se a missão foi realmente concluída
+      const metrics = await loadMissionMetrics(supabaseAdmin, userId);
+      const req = (mission.requirements as any) || {};
+      if (req.min_vip_tier && vipRank(metrics.vipTier) < vipRank(req.min_vip_tier)) {
+        return { ok: false, message: "Missão exclusiva para membros VIP." };
+      }
+      if (missionProgress(req, metrics) < 100) {
+        return { ok: false, message: "Missão ainda não concluída." };
+      }
+
       // 3. Award points & update profile
       const { data: profile } = await supabaseAdmin.from("profiles").select("reward_points, total_points_earned").eq("id", userId).single();
       
@@ -105,12 +120,16 @@ export const claimMissionReward = createServerFn({ method: "POST" })
       }).eq("id", userId);
 
       // 4. Mark mission as completed
-      await supabaseAdmin.from("user_missions").upsert({
-        user_id: userId,
-        mission_id: missionId,
-        completed_at: new Date().toISOString(),
-        progress: 100
-      });
+      await supabaseAdmin.from("user_missions").upsert(
+        {
+          user_id: userId,
+          mission_id: missionId,
+          completed_at: new Date().toISOString(),
+          progress: 100,
+        },
+        { onConflict: "user_id,mission_id" },
+      );
+
 
       // 5. History log
       await supabaseAdmin.from("points_history").insert({
