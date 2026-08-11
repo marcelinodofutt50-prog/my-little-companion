@@ -21,21 +21,36 @@
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { siteUrl } from "@/lib/site-url";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearch, createFileRoute, Link } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { toast } from "sonner";
+import { SocialProofStrip } from "@/components/SocialProof";
+import { MobileStickyCTA } from "@/components/ConversionBoosters";
+import { Testimonials } from "@/components/Testimonials";
+import { ProofWall } from "@/components/ProofWall";
+import { ImpossibleProof } from "@/components/ImpossibleProof";
+import { BeforeAfter } from "@/components/BeforeAfter";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { formatBrl } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 import { playNotifyDing } from "@/lib/notify-sound";
 import { motion } from "framer-motion";
 import { 
   Shield, 
   Zap, 
   Lock, 
+  Globe, 
   ShieldCheck, 
+  Server, 
+  Rocket, 
   ArrowRight, 
   CheckCircle2, 
+  Store, 
+  Users, 
+  Gift 
 } from "lucide-react";
 // Hardcoded paths to assets
 import btmobDashboardAsset from "@/assets/btmob_conexion_1_v2.png";
@@ -45,6 +60,7 @@ const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
 const btmobCoreDashboard = btmobDualAsset.url;
 const btmob1 = btmobDashboardAsset;
 const btmob2 = btmobUpdatesAsset;
+
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -549,8 +565,6 @@ function Index() {
     </div>
   );
 }
-
-
 
 function FeatureCard({ icon: Icon, title, desc, link }: { icon: any, title: string, desc: string, link?: string }) {
   const content = (
