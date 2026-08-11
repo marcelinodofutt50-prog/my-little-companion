@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTrial } from '@/lib/license.functions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { BackToDashboard } from "@/components/BackToDashboard";
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   loader: async ({ context }) => {
@@ -181,6 +182,8 @@ function ShadowPassPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-6xl pb-24 md:pb-8 overflow-x-hidden">
+      <BackToDashboard />
+
       {/* Header Profile */}
       <header className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-primary/20 bg-card p-5 md:p-10 shadow-2xl">
         <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">

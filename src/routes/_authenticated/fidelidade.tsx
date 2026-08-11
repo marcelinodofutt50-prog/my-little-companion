@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
+import { BackToDashboard } from "@/components/BackToDashboard";
 
 export const Route = createFileRoute('/_authenticated/fidelidade')({
   loader: async ({ context }) => {
@@ -156,6 +157,7 @@ function LoyaltyPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+      <BackToDashboard />
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <div>
           <h1 className="text-4xl md:text-6xl font-display font-black tracking-tighter uppercase italic">

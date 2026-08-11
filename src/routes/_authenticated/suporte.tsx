@@ -16,6 +16,7 @@ import { SupportChat } from "@/components/support/SupportChat";
 import { SUPPORT_CATEGORY_META, categoryMeta, type SupportCategory } from "@/lib/support-categories";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
+import { BackToDashboard } from "@/components/BackToDashboard";
 
 
 export const Route = createFileRoute("/_authenticated/suporte")({
@@ -343,6 +344,7 @@ function SupportPage() {
     <div className="client-enterprise min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-8">
+        <div className="mb-4"><BackToDashboard /></div>
         <div className="osint-panel osint-corners osint-sweep relative overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "120px" }}>
           <div className="osint-label text-neon">// support channel</div>
           <h1 className="mt-1 text-2xl font-bold">{t("chat.title" as any)}</h1>
