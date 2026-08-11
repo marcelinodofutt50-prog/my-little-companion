@@ -19,7 +19,8 @@ export async function runFullAudit() {
     const tables = ['profiles', 'licenses', 'trials', 'user_loyalty', 'loyalty_tier_config', 'loyalty_missions', 'user_missions', 'community_messages', 'support_threads', 'support_messages', 'tutorials', 'tutorial_progress'];
     
     for (const table of tables) {
-      const { error } = await supabaseAdmin.from(table).select('count', { count: 'exact', head: true });
+      // Cast as any to bypass generated type limitations during forensic audit
+      const { error } = await (supabaseAdmin.from(table as any) as any).select('count', { count: 'exact', head: true });
       if (error) {
         results.failed.push(`Table ${table}: ${error.message} (Code: ${error.code})`);
       } else {
