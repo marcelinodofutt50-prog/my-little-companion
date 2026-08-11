@@ -2,128 +2,118 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/**
+ * SHADOW NEXUS v2.0
+ * Leitura sem embed do PostgREST (community_messages.user_id possui 2 FKs:
+ * auth.users e profiles -> o hint "profiles!user_id" era ambíguo e derrubava
+ * o chat inteiro, deixando a Central da Comunidade "sincronizando" para sempre).
+ * Agora buscamos mensagens e perfis em duas queries e juntamos em memória.
+ */
 export const getCommunityMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
+    const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
-    // Tática de Túnel Administrativo Reforçada (v21.0)
-    const fetchMessages = async (client: any) => client
+
+    const { data: rows, error } = await supabaseAdmin
       .from("community_messages")
-      .select(`
-        id, 
-        content, 
-        created_at, 
-        user_id, 
-        profiles!user_id(
-          display_name, 
-          full_name,
-          email,
-          metadata
-        )
-      `)
+      .select("id, content, created_at, user_id")
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(60);
 
-    let { data, error } = await fetchMessages(supabase);
-    
-    // PGRST205/108 Check
     if (error) {
-      const isCacheError = error.code === 'PGRST108' || error.code === 'PGRST205' || error.message?.includes('schema cache') || error.code === '42P01';
-      console.warn(`[Community] Fetch ${isCacheError ? 'Cache Error' : 'Error'}: ${error.message}. Using admin tunnel.`);
-      
-      const adminResult = await fetchMessages(supabaseAdmin);
-      data = adminResult.data;
-      
-      if (adminResult.error) {
-        console.error("[Community] Admin tunnel also failed:", adminResult.error);
-      }
-      
-      // Attempt background schema repair if cache error
-      if (isCacheError) {
-        (async () => {
-           try { await supabaseAdmin.rpc("force_refresh_schema_permissions"); } catch(e) {}
-        })();
-      }
+      console.error("[Nexus] Falha ao carregar mensagens:", error.message);
+      return { messages: [], online: 0, error: error.message };
     }
 
-    if (!data && error) {
-      console.error("[Community] Critical error returning empty list:", error);
-      return [];
+    const list = rows || [];
+    const ids = Array.from(new Set(list.map((m) => m.user_id)));
+
+    let profileMap = new Map<string, any>();
+    if (ids.length) {
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id, display_name, full_name, email, metadata, vip_tier")
+        .in("id", ids);
+      profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
     }
-    
-    return data || [];
+
+    // "Online": autores distintos nos últimos 15 minutos
+    const cutoff = Date.now() - 15 * 60 * 1000;
+    const online = new Set(
+      list.filter((m) => new Date(m.created_at).getTime() > cutoff).map((m) => m.user_id),
+    ).size;
+
+    const messages = list.map((m) => {
+      const p = profileMap.get(m.user_id) || {};
+      const meta = (p.metadata as any) || {};
+      const anonymous = !!meta.is_anonymous;
+      return {
+        id: m.id,
+        content: m.content,
+        created_at: m.created_at,
+        isMine: m.user_id === userId,
+        anonymous,
+        author: anonymous
+          ? "Agente Anônimo"
+          : meta.nickname || p.display_name || p.full_name || p.email?.split("@")[0] || "Membro",
+        avatar: anonymous ? null : meta.avatar_url || null,
+        vip: anonymous ? "none" : p.vip_tier || "none",
+      };
+    });
+
+    return { messages, online, error: null };
   });
 
 export const sendCommunityMessage = createServerFn({ method: "POST" })
+  .validator((d: unknown) => z.object({ content: z.string().trim().min(1).max(500) }).parse(d))
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => z.object({ content: z.string().min(1).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
-    // 1. Verificar anonimato via Admin para garantir leitura da coluna metadata
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("metadata")
-      .eq("id", userId)
-      .maybeSingle();
-      
-    const isAnonymous = (profile?.metadata as any)?.is_anonymous ?? false;
 
-    // 2. Tentar inserção com cliente padrão
-    const insertPayload: any = {
-      user_id: userId,
-      content: data.content,
-    };
+    // Anti-flood simples: máx. 5 mensagens por minuto
+    const since = new Date(Date.now() - 60 * 1000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("community_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", since);
 
-    let { error } = await supabase.from("community_messages").insert(insertPayload);
-
-    // 3. Fallback se houver erro de cache ou tabela não encontrada (PGRST205)
-    if (error) {
-      const isCacheError = error.code === 'PGRST108' || error.code === 'PGRST205' || error.message?.includes('schema cache') || error.code === '42P01';
-      
-      if (isCacheError) {
-        console.warn("[Community] Send fail (Cache/PGRST205), activating admin tunnel...");
-        const adminResult = await supabaseAdmin.from("community_messages").insert(insertPayload);
-        error = adminResult.error;
-        
-        // Auto-heal async
-        import("./tutorials.functions").then(m => 
-          m.trackSchemaFailure(error, "sendCommunityMessage", true, { stage: "send_retry_v21" }, userId)
-        );
-      }
+    if ((count || 0) >= 5) {
+      throw new Error("Muitas transmissões seguidas. Aguarde alguns segundos.");
     }
 
-    if (error) {
-      console.error("[Community] Final error sending message:", error);
-      throw new Error("Erro ao enviar mensagem: " + error.message);
-    }
-    
+    const { error } = await supabaseAdmin
+      .from("community_messages")
+      .insert({ user_id: userId, content: data.content });
+
+    if (error) throw new Error("Erro ao enviar mensagem: " + error.message);
+    return { ok: true };
+  });
+
+export const deleteCommunityMessage = createServerFn({ method: "POST" })
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("community_messages")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 export const getCommunityGoals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
+  .handler(async () => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const fetchGoals = async (client: any) => client
+    const { data } = await supabaseAdmin
       .from("community_goals")
       .select("*")
       .order("target_members", { ascending: true });
-
-    let { data, error } = await fetchGoals(supabase);
-
-    if (error && (error.code === 'PGRST108' || error.code === 'PGRST205' || error.message?.includes('schema cache') || error.code === '42P01')) {
-      const adminResult = await fetchGoals(supabaseAdmin);
-      data = adminResult.data;
-      (async () => {
-         try { await supabaseAdmin.rpc("force_refresh_schema_permissions"); } catch(e) {}
-      })();
-    }
-
     return data || [];
   });

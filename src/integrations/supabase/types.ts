@@ -2939,6 +2939,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      recalc_vip_tier: { Args: { _user_id: string }; Returns: string }
       revoke_unpaid_server_licenses: {
         Args: never
         Returns: {
