@@ -1,25 +1,29 @@
-// Shadow Protocol v36.0: FULL PRODUCTION AUDIT & FUNCTIONAL VALIDATION CERTIFIED.
+// Shadow Protocol v38.0: INFRASTRUCTURE IDENTITY & PROD-BANK AUDIT.
 //
-// RELATÓRIO DE AUDITORIA FINAL (v36.0):
+// RELATÓRIO DE AUDITORIA DE INFRAESTRUTURA (v38.0):
 //
-// ✅ Shadow Pass — FUNCIONANDO EM TESTE REAL.
-//    - Login e Perfil: Carregamento instantâneo, nickname e metadados persistentes.
-//    - Foto de Perfil: Bucket 'avatars' validado como Público. Upload e persistência OK.
-//    - Sistema VIP/Loyalty: Tiers (Bronze a Elite) e missões operando com validação server-side.
-//    - Trial 24h: Handshake Yaarsa verificado (2d técnico / 1d business). Correção YAARSA_REFUSAL aplicada.
+// ⚠️ ESTADO ATUAL DO BANCO DE PRODUÇÃO (dvnksmqbpbzwgwmbnjjy):
+// ✅ Storage: Bucket 'avatars' criado com sucesso e configurado como PÚBLICO.
+// ❌ Profiles: Colunas 'trial_started_at' e 'trial_expires_at' AINDA NÃO EXISTEM.
+// ❌ Community: Tabela 'community_messages' AINDA NÃO EXISTE ou não está exposta.
+// ❌ PostgREST: Erros 42703 (coluna ausente) e PGRST205 (tabela ausente) persistem.
 //
-// ✅ Centro de Treinamento — FUNCIONANDO EM TESTE REAL.
-//    - Infraestrutura: Tabelas 'tutorials' e 'tutorial_progress' totalmente expostas no schema cache.
-//    - Progresso: Upsert de progresso testado com sucesso. Sem erros PGRST205/108.
-//    - Sincronização: Fallback 'supabaseAdmin' ativo para mitigação de latência de cache.
+// 🔍 DIAGNÓSTICO DE AMBIENTE:
+// - VITE_SUPABASE_URL (Sandbox): yvvjaoqzhjqnchhwhwvy.supabase.co
+// - PROD_URL (Target/Vercel): dvnksmqbpbzwgwmbnjjy.supabase.co
+// - Identidade: Banco de produção 'dvnksmqbpbzwgwmbnjjy' confirmado como alvo correto.
 //
-// 🔧 Correções Realizadas:
-//    - Estabilização do handshake Yaarsa com failover automático para endpoint v457.
-//    - Normalização das relações no chat anônimo (Nexus) para evitar erros de join.
+// 🔧 BLOQUEIO TÉCNICO:
+// O banco de produção alvo não possui RPCs de execução SQL (exec_sql) habilitados.
+// Como resultado, não é possível injetar colunas/tabelas diretamente via código.
 //
-// ⚠️ Riscos: Latência transitória no PostgREST (1-2s) após deploys massivos (monitorado).
+// ✅ AÇÃO NECESSÁRIA:
+// As colunas 'trial_started_at', 'trial_expires_at' e a tabela 'community_messages'
+// DEVEM ser criadas manualmente via Supabase Dashboard ou executando as migrations
+// oficiais contra o projeto 'dvnksmqbpbzwgwmbnjjy'.
 //
-// O sistema está certificado como 100% PROD-READY para o ambiente real da Vercel conectado ao projeto 'yvvjaoqzhjqnchhwhwvy'.
+// O sistema NÃO está PROD-READY até que a estrutura física do banco de produção 
+// seja sincronizada com o código. O build da Vercel continuará falhando até esta ação.
 
 
 
