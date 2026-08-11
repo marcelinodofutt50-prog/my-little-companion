@@ -140,11 +140,12 @@ export const updateVipStatus = createServerFn({ method: "POST" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // Simple logic: Upgrade based on points/conversions if eligible
     const { data: profile } = await supabaseAdmin.from("profiles").select("conversions_count").eq("id", userId).single();
     
-    let newTier = 'bronze';
+    type VipTier = 'none' | 'vip' | 'bronze' | 'silver' | 'gold' | 'diamond' | 'elite';
+    let newTier: VipTier = 'bronze';
     const c = profile?.conversions_count || 0;
+    
     if (c >= 50) newTier = 'elite';
     else if (c >= 25) newTier = 'diamond';
     else if (c >= 10) newTier = 'gold';
