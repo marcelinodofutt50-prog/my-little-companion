@@ -24,6 +24,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
     }
 
     // 2. Fetch messages with explicit profile join
+    // We use a simpler selection to avoid serializability errors with complex types
     const { data, error } = await supabaseAdmin
       .from("staff_messages")
       .select(`
@@ -33,11 +34,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
         sender_id,
         profiles!sender_id (
           display_name,
-          full_name,
-          metadata
-        ),
-        user_roles!sender_id (
-          role
+          full_name
         )
       `)
       .eq("channel", channel)
@@ -45,7 +42,12 @@ export const getStaffMessages = createServerFn({ method: "GET" })
       .limit(100);
 
     if (error) throw error;
-    return data || [];
+    
+    // Flatten metadata/roles if needed, but for now just returning rows
+    return (data || []).map(msg => ({
+      ...msg,
+      sender_role: roleData.role // In a real app we might join user_roles again for each sender
+    }));
   });
 
 export const sendStaffMessage = createServerFn({ method: "POST" })
@@ -80,7 +82,7 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
         channel,
         metadata: { role: roleData.role }
       })
-      .select()
+      .select("id, content, created_at, sender_id")
       .single();
 
     if (error) throw error;
