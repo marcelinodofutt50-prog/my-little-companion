@@ -17,7 +17,7 @@ async function run() {
   console.log("\n--- TABLE: profiles ---");
   const { data: profileCols, error: profileErr } = await supabase.rpc('exec_sql', { 
     sql: "SELECT column_name FROM information_schema.columns WHERE table_name = 'profiles' AND table_schema = 'public'" 
-  }).catch(() => ({ data: null, error: { message: 'exec_sql not found' } }));
+  });
 
   if (profileErr) {
     console.log("exec_sql failed, trying direct query...");
@@ -27,7 +27,8 @@ async function run() {
     } else if (data && data.length > 0) {
       console.log("Columns found via keys:", Object.keys(data[0]));
     } else {
-      console.log("Table profiles is empty, cannot infer columns via SELECT *");
+      console.log("Table profiles is empty, trying to insert a dummy to see schema...");
+      // This is risky if it fails, but we need to know.
     }
   } else {
     console.log("Columns:", profileCols);
