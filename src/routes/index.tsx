@@ -23,6 +23,9 @@
 // Certificado para yvvjaoqzhjqnchhwhwvy. Falha garantida em dvnksmqbpbzwgwmbnjjy até o alinhamento de chaves.
 
 import { SiteHeader } from "@/components/SiteHeader";
+import { ProgressiveImage } from "@/components/ProgressiveImage";
+import { siteUrl } from "@/lib/site-url";
+import { useEffect } from "react";
 import { useSearch, createFileRoute, Link } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { toast } from "sonner";
