@@ -111,8 +111,9 @@ function ShadowPassPage() {
       if (!userData.user) throw new Error("Não autenticado");
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userData.user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // A política de segurança exige que o primeiro nível da pasta seja o ID do usuário.
+      const filePath = `${userData.user.id}/${fileName}`;
 
       // Upload para o bucket 'avatars' (confirmado existente e público)
       const { error: uploadError } = await supabase.storage
