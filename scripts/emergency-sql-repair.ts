@@ -12,45 +12,29 @@ async function runRepair() {
   console.log(`--- REPARO DE EMERGÊNCIA (SQL DIRECT): ${PROD_URL} ---`);
   const supabase = createClient(PROD_URL, PROD_KEY);
 
-  // Tentativa de rodar SQL via RPC 'exec_sql' se disponível no banco alvo
-  // Se não, tentaremos criar as tabelas/colunas via migrations ou dashboard.
-  const sql = `
-    -- 1. Buckets
-    INSERT INTO storage.buckets (id, name, public) 
-    VALUES ('avatars', 'avatars', true)
-    ON CONFLICT (id) DO UPDATE SET public = true;
-
-    -- 2. Colunas Profiles
-    ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_started_at timestamptz;
-    ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_expires_at timestamptz;
-    ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
-
-    -- 3. Community Messages
-    CREATE TABLE IF NOT EXISTS public.community_messages (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-      content text NOT NULL,
-      is_anonymous boolean DEFAULT false,
-      created_at timestamptz DEFAULT now()
-    );
-    ALTER TABLE public.community_messages ENABLE ROW LEVEL SECURITY;
-    GRANT SELECT, INSERT ON public.community_messages TO authenticated;
-    GRANT ALL ON public.community_messages TO service_role;
-
-    -- 4. Reload PostgREST
-    NOTIFY pgrst, 'reload schema';
-  `;
-
-  console.log("Executando comandos via RPC exec_sql...");
-  const { data, error } = await supabase.rpc('exec_sql', { sql_query: sql });
+  // Tentativa de rodar comandos de limpeza e criação se possível
+  // Como não temos SQL, vamos usar os clients para verificar e criar o que dá
   
-  if (error) {
-    console.log("   ⚠️ RPC exec_sql falhou ou não existe. Tentando alternativa...");
-    // Se falhar, tentamos o 'force_refresh_schema_permissions' que às vezes roda SQL de reparo internamente
-    await supabase.rpc('force_refresh_schema_permissions');
-  } else {
-    console.log("   ✅ SQL executado com sucesso.");
+  // 1. Storage
+  console.log("1. Verificando Storage...");
+  const { data: buckets } = await supabase.storage.listBuckets();
+  if (!buckets?.find(b => b.name === 'avatars')) {
+    console.log("   - Criando bucket 'avatars'...");
+    await supabase.storage.createBucket('avatars', { public: true });
   }
+
+  // 2. Tentar disparar o force_refresh_schema_permissions
+  console.log("2. Refresh Schema Cache...");
+  await supabase.rpc('force_refresh_schema_permissions');
+  
+  console.log("3. Validação de Colunas via Select...");
+  const { error: pErr } = await supabase.from('profiles').select('trial_started_at').limit(1);
+  if (pErr) console.error("   ❌ Erro em profiles:", pErr.message);
+  else console.log("   ✅ Profiles colunas OK.");
+
+  const { error: cErr } = await supabase.from('community_messages').select('id').limit(1);
+  if (cErr) console.error("   ❌ Erro em community_messages:", cErr.message);
+  else console.log("   ✅ community_messages OK.");
 
   console.log("--- FIM DO REPARO ---");
 }
