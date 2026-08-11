@@ -135,7 +135,7 @@ function ShadowPassPage() {
         data: { dataUrl, contentType: file.type || "image/png" },
       });
 
-      queryClient.invalidateQueries({ queryKey: ['shadow-pass'] });
+      queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
       toast.success("Avatar atualizado com sucesso!", { id: uploadToast });
       return res;
     } catch (error: any) {
@@ -347,11 +347,11 @@ function ShadowPassPage() {
               <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[10px] md:text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between items-center">
-                    Progressão VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? 'MAX' : '78%'}</span>
+                    Progressão VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? 'MAX' : `${Math.round(vip.progress || 0)}%`}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
+                  <Progress value={vip.tier === 'elite' ? 100 : Math.round(vip.progress || 0)} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
                   <div className="flex justify-between items-center text-xs">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className={cn(
@@ -823,6 +823,82 @@ function ShadowPassPage() {
               </Card>
             ))}
           </div>
+
+          {/* Missões VIP */}
+          <section className="mt-10 space-y-4">
+            <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
+              <Diamond className="h-5 w-5 text-yellow-500" /> Missões VIP
+              <Badge variant="outline" className="text-[9px] font-mono border-yellow-500/30 text-yellow-500">
+                {vip.tier === 'none' ? 'BLOQUEADO' : vip.tier.toUpperCase()}
+              </Badge>
+            </h2>
+            {(data.vipMissions || []).length === 0 ? (
+              <p className="text-xs font-mono text-muted-foreground">Nenhuma missão VIP ativa no momento.</p>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {(data.vipMissions || []).map((m: any) => (
+                  <Card key={m.id} className={cn(
+                    "border-yellow-500/20 bg-card/50 backdrop-blur-sm relative overflow-hidden transition-all",
+                    m.completed && "opacity-60 border-green-500/20",
+                    m.locked && "opacity-70"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-sm font-mono uppercase tracking-tight flex items-center gap-2">
+                          {m.locked ? <Lock className="h-4 w-4 text-yellow-500" />
+                            : m.completed ? <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            : <Diamond className="h-4 w-4 text-yellow-500" />}
+                          {m.title}
+                        </CardTitle>
+                        <Badge variant="outline" className="text-[9px] font-mono border-yellow-500/30 text-yellow-500">
+                          +{m.reward_points} XP
+                        </Badge>
+                      </div>
+                      <CardDescription className="text-[10px] font-mono leading-relaxed mt-1">
+                        {m.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="text-[9px] font-mono uppercase text-yellow-500/80">
+                        Requer VIP {String(m.minVipTier || 'bronze').toUpperCase()}
+                      </div>
+                      {!m.completed && !m.locked && (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[8px] font-mono uppercase text-muted-foreground">
+                            <span>Progresso</span>
+                            <span>{m.progress || 0}%</span>
+                          </div>
+                          <Progress value={m.progress || 0} className="h-1 [&>div]:bg-yellow-500" />
+                        </div>
+                      )}
+                      <Button
+                        variant={m.completed ? "outline" : "default"}
+                        className="w-full h-8 text-[10px] font-mono uppercase"
+                        disabled={m.completed || m.locked || (m.progress || 0) < 100}
+                        onClick={() => {
+                          toast.promise(claimRewardFn({ data: { missionId: m.id } }), {
+                            loading: 'Resgatando XP...',
+                            success: (res: any) => {
+                              if (res.ok) {
+                                queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+                                return res.message;
+                              }
+                              throw new Error(res.message);
+                            },
+                            error: (err) => err.message,
+                          });
+                        }}
+                      >
+                        {m.locked ? "Exclusivo VIP"
+                          : m.completed ? "Recompensa Resgatada"
+                          : (m.progress || 0) < 100 ? "Em Andamento" : "Resgatar Recompensa"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
         </TabsContent>
 
         <TabsContent value="vip-benefits" className="m-0">

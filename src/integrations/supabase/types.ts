@@ -1370,7 +1370,7 @@ export type Database = {
           expires_at: string
           granted_at: string
           id: string
-          license_id: string
+          license_id: string | null
           source: string
           user_id: string
         }
@@ -1379,7 +1379,7 @@ export type Database = {
           expires_at: string
           granted_at?: string
           id?: string
-          license_id: string
+          license_id?: string | null
           source?: string
           user_id: string
         }
@@ -1388,7 +1388,7 @@ export type Database = {
           expires_at?: string
           granted_at?: string
           id?: string
-          license_id?: string
+          license_id?: string | null
           source?: string
           user_id?: string
         }
