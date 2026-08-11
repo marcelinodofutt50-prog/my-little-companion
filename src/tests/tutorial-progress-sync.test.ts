@@ -11,7 +11,8 @@ const SCHEMA_ERRORS = ['PGRST205', 'PGRST108', '42P01'];
 
 describe('Tutorial Progress Synchronization (end-to-end)', () => {
   it('public.tutorial_progress must exist and be exposed in the schema cache', async () => {
-    const { error } = await supabase.from('tutorial_progress').select('id').limit(1);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { error } = await supabaseAdmin.from('tutorial_progress').select('id').limit(1);
 
     if (error && SCHEMA_ERRORS.includes(error.code ?? '')) {
       throw new Error(
@@ -22,7 +23,8 @@ describe('Tutorial Progress Synchronization (end-to-end)', () => {
   });
 
   it('public.tutorials must exist and be exposed in the schema cache', async () => {
-    const { error } = await supabase.from('tutorials').select('id').limit(1);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { error } = await supabaseAdmin.from('tutorials').select('id').limit(1);
 
     if (error && SCHEMA_ERRORS.includes(error.code ?? '')) {
       throw new Error(
@@ -33,7 +35,8 @@ describe('Tutorial Progress Synchronization (end-to-end)', () => {
   });
 
   it('tutorial_progress sync columns must be queryable (no 42703)', async () => {
-    const { error } = await supabase
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { error } = await supabaseAdmin
       .from('tutorial_progress')
       .select('user_id, tutorial_id, completed')
       .limit(1);
@@ -42,11 +45,16 @@ describe('Tutorial Progress Synchronization (end-to-end)', () => {
   });
 
   it('tutorial_progress <-> tutorials relation must resolve for sync joins', async () => {
-    const { error } = await supabase
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    // For joins we use the relationship name. In Supabase, if we have a FK, 
+    // it usually exposes it. We'll check if the schema cache sees the FK.
+    const { error } = await supabaseAdmin
       .from('tutorial_progress')
       .select('id, tutorials(id, title)')
       .limit(1);
 
+    // If join fails because of PGRST205/108, it means the schema cache is broken for joins too
     expect(SCHEMA_ERRORS).not.toContain(error?.code ?? 'OK');
   });
 });
+
