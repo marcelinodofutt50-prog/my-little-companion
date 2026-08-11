@@ -105,7 +105,7 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
-      "Acesso ao Bypass Play Protect (Play Protect Cloak & Shadow Bypass Dropper)",
+      "Acesso ao Bypass Play Protect (Cloak & Dropper)",
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
@@ -118,7 +118,7 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Shadow 4.5.7 completa",
       "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
-      "Acesso ao Bypass Play Protect (Bypass Automático & Dropper)",
+      "Acesso ao Bypass Play Protect (Automático & Dropper)",
     ],
     note: t("plan.monthly.note"),
   };
@@ -1130,7 +1130,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
 
           <div className={`flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3 transition-opacity ${isSignerPlan ? "opacity-50 cursor-not-allowed" : ""}`}>
             <div>
-              <div className="text-xs font-bold">Bypass Play Protect (Play Protect)</div>
+              <div className="text-xs font-bold">Bypass Play Protect</div>
               <div className="text-[10px] text-muted-foreground">+ R$ 250 (Incluso no Vitalício)</div>
             </div>
             <button

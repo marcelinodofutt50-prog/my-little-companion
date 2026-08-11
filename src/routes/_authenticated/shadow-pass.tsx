@@ -864,7 +864,7 @@ function ShadowPassPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Resgate 1 dia gratuito de Bypass Play Protect (Bypass Play Protect) uma vez por mês para testar novos vetores de ataque.
+                  Resgate 1 dia gratuito de Bypass Play Protect uma vez por mês para testar novos vetores de ataque.
                 </p>
                 <TrialActivationButton />
               </CardContent>
