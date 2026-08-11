@@ -77,6 +77,14 @@ function ShadowPassPage() {
     }
   });
 
+  const deleteMessageMutation = useMutation({
+    mutationFn: (vars: { id: string }) => deleteMsgFn({ data: vars }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['community-messages'] }),
+    onError: (e: any) => toast.error("Falha ao apagar: " + e.message),
+  });
+
+
+
   const updateProfileFn = useServerFn(updateProfileCustomization);
   const mutation = useMutation({
     mutationFn: (vars: any) => updateProfileFn({ data: vars }),
