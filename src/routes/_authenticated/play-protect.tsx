@@ -21,6 +21,7 @@ import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { triggerDownload } from "@/lib/download";
   const btmobInstructions = "/assets/shadow-play-protect-new.png?v=v147";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
+import { BackToDashboard } from "@/components/BackToDashboard";
 
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
@@ -208,6 +209,7 @@ function PlayProtectPage() {
 
 
           <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+            <div className="mb-4"><BackToDashboard /></div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

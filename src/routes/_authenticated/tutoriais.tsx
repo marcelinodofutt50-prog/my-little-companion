@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import trainingBgAsset from "@/assets/kraken_v31_final.webp.asset.json";
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 import { testDatabaseConnection } from "@/lib/diagnostics.functions";
+import { BackToDashboard } from "@/components/BackToDashboard";
 
 
 export const Route = createFileRoute("/_authenticated/tutoriais")({
@@ -233,6 +234,7 @@ function TutorialsPage() {
           <SiteHeader />
           <HealthWidget />
           <div className="container mx-auto px-4 py-8">
+            <div className="mb-6"><BackToDashboard /></div>
             <div className="mb-10">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="text-center md:text-left">

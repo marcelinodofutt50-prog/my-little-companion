@@ -86,6 +86,7 @@ import { AdminTagline } from "@/components/AdminTagline";
 import { AdminTeamGuide } from "@/components/AdminTeamGuide";
 import { AdminPermissionsMatrix } from "@/components/AdminPermissionsMatrix";
 import { AdminTrialMonitorPanel } from "@/components/admin/AdminTrialMonitorPanel";
+import { StaffNexusChat } from "@/components/staff/StaffNexusChat";
 import { AdminVipPanel } from "@/components/admin/AdminVipPanel";
 
 import { Button } from "@/components/ui/button";
@@ -197,6 +198,7 @@ type Tab =
   | "quotas"
   | "selftest"
   | "trial_monitor"
+  | "nexus"
   | "vip";
 
 
@@ -225,6 +227,7 @@ const TAB_DESC: Record<Tab, string> = {
   servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
   quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
+  nexus: "Staff Nexus: canal de bate-papo interno e privado da equipe (admin, suporte e moderação).",
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
 };
@@ -634,6 +637,7 @@ function AdminPage() {
         { id: "apk", label: "Fila Play Protect", icon: Download, hint: "APKs pendentes" },
         { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
         { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
+        { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
       ],
     },
     {
@@ -2224,6 +2228,7 @@ function AdminPage() {
               {tab === "selftest" && <AdminSelfTestPanel />}
               {tab === "trial_monitor" && <AdminTrialMonitorPanel />}
               {tab === "vip" && <AdminVipPanel />}
+              {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               </motion.div>
             </AnimatePresence>
           </div>
