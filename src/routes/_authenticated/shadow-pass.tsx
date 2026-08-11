@@ -135,7 +135,7 @@ function ShadowPassPage() {
         data: { dataUrl, contentType: file.type || "image/png" },
       });
 
-      queryClient.invalidateQueries({ queryKey: ['shadow-pass'] });
+      queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
       toast.success("Avatar atualizado com sucesso!", { id: uploadToast });
       return res;
     } catch (error: any) {
