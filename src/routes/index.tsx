@@ -1,13 +1,112 @@
 // Shadow Protocol v35.0: STAFF NEXUS & ISOLATION AUDIT CERTIFIED.
 //
-// RELATÓRIO DE SEGURANÇA E INFRAESTRUTURA (v35.0):
-// ✅ STAFF NEXUS: Implementado como sistema 100% independente do suporte ao cliente.
-// ✅ ISOLAMENTO TOTAL: Mensagens da equipe protegidas por RLS e validação de cargo server-side.
-// ✅ ATENDIMENTO AO CLIENTE: Sistema original preservado e operando sem interferências.
-// ✅ NORMAS DE ACESSO: Apenas Admin, Moderator e Support possuem permissão de leitura/escrita no Nexus.
-// ✅ AUDITORIA PROD-READY: Validação completa do schema `staff_messages` e rotas autenticadas.
+// Faça agora uma auditoria completa e específica do Shadow Pass e do Centro de Treinamento no ambiente REAL de produção conectado à Vercel.
 //
-// O ecossistema agora opera com duas camadas distintas de comunicação, garantindo privacidade interna total.
+// Quero confirmar se todos os erros que encontramos anteriormente foram realmente corrigidos, porque já tivemos várias situações em que o Preview/Lovable funcionava, mas a Vercel continuava apresentando erros.
+//
+// SHADOW PASS
+//
+// Verifique e teste de verdade:
+//
+// Login e carregamento do Shadow Pass.
+//
+// Perfil e atualização de nickname.
+//
+// Upload de foto de perfil.
+//
+// Bucket avatars.
+//
+// Persistência da foto após atualizar/relogar.
+//
+// Sistema VIP e todos os níveis.
+//
+// XP e pontos.
+//
+// Missões e recompensas.
+//
+// Prevenção contra duplicação/manipulação de pontos.
+//
+// Benefícios VIP.
+//
+// Trial de 24 horas.
+//
+// Criação do login no Yaarsa.
+//
+// Regra técnica de 2 dias no Yaarsa + 24 horas no ShadowDash.
+//
+// Erro YAARSA_REFUSAL.
+//
+// Contador e expiração do trial.
+//
+// Persistência das informações no banco.
+//
+// Chat relacionado ao Shadow Pass, se houver.
+//
+// Qualquer erro de console, API, Supabase ou PostgREST.
+//
+// CENTRO DE TREINAMENTO
+//
+// Verifique especificamente os problemas que já ocorreram:
+//
+// tutorials sendo reconhecida corretamente.
+//
+// tutorial_progress sendo reconhecida corretamente.
+//
+// Schema cache do PostgREST.
+//
+// Relação tutorial_progress ↔ tutorials.
+//
+// Carregamento dos cursos.
+//
+// Início de um curso.
+//
+// Salvamento do progresso.
+//
+// Atualização do progresso.
+//
+// Persistência do progresso após refresh/logout/login.
+//
+// Erros PGRST205, PGRST108, 42P01 e 42703.
+//
+// Estado “Aguardando Sincronização”.
+//
+// Loader/fallbacks.
+//
+// Erros de console e requests 4xx/5xx.
+//
+// MUITO IMPORTANTE
+//
+// Não valide apenas se os testes automatizados passam.
+//
+// Faça testes funcionais reais no ambiente que a Vercel está usando atualmente e confirme novamente qual projeto Supabase está conectado à produção.
+//
+// Quero que você compare:
+//
+// Vercel → Environment Variables → Supabase URL → Project ID → Banco real
+//
+// para garantir que não estamos corrigindo novamente o projeto errado.
+//
+// Depois:
+//
+// Corrija qualquer erro encontrado.
+//
+// Teste novamente a funcionalidade corrigida.
+//
+// Rode os testes automatizados.
+//
+// Rode o build de produção.
+//
+// Faça uma última verificação de regressão.
+//
+// No relatório final, seja extremamente objetivo:
+//
+// ✅ Shadow Pass — funcionando / problemas encontrados
+// ✅ Centro de Treinamento — funcionando / problemas encontrados
+// ❌ Erros ainda existentes
+// 🔧 Correções realizadas
+// ⚠️ Riscos ou pontos de atenção
+//
+// Não declare PROD-READY se qualquer erro crítico ainda existir no ambiente real da Vercel.
 
 
 
