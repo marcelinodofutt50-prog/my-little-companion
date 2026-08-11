@@ -831,19 +831,21 @@ function HealthWidget() {
   if (!health) return null;
 
   const isHealthy = health.status === 'healthy';
+  const isDegraded = health.status === 'unstable' || health.status === 'degraded';
+  const tutorialProgressStatus = health.tables?.tutorial_progress?.accessible;
 
   return (
     <div className="bg-black/40 border-b border-white/5 py-2 px-4 flex items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
       <div className="flex items-center gap-2">
-        <Database className={`h-3 w-3 ${isHealthy ? 'text-green-500' : 'text-red-500'}`} />
+        <Database className={`h-3 w-3 ${isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}`} />
         <span className="text-muted-foreground">DB STATUS:</span>
-        <span className={isHealthy ? 'text-green-500' : 'text-red-500'}>{health.status}</span>
+        <span className={isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}>{health.status}</span>
       </div>
       <div className="h-3 w-[1px] bg-white/10" />
       <div className="flex items-center gap-2">
-        <Activity className="h-3 w-3 text-primary" />
+        <Activity className={`h-3 w-3 ${tutorialProgressStatus ? 'text-primary' : 'text-red-500 animate-pulse'}`} />
         <span className="text-muted-foreground">SYNC:</span>
-        <span className="text-primary">{health.tables?.tutorial_progress?.accessible ? 'OPERATIONAL' : 'ERROR'}</span>
+        <span className={tutorialProgressStatus ? 'text-primary' : 'text-red-500'}>{tutorialProgressStatus ? 'OPERATIONAL' : 'REPAIRING'}</span>
       </div>
       <div className="h-3 w-[1px] bg-white/10" />
       <div className="flex items-center gap-2">
