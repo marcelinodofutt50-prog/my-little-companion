@@ -7,7 +7,7 @@
     "test:e2e": "python3 scripts/check-schema.py && python3 scripts/e2e-training-hub.py",
     "dev": "vite dev",
     "validate-assets": "bun run scripts/validate-assets.ts",
-    "build": "bun run validate-assets && vitest run src/tests/shadow-prod-readiness.test.ts src/tests/shadow-pass-verification.test.ts src/tests/tutorial-progress-sync.test.ts && vite build",
+    "build": "bun run validate-assets && vitest run src/tests/forensic-audit-v25.test.ts src/tests/tutorial-progress-sync.test.ts && vite build",
     "build:dev": "bun run validate-assets && vite build --mode development",
     "build:ci": "bun run validate-assets && vitest run && vite build",
     "preview": "vite preview",
