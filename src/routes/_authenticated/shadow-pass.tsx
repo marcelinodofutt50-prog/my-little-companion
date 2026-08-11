@@ -347,11 +347,11 @@ function ShadowPassPage() {
               <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[10px] md:text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between items-center">
-                    Progressão VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? 'MAX' : '78%'}</span>
+                    Progressão VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? 'MAX' : `${Math.round(vip.progress || 0)}%`}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
+                  <Progress value={vip.tier === 'elite' ? 100 : Math.round(vip.progress || 0)} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
                   <div className="flex justify-between items-center text-xs">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className={cn(
