@@ -2956,7 +2956,14 @@ export type Database = {
         | "ouro"
         | "elite"
         | "legend"
-      vip_tier: "none" | "vip" | "gold" | "elite"
+      vip_tier:
+        | "none"
+        | "vip"
+        | "gold"
+        | "elite"
+        | "bronze"
+        | "silver"
+        | "diamond"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3144,7 +3151,7 @@ export const Constants = {
         "elite",
         "legend",
       ],
-      vip_tier: ["none", "vip", "gold", "elite"],
+      vip_tier: ["none", "vip", "gold", "elite", "bronze", "silver", "diamond"],
     },
   },
 } as const
