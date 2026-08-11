@@ -6,6 +6,8 @@ const supabaseAdminKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseAdminKey);
 
 describe('Shadow Protocol v25.0: Forensic Production Audit', () => {
+  console.log(`[Forensic Audit] Connecting to: ${supabaseUrl}`);
+
 
   it('1. FOTO DE PERFIL: Verify bucket "avatars" exists and is public', async () => {
     const { data, error } = await supabaseAdmin.storage.getBucket('avatars');
