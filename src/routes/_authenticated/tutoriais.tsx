@@ -312,6 +312,31 @@ function TutorialsPage() {
               </div>
             )}
 
+            {!loading && tutorials.length === 0 && !loadError && (
+              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-4 mb-10">
+                <div className="flex justify-center">
+                  <div className="p-4 rounded-full bg-primary/5 border border-primary/10">
+                    <BookOpen className="h-12 w-12 text-primary/30" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">
+                  Nenhum módulo publicado
+                </h3>
+                <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
+                  A conexão com o Centro de Treinamento está saudável. Assim que a equipe publicar os
+                  primeiros tutoriais, eles aparecerão aqui automaticamente.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadData()}
+                  className="font-mono text-[10px] uppercase border-primary/20"
+                >
+                  <RefreshCw className="h-3 w-3 mr-2" /> Atualizar
+                </Button>
+              </div>
+            )}
+
             {/* Sync Status Panel */}
             <div className="mb-8">
             {/* Diagnostic and Sync Controls */}
