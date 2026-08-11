@@ -1,0 +1,1 @@
+ALTER TABLE public.play_protect_grants ALTER COLUMN license_id DROP NOT NULL;
