@@ -34,10 +34,9 @@ describe("Shadow Protocol v23.0: Forensic Business Audit", () => {
     expect(error).toBeNull();
   });
 
-  it("should verify Trial 7D structure", async () => {
-    const { data: columns } = await supabaseAdmin.rpc('get_column_info', { t_name: 'profiles' });
-    // Logic check for trial columns
-    const { data: profile } = await supabaseAdmin.from("profiles").select("trial_7d_started_at, trial_7d_expires_at").limit(1).single();
+  it("should verify Trial 1D structure", async () => {
+    // Logic check for trial columns (generic ones)
+    const { data: profile } = await supabaseAdmin.from("profiles").select("trial_started_at, trial_expires_at").limit(1).single();
     expect(profile).toBeDefined();
   });
 });

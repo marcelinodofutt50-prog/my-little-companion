@@ -121,7 +121,7 @@ export async function internalGenerateTrial(
   // garantindo que o usuário tenha acesso aos dados que já estão no Yaarsa.
   
   const expiresAt = new Date(); 
-  expiresAt.setDate(expiresAt.getDate() + durationDays);
+  expiresAt.setHours(expiresAt.getHours() + 24); // Exactly 24 hours trial
   
   const licPayload: any = {
     user_id: userId,

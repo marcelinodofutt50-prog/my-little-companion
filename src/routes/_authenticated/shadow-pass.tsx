@@ -824,10 +824,10 @@ function ShadowPassPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Resgate 7 dias gratuitos de Shadow Signer (Bypass Play Protect) uma vez por mês para testar novos vetores de ataque.
+                  Resgate 1 dia gratuito de Shadow Signer (Bypass Play Protect) uma vez por mês para testar novos vetores de ataque.
                 </p>
                 <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-[10px] uppercase">
-                  Resgatar 7 Dias Grátis
+                  Resgatar 1 Dia Grátis
                 </Button>
               </CardContent>
             </Card>

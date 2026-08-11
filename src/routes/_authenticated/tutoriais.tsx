@@ -835,7 +835,7 @@ function HealthWidget() {
   const tutorialProgressStatus = health.tables?.tutorial_progress?.accessible;
 
   return (
-    <div className="bg-black/40 border-b border-white/5 py-2 px-4 flex items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
+    <div className="bg-black/40 border-b border-white/5 py-2 px-4 flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
       <div className="flex items-center gap-2">
         <Database className={`h-3 w-3 ${isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}`} />
         <span className="text-muted-foreground">DB STATUS:</span>
@@ -849,9 +849,9 @@ function HealthWidget() {
       </div>
       <div className="h-3 w-[1px] bg-white/10" />
       <div className="flex items-center gap-2">
-        <Server className="h-3 w-3 text-muted-foreground" />
-        <span className="text-muted-foreground">INFRA:</span>
-        <span className="text-white">VERCEL-EDGE</span>
+        <Clock className="h-3 w-3 text-yellow-500" />
+        <span className="text-muted-foreground">TRIAL:</span>
+        <span className="text-yellow-500">24H DURATION</span>
       </div>
     </div>
   );
