@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode, Suspense } from "react";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { redirectLocalhostAuthToCanonical } from "@/lib/site-url";
 import { Toaster } from "sonner";
 import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
