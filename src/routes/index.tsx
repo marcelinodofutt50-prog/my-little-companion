@@ -1,22 +1,23 @@
-// Shadow Protocol v33.0: FULL PRODUCTION AUDIT CERTIFIED (dvnksmqbpbzwgwmbnjjy).
+// Shadow Protocol v34.0: LIVE PRODUCTION FUNCTIONAL AUDIT (dvnksmqbpbzwgwmbnjjy).
 //
-// RELATÓRIO DE AUDITORIA (v33.0):
-// PASSOU ✅:
-// - Conectividade e Tabelas Core (profiles, licenses, trials, loyalty, nexus, tutorials, support)
-// - Bucket Storage 'avatars' (Provisionado e Público)
-// - Colunas de Identidade e Trial (metadata, vip_tier, reputation_score, trial_started_at, trial_expires_at)
-// - Failover Yaarsa (Handshake primário e secundário validados)
-// - Regras de Negócio: Trial de 24h vs Yaarsa 2d (Sincronizado)
-// - Centro de Treinamento: UUID Relations & Sync (Integridade 100%)
+// Agora que a auditoria v33.0 passou, quero uma validação funcional real, não apenas validação de infraestrutura/testes.
+// O fato de 9/9 testes passarem não é suficiente para considerar o sistema totalmente corrigido. 
+// Quero que você faça testes reais de cada fluxo crítico no ambiente de produção atualmente conectado à Vercel.
 //
-// CORRIGIDO 🔧:
-// - Nexus Schema Sync: Normalizada a resolução de nicknames/display_names via Profiles Alias.
-// - Admin Tunnel: Refinada a resiliência para falhas de cache PostgREST durante picos de rede.
+// TESTES REAIS EXIGIDOS:
+// 1. TESTE GRÁTIS: Confirmar ativação real, criação no Yaarsa, ausência de YAARSA_REFUSAL e limite de 24h.
+// 2. FOTO DE PERFIL: Upload real, armazenamento no bucket 'avatars' e persistência pós-reload.
+// 3. CENTRO DE TREINAMENTO: Abertura de cursos, marcação de progresso e persistência real.
+// 4. CHAT ANÔNIMO: Envio de mensagem, recebimento no banco e propagação para outros usuários.
+// 5. SHADOW PASS / VIP: Validação de missões, ganho de pontos (sem bypass) e progressão de nível.
+// 6. PAINEL ADMIN: Validação de permissões (Admin, Moderator, Support) e isolamento de usuários comuns.
+// 7. PERFIL: Persistência de nickname e foto no banco dvnksmqbpbzwgwmbnjjy.
+// 8. INFRA: Validação final do projeto Supabase ativo na Vercel (evitar falsos positivos do Preview).
+// 9. TELEMETRIA: Inspeção de erros JavaScript, HTTP 4xx/5xx e erros silenciosos do PostgREST.
 //
-// RISCOS/PONTOS DE ATENÇÃO ⚠️:
-// - RLS Nexus: Recomendada auditoria manual periódica das políticas de isolamento do Staff Nexus.
+// RELATÓRIO FINAL: ✅ Funcional | 🔧 Corrigido | ❌ Falha | ⚠️ Risco
 //
-// SISTEMA CERTIFICADO COMO PROD-READY (9/9 TESTES DE NEGÓCIO PASSANDO).
+// O sistema só será declarado PROD-READY se 100% dos fluxos manuais acima passarem no ambiente REAL.
 
 
 
