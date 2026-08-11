@@ -18,7 +18,8 @@ export const runBusinessAudit = createServerFn({ method: "POST" })
       // 1. Audit DB Schema (External Project)
       const tables = ['profiles', 'loyalty_missions', 'user_missions', 'points_history', 'staff_messages'];
       for (const table of tables) {
-        const { error } = await supabaseAdmin.from(table).select("count", { count: 'exact', head: true });
+        // Casting to any to bypass strict table name checking in this specific utility
+        const { error } = await (supabaseAdmin.from(table as any) as any).select("count", { count: 'exact', head: true });
         results.database[table] = error ? `ERROR: ${error.message}` : "OPERATIONAL";
       }
 
