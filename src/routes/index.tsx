@@ -1,22 +1,15 @@
-// Shadow Protocol v20.0: FINAL DEPLOYMENT PHASE INITIATED.
-// Status: PROD-READY CERTIFIED (Validated on Production dvnksmqbpbzwgwmbnjjy).
-// Goal: 100% Operational deployment on Vercel with consistent infrastructure.
-// Directives: Final deployment verification, health check, and operational audit.
-// 00:26:00 - 11/08/2026 - Certification Level: CRITICAL/FINAL.
+// Shadow Protocol v21.0: INFRASTRUCTURE SYNC & PRODUCTION BUGFIX.
+// Status: REPAIRING PRODUCTION (Target: dvnksmqbpbzwgwmbnjjy).
+// Goal: Fix Profile Photo Upload, Training Center Sync, and Anonymous Chat.
+// 00:27:00 - 11/08/2026 - Certification Level: PRODUCTION REPAIR.
 //
-// Perfeito. Agora que a causa raiz foi identificada e o banco dvnksmqbpbzwgwmbnjjy foi corrigido, faça o deployment FINAL na Vercel.
-// Não faça mais alterações estruturais.
-// Quero apenas:
-// Commitar e enviar todas as alterações necessárias para a branch main.
-// Iniciar um novo deployment na Vercel.
-// Confirmar que os 11/11 testes passam no ambiente utilizado pelo deployment.
-// Confirmar que o vite build passa.
-// Confirmar que o deployment da Vercel terminou com status Ready/Successful.
-// Informar a URL/Deployment ID do deployment concluído.
-// Fazer uma última verificação das funcionalidades críticas em produção, principalmente:
-// login; perfil/nickname; foto; Shadow Pass; VIP; Centro de Treinamento; progresso dos tutoriais; Nexus/Chat.
-// Não altere os testes nem esconda erros.
-// Só considere PROD-READY depois que o deployment REAL da Vercel estiver concluído com sucesso.
+// Agora que a infraestrutura da Vercel está corrigida e estamos usando o banco de produção correto, encontrei 3 problemas reais no Shadow Pass que precisam ser corrigidos em PRODUÇÃO.
+// Não quero apenas esconder os erros ou colocar mensagens de fallback. Quero corrigir a infraestrutura e o fluxo de cada funcionalidade.
+// 1. FOTO DE PERFIL — Bucket not found
+// 2. CENTRO DE TREINAMENTO — Aguardando Sincronização
+// 3. CHAT ANÔNIMO — community_messages
+// Não quero três novos “fallbacks” para esconder esses erros. Quero corrigir a causa raiz no ambiente de produção.
+// Use como fonte de verdade o banco de produção: dvnksmqbpbzwgwmbnjjy.
 
 
 
