@@ -15,6 +15,7 @@ import { getShadowPassData } from '@/lib/shadow-core.functions';
 import { updateProfileCustomization } from '@/lib/profile-customization.functions';
 import { getCommunityMessages, sendCommunityMessage, getCommunityGoals } from '@/lib/community.functions';
 import { getDiagnosticData, triggerManualSchemaRefresh } from '@/lib/diagnostics.functions';
+import { claimMissionReward } from '@/lib/loyalty.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
