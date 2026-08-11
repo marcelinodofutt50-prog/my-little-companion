@@ -126,7 +126,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Shadow — Advanced OSINT & Digital Asset Manager" },
-      { name: "description", content: "ShadowDash Store: O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, Shadow Signer e infraestrutura VPS dedicada." },
+      { name: "description", content: "ShadowDash Store: O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, Bypass Play Protect e infraestrutura VPS dedicada." },
       { name: "theme-color", content: "#f9f7f2" },
       { property: "og:title", content: "Shadow — Advanced OSINT & Digital Asset Manager" },
       { property: "og:description", content: "Acesse a elite do gerenciamento de ativos digitais. Ativação instantânea via Mercado Pago." },

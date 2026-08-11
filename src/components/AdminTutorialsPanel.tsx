@@ -307,7 +307,7 @@ export function AdminTutorialsPanel() {
                 <Input 
                   value={current.title} 
                   onChange={(e) => setCurrent({ ...current, title: e.target.value })}
-                  placeholder="Ex: Como baixar o Shadow Signer"
+                  placeholder="Ex: Como baixar o Bypass Play Protect"
                   className="bg-card"
                 />
               </div>

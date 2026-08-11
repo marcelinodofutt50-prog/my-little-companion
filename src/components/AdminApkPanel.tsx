@@ -217,7 +217,7 @@ export function AdminApkPanel() {
       <div className="terminal-card scanlines relative p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-neon">// shadow signer queue</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-neon">// bypass play protect queue</div>
             <h3 className="mt-1 font-display text-lg font-semibold tracking-tight flex items-center gap-2">
               APKs aguardando processamento
               {jobs.length > 0 && (

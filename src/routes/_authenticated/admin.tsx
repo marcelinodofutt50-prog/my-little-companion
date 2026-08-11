@@ -217,7 +217,7 @@ const TAB_DESC: Record<Tab, string> = {
   health: "Saúde do sistema: erros recentes, falhas de entrega e alertas.",
   logs: "Registro técnico do servidor, útil para investigar um problema específico.",
   audit: "Histórico de ações dos administradores, com data e responsável.",
-  apk: "Shadow Signer (Fila APK): APKs enviados pelos clientes para bypass de Play Protect.",
+  apk: "Bypass Play Protect (Fila APK): APKs enviados pelos clientes para bypass de Play Protect.",
   updates: "Publicar uma nova versão do app para os clientes baixarem.",
   tutorials: "Shadow Hub: Upload de vídeos, tutoriais e guias para novos usuários.",
   servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
@@ -1187,7 +1187,7 @@ function AdminPage() {
                           >
                             <Download className="h-4 w-4 shrink-0 text-cyan" />
                             <div className="min-w-0">
-                              <div className="font-mono text-xs uppercase">Shadow Signer</div>
+                              <div className="font-mono text-xs uppercase">Bypass Play Protect</div>
                               <div className="text-[10px] text-muted-foreground">
                                 Fila Play Protect / Dropper
                               </div>
