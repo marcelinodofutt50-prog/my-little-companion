@@ -63,25 +63,36 @@ export async function internalGenerateTrial(
   // 3) Call Yaarsa with Retry logic for stability
   let yr: any;
   let attempts = 0;
-  const maxAttempts = 2;
+  const maxAttempts = 3; // Shadow Protocol v15.9: Increased retry limit
   
   while (attempts < maxAttempts) {
-    yr = await yaarsaCreateAccount({
-      username: creds.username,
-      email: creds.email,
-      password: creds.password,
-      planSlug: "trial",
-      totalPaid: 0,
-      additionalInfo: "shadow-trial",
-      panel: panelFromPlanSlug("trial"),
-    });
+    try {
+      yr = await yaarsaCreateAccount({
+        username: creds.username,
+        email: creds.email,
+        password: creds.password,
+        planSlug: "trial",
+        totalPaid: 0,
+        additionalInfo: "shadow-trial",
+        panel: panelFromPlanSlug("trial"),
+      });
 
-    if (yr.Success || yr.Fail && /1004|already|exist|existe/i.test(yr.Fail)) break;
+      // Shadow Protocol v15.9: Enhanced success detection
+      const success = !!yr.Success || (yr.Fail && /1004|already|exist|existe/i.test(yr.Fail));
+      
+      if (success) break;
+      
+      // If we got a refusal but not a desync, we retry
+      console.warn(`[internalGenerateTrial] Yaarsa refusal: ${yr.Fail || "Unknown error"}. Attempt ${attempts + 1}/${maxAttempts}.`);
+    } catch (err: any) {
+      console.error(`[internalGenerateTrial] Yaarsa connection error on attempt ${attempts + 1}:`, err.message);
+    }
     
     attempts++;
     if (attempts < maxAttempts) {
-      console.warn(`[internalGenerateTrial] Yaarsa attempt ${attempts} failed, retrying...`);
-      await new Promise(r => setTimeout(r, 1000));
+      // Exponential backoff: 1s, 2s, 4s...
+      const delay = Math.pow(2, attempts - 1) * 1000;
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   
