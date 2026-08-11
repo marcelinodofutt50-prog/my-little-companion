@@ -889,48 +889,36 @@ export type Database = {
       }
       loyalty_missions: {
         Row: {
-          active: boolean | null
-          category: string | null
           created_at: string | null
           description: string | null
-          ends_at: string | null
+          difficulty: string | null
           id: string
-          limit_per_user: number | null
-          requirement_type: string
-          requirement_value: number
-          reward_metadata: Json | null
+          limit_count: number | null
+          requirements: Json | null
           reward_points: number
-          starts_at: string | null
+          status: string | null
           title: string
         }
         Insert: {
-          active?: boolean | null
-          category?: string | null
           created_at?: string | null
           description?: string | null
-          ends_at?: string | null
+          difficulty?: string | null
           id?: string
-          limit_per_user?: number | null
-          requirement_type: string
-          requirement_value: number
-          reward_metadata?: Json | null
+          limit_count?: number | null
+          requirements?: Json | null
           reward_points?: number
-          starts_at?: string | null
+          status?: string | null
           title: string
         }
         Update: {
-          active?: boolean | null
-          category?: string | null
           created_at?: string | null
           description?: string | null
-          ends_at?: string | null
+          difficulty?: string | null
           id?: string
-          limit_per_user?: number | null
-          requirement_type?: string
-          requirement_value?: number
-          reward_metadata?: Json | null
+          limit_count?: number | null
+          requirements?: Json | null
           reward_points?: number
-          starts_at?: string | null
+          status?: string | null
           title?: string
         }
         Relationships: []
@@ -1376,6 +1364,33 @@ export type Database = {
         }
         Relationships: []
       }
+      points_history: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1404,6 +1419,8 @@ export type Database = {
           reward_points: number | null
           security_ack_at: string | null
           total_points_earned: number | null
+          trial_7d_expires_at: string | null
+          trial_7d_started_at: string | null
           trust_score: number | null
           updated_at: string
           vip_tier: Database["public"]["Enums"]["vip_tier"] | null
@@ -1435,6 +1452,8 @@ export type Database = {
           reward_points?: number | null
           security_ack_at?: string | null
           total_points_earned?: number | null
+          trial_7d_expires_at?: string | null
+          trial_7d_started_at?: string | null
           trust_score?: number | null
           updated_at?: string
           vip_tier?: Database["public"]["Enums"]["vip_tier"] | null
@@ -1466,6 +1485,8 @@ export type Database = {
           reward_points?: number | null
           security_ack_at?: string | null
           total_points_earned?: number | null
+          trial_7d_expires_at?: string | null
+          trial_7d_started_at?: string | null
           trust_score?: number | null
           updated_at?: string
           vip_tier?: Database["public"]["Enums"]["vip_tier"] | null
@@ -2166,6 +2187,33 @@ export type Database = {
           },
         ]
       }
+      staff_messages: {
+        Row: {
+          channel: string
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          sender_id: string | null
+        }
+        Insert: {
+          channel?: string
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          sender_id?: string | null
+        }
+        Update: {
+          channel?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          sender_id?: string | null
+        }
+        Relationships: []
+      }
       staff_permissions: {
         Row: {
           created_at: string | null
@@ -2584,6 +2632,44 @@ export type Database = {
           },
         ]
       }
+      user_missions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          mission_id: string
+          progress: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          mission_id: string
+          progress?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          mission_id?: string
+          progress?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_rewards: {
         Row: {
           claimed_at: string | null
@@ -2826,7 +2912,7 @@ export type Database = {
         | "failed"
         | "expired"
         | "cancelled"
-      app_role: "admin" | "user" | "moderator"
+      app_role: "admin" | "user" | "moderator" | "support"
       license_status:
         | "trial"
         | "active"
@@ -3009,7 +3095,7 @@ export const Constants = {
         "expired",
         "cancelled",
       ],
-      app_role: ["admin", "user", "moderator"],
+      app_role: ["admin", "user", "moderator", "support"],
       license_status: [
         "trial",
         "active",
