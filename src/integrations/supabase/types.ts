@@ -1364,6 +1364,44 @@ export type Database = {
         }
         Relationships: []
       }
+      play_protect_grants: {
+        Row: {
+          created_at: string
+          expires_at: string
+          granted_at: string
+          id: string
+          license_id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          granted_at?: string
+          id?: string
+          license_id: string
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          granted_at?: string
+          id?: string
+          license_id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "play_protect_grants_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: true
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       points_history: {
         Row: {
           amount: number
@@ -2847,6 +2885,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_play_protect_eligible_slug: {
+        Args: { _slug: string }
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
