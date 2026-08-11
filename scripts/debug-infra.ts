@@ -14,10 +14,6 @@ async function main() {
   console.log('--- Environment Info ---');
   console.log('URL:', url);
   
-  const { data: projectInfo } = await supabase.rpc('get_project_info').catch(() => ({ data: null }));
-  console.log('Project Info (RPC):', projectInfo);
-
-  console.log('\n--- Checking Tables ---');
   const { data: profileColumns, error: profileError } = await supabase
     .from('profiles')
     .select('*')
@@ -26,19 +22,19 @@ async function main() {
   if (profileError) {
     console.error('Error reading profiles:', profileError);
   } else {
-    const keys = profileColumns && profileColumns[0] ? Object.keys(profileColumns[0]) : [];
+    const row = profileColumns?.[0];
+    const keys = row ? Object.keys(row) : [];
     console.log('Profiles columns:', keys);
     console.log('trial_started_at exists:', keys.includes('trial_started_at'));
   }
 
-  const { data: communityTable, error: communityError } = await supabase
+  const { error: communityError } = await supabase
     .from('community_messages')
     .select('id')
     .limit(1);
   
   console.log('community_messages accessibility:', communityError ? communityError.message : 'OK');
 
-  console.log('\n--- Checking Buckets ---');
   const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
   if (bucketsError) {
     console.error('Error listing buckets:', bucketsError);
