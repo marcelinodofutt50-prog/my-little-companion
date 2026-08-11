@@ -141,6 +141,11 @@ function Index() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button size="lg" asChild className="group relative h-14 overflow-hidden px-10 text-xs font-mono uppercase tracking-widest rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
                 <Link to="/planos">
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  />
                   Começar Agora <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
@@ -152,13 +157,26 @@ function Index() {
                   Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary animate-pulse" />
                 </Link>
               </Button>
+
             </motion.div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
+          >
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
+            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> Central de atendimento: OK</div>
           </motion.div>
         </div>
       </section>
       
       {/* Enterprise Differential Section */}
-      <section className="py-20 relative bg-black/40 dark:bg-black/40">
+      <section className="py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-transparent">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">// diferenciais táticos</span>
@@ -184,6 +202,9 @@ function Index() {
           </div>
         </div>
       </section>
+
+      {/* Enterprise Management Section - Integrated Real UI Elements */}
+
 
       <section className="py-20 relative border-y border-border/40 bg-card/20 theme-light:bg-transparent overflow-hidden">
         <div className="container mx-auto px-4">
@@ -528,6 +549,21 @@ function Index() {
     </div>
   );
 }
+
+function FeatureCard({ icon: Icon, title, desc, link }: { icon: any, title: string, desc: string, link?: string }) {
+  const content = (
+    <div className="group rounded-2xl border border-border/50 bg-card p-8 transition-all hover:border-primary/30 hover:bg-card/80 h-full">
+      <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="mb-4 text-xl font-bold text-foreground">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed">{desc}</p>
     </div>
   );
+
+  if (link) {
+    return <Link to={link}>{content}</Link>;
+  }
+
+  return content;
 }
