@@ -50,7 +50,11 @@ export const uploadAvatar = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
-    const metadata = { ...(((current?.metadata as any) || {}) as object), avatar_url: publicUrl };
+    const metadata = {
+      ...(((current?.metadata as any) || {}) as object),
+      avatar_url: publicUrl,
+      avatar_updated_at: new Date().toISOString(),
+    };
 
     const { error: profErr } = await supabaseAdmin
       .from("profiles")
