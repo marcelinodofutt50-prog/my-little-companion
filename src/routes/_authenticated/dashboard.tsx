@@ -295,7 +295,7 @@ function DashboardPage() {
                     <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} /> 
                     {syncing ? "Sincronizando..." : "Corrigir Erros"}
                   </Button>
-                  <Link to="/play-protect"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-amber-500 border-amber-500/30 hover:bg-amber-500/5"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Shadow Signer (APK)</Button></Link>
+                  <Link to="/play-protect"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-amber-500 border-amber-500/30 hover:bg-amber-500/5"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Bypass Play Protect (APK)</Button></Link>
                   <Link to="/tutoriais"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-primary border-primary/30 hover:bg-primary/5"><Video className="mr-1.5 h-3.5 w-3.5" /> Hub de Vídeos</Button></Link>
                   <Link to="/suporte" search={{}}><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase"><LifeBuoy className="mr-1.5 h-3.5 w-3.5" /> Suporte</Button></Link>
                   <Link to="/planos"><Button size="sm" className="font-mono text-[10px] uppercase"><ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Renovar agora</Button></Link>

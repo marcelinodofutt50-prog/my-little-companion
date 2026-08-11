@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSuspenseQuery, useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { getShadowPassData } from '@/lib/shadow-core.functions';
 import { updateProfileCustomization } from '@/lib/profile-customization.functions';
-import { getCommunityMessages, sendCommunityMessage, getCommunityGoals } from '@/lib/community.functions';
+import { getCommunityMessages, sendCommunityMessage, deleteCommunityMessage } from '@/lib/community.functions';
+import { uploadAvatar } from '@/lib/avatar.functions';
 import { getDiagnosticData, triggerManualSchemaRefresh } from '@/lib/diagnostics.functions';
 import { claimMissionReward } from '@/lib/loyalty.functions';
 import { formatDistanceToNow } from 'date-fns';
@@ -48,16 +49,21 @@ function ShadowPassPage() {
   const [messageText, setMessageText] = useState("");
   const fetchMessages = useServerFn(getCommunityMessages);
   const sendMsgFn = useServerFn(sendCommunityMessage);
+  const deleteMsgFn = useServerFn(deleteCommunityMessage);
 
-  const { data: messagesData } = useQuery({
+  const { data: nexus, isLoading: nexusLoading, isError: nexusError, refetch: refetchNexus } = useQuery({
     queryKey: ['community-messages'],
     queryFn: () => fetchMessages({}),
     refetchInterval: 5000,
+    retry: 1,
   });
 
   const claimRewardFn = useServerFn(claimMissionReward);
 
-  const messages = messagesData || [];
+  const messages = (nexus?.messages ?? []) as any[];
+  const nexusOnline = nexus?.online ?? 0;
+  const nexusFault = nexusError || !!nexus?.error;
+
 
   const sendMessageMutation = useMutation({
     mutationFn: (vars: { content: string }) => sendMsgFn({ data: vars }),
@@ -70,6 +76,14 @@ function ShadowPassPage() {
       toast.error("Falha ao enviar: " + e.message);
     }
   });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: (vars: { id: string }) => deleteMsgFn({ data: vars }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['community-messages'] }),
+    onError: (e: any) => toast.error("Falha ao apagar: " + e.message),
+  });
+
+
 
   const updateProfileFn = useServerFn(updateProfileCustomization);
   const mutation = useMutation({
@@ -95,6 +109,8 @@ function ShadowPassPage() {
     mutation.mutate({ nickname: editName, is_anonymous: isAnonymous });
   };
 
+  const uploadAvatarFn = useServerFn(uploadAvatar);
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -105,37 +121,31 @@ function ShadowPassPage() {
     }
 
     const uploadToast = toast.loading("Enviando imagem tática...");
-    
+
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Não autenticado");
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Não foi possível ler o arquivo"));
+        reader.readAsDataURL(file);
+      });
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      // A política de segurança exige que o primeiro nível da pasta seja o ID do usuário.
-      const filePath = `${userData.user.id}/${fileName}`;
+      // Upload via servidor: evita bloqueios de RLS no storage do navegador.
+      const res: any = await uploadAvatarFn({
+        data: { dataUrl, contentType: file.type || "image/png" },
+      });
 
-      // Upload para o bucket 'avatars' (confirmado existente e público)
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      mutation.mutate({ avatar_url: publicUrl });
+      queryClient.invalidateQueries({ queryKey: ['shadow-pass'] });
       toast.success("Avatar atualizado com sucesso!", { id: uploadToast });
+      return res;
     } catch (error: any) {
       console.error("Erro no upload:", error);
-      toast.error("Falha no upload: " + error.message, { id: uploadToast });
+      toast.error("Falha no upload: " + (error?.message || "erro desconhecido"), { id: uploadToast });
+    } finally {
+      e.target.value = "";
     }
   };
+
 
   const [showDiag, setShowDiag] = useState(false);
   const getDiagFn = useServerFn(getDiagnosticData);
@@ -548,14 +558,26 @@ function ShadowPassPage() {
           {/* Mini Comunidade Anônima */}
           <section className="space-y-4">
             <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Shadow Nexus (Alpha)
-              <Badge variant="outline" className="text-[9px] border-primary/20 text-primary/60">Anônimo</Badge>
+              <MessageSquare className="h-5 w-5 text-primary" /> Shadow Nexus
+              <Badge variant="outline" className="text-[9px] border-primary/20 text-primary/60">
+                {nexusOnline} ativos
+              </Badge>
             </h2>
             <Card className="border-primary/10 bg-card/50 overflow-hidden">
               <CardContent className="p-0 flex flex-col h-[400px]">
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
                   <AnimatePresence initial={false}>
-                    {messages.length === 0 ? (
+                    {nexusFault ? (
+                      <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
+                        <Ghost className="h-8 w-8 opacity-50" />
+                        <p className="text-[10px] font-mono uppercase tracking-widest">Canal instável</p>
+                        <Button size="sm" variant="outline" onClick={() => refetchNexus()}>Reconectar</Button>
+                      </div>
+                    ) : nexusLoading ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground opacity-50">
+                        <p className="text-[10px] font-mono uppercase tracking-widest">Conectando ao canal...</p>
+                      </div>
+                    ) : messages.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 space-y-2">
                         <Ghost className="h-8 w-8" />
                         <p className="text-[10px] font-mono uppercase tracking-widest">Silêncio no vácuo...</p>
@@ -566,15 +588,29 @@ function ShadowPassPage() {
                           key={msg.id}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="flex flex-col space-y-1"
+                          className="flex flex-col space-y-1 group"
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-tighter">
-                              {msg.profiles?.metadata?.is_anonymous ? "Agente Anônimo" : msg.profiles?.display_name || "Membro"}
+                              {msg.author}
                             </span>
+                            {msg.vip && msg.vip !== 'none' && (
+                              <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary uppercase">
+                                {msg.vip}
+                              </Badge>
+                            )}
                             <span className="text-[8px] text-muted-foreground font-mono">
                               {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ptBR })}
                             </span>
+                            {msg.isMine && (
+                              <button
+                                type="button"
+                                onClick={() => deleteMessageMutation.mutate({ id: msg.id })}
+                                className="text-[8px] text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity font-mono uppercase"
+                              >
+                                apagar
+                              </button>
+                            )}
                           </div>
                           <div className="bg-primary/5 border border-primary/10 rounded-2xl rounded-tl-none px-3 py-2 text-xs leading-relaxed max-w-[90%] break-words">
                             {msg.content}
@@ -584,6 +620,7 @@ function ShadowPassPage() {
                     )}
                   </AnimatePresence>
                 </div>
+
                 
                 <div className="p-4 border-t border-primary/10 bg-black/20">
                   <form 
@@ -827,7 +864,7 @@ function ShadowPassPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Resgate 1 dia gratuito de Shadow Signer (Bypass Play Protect) uma vez por mês para testar novos vetores de ataque.
+                  Resgate 1 dia gratuito de Bypass Play Protect uma vez por mês para testar novos vetores de ataque.
                 </p>
                 <TrialActivationButton />
               </CardContent>

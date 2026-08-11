@@ -245,7 +245,7 @@ function ServerStatusPage() {
                     <h4 className="font-bold text-primary">O que fazer se um servidor estiver Offline?</h4>
                     <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                       Nossa infraestrutura possui redundância. Se a sua versão (ex: 4.5.7) estiver com latência alta, 
-                      as funções de Play Protect Builder ainda podem funcionar via Shadow Signer 4.6. 
+                      as funções de Play Protect Builder ainda podem funcionar via Bypass Play Protect 4.6. 
                       Para erros de login "803" ou "Licença Expirada" com servidor Online, utilize o botão de correção no Dashboard.
                     </p>
                     <div className="mt-4 flex gap-3">

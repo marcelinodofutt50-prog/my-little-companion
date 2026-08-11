@@ -45,7 +45,7 @@ export const Route = createFileRoute("/planos")({
   head: () => ({ 
     meta: [
       { title: "Planos Shadow — Licenças, servidor e código-fonte" },
-      { name: "description", content: "Pagamento oficial via PIX Mercado Pago. Ativação automática em menos de 1 minuto. Shadow 4.6+ com Shadow Signer e Bypass Dropper inclusos." },
+      { name: "description", content: "Pagamento oficial via PIX Mercado Pago. Ativação automática em menos de 1 minuto. Shadow 4.6+ com Bypass Play Protect e Bypass Dropper inclusos." },
       { property: "og:title", content: "Planos Shadow — Licenças, servidor e código-fonte" },
       { property: "og:description", content: "PIX oficial Mercado Pago, ativação automática em menos de 1 minuto e garantia de 7 dias." },
       { property: "og:type", content: "website" },
@@ -105,7 +105,7 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
-      "Acesso ao Shadow Signer (Play Protect Cloak & Shadow Bypass Dropper)",
+      "Acesso ao Bypass Play Protect (Cloak & Dropper)",
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
@@ -118,7 +118,7 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
       "Shadow 4.5.7 completa",
       "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)",
       "Suporte via chat no painel",
-      "Acesso ao Shadow Signer (Bypass Automático & Dropper)",
+      "Acesso ao Bypass Play Protect (Automático & Dropper)",
     ],
     note: t("plan.monthly.note"),
   };
@@ -160,7 +160,7 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
 
   if (s.includes("cloak") || s.includes("bypass")) return {
     tagline: "O bypass de longa duração mais estável do mercado.",
-    badge: "Shadow Signer",
+    badge: "Bypass Play Protect",
     icon: ShieldCheck,
     cadence: "renovação em 30 dias",
     features: [
@@ -880,7 +880,7 @@ function PlansPage() {
                 if (is7d && addons.length > 0) {
                   extension = {
                     icon: ShieldCheck,
-                    label: "PLAY PROTECT (SHADOW SIGNER)",
+                    label: "PLAY PROTECT (BYPASS PLAY PROTECT)",
                     desc: "R$ 450 — APK dura 30 dias (vs 1 dia do BTmob nativo). Otimizado e não é detectado como vírus pelo Play Protect.",
                     slug: addons[0].slug,
                   };
@@ -1130,7 +1130,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
 
           <div className={`flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3 transition-opacity ${isSignerPlan ? "opacity-50 cursor-not-allowed" : ""}`}>
             <div>
-              <div className="text-xs font-bold">Shadow Signer (Play Protect)</div>
+              <div className="text-xs font-bold">Bypass Play Protect</div>
               <div className="text-[10px] text-muted-foreground">+ R$ 250 (Incluso no Vitalício)</div>
             </div>
             <button

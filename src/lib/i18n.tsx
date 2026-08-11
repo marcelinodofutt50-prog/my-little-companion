@@ -22,7 +22,7 @@ const DICT: Dict = {
   "nav.gifts": { pt: "Presentes", en: "Gifts" },
   "nav.support": { pt: "Suporte", en: "Support" },
   "nav.admin": { pt: "Painel Admin", en: "Admin Panel" },
-  "nav.playprotect": { pt: "Shadow Signer", en: "Shadow Signer" },
+  "nav.playprotect": { pt: "Bypass Play Protect", en: "Bypass Play Protect" },
   "nav.tutorials": { pt: "Centro de Treinamento", en: "Training Hub" },
   "nav.kraken": { pt: "Kraken (2.0)", en: "Kraken (2.0)" },
 
@@ -75,9 +75,9 @@ const DICT: Dict = {
   "chat.choose_cat": { pt: "Qual é o assunto?", en: "What is the subject?" },
   "chat.cat_label": { pt: "Assunto do atendimento", en: "Support subject" },
 
-  // ===== Play Protect / Shadow Signer =====
-  "pp.title": { pt: "Shadow Signer (Play Protect Bypass)", en: "Shadow Signer (Play Protect Bypass)" },
-  "pp.header": { pt: "Shadow Signer (Public Builder)", en: "Shadow Signer (Public Builder)" },
+  // ===== Play Protect / Bypass Play Protect =====
+  "pp.title": { pt: "Bypass Play Protect", en: "Bypass Play Protect" },
+  "pp.header": { pt: "Bypass Play Protect (Public Builder)", en: "Bypass Play Protect (Public Builder)" },
   "pp.desc": { pt: "O console automatizado para injeção de dropper (Shadow Bypass v4.6) e bypass polimórfico total do Play Protect.", en: "The automated console for Shadow Bypass v4.6 dropper injection and total polymorphic Play Protect bypass." },
   "pp.no_access": { pt: "Este recurso está disponível apenas para clientes com plano Mensal (4.5.7) ou Vitalício (4.6).", en: "This feature is available only for Monthly (4.5.7) or Lifetime (4.6) customers." },
   "pp.new_op": { pt: "Nova Operação", en: "New Operation" },
@@ -205,7 +205,7 @@ const DICT: Dict = {
   },
   "home.cta.buy": { pt: "Adquirir Acesso Agora", en: "Get Access Now" },
   "home.cta.mobile": { pt: "Entrar na Shadow", en: "Join Shadow" },
-  "home.feat.signer.title": { pt: "Shadow Signer", en: "Shadow Signer" },
+  "home.feat.signer.title": { pt: "Bypass Play Protect", en: "Bypass Play Protect" },
   "home.feat.signer.desc": { 
     pt: "Assinatura digital V2/V3 com bypass nativo Play Protect. Seus APKs limpos e operacionais em segundos.", 
     en: "V2/V3 digital signature with native Play Protect bypass. Your APKs clean and operational in seconds." 

@@ -65,7 +65,7 @@ const btmob2 = btmobUpdatesAsset;
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
     { title: "Shadow — OSINT & Digital Asset Manager" },
-    { name: "description", content: "O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, Shadow Signer e infraestrutura VPS dedicada." },
+    { name: "description", content: "O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, Bypass Play Protect e infraestrutura VPS dedicada." },
     { property: "og:title", content: "Shadow — OSINT & Digital Asset Manager" },
     { property: "og:description", content: "Acesse a elite do gerenciamento de ativos digitais. Ativação instantânea via Mercado Pago." },
     { property: "og:type", content: "website" },
@@ -202,7 +202,7 @@ function Index() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
               <Shield className="h-10 w-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">Shadow Signer</h3>
+              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">Bypass Play Protect</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">Assinatura V2/V3 com ofuscação polimórfica que engana as heurísticas do Play Protect em tempo real.</p>
             </div>
             <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">

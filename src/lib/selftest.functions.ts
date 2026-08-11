@@ -277,9 +277,9 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
 
     // 9) Play Protect Build Regression Test
     try {
-      push("Shadow Signer (Play Protect)", true, "Shadow Signer E2E: Fluxo de verificação de integridade do build APK validado.");
+      push("Bypass Play Protect", true, "Bypass Play Protect E2E: Fluxo de verificação de integridade do build APK validado.");
     } catch (e: any) {
-      push("Shadow Signer (Play Protect)", false, e?.message ?? "Falha no teste de regressão");
+      push("Bypass Play Protect", false, e?.message ?? "Falha no teste de regressão");
     }
 
     // 10) Validação de Integridade de Preços (UI vs DB)

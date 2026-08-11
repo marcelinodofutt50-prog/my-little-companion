@@ -26,9 +26,9 @@ import { ProgressiveImage } from "@/components/ProgressiveImage";
 export const Route = createFileRoute("/_authenticated/play-protect")({
   head: () => ({
     meta: [
-      { title: "Shadow Signer — APK Builder" },
+      { title: "Bypass Play Protect — APK Builder" },
       { name: "description", content: "Envie, acompanhe e baixe seus APKs assinados pelo painel Shadow." },
-      { property: "og:title", content: "Shadow Signer — APK Builder" },
+      { property: "og:title", content: "Bypass Play Protect — APK Builder" },
       { property: "og:description", content: "Envie, acompanhe e baixe seus APKs assinados pelo painel Shadow." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
