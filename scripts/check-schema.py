@@ -5,7 +5,7 @@ import sys
 
 def check_schema():
     supabase_url = os.environ.get("VITE_SUPABASE_URL")
-    supabase_key = os.environ.get("VITE_SUPABASE_ANON_KEY")
+    supabase_key = os.environ.get("VITE_SUPABASE_PUBLISHABLE_KEY")
     
     if not supabase_url or not supabase_key:
         print("Error: Missing Supabase environment variables")
@@ -28,15 +28,9 @@ def check_schema():
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 print(f"✅ Table '{table}': Accessible")
-            elif response.status_code == 406 and "PGRST108" in response.text:
-                print(f"❌ Table '{table}': PGRST108 (Schema cache error)")
+            elif response.status_code >= 400:
+                print(f"❌ Table '{table}': Status {response.status_code} - {response.text[:100]}")
                 all_ok = False
-            elif response.status_code == 404:
-                print(f"❌ Table '{table}': 404 (Not found)")
-                all_ok = False
-            else:
-                print(f"⚠️ Table '{table}': Status {response.status_code} - {response.text[:100]}")
-                # We don't mark as failure for auth errors here, just connectivity
         except Exception as e:
             print(f"❌ Table '{table}': Exception {str(e)}")
             all_ok = False
