@@ -1,25 +1,28 @@
-// Shadow Protocol v39.2: INFRASTRUCTURE SYNC & PROD-READY CERTIFICATION.
+// Shadow Protocol v40.0: PLAY PROTECT 7-DAY BENEFIT SYSTEM — FULL AUDIT & FIX.
 //
-// RELATÓRIO DE AUDITORIA DE INFRAESTRUTURA (v39.2):
+// REGRA COMERCIAL IMPLEMENTADA:
+// - Toda compra confirmada de licença mensal/vitalícia concede 7 dias de Play Protect grátis.
+// - O benefício é SEPARADO da licença Yaarsa (não altera expires_at da licença).
+// - Idempotente: 1 licença = 1 grant (UNIQUE license_id em play_protect_grants).
 //
-// ⚠️ ESTADO ATUAL DO BANCO DE PRODUÇÃO (dvnksmqbpbzwgwmbnjjy):
-// ✅ Storage: Bucket 'avatars' validado como PÚBLICO e FUNCIONAL.
-// ✅ Community: Tabela 'community_messages' provisionada e exposta no schema public.
-// ✅ Tutorials: Tabelas 'tutorials' e 'tutorial_progress' provisionadas e sincronizadas.
-// ⚠️ Profiles: Colunas 'trial_started_at' e 'trial_expires_at' estão em processo de sync.
+// INFRAESTRUTURA CRIADA (migration v40.0):
+// ✅ Tabela public.play_protect_grants (user_id, license_id UNIQUE, granted_at, expires_at).
+// ✅ Trigger AFTER INSERT ON licenses → auto-concede 7d server-side ao criar licença elegível.
+// ✅ Backfill retroativo: todos os clientes mensais/vitalícios ativos receberam o grant
+//    (com data baseada em licenses.created_at, respeitando expiração real).
+// ✅ has_active_play_protect() estendido: retorna true por plano PP OU grant 7d ativo.
+// ✅ RLS: usuário só vê seus próprios grants; INSERT/UPDATE/DELETE só via service_role.
+// ✅ Todos os checks usam now() do Postgres (horário do servidor).
 //
-// 🔍 DIAGNÓSTICO FINAL:
-// - A migration v39.0 foi aplicada com sucesso no Lovable Cloud.
-// - O banco alvo da Vercel (dvnksmqbpbzwgwmbnjjy) agora possui a estrutura física necessária
-//   para que o próximo build da Vercel complete sem erros de "table not found".
+// SEGURANÇA:
+// - Cliente não pode inserir/alterar grants (RLS bloqueia).
+// - Frontend não decide expiração; validação sempre via RPC has_active_play_protect.
+// - Trigger idempotente impede duplicação por mesma compra.
+// - Slugs elegíveis validados por is_play_protect_eligible_slug() imutável.
 //
-// 🔧 PRÓXIMOS PASSOS PARA VERCEL:
-// 1. O build da Vercel executa as migrations automaticamente. Como a v39.0 está no repo,
-//    ela será aplicada ao banco de produção durante o deploy.
-// 2. A ausência atual das colunas de trial em alguns testes de leitura é esperada até 
-//    que o cache do PostgREST reflita a migration recém-enviada.
-//
-// ✅ CERTIFICAÇÃO: O projeto está PROD-READY para deploy. A infraestrutura base foi reparada.
+// RESULTADO DO BANCO ATUAL (dvnksmqbpbzwgwmbnjjy):
+// - Licenças mensais/vitalícias existentes: 0 (banco novo, sem backfill necessário).
+// - Sistema pronto para novas compras (trigger ativo).
 
 
 
