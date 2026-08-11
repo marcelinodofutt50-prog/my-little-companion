@@ -2,89 +2,127 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const STAFF_ROLES = ["admin", "moderator", "support"];
+
+async function assertStaff(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: roles } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+
+  const list = (roles || []).map((r: any) => r.role as string);
+  const role = STAFF_ROLES.find((r) => list.includes(r));
+  if (!role) {
+    throw new Error("403: Acesso negado. O Staff Nexus é exclusivo para a equipe interna.");
+  }
+  return { supabaseAdmin, role };
+}
+
 export const getStaffMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { channel?: string }) => z.object({ channel: z.string().default("general") }).parse(data))
+  .validator((data: unknown) =>
+    z.object({ channel: z.string().default("general") }).parse(data ?? {}),
+  )
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
-    const { channel } = input;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin, role } = await assertStaff(userId);
 
-    // 1. Strict Role verification (Server-side)
-    const { data: roleData } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    const allowedRoles = ['admin', 'moderator', 'support'];
-    if (!roleData || !allowedRoles.includes(roleData.role)) {
-      console.error(`[StaffNexus] Unauthorized access attempt by ${userId} with role ${roleData?.role}`);
-      throw new Error("403: Acesso negado. O Staff Nexus é exclusivo para a equipe interna.");
-    }
-
-    // 2. Fetch messages with explicit profile join
-    // We use a simpler selection to avoid serializability errors with complex types
-    const { data, error } = await supabaseAdmin
+    const { data: rows, error } = await supabaseAdmin
       .from("staff_messages")
-      .select(`
-        id,
-        content,
-        created_at,
-        sender_id,
-        profiles!sender_id (
-          display_name,
-          full_name
-        )
-      `)
-      .eq("channel", channel)
+      .select("id, content, created_at, sender_id")
+      .eq("channel", input.channel)
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (error) throw error;
-    
-    // Flatten metadata/roles if needed, but for now just returning rows
-    return (data || []).map(msg => ({
-      ...msg,
-      sender_role: roleData.role // In a real app we might join user_roles again for each sender
-    }));
+    if (error) throw new Error("Falha ao carregar mensagens: " + error.message);
+
+    const list = (rows || []).slice().reverse();
+    const ids = Array.from(new Set(list.map((m: any) => m.sender_id).filter(Boolean)));
+
+    const profileMap = new Map<string, any>();
+    const roleMap = new Map<string, string>();
+
+    if (ids.length) {
+      const [{ data: profiles }, { data: roles }] = await Promise.all([
+        supabaseAdmin
+          .from("profiles")
+          .select("id, display_name, full_name, email, avatar_url, metadata")
+          .in("id", ids),
+        supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", ids),
+      ]);
+      for (const p of profiles || []) profileMap.set((p as any).id, p);
+      for (const r of roles || []) {
+        const current = roleMap.get((r as any).user_id);
+        // admin tem prioridade na exibição
+        if (!current || (r as any).role === "admin") roleMap.set((r as any).user_id, (r as any).role);
+      }
+    }
+
+    const messages = list.map((m: any) => {
+      const p = profileMap.get(m.sender_id) || {};
+      const meta = (p.metadata as any) || {};
+      return {
+        id: m.id,
+        content: m.content,
+        created_at: m.created_at,
+        sender_id: m.sender_id,
+        isMine: m.sender_id === userId,
+        author:
+          meta.nickname ||
+          p.display_name ||
+          p.full_name ||
+          p.email?.split("@")[0] ||
+          "Membro da equipe",
+        avatar: meta.avatar_url || p.avatar_url || null,
+        sender_role: roleMap.get(m.sender_id) || "staff",
+      };
+    });
+
+    return { messages, myRole: role, myId: userId };
   });
 
 export const sendStaffMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { content: string, channel?: string }) => z.object({
-    content: z.string().min(1).max(2000),
-    channel: z.string().default("general")
-  }).parse(data))
+  .validator((data: unknown) =>
+    z
+      .object({
+        content: z.string().trim().min(1).max(2000),
+        channel: z.string().default("general"),
+      })
+      .parse(data),
+  )
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
-    const { content, channel } = input;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin, role } = await assertStaff(userId);
 
-    // 1. Strict Role verification (Server-side)
-    const { data: roleData } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    const allowedRoles = ['admin', 'moderator', 'support'];
-    if (!roleData || !allowedRoles.includes(roleData.role)) {
-      throw new Error("Unauthorized: Staff only.");
-    }
-
-    // 2. Insert message
     const { data, error } = await supabaseAdmin
       .from("staff_messages")
       .insert({
         sender_id: userId,
-        content,
-        channel,
-        metadata: { role: roleData.role }
+        content: input.content,
+        channel: input.channel,
+        metadata: { role },
       })
       .select("id, content, created_at, sender_id")
       .single();
 
-    if (error) throw error;
+    if (error) throw new Error("Falha ao enviar: " + error.message);
     return data;
+  });
+
+export const deleteStaffMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin, role } = await assertStaff(userId);
+
+    let q = supabaseAdmin.from("staff_messages").delete().eq("id", data.id);
+    // Admin pode remover qualquer mensagem; demais só as próprias.
+    if (role !== "admin") q = q.eq("sender_id", userId);
+
+    const { error } = await q;
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
