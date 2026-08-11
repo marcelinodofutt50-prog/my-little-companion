@@ -63,45 +63,56 @@ export async function internalGenerateTrial(
   // 3) Call Yaarsa with Retry logic for stability
   let yr: any;
   let attempts = 0;
-  const maxAttempts = 3; // Shadow Protocol v15.9: Increased retry limit
+  const maxAttempts = 5; // Increased retry limit for production stability
   
   while (attempts < maxAttempts) {
     try {
+      console.log(`[internalGenerateTrial] Attempting Yaarsa call ${attempts + 1}/${maxAttempts} for user ${userId}`);
       yr = await yaarsaCreateAccount({
         username: creds.username,
         email: creds.email,
         password: creds.password,
         planSlug: "trial",
         totalPaid: 0,
-        additionalInfo: "shadow-trial",
+        additionalInfo: "shadow-trial-evolution",
         panel: panelFromPlanSlug("trial"),
       });
 
-      // Shadow Protocol v15.9: Enhanced success detection
-      const success = !!yr.Success || (yr.Fail && /1004|already|exist|existe/i.test(yr.Fail));
+      // Yaarsa refusal handling
+      if (yr.Success) {
+        console.log(`[internalGenerateTrial] Yaarsa success for user ${userId}`);
+        break;
+      }
       
-      if (success) break;
-      
-      // If we got a refusal but not a desync, we retry
-      console.warn(`[internalGenerateTrial] Yaarsa refusal: ${yr.Fail || "Unknown error"}. Attempt ${attempts + 1}/${maxAttempts}.`);
+      const alreadyExists = !!yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
+      if (alreadyExists) {
+        console.log(`[internalGenerateTrial] Yaarsa account already exists for user ${userId}, proceeding with sync.`);
+        break;
+      }
+
+      // Handle specific refusal codes
+      if (yr.Fail === "YAARSA_REFUSAL") {
+        console.warn(`[internalGenerateTrial] Yaarsa license server reported instability (YAARSA_REFUSAL). Retrying...`);
+      } else {
+        console.warn(`[internalGenerateTrial] Yaarsa refusal: ${yr.Fail}. Retrying...`);
+      }
     } catch (err: any) {
       console.error(`[internalGenerateTrial] Yaarsa connection error on attempt ${attempts + 1}:`, err.message);
     }
     
     attempts++;
     if (attempts < maxAttempts) {
-      // Exponential backoff: 1s, 2s, 4s...
       const delay = Math.pow(2, attempts - 1) * 1000;
       await new Promise(r => setTimeout(r, delay));
     }
   }
   
-  const alreadyExists = !!yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
+  const alreadyExists = yr?.Fail && /1004|already|exist|existe/i.test(yr.Fail);
   
-  if (yr.Fail && !alreadyExists) {
-    // Removemos a intenção de trial se falhar no Yaarsa, para permitir retry imediato.
+  if (yr?.Fail && !alreadyExists) {
+    console.error(`[internalGenerateTrial] Yaarsa final failure after ${attempts} attempts: ${yr.Fail}`);
     await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
-    throw new Error(`Shadow Node Refusal: ${yr.Fail}`);
+    throw new Error(`Shadow Node Refusal: ${yr.Fail}. O servidor de licenças está instável ou a configuração é inválida. Contate o suporte técnico.`);
   }
 
 

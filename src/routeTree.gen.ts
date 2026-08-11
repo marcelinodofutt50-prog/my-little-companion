@@ -32,6 +32,7 @@ import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.penden
 import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
+import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authenticated/staff-chat'
 import { Route as AuthenticatedShadowPassRouteImport } from './routes/_authenticated/shadow-pass'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
 import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authenticated/fidelidade'
@@ -169,6 +170,11 @@ const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
 const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStaffChatRoute = AuthenticatedStaffChatRouteImport.update({
+  id: '/staff-chat',
+  path: '/staff-chat',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedShadowPassRoute = AuthenticatedShadowPassRouteImport.update({
@@ -326,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
+  '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/erro': typeof PagamentoErroRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByTo {
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
+  '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/erro': typeof PagamentoErroRoute
@@ -424,6 +432,7 @@ export interface FileRoutesById {
   '/_authenticated/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
   '/_authenticated/shadow-pass': typeof AuthenticatedShadowPassRoute
+  '/_authenticated/staff-chat': typeof AuthenticatedStaffChatRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/erro': typeof PagamentoErroRoute
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/fidelidade'
     | '/play-protect'
     | '/shadow-pass'
+    | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
     | '/pagamento/erro'
@@ -522,6 +532,7 @@ export interface FileRouteTypes {
     | '/fidelidade'
     | '/play-protect'
     | '/shadow-pass'
+    | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
     | '/pagamento/erro'
@@ -571,6 +582,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fidelidade'
     | '/_authenticated/play-protect'
     | '/_authenticated/shadow-pass'
+    | '/_authenticated/staff-chat'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
     | '/pagamento/erro'
@@ -800,6 +812,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuporteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/staff-chat': {
+      id: '/_authenticated/staff-chat'
+      path: '/staff-chat'
+      fullPath: '/staff-chat'
+      preLoaderRoute: typeof AuthenticatedStaffChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/shadow-pass': {
       id: '/_authenticated/shadow-pass'
       path: '/shadow-pass'
@@ -988,6 +1007,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFidelidadeRoute: typeof AuthenticatedFidelidadeRoute
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
   AuthenticatedShadowPassRoute: typeof AuthenticatedShadowPassRoute
+  AuthenticatedStaffChatRoute: typeof AuthenticatedStaffChatRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
   AuthenticatedTutoriaisRoute: typeof AuthenticatedTutoriaisRoute
   AuthenticatedServidorKrakenRoute: typeof AuthenticatedServidorKrakenRoute
@@ -1000,6 +1020,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFidelidadeRoute: AuthenticatedFidelidadeRoute,
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
   AuthenticatedShadowPassRoute: AuthenticatedShadowPassRoute,
+  AuthenticatedStaffChatRoute: AuthenticatedStaffChatRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
   AuthenticatedTutoriaisRoute: AuthenticatedTutoriaisRoute,
   AuthenticatedServidorKrakenRoute: AuthenticatedServidorKrakenRoute,
@@ -1065,13 +1086,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

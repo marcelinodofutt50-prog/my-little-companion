@@ -15,6 +15,7 @@ import { getShadowPassData } from '@/lib/shadow-core.functions';
 import { updateProfileCustomization } from '@/lib/profile-customization.functions';
 import { getCommunityMessages, sendCommunityMessage, getCommunityGoals } from '@/lib/community.functions';
 import { getDiagnosticData, triggerManualSchemaRefresh } from '@/lib/diagnostics.functions';
+import { claimMissionReward } from '@/lib/loyalty.functions';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,8 @@ function ShadowPassPage() {
     queryFn: () => fetchMessages({}),
     refetchInterval: 5000,
   });
+
+  const claimRewardFn = useServerFn(claimMissionReward);
 
   const messages = messagesData || [];
 
@@ -275,6 +278,12 @@ function ShadowPassPage() {
             Progresso & Nexus
           </TabsTrigger>
           <TabsTrigger 
+            value="missions" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
+          >
+            Missões Shadow
+          </TabsTrigger>
+          <TabsTrigger 
             value="vip-benefits" 
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
           >
@@ -321,23 +330,37 @@ function ShadowPassPage() {
                 </CardContent>
               </Card>
 
-              {/* VIP Progress */}
+              {/* VIP Progress (Shadow Protocol v22.0 Evolution) */}
               <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[10px] md:text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between items-center">
-                    Shadow VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? '100%' : '78%'}</span>
+                    Progressão VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? 'MAX' : '78%'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-yellow-500 capitalize">{vip.tier}</span>
-                    <span className="text-muted-foreground truncate ml-2">Próximo: {vip.next?.tier || 'Max'}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={cn(
+                        "text-[9px] uppercase font-bold border-yellow-500/30",
+                        vip.tier === 'elite' ? "bg-yellow-500 text-black" : "text-yellow-500"
+                      )}>
+                        {vip.tier.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <span className="text-muted-foreground text-[10px] font-mono uppercase">
+                      Próximo Nível: {vip.next?.tier?.toUpperCase() || 'SOBERANO'}
+                    </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {vip.benefits.map((b: string, i: number) => (
-                      <Badge key={i} variant="secondary" className="text-[9px] font-mono px-1 py-0 whitespace-nowrap">{b}</Badge>
-                    ))}
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="p-2 rounded bg-black/20 border border-white/5 text-center">
+                      <div className="text-xs font-bold text-yellow-500 font-mono">{loyalty.points}</div>
+                      <div className="text-[8px] text-muted-foreground uppercase font-mono">XP Total</div>
+                    </div>
+                    <div className="p-2 rounded bg-black/20 border border-white/5 text-center">
+                      <div className="text-xs font-bold text-primary font-mono">{reputation.score}</div>
+                      <div className="text-[8px] text-muted-foreground uppercase font-mono">Reputação</div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -702,6 +725,63 @@ function ShadowPassPage() {
              </Card>
             </section>
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="missions" className="m-0">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {(data.missions || []).map((m: any) => (
+              <Card key={m.id} className={cn(
+                "border-primary/20 bg-card/50 backdrop-blur-sm relative overflow-hidden group transition-all",
+                m.completed && "opacity-60 border-green-500/20"
+              )}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-sm font-mono uppercase tracking-tight flex items-center gap-2">
+                      {m.completed ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-primary" />}
+                      {m.title}
+                    </CardTitle>
+                    <Badge variant="outline" className="text-[9px] font-mono border-yellow-500/30 text-yellow-500">
+                      +{m.reward_points} XP
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-[10px] font-mono leading-relaxed mt-1">
+                    {m.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {!m.completed && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[8px] font-mono uppercase text-muted-foreground">
+                        <span>Progresso</span>
+                        <span>{m.progress || 0}%</span>
+                      </div>
+                      <Progress value={m.progress || 0} className="h-1" />
+                    </div>
+                  )}
+                  <Button 
+                    variant={m.completed ? "outline" : "default"} 
+                    className="w-full h-8 text-[10px] font-mono uppercase"
+                    disabled={m.completed || (m.progress || 0) < 100}
+                    onClick={() => {
+                      toast.promise(claimRewardFn({ data: { missionId: m.id } }), {
+                        loading: 'Resgatando XP...',
+                        success: (res: any) => {
+                          if (res.ok) {
+                            queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+                            return res.message;
+                          }
+                          throw new Error(res.message);
+                        },
+                        error: (err) => err.message
+                      });
+                    }}
+                  >
+                    {m.completed ? "Recompensa Resgatada" : (m.progress || 0) < 100 ? "Em Andamento" : "Resgatar Recompensa"}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </TabsContent>
 
