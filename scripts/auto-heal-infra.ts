@@ -3,15 +3,25 @@ import { createClient } from '@supabase/supabase-js';
 async function heal() {
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  // Extração do Project ID da URL
+  const projectId = url?.split('//')[1]?.split('.')[0];
 
-  console.log("\n[Shadow Protocol] Auto-Healing Infrastructure...");
-  console.log(`[Shadow Protocol] Target: ${url}`);
+  console.log("\n[Shadow Protocol] Build Pipeline Verification...");
+  console.log(`[Shadow Protocol] Target URL: ${url}`);
+  console.log(`[Shadow Protocol] Project ID: ${projectId}`);
 
   if (!url || !key) {
-    console.error("[Shadow Protocol] Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Skipping healing.");
-    return;
+    console.error("[Shadow Protocol] ❌ FALHA CRÍTICA: VITE_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configurados.");
+    process.exit(1);
+  }
+  
+  if (!url.includes('supabase.co')) {
+    console.error("[Shadow Protocol] ❌ ERRO DE CONEXÃO: URL do Supabase inválida.");
+    process.exit(1);
   }
 
+  console.log("[Shadow Protocol] Conexão validada. Iniciando Auto-Healing...");
   const supabase = createClient(url, key);
 
   // 1. Storage Buckets
