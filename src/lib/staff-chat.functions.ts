@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const getStaffMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ channel: z.string().default("general") }))
-  .handler(async ({ input, context }) => {
+  .validator((data: { channel?: string }) => z.object({ channel: z.string().default("general") }).parse(data))
+  .handler(async ({ data: input, context }) => {
     const { userId } = context;
     const { channel } = input;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -46,11 +46,11 @@ export const getStaffMessages = createServerFn({ method: "GET" })
 
 export const sendStaffMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator((data: { content: string, channel?: string }) => z.object({
     content: z.string().min(1).max(2000),
     channel: z.string().default("general")
-  }))
-  .handler(async ({ input, context }) => {
+  }).parse(data))
+  .handler(async ({ data: input, context }) => {
     const { userId } = context;
     const { content, channel } = input;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

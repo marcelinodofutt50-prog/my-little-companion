@@ -10,7 +10,7 @@ export async function grant7DayTrialBenefit(userId: string, planSlug: string) {
   // 1. Check if user already had this benefit to prevent abuse
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("trial_7d_expires_at, metadata")
+    .select("trial_7d_expires_at, metadata, reward_points, total_points_earned")
     .eq("id", userId)
     .single();
 

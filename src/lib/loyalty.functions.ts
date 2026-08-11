@@ -37,8 +37,8 @@ export const getAvailableMissions = createServerFn({ method: "GET" })
 
 export const completeMission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ missionId: z.string().uuid() }))
-  .handler(async ({ input, context }) => {
+  .validator((data: { missionId: string }) => z.object({ missionId: z.string().uuid() }).parse(data))
+  .handler(async ({ data: input, context }) => {
     const { missionId } = input;
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -60,7 +60,7 @@ export const completeMission = createServerFn({ method: "POST" })
       .eq("mission_id", missionId)
       .maybeSingle();
 
-    if (userMission?.completed_at && mission.limit_count <= 1) {
+    if (userMission?.completed_at && (mission.limit_count || 1) <= 1) {
       throw new Error("Missão já concluída.");
     }
 
