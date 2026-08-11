@@ -100,7 +100,7 @@ function StaffChatPage() {
             [...(messages || [])].reverse().map((msg: any) => (
               <div key={msg.id} className="group flex items-start gap-3 hover:bg-white/5 p-2 rounded-lg transition-colors">
                 <Avatar className="h-8 w-8 border border-primary/20 shrink-0">
-                  <AvatarImage src={(msg.profiles?.metadata as any)?.avatar_url} />
+                  <AvatarImage src={undefined} />
                   <AvatarFallback className="text-[10px] bg-muted uppercase">
                     {(msg.profiles?.display_name || msg.profiles?.full_name || "?").substring(0, 2)}
                   </AvatarFallback>
@@ -110,10 +110,16 @@ function StaffChatPage() {
                     <span className="text-xs font-bold text-primary truncate max-w-[150px]">
                       {msg.profiles?.display_name || msg.profiles?.full_name || "Desconhecido"}
                     </span>
+                    {msg.sender_role && (
+                      <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-mono border border-primary/20">
+                        {msg.sender_role}
+                      </span>
+                    )}
                     <span className="text-[9px] text-muted-foreground opacity-60">
                       {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ptBR })}
                     </span>
                   </div>
+
                   <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap break-words">
                     {msg.content}
                   </p>
