@@ -54,7 +54,11 @@ export const getShadowPassData = createServerFn({ method: "GET" })
     const nextVipTier = vipTierList[vipIndex + 1] || null;
     const vipProgress = Math.round((vipIndex / (vipTierList.length - 1)) * 100);
 
-    // 4. Missões com progresso real
+    // 4. Missões com progresso real (normais + exclusivas VIP)
+    const { loadMissionMetrics, missionProgress, vipRank } = await import(
+      "@/lib/mission-progress.server"
+    );
+
     const { data: missions } = await supabaseAdmin
       .from("loyalty_missions")
       .select("*")
@@ -65,51 +69,29 @@ export const getShadowPassData = createServerFn({ method: "GET" })
       .select("*")
       .eq("user_id", userId);
 
-    const [{ count: trialCount }, { count: tutorialCount }] = await Promise.all([
-      supabaseAdmin
-        .from("licenses")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("is_trial", true),
-      supabaseAdmin
-        .from("tutorial_progress")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("completed", true),
-    ]);
-
+    const metrics = await loadMissionMetrics(supabaseAdmin, userId);
     const meta = (profileData.metadata as any) || {};
-    const profileComplete =
-      (!!meta.avatar_url || !!profileData.avatar_url) &&
-      !!(meta.nickname || profileData.display_name);
 
-    const computeProgress = (req: any): number => {
-      const type = req?.type;
-      const target = Number(req?.count || 1);
-      if (type === "profile_setup") return profileComplete ? 100 : 0;
-      if (type === "trial_generation")
-        return Math.min(100, ((trialCount || 0) / target) * 100);
-      if (type === "referral")
-        return Math.min(
-          100,
-          ((profileData.referrals_valid_count || 0) / target) * 100,
-        );
-      if (type === "tutorial_completion")
-        return Math.min(100, ((tutorialCount || 0) / target) * 100);
-      return 0;
-    };
-
-    const missionsWithProgress = (missions || []).map((m: any) => {
+    const allMissions = (missions || []).map((m: any) => {
       const um = (userMissions || []).find((u: any) => u.mission_id === m.id);
       const completed = !!um?.completed_at;
+      const req = (m.requirements as any) || {};
+      const minVip = req.min_vip_tier || null;
       return {
         ...m,
         ...um,
         id: m.id,
         completed,
-        progress: completed ? 100 : Math.round(computeProgress(m.requirements)),
+        vipOnly: !!minVip,
+        minVipTier: minVip,
+        locked: !!minVip && vipRank(metrics.vipTier) < vipRank(minVip),
+        progress: completed ? 100 : missionProgress(req, metrics),
       };
     });
+
+    const missionsWithProgress = allMissions.filter((m: any) => !m.vipOnly);
+    const vipMissions = allMissions.filter((m: any) => m.vipOnly);
+
 
     // 5. Community Goals
     const { data: goals } = await supabaseAdmin
