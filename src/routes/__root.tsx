@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode, Suspense } from "react";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { redirectLocalhostAuthToCanonical } from "@/lib/site-url";
 import { Toaster } from "sonner";
 import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
@@ -214,8 +215,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const isConfigured = isSupabaseConfigured();
+  const hydrated = useHydrated();
   
-  if (!isConfigured && typeof window !== 'undefined') {
+  if (!isConfigured && hydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="enterprise-surface max-w-lg p-10 shadow-2xl border-primary/20 bg-black/60 backdrop-blur-xl">
