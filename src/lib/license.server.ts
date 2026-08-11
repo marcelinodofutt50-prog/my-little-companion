@@ -60,26 +60,39 @@ export async function internalGenerateTrial(
   }
 
 
-  // 3) Call Yaarsa
-  const yr = await yaarsaCreateAccount({
-    username: creds.username,
-    email: creds.email,
-    password: creds.password,
-    planSlug: "trial",
-    totalPaid: 0,
-    additionalInfo: "shadow-trial",
-    panel: panelFromPlanSlug("trial"),
-  });
+  // 3) Call Yaarsa with Retry logic for stability
+  let yr: any;
+  let attempts = 0;
+  const maxAttempts = 2;
+  
+  while (attempts < maxAttempts) {
+    yr = await yaarsaCreateAccount({
+      username: creds.username,
+      email: creds.email,
+      password: creds.password,
+      planSlug: "trial",
+      totalPaid: 0,
+      additionalInfo: "shadow-trial",
+      panel: panelFromPlanSlug("trial"),
+    });
+
+    if (yr.Success || yr.Fail && /1004|already|exist|existe/i.test(yr.Fail)) break;
+    
+    attempts++;
+    if (attempts < maxAttempts) {
+      console.warn(`[internalGenerateTrial] Yaarsa attempt ${attempts} failed, retrying...`);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
   
   const alreadyExists = !!yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
   
-  // Resiliência agressiva: se o Yaarsa falhar com timeout ou rede, 
-  // tentamos garantir que o registro no banco não trave o usuário em um limbo.
   if (yr.Fail && !alreadyExists) {
     // Removemos a intenção de trial se falhar no Yaarsa, para permitir retry imediato.
     await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
     throw new Error(`Shadow Node Refusal: ${yr.Fail}`);
   }
+
 
   // AUTO-HEAL: Se o Yaarsa disse que a conta existe, mas não temos o registro 
   // na tabela 'licenses' (desync), nós prosseguimos para criar a linha no banco, 
