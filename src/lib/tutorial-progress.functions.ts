@@ -63,11 +63,20 @@ export const toggleTutorialStatus = createServerFn({ method: "POST" })
     if (data.completed) {
       const { error } = await supabaseAdmin
         .from("tutorial_progress")
-        .upsert({ user_id: userId, tutorial_id: data.tutorialId }, { onConflict: "user_id,tutorial_id" });
+        .upsert(
+          {
+            user_id: userId,
+            tutorial_id: data.tutorialId,
+            completed: true,
+            last_watched_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,tutorial_id" },
+        );
       if (error) {
         console.error("[tutorial_progress] Upsert failure via Client:", error);
         throw new Error(error.message);
       }
+
     } else {
       const { error } = await supabaseAdmin
         .from("tutorial_progress")
