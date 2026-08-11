@@ -25,6 +25,8 @@ import { Input } from '@/components/ui/input';
 import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { generateTrial } from '@/lib/license.functions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   loader: async ({ context }) => {
@@ -826,9 +828,7 @@ function ShadowPassPage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Resgate 1 dia gratuito de Shadow Signer (Bypass Play Protect) uma vez por mês para testar novos vetores de ataque.
                 </p>
-                <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-[10px] uppercase">
-                  Resgatar 1 Dia Grátis
-                </Button>
+                <TrialActivationButton />
               </CardContent>
             </Card>
 
@@ -859,6 +859,128 @@ function ShadowPassPage() {
           </div>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function TrialActivationButton() {
+  const queryClient = useQueryClient();
+  const generateTrialFn = useServerFn(generateTrial);
+  const [isOpen, setIsOpen] = useState(false);
+  const [step, setStep] = useState<'idle' | 'yaarsa' | 'login' | 'trial' | 'success' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleActivate = async () => {
+    setIsOpen(true);
+    setStep('yaarsa');
+    setErrorMsg(null);
+
+    try {
+      // Step 1: Enviando para Yaarsa
+      await new Promise(r => setTimeout(r, 1500));
+      setStep('login');
+
+      // Step 2: Criando login e registrando trial
+      const result = await generateTrialFn();
+      setStep('trial');
+
+      // Step 3: Contagem de 24h
+      await new Promise(r => setTimeout(r, 1000));
+      setStep('success');
+      
+      queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+      toast.success("Teste Grátis ativado com sucesso!");
+    } catch (err: any) {
+      console.error("Trial Activation Error:", err);
+      setStep('error');
+      setErrorMsg(err.message || "Erro desconhecido na ativação.");
+      toast.error("Falha na ativação: " + (err.message || "Erro desconhecido"));
+    }
+  };
+
+  return (
+    <>
+      <Button 
+        size="sm" 
+        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-[10px] uppercase"
+        onClick={handleActivate}
+      >
+        Resgatar 1 Dia Grátis
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={(open) => !['yaarsa', 'login', 'trial'].includes(step) && setIsOpen(open)}>
+        <DialogContent className="sm:max-w-md bg-card border-primary/20 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase tracking-tight flex items-center gap-2">
+              <Zap className={cn("h-5 w-5", step === 'error' ? "text-destructive" : "text-primary")} />
+              Status da Ativação
+            </DialogTitle>
+            <DialogDescription className="font-mono text-[10px] uppercase opacity-60">
+              Protocolo Shadow Trial v24.0
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-6 space-y-6">
+            <div className="space-y-4">
+              <StatusStep 
+                label="Handshake com Servidor Yaarsa" 
+                status={step === 'yaarsa' ? 'loading' : ['login', 'trial', 'success', 'error'].includes(step) && step !== 'error' ? 'success' : step === 'error' && errorMsg?.includes('Yaarsa') ? 'error' : 'pending'} 
+              />
+              <StatusStep 
+                label="Provisionamento de Credenciais" 
+                status={step === 'login' ? 'loading' : ['trial', 'success', 'error'].includes(step) && step !== 'error' ? 'success' : 'pending'} 
+              />
+              <StatusStep 
+                label="Registro de Benefício 24h" 
+                status={step === 'trial' ? 'loading' : step === 'success' ? 'success' : 'pending'} 
+              />
+            </div>
+
+            {step === 'success' && (
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in duration-300">
+                <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                <p className="text-xs font-bold text-emerald-500 uppercase font-mono">Acesso Liberado</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Sua licença de 24h está ativa no dashboard.</p>
+                <Button className="mt-4 w-full h-8 text-[10px] font-mono uppercase" onClick={() => setIsOpen(false)}>
+                  Entendido
+                </Button>
+              </div>
+            )}
+
+            {step === 'error' && (
+              <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 space-y-3 animate-in shake duration-300">
+                <div className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="text-xs font-bold uppercase font-mono">Falha Crítica</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed bg-black/20 p-2 rounded border border-white/5 font-mono">
+                  {errorMsg}
+                </p>
+                <Button variant="outline" className="w-full h-8 text-[10px] font-mono uppercase" onClick={() => setIsOpen(false)}>
+                  Fechar e Reportar
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function StatusStep({ label, status }: { label: string, status: 'pending' | 'loading' | 'success' | 'error' }) {
+  return (
+    <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/20 border border-white/5">
+      <span className={cn(
+        "text-[10px] font-mono uppercase tracking-tight",
+        status === 'pending' ? "text-muted-foreground" : "text-foreground"
+      )}>
+        {label}
+      </span>
+      {status === 'loading' && <RefreshCw className="h-3 w-3 animate-spin text-primary" />}
+      {status === 'success' && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+      {status === 'error' && <X className="h-3 w-3 text-destructive" />}
+      {status === 'pending' && <Clock className="h-3 w-3 text-muted-foreground/30" />}
     </div>
   );
 }
