@@ -53,6 +53,8 @@ function ShadowPassPage() {
     refetchInterval: 5000,
   });
 
+  const claimRewardFn = useServerFn(claimMissionReward);
+
   const messages = messagesData || [];
 
   const sendMessageMutation = useMutation({
