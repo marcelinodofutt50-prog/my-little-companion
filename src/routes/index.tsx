@@ -1,31 +1,19 @@
-// Shadow Protocol v29.0: ALINHAMENTO FINAL DE INFRAESTRUTURA (PRODUÇÃO).
+// Shadow Protocol v30.0: PRODUÇÃO REAL EM 'dvnksmqbpbzwgwmbnjjy'.
 //
-// Agora sim encontramos a causa raiz.
-// Antes de alterar a Vercel, quero que você faça uma última verificação para evitar outro problema de ambiente.
+// ALINHAMENTO MANDATÓRIO: O usuário optou por manter o projeto Supabase 'dvnksmqbpbzwgwmbnjjy'.
+// Todas as correções estruturais serão aplicadas DIRETAMENTE neste projeto de produção.
 //
-// O projeto corrigido é: yvvjaoqzhjqnchhwhwvy
-// E o projeto atualmente usado pela Vercel é: dvnksmqbpbzwgwmbnjjy
+// OBJETIVO: Paridade total entre código ShadowDash e infraestrutura física.
 //
-// Confirme que yvvjaoqzhjqnchhwhwvy é DEFINITIVAMENTE o projeto Supabase que deve ser usado como PRODUÇÃO do ShadowDash.
+// 1. AVATAR: Criar bucket 'avatars', configurar RLS público e políticas de upload.
+// 2. TRIAL 24H: Provisionar colunas 'trial_started_at' e 'trial_expires_at' na tabela 'profiles'.
+// 3. CENTRO DE TREINAMENTO: Garantir existência e relações de 'tutorials' e 'tutorial_progress'.
+// 4. CHAT ANÔNIMO: Restaurar 'community_messages' e resolver erro PGRST205.
+// 5. YAARSA: Investigar fluxo completo e resolver YAARSA_REFUSAL sem mocks.
 //
-// Se confirmado:
-// 1. Atualize as Environment Variables da Vercel para apontar para yvvjaoqzhjqnchhwhwvy.
-// 2. Verifique TODAS as variáveis Supabase necessárias, não somente VITE_SUPABASE_URL.
-// 3. Garanta que as chaves públicas/anon e quaisquer variáveis server-side estejam correspondentes ao mesmo projeto.
-//
-// Não altere migrations nem crie novos recursos no banco.
-// Faça um novo deployment na Vercel e execute novamente os testes de produção.
-//
-// O objetivo é que: Vercel → yvvjaoqzhjqnchhwhwvy → banco corrigido → PostgREST correto.
-//
-// Depois do deployment, confirme no log:
-// - 9/9 testes PASS
-// - Vite build PASS
-// - Vercel deployment READY
-//
-// E faça uma validação funcional real de: upload de avatar, Trial de 24h, Centro de Treinamento, progresso dos tutoriais e chat anônimo.
-//
-// STATUS: INFRAESTRUTURA CERTIFICADA PARA 'yvvjaoqzhjqnchhwhwvy'.
+// REGRA: Sem fallbacks, sem mocks, sem alteração de Environment Variables na Vercel.
+// STATUS: AGUARDANDO REPARO FÍSICO NO BANCO 'dvnksmqbpbzwgwmbnjjy'.
+
 
 
 import { SiteHeader } from "@/components/SiteHeader";
