@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL!;
@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseAdminKey);
 describe('Shadow Protocol v25.0: Forensic Production Audit', () => {
   console.log(`[Forensic Audit] Connecting to: ${supabaseUrl}`);
 
-  it('0. IDENTITY: frontend and tests use the same production project', () => {
+  beforeAll(() => {
     const projectRef = (value: string) => value.match(/^https:\/\/([a-z0-9]+)\./)?.[1];
     expect(projectRef(frontendUrl)).toBeTruthy();
     expect(projectRef(supabaseUrl)).toBe(projectRef(frontendUrl));
