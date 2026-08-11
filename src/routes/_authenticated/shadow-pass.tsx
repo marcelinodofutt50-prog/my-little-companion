@@ -275,6 +275,12 @@ function ShadowPassPage() {
             Progresso & Nexus
           </TabsTrigger>
           <TabsTrigger 
+            value="missions" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
+          >
+            Missões Shadow
+          </TabsTrigger>
+          <TabsTrigger 
             value="vip-benefits" 
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
           >
@@ -321,23 +327,37 @@ function ShadowPassPage() {
                 </CardContent>
               </Card>
 
-              {/* VIP Progress */}
+              {/* VIP Progress (Shadow Protocol v22.0 Evolution) */}
               <Card className="border-yellow-500/10 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[10px] md:text-sm font-mono uppercase tracking-widest text-muted-foreground flex justify-between items-center">
-                    Shadow VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? '100%' : '78%'}</span>
+                    Progressão VIP <span className="text-yellow-500 font-bold">{vip.tier === 'elite' ? 'MAX' : '78%'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Progress value={vip.tier === 'elite' ? 100 : 78} className="h-2 bg-yellow-500/10 [&>div]:bg-yellow-500" />
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-yellow-500 capitalize">{vip.tier}</span>
-                    <span className="text-muted-foreground truncate ml-2">Próximo: {vip.next?.tier || 'Max'}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={cn(
+                        "text-[9px] uppercase font-bold border-yellow-500/30",
+                        vip.tier === 'elite' ? "bg-yellow-500 text-black" : "text-yellow-500"
+                      )}>
+                        {vip.tier.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <span className="text-muted-foreground text-[10px] font-mono uppercase">
+                      Próximo Nível: {vip.next?.tier?.toUpperCase() || 'SOBERANO'}
+                    </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {vip.benefits.map((b: string, i: number) => (
-                      <Badge key={i} variant="secondary" className="text-[9px] font-mono px-1 py-0 whitespace-nowrap">{b}</Badge>
-                    ))}
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="p-2 rounded bg-black/20 border border-white/5 text-center">
+                      <div className="text-xs font-bold text-yellow-500 font-mono">{loyalty.points}</div>
+                      <div className="text-[8px] text-muted-foreground uppercase font-mono">XP Total</div>
+                    </div>
+                    <div className="p-2 rounded bg-black/20 border border-white/5 text-center">
+                      <div className="text-xs font-bold text-primary font-mono">{reputation.score}</div>
+                      <div className="text-[8px] text-muted-foreground uppercase font-mono">Reputação</div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
