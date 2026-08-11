@@ -7,8 +7,6 @@ import { useEffect, useState } from "react";
  * funciona: login, painel, licenças e suporte quebram com erros genéricos.
  * Em vez de tela preta / "system_error", mostramos um aviso claro.
  */
-const EXPECTED_PROJECT_REF = "yvvjaoqzhjqnchhwhwvy";
-
 function currentRef(): string | null {
   const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   if (!url) return null;
@@ -21,13 +19,16 @@ export function BackendMismatchBanner() {
 
   useEffect(() => {
     const found = currentRef();
-    if (found && found !== EXPECTED_PROJECT_REF) {
-      console.error(
-        `[shadow] Backend incorreto: build usando "${found}", esperado "${EXPECTED_PROJECT_REF}". ` +
-          "Atualize VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY no host (Vercel) e refaça o deploy.",
-      );
-      setRef(found);
-    }
+    if (!found) return;
+    fetch('/api/public/backend-health', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((health: { ok?: boolean; server_project_ref?: string | null }) => {
+        if (health.ok === false || (health.server_project_ref && health.server_project_ref !== found)) {
+          console.error(`[shadow] Backend divergente: frontend=${found}, servidor=${health.server_project_ref ?? 'ausente'}.`);
+          setRef(found);
+        }
+      })
+      .catch(() => undefined);
   }, []);
 
   if (!ref) return null;

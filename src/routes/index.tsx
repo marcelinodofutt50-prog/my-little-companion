@@ -1,11 +1,11 @@
 /**
- * SHADOW PROTOCOL v44.0 - PRODUCTION INTEGRITY CERTIFIED
+ * SHADOW PROTOCOL - PRODUCTION IDENTITY UNDER VERIFICATION
  * 
- * STATUS: 100% PROD-READY (Verified on Active Target)
- * ENVIRONMENT: yvvjaoqzhjqnchhwhwvy (Active Production)
+ * STATUS: Certification blocked until the Vercel target passes the real audit.
+ * The build pipeline requires frontend, server, tests and auto-healing to use one project.
  * 
- * FORENSIC AUDIT (9/9 PASS):
- * 1. IDENTITY: VITE_SUPABASE_URL matched to project yvvjaoqzhjqnchhwhwvy.
+ * FORENSIC AUDIT:
+ * 1. IDENTITY: VITE_SUPABASE_URL must match SUPABASE_URL.
  * 2. STORAGE: Buckets 'avatars' and 'tutorials' verified and accessible.
  * 3. SCHEMA: profiles.trial_started_at & trial_expires_at verified via physical DDL audit.
  * 4. REPUTATION: profiles.metadata & vip_tier provisioned for Shadow Pass sync.
@@ -15,7 +15,7 @@
  * 8. ASSETS: BTMob Conexion v2 & Kraken v32 final assets synced.
  * 9. STABILITY: Auto-heal bridge implemented in package.json build pipeline.
  * 
- * Auditoria 9/9 finalizada com sucesso. Infraestrutura provisionada no banco ativo.
+ * No PROD-READY claim is made until all checks pass on the deployed environment.
  */
 
 

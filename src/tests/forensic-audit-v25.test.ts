@@ -1,12 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
+const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseAdminKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const frontendUrl = process.env.VITE_SUPABASE_URL!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseAdminKey);
 
 describe('Shadow Protocol v25.0: Forensic Production Audit', () => {
   console.log(`[Forensic Audit] Connecting to: ${supabaseUrl}`);
+
+  beforeAll(() => {
+    const projectRef = (value: string) => value.match(/^https:\/\/([a-z0-9]+)\./)?.[1];
+    expect(projectRef(frontendUrl)).toBeTruthy();
+    expect(projectRef(supabaseUrl)).toBe(projectRef(frontendUrl));
+    console.log(`[Forensic Audit] Project ID: ${projectRef(supabaseUrl)}`);
+  });
 
 
   it('1. FOTO DE PERFIL: Verify bucket "avatars" exists and is public', async () => {
@@ -28,8 +36,7 @@ describe('Shadow Protocol v25.0: Forensic Production Audit', () => {
       .select('id, profiles(display_name)')
       .limit(1);
     if (error) console.error("Table 'community_messages' error:", error);
-    expect(error?.code).not.toBe('PGRST108');
-    expect(error?.code).not.toBe('42P01');
+    expect(error).toBeNull();
   });
 
   it('4. YAARSA SYNC: Verify trial duration logic (Yaarsa 2d vs Shadow 1d)', async () => {
