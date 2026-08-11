@@ -9,14 +9,19 @@ import { supabase } from '@/integrations/supabase/client';
 describe('Shadow Production Final Audit', () => {
   
   it('should verify global availability of "profiles" metadata', async () => {
-    const { data, error } = await supabase
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data, error } = await supabaseAdmin
       .from('profiles')
       .select('metadata, vip_tier, reputation_score')
       .limit(1);
     
     // Teste de integridade de esquema
+    if (error) {
+      console.error("[Audit Failure] Profiles columns missing:", error);
+    }
     expect(error?.code).not.toBe('42703'); 
   });
+
 
   it('should verify "community_messages" relation health', async () => {
     const { data, error } = await supabase
