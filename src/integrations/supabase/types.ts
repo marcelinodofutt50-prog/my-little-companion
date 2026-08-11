@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      _e2e_pp_log: {
+        Row: {
+          at: string | null
+          detail: string | null
+          result: string | null
+          step: string
+        }
+        Insert: {
+          at?: string | null
+          detail?: string | null
+          result?: string | null
+          step: string
+        }
+        Update: {
+          at?: string | null
+          detail?: string | null
+          result?: string | null
+          step?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           attachment_name: string | null
