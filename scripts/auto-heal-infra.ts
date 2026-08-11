@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 async function heal() {
-  const url = process.env.VITE_SUPABASE_URL;
+  const frontendUrl = process.env.VITE_SUPABASE_URL;
+  const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   // Extração do Project ID da URL
@@ -11,8 +12,14 @@ async function heal() {
   console.log(`[Shadow Protocol] Target URL: ${url}`);
   console.log(`[Shadow Protocol] Project ID: ${projectId}`);
 
-  if (!url || !key) {
-    console.error("[Shadow Protocol] ❌ FALHA CRÍTICA: VITE_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configurados.");
+  if (!frontendUrl || !url || !key) {
+    console.error("[Shadow Protocol] ❌ FALHA CRÍTICA: VITE_SUPABASE_URL, SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configurados.");
+    process.exit(1);
+  }
+
+  const frontendProjectId = frontendUrl.split('//')[1]?.split('.')[0];
+  if (!projectId || frontendProjectId !== projectId) {
+    console.error(`[Shadow Protocol] ❌ IDENTIDADE DIVERGENTE: frontend=${frontendProjectId}, auto-healing=${projectId}.`);
     process.exit(1);
   }
   
@@ -26,77 +33,30 @@ async function heal() {
 
   // 1. Storage Buckets
   console.log("[Shadow Protocol] Ensuring storage buckets...");
-  const { data: buckets } = await supabase.storage.listBuckets();
+  const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+  if (bucketsError) throw new Error(`[Shadow Protocol] Storage authentication failed: ${bucketsError.message}`);
   const bucketNames = buckets?.map(b => b.name) || [];
   
   if (!bucketNames.includes('avatars')) {
     console.log("[Shadow Protocol] Creating 'avatars' bucket...");
-    await supabase.storage.createBucket('avatars', { public: true });
+    const { error } = await supabase.storage.createBucket('avatars', { public: true });
+    if (error) throw new Error(`[Shadow Protocol] Could not create avatars bucket: ${error.message}`);
   }
 
   // 2. Schema Probe & Repair
   console.log("[Shadow Protocol] Probing schema...");
-  const { data: profileCols, error: pErr } = await supabase.from('profiles').select('*').limit(1).maybeSingle();
+  const { error: pErr } = await supabase
+    .from('profiles')
+    .select('trial_started_at, trial_expires_at, metadata, vip_tier, reputation_score')
+    .limit(1);
   
-  if (pErr) {
-    console.error(`[Shadow Protocol] Schema probe failed: ${pErr.message}`);
-  } else if (profileCols) {
-    const cols = Object.keys(profileCols);
-    const required = ['trial_started_at', 'trial_expires_at', 'metadata', 'vip_tier', 'reputation_score'];
-    const missing = required.filter(c => !cols.includes(c));
-    
-    if (missing.length > 0) {
-      console.warn(`[Shadow Protocol] Missing columns in profiles: ${missing.join(', ')}`);
-      
-      const sql = `
-        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
-        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ;
-        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
-        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS vip_tier TEXT DEFAULT 'none';
-        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS reputation_score INTEGER DEFAULT 100;
-        
-        CREATE TABLE IF NOT EXISTS public.community_messages (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-          content TEXT NOT NULL,
-          is_anonymous BOOLEAN DEFAULT FALSE,
-          created_at TIMESTAMPTZ DEFAULT now()
-        );
-        
-        GRANT ALL ON public.profiles TO authenticated, service_role;
-        GRANT ALL ON public.community_messages TO authenticated, service_role;
-        ALTER TABLE public.community_messages ENABLE ROW LEVEL SECURITY;
-        
-        -- Reload schema
-        NOTIFY pgrst, 'reload schema';
-      `;
-      
-      console.log("[Shadow Protocol] Attempting emergency repair via RPC...");
-      const rpcProbes = ['exec_sql', 'run_sql', 'execute_sql'];
-      let repaired = false;
-      for (const rpc of rpcProbes) {
-        const { error } = await supabase.rpc(rpc, { sql });
-        if (!error) {
-          console.log(`[Shadow Protocol] ✅ Repair successful using RPC: ${rpc}`);
-          repaired = true;
-          break;
-        }
-      }
-      
-      if (!repaired) {
-        console.error("[Shadow Protocol] ❌ AUTO-HEALING FAILED: No SQL RPC found on target.");
-        console.log("\n[ACTION REQUIRED] Run the following SQL in the Supabase Dashboard SQL Editor:");
-        console.log(sql);
-      }
-    } else {
-      console.log("[Shadow Protocol] ✅ All profile columns present.");
-    }
-  }
+  if (pErr) throw new Error(`[Shadow Protocol] Required profile columns are unavailable: [${pErr.code}] ${pErr.message}`);
+  console.log("[Shadow Protocol] ✅ All profile columns present.");
 
   // 3. Community Messages check
   const { error: msgErr } = await supabase.from('community_messages').select('id').limit(1);
   if (msgErr) {
-    console.log(`[Shadow Protocol] community_messages status: ${msgErr.code}`);
+    throw new Error(`[Shadow Protocol] community_messages is unavailable: [${msgErr.code}] ${msgErr.message}`);
   } else {
     console.log("[Shadow Protocol] ✅ community_messages is accessible.");
   }
@@ -104,4 +64,7 @@ async function heal() {
   console.log("[Shadow Protocol] Auto-healing cycle finished.\n");
 }
 
-heal();
+heal().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

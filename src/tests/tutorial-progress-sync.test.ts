@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { supabase } from '@/integrations/supabase/client';
-
 /**
  * Shadow Protocol v15.6 — Tutorial Progress Sync Integration Test
  * O build DEVE falhar se a tabela public.tutorial_progress estiver ausente
