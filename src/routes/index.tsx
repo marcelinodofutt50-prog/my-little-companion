@@ -1,55 +1,29 @@
-// Shadow Protocol v37.0: INFRASTRUCTURE AUDIT & PROD-BANK IDENTITY CERTIFIED.
+// Shadow Protocol v38.0: INFRASTRUCTURE IDENTITY & PROD-BANK AUDIT.
 //
-// Faça agora uma auditoria e correção EXCLUSIVAMENTE no projeto Supabase que a Vercel está realmente utilizando em produção. Não faça as correções em outro projeto, Preview, Lovable Cloud ou Supabase diferente.
+// RELATÓRIO DE AUDITORIA DE INFRAESTRUTURA (v38.0):
 //
-// O último build da Vercel continua falhando e o log prova que os recursos ainda não existem no banco que está sendo consultado durante o build.
+// ⚠️ ESTADO ATUAL DO BANCO DE PRODUÇÃO (dvnksmqbpbzwgwmbnjjy):
+// ✅ Storage: Bucket 'avatars' criado com sucesso e configurado como PÚBLICO.
+// ❌ Profiles: Colunas 'trial_started_at' e 'trial_expires_at' AINDA NÃO EXISTEM.
+// ❌ Community: Tabela 'community_messages' AINDA NÃO EXISTE ou não está exposta.
+// ❌ PostgREST: Erros 42703 (coluna ausente) e PGRST205 (tabela ausente) persistem.
 //
-// ERROS CONFIRMADOS NO BUILD
+// 🔍 DIAGNÓSTICO DE AMBIENTE:
+// - VITE_SUPABASE_URL (Sandbox): yvvjaoqzhjqnchhwhwvy.supabase.co
+// - PROD_URL (Target/Vercel): dvnksmqbpbzwgwmbnjjy.supabase.co
+// - Identidade: Banco de produção 'dvnksmqbpbzwgwmbnjjy' confirmado como alvo correto.
 //
-// Avatar
-// Bucket 'avatars' error: StorageApiError: Bucket not found
+// 🔧 BLOQUEIO TÉCNICO:
+// O banco de produção alvo não possui RPCs de execução SQL (exec_sql) habilitados.
+// Como resultado, não é possível injetar colunas/tabelas diretamente via código.
 //
-// Trial de 24 horas
-// column profiles.trial_started_at does not exist
+// ✅ AÇÃO NECESSÁRIA:
+// As colunas 'trial_started_at', 'trial_expires_at' e a tabela 'community_messages'
+// DEVEM ser criadas manualmente via Supabase Dashboard ou executando as migrations
+// oficiais contra o projeto 'dvnksmqbpbzwgwmbnjjy'.
 //
-// Chat anônimo
-// Could not find the table 'public.community_messages' in the schema cache
-//
-// O QUE VOCÊ DEVE FAZER
-//
-// Primeiro, antes de alterar qualquer coisa:
-// 1. Identifique exatamente qual VITE_SUPABASE_URL e quais credenciais de produção estão sendo utilizadas pela Vercel durante o build.
-// 2. Extraia o Project ID real desse endpoint.
-// 3. Compare esse Project ID com o banco onde você pretende executar as correções.
-// 4. Se forem diferentes, PARE e não aplique nenhuma migration.
-// 5. Só continue depois de confirmar que está trabalhando exatamente no banco utilizado pela Vercel.
-//
-// Depois, nesse banco REAL de produção:
-// - Verifique se o bucket avatars existe. (Se não, crie como público).
-// - Verifique profiles.trial_started_at e trial_expires_at. (Se ausentes, crie).
-// - Verifique community_messages em public. (Verifique relações, RLS e PostgREST).
-// - Faça reload/refresh do schema do PostgREST.
-// - Não use mock, fallback ou bypass para fazer os testes passarem.
-//
-// VALIDAÇÃO OBRIGATÓRIA
-// Execute os mesmos testes que a Vercel:
-// bun run validate-assets
-// vitest run src/tests/forensic-audit-v25.test.ts src/tests/tutorial-progress-sync.test.ts
-// vite build
-//
-// O resultado esperado é:
-// avatars → PASS
-// tutorial_progress → PASS
-// community_messages → PASS
-// Yaarsa 2 dias / Shadow Trial 24h → PASS
-// trial_started_at → PASS
-// trial_expires_at → PASS
-// 9/9 testes → PASS
-// Vite build → PASS
-//
-// IMPORTANTE: A prioridade desta auditoria é provar a identidade do projeto antes de executar qualquer reparo.
-//
-// Não declare PROD-READY até que os testes passem contra o projeto REAL da Vercel.
+// O sistema NÃO está PROD-READY até que a estrutura física do banco de produção 
+// seja sincronizada com o código. O build da Vercel continuará falhando até esta ação.
 
 
 
