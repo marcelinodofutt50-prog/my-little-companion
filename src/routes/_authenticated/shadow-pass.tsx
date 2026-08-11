@@ -90,6 +90,8 @@ function ShadowPassPage() {
     mutationFn: (vars: any) => updateProfileFn({ data: vars }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+      queryClient.invalidateQueries({ queryKey: ['my-identity'] });
+      queryClient.invalidateQueries({ queryKey: ['community-messages'] });
       toast.success("Perfil atualizado!");
       setIsEditing(false);
     },
@@ -104,6 +106,12 @@ function ShadowPassPage() {
   const [editName, setEditName] = useState(identity.nickname);
   const [isAnonymous, setIsAnonymous] = useState(!!(identity.isAnonymous || identity.metadata?.is_anonymous));
   const fileRef = useRef<HTMLInputElement>(null);
+  const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
+
+  // Mantém o campo de edição sincronizado quando os dados do servidor chegam/atualizam.
+  useEffect(() => {
+    if (!isEditing) setEditName(identity.nickname || "");
+  }, [identity.nickname, isEditing]);
 
   const handleSave = () => {
     mutation.mutate({ nickname: editName, is_anonymous: isAnonymous });
@@ -135,7 +143,10 @@ function ShadowPassPage() {
         data: { dataUrl, contentType: file.type || "image/png" },
       });
 
-      queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+      if (res?.url) setAvatarOverride(`${res.url}?t=${Date.now()}`);
+      await queryClient.invalidateQueries({ queryKey: ['shadow-pass-data'] });
+      queryClient.invalidateQueries({ queryKey: ['my-identity'] });
+      queryClient.invalidateQueries({ queryKey: ['community-messages'] });
       toast.success("Avatar atualizado com sucesso!", { id: uploadToast });
       return res;
     } catch (error: any) {
@@ -180,7 +191,10 @@ function ShadowPassPage() {
           <div className="relative shrink-0 group">
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/40 transition-colors" />
             <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative cursor-pointer hover:scale-105 transition-transform overflow-hidden" onClick={() => fileRef.current?.click()}>
-              <AvatarImage src={identity.avatar || (identity.metadata as any)?.avatar_url} className="object-cover" />
+              <AvatarImage
+                src={avatarOverride || identity.avatar || (identity.metadata as any)?.avatar_url || undefined}
+                className="object-cover"
+              />
               <AvatarFallback className="bg-muted text-2xl md:text-4xl">
                 {isAnonymous ? <Ghost className="h-12 w-12 text-primary" /> : (identity.nickname || identity.display_name || "?")?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
