@@ -86,6 +86,7 @@ import { AdminTagline } from "@/components/AdminTagline";
 import { AdminTeamGuide } from "@/components/AdminTeamGuide";
 import { AdminPermissionsMatrix } from "@/components/AdminPermissionsMatrix";
 import { AdminTrialMonitorPanel } from "@/components/admin/AdminTrialMonitorPanel";
+import { AdminVipPanel } from "@/components/admin/AdminVipPanel";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -195,7 +196,8 @@ type Tab =
   | "refunds"
   | "quotas"
   | "selftest"
-  | "trial_monitor";
+  | "trial_monitor"
+  | "vip";
 
 
 // Explicação em linguagem simples de cada seção do painel.
@@ -223,6 +225,7 @@ const TAB_DESC: Record<Tab, string> = {
   servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
   quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
+  vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
 };
 
@@ -668,6 +671,12 @@ function AdminPage() {
           label: "Autoteste de Compra",
           icon: Activity,
           hint: "fluxo PIX ponta a ponta",
+        },
+        {
+          id: "vip",
+          label: "VIP & Missões",
+          icon: Activity,
+          hint: "tiers, missões e bypass",
         },
         {
           id: "trial_monitor",
@@ -2214,6 +2223,7 @@ function AdminPage() {
             {tab === "refunds" && <AdminRefundsPanel />}
               {tab === "selftest" && <AdminSelfTestPanel />}
               {tab === "trial_monitor" && <AdminTrialMonitorPanel />}
+              {tab === "vip" && <AdminVipPanel />}
               </motion.div>
             </AnimatePresence>
           </div>
