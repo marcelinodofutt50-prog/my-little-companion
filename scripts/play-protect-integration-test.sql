@@ -22,10 +22,6 @@ DECLARE
   n           int;
   d           numeric;
   fails       int := 0;
-
-  PROCEDURE_NOOP boolean;
-
-  FUNCTION_HELPER boolean;
 BEGIN
   -- helper de asserção
   CREATE TEMP TABLE _pp_results(nome text, esperado text, obtido text, ok boolean) ON COMMIT DROP;
@@ -58,7 +54,7 @@ BEGIN
   -- ---------------------------------------------------------------- CASO 3
   -- Compra VITALÍCIA → exatamente 1 grant de 7 dias.
   INSERT INTO public.licenses (user_id, plan_slug, yaarsa_username, yaarsa_email, yaarsa_password_enc, panel)
-  VALUES (u_lifetime, 'kraken-lifetime', 'ppl01', 'ppl01@shadow-test.invalid', 'v46')
+  VALUES (u_lifetime, 'kraken-lifetime', 'ppl01', 'ppl01@shadow-test.invalid', 'enc', 'v46')
   RETURNING id INTO lic_life;
 
   SELECT count(*) INTO n FROM public.play_protect_grants WHERE user_id = u_lifetime;
@@ -77,7 +73,7 @@ BEGIN
   RETURNING id INTO lic_old;
 
   -- simula recarregar página / relogin / reprocessar evento (updates na mesma licença)
-  UPDATE public.licenses SET additional_info_synced_at = now() WHERE id = lic_old;
+  UPDATE public.licenses SET updated_at = now() WHERE id = lic_old;
   UPDATE public.licenses SET expires_at = expires_at WHERE id = lic_old;
 
   SELECT count(*) INTO n FROM public.play_protect_grants WHERE license_id = lic_old;
@@ -143,9 +139,7 @@ BEGIN
 
   -- ---------------------------------------------------------------- RELATÓRIO
   RAISE NOTICE '';
-  RAISE NOTICE '=== PLAY PROTECT — TESTES DE INTEGRAÇÃO (produção, transação revertida) ===';
-  FOR n IN SELECT 1 LOOP END LOOP;
-  PERFORM 1;
+  RAISE NOTICE '=== PLAY PROTECT — TESTES DE INTEGRACAO (producao, transacao revertida) ===';
 END $$;
 
 SELECT CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS resultado, nome, esperado, obtido
