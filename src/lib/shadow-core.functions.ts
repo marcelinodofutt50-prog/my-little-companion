@@ -188,6 +188,8 @@ export const getShadowPassData = createServerFn({ method: "GET" })
         nextTier: nextLoyaltyTier?.name,
       },
       missions: missionsWithProgress,
+      vipMissions,
+      metrics,
       community: {
         referrals: profileData.referrals_valid_count || 0,
         conversions: profileData.conversions_count || 0,
