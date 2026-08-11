@@ -14,17 +14,10 @@ async function main() {
   console.log('--- SYNC AUDIT: Project dvnksmqbpbzwgwmbnjjy ---');
   
   // 1. Force Column Check
-  const { data: cols } = await supabase.rpc('run_sql', { 
-    sql: "SELECT column_name FROM information_schema.columns WHERE table_name = 'profiles' AND table_schema = 'public'" 
-  }).catch(() => ({ data: null }));
-  
-  if (cols) {
-    console.log('Detected Columns:', cols.map((c: any) => c.column_name));
-  } else {
-    // Fallback direct check
-    const { data: profiles } = await supabase.from('profiles').select('*').limit(1);
-    console.log('Profiles Row Keys:', profiles?.[0] ? Object.keys(profiles[0]) : 'No data');
-  }
+  const { data: profiles } = await supabase.from('profiles').select('*').limit(1);
+  const keys = profiles?.[0] ? Object.keys(profiles[0]) : [];
+  console.log('Profiles Row Keys:', keys);
+  console.log('trial_started_at exists:', keys.includes('trial_started_at'));
 
   // 2. Storage Bucket Deep Check
   const { data: bucket, error: bucketErr } = await supabase.storage.getBucket('avatars');
@@ -36,11 +29,12 @@ async function main() {
 
   // 4. Force Reload Trigger
   console.log('Triggering PostgREST Schema Reload...');
-  await supabase.rpc('force_refresh_schema_permissions').catch(() => {});
+  const { error: rpcErr } = await supabase.rpc('force_refresh_schema_permissions');
+  if (rpcErr) console.error('RPC Error:', rpcErr.message);
   
   // 5. Final Handshake
-  const { data: test } = await supabase.from('profiles').select('trial_started_at').limit(1);
-  console.log('Final Handshake (trial_started_at):', test ? 'OK' : 'FAIL');
+  const { data: test, error: testErr } = await supabase.from('profiles').select('trial_started_at').limit(1);
+  console.log('Final Handshake (trial_started_at):', test ? 'OK' : `FAIL: ${testErr?.message}`);
 }
 
 main().catch(console.error);
