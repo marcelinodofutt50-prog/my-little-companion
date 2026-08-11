@@ -64,7 +64,7 @@ export async function runFullAudit() {
     // Handled by build process, but we can check if it's imported correctly.
 
     // 6. RLS Check (Basic check for policies)
-    const { data: policies, error: policyError } = await supabaseAdmin.rpc('get_policies_count'); // Assuming a helper exists or raw query
+    const { data: policies, error: policyError } = await (supabaseAdmin.rpc as any)('check_rls_enabled');
     // Since we don't have get_policies_count, we check via raw query if possible or just assume from table access
     
     results.risks.push("Manual verification needed: Verify RLS policies for 'staff_messages' and 'community_messages' ensure role-based isolation.");
