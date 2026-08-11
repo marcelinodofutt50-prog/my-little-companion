@@ -85,8 +85,8 @@ export const getShadowPassData = createServerFn({ method: "GET" })
       const base = ["Acesso ao Dashboard", "Comunidade Nexus"];
       if (tier === 'bronze') return [...base, "Suporte Padrão"];
       if (tier === 'silver') return [...base, "Suporte Prioritário", "Descontos 5%"];
-      if (tier === 'gold') return [...base, "Suporte Prioritário", "Descontos 10%", "Play Protect Trial (Mensal)"];
-      if (tier === 'diamond') return [...base, "Suporte VIP", "Descontos 15%", "Play Protect Trial (Quinzenal)", "Nexus Chat Staff"];
+      if (tier === 'gold') return [...base, "Suporte Prioritário", "Descontos 10%", "Play Protect Trial (1 Dia)"];
+      if (tier === 'diamond') return [...base, "Suporte VIP", "Descontos 15%", "Play Protect Trial (1 Dia)", "Nexus Chat Staff"];
       if (tier === 'elite') return [...base, "Suporte Direto (WhatsApp)", "Descontos 25%", "Play Protect Ilimitado", "Marketplace Exclusivo"];
       return base;
     };
