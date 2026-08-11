@@ -15,6 +15,10 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { KrakenTab } from "@/components/KrakenTab";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getMyIdentity } from "@/lib/identity.functions";
 
 
 import type { User } from "@supabase/supabase-js";
@@ -27,6 +31,14 @@ export function SiteHeader() {
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
+
+  const identityFn = useServerFn(getMyIdentity);
+  const { data: identity } = useQuery({
+    queryKey: ["my-identity"],
+    queryFn: () => identityFn({}),
+    enabled: !!user,
+    staleTime: 30_000,
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
@@ -93,11 +105,28 @@ export function SiteHeader() {
           <LanguageToggle className="hidden sm:inline-flex" />
 
           {user ? (
-            <Link to="/dashboard">
-              <Button size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
-                {t("nav.panel")}
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/shadow-pass"
+                className="hidden items-center gap-2 sm:flex"
+                title={identity?.nickname || "Shadow Pass"}
+              >
+                <Avatar className="h-7 w-7 border border-primary/40">
+                  <AvatarImage src={identity?.avatar || undefined} className="object-cover" />
+                  <AvatarFallback className="text-[10px] font-mono">
+                    {(identity?.nickname || user.email || "?").slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="max-w-[120px] truncate font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                  {identity?.nickname || user.email?.split("@")[0]}
+                </span>
+              </Link>
+              <Link to="/dashboard">
+                <Button size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
+                  {t("nav.panel")}
+                </Button>
+              </Link>
+            </div>
           ) : (
             <Link to="/auth" className="hidden sm:block">
               <Button
