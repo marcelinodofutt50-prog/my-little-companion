@@ -48,6 +48,7 @@ import {
   Megaphone,
   Building2,
   Settings2,
+  Paperclip,
 } from "lucide-react";
 
 
