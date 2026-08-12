@@ -387,9 +387,11 @@ export const adminSendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({
     threadId: z.string().uuid(),
-    body: z.string().trim().min(1).max(4000),
+    body: z.string().trim().max(4000).optional().default(""),
     replyToId: z.string().uuid().optional().nullable(),
-  }).parse(i))
+    attachmentPath: z.string().min(1).max(512).optional(),
+    attachmentType: z.string().max(100).optional(),
+  }).refine((v) => !!v.body?.trim() || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     // Use the authenticated supabase client (not supabaseAdmin) so the
@@ -397,11 +399,26 @@ export const adminSendMessage = createServerFn({ method: "POST" })
     // preserves is_admin=true. When inserted via service_role, auth.uid()
     // is NULL and the trigger forces is_admin=false, making replies appear
     // as if the client sent them.
-    const payload = {
+    let attachmentUrl: string | null = null;
+    if (data.attachmentPath) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signed, error: sErr } = await supabaseAdmin.storage
+        .from("support-media")
+        .createSignedUrl(data.attachmentPath, 60 * 60 * 24 * 7);
+      if (sErr) {
+        console.error("[support] assinatura do anexo falhou:", sErr.message);
+        throw new Error("Não foi possível anexar o arquivo: " + sErr.message);
+      }
+      attachmentUrl = signed?.signedUrl ?? null;
+    }
+
+    const payload: any = {
       thread_id: data.threadId,
       sender_id: context.userId,
       is_admin: true,
-      body: data.body,
+      body: data.body?.trim() ? data.body.trim() : null,
+      attachment_url: attachmentUrl,
+      attachment_type: data.attachmentType ?? null,
       reply_to_id: data.replyToId ?? null,
     };
     let { data: msg, error } = await context.supabase
@@ -427,7 +444,13 @@ export const adminSendMessage = createServerFn({ method: "POST" })
       error = retry.error;
     }
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[support] resposta do admin falhou:", error.code, error.message, error.details);
+      if (error.code === "42501") {
+        throw new Error("Permissão negada ao gravar a resposta (GRANT/RLS em support_messages).");
+      }
+      throw new Error(`Não foi possível enviar a resposta (${error.code || "erro"}): ${error.message}`);
+    }
     if (!msg) throw new Error("Não foi possível enviar a resposta");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("support_threads").update({ updated_at: new Date().toISOString() }).eq("id", data.threadId);
