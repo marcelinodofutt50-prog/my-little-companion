@@ -196,7 +196,7 @@ export function AdminTutorialsPanel() {
     try {
       // URL assinada gerada no servidor: independe das policies de storage.
       const signed = await createTutorialUploadUrl({
-        data: { filename: file.name, kind: type },
+        data: { filename: file.name, kind: type, size: file.size },
       });
 
       const { error } = await supabase.storage
