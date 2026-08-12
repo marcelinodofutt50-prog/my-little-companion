@@ -17,7 +17,8 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
     try { await supabase.rpc("expire_stale_apk_jobs"); } catch { /* ignore */ }
 
     // Check if the user has an active plan that specifically supports Play Protect
-    const { data: active } = await supabase.rpc("has_active_play_protect", { _user_id: userId });
+    const { hasActivePlayProtect } = await import("@/lib/play-protect-access.server");
+    const active = await hasActivePlayProtect(userId);
     
     const [consumedRes, pendingRes, totalRes, myOldest, globalQueue] = await Promise.all([
       supabase.from("apk_free_trials").select("user_id", { count: "exact", head: true }).eq("user_id", userId),
@@ -83,8 +84,9 @@ export const createApkJob = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const [{ data: active }, consumedRes, pendingRes] = await Promise.all([
-      supabase.rpc("has_active_play_protect", { _user_id: userId }),
+    const { hasActivePlayProtect } = await import("@/lib/play-protect-access.server");
+    const [active, consumedRes, pendingRes] = await Promise.all([
+      hasActivePlayProtect(userId),
       supabase.from("apk_free_trials").select("user_id", { count: "exact", head: true }).eq("user_id", userId),
       supabase.from("apk_jobs").select("id", { count: "exact", head: true }).eq("user_id", userId).in("status", PENDING_STATUSES as any).is("cleared_at", null),
     ]);
