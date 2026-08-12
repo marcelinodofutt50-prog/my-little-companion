@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { adminSaveTutorial, adminDeleteTutorial, listTutorials, updateTutorialOrder } from "@/lib/tutorials.functions";
+import { createTutorialUploadUrl } from "@/lib/tutorial-upload.functions";
 import { useI18n } from "@/lib/i18n";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -193,17 +194,20 @@ export function AdminTutorialsPanel() {
     }, 300);
 
     try {
-      const ext = file.name.split('.').pop();
-      const path = `tutorials/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-      
-      const { error } = await supabase.storage.from('tutorials').upload(path, file, {
-        cacheControl: '3600',
-        upsert: false
+      // URL assinada gerada no servidor: independe das policies de storage.
+      const signed = await createTutorialUploadUrl({
+        data: { filename: file.name, kind: type },
       });
+
+      const { error } = await supabase.storage
+        .from('tutorials')
+        .uploadToSignedUrl(signed.path, signed.token, file, {
+          contentType: file.type || undefined,
+        });
 
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage.from('tutorials').getPublicUrl(path);
+      const publicUrl = signed.publicUrl;
       
       clearInterval(progressInterval);
       setUploadProgress(100);
