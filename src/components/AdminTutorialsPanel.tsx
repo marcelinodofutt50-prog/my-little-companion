@@ -218,6 +218,27 @@ export function AdminTutorialsPanel() {
       clearInterval(progressInterval);
       console.error(`Upload attempt ${retryCount + 1} failed:`, e);
       
+      const raw = String(e?.message ?? e ?? "erro desconhecido");
+      // Erros que NUNCA se resolvem repetindo — avisamos na hora, sem retry.
+      const fatal =
+        /acesso negado|forbidden|403|permission|row-level security|payload too large|exceeded the maximum|invalid|bucket not found|não encontrado/i.test(
+          raw,
+        );
+      const friendly = /bucket not found/i.test(raw)
+        ? "O espaço de armazenamento dos tutoriais não existe neste ambiente. Avise o suporte técnico."
+        : /row-level security|permission|403|forbidden|acesso negado/i.test(raw)
+          ? "Seu usuário não tem permissão para enviar arquivos do Centro de Treinamento."
+          : /payload too large|exceeded the maximum|413/i.test(raw)
+            ? "Arquivo maior que o limite aceito pelo servidor. Comprima o vídeo e tente de novo."
+            : /network|failed to fetch|timeout|aborted/i.test(raw)
+              ? "Conexão interrompida durante o envio. Verifique sua internet e tente novamente."
+              : `Falha no envio: ${raw}`;
+
+      if (fatal) {
+        toast.error(friendly);
+        return;
+      }
+
       const MAX_RETRIES = 3;
       if (retryCount < MAX_RETRIES) {
         // Exponential backoff: 2s, 4s, 8s...
@@ -228,7 +249,7 @@ export function AdminTutorialsPanel() {
         return handleFileUpload(file, type, retryCount + 1);
       }
       
-      toast.error("Erro crítico no upload: " + e.message);
+      toast.error(friendly);
     } finally {
       if (retryCount === 0 || !uploading) {
         setTimeout(() => {
