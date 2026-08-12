@@ -4,19 +4,55 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const STAFF_ROLES = ["admin", "moderator", "support"];
 
+class StaffAccessError extends Error {}
+class StaffInfraError extends Error {}
+
+/**
+ * Resolve o papel do membro da equipe de forma resiliente.
+ * Antes, qualquer falha de infraestrutura (tabela sem GRANT, cache de schema)
+ * era exibida como "Acesso Restrito", mesmo para o dono da conta admin.
+ * Agora separamos claramente: falta de papel (403) x falha técnica (500).
+ */
 async function assertStaff(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: roles } = await supabaseAdmin
+
+  const { data: roles, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
 
-  const list = (roles || []).map((r: any) => r.role as string);
+  if (error) {
+    console.error("[StaffNexus] Falha ao ler user_roles:", error.code, error.message);
+    throw new StaffInfraError(
+      `Falha técnica ao verificar seu cargo (${error.code || "erro"}): ${error.message}`,
+    );
+  }
+
+  const list = (roles || []).map((r: any) => String(r.role));
   const role = STAFF_ROLES.find((r) => list.includes(r));
   if (!role) {
-    throw new Error("403: Acesso negado. O Staff Nexus é exclusivo para a equipe interna.");
+    console.warn("[StaffNexus] Acesso negado. Papéis encontrados:", list);
+    throw new StaffAccessError(
+      "Acesso negado: sua conta não possui cargo de admin, moderador ou suporte.",
+    );
   }
   return { supabaseAdmin, role };
+}
+
+/** Garante que a tabela do canal interno responde; erro claro em vez de "acesso negado". */
+function wrapChannelError(error: { code?: string; message: string }, action: string): never {
+  console.error(`[StaffNexus] ${action} falhou:`, error.code, error.message);
+  if (error.code === "42501") {
+    throw new StaffInfraError(
+      "O canal interno está sem permissão de acesso no banco (GRANT ausente em staff_messages).",
+    );
+  }
+  if (error.code === "PGRST205" || error.code === "PGRST106") {
+    throw new StaffInfraError(
+      "A tabela do canal interno não está publicada na API. Recarregue em instantes.",
+    );
+  }
+  throw new StaffInfraError(`${action} falhou: ${error.message}`);
 }
 
 export const getStaffMessages = createServerFn({ method: "GET" })
@@ -35,7 +71,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (error) throw new Error("Falha ao carregar mensagens: " + error.message);
+    if (error) wrapChannelError(error as any, "Carregar mensagens");
 
     const list = (rows || []).slice().reverse();
     const ids = Array.from(new Set(list.map((m: any) => m.sender_id).filter(Boolean)));
@@ -107,7 +143,7 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
       .select("id, content, created_at, sender_id")
       .single();
 
-    if (error) throw new Error("Falha ao enviar: " + error.message);
+    if (error) wrapChannelError(error as any, "Enviar mensagem");
     return data;
   });
 
@@ -123,6 +159,6 @@ export const deleteStaffMessage = createServerFn({ method: "POST" })
     if (role !== "admin") q = q.eq("sender_id", userId);
 
     const { error } = await q;
-    if (error) throw new Error(error.message);
+    if (error) wrapChannelError(error as any, "Apagar mensagem");
     return { ok: true };
   });
