@@ -735,10 +735,17 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
     // Verificação de Cota para Staff (Moderadores) - Admins ignoram
     const { isAdmin } = await (await import("@/lib/roles.server")).resolveRoles(context);
     if (!isAdmin) {
-      const { data: quotaOk } = await context.supabase.rpc('check_license_quota' as any, { _staff_id: context.userId });
-      if (!quotaOk) {
-          throw new Error("Você atingiu seu limite diário ou mensal de geração de licenças manuais. Solicite liberação a um administrador.");
+      // A RPC/ tabelas de cota podem não existir em todos os ambientes.
+      // Nesse caso não podemos bloquear a emissão (era o motivo do erro
+      // "limite diário" aparecendo mesmo com HOJE 0/5).
+      const { data: quotaOk, error: quotaErr } = await context.supabase.rpc(
+        'check_license_quota' as any,
+        { _staff_id: context.userId },
+      );
+      if (!quotaErr && quotaOk === false) {
+        throw new Error("Você atingiu seu limite diário ou mensal de geração de licenças manuais. Solicite liberação a um administrador.");
       }
+      if (quotaErr) console.warn("[quota] check_license_quota indisponível:", quotaErr.message);
     }
 
 
@@ -782,12 +789,16 @@ export const adminCreateLicenseForClient = createServerFn({ method: "POST" })
     if (licErr) throw new Error(licErr.message);
 
     // Registrar no log de cotas
-    await (context.supabase.from('license_generation_logs' as any) as any).insert({
-      staff_id: context.userId,
-      customer_email: data.userEmail.toLowerCase(),
-      plan_slug: data.planSlug,
-      license_id: lic.id
-    });
+    try {
+      await (context.supabase.from('license_generation_logs' as any) as any).insert({
+        staff_id: context.userId,
+        customer_email: data.userEmail.toLowerCase(),
+        plan_slug: data.planSlug,
+        license_id: lic.id
+      });
+    } catch (logErr) {
+      console.warn("[quota] falha ao registrar license_generation_logs", logErr);
+    }
 
 
 
