@@ -3,11 +3,18 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertStaff } from "@/lib/admin-helpers.server";
 
+const MAX_VIDEO = 500 * 1024 * 1024; // 500MB
+const MAX_IMAGE = 10 * 1024 * 1024; // 10MB
+
+const VIDEO_EXT = ["mp4", "webm", "mov", "m4v"];
+const IMAGE_EXT = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
+
 /**
  * Upload de mídia do Centro de Treinamento via URL assinada.
  * O upload direto do browser dependia de policies em storage.objects que
  * variam entre ambientes ("new row violates row-level security policy").
- * Aqui o servidor (service role) gera o token e o browser envia o arquivo.
+ * Aqui o servidor (service role) valida, registra a causa de qualquer falha
+ * e gera o token; o browser apenas envia o arquivo.
  */
 export const createTutorialUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -16,24 +23,65 @@ export const createTutorialUploadUrl = createServerFn({ method: "POST" })
       .object({
         filename: z.string().trim().min(1).max(200),
         kind: z.enum(["video", "image"]),
+        size: z.number().int().min(1).optional(),
       })
       .parse(i),
   )
   .handler(async ({ data, context }) => {
-    await assertStaff(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try {
+      await assertStaff(context);
+    } catch {
+      console.warn("[tutorial-upload] acesso negado para", context.userId);
+      throw new Error(
+        "Acesso negado: apenas admin ou suporte podem enviar mídia do Centro de Treinamento.",
+      );
+    }
 
-    const ext = (data.filename.split(".").pop() || "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8);
+    const rawExt = (data.filename.split(".").pop() || "").toLowerCase();
+    const ext = rawExt.replace(/[^a-z0-9]/g, "").slice(0, 8);
+    const allowed = data.kind === "video" ? VIDEO_EXT : IMAGE_EXT;
+    if (!ext || !allowed.includes(ext)) {
+      throw new Error(
+        data.kind === "video"
+          ? "Formato de vídeo inválido. Use MP4, WEBM ou MOV."
+          : "Formato de imagem inválido. Use JPG, PNG, WEBP, GIF ou SVG.",
+      );
+    }
+
+    const limit = data.kind === "video" ? MAX_VIDEO : MAX_IMAGE;
+    if (data.size && data.size > limit) {
+      throw new Error(
+        `Arquivo maior que o limite (${Math.round(limit / 1024 / 1024)}MB). Comprima e tente novamente.`,
+      );
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const path = `tutorials/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const { data: signed, error } = await supabaseAdmin.storage
       .from("tutorials")
       .createSignedUploadUrl(path);
-    if (error || !signed) throw new Error(error?.message || "Falha ao preparar upload");
+
+    if (error || !signed) {
+      // Causa registrada no servidor para diagnóstico; usuário recebe texto claro.
+      console.error("[tutorial-upload] createSignedUploadUrl falhou:", {
+        userId: context.userId,
+        kind: data.kind,
+        path,
+        message: error?.message,
+      });
+      if (/bucket not found/i.test(error?.message ?? "")) {
+        throw new Error(
+          "O espaço de armazenamento dos tutoriais não existe neste ambiente. Avise o suporte técnico.",
+        );
+      }
+      throw new Error(`Falha ao preparar o envio: ${error?.message ?? "sem resposta do storage"}`);
+    }
 
     const {
       data: { publicUrl },
     } = supabaseAdmin.storage.from("tutorials").getPublicUrl(path);
 
+    console.log("[tutorial-upload] token emitido", { userId: context.userId, path });
     return { path, token: signed.token, publicUrl };
   });

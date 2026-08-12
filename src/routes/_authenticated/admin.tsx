@@ -48,6 +48,7 @@ import {
   Megaphone,
   Building2,
   Settings2,
+  Paperclip,
 } from "lucide-react";
 
 
@@ -2900,6 +2901,7 @@ function AdminChatPanel() {
     activeIdRef.current = activeId;
   }, [activeId]);
 
+  const adminFileRef = useRef<HTMLInputElement>(null);
   const threadsFn = useServerFn(adminListThreads);
   const msgsFn = useServerFn(adminListThreadMessages);
   const sendFn = useServerFn(adminSendMessage);
@@ -3074,6 +3076,45 @@ function AdminChatPanel() {
     node.scrollIntoView({ behavior: "smooth", block: "center" });
     setHighlightId(id);
     setTimeout(() => setHighlightId((cur) => (cur === id ? null : cur)), 1500);
+  }
+
+  async function sendAttachment(file: File) {
+    if (!activeId) return;
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("Arquivo muito grande (máx 20MB).");
+      return;
+    }
+    setSending(true);
+    try {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(-80);
+      const path = `staff/${activeId}/${Date.now()}-${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("support-media")
+        .upload(path, file, { contentType: file.type || undefined, upsert: false });
+      if (upErr) {
+        throw new Error(
+          /row-level security|not authorized/i.test(upErr.message)
+            ? "Sem permissão para enviar anexos (verifique seu cargo de equipe)."
+            : `Falha no upload do anexo: ${upErr.message}`,
+        );
+      }
+      const res: any = await sendFn({
+        data: {
+          threadId: activeId,
+          body: body.trim() || undefined,
+          attachmentPath: path,
+          attachmentType: file.type || "application/octet-stream",
+          replyToId: replyTo?.id ?? null,
+        },
+      });
+      setBody("");
+      setReplyTo(null);
+      if (res?.id)
+        setMsgs((prev) => (prev.some((x) => x.id === res.id) ? prev : [...prev, res as Msg]));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao enviar anexo");
+    }
+    setSending(false);
   }
 
   async function send() {
@@ -3739,6 +3780,29 @@ function AdminChatPanel() {
                     send();
                   }}
                 >
+                  <input
+                    type="file"
+                    ref={adminFileRef}
+                    hidden
+                    accept="image/*,application/pdf,video/mp4"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = "";
+                      if (f) void sendAttachment(f);
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={sending}
+                    aria-label="Anexar arquivo"
+                    title="Anexar imagem, PDF ou vídeo (máx 20MB)"
+                    className="min-h-11 w-11 shrink-0"
+                    onClick={() => adminFileRef.current?.click()}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
                   <textarea
                     ref={inputRef}
                     value={body}
