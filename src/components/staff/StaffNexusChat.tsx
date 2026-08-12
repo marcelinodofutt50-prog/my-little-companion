@@ -61,13 +61,28 @@ export function StaffNexusChat({ className }: { className?: string }) {
   }, [lastId, channel]);
 
   if (error) {
+    const raw = (error as any)?.message ?? "Erro desconhecido";
+    const denied = /acesso negado/i.test(raw);
     return (
       <Card className="border-destructive/20 bg-destructive/5 p-8 text-center">
         <AlertCircle className="mx-auto mb-4 h-10 w-10 text-destructive" />
-        <h2 className="mb-2 text-lg font-bold">Acesso Restrito</h2>
+        <h2 className="mb-2 text-lg font-bold">
+          {denied ? "Acesso Restrito" : "Falha ao abrir o canal"}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Esta área é exclusiva para a equipe Shadow (Admin / Suporte / Moderação).
+          {denied
+            ? "Esta área é exclusiva para a equipe Shadow (Admin / Suporte / Moderação)."
+            : "O canal existe, mas o servidor recusou a leitura. Detalhe técnico abaixo."}
         </p>
+        <p className="mt-3 break-words font-mono text-[10px] text-destructive/80">{raw}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4 h-8 font-mono text-[10px] uppercase"
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["staff-messages"] })}
+        >
+          Tentar novamente
+        </Button>
       </Card>
     );
   }
