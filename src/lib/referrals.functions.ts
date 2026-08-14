@@ -121,7 +121,11 @@ export const updateReferralPref = createServerFn({ method: "POST" })
 
 export const activateTrialReward = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((input: any) => ({
+    deviceId: typeof input?.deviceId === "string" ? input.deviceId.slice(0, 120) : undefined,
+    attrs: typeof input?.attrs === "string" ? input.attrs.slice(0, 600) : undefined,
+  }))
+  .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { internalGenerateTrial } = await import("./license.server");
@@ -148,9 +152,19 @@ export const activateTrialReward = createServerFn({ method: "POST" })
       throw new Error(guard.reason ?? "Não foi possível validar este benefício.");
     }
 
+    const { assessAbuse } = await import("./fraud-engine.server");
+    const verdict = await assessAbuse({ userId, action: "trial", device: data ?? null });
+    if (!verdict.allowed) {
+      throw new Error(verdict.message ?? "Não foi possível validar este benefício.");
+    }
+
     // 2. Gera o Trial de 3 dias
     try {
-      const trial = await internalGenerateTrial(supabaseAdmin, userId, 3, guard.ipHash);
+      const trial = await internalGenerateTrial(supabaseAdmin, userId, 3, guard.ipHash ?? verdict.ipHash, {
+        deviceHash: verdict.deviceHash,
+        attrsHash: verdict.attrsHash,
+        ipPrefixHash: verdict.ipPrefixHash,
+      });
       
       // Marca como resgatado
       await supabaseAdmin
