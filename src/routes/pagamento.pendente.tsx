@@ -5,6 +5,7 @@ import { Clock, RefreshCw, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { getOrderState } from "@/lib/checkout.functions";
+import { reconcileMyRecentOrders } from "@/lib/checkout.functions";
 
 export const Route = createFileRoute("/pagamento/pendente")({
   validateSearch: (s: Record<string, unknown>) => ({ order: String(s.order ?? "") }),
@@ -30,6 +31,7 @@ function PendingPage() {
   const [tries, setTries] = useState(0);
   const [exhausted, setExhausted] = useState(false);
   const stateFn = useServerFn(getOrderState);
+  const reconcileFn = useServerFn(reconcileMyRecentOrders);
   const timerRef = useRef<number | null>(null);
   const stopped = useRef(false);
 
@@ -49,6 +51,11 @@ function PendingPage() {
           return;
         }
       } catch { /* transient */ }
+      // Fallback do cron: a cada ~10s forçamos a reconciliação do pedido,
+      // garantindo a entrega mesmo sem agendador de alta frequência.
+      if (n % 4 === 0) {
+        try { await reconcileFn({ data: {} } as any); } catch { /* usuário deslogado ou transitório */ }
+      }
       if (n < MAX_TRIES) timerRef.current = window.setTimeout(tick, 2500);
       else setExhausted(true);
     };
