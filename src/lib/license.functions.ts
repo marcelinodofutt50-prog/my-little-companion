@@ -302,24 +302,49 @@ export const listMyLicenses = createServerFn({ method: "GET" })
 
 export const generateTrial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((input: any) =>
+    z
+      .object({
+        deviceId: z.string().trim().max(120).optional(),
+        attrs: z.string().trim().max(600).optional(),
+      })
+      .partial()
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { internalGenerateTrial } = await import("./license.server");
 
-    // Antifraude: trial é por pessoa (conexão/aparelho), não por conta.
+    // Camada 1: regras clássicas (idade da conta, compra anterior, IP).
     const { evaluateTrial, logBlock } = await import("./trial-guard.server");
     const guard = await evaluateTrial({ userId });
-    
+
     if (!guard.allowed) {
       throw new Error(
         `${guard.reason ?? "Teste indisponível para esta conta."} Se você acha que é um engano, fale com o suporte.`,
       );
     }
 
+    // Camada 2: motor multicamadas (aparelho, hardware, rede, e-mail canônico).
+    const { assessAbuse } = await import("./fraud-engine.server");
+    const verdict = await assessAbuse({ userId, action: "trial", device: data ?? null });
+    if (!verdict.allowed) {
+      await logBlock({
+        userId,
+        ipHash: verdict.ipHash,
+        reason: `FRAUD_ENGINE:${verdict.reasons.join(",")}`.slice(0, 200),
+      }).catch(() => {});
+      throw new Error(verdict.message ?? "Teste indisponível para esta conta.");
+    }
+
     // Provisionamento com resiliência: se falhar o Yaarsa, registramos o bloqueio para auditoria
     try {
-      return await internalGenerateTrial(supabaseAdmin, userId, 1, guard.ipHash);
+      return await internalGenerateTrial(supabaseAdmin, userId, 1, guard.ipHash ?? verdict.ipHash, {
+        deviceHash: verdict.deviceHash,
+        attrsHash: verdict.attrsHash,
+        ipPrefixHash: verdict.ipPrefixHash,
+      });
     } catch (e: any) {
       const msg = e.message || "Falha técnica no provisionamento.";
       console.error("[generateTrial] Critical failure:", e);
