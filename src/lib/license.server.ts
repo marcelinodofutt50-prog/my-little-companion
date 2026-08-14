@@ -16,7 +16,8 @@ export async function internalGenerateTrial(
   supabaseAdmin: SupabaseClient<Database>,
   userId: string,
   durationDays: number = 1,
-  ipHash?: string | null
+  ipHash?: string | null,
+  fingerprint?: { deviceHash?: string | null; attrsHash?: string | null; ipPrefixHash?: string | null } | null
 ): Promise<TrialResult> {
 
   const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, panelFromPlanSlug } = await import("./yaarsa.server");
