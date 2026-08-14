@@ -51,7 +51,7 @@ const LEGIT_CONTEXT: RegExp[] = [
  * o que evita cruzar palavras soltas espalhadas na frase.
  */
 const ACTION_WORDS =
-  "(instal\\w*|coloc\\w*|bot\\w*|pass\\w*|ativ\\w*|aplic\\w*|configur\\w*|vend\\w*|revend\\w*)";
+  "(instal\\w*|coloc\\w*|coloq\\w*|bot\\w*|pass\\w*|ativ\\w*|aplic\\w*|configur\\w*|vend\\w*|revend\\w*)";
 const THIRD_PARTY =
   "(penas?|bicos?|(meu?s?|minha?s?|dos?\\s+meus?)\\s+clientes?|clientes?\\s+(meu?s?|dele|dela|do\\s+meu)|freguesi\\w+|comprador\\w*)";
 
