@@ -222,7 +222,9 @@ export function SupportChat({ threadId, userId, isAdmin = false, onNewMessage }:
 
   return (
     <div className="relative flex flex-col h-full bg-background/40 backdrop-blur-sm border border-border/40 rounded-lg overflow-hidden">
+      <SupportSummaryPanel threadId={threadId} />
       <div
+
         ref={listRef}
         onScroll={(e) => {
           const el = e.currentTarget;
