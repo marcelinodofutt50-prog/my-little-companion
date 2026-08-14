@@ -84,8 +84,11 @@ export async function enforceTrialConduct(input: {
   try {
     await supabaseAdmin.from("audit_logs").insert({
       user_id: input.userId,
-      action: "trial_revoked_misconduct",
-      details: {
+      event: "trial_revoked_misconduct",
+      decision: revokedLicenseIds.length > 0 ? "revoked" : "flagged",
+      reason: detection.matched.join(","),
+      system: "support-conduct",
+      metadata: {
         thread_id: input.threadId,
         matched: detection.matched,
         message_excerpt: input.message.slice(0, 240),

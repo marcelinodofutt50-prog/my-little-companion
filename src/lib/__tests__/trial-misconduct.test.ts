@@ -119,7 +119,7 @@ describe("enforceTrialConduct", () => {
     });
     expect(out.revokedLicenseIds).toEqual(["trial-1"]);
     expect(state.updates[0]).toMatchObject({ id: "trial-1", revoked: true, status: "revoked" });
-    expect(state.audits[0]).toMatchObject({ action: "trial_revoked_misconduct" });
+    expect(state.audits[0]).toMatchObject({ event: "trial_revoked_misconduct", decision: "revoked" });
     expect(state.systemMessages[0]).toContain("conduta inadequada");
   });
 });
