@@ -462,7 +462,10 @@ export async function assessAbuse(input: {
       allowed,
       score,
       reasons,
-      message: allowed ? undefined : DENY_MESSAGE,
+      message: allowed
+        ? undefined
+        : buildDenyMessage(input.action, reasons, input.userId, score),
+
       ...base,
     };
     await logAssessment(input.userId, input.action, verdict);
