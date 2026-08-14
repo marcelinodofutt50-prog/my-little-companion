@@ -8,14 +8,15 @@
     "dev": "vite dev",
     "validate-assets": "bun run scripts/validate-assets.ts",
     "verify-production-identity": "bun run scripts/verify-production-identity.ts",
-    "build": "bun run validate-assets && bun run verify-production-identity && bun run scripts/auto-heal-infra.ts && vitest run src/tests/forensic-audit-v25.test.ts src/tests/tutorial-progress-sync.test.ts && vite build",
+    "build": "bun run validate-assets && bun run verify-production-identity && bun run scripts/auto-heal-infra.ts && vitest run src/tests/forensic-audit-v25.test.ts src/tests/tutorial-progress-sync.test.ts && bun run security-gate && vite build",
     "build:dev": "bun run validate-assets && vite build --mode development",
-    "build:ci": "bun run validate-assets && vitest run && vite build",
+    "build:ci": "bun run validate-assets && bun run security-gate && vitest run && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "security-gate": "bun run scripts/security-gate.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.31",
