@@ -1,59 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-const STAFF_ROLES = ["admin", "moderator", "support"];
-
-class StaffAccessError extends Error {}
-class StaffInfraError extends Error {}
-
-/**
- * Resolve o papel do membro da equipe de forma resiliente.
- * Antes, qualquer falha de infraestrutura (tabela sem GRANT, cache de schema)
- * era exibida como "Acesso Restrito", mesmo para o dono da conta admin.
- * Agora separamos claramente: falta de papel (403) x falha técnica (500).
- */
-async function assertStaff(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-  const { data: roles, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
-
-  if (error) {
-    console.error("[StaffNexus] Falha ao ler user_roles:", error.code, error.message);
-    throw new StaffInfraError(
-      `Falha técnica ao verificar seu cargo (${error.code || "erro"}): ${error.message}`,
-    );
-  }
-
-  const list = (roles || []).map((r: any) => String(r.role));
-  const role = STAFF_ROLES.find((r) => list.includes(r));
-  if (!role) {
-    console.warn("[StaffNexus] Acesso negado. Papéis encontrados:", list);
-    throw new StaffAccessError(
-      "Acesso negado: sua conta não possui cargo de admin, moderador ou suporte.",
-    );
-  }
-  return { supabaseAdmin, role };
-}
-
-/** Garante que a tabela do canal interno responde; erro claro em vez de "acesso negado". */
-function wrapChannelError(error: { code?: string; message: string }, action: string): never {
-  console.error(`[StaffNexus] ${action} falhou:`, error.code, error.message);
-  if (error.code === "42501") {
-    throw new StaffInfraError(
-      "O canal interno está sem permissão de acesso no banco (GRANT ausente em staff_messages).",
-    );
-  }
-  if (error.code === "PGRST205" || error.code === "PGRST106") {
-    throw new StaffInfraError(
-      "A tabela do canal interno não está publicada na API. Recarregue em instantes.",
-    );
-  }
-  throw new StaffInfraError(`${action} falhou: ${error.message}`);
-}
+import { assertStaffChannelAccess, throwStaffChannelError } from "./staff-chat.server";
 
 export const getStaffMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -62,7 +10,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
   )
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
-    const { supabaseAdmin, role } = await assertStaff(userId);
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
 
     const { data: rows, error } = await supabaseAdmin
       .from("staff_messages")
@@ -71,7 +19,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (error) wrapChannelError(error as any, "Carregar mensagens");
+    if (error) throwStaffChannelError(error as any, "Carregar mensagens");
 
     const list = (rows || []).slice().reverse();
     const ids = Array.from(new Set(list.map((m: any) => m.sender_id).filter(Boolean)));
@@ -130,7 +78,7 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
-    const { supabaseAdmin, role } = await assertStaff(userId);
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
 
     const { data, error } = await supabaseAdmin
       .from("staff_messages")
@@ -143,7 +91,7 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
       .select("id, content, created_at, sender_id")
       .single();
 
-    if (error) wrapChannelError(error as any, "Enviar mensagem");
+    if (error) throwStaffChannelError(error as any, "Enviar mensagem");
     return data;
   });
 
@@ -152,13 +100,13 @@ export const deleteStaffMessage = createServerFn({ method: "POST" })
   .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const { supabaseAdmin, role } = await assertStaff(userId);
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
 
     let q = supabaseAdmin.from("staff_messages").delete().eq("id", data.id);
     // Admin pode remover qualquer mensagem; demais só as próprias.
     if (role !== "admin") q = q.eq("sender_id", userId);
 
     const { error } = await q;
-    if (error) wrapChannelError(error as any, "Apagar mensagem");
+    if (error) throwStaffChannelError(error as any, "Apagar mensagem");
     return { ok: true };
   });

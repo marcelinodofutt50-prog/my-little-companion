@@ -125,6 +125,7 @@ export const activateTrialReward = createServerFn({ method: "POST" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { internalGenerateTrial } = await import("./license.server");
+    const { evaluateTrial } = await import("./trial-guard.server");
 
     // 1. Verifica se já tem uma licença ou trial ativo
     const { data: profile } = await supabaseAdmin
@@ -142,9 +143,14 @@ export const activateTrialReward = createServerFn({ method: "POST" })
       throw new Error("Você já resgatou seu benefício de boas-vindas.");
     }
 
+    const guard = await evaluateTrial({ userId });
+    if (!guard.allowed) {
+      throw new Error(guard.reason ?? "Não foi possível validar este benefício.");
+    }
+
     // 2. Gera o Trial de 3 dias
     try {
-      const trial = await internalGenerateTrial(supabaseAdmin, userId, 3);
+      const trial = await internalGenerateTrial(supabaseAdmin, userId, 3, guard.ipHash);
       
       // Marca como resgatado
       await supabaseAdmin

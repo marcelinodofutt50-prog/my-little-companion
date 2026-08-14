@@ -1,12 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-async function assertStaff(ctx: { supabase: any; userId: string }) {
-  const { data: admin } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  const { data: mod } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "moderator" });
-  if (!admin && !mod) throw new Error("Forbidden");
-}
+import { assertStaff } from "@/lib/admin-helpers.server";
 
 export async function trackSchemaFailure(
   error: any, 
@@ -117,7 +112,10 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
     const emptyToNull = z.preprocess(
       (v) => (typeof v === "string" && v.trim() === "" ? null : v),
-      z.string().url().nullish()
+      z.string().trim().max(1000).refine(
+        (value) => /^https?:\/\//i.test(value) || /^[a-zA-Z0-9_./-]+$/.test(value),
+        "Informe uma URL válida ou um arquivo do Centro de Treinamento.",
+      ).nullish(),
     );
     return z.object({
       id: z.string().uuid().optional(),
