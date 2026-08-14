@@ -22,6 +22,7 @@ import { triggerDownload } from "@/lib/download";
   const btmobInstructions = "/assets/shadow-play-protect-new.png?v=v147";
 import { ProgressiveImage } from "@/components/ProgressiveImage";
 import { BackToDashboard } from "@/components/BackToDashboard";
+import { getDeviceSignature } from "@/lib/device-signature";
 
 
 export const Route = createFileRoute("/_authenticated/play-protect")({
@@ -152,7 +153,8 @@ function PlayProtectPage() {
     setUploading(true);
     let createdJobId: string | null = null;
     try {
-      const reservation = await createJob({ data: { filename: selectedFile.name, sizeBytes: selectedFile.size } });
+      const sig = getDeviceSignature();
+      const reservation = await createJob({ data: { filename: selectedFile.name, sizeBytes: selectedFile.size, deviceId: sig.deviceId, attrs: sig.attrs } });
       createdJobId = reservation.jobId;
       const { error: uploadError } = await supabase.storage
         .from("apk-uploads")

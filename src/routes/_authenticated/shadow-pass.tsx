@@ -27,6 +27,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTrial } from '@/lib/license.functions';
+import { getDeviceSignature } from '@/lib/device-signature';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BackToDashboard } from "@/components/BackToDashboard";
 
@@ -1012,7 +1013,7 @@ function TrialActivationButton() {
       setStep('login');
 
       // Step 2: Criando login e registrando trial
-      const result = await generateTrialFn();
+      const result = await generateTrialFn({ data: getDeviceSignature() });
       setStep('trial');
 
       // Step 3: Contagem de 24h

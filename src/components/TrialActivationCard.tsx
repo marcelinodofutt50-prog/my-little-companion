@@ -4,6 +4,7 @@ import { Gift, Loader2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { generateTrial } from "@/lib/license.functions";
+import { getDeviceSignature } from "@/lib/device-signature";
 
 type TrialResult = {
   username: string;
@@ -27,7 +28,7 @@ export function TrialActivationCard({ onDone }: { onDone?: () => void }) {
     setLoading(true);
     setError(null);
     try {
-      const res = (await run()) as TrialResult;
+      const res = (await run({ data: getDeviceSignature() })) as TrialResult;
       setCreds(res);
       toast.success("Teste grátis ativado! Você tem 24 horas.");
       onDone?.();
