@@ -77,8 +77,8 @@ function protocolFor(threadId: string, createdAt: string): string {
 }
 
 export const summarizeThread = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => z.object({ threadId: z.string().uuid() }).parse(i))
   .middleware([requireSupabaseAuth])
+  .validator((i: any) => z.object({ threadId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }): Promise<ThreadSummary> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -142,10 +142,10 @@ export const summarizeThread = createServerFn({ method: "POST" })
 
 /** Encaminha o atendimento para a equipe humana com prioridade alta. */
 export const escalateThread = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) =>
+  .middleware([requireSupabaseAuth])
+  .validator((i: any) =>
     z.object({ threadId: z.string().uuid(), reason: z.string().trim().max(500).optional() }).parse(i),
   )
-  .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
