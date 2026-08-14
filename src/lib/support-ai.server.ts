@@ -66,7 +66,13 @@ async function resolveSystemSender(): Promise<string | null> {
 
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
-  const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar", "btmob", "pena", "bico", "cliente", "revend"];
+  const triggers = [
+    "erro", "error", "login", "logar", "senha", "entrar", "acessar", "acesso", "expirou", "venceu",
+    "vencid", "inválid", "invalid", "bug", "conectar", "conexão", "btmob", "yaarsa", "painel",
+    "licen", "teste", "trial", "bloque", "negad", "protocolo", "play protect", "apk",
+    "pena", "bico", "cliente", "revend", "pix", "pagamento", "paguei", "não funciona", "nao funciona",
+  ];
+
   const msgLower = userMessage.toLowerCase();
   const hasTrigger = triggers.some(t => msgLower.includes(t));
   
