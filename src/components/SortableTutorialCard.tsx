@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Plus, Trash2, Video, Image as ImageIcon, Link as LinkIcon, Edit, GripVertical } from "lucide-react";
+import { Trash2, Video, Link as LinkIcon, Edit, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -12,6 +12,7 @@ interface SortableTutorialCardProps {
 }
 
 export function SortableTutorialCard({ t, setCurrent, setIsEditing, handleDelete }: SortableTutorialCardProps) {
+  const thumbnailUrl = t.preview_url || t.image_url;
   const {
     attributes,
     listeners,
@@ -41,8 +42,8 @@ export function SortableTutorialCard({ t, setCurrent, setIsEditing, handleDelete
         </div>
 
         <div className="relative aspect-video w-full bg-muted overflow-hidden">
-          {t.image_url ? (
-            <img src={t.image_url} alt={t.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          {thumbnailUrl ? (
+            <img src={thumbnailUrl} alt={t.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Video className="h-10 w-10 text-muted-foreground/30" />
