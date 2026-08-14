@@ -38,6 +38,8 @@ import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
 import { LicensePauseControls } from '@/components/LicensePauseControls'
 import { planLabel } from '@/lib/license-display'
 import { reconcileMyRecentOrders } from '@/lib/checkout.functions'
+import { registerMyDevice } from '@/lib/device.functions'
+import { getDeviceSignature } from '@/lib/device-signature'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
@@ -56,6 +58,13 @@ export const Route = createFileRoute('/_authenticated/dashboard')({
 function DashboardPage() {
   const { trial: trialParam } = Route.useSearch() as any;
   const { t } = useI18n()
+
+  // Antifraude passiva: registra a assinatura do aparelho assim que o cliente
+  // entra no painel, muito antes de tentar resgatar qualquer benefício.
+  const registerDevice = useServerFn(registerMyDevice)
+  useEffect(() => {
+    void registerDevice({ data: getDeviceSignature() }).catch(() => {})
+  }, [registerDevice])
 
   const { resolved } = useTheme()
   const [tutorialOpen, setTutorialOpen] = useState(false)

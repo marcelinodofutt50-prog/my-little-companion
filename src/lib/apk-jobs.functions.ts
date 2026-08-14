@@ -79,6 +79,8 @@ export const createApkJob = createServerFn({ method: "POST" })
     return z.object({
       filename: z.string().trim().min(1).max(200).regex(/\.apk$/i, "Arquivo precisa ter extensão .apk"),
       sizeBytes: z.number().int().positive().max(MAX_APK_BYTES),
+      deviceId: z.string().trim().max(120).optional(),
+      attrs: z.string().trim().max(600).optional(),
     }).parse(input);
   })
   .handler(async ({ data, context }) => {
@@ -107,13 +109,36 @@ export const createApkJob = createServerFn({ method: "POST" })
     const cleanName = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
     const sourcePath = `${userId}/${jobId}/${cleanName}`;
 
-    // Reserva atômica do teste grátis (PK por usuário): duas abas em paralelo
-    // não conseguem consumir dois testes.
+    // Reserva atômica do teste grátis (PK por usuário + índice único por
+    // aparelho): duas abas, ou duas contas no mesmo celular, não conseguem
+    // consumir dois APKs grátis. Quem já paga passa direto, sem antifraude.
     if (isFreeTrial) {
+      const { assessAbuse } = await import("@/lib/fraud-engine.server");
+      const verdict = await assessAbuse({
+        userId,
+        action: "play_protect",
+        device: { deviceId: data.deviceId, attrs: data.attrs },
+      });
+      if (!verdict.allowed) {
+        throw new Error(
+          `${verdict.message ?? "APK grátis indisponível para esta conta."} Assinantes do Play Protect não passam por esta verificação.`,
+        );
+      }
+
       const { error: trialErr } = await supabaseAdmin
         .from("apk_free_trials")
-        .insert({ user_id: userId, job_id: jobId } as any);
+        .insert({
+          user_id: userId,
+          job_id: jobId,
+          device_hash: verdict.deviceHash,
+          attrs_hash: verdict.attrsHash,
+          ip_hash: verdict.ipHash,
+          ip_prefix_hash: verdict.ipPrefixHash,
+        } as any);
       if (trialErr) {
+        if (trialErr.code === "23505" && /device/i.test(trialErr.message ?? "")) {
+          throw new Error("Este aparelho já usou o APK grátis. O benefício é 1 por pessoa — ative o plano Play Protect para continuar.");
+        }
         throw new Error("Teste grátis já utilizado (1 por conta). Ative o plano Play Protect (R$ 450/mês) para continuar.");
       }
     }

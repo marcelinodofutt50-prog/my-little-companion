@@ -180,16 +180,28 @@ export type Database = {
       }
       apk_free_trials: {
         Row: {
+          attrs_hash: string | null
+          device_hash: string | null
+          ip_hash: string | null
+          ip_prefix_hash: string | null
           job_id: string | null
           used_at: string
           user_id: string
         }
         Insert: {
+          attrs_hash?: string | null
+          device_hash?: string | null
+          ip_hash?: string | null
+          ip_prefix_hash?: string | null
           job_id?: string | null
           used_at?: string
           user_id: string
         }
         Update: {
+          attrs_hash?: string | null
+          device_hash?: string | null
+          ip_hash?: string | null
+          ip_prefix_hash?: string | null
           job_id?: string | null
           used_at?: string
           user_id?: string
@@ -558,6 +570,51 @@ export type Database = {
           },
         ]
       }
+      device_identities: {
+        Row: {
+          attrs_hash: string | null
+          created_at: string
+          device_hash: string
+          first_seen_at: string
+          id: string
+          ip_hash: string | null
+          ip_prefix_hash: string | null
+          last_seen_at: string
+          seen_count: number
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          attrs_hash?: string | null
+          created_at?: string
+          device_hash: string
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string | null
+          ip_prefix_hash?: string | null
+          last_seen_at?: string
+          seen_count?: number
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          attrs_hash?: string | null
+          created_at?: string
+          device_hash?: string
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string | null
+          ip_prefix_hash?: string | null
+          last_seen_at?: string
+          seen_count?: number
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_confirm_retries: {
         Row: {
           attempts: number
@@ -587,6 +644,48 @@ export type Database = {
           last_attempt_at?: string | null
           last_error?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fraud_assessments: {
+        Row: {
+          action: string
+          attrs_hash: string | null
+          created_at: string
+          decision: string
+          device_hash: string | null
+          id: string
+          ip_hash: string | null
+          ip_prefix_hash: string | null
+          reasons: Json
+          score: number
+          user_id: string
+        }
+        Insert: {
+          action: string
+          attrs_hash?: string | null
+          created_at?: string
+          decision: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          ip_prefix_hash?: string | null
+          reasons?: Json
+          score?: number
+          user_id: string
+        }
+        Update: {
+          action?: string
+          attrs_hash?: string | null
+          created_at?: string
+          decision?: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          ip_prefix_hash?: string | null
+          reasons?: Json
+          score?: number
           user_id?: string
         }
         Relationships: []
@@ -1439,6 +1538,7 @@ export type Database = {
             | null
           display_name: string | null
           email: string
+          email_canonical: string | null
           full_name: string | null
           id: string
           legacy_checked_at: string | null
@@ -1456,6 +1556,7 @@ export type Database = {
           reputation_score: number | null
           reward_points: number | null
           security_ack_at: string | null
+          signup_device_hash: string | null
           total_points_earned: number | null
           trial_7d_expires_at: string | null
           trial_7d_started_at: string | null
@@ -1474,6 +1575,7 @@ export type Database = {
             | null
           display_name?: string | null
           email: string
+          email_canonical?: string | null
           full_name?: string | null
           id: string
           legacy_checked_at?: string | null
@@ -1491,6 +1593,7 @@ export type Database = {
           reputation_score?: number | null
           reward_points?: number | null
           security_ack_at?: string | null
+          signup_device_hash?: string | null
           total_points_earned?: number | null
           trial_7d_expires_at?: string | null
           trial_7d_started_at?: string | null
@@ -1509,6 +1612,7 @@ export type Database = {
             | null
           display_name?: string | null
           email?: string
+          email_canonical?: string | null
           full_name?: string | null
           id?: string
           legacy_checked_at?: string | null
@@ -1526,6 +1630,7 @@ export type Database = {
           reputation_score?: number | null
           reward_points?: number | null
           security_ack_at?: string | null
+          signup_device_hash?: string | null
           total_points_earned?: number | null
           trial_7d_expires_at?: string | null
           trial_7d_started_at?: string | null
@@ -2456,21 +2561,30 @@ export type Database = {
       }
       trials: {
         Row: {
+          attrs_hash: string | null
+          device_hash: string | null
           ip_hash: string | null
+          ip_prefix_hash: string | null
           license_id: string | null
           used_at: string
           user_agent: string | null
           user_id: string
         }
         Insert: {
+          attrs_hash?: string | null
+          device_hash?: string | null
           ip_hash?: string | null
+          ip_prefix_hash?: string | null
           license_id?: string | null
           used_at?: string
           user_agent?: string | null
           user_id: string
         }
         Update: {
+          attrs_hash?: string | null
+          device_hash?: string | null
           ip_hash?: string | null
+          ip_prefix_hash?: string | null
           license_id?: string | null
           used_at?: string
           user_agent?: string | null

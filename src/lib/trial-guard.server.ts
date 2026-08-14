@@ -100,45 +100,11 @@ export async function evaluateTrial(input: {
 
     if (await isAllowlisted(ipHash)) return { allowed: true, ipHash, userAgent };
 
-    // 3) Mesma conexão já pegou um teste com outra conta.
-    const { data: sameIpTrials, error: sameIpTrialsError } = await supabaseAdmin
-      .from("trials")
-      .select("user_id")
-      .eq("ip_hash", ipHash)
-      .neq("user_id", input.userId)
-      .limit(1);
-    if (sameIpTrialsError) throw sameIpTrialsError;
-    if (sameIpTrials && sameIpTrials.length > 0) {
-      const reason = "Já existe um teste grátis usado nesta conexão/aparelho.";
-      await logBlock({ userId: input.userId, ipHash, email: profile?.email, reason });
-      return { allowed: false, reason, ipHash, userAgent };
-    }
-
-    // 4) Conta criada a partir de uma conexão que já registrou outras contas
-    //    e que também já usou teste: multi-conta clássica.
-    const { data: ipAccounts, error: ipAccountsError } = await supabaseAdmin
-      .from("signup_ip_log")
-      .select("user_id")
-      .eq("ip_hash", ipHash)
-      .not("user_id", "is", null);
-    if (ipAccountsError) throw ipAccountsError;
-    const otherUsers = Array.from(
-      new Set((ipAccounts ?? []).map((r) => r.user_id as string).filter((id) => id && id !== input.userId)),
-    );
-    if (otherUsers.length > 0) {
-      const { data: theirTrials, error: theirTrialsError } = await supabaseAdmin
-        .from("trials")
-        .select("user_id")
-        .in("user_id", otherUsers)
-        .limit(1);
-      if (theirTrialsError) throw theirTrialsError;
-      if (theirTrials && theirTrials.length > 0) {
-        const reason = "Outra conta desta mesma conexão já utilizou o teste grátis.";
-        await logBlock({ userId: input.userId, ipHash, email: profile?.email, reason });
-        return { allowed: false, reason, ipHash, userAgent };
-      }
-    }
-
+    // A partir daqui as pistas são só de REDE. IP não identifica pessoa
+    // (operadora móvel, faculdade, escritório compartilham o mesmo IP), então
+    // aqui nada bloqueia sozinho: os sinais viram pontuação no motor
+    // multicamadas (fraud-engine.server), que cruza rede + aparelho + e-mail.
+    // Isso evita barrar cliente real e ainda pega quem cria conta em série.
     return { allowed: true, ipHash, userAgent };
   } catch (err: any) {
     console.error("[trial-guard] Critical error in evaluateTrial:", err);
