@@ -78,10 +78,15 @@ export async function enforceTrialConduct(input: {
   );
 
   // Login comprado = licença ativa que não é trial.
-  const hasPaidLicense = active.some((l: any) => l.is_trial !== true);
+  // Também protegemos quem JÁ comprou algum dia (licença paga, mesmo expirada):
+  // cliente real nunca deve ser punido automaticamente.
+  const hasPaidLicense =
+    active.some((l: any) => l.is_trial !== true) ||
+    (licenses ?? []).some((l: any) => l.is_trial !== true);
   if (hasPaidLicense) {
-    return { flagged: true, hasPaidLicense: true, revokedLicenseIds: [] };
+    return { flagged: true, actionable: true, confidence: "high", hasPaidLicense: true, revokedLicenseIds: [] };
   }
+
 
   const trials = active.filter((l: any) => l.is_trial === true);
   const revokedLicenseIds: string[] = [];
