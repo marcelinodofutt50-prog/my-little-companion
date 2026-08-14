@@ -28,7 +28,11 @@ const STRONG_PATTERNS: Array<[string, RegExp]> = [
   ["muita_pena", /\b(muita|varias|v[aá]rias|umas|umas?\s+\d+)\s+penas?\b/],
   ["pena_plural", /\bpenas\b/],
   ["no_bico", /\b(n[ao]s?|em|pra|para|pro)\s+bicos?\b/],
-  ["revenda", /\b(revend|repass)\w*/],
+  // "repassar" sozinho é ambíguo (ex.: "pode repassar a senha?"). Só conta
+  // como evidência quando o alvo é terceiro/licença.
+  ["revenda", /\brevend\w*/],
+  ["repasse_licenca", /\brepass\w*\s+(o\s+|a\s+|meu\s+|minha\s+)?(login|licenca|acesso|conta|painel|teste)\b/],
+
   ["meus_clientes", /\b(meu|meus|minha|minhas)\s+(cliente|clientes|freguesi\w+)\b/],
   ["cliente_alheio", /\bcliente\s+(dele|dela|do\s+meu|de\s+um)\b/],
 ];
