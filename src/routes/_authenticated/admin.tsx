@@ -893,13 +893,18 @@ function AdminPage() {
                             aria-current={active ? "page" : undefined}
                             className={`group relative flex w-full items-center gap-2.5 rounded-md py-2 pl-3 pr-2 text-left transition-colors ${
                               active
-                                ? "bg-primary/10 text-primary"
+                                ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)]"
                                 : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                             }`}
                           >
                             {active && (
-                              <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-primary" />
+                              <motion.span
+                                layoutId="admin-nav-active"
+                                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                                className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-primary"
+                              />
                             )}
+
                             <t.icon
                               className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
                             />
