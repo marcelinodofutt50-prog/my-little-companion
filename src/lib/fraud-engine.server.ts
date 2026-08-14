@@ -168,8 +168,8 @@ async function logAssessment(
   }
 }
 
-const DENY_MESSAGE =
-  "Este benefício é 1 por pessoa e já foi usado neste aparelho ou conexão. Se você acha que é um engano, fale com o suporte que liberamos manualmente.";
+
+
 
 /** Nome legível do benefício, usado nas mensagens ao cliente. */
 function benefitLabel(action: FraudAction): string {
