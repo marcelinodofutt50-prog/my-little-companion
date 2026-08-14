@@ -31,7 +31,7 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
   useEffect(() => {
     if (!open) return;
     const t = setTimeout(() => {
-      activeRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      activeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
     }, 120);
     return () => clearTimeout(t);
   }, [open]);

@@ -3067,7 +3067,7 @@ function AdminChatPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMsgId]);
   useEffect(() => {
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
     setReplyTo(null);
   }, [activeId]);
 
@@ -3078,7 +3078,7 @@ function AdminChatPanel() {
       toast.info("Mensagem original está em um trecho antigo — carregue mensagens antigas.");
       return;
     }
-    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    node.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
     setHighlightId(id);
     setTimeout(() => setHighlightId((cur) => (cur === id ? null : cur)), 1500);
   }
@@ -3138,7 +3138,7 @@ function AdminChatPanel() {
       toast.error(e.message);
     }
     setSending(false);
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   }
 
   const filtered = threads.filter((t) => {
@@ -3637,7 +3637,7 @@ function AdminChatPanel() {
                               title="Responder esta mensagem"
                               onClick={() => {
                                 setReplyTo(m);
-                                inputRef.current?.focus();
+                                inputRef.current?.focus({ preventScroll: true });
                               }}
                               className="mb-1 rounded-full border border-border/60 bg-background/80 p-1.5 text-muted-foreground opacity-0 transition hover:text-neon focus:opacity-100 group-hover:opacity-100"
                             >
@@ -3729,7 +3729,7 @@ function AdminChatPanel() {
                               title="Responder esta mensagem"
                               onClick={() => {
                                 setReplyTo(m);
-                                inputRef.current?.focus();
+                                inputRef.current?.focus({ preventScroll: true });
                               }}
                               className="mb-1 rounded-full border border-border/60 bg-background/80 p-1.5 text-muted-foreground opacity-0 transition hover:text-neon focus:opacity-100 group-hover:opacity-100"
                             >
@@ -3774,7 +3774,7 @@ function AdminChatPanel() {
                   <QuickRepliesDropdown
                     onPick={(text) => {
                       setBody((prev) => (prev.trim() ? `${prev}\n${text}` : text));
-                      inputRef.current?.focus();
+                      inputRef.current?.focus({ preventScroll: true });
                     }}
                   />
                 </div>

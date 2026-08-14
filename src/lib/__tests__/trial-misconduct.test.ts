@@ -57,16 +57,28 @@ const trial = (over: any = {}) => ({
 });
 
 describe("detectTrialMisconduct", () => {
-  it("flags installing on third parties", () => {
+  it("flags installing on third parties with high confidence", () => {
     for (const m of [
       "não estou conseguindo instalar na pena",
-      "tenho muita pena para colocar",
+      "tenho muitas penas para colocar",
       "como boto no bico do meu amigo",
       "quero revender esse app",
       "instalei nos meus clientes e deu erro",
       "coloquei nas penas e não abriu",
     ]) {
-      expect(detectTrialMisconduct(m).flagged, m).toBe(true);
+      const r = detectTrialMisconduct(m);
+      expect(r.flagged, m).toBe(true);
+      expect(r.actionable, m).toBe(true);
+    }
+  });
+
+  it("never auto-punishes ambiguous mentions", () => {
+    for (const m of [
+      "meus clientes reclamaram do atendimento",
+      "falaram de uma pena aqui no grupo",
+    ]) {
+      const r = detectTrialMisconduct(m);
+      expect(r.actionable, m).toBe(false);
     }
   });
 
@@ -77,6 +89,8 @@ describe("detectTrialMisconduct", () => {
       "erro de senha ao entrar no btmob",
       "meu teste expirou, quero comprar",
       "bom dia, tudo bem?",
+      "sou cliente novo aqui, como instalo o app?",
+      "instalei o apk no meu celular e não abriu",
     ]) {
       expect(detectTrialMisconduct(m).flagged, m).toBe(false);
     }
@@ -107,6 +121,18 @@ describe("enforceTrialConduct", () => {
     });
     expect(out.flagged).toBe(true);
     expect(out.hasPaidLicense).toBe(true);
+    expect(state.updates).toHaveLength(0);
+  });
+
+  it("only reviews ambiguous messages without revoking", async () => {
+    state.licenses = [trial()];
+    const out = await enforceTrialConduct({
+      threadId: "t1",
+      userId: "u1",
+      message: "meus clientes estão perguntando do horario",
+    });
+    expect(out.flagged).toBe(true);
+    expect(out.actionable).toBe(false);
     expect(state.updates).toHaveLength(0);
   });
 

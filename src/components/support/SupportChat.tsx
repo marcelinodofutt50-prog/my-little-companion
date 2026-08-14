@@ -44,6 +44,8 @@ interface SupportChatProps {
   threadId: string;
   userId: string;
   isAdmin?: boolean;
+  /** Nome exibido para as mensagens do cliente quando um admin está lendo. */
+  customerName?: string;
   onNewMessage?: () => void;
 }
 
@@ -71,17 +73,39 @@ function hhmm(iso: string): string {
   return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
-/** Agrupa por dia e por autor em sequência — evita a poluição de cabeçalho por mensagem. */
-function groupMessages(msgs: SupportMessage[], userId: string): Group[] {
+/**
+ * Agrupa por dia e por autor em sequência.
+ *
+ * O rótulo depende de QUEM está vendo o chat:
+ *  - suas próprias mensagens -> "Você"
+ *  - mensagens da equipe      -> "Suporte Shadow"
+ *  - mensagens do cliente vistas por um admin -> "Cliente"
+ */
+function groupMessages(
+  msgs: SupportMessage[],
+  userId: string,
+  viewerIsAdmin: boolean,
+  customerLabel = "Cliente",
+): Group[] {
   const groups: Group[] = [];
   for (const m of msgs) {
-    const author: Group["author"] = m.is_system ? "system" : m.sender_id === userId ? "me" : "staff";
-    const label = m.is_system ? "Assistente Shadow" : author === "me" ? "Você" : "Suporte Shadow";
+    const mine = !!m.sender_id && m.sender_id === userId;
+    const author: Group["author"] = m.is_system ? "system" : mine ? "me" : "staff";
+    const label = m.is_system
+      ? "Assistente Shadow"
+      : mine
+        ? "Você"
+        : m.is_admin
+          ? "Suporte Shadow"
+          : viewerIsAdmin
+            ? customerLabel
+            : "Suporte Shadow";
     const day = dayLabel(m.created_at);
     const last = groups[groups.length - 1];
     const withinWindow =
       last &&
       last.author === author &&
+      last.authorLabel === label &&
       last.dayLabel === day &&
       new Date(m.created_at).getTime() -
         new Date(last.messages[last.messages.length - 1]!.created_at).getTime() <
@@ -95,7 +119,8 @@ function groupMessages(msgs: SupportMessage[], userId: string): Group[] {
   return groups;
 }
 
-export function SupportChat({ threadId, userId, isAdmin = false, onNewMessage }: SupportChatProps) {
+
+export function SupportChat({ threadId, userId, isAdmin = false, customerName, onNewMessage }: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +138,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, onNewMessage }:
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const groups = useMemo(() => groupMessages(msgs, userId), [msgs, userId]);
+  const groups = useMemo(
+    () => groupMessages(msgs, userId, isAdmin, customerName || "Cliente"),
+    [msgs, userId, isAdmin, customerName],
+  );
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior });

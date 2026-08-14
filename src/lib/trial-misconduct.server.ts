@@ -10,6 +10,9 @@ import { detectTrialMisconduct } from "./trial-misconduct";
 
 export type MisconductOutcome = {
   flagged: boolean;
+  /** Só é true quando a evidência é inequívoca (permite revogação). */
+  actionable?: boolean;
+  confidence?: "none" | "review" | "high";
   hasPaidLicense: boolean;
   revokedLicenseIds: string[];
   reason?: string;
@@ -22,10 +25,40 @@ export async function enforceTrialConduct(input: {
 }): Promise<MisconductOutcome> {
   const detection = detectTrialMisconduct(input.message);
   if (!detection.flagged) {
-    return { flagged: false, hasPaidLicense: false, revokedLicenseIds: [] };
+    return { flagged: false, actionable: false, confidence: "none", hasPaidLicense: false, revokedLicenseIds: [] };
   }
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  // Indício fraco: NUNCA punimos. Apenas registramos para revisão humana,
+  // evitando confundir cliente legítimo com quem burla o teste.
+  if (!detection.actionable) {
+    try {
+      await supabaseAdmin.from("audit_logs").insert({
+        user_id: input.userId,
+        event: "trial_misconduct_review",
+        decision: "review",
+        reason: detection.matched.join(","),
+        system: "support-conduct",
+        metadata: {
+          thread_id: input.threadId,
+          matched: detection.matched,
+          message_excerpt: input.message.slice(0, 240),
+        },
+      } as any);
+    } catch (e) {
+      console.error("[trial-conduct] falha ao registrar revisão:", e);
+    }
+    return {
+      flagged: true,
+      actionable: false,
+      confidence: detection.confidence,
+      hasPaidLicense: false,
+      revokedLicenseIds: [],
+      reason: detection.matched.join(","),
+    };
+  }
+
 
   const { data: licenses, error } = await supabaseAdmin
     .from("licenses")
@@ -45,10 +78,15 @@ export async function enforceTrialConduct(input: {
   );
 
   // Login comprado = licença ativa que não é trial.
-  const hasPaidLicense = active.some((l: any) => l.is_trial !== true);
+  // Também protegemos quem JÁ comprou algum dia (licença paga, mesmo expirada):
+  // cliente real nunca deve ser punido automaticamente.
+  const hasPaidLicense =
+    active.some((l: any) => l.is_trial !== true) ||
+    (licenses ?? []).some((l: any) => l.is_trial !== true);
   if (hasPaidLicense) {
-    return { flagged: true, hasPaidLicense: true, revokedLicenseIds: [] };
+    return { flagged: true, actionable: true, confidence: "high", hasPaidLicense: true, revokedLicenseIds: [] };
   }
+
 
   const trials = active.filter((l: any) => l.is_trial === true);
   const revokedLicenseIds: string[] = [];

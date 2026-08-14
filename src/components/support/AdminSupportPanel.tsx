@@ -272,6 +272,7 @@ export function AdminSupportPanel() {
                 threadId={selectedThread.id} 
                 userId={myId || ""} 
                 isAdmin={true} 
+                customerName={selectedThread.profile?.display_name || selectedThread.profile?.email || "Cliente"} 
               />
             </div>
 
