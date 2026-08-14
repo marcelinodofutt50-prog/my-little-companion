@@ -44,6 +44,8 @@ interface SupportChatProps {
   threadId: string;
   userId: string;
   isAdmin?: boolean;
+  /** Nome exibido para as mensagens do cliente quando um admin está lendo. */
+  customerName?: string;
   onNewMessage?: () => void;
 }
 
@@ -118,7 +120,7 @@ function groupMessages(
 }
 
 
-export function SupportChat({ threadId, userId, isAdmin = false, onNewMessage }: SupportChatProps) {
+export function SupportChat({ threadId, userId, isAdmin = false, customerName, onNewMessage }: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, onNewMessage }:
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const groups = useMemo(() => groupMessages(msgs, userId), [msgs, userId]);
+  const groups = useMemo(
+    () => groupMessages(msgs, userId, isAdmin, customerName || "Cliente"),
+    [msgs, userId, isAdmin, customerName],
+  );
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior });
