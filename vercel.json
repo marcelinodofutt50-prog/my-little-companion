@@ -5,6 +5,12 @@
   "buildCommand": "bun run build",
   "ignoreCommand": "exit 1",
   "regions": ["gru1"],
+  "crons": [
+    {
+      "path": "/api/public/hooks/reconcile-pending",
+      "schedule": "*/5 * * * *"
+    }
+  ],
 
   "github": {
     "enabled": true,

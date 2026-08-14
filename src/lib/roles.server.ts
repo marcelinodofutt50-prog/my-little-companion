@@ -9,7 +9,7 @@
  *
  * Importante: isso NÃO afrouxa a segurança — o papel continua vindo do banco.
  */
-export type StaffRole = "admin" | "moderator";
+export type StaffRole = "admin" | "moderator" | "support";
 
 async function rpcHasRole(userClient: any, userId: string, role: StaffRole) {
   try {
@@ -35,22 +35,25 @@ async function readRolesViaAdmin(userId: string): Promise<Set<string>> {
 
 /** Papéis efetivos do usuário (com fallback). */
 export async function resolveRoles(ctx: { supabase: any; userId: string }) {
-  const [a, m] = await Promise.all([
+  const [a, m, s] = await Promise.all([
     rpcHasRole(ctx.supabase, ctx.userId, "admin"),
     rpcHasRole(ctx.supabase, ctx.userId, "moderator"),
+    rpcHasRole(ctx.supabase, ctx.userId, "support"),
   ]);
 
   let isAdmin = a.value;
   let isModerator = m.value;
+  let isSupport = s.value;
 
   // Se qualquer RPC falhou (erro, não "false"), confirmamos pelo banco.
-  if (!a.ok || !m.ok) {
+  if (!a.ok || !m.ok || !s.ok) {
     const roles = await readRolesViaAdmin(ctx.userId);
     isAdmin = isAdmin || roles.has("admin");
     isModerator = isModerator || roles.has("moderator");
+    isSupport = isSupport || roles.has("support");
   }
 
-  return { isAdmin, isModerator, isStaff: isAdmin || isModerator };
+  return { isAdmin, isModerator, isSupport, isStaff: isAdmin || isModerator || isSupport };
 }
 
 export async function assertAdminRole(ctx: { supabase: any; userId: string }) {

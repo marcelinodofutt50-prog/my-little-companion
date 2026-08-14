@@ -207,12 +207,21 @@ export function AdminTutorialsPanel() {
 
       if (error) throw error;
 
-      const publicUrl = signed.publicUrl;
-      
       clearInterval(progressInterval);
       setUploadProgress(100);
       
-      setCurrent((prev: any) => ({ ...prev, [type === 'video' ? 'video_url' : 'image_url']: publicUrl }));
+      const { data: preview, error: previewError } = await supabase.storage
+        .from('tutorials')
+        .createSignedUrl(signed.mediaPath, 60 * 60);
+      if (previewError || !preview?.signedUrl) {
+        throw new Error("Arquivo enviado, mas não foi possível preparar a visualização.");
+      }
+
+      setCurrent((prev: any) => ({
+        ...prev,
+        [type === 'video' ? 'video_url' : 'image_url']: signed.mediaPath,
+        [type === 'video' ? 'video_preview_url' : 'image_preview_url']: preview.signedUrl,
+      }));
       toast.success(`${type === 'video' ? 'Vídeo' : 'Capa'} enviado com sucesso!`);
     } catch (e: any) {
       clearInterval(progressInterval);
@@ -488,7 +497,7 @@ export function AdminTutorialsPanel() {
                       />
                     ) : current.video_url ? (
                       <video 
-                        src={current.video_url} 
+                        src={current.video_preview_url || current.video_url} 
                         controls 
                         className="w-full h-full object-contain"
                       />
@@ -516,7 +525,7 @@ export function AdminTutorialsPanel() {
                   <div className="aspect-video relative rounded-md overflow-hidden bg-black/40 border border-border/50 flex items-center justify-center group">
                     {current.image_url ? (
                       <img 
-                        src={current.image_url} 
+                        src={current.image_preview_url || current.image_url} 
                         alt="Preview" 
                         className="w-full h-full object-cover"
                       />

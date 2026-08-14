@@ -56,7 +56,19 @@ export const createTutorialUploadUrl = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const path = `tutorials/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const path = `${context.userId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    const { data: bucket, error: bucketError } = await supabaseAdmin.storage.getBucket("tutorials");
+    if (bucketError || !bucket) {
+      console.error("[tutorial-upload] bucket indisponível:", {
+        userId: context.userId,
+        code: (bucketError as { statusCode?: string })?.statusCode,
+        message: bucketError?.message,
+      });
+      throw new Error(
+        "O armazenamento do Centro de Treinamento não está disponível neste ambiente. Tente novamente em alguns minutos.",
+      );
+    }
 
     const { data: signed, error } = await supabaseAdmin.storage
       .from("tutorials")
@@ -78,10 +90,6 @@ export const createTutorialUploadUrl = createServerFn({ method: "POST" })
       throw new Error(`Falha ao preparar o envio: ${error?.message ?? "sem resposta do storage"}`);
     }
 
-    const {
-      data: { publicUrl },
-    } = supabaseAdmin.storage.from("tutorials").getPublicUrl(path);
-
     console.log("[tutorial-upload] token emitido", { userId: context.userId, path });
-    return { path, token: signed.token, publicUrl };
+    return { path, token: signed.token, mediaPath: path };
   });

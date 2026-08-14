@@ -42,20 +42,19 @@ export async function internalGenerateTrial(
     };
   }
 
-  // 1.5) Antifraude evaluation could go here or remain in the calling function
-  // For internal calls, we assume evaluation is done or not needed (e.g., welcome gift)
-
-  // 2) Claim trial - Garante que o registro da intenção ocorra via Admin 
-  // para evitar problemas de RLS durante o provisionamento inicial.
-  const { data: claim, error: claimErr } = await supabaseAdmin.from("trials").upsert({ 
+  // 2) A PK de trials é a trava atômica. INSERT (não upsert) impede duas
+  // solicitações simultâneas de avançarem para o provisionamento externo.
+  const { error: claimErr } = await supabaseAdmin.from("trials").insert({
     user_id: userId,
     license_id: null,
     ip_hash: ipHash || null
-
-  }, { onConflict: 'user_id' }).select("*").maybeSingle();
+  });
 
   if (claimErr) {
     console.error("[internalGenerateTrial] Intent registration failed:", claimErr);
+    if (claimErr.code === "23505") {
+      throw new Error("Seu teste já foi utilizado ou está sendo processado. Atualize a página em instantes.");
+    }
     throw new Error("Erro ao registrar intenção de teste: " + claimErr.message);
   }
 
@@ -120,8 +119,8 @@ export async function internalGenerateTrial(
   // na tabela 'licenses' (desync), nós prosseguimos para criar a linha no banco, 
   // garantindo que o usuário tenha acesso aos dados que já estão no Yaarsa.
   
-  const expiresAt = new Date(); 
-  expiresAt.setHours(expiresAt.getHours() + 24); // Exactly 24 hours trial
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + Math.max(1, durationDays) * 24);
   
   const licPayload: any = {
     user_id: userId,

@@ -48,11 +48,33 @@ export async function evaluateTrial(input: {
 
     // 1) Conta antiga que nunca comprou não pode "descobrir" um trial novo:
     //    o teste é só para contas novas (primeiras 72h de vida).
-    const { data: profile } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("created_at, email")
       .eq("id", input.userId)
       .maybeSingle();
+    if (profileError || !profile?.created_at) {
+      throw new Error("Não foi possível validar a criação da conta.");
+    }
+
+    const accountAgeMs = Date.now() - new Date(profile.created_at).getTime();
+    if (!Number.isFinite(accountAgeMs) || accountAgeMs > 72 * 60 * 60 * 1000) {
+      const reason = "O teste é exclusivo para contas criadas nas últimas 72 horas.";
+      await logBlock({ userId: input.userId, ipHash, email: profile.email, reason });
+      return { allowed: false, reason, ipHash, userAgent };
+    }
+
+    const { data: previousTrial, error: previousTrialError } = await supabaseAdmin
+      .from("trials")
+      .select("user_id")
+      .eq("user_id", input.userId)
+      .maybeSingle();
+    if (previousTrialError) throw previousTrialError;
+    if (previousTrial) {
+      const reason = "Esta conta já utilizou o teste grátis.";
+      await logBlock({ userId: input.userId, ipHash, email: profile.email, reason });
+      return { allowed: false, reason, ipHash, userAgent };
+    }
 
     // 2) Já comprou alguma vez? Então não é "novo usuário" — sem teste.
     const { count: paidOrders } = await supabaseAdmin
@@ -66,7 +88,14 @@ export async function evaluateTrial(input: {
       return { allowed: false, reason, ipHash, userAgent };
     }
 
-    if (!ipHash) return { allowed: true, ipHash, userAgent };
+    if (!ipHash) {
+      return {
+        allowed: false,
+        reason: "Não foi possível validar sua conexão. Desative VPN/proxy e tente novamente.",
+        ipHash,
+        userAgent,
+      };
+    }
 
     if (await isAllowlisted(ipHash)) return { allowed: true, ipHash, userAgent };
 
@@ -109,9 +138,12 @@ export async function evaluateTrial(input: {
     return { allowed: true, ipHash, userAgent };
   } catch (err: any) {
     console.error("[trial-guard] Critical error in evaluateTrial:", err);
-    // Erro no antifraude NUNCA deve travar um cliente se o sistema de logs/db falhar,
-    // mas logamos o erro para depuração técnica.
-    return { allowed: true, ipHash, userAgent };
+    return {
+      allowed: false,
+      reason: "A validação antifraude está temporariamente indisponível. Tente novamente em alguns minutos.",
+      ipHash,
+      userAgent,
+    };
   }
 
 }

@@ -15,7 +15,7 @@ function providedToken(request: Request): string {
 
 /** true quando a requisição está autorizada a rodar o cron. */
 export function isAuthorizedCron(request: Request): boolean {
-  const expected = (process.env.CRON_TRIGGER_TOKEN ?? "").trim();
+  const expected = (process.env.CRON_SECRET ?? process.env.CRON_TRIGGER_TOKEN ?? "").trim();
   if (!expected || expected.length < 16) return false;
   const provided = providedToken(request);
   if (provided.length !== expected.length) return false;
