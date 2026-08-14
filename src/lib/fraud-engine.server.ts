@@ -168,8 +168,87 @@ async function logAssessment(
   }
 }
 
-const DENY_MESSAGE =
-  "Este benefício é 1 por pessoa e já foi usado neste aparelho ou conexão. Se você acha que é um engano, fale com o suporte que liberamos manualmente.";
+
+
+
+/** Nome legível do benefício, usado nas mensagens ao cliente. */
+function benefitLabel(action: FraudAction): string {
+  return action === "trial" ? "o teste grátis de licença" : "o APK grátis do Play Protect";
+}
+
+/**
+ * Explicação específica por motivo. O cliente precisa entender EXATAMENTE
+ * o que foi detectado — mensagem genérica só gera ticket de suporte.
+ */
+const REASON_EXPLANATIONS: Record<string, string> = {
+  device_already_used:
+    "Este mesmo aparelho já resgatou o benefício em outra conta. O limite é de 1 por aparelho.",
+  device_shared_with_consumer:
+    "Este aparelho já foi usado por outra conta que resgatou o benefício, mesmo depois de limpar os dados do navegador.",
+  same_inbox_already_used:
+    "Este e-mail é uma variação (pontos ou +alias) de outra conta que já resgatou o benefício. Para nós é a mesma caixa de entrada.",
+  disposable_email:
+    "O domínio do seu e-mail é de e-mail temporário/descartável, que não é aceito para benefícios grátis.",
+  email_alias_family: "Existem outras contas usando variações do seu e-mail.",
+  device_shared: "Outras contas já usaram este mesmo aparelho.",
+  same_hardware_same_network_consumer:
+    "Detectamos o mesmo perfil de hardware e a mesma rede de outra conta que já resgatou o benefício.",
+  same_hardware_same_network:
+    "Detectamos o mesmo perfil de hardware e a mesma rede de outras contas.",
+  no_device_signature:
+    "Não conseguimos identificar seu aparelho (navegador anônimo, bloqueadores ou dados desativados).",
+  no_network_signature: "Não conseguimos identificar sua conexão de rede.",
+  multi_account_burst_same_device:
+    "Várias contas novas foram criadas neste mesmo aparelho nos últimos 7 dias.",
+};
+
+function explainReason(reason: string): string {
+  if (REASON_EXPLANATIONS[reason]) return REASON_EXPLANATIONS[reason]!;
+  const ipReuse = reason.match(/^ip_reuse_(\d+)$/);
+  if (ipReuse) {
+    return `Outra(s) ${ipReuse[1]} conta(s) já usaram o benefício a partir do mesmo endereço de internet.`;
+  }
+  const cluster = reason.match(/^network_cluster_(\d+)$/);
+  if (cluster) {
+    return `Detectamos ${cluster[1]} contas diferentes criadas na sua faixa de rede nos últimos 30 dias.`;
+  }
+  return reason;
+}
+
+/** Código curto de protocolo para o cliente citar no suporte. */
+function protocolCode(userId: string, action: FraudAction): string {
+  const suffix = userId.replace(/-/g, "").slice(-6).toUpperCase();
+  const day = new Date().toISOString().slice(2, 10).replace(/-/g, "");
+  return `${action === "trial" ? "TRL" : "APK"}-${day}-${suffix}`;
+}
+
+/** Monta a mensagem detalhada de negação, com motivo principal e protocolo. */
+export function buildDenyMessage(
+  action: FraudAction,
+  reasons: string[],
+  userId: string,
+  score: number,
+): string {
+  const primary = reasons[reasons.length - 1] ?? "";
+  const secondary = reasons.slice(0, -1).filter((r) => r !== "allowlisted");
+  const lines = [
+    `Não foi possível liberar ${benefitLabel(action)} para esta conta.`,
+    "",
+    `Motivo: ${explainReason(primary)}`,
+  ];
+  if (secondary.length) {
+    lines.push(
+      `Também observamos: ${secondary.map(explainReason).join(" ")}`,
+    );
+  }
+  lines.push(
+    "",
+    "Regra: cada pessoa tem direito a um único benefício grátis. Se você comprar uma licença, o acesso é liberado na hora e sem verificação.",
+    `Se isso for um engano (ex.: você divide a internet com outra pessoa), fale com o suporte citando o protocolo ${protocolCode(userId, action)} — nós liberamos manualmente.`,
+  );
+  return lines.join("\n");
+}
+
 
 /**
  * Avaliação principal. `allowed=false` só acontece com prova forte ou score alto.
@@ -207,9 +286,15 @@ export async function assessAbuse(input: {
     const reasons: string[] = [];
     let score = 0;
     const deny = async (reason: string): Promise<FraudVerdict> => {
+      const all = [...reasons, reason];
       const verdict: FraudVerdict = {
-        allowed: false, score: 100, reasons: [...reasons, reason], message: DENY_MESSAGE, ...base,
+        allowed: false,
+        score: 100,
+        reasons: all,
+        message: buildDenyMessage(input.action, all, input.userId, 100),
+        ...base,
       };
+
       await logAssessment(input.userId, input.action, verdict);
       return verdict;
     };
@@ -377,7 +462,10 @@ export async function assessAbuse(input: {
       allowed,
       score,
       reasons,
-      message: allowed ? undefined : DENY_MESSAGE,
+      message: allowed
+        ? undefined
+        : buildDenyMessage(input.action, reasons, input.userId, score),
+
       ...base,
     };
     await logAssessment(input.userId, input.action, verdict);
