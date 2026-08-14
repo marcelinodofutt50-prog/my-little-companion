@@ -373,7 +373,7 @@ async function fulfillOrderInner(orderId: string) {
   const meta = (order as any).metadata;
   const includeServer = !!meta?.includeServer || order.plan_slug.includes("server");
 
-  await supabaseAdmin.from("licenses").insert({
+  const { data: createdLicense, error: licenseError } = await supabaseAdmin.from("licenses").insert({
     user_id: beneficiaryId,
     order_id: order.id,
     plan_slug: order.plan_slug,
@@ -390,7 +390,10 @@ async function fulfillOrderInner(orderId: string) {
     status: 'active',
     origin_type: 'purchase',
     metadata: { order_id: order.id, buyer_id: order.user_id }
-  } as any);
+  } as any).select("id").single();
+  if (licenseError || !createdLicense) {
+    throw new Error(`Falha ao registrar licença: ${licenseError?.message ?? "sem retorno"}`);
+  }
 
   // Auto-deliver credentials in the customer's support chat as a system message.
   // Warning: If user already had a trial login and bought a weekly/monthly login,

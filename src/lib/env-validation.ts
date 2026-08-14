@@ -26,7 +26,7 @@ const SERVER_ENV: EnvSpec[] = [
   { name: "YAARSA_V46_ADMIN_KEY", required: true, description: "Yaarsa v4.6 admin key" },
   { name: "LICENSE_ENC_KEY", required: true, description: "Symmetric key for encrypting stored panel credentials" },
   { name: "APK_WORKER_HMAC_SECRET", required: true, description: "HMAC secret used by the APK worker" },
-  { name: "CRON_TRIGGER_TOKEN", required: true, description: "Bearer token required by /api/public/hooks/* cron endpoints" },
+  { name: "CRON_SECRET", required: true, description: "Bearer token required by scheduled reconciliation endpoints" },
 ];
 
 let didValidateServer = false;

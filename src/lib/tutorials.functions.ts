@@ -112,7 +112,10 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
     const emptyToNull = z.preprocess(
       (v) => (typeof v === "string" && v.trim() === "" ? null : v),
-      z.string().url().nullish()
+      z.string().trim().max(1000).refine(
+        (value) => /^https?:\/\//i.test(value) || /^[a-zA-Z0-9_./-]+$/.test(value),
+        "Informe uma URL válida ou um arquivo do Centro de Treinamento.",
+      ).nullish(),
     );
     return z.object({
       id: z.string().uuid().optional(),

@@ -37,6 +37,7 @@ import { LicenseCountdown } from '@/components/LicenseCountdown'
 import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
 import { LicensePauseControls } from '@/components/LicensePauseControls'
 import { planLabel } from '@/lib/license-display'
+import { reconcileMyRecentOrders } from '@/lib/checkout.functions'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({
@@ -79,6 +80,7 @@ function DashboardPage() {
   const listUpdates = useServerFn(listMyUpdates)
   const getDownload = useServerFn(getUpdateDownloadUrl)
   const fetchMyLicenses = useServerFn(listMyLicenses)
+  const reconcileOrders = useServerFn(reconcileMyRecentOrders)
   const syncLicensesFn = useServerFn(syncAllMyLicenses)
   const [syncing, setSyncing] = useState(false)
 
@@ -121,6 +123,7 @@ function DashboardPage() {
     queryKey: ['licenses', user?.id],
     queryFn: async () => {
       try {
+        await reconcileOrders()
         const result = await fetchMyLicenses()
         return result ?? []
       } catch (err: any) {

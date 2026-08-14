@@ -267,3 +267,35 @@ export const getOrderState = createServerFn({ method: "GET" })
       .from("licenses").select("*").eq("order_id", data.orderId).maybeSingle();
     return { order: freshOrder ?? order, license };
   });
+
+export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+    const { data: orders, error } = await context.supabase
+      .from("orders")
+      .select("id, amount, status")
+      .eq("user_id", context.userId)
+      .in("status", ["pending", "created", "yaarsa_failed"])
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    if (error) throw new Error("Não foi possível verificar compras recentes.");
+
+    let fulfilled = 0;
+    for (const order of orders ?? []) {
+      try {
+        const { findApprovedPaymentForOrder } = await import("./mercadopago.server");
+        const approved = await findApprovedPaymentForOrder(order.id, Number(order.amount));
+        if (!approved) continue;
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", order.id);
+        const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+        const result = await fulfillOrder(order.id);
+        if (result.ok) fulfilled += 1;
+      } catch (error) {
+        console.error("[reconcileMyRecentOrders] falha:", order.id, (error as Error)?.message);
+      }
+    }
+    return { checked: orders?.length ?? 0, fulfilled };
+  });
