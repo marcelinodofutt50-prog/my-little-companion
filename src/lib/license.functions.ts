@@ -348,15 +348,19 @@ export const generateTrial = createServerFn({ method: "POST" })
     } catch (e: any) {
       const msg = e.message || "Falha técnica no provisionamento.";
       console.error("[generateTrial] Critical failure:", e);
-      
-      // Se falhou por erro de comunicação com o painel, logamos como bloqueio técnico
-      // para que o admin possa ver o que houve no log de auditoria.
+
       await logBlock({ 
         userId, 
         ipHash: guard.ipHash, 
         reason: `PROVISIONING_FAILED: ${msg.slice(0, 100)}` 
       }).catch(() => {});
-      
+
+      // Bloqueio antifraude/duplicidade tem mensagem própria: não mascarar de
+      // instabilidade do painel, senão o cliente fica tentando pra sempre.
+      if (/teste grátis|já foi utilizado|1 por pessoa|suporte se achar/i.test(msg)) {
+        throw new Error(msg);
+      }
+
       throw new Error(`O servidor de licenças está instável no momento. Tente novamente em alguns minutos ou fale com o suporte técnico. (Código: YAARSA_REFUSAL)`);
     }
   });
