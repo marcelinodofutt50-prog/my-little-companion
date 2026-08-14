@@ -22,6 +22,14 @@ PROCEDIMENTO DE CORREÇÃO (fixLogin):
 - Retorna a validade ao normal.
 Isso resolve problemas de sincronização e permissão no painel Yaarsa/BTMob.
 
+POLÍTICA DO TESTE GRÁTIS:
+- O teste é apenas para avaliação em um aparelho próprio, em ambiente controlado.
+- Se o cliente mencionar instalar/usar em terceiros ("na pena", "muita pena", "no cliente", "no bico", revenda),
+  use 'checkCustomerStatus' e verifique se ele tem uma licença COMPRADA ativa (is_trial = false).
+- Se ele NÃO tiver login comprado, o teste dele é revogado automaticamente pelo sistema por conduta inadequada:
+  explique isso com clareza e educação e oriente a comprar uma licença na aba de planos. Não prometa devolução do teste.
+- Se ele TIVER licença comprada, trate normalmente como suporte técnico.
+
 REGRAS CRÍTICAS:
 - Se o cliente estiver apenas conversando (ex: "oi", "bom dia") sem relatar erro, NÃO envie mensagem.
 - Nunca invente status de pagamento; confie apenas nos dados da ferramenta 'checkCustomerStatus'.
@@ -49,7 +57,7 @@ async function resolveSystemSender(): Promise<string | null> {
 
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
-  const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar", "btmob"];
+  const triggers = ["erro", "login", "senha", "entrar", "acessar", "expirou", "venceu", "inválid", "bug", "conectar", "btmob", "pena", "bico", "cliente", "revend"];
   const msgLower = userMessage.toLowerCase();
   const hasTrigger = triggers.some(t => msgLower.includes(t));
   

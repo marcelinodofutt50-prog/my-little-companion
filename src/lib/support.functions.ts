@@ -343,6 +343,16 @@ export const sendMessage = createServerFn({ method: "POST" })
       triggerSupportAI(effectiveThreadId, context.userId, data.body).catch(e => {
         console.error("[support-ai] background trigger failed:", e);
       });
+
+      // Política de conduta do teste grátis (revenda / instalação em terceiros)
+      const { enforceTrialConduct } = await import("./trial-misconduct.server");
+      enforceTrialConduct({
+        threadId: effectiveThreadId,
+        userId: context.userId,
+        message: data.body,
+      }).catch(e => {
+        console.error("[trial-conduct] background check failed:", e);
+      });
     }
 
     const { normalizeSupportMessage } = await import("./support-message");
