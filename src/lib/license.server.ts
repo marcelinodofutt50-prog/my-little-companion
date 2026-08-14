@@ -45,15 +45,23 @@ export async function internalGenerateTrial(
 
   // 2) A PK de trials é a trava atômica. INSERT (não upsert) impede duas
   // solicitações simultâneas de avançarem para o provisionamento externo.
+  // O índice único por aparelho garante 1 teste por aparelho, mesmo com
+  // várias contas criadas em paralelo.
   const { error: claimErr } = await supabaseAdmin.from("trials").insert({
     user_id: userId,
     license_id: null,
-    ip_hash: ipHash || null
-  });
+    ip_hash: ipHash || null,
+    device_hash: fingerprint?.deviceHash || null,
+    attrs_hash: fingerprint?.attrsHash || null,
+    ip_prefix_hash: fingerprint?.ipPrefixHash || null,
+  } as any);
 
   if (claimErr) {
     console.error("[internalGenerateTrial] Intent registration failed:", claimErr);
     if (claimErr.code === "23505") {
+      if (/device/i.test(claimErr.message ?? "")) {
+        throw new Error("Este aparelho já utilizou o teste grátis. O benefício é 1 por pessoa — fale com o suporte se achar que é um engano.");
+      }
       throw new Error("Seu teste já foi utilizado ou está sendo processado. Atualize a página em instantes.");
     }
     throw new Error("Erro ao registrar intenção de teste: " + claimErr.message);
