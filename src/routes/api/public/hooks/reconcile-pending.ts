@@ -6,12 +6,22 @@ import { z } from "zod";
  * Scans orders created in the last 24h that are still pending/created/yaarsa_failed,
  * asks Mercado Pago for the definitive payment status, and fulfills or fails them.
  *
- * Auth: Bearer CRON_TRIGGER_TOKEN. No token = 401.
+ * Auth: Bearer CRON_SECRET (Vercel Cron) ou CRON_TRIGGER_TOKEN legado.
  */
 export const Route = createFileRoute("/api/public/hooks/reconcile-pending")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        return reconcilePendingOrders(request);
+      },
+      GET: async ({ request }) => {
+        return reconcilePendingOrders(request);
+      },
+    },
+  },
+});
+
+async function reconcilePendingOrders(request: Request) {
         const { cronUnauthorized } = await import("@/lib/cron-auth.server");
         const denied = cronUnauthorized(request);
         if (denied) return denied;
@@ -134,8 +144,4 @@ export const Route = createFileRoute("/api/public/hooks/reconcile-pending")({
         return new Response(JSON.stringify({ processed: results.length, results }), {
           headers: { "Content-Type": "application/json" },
         });
-      },
-      GET: async () => new Response("ok", { status: 200 }),
-    },
-  },
-});
+}

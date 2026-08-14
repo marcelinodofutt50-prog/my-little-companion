@@ -52,6 +52,9 @@ export function clientUserAgent(): string | null {
 /** sha256(ip + salt) — nunca guardamos o IP em claro. */
 export async function hashIp(ip: string): Promise<string> {
   const salt = process.env.IP_HASH_SALT ?? "";
+  if (salt.length < 16) {
+    throw new Error("IP_HASH_SALT não configurado corretamente");
+  }
   const bytes = new TextEncoder().encode(`${ip}:${salt}`);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest))
