@@ -60,6 +60,7 @@ beforeAll(async () => {
       plan_slug: "monthly_457",
       yaarsa_email: email,
       yaarsa_username: `qa${stamp}`,
+      yaarsa_password_enc: "qa-encrypted",
       expires_at: new Date(Date.now() + 30 * 864e5).toISOString(),
     })
     .select("id")
