@@ -286,9 +286,15 @@ export async function assessAbuse(input: {
     const reasons: string[] = [];
     let score = 0;
     const deny = async (reason: string): Promise<FraudVerdict> => {
+      const all = [...reasons, reason];
       const verdict: FraudVerdict = {
-        allowed: false, score: 100, reasons: [...reasons, reason], message: DENY_MESSAGE, ...base,
+        allowed: false,
+        score: 100,
+        reasons: all,
+        message: buildDenyMessage(input.action, all, input.userId, 100),
+        ...base,
       };
+
       await logAssessment(input.userId, input.action, verdict);
       return verdict;
     };
