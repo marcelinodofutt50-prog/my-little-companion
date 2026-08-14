@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { SupportSummaryPanel } from "./SupportSummaryPanel";
+
 import {
   listMessages,
   sendMessage,
@@ -222,7 +224,9 @@ export function SupportChat({ threadId, userId, isAdmin = false, onNewMessage }:
 
   return (
     <div className="relative flex flex-col h-full bg-background/40 backdrop-blur-sm border border-border/40 rounded-lg overflow-hidden">
+      <SupportSummaryPanel threadId={threadId} />
       <div
+
         ref={listRef}
         onScroll={(e) => {
           const el = e.currentTarget;

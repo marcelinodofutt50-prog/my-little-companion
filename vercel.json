@@ -8,9 +8,10 @@
   "crons": [
     {
       "path": "/api/public/hooks/reconcile-pending",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 6 * * *"
     }
   ],
+
 
   "github": {
     "enabled": true,
