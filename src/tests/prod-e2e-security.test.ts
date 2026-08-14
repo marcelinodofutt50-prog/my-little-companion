@@ -70,11 +70,24 @@ describe("Produção — infraestrutura dos fluxos críticos", () => {
     await admin.storage.from("tutorials").remove([path]);
   });
 
-  it("Play Protect e trial: índices de 1 por aparelho estão ativos", async () => {
-    const { data, error } = await admin.rpc("check_rls_enabled", { target_table: "trials" });
-    expect(error).toBeNull();
+  it.each([
+    "trials_one_per_device_idx",
+    "apk_free_trials_one_per_device_idx",
+    "device_identities_user_device_key",
+  ])("índice antifraude %s existe (1 por aparelho)", async (idx) => {
+    const { data, error } = await admin.rpc("check_index_exists", { target_index: idx });
+    expect(error?.message ?? null).toBeNull();
     expect(data).toBe(true);
   });
+
+  it.each(["trials", "licenses", "staff_messages", "device_identities", "fraud_assessments", "audit_logs"])(
+    "RLS está habilitado em %s",
+    async (t) => {
+      const { data, error } = await admin.rpc("check_rls_enabled", { target_table: t });
+      expect(error?.message ?? null).toBeNull();
+      expect(data).toBe(true);
+    },
+  );
 });
 
 describe("Segurança — RLS bloqueia acesso anônimo", () => {
@@ -123,9 +136,9 @@ describe("Segurança — Staff Nexus (bypass de staff)", () => {
     expect(error).not.toBeNull();
   });
 
-  it("política exige is_staff() e sender_id = auth.uid()", async () => {
+  it("canal interno está protegido por RLS", async () => {
     const { data, error } = await admin.rpc("check_rls_enabled", { target_table: "staff_messages" });
-    expect(error).toBeNull();
+    expect(error?.message ?? null).toBeNull();
     expect(data).toBe(true);
   });
 });
