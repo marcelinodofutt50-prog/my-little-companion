@@ -51,15 +51,20 @@ export function clientUserAgent(): string | null {
 
 /** sha256(ip + salt) — nunca guardamos o IP em claro. */
 export function resolveHashSalt(): string {
-  const explicit = process.env.IP_HASH_SALT ?? "";
+  const explicit = (process.env.IP_HASH_SALT ?? "").trim();
   if (explicit.length >= 16) return explicit;
   // Fallback determinístico: mantém o hash com chave secreta mesmo quando a
   // variável dedicada não foi provisionada no ambiente. Antifraude nunca pode
   // derrubar login/cadastro por falta de configuração.
   const derived =
+    process.env.EXT_SUPABASE_SERVICE_ROLE_KEY ??
+    process.env.EXT_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.EXT_SUPABASE_URL ??
     process.env.SUPABASE_SERVICE_ROLE_KEY ??
     process.env.SUPABASE_PUBLISHABLE_KEY ??
     process.env.SUPABASE_URL ??
+    process.env.LICENSE_ENC_KEY ??
+    process.env.APK_WORKER_HMAC_SECRET ??
     "";
   if (derived.length >= 16) return `shadow-ip-fallback:${derived}`;
   return "shadow-ip-fallback:local-development-salt";

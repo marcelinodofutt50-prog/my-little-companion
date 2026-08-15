@@ -18,7 +18,7 @@ export const checkSignupAllowed = createServerFn({ method: "POST" })
     } catch (err) {
       // Fail-open: falha de infraestrutura antifraude nunca bloqueia cadastro.
       console.error("[antifraud] checkSignupAllowed falhou, liberando cadastro:", err);
-      return { allowed: true, reason: null, accountsFromIp: 0, suspicious: false } as any;
+      return { allowed: true, accountsInWindow: 0 };
     }
   });
 
