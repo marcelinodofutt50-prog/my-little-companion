@@ -15,27 +15,32 @@ export const checkAuthSecurity = createServerFn({ method: "POST" })
     }).parse(input)
   )
   .handler(async ({ data }) => {
-    // Default configs
-    const configs = {
-      login: { max: 5, window: 5 * 60 * 1000 }, // 5 attempts per 5 mins
-      signup: { max: 3, window: 60 * 60 * 1000 }, // 3 attempts per hour (IP level checked elsewhere too)
-      recovery: { max: 3, window: 15 * 60 * 1000 }, // 3 recoveries per 15 mins
-    };
-
-    const config = configs[data.action];
-    const rl = await checkRateLimit({
-      key: data.action,
-      maxAttempts: config.max,
-      windowMs: config.window
-    });
-
-    if (!rl.allowed) {
-      await recordAttempt(data.action, "blocked", maskEmail(data.email));
-      return { 
-        allowed: false, 
-        message: `Muitas tentativas de ${data.action}. Tente novamente em ${Math.ceil(rl.retryAfter / 60)} minutos.`,
-        retryAfter: rl.retryAfter
+    try {
+      // Default configs
+      const configs = {
+        login: { max: 5, window: 5 * 60 * 1000 }, // 5 attempts per 5 mins
+        signup: { max: 3, window: 60 * 60 * 1000 }, // 3 attempts per hour (IP level checked elsewhere too)
+        recovery: { max: 3, window: 15 * 60 * 1000 }, // 3 recoveries per 15 mins
       };
+
+      const config = configs[data.action];
+      const rl = await checkRateLimit({
+        key: data.action,
+        maxAttempts: config.max,
+        windowMs: config.window
+      });
+
+      if (!rl.allowed) {
+        await recordAttempt(data.action, "blocked", maskEmail(data.email));
+        return {
+          allowed: false,
+          message: `Muitas tentativas de ${data.action}. Tente novamente em ${Math.ceil(rl.retryAfter / 60)} minutos.`,
+          retryAfter: rl.retryAfter
+        };
+      }
+    } catch (error) {
+      // Uma falha de configuração/telemetria nunca pode derrubar login ou cadastro.
+      console.error("[security] rate limit indisponível; autenticação liberada:", error);
     }
 
     return { allowed: true };
