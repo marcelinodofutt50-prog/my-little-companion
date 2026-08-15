@@ -1,8 +1,8 @@
 {
   "base_url": "http://localhost:8080",
-  "generated_at": "2026-08-15T00:10:40.996889+00:00",
-  "healthy": false,
-  "passed": 9,
+  "generated_at": "2026-08-15T00:11:49.920742+00:00",
+  "healthy": true,
+  "passed": 10,
   "total": 10,
   "routes": [
     {
@@ -11,10 +11,8 @@
       "status": 200,
       "console_errors": [],
       "page_errors": [],
-      "failed_requests": [
-        "HEAD https://yvvjaoqzhjqnchhwhwvy.supabase.co/rest/v1/orders?select=*&status=eq.paid"
-      ],
-      "ok": false
+      "failed_requests": [],
+      "ok": true
     },
     {
       "route": "/planos",

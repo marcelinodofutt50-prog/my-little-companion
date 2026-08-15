@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getPaidOrdersCount } from "@/lib/social-proof.functions";
 import { CheckCircle2, ShieldCheck, Zap, Clock } from "lucide-react";
 
 export function SocialProofStrip() {
@@ -9,11 +9,8 @@ export function SocialProofStrip() {
     let cancelled = false;
     (async () => {
       try {
-        const { count: total, error } = await supabase
-          .from("orders" as any)
-          .select("*", { count: "exact", head: true })
-          .eq("status", "paid");
-        if (!cancelled && !error && typeof total === "number") setCount(total);
+        const res: any = await getPaidOrdersCount();
+        if (!cancelled && typeof res?.count === "number") setCount(res.count);
       } catch {
         // leitura pública indisponível — mantém o selo estático
       }
