@@ -13,7 +13,7 @@ import { Lost2faHelp } from "@/components/Lost2faHelp";
 import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
 import { checkEmailAvailability, confirmFreshSignupEmail, createAccountWhenEmailBlocked } from "@/lib/signup.functions";
-import { reportAuthOutcome } from "@/lib/security.functions";
+import { checkAuthSecurity, reportAuthOutcome } from "@/lib/security.functions";
 
 
 export const Route = createFileRoute("/auth")({
@@ -333,12 +333,19 @@ function AuthPage() {
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     try {
-      // Nunca coloque verificações auxiliares de telemetria antes da chamada de
-      // autenticação. Uma implantação antiga desse endpoint exigia IP_HASH_SALT
-      // e impedia login/cadastro antes que o provedor de identidade fosse chamado.
-      // O provedor mantém seu próprio rate limit; cadastros também passam pelo
-      // antifraude fail-open abaixo, que usa apenas sinais disponíveis.
       setSecurityNotice(null);
+
+      // Login e cadastro usam a mesma proteção e o mesmo hash server-side.
+      // Se o segredo obrigatório estiver ausente, o backend bloqueia de forma
+      // controlada sem revelar nomes, valores ou detalhes internos ao cliente.
+      const security = await checkAuthSecurity({
+        data: { email: cleanEmail, action: mode === "up" ? "signup" : "login" },
+      });
+      setSecurityNotice("warning" in security ? (security.warning ?? null) : null);
+      if (!security.allowed) {
+        toast.error(security.message);
+        return;
+      }
 
       if (mode === "up") {
         // 1) Mesma caixa de entrada já cadastrada? (cobre alias do Gmail: pontos e +tag)

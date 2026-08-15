@@ -15,6 +15,7 @@ const CLIENT_ENV: EnvSpec[] = [
 ];
 
 const SERVER_ENV: EnvSpec[] = [
+  { name: "IP_HASH_SALT", required: true, description: "Server-only secret used to hash IP addresses (minimum 32 characters)" },
   { name: "SUPABASE_URL", required: true, description: "Supabase project URL (server)" },
   { name: "SUPABASE_PUBLISHABLE_KEY", required: true, description: "Supabase publishable key (server)" },
   { name: "SUPABASE_SERVICE_ROLE_KEY", required: true, description: "Supabase service role key (server-only, used by admin client, referrals, webhooks)" },
@@ -44,7 +45,8 @@ export function validateServerEnv(): { ok: boolean; missing: string[] } {
   const missing: string[] = [];
   for (const spec of SERVER_ENV) {
     const value = process.env[spec.name];
-    if (spec.required && (!value || value.trim() === "")) {
+    const invalidIpSalt = spec.name === "IP_HASH_SALT" && (value?.trim().length ?? 0) < 32;
+    if (spec.required && (!value || value.trim() === "" || invalidIpSalt)) {
       missing.push(spec.name);
     }
   }

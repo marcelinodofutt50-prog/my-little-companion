@@ -16,6 +16,15 @@ export const checkSignupAllowed = createServerFn({ method: "POST" })
       const { evaluateSignup } = await import("@/lib/antifraud.server");
       return await evaluateSignup(data?.email ?? null);
     } catch (err) {
+      const { isIpHashSaltConfigurationError } = await import("@/lib/antifraud.server");
+      if (isIpHashSaltConfigurationError(err)) {
+        console.error("[antifraud] Cadastro interrompido: configuração do hash de IP indisponível.");
+        return {
+          allowed: false,
+          accountsInWindow: 0,
+          reason: "Não foi possível validar sua conexão com segurança. Tente novamente mais tarde ou fale com o suporte.",
+        };
+      }
       // Fail-open: falha de infraestrutura antifraude nunca bloqueia cadastro.
       console.error("[antifraud] checkSignupAllowed falhou, liberando cadastro:", err);
       return { allowed: true, accountsInWindow: 0 };

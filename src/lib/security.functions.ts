@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { checkRateLimit, recordAttempt } from "./rate-limit.server";
-import { maskEmail } from "./antifraud.server";
+import { isIpHashSaltConfigurationError, maskEmail } from "./antifraud.server";
 
 /**
  * Public security check for sensitive auth actions.
@@ -39,7 +39,15 @@ export const checkAuthSecurity = createServerFn({ method: "POST" })
         };
       }
     } catch (error) {
-      // Uma falha de configuração/telemetria nunca pode derrubar login ou cadastro.
+      if (isIpHashSaltConfigurationError(error)) {
+        console.error("[security] Proteção de autenticação indisponível por configuração inválida do hash de IP.");
+        return {
+          allowed: false,
+          code: "SECURITY_CONFIGURATION_UNAVAILABLE" as const,
+          message: "Não foi possível validar sua conexão com segurança. Tente novamente mais tarde ou fale com o suporte.",
+        };
+      }
+      // Falhas de telemetria não devem se passar por bloqueio antifraude.
       console.error("[security] rate limit indisponível; autenticação liberada:", error);
       return {
         allowed: true,
