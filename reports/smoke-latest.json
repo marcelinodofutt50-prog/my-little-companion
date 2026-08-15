@@ -1,0 +1,101 @@
+{
+  "base_url": "http://localhost:8080",
+  "generated_at": "2026-08-15T00:10:40.996889+00:00",
+  "healthy": false,
+  "passed": 9,
+  "total": 10,
+  "routes": [
+    {
+      "route": "/",
+      "label": "Home",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [
+        "HEAD https://yvvjaoqzhjqnchhwhwvy.supabase.co/rest/v1/orders?select=*&status=eq.paid"
+      ],
+      "ok": false
+    },
+    {
+      "route": "/planos",
+      "label": "Planos",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/auth",
+      "label": "Login",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/indicacoes",
+      "label": "Indicações",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/mercado",
+      "label": "Mercado",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/tutorial",
+      "label": "Tutoriais",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/crypto",
+      "label": "Cripto",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/contato",
+      "label": "Contato",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/termos",
+      "label": "Termos",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    },
+    {
+      "route": "/privacidade",
+      "label": "Privacidade",
+      "status": 200,
+      "console_errors": [],
+      "page_errors": [],
+      "failed_requests": [],
+      "ok": true
+    }
+  ]
+}
