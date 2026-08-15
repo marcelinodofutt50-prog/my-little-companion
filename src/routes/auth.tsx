@@ -327,7 +327,11 @@ function AuthPage() {
     setLoading(true);
     try {
       // Security Check: Rate limiting before attempting Supabase Auth
-      const sec = await checkAuthSecurity({ data: { email: cleanEmail, action: mode === "up" ? "signup" : "login" } });
+      const sec = await checkAuthSecurity({ data: { email: cleanEmail, action: mode === "up" ? "signup" : "login" } })
+        .catch((error) => {
+          console.error("[auth] verificação preventiva indisponível; seguindo com autenticação:", error);
+          return { allowed: true };
+        });
       if (!sec.allowed) {
         setLoading(false);
         return toast.error(sec.message);
