@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { SupportDiagnosticButton } from '@/components/SupportDiagnosticButton'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 import { TrialActivationCard } from '@/components/TrialActivationCard'
+import { WelcomeProfileDialog } from '@/components/WelcomeProfileDialog'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -364,6 +365,8 @@ function DashboardPage() {
               )}
 
 
+
+              <WelcomeProfileDialog />
 
               {licenses && licenses.length > 0 && (
                 <OnboardingChecklist
