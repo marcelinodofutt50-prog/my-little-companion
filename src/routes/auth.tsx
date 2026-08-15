@@ -336,7 +336,7 @@ function AuthPage() {
             warning: "Não foi possível concluir uma verificação preventiva, mas seu acesso continua liberado.",
           };
         });
-      setSecurityNotice("warning" in sec ? sec.warning : null);
+      setSecurityNotice("warning" in sec ? (sec.warning ?? null) : null);
       if (!sec.allowed) {
         setLoading(false);
         return toast.error("message" in sec ? sec.message : "Muitas tentativas. Aguarde e tente novamente.");
