@@ -6,7 +6,7 @@ import { assertStaff } from "@/lib/admin-helpers.server";
 const MAX_VIDEO = 500 * 1024 * 1024; // 500MB
 const MAX_IMAGE = 10 * 1024 * 1024; // 10MB
 
-const VIDEO_EXT = ["mp4", "webm", "mov", "m4v"];
+const VIDEO_EXT = ["mp4", "webm", "mov", "m4v", "mkv", "ogg", "ogv", "avi"];
 const IMAGE_EXT = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
 
 /**
