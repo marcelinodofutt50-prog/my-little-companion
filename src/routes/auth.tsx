@@ -13,7 +13,7 @@ import { Lost2faHelp } from "@/components/Lost2faHelp";
 import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
 import { checkEmailAvailability, confirmFreshSignupEmail, createAccountWhenEmailBlocked } from "@/lib/signup.functions";
-import { checkAuthSecurity, reportAuthOutcome } from "@/lib/security.functions";
+import { reportAuthOutcome } from "@/lib/security.functions";
 
 
 export const Route = createFileRoute("/auth")({
@@ -333,26 +333,12 @@ function AuthPage() {
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     try {
-      // Security Check: Rate limiting before attempting Supabase Auth
-      const sec = await checkAuthSecurity({ data: { email: cleanEmail, action: mode === "up" ? "signup" : "login" } })
-        .catch((error) => {
-          console.error("[auth] verificação preventiva indisponível; seguindo com autenticação:", error);
-          return {
-            allowed: true,
-            warning: "Não foi possível concluir uma verificação preventiva, mas seu acesso continua liberado.",
-          };
-        });
-      setSecurityNotice("warning" in sec ? (sec.warning ?? null) : null);
-      if (!sec.allowed) {
-        setLoading(false);
-        const msg = "message" in sec ? String(sec.message ?? "") : "";
-        const technical = /IP_HASH_SALT|hash salt|não configurado|not configured|PGRST|schema cache|env(ironment)? var/i.test(msg);
-        return toast.error(
-          technical || !msg
-            ? "Não conseguimos validar sua conexão agora (navegação anônima ou bloqueadores podem causar isso). Tente em uma aba normal do navegador ou fale com o suporte."
-            : msg,
-        );
-      }
+      // Nunca coloque verificações auxiliares de telemetria antes da chamada de
+      // autenticação. Uma implantação antiga desse endpoint exigia IP_HASH_SALT
+      // e impedia login/cadastro antes que o provedor de identidade fosse chamado.
+      // O provedor mantém seu próprio rate limit; cadastros também passam pelo
+      // antifraude fail-open abaixo, que usa apenas sinais disponíveis.
+      setSecurityNotice(null);
 
       if (mode === "up") {
         // 1) Mesma caixa de entrada já cadastrada? (cobre alias do Gmail: pontos e +tag)
