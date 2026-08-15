@@ -69,15 +69,52 @@ beforeEach(() => {
 const device = { deviceId: "device-abc-12345678", attrs: "1920x1080x24|2|America/Sao_Paulo|pt-BR|Linux|8|8|0|Mozilla" };
 
 describe("fraud engine", () => {
-  it("não bloqueia autenticação quando IP_HASH_SALT está ausente ou curto", async () => {
+  it("falha de forma controlada quando IP_HASH_SALT está ausente ou curto", async () => {
     const previous = process.env.IP_HASH_SALT;
-    const { resolveHashSalt } = await import("../antifraud.server");
+    const { resolveHashSalt, IpHashSaltConfigurationError } = await import("../antifraud.server");
 
     delete process.env.IP_HASH_SALT;
-    expect(resolveHashSalt().length).toBeGreaterThanOrEqual(16);
+    expect(() => resolveHashSalt()).toThrow(IpHashSaltConfigurationError);
 
     process.env.IP_HASH_SALT = "curto";
-    expect(resolveHashSalt().length).toBeGreaterThanOrEqual(16);
+    expect(() => resolveHashSalt()).toThrow(IpHashSaltConfigurationError);
+
+    if (previous === undefined) delete process.env.IP_HASH_SALT;
+    else process.env.IP_HASH_SALT = previous;
+  });
+
+  it("usa o salt configurado sem expô-lo e mantém hashes determinísticos", async () => {
+    const secret = "segredo-super-forte-de-teste-com-mais-de-32-caracteres";
+    const previous = process.env.IP_HASH_SALT;
+    process.env.IP_HASH_SALT = secret;
+    const { hashIp } = await import("../antifraud.server");
+
+    const signupHash = await hashIp("203.0.113.10");
+    const loginHash = await hashIp("203.0.113.10");
+    expect(signupHash).toBe(loginHash);
+    expect(signupHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(signupHash).not.toContain(secret);
+
+    if (previous === undefined) delete process.env.IP_HASH_SALT;
+    else process.env.IP_HASH_SALT = previous;
+  });
+
+  it("não inclui o segredo em erros nem logs", async () => {
+    const previous = process.env.IP_HASH_SALT;
+    const tooShortSecret = "segredo-curto";
+    process.env.IP_HASH_SALT = tooShortSecret;
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { resolveHashSalt } = await import("../antifraud.server");
+
+    let message = "";
+    try {
+      resolveHashSalt();
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).not.toContain(tooShortSecret);
+    expect(log.mock.calls.flat().join(" ")).not.toContain(tooShortSecret);
+    log.mockRestore();
 
     if (previous === undefined) delete process.env.IP_HASH_SALT;
     else process.env.IP_HASH_SALT = previous;

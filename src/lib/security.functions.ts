@@ -1,7 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { checkRateLimit, recordAttempt } from "./rate-limit.server";
-import { maskEmail } from "./antifraud.server";
 
 /**
  * Public security check for sensitive auth actions.
@@ -16,6 +14,8 @@ export const checkAuthSecurity = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     try {
+      const { checkRateLimit, recordAttempt } = await import("./rate-limit.server");
+      const { maskEmail } = await import("./antifraud.server");
       // Default configs
       const configs = {
         login: { max: 5, window: 5 * 60 * 1000 }, // 5 attempts per 5 mins
@@ -39,7 +39,16 @@ export const checkAuthSecurity = createServerFn({ method: "POST" })
         };
       }
     } catch (error) {
-      // Uma falha de configuração/telemetria nunca pode derrubar login ou cadastro.
+      const { isIpHashSaltConfigurationError } = await import("./antifraud.server");
+      if (isIpHashSaltConfigurationError(error)) {
+        console.error("[security] Proteção de autenticação indisponível por configuração inválida do hash de IP.");
+        return {
+          allowed: false,
+          code: "SECURITY_CONFIGURATION_UNAVAILABLE" as const,
+          message: "Não foi possível validar sua conexão com segurança. Tente novamente mais tarde ou fale com o suporte.",
+        };
+      }
+      // Falhas de telemetria não devem se passar por bloqueio antifraude.
       console.error("[security] rate limit indisponível; autenticação liberada:", error);
       return {
         allowed: true,
@@ -62,6 +71,8 @@ export const reportAuthOutcome = createServerFn({ method: "POST" })
     }).parse(input)
   )
   .handler(async ({ data }) => {
+    const { recordAttempt } = await import("./rate-limit.server");
+    const { maskEmail } = await import("./antifraud.server");
     await recordAttempt(data.action, data.success ? "success" : "failure", maskEmail(data.email));
     return { ok: true };
   });

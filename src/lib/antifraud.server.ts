@@ -49,25 +49,37 @@ export function clientUserAgent(): string | null {
   return (getRequestHeader("user-agent") ?? "").slice(0, 200) || null;
 }
 
-/** sha256(ip + salt) — nunca guardamos o IP em claro. */
+export const MIN_IP_HASH_SALT_LENGTH = 32;
+
+export class IpHashSaltConfigurationError extends Error {
+  readonly code = "IP_HASH_CONFIGURATION_UNAVAILABLE";
+
+  constructor() {
+    super("Security configuration unavailable");
+    this.name = "IpHashSaltConfigurationError";
+  }
+}
+
+export function isIpHashSaltConfigurationError(error: unknown): boolean {
+  return error instanceof IpHashSaltConfigurationError ||
+    (typeof error === "object" && error !== null && "code" in error &&
+      error.code === "IP_HASH_CONFIGURATION_UNAVAILABLE");
+}
+
+/**
+ * Segredo exclusivo do hash de IP. Lido somente no servidor, a cada request.
+ * Não derivamos este salt de outras credenciais: isso mudaria hashes entre
+ * ambientes e ampliaria o impacto de um vazamento.
+ */
 export function resolveHashSalt(): string {
   const explicit = (process.env.IP_HASH_SALT ?? "").trim();
-  if (explicit.length >= 16) return explicit;
-  // Fallback determinístico: mantém o hash com chave secreta mesmo quando a
-  // variável dedicada não foi provisionada no ambiente. Antifraude nunca pode
-  // derrubar login/cadastro por falta de configuração.
-  const derived =
-    process.env.EXT_SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.EXT_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.EXT_SUPABASE_URL ??
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SUPABASE_URL ??
-    process.env.LICENSE_ENC_KEY ??
-    process.env.APK_WORKER_HMAC_SECRET ??
-    "";
-  if (derived.length >= 16) return `shadow-ip-fallback:${derived}`;
-  return "shadow-ip-fallback:local-development-salt";
+  if (explicit.length >= MIN_IP_HASH_SALT_LENGTH) return explicit;
+
+  // Registra somente estado e requisito, nunca o valor recebido.
+  console.error(
+    `[security-config] IP_HASH_SALT ausente ou menor que ${MIN_IP_HASH_SALT_LENGTH} caracteres; proteção por IP indisponível.`,
+  );
+  throw new IpHashSaltConfigurationError();
 }
 
 export async function hashIp(ip: string): Promise<string> {
@@ -195,7 +207,8 @@ export async function evaluateSignup(email?: string | null): Promise<SignupGuard
       };
     }
     return { allowed: true, accountsInWindow: used };
-  } catch {
+  } catch (error) {
+    if (isIpHashSaltConfigurationError(error)) throw error;
     // Antifraude nunca pode derrubar a venda: em erro, libera.
     return { allowed: true, accountsInWindow: 0 };
   }
