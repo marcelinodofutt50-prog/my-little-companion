@@ -99,6 +99,27 @@ describe("fraud engine", () => {
     else process.env.IP_HASH_SALT = previous;
   });
 
+  it("não inclui o segredo em erros nem logs", async () => {
+    const previous = process.env.IP_HASH_SALT;
+    const tooShortSecret = "segredo-curto";
+    process.env.IP_HASH_SALT = tooShortSecret;
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { resolveHashSalt } = await import("../antifraud.server");
+
+    let message = "";
+    try {
+      resolveHashSalt();
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).not.toContain(tooShortSecret);
+    expect(log.mock.calls.flat().join(" ")).not.toContain(tooShortSecret);
+    log.mockRestore();
+
+    if (previous === undefined) delete process.env.IP_HASH_SALT;
+    else process.env.IP_HASH_SALT = previous;
+  });
+
   it("libera cliente novo e legítimo (score zero)", async () => {
     const v = await assess("trial", device);
     expect(v.allowed).toBe(true);

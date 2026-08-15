@@ -266,7 +266,7 @@ function AuthPage() {
       toast.error("Confirme seu e-mail antes de entrar. Veja a caixa de entrada e o spam.");
     } else if (/invalid login credentials/i.test(raw)) {
       toast.error("E-mail ou senha incorretos.");
-    } else if (/IP_HASH_SALT|hash salt|não configurado|not configured|PGRST|schema cache|env(ironment)? var/i.test(raw)) {
+    } else if (/security configuration unavailable|configuração de segurança indisponível|PGRST|schema cache/i.test(raw)) {
       // Erro técnico de configuração: nunca mostrar detalhes internos ao cliente.
       if (action !== "signin") track(action, "failed", { error: raw, httpStatus: Number(status) || undefined });
       toast.error(
