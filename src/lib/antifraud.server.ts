@@ -73,6 +73,22 @@ export function isIpHashSaltConfigurationError(error: unknown): boolean {
  */
 export function resolveHashSalt(): string {
   const explicit = (process.env.IP_HASH_SALT ?? "").trim();
+  const runtime = typeof (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime !== "undefined"
+    ? "edge"
+    : process.release?.name === "node"
+      ? `node-${process.version}`
+      : "unknown";
+  const deployment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown";
+  const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ?? "unavailable";
+  console.info("[security-config-runtime]", {
+    function: "resolveHashSalt",
+    configured: explicit.length > 0,
+    length: explicit.length,
+    valid: explicit.length >= MIN_IP_HASH_SALT_LENGTH,
+    deployment,
+    runtime,
+    commit,
+  });
   if (explicit.length >= MIN_IP_HASH_SALT_LENGTH) return explicit;
 
   // Registra somente estado e requisito, nunca o valor recebido.

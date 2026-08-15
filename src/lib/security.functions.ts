@@ -13,6 +13,17 @@ export const checkAuthSecurity = createServerFn({ method: "POST" })
     }).parse(input)
   )
   .handler(async ({ data }) => {
+    console.info("[auth-runtime]", {
+      function: "checkAuthSecurity",
+      action: data.action,
+      deployment: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown",
+      runtime: typeof (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime !== "undefined"
+        ? "edge"
+        : process.release?.name === "node"
+          ? `node-${process.version}`
+          : "unknown",
+      commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ?? "unavailable",
+    });
     try {
       const { checkRateLimit, recordAttempt } = await import("./rate-limit.server");
       const { maskEmail } = await import("./antifraud.server");
