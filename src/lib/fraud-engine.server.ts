@@ -16,7 +16,7 @@
  * Provas fortes negam na hora. O resto soma pontos: só nega acima do limite,
  * então um usuário legítimo isolado passa com score 0.
  */
-import { clientIp, clientUserAgent, hashIp, isAllowlisted } from "./antifraud.server";
+import { clientIp, clientUserAgent, hashIp, isAllowlisted, resolveHashSalt } from "./antifraud.server";
 import { canonicalEmail } from "./email-canonical";
 
 export type FraudAction = "trial" | "play_protect";
@@ -57,8 +57,7 @@ export function ipPrefix(ip: string): string | null {
 }
 
 async function sha(value: string): Promise<string> {
-  const salt = process.env.IP_HASH_SALT ?? "";
-  if (salt.length < 16) throw new Error("IP_HASH_SALT não configurado corretamente");
+  const salt = resolveHashSalt();
   const bytes = new TextEncoder().encode(`${value}:${salt}`);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest))
