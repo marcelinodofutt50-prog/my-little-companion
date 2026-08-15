@@ -266,6 +266,12 @@ function AuthPage() {
       toast.error("Confirme seu e-mail antes de entrar. Veja a caixa de entrada e o spam.");
     } else if (/invalid login credentials/i.test(raw)) {
       toast.error("E-mail ou senha incorretos.");
+    } else if (/IP_HASH_SALT|hash salt|não configurado|not configured|PGRST|schema cache|env(ironment)? var/i.test(raw)) {
+      // Erro técnico de configuração: nunca mostrar detalhes internos ao cliente.
+      if (action !== "signin") track(action, "failed", { error: raw, httpStatus: Number(status) || undefined });
+      toast.error(
+        "Não conseguimos validar sua conexão agora (navegação anônima ou bloqueadores podem causar isso). Tente em uma aba normal do navegador ou fale com o suporte.",
+      );
     } else {
       if (action !== "signin") track(action, "failed", { error: raw, httpStatus: Number(status) || undefined });
       toast.error(raw || "Não foi possível concluir. Tente novamente.");
