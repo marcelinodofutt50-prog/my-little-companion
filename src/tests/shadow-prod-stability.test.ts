@@ -69,13 +69,13 @@ describe('Shadow Production Stability Final Audit', () => {
     expect(tiersError?.code).not.toBe('42P01');
   });
 
-  it('should confirm diagnostic tunnel accessibility', async () => {
-    // O painel de diagnóstico do Shadow Pass usa funções que devem estar acessíveis
+  it('keeps profiles closed to anonymous clients', async () => {
+    // Perfis nunca podem ser lidos sem sessão: o painel usa funções autenticadas.
     const { data, error } = await supabase
       .from('profiles')
       .select('id')
       .limit(1);
-      
-    expect(error).toBeNull();
+
+    expect(error?.code === '42501' || (data?.length ?? 0) === 0).toBe(true);
   });
 });
