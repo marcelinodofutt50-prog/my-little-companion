@@ -334,7 +334,7 @@ function AuthPage() {
         });
       if (!sec.allowed) {
         setLoading(false);
-        return toast.error(sec.message);
+        return toast.error("message" in sec ? sec.message : "Muitas tentativas. Aguarde e tente novamente.");
       }
 
       if (mode === "up") {
