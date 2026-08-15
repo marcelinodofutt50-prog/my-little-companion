@@ -67,7 +67,7 @@ export async function enforceTrialConduct(input: {
 
   if (error) {
     console.error("[trial-conduct] falha ao ler licenças:", error);
-    return { flagged: true, hasPaidLicense: false, revokedLicenseIds: [], reason: "leitura_falhou" };
+    return { flagged: true, actionable: true, confidence: "high", hasPaidLicense: false, revokedLicenseIds: [], reason: "leitura_falhou" };
   }
 
   const active = (licenses ?? []).filter(
@@ -153,6 +153,8 @@ export async function enforceTrialConduct(input: {
 
   return {
     flagged: true,
+    actionable: true,
+    confidence: "high",
     hasPaidLicense: false,
     revokedLicenseIds,
     reason: detection.matched.join(","),
