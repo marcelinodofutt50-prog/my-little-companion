@@ -16,8 +16,7 @@
  * Provas fortes negam na hora. O resto soma pontos: só nega acima do limite,
  * então um usuário legítimo isolado passa com score 0.
  */
-import { resolveHashSalt } from "./antifraud.server";
-import { clientIp, clientUserAgent, hashIp, isAllowlisted } from "./antifraud.server";
+import { clientIp, clientUserAgent, hashIp, isAllowlisted, resolveHashSalt } from "./antifraud.server";
 import { canonicalEmail } from "./email-canonical";
 
 export type FraudAction = "trial" | "play_protect";
