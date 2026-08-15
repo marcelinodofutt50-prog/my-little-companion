@@ -207,7 +207,8 @@ export async function evaluateSignup(email?: string | null): Promise<SignupGuard
       };
     }
     return { allowed: true, accountsInWindow: used };
-  } catch {
+  } catch (error) {
+    if (isIpHashSaltConfigurationError(error)) throw error;
     // Antifraude nunca pode derrubar a venda: em erro, libera.
     return { allowed: true, accountsInWindow: 0 };
   }
