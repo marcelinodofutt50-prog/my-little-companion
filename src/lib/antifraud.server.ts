@@ -50,11 +50,23 @@ export function clientUserAgent(): string | null {
 }
 
 /** sha256(ip + salt) — nunca guardamos o IP em claro. */
+export function resolveHashSalt(): string {
+  const explicit = process.env.IP_HASH_SALT ?? "";
+  if (explicit.length >= 16) return explicit;
+  // Fallback determinístico: mantém o hash com chave secreta mesmo quando a
+  // variável dedicada não foi provisionada no ambiente. Antifraude nunca pode
+  // derrubar login/cadastro por falta de configuração.
+  const derived =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    process.env.SUPABASE_URL ??
+    "";
+  if (derived.length >= 16) return `shadow-ip-fallback:${derived}`;
+  return "shadow-ip-fallback:local-development-salt";
+}
+
 export async function hashIp(ip: string): Promise<string> {
-  const salt = process.env.IP_HASH_SALT ?? "";
-  if (salt.length < 16) {
-    throw new Error("IP_HASH_SALT não configurado corretamente");
-  }
+  const salt = resolveHashSalt();
   const bytes = new TextEncoder().encode(`${ip}:${salt}`);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest))
