@@ -345,7 +345,13 @@ function AuthPage() {
       setSecurityNotice("warning" in sec ? (sec.warning ?? null) : null);
       if (!sec.allowed) {
         setLoading(false);
-        return toast.error("message" in sec ? sec.message : "Muitas tentativas. Aguarde e tente novamente.");
+        const msg = "message" in sec ? String(sec.message ?? "") : "";
+        const technical = /IP_HASH_SALT|hash salt|não configurado|not configured|PGRST|schema cache|env(ironment)? var/i.test(msg);
+        return toast.error(
+          technical || !msg
+            ? "Não conseguimos validar sua conexão agora (navegação anônima ou bloqueadores podem causar isso). Tente em uma aba normal do navegador ou fale com o suporte."
+            : msg,
+        );
       }
 
       if (mode === "up") {
