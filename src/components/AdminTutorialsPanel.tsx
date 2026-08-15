@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { adminSaveTutorial, adminDeleteTutorial, listTutorials, updateTutorialOrder } from "@/lib/tutorials.functions";
-import { createTutorialUploadUrl } from "@/lib/tutorial-upload.functions";
+import { createTutorialUploadUrl, createTutorialPreviewUrl } from "@/lib/tutorial-upload.functions";
 import { useI18n } from "@/lib/i18n";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -210,17 +210,22 @@ export function AdminTutorialsPanel() {
       clearInterval(progressInterval);
       setUploadProgress(100);
       
-      const { data: preview, error: previewError } = await supabase.storage
-        .from('tutorials')
-        .createSignedUrl(signed.mediaPath, 60 * 60);
-      if (previewError || !preview?.signedUrl) {
-        throw new Error("Arquivo enviado, mas não foi possível preparar a visualização.");
+      // Preview assinado pelo servidor (bucket privado): nunca bloqueia o envio.
+      let previewUrl: string | null = null;
+      try {
+        const res: any = await createTutorialPreviewUrl({ data: { path: signed.mediaPath } });
+        previewUrl = res?.url ?? null;
+      } catch (previewErr) {
+        console.warn("[tutorials] preview indisponível:", previewErr);
+      }
+      if (!previewUrl) {
+        toast.info("Arquivo enviado. A pré-visualização aparecerá após salvar.");
       }
 
       setCurrent((prev: any) => ({
         ...prev,
         [type === 'video' ? 'video_url' : 'image_url']: signed.mediaPath,
-        [type === 'video' ? 'video_preview_url' : 'image_preview_url']: preview.signedUrl,
+        [type === 'video' ? 'video_preview_url' : 'image_preview_url']: previewUrl,
       }));
       toast.success(`${type === 'video' ? 'Vídeo' : 'Capa'} enviado com sucesso!`);
     } catch (e: any) {

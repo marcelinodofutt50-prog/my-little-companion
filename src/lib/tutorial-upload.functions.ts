@@ -93,3 +93,29 @@ export const createTutorialUploadUrl = createServerFn({ method: "POST" })
     console.log("[tutorial-upload] token emitido", { userId: context.userId, path });
     return { path, token: signed.token, mediaPath: path };
   });
+
+/**
+ * URL assinada de leitura para pré-visualizar a mídia recém-enviada.
+ * O bucket `tutorials` é privado: gerar a URL no browser depende de policies
+ * em storage.objects que variam por ambiente e falhava com "não foi possível
+ * preparar a visualização". Aqui o service role assina e devolve pronto.
+ */
+export const createTutorialPreviewUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) => z.object({ path: z.string().trim().min(1).max(400) }).parse(i))
+  .handler(async ({ data, context }) => {
+    try {
+      await assertStaff(context);
+    } catch {
+      throw new Error("Acesso negado: apenas admin ou suporte podem visualizar essa mídia.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from("tutorials")
+      .createSignedUrl(data.path, 60 * 60);
+    if (error || !signed?.signedUrl) {
+      console.error("[tutorial-upload] preview falhou:", { path: data.path, message: error?.message });
+      return { url: null as string | null };
+    }
+    return { url: signed.signedUrl };
+  });
