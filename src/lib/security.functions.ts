@@ -41,6 +41,10 @@ export const checkAuthSecurity = createServerFn({ method: "POST" })
     } catch (error) {
       // Uma falha de configuração/telemetria nunca pode derrubar login ou cadastro.
       console.error("[security] rate limit indisponível; autenticação liberada:", error);
+      return {
+        allowed: true,
+        warning: "A verificação preventiva está temporariamente indisponível, mas você pode entrar ou criar sua conta normalmente.",
+      };
     }
 
     return { allowed: true };

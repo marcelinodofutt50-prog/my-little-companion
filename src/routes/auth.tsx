@@ -142,6 +142,7 @@ function AuthPage() {
   /** bloqueio temporário por excesso de tentativas de cadastro (rate limit do servidor). */
   const [signupBlockUntil, setSignupBlockUntil] = useState<number | null>(null);
   const [signupBlockSecs, setSignupBlockSecs] = useState(0);
+  const [securityNotice, setSecurityNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!signupBlockUntil) return setSignupBlockSecs(0);
@@ -330,8 +331,12 @@ function AuthPage() {
       const sec = await checkAuthSecurity({ data: { email: cleanEmail, action: mode === "up" ? "signup" : "login" } })
         .catch((error) => {
           console.error("[auth] verificação preventiva indisponível; seguindo com autenticação:", error);
-          return { allowed: true };
+          return {
+            allowed: true,
+            warning: "Não foi possível concluir uma verificação preventiva, mas seu acesso continua liberado.",
+          };
         });
+      setSecurityNotice("warning" in sec ? sec.warning : null);
       if (!sec.allowed) {
         setLoading(false);
         return toast.error("message" in sec ? sec.message : "Muitas tentativas. Aguarde e tente novamente.");
@@ -493,6 +498,13 @@ function AuthPage() {
           <div className="mt-4 flex w-full items-start gap-3 rounded-md border border-neon/40 bg-neon/10 px-4 py-4 text-xs whitespace-pre-line text-neon">
             <Mail className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{signupMessage}</span>
+          </div>
+        )}
+
+        {securityNotice && (
+          <div role="status" className="mt-4 flex w-full items-start gap-3 rounded-md border border-amber-400/40 bg-amber-400/5 px-4 py-3 text-xs text-amber-400">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{securityNotice} Tente novamente se a operação não concluir.</span>
           </div>
         )}
 
