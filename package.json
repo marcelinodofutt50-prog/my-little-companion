@@ -4,6 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "smoke": "python3 scripts/post-deploy-smoke.py",
     "test:e2e": "python3 scripts/check-schema.py && python3 scripts/e2e-training-hub.py",
     "dev": "vite dev",
     "validate-assets": "bun run scripts/validate-assets.ts",
