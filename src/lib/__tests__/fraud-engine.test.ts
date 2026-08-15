@@ -69,6 +69,20 @@ beforeEach(() => {
 const device = { deviceId: "device-abc-12345678", attrs: "1920x1080x24|2|America/Sao_Paulo|pt-BR|Linux|8|8|0|Mozilla" };
 
 describe("fraud engine", () => {
+  it("não bloqueia autenticação quando IP_HASH_SALT está ausente ou curto", async () => {
+    const previous = process.env.IP_HASH_SALT;
+    const { resolveHashSalt } = await import("../antifraud.server");
+
+    delete process.env.IP_HASH_SALT;
+    expect(resolveHashSalt().length).toBeGreaterThanOrEqual(16);
+
+    process.env.IP_HASH_SALT = "curto";
+    expect(resolveHashSalt().length).toBeGreaterThanOrEqual(16);
+
+    if (previous === undefined) delete process.env.IP_HASH_SALT;
+    else process.env.IP_HASH_SALT = previous;
+  });
+
   it("libera cliente novo e legítimo (score zero)", async () => {
     const v = await assess("trial", device);
     expect(v.allowed).toBe(true);
