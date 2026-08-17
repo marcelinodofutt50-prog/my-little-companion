@@ -102,3 +102,35 @@ export const getPublicTutorialById = createServerFn({ method: "GET" })
 
     return tutorial;
   });
+
+/**
+ * Assina uma mídia do bucket privado `tutorials` para reprodução pelo cliente.
+ * O browser não consegue assinar (policies de storage.objects), por isso o
+ * service role faz isso aqui — validando que o caminho pertence a um tutorial ativo.
+ */
+export const signTutorialMedia = createServerFn({ method: "POST" })
+  .validator((input: unknown) => z.object({ path: z.string().trim().min(1).max(500) }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const path = data.path.replace(/^\/+/, "");
+
+    const { data: owner } = await supabaseAdmin
+      .from("tutorials")
+      .select("id")
+      .eq("is_active", true)
+      .or(`video_url.ilike.%${path}%,image_url.ilike.%${path}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (!owner) return { url: null as string | null };
+
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from("tutorials")
+      .createSignedUrl(path, 60 * 60 * 4);
+
+    if (error || !signed?.signedUrl) {
+      console.error("[public-tutorials] Falha ao assinar mídia:", { path, message: error?.message });
+      return { url: null as string | null };
+    }
+    return { url: signed.signedUrl };
+  });
