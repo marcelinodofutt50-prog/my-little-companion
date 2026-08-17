@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Video, Youtube, Calendar, Tag, BarChart } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTutorialMedia } from "@/lib/tutorial-media";
 
 const tutorialQueryOptions = (id: string) => 
   queryOptions({
@@ -21,6 +22,8 @@ export const Route = createFileRoute("/tutorial/$id")({
 function TutorialDetailsPage() {
   const { id } = Route.useParams();
   const { data: tutorial } = useSuspenseQuery(tutorialQueryOptions(id));
+  const videoUrl = useTutorialMedia(tutorial.video_url);
+  const posterUrl = useTutorialMedia(tutorial.image_url);
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,12 +44,24 @@ function TutorialDetailsPage() {
           <div className="enterprise-surface overflow-hidden rounded-2xl border border-primary/20 bg-card/40 backdrop-blur-xl shadow-2xl mb-8">
             <div className="aspect-video w-full bg-black relative">
               {tutorial.video_url ? (
-                <video 
-                  src={tutorial.video_url || undefined} 
-                  controls 
-                  className="h-full w-full object-contain"
-                  poster={tutorial.image_url || undefined}
-                />
+                videoUrl ? (
+                  <video
+                    key={videoUrl}
+                    src={videoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    controlsList="nodownload"
+                    className="h-full w-full object-contain"
+                    poster={posterUrl || undefined}
+                  >
+                    Seu navegador não suporta a reprodução de vídeos.
+                  </video>
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground font-mono text-[10px] uppercase tracking-[0.3em]">
+                    Preparando reprodução...
+                  </div>
+                )
               ) : tutorial.youtube_url ? (
                 <iframe
                   className="h-full w-full"
