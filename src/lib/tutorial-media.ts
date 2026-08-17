@@ -23,14 +23,31 @@ export async function resolveTutorialMedia(url?: string | null): Promise<string 
   const cached = cache.get(path);
   if (cached) return cached;
 
-  const { supabase } = await import("@/integrations/supabase/client");
-  const { data, error } = await supabase.storage.from("tutorials").createSignedUrl(path, 60 * 60 * 4);
-  if (error || !data?.signedUrl) {
-    console.warn("[tutorial-media] Falha ao assinar mídia:", error?.message);
-    return url;
+  // O bucket é privado: só o servidor (service role) consegue assinar de forma confiável.
+  try {
+    const { signTutorialMedia } = await import("@/lib/public-tutorials.functions");
+    const res = await signTutorialMedia({ data: { path } });
+    if (res?.url) {
+      cache.set(path, res.url);
+      return res.url;
+    }
+  } catch (e) {
+    console.warn("[tutorial-media] Assinatura no servidor falhou:", e);
   }
-  cache.set(path, data.signedUrl);
-  return data.signedUrl;
+
+  // Fallback: tenta assinar no browser (funciona quando há policy de leitura)
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data, error } = await supabase.storage.from("tutorials").createSignedUrl(path, 60 * 60 * 4);
+    if (!error && data?.signedUrl) {
+      cache.set(path, data.signedUrl);
+      return data.signedUrl;
+    }
+    console.warn("[tutorial-media] Falha ao assinar mídia:", error?.message);
+  } catch (e) {
+    console.warn("[tutorial-media] Fallback de assinatura falhou:", e);
+  }
+  return url;
 }
 
 /** Hook que devolve a URL utilizável (assinada quando necessário). */
