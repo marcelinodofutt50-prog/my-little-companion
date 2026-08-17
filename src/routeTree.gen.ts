@@ -52,6 +52,7 @@ import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
 import { Route as ApiPublicHooksMigrationWaveEnforceRouteImport } from './routes/api/public/hooks/migration-wave-enforce'
 import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
+import { Route as ApiPublicHooksDailyMaintenanceRouteImport } from './routes/api/public/hooks/daily-maintenance'
 import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
 import { Route as ApiPublicHooksCryptoPollRouteImport } from './routes/api/public/hooks/crypto-poll'
 import { Route as ApiPublicHooksCleanupApkJobsRouteImport } from './routes/api/public/hooks/cleanup-apk-jobs'
@@ -280,6 +281,12 @@ const ApiPublicHooksExpireLicensesRoute =
     path: '/api/public/hooks/expire-licenses',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDailyMaintenanceRoute =
+  ApiPublicHooksDailyMaintenanceRouteImport.update({
+    id: '/api/public/hooks/daily-maintenance',
+    path: '/api/public/hooks/daily-maintenance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDailyLicenseCheckRoute =
   ApiPublicHooksDailyLicenseCheckRouteImport.update({
     id: '/api/public/hooks/daily-license-check',
@@ -353,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
+  '/api/public/hooks/daily-maintenance': typeof ApiPublicHooksDailyMaintenanceRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
@@ -402,6 +410,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
+  '/api/public/hooks/daily-maintenance': typeof ApiPublicHooksDailyMaintenanceRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
@@ -453,6 +462,7 @@ export interface FileRoutesById {
   '/api/public/hooks/cleanup-apk-jobs': typeof ApiPublicHooksCleanupApkJobsRoute
   '/api/public/hooks/crypto-poll': typeof ApiPublicHooksCryptoPollRoute
   '/api/public/hooks/daily-license-check': typeof ApiPublicHooksDailyLicenseCheckRoute
+  '/api/public/hooks/daily-maintenance': typeof ApiPublicHooksDailyMaintenanceRoute
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
@@ -504,6 +514,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
+    | '/api/public/hooks/daily-maintenance'
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
+    | '/api/public/hooks/daily-maintenance'
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
@@ -603,6 +615,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cleanup-apk-jobs'
     | '/api/public/hooks/crypto-poll'
     | '/api/public/hooks/daily-license-check'
+    | '/api/public/hooks/daily-maintenance'
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
@@ -642,6 +655,7 @@ export interface RootRouteChildren {
   ApiPublicHooksCleanupApkJobsRoute: typeof ApiPublicHooksCleanupApkJobsRoute
   ApiPublicHooksCryptoPollRoute: typeof ApiPublicHooksCryptoPollRoute
   ApiPublicHooksDailyLicenseCheckRoute: typeof ApiPublicHooksDailyLicenseCheckRoute
+  ApiPublicHooksDailyMaintenanceRoute: typeof ApiPublicHooksDailyMaintenanceRoute
   ApiPublicHooksExpireLicensesRoute: typeof ApiPublicHooksExpireLicensesRoute
   ApiPublicHooksMigrationWaveEnforceRoute: typeof ApiPublicHooksMigrationWaveEnforceRoute
   ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
@@ -952,6 +966,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksExpireLicensesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/daily-maintenance': {
+      id: '/api/public/hooks/daily-maintenance'
+      path: '/api/public/hooks/daily-maintenance'
+      fullPath: '/api/public/hooks/daily-maintenance'
+      preLoaderRoute: typeof ApiPublicHooksDailyMaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/daily-license-check': {
       id: '/api/public/hooks/daily-license-check'
       path: '/api/public/hooks/daily-license-check'
@@ -1074,6 +1095,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksCleanupApkJobsRoute: ApiPublicHooksCleanupApkJobsRoute,
   ApiPublicHooksCryptoPollRoute: ApiPublicHooksCryptoPollRoute,
   ApiPublicHooksDailyLicenseCheckRoute: ApiPublicHooksDailyLicenseCheckRoute,
+  ApiPublicHooksDailyMaintenanceRoute: ApiPublicHooksDailyMaintenanceRoute,
   ApiPublicHooksExpireLicensesRoute: ApiPublicHooksExpireLicensesRoute,
   ApiPublicHooksMigrationWaveEnforceRoute:
     ApiPublicHooksMigrationWaveEnforceRoute,

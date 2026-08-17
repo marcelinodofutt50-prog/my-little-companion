@@ -7,7 +7,7 @@
   "regions": ["gru1"],
   "crons": [
     {
-      "path": "/api/public/hooks/reconcile-pending",
+      "path": "/api/public/hooks/daily-maintenance",
       "schedule": "0 6 * * *"
     }
   ],

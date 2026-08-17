@@ -19,7 +19,12 @@ export function isAuthorizedCron(request: Request): boolean {
   if (!expected || expected.length < 16) return false;
   const provided = providedToken(request);
   if (provided.length !== expected.length) return false;
-  return provided === expected;
+  // Comparação em tempo constante: evita vazar o segredo por timing.
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+  }
+  return diff === 0;
 }
 
 /** Devolve uma Response 401 quando não autorizado, ou null quando pode seguir. */
