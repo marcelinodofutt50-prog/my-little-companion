@@ -24,7 +24,11 @@ describe('Shadow Protocol v34.0: LIVE PRODUCTION FUNCTIONAL AUDIT', () => {
        // Actually, we'll check the file content to ensure the '+ 24' is there
        const fs = await import('fs');
        const content = fs.readFileSync('src/lib/license.server.ts', 'utf8');
-       expect(content).toContain('expiresAt.setHours(expiresAt.getHours() + 24)');
+       // A duração é parametrizada (default 1 dia = 24h). Aceitamos a forma literal
+       // ou a forma calculada, desde que o passo continue sendo em horas de 24.
+       const has24h = content.includes('expiresAt.setHours(expiresAt.getHours() + 24)') ||
+         (content.includes('expiresAt.setHours(expiresAt.getHours() +') && content.includes('durationDays) * 24'));
+       expect(has24h).toBe(true);
     });
   });
 
