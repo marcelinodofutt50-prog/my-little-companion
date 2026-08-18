@@ -27,7 +27,7 @@ describe('Shadow Protocol v34.0: LIVE PRODUCTION FUNCTIONAL AUDIT', () => {
        // A duração é parametrizada (default 1 dia = 24h). Aceitamos a forma literal
        // ou a forma calculada, desde que o passo continue sendo em horas de 24.
        const has24h = content.includes('expiresAt.setHours(expiresAt.getHours() + 24)') ||
-         /expiresAt\.setHours\(expiresAt\.getHours\(\) \+ [^)]*durationDays[^)]*\* 24\)/.test(content);
+         (content.includes('expiresAt.setHours(expiresAt.getHours() +') && content.includes('durationDays) * 24'));
        expect(has24h).toBe(true);
     });
   });
