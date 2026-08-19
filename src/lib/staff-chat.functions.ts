@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertStaffChannelAccess, throwStaffChannelError } from "./staff-chat.server";
+import {
+  assertStaffChannelAccess,
+  throwStaffChannelError,
+  assertChannelMembership,
+  dmChannelFor,
+} from "./staff-chat.server";
 
 export const getStaffMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -11,6 +16,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
     const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+    assertChannelMembership(input.channel, userId);
 
     const { data: rows, error } = await supabaseAdmin
       .from("staff_messages")
@@ -79,6 +85,7 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
     const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+    assertChannelMembership(input.channel, userId);
 
     const { data, error } = await supabaseAdmin
       .from("staff_messages")
@@ -109,4 +116,52 @@ export const deleteStaffMessage = createServerFn({ method: "POST" })
     const { error } = await q;
     if (error) throwStaffChannelError(error as any, "Apagar mensagem");
     return { ok: true };
+  });
+
+/** Lista os membros da equipe disponíveis para conversa privada. */
+export const listStaffDirectory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await assertStaffChannelAccess(userId);
+
+    const { data: roles, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id, role")
+      .in("role", ["admin", "moderator", "support"]);
+
+    if (error) throwStaffChannelError(error as any, "Listar equipe");
+
+    const roleMap = new Map<string, string>();
+    for (const r of roles ?? []) {
+      const uid = (r as any).user_id as string;
+      const current = roleMap.get(uid);
+      if (!current || (r as any).role === "admin") roleMap.set(uid, (r as any).role);
+    }
+    const ids = Array.from(roleMap.keys()).filter((id) => id !== userId);
+    if (!ids.length) return { members: [] as any[] };
+
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, display_name, full_name, email, avatar_url, metadata")
+      .in("id", ids);
+
+    const members = (profiles ?? []).map((p: any) => {
+      const meta = (p.metadata as any) || {};
+      return {
+        id: p.id as string,
+        name:
+          meta.nickname ||
+          p.display_name ||
+          p.full_name ||
+          p.email?.split("@")[0] ||
+          "Membro da equipe",
+        avatar: meta.avatar_url || p.avatar_url || null,
+        role: roleMap.get(p.id) ?? "staff",
+        channel: dmChannelFor(userId, p.id),
+      };
+    });
+
+    members.sort((a, b) => a.name.localeCompare(b.name));
+    return { members };
   });

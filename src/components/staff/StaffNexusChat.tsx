@@ -5,12 +5,13 @@ import {
   getStaffMessages,
   sendStaffMessage,
   deleteStaffMessage,
+  listStaffDirectory,
 } from "@/lib/staff-chat.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, MessageSquare, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import { Send, MessageSquare, AlertCircle, Loader2, Trash2, Lock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -21,12 +22,14 @@ const CHANNELS = ["general", "suporte", "anuncios"];
 export function StaffNexusChat({ className }: { className?: string }) {
   const [message, setMessage] = useState("");
   const [channel, setChannel] = useState("general");
+  const [dmName, setDmName] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const fetchMessages = useServerFn(getStaffMessages);
   const sendMsgFn = useServerFn(sendStaffMessage);
   const deleteMsgFn = useServerFn(deleteStaffMessage);
+  const fetchDirectory = useServerFn(listStaffDirectory);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["staff-messages", channel],
@@ -35,8 +38,19 @@ export function StaffNexusChat({ className }: { className?: string }) {
     retry: false,
   });
 
+  const { data: directory } = useQuery({
+    queryKey: ["staff-directory"],
+    queryFn: () => fetchDirectory(),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const members = directory?.members ?? [];
+  const isDm = channel.startsWith("dm:");
+
   const messages = data?.messages ?? [];
   const myRole = data?.myRole;
+
 
   const mutation = useMutation({
     mutationFn: (vars: { content: string; channel: string }) => sendMsgFn({ data: vars }),
@@ -53,12 +67,14 @@ export function StaffNexusChat({ className }: { className?: string }) {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao apagar"),
   });
 
-  // Scroll apenas quando chegam mensagens novas (evita "pular" a cada refetch)
+  // Só rola para o fim quando chega mensagem nova E o leitor já estava no fim.
   const lastId = messages[messages.length - 1]?.id;
+  const atBottomRef = useRef(true);
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && atBottomRef.current) el.scrollTop = el.scrollHeight;
   }, [lastId, channel]);
+
 
   if (error) {
     const raw = (error as any)?.message ?? "Erro desconhecido";
@@ -90,14 +106,17 @@ export function StaffNexusChat({ className }: { className?: string }) {
   return (
     <div className={cn("flex min-h-0 flex-col gap-3", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {CHANNELS.map((c) => (
             <Button
               key={c}
               variant={channel === c ? "default" : "outline"}
               size="sm"
               className="h-7 font-mono text-[10px] uppercase"
-              onClick={() => setChannel(c)}
+              onClick={() => {
+                setDmName(null);
+                setChannel(c);
+              }}
             >
               #{c}
             </Button>
@@ -110,11 +129,45 @@ export function StaffNexusChat({ className }: { className?: string }) {
         )}
       </div>
 
+      {members.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/10 bg-card/30 p-2">
+          <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            <Lock className="h-3 w-3" /> Privado
+          </span>
+          {members.map((m: any) => (
+            <Button
+              key={m.id}
+              variant={channel === m.channel ? "default" : "ghost"}
+              size="sm"
+              className="h-7 gap-1.5 px-2 font-mono text-[10px]"
+              onClick={() => {
+                setDmName(m.name);
+                setChannel(m.channel);
+              }}
+            >
+              <Avatar className="h-4 w-4">
+                <AvatarImage src={m.avatar ?? undefined} className="object-cover" />
+                <AvatarFallback className="text-[7px] uppercase">
+                  {(m.name || "?").substring(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              {m.name}
+              <span className="opacity-50">· {m.role}</span>
+            </Button>
+          ))}
+        </div>
+      )}
+
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-primary/20 bg-card/30 backdrop-blur-sm">
         <CardContent
-          className="min-h-[320px] flex-1 space-y-3 overflow-y-auto scroll-smooth p-4 font-mono"
+          className="min-h-[320px] flex-1 space-y-3 overflow-y-auto overscroll-contain scroll-smooth p-4 font-mono"
           ref={scrollRef}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+          }}
         >
+
           {isLoading ? (
             <div className="flex h-full items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -123,7 +176,7 @@ export function StaffNexusChat({ className }: { className?: string }) {
             <div className="py-20 text-center text-muted-foreground opacity-40">
               <MessageSquare className="mx-auto mb-4 h-12 w-12" />
               <p className="text-xs uppercase tracking-widest">
-                Início da transmissão segura em #{channel}
+                Início da transmissão segura {isDm ? `com ${dmName ?? "membro da equipe"}` : `em #${channel}`}
               </p>
             </div>
           ) : (
@@ -183,7 +236,7 @@ export function StaffNexusChat({ className }: { className?: string }) {
             }}
           >
             <Input
-              placeholder={`Enviar mensagem segura para #${channel}...`}
+              placeholder={isDm ? `Mensagem privada para ${dmName ?? "membro da equipe"}...` : `Enviar mensagem segura para #${channel}...`}
               className="h-11 border-primary/20 bg-background/50"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -199,7 +252,7 @@ export function StaffNexusChat({ className }: { className?: string }) {
           </form>
           <div className="mt-2 flex items-center gap-2 font-mono text-[9px] text-muted-foreground">
             <div className="h-1 w-1 animate-pulse rounded-full bg-emerald-500" />
-            Canal interno privado — visível apenas para a equipe.
+            {isDm ? "Conversa privada — visível apenas para vocês dois." : "Canal interno privado — visível apenas para a equipe."}
           </div>
         </div>
       </Card>

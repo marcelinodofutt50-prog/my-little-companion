@@ -38,3 +38,20 @@ export function throwStaffChannelError(
   }
   throw new StaffInfraError(`${action} falhou. Tente novamente.`);
 }
+/** Canal privado entre dois membros da equipe: dm:<idA>|<idB> (ordenado). */
+export function dmChannelFor(a: string, b: string): string {
+  return `dm:${[a, b].sort().join("|")}`;
+}
+
+export function isDmChannel(channel: string): boolean {
+  return channel.startsWith("dm:");
+}
+
+/** Garante que o usuário faz parte do canal privado que está tentando abrir. */
+export function assertChannelMembership(channel: string, userId: string): void {
+  if (!isDmChannel(channel)) return;
+  const parts = channel.slice(3).split("|");
+  if (parts.length !== 2 || !parts.includes(userId)) {
+    throw new StaffAccessError("Você não faz parte desta conversa privada.");
+  }
+}

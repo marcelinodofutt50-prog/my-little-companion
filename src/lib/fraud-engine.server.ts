@@ -199,6 +199,9 @@ const REASON_EXPLANATIONS: Record<string, string> = {
   no_network_signature: "Não conseguimos identificar sua conexão de rede.",
   multi_account_burst_same_device:
     "Várias contas novas foram criadas neste mesmo aparelho nos últimos 7 dias.",
+  repeated_denied_attempts:
+    "Este aparelho já teve várias tentativas de resgate negadas nas últimas 24 horas.",
+
 };
 
 function explainReason(reason: string): string {
@@ -455,6 +458,26 @@ export async function assessAbuse(input: {
         reasons.push("multi_account_burst_same_device");
       }
     }
+
+    // ── Velocidade: tentativas já negadas neste mesmo aparelho nas últimas 24h.
+    //    Cliente novo legítimo tem zero negativas, então isso nunca o atinge.
+    if (sig.deviceHash) {
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: denials } = await supabaseAdmin
+        .from("fraud_assessments")
+        .select("id")
+        .eq("device_hash", sig.deviceHash)
+        .eq("decision", "deny")
+        .gte("created_at", since24h)
+        .limit(20);
+      const attempts = (denials ?? []).length;
+      if (attempts >= 3) {
+        score += attempts >= 6 ? 35 : 20;
+        reasons.push("repeated_denied_attempts");
+      }
+    }
+
+
 
     const allowed = score < DENY_SCORE;
     const verdict: FraudVerdict = {
