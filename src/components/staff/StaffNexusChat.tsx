@@ -5,12 +5,13 @@ import {
   getStaffMessages,
   sendStaffMessage,
   deleteStaffMessage,
+  listStaffDirectory,
 } from "@/lib/staff-chat.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, MessageSquare, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import { Send, MessageSquare, AlertCircle, Loader2, Trash2, Lock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -21,12 +22,14 @@ const CHANNELS = ["general", "suporte", "anuncios"];
 export function StaffNexusChat({ className }: { className?: string }) {
   const [message, setMessage] = useState("");
   const [channel, setChannel] = useState("general");
+  const [dmName, setDmName] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const fetchMessages = useServerFn(getStaffMessages);
   const sendMsgFn = useServerFn(sendStaffMessage);
   const deleteMsgFn = useServerFn(deleteStaffMessage);
+  const fetchDirectory = useServerFn(listStaffDirectory);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["staff-messages", channel],
@@ -35,8 +38,19 @@ export function StaffNexusChat({ className }: { className?: string }) {
     retry: false,
   });
 
+  const { data: directory } = useQuery({
+    queryKey: ["staff-directory"],
+    queryFn: () => fetchDirectory(),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const members = directory?.members ?? [];
+  const isDm = channel.startsWith("dm:");
+
   const messages = data?.messages ?? [];
   const myRole = data?.myRole;
+
 
   const mutation = useMutation({
     mutationFn: (vars: { content: string; channel: string }) => sendMsgFn({ data: vars }),
