@@ -583,61 +583,55 @@ function ShadowPassPage() {
             </h2>
             <Card className="border-primary/10 bg-card/50 overflow-hidden">
               <CardContent className="p-0 flex flex-col h-[400px]">
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
-                  <AnimatePresence initial={false}>
-                    {nexusFault ? (
-                      <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
-                        <Ghost className="h-8 w-8 opacity-50" />
-                        <p className="text-[10px] font-mono uppercase tracking-widest">Canal instável</p>
-                        <Button size="sm" variant="outline" onClick={() => refetchNexus()}>Reconectar</Button>
+                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
+                  {nexusFault ? (
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
+                      <Ghost className="h-8 w-8 opacity-50" />
+                      <p className="text-[10px] font-mono uppercase tracking-widest">Canal instável</p>
+                      <Button size="sm" variant="outline" onClick={() => refetchNexus()}>Reconectar</Button>
+                    </div>
+                  ) : nexusLoading ? (
+                    <div className="h-full flex items-center justify-center text-muted-foreground opacity-50">
+                      <p className="text-[10px] font-mono uppercase tracking-widest">Conectando ao canal...</p>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 space-y-2">
+                      <Ghost className="h-8 w-8" />
+                      <p className="text-[10px] font-mono uppercase tracking-widest">Silêncio no vácuo...</p>
+                    </div>
+                  ) : (
+                    messages.map((msg: any) => (
+                      <div key={msg.id} className="flex flex-col space-y-1 group">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-tighter">
+                            {msg.author}
+                          </span>
+                          {msg.vip && msg.vip !== 'none' && (
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary uppercase">
+                              {msg.vip}
+                            </Badge>
+                          )}
+                          <span className="text-[8px] text-muted-foreground font-mono">
+                            {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ptBR })}
+                          </span>
+                          {msg.isMine && (
+                            <button
+                              type="button"
+                              onClick={() => deleteMessageMutation.mutate({ id: msg.id })}
+                              className="text-[8px] text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity font-mono uppercase"
+                            >
+                              apagar
+                            </button>
+                          )}
+                        </div>
+                        <div className="bg-primary/5 border border-primary/10 rounded-2xl rounded-tl-none px-3 py-2 text-xs leading-relaxed max-w-[90%] break-words">
+                          {msg.content}
+                        </div>
                       </div>
-                    ) : nexusLoading ? (
-                      <div className="h-full flex items-center justify-center text-muted-foreground opacity-50">
-                        <p className="text-[10px] font-mono uppercase tracking-widest">Conectando ao canal...</p>
-                      </div>
-                    ) : messages.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 space-y-2">
-                        <Ghost className="h-8 w-8" />
-                        <p className="text-[10px] font-mono uppercase tracking-widest">Silêncio no vácuo...</p>
-                      </div>
-                    ) : (
-                      messages.map((msg: any) => (
-                        <motion.div 
-                          key={msg.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="flex flex-col space-y-1 group"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-tighter">
-                              {msg.author}
-                            </span>
-                            {msg.vip && msg.vip !== 'none' && (
-                              <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary uppercase">
-                                {msg.vip}
-                              </Badge>
-                            )}
-                            <span className="text-[8px] text-muted-foreground font-mono">
-                              {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ptBR })}
-                            </span>
-                            {msg.isMine && (
-                              <button
-                                type="button"
-                                onClick={() => deleteMessageMutation.mutate({ id: msg.id })}
-                                className="text-[8px] text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity font-mono uppercase"
-                              >
-                                apagar
-                              </button>
-                            )}
-                          </div>
-                          <div className="bg-primary/5 border border-primary/10 rounded-2xl rounded-tl-none px-3 py-2 text-xs leading-relaxed max-w-[90%] break-words">
-                            {msg.content}
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                  </AnimatePresence>
+                    ))
+                  )}
                 </div>
+
 
                 
                 <div className="p-4 border-t border-primary/10 bg-black/20">
