@@ -176,7 +176,7 @@ export function StaffNexusChat({ className }: { className?: string }) {
             <div className="py-20 text-center text-muted-foreground opacity-40">
               <MessageSquare className="mx-auto mb-4 h-12 w-12" />
               <p className="text-xs uppercase tracking-widest">
-                Início da transmissão segura em #{channel}
+                Início da transmissão segura {isDm ? `com ${dmName ?? "membro da equipe"}` : `em #${channel}`}
               </p>
             </div>
           ) : (
@@ -236,7 +236,7 @@ export function StaffNexusChat({ className }: { className?: string }) {
             }}
           >
             <Input
-              placeholder={`Enviar mensagem segura para #${channel}...`}
+              placeholder={isDm ? `Mensagem privada para ${dmName ?? "membro da equipe"}...` : `Enviar mensagem segura para #${channel}...`}
               className="h-11 border-primary/20 bg-background/50"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -252,7 +252,7 @@ export function StaffNexusChat({ className }: { className?: string }) {
           </form>
           <div className="mt-2 flex items-center gap-2 font-mono text-[9px] text-muted-foreground">
             <div className="h-1 w-1 animate-pulse rounded-full bg-emerald-500" />
-            Canal interno privado — visível apenas para a equipe.
+            {isDm ? "Conversa privada — visível apenas para vocês dois." : "Canal interno privado — visível apenas para a equipe."}
           </div>
         </div>
       </Card>
