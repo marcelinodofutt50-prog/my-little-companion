@@ -459,6 +459,26 @@ export async function assessAbuse(input: {
       }
     }
 
+    // ── Velocidade: tentativas já negadas neste mesmo aparelho nas últimas 24h.
+    //    Cliente novo legítimo tem zero negativas, então isso nunca o atinge.
+    if (sig.deviceHash) {
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: denials } = await supabaseAdmin
+        .from("fraud_assessments")
+        .select("id")
+        .eq("device_hash", sig.deviceHash)
+        .eq("decision", "deny")
+        .gte("created_at", since24h)
+        .limit(20);
+      const attempts = (denials ?? []).length;
+      if (attempts >= 3) {
+        score += attempts >= 6 ? 35 : 20;
+        reasons.push("repeated_denied_attempts");
+      }
+    }
+
+
+
     const allowed = score < DENY_SCORE;
     const verdict: FraudVerdict = {
       allowed,
