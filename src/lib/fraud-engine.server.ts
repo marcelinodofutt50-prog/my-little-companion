@@ -199,6 +199,9 @@ const REASON_EXPLANATIONS: Record<string, string> = {
   no_network_signature: "Não conseguimos identificar sua conexão de rede.",
   multi_account_burst_same_device:
     "Várias contas novas foram criadas neste mesmo aparelho nos últimos 7 dias.",
+  repeated_denied_attempts:
+    "Este aparelho já teve várias tentativas de resgate negadas nas últimas 24 horas.",
+
 };
 
 function explainReason(reason: string): string {
