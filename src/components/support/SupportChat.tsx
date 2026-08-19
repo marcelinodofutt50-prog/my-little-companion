@@ -24,6 +24,9 @@ import {
   Bot,
   ChevronDown,
   AlertCircle,
+  Reply,
+  X,
+  ZoomIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -130,6 +133,8 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const [uploading, setUploading] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
+  const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
+  const [zoomUrl, setZoomUrl] = useState<string | null>(null);
 
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
@@ -207,6 +212,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const handleSend = async (attachmentPath?: string, attachmentType?: string, retryOf?: string) => {
     const text = retryOf ? (pending.find((p) => p.clientId === retryOf)?.body ?? "") : body.trim();
     if (!text && !attachmentPath) return;
+    const replyToId = retryOf ? null : replyTo?.id ?? null;
 
     const clientId = retryOf ?? `local-${Date.now()}`;
     const newPending: PendingMsg = {
@@ -221,11 +227,20 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     setPending((prev) =>
       retryOf ? prev.map((p) => (p.clientId === retryOf ? newPending : p)) : [...prev, newPending],
     );
-    if (!retryOf) setBody("");
+    if (!retryOf) {
+      setBody("");
+      setReplyTo(null);
+    }
 
     try {
       const res: any = await sendFn({
-        data: { threadId, body: text || undefined, attachmentPath, attachmentType },
+        data: {
+          threadId,
+          body: text || undefined,
+          attachmentPath,
+          attachmentType,
+          replyToId: replyToId ?? undefined,
+        },
       });
       setMsgs((prev) => {
         const normalized = normalizeSupportMessage(res, threadId);
@@ -325,25 +340,57 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   <span>{g.authorLabel}</span>
                 </div>
 
-                {g.messages.map((m) => (
+                {g.messages.map((m) => {
+                  const quoted = m.reply_to_id ? msgs.find((q) => q.id === m.reply_to_id) : null;
+                  return (
                   <div
                     key={m.id}
-                    className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2 ${bubbleClass(g.author)} ${
+                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2 ${bubbleClass(g.author)} ${
                       g.author === "system" ? "text-center" : ""
                     }`}
                   >
+                    {quoted && (
+                      <div className="mb-2 rounded-lg border-l-2 border-current/40 bg-black/20 px-2 py-1 text-[11px] opacity-80">
+                        <span className="block font-mono text-[9px] uppercase tracking-wide opacity-70">
+                          Respondendo
+                        </span>
+                        <span className="line-clamp-2 break-words">
+                          {quoted.body || "Anexo"}
+                        </span>
+                      </div>
+                    )}
+                    {g.author !== "system" && (
+                      <button
+                        type="button"
+                        aria-label="Responder mensagem"
+                        onClick={() => setReplyTo(m)}
+                        className="absolute -top-2 right-2 hidden rounded-full border border-border/40 bg-background p-1 text-muted-foreground shadow group-hover/msg:block hover:text-foreground"
+                      >
+                        <Reply className="h-3 w-3" />
+                      </button>
+                    )}
                     {m.body && (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</p>
                     )}
                     {m.attachment_url && (
                       <div className="mt-2 rounded-lg overflow-hidden border border-border/20">
                         {m.attachment_type?.startsWith("image/") ? (
-                          <img
-                            src={m.attachment_url}
-                            alt="anexo enviado no atendimento"
-                            loading="lazy"
-                            className="max-h-60 w-full object-contain bg-black/20"
-                          />
+                          <button
+                            type="button"
+                            className="group/img relative block w-full"
+                            onClick={() => setZoomUrl(m.attachment_url)}
+                            aria-label="Ampliar imagem do anexo"
+                          >
+                            <img
+                              src={m.attachment_url}
+                              alt="anexo enviado no atendimento"
+                              loading="lazy"
+                              className="max-h-60 w-full cursor-zoom-in object-contain bg-black/20"
+                            />
+                            <span className="absolute bottom-1 right-1 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover/img:opacity-100">
+                              <ZoomIn className="h-3 w-3" />
+                            </span>
+                          </button>
                         ) : (
                           <a
                             href={m.attachment_url}
@@ -360,7 +407,8 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                       {hhmm(m.created_at)}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
@@ -416,6 +464,26 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           <ChevronDown className="h-3 w-3" />
           {unseen > 0 ? `${unseen} nova(s)` : "Ir para o fim"}
         </Button>
+      )}
+
+      {replyTo && (
+        <div className="flex items-start gap-2 border-t border-border/40 bg-muted/30 px-3 py-2 sm:px-4">
+          <Reply className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+              Respondendo
+            </p>
+            <p className="truncate text-xs">{replyTo.body || "Anexo"}</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Cancelar resposta"
+            onClick={() => setReplyTo(null)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       )}
 
       <form
@@ -479,6 +547,41 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           </Button>
         </div>
       </form>
+
+      {zoomUrl && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          role="dialog"
+          aria-label="Visualização ampliada do anexo"
+          onClick={() => setZoomUrl(null)}
+        >
+          <img
+            src={zoomUrl}
+            alt="anexo ampliado"
+            className="max-h-[90vh] max-w-[95vw] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <Button
+            type="button"
+            size="icon"
+            variant="secondary"
+            aria-label="Fechar imagem"
+            className="absolute right-4 top-4 h-9 w-9 rounded-full"
+            onClick={() => setZoomUrl(null)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <a
+            href={zoomUrl}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-4 py-1.5 text-xs"
+          >
+            Abrir em nova aba
+          </a>
+        </div>
+      )}
     </div>
   );
 }
