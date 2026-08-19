@@ -106,14 +106,17 @@ export function StaffNexusChat({ className }: { className?: string }) {
   return (
     <div className={cn("flex min-h-0 flex-col gap-3", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {CHANNELS.map((c) => (
             <Button
               key={c}
               variant={channel === c ? "default" : "outline"}
               size="sm"
               className="h-7 font-mono text-[10px] uppercase"
-              onClick={() => setChannel(c)}
+              onClick={() => {
+                setDmName(null);
+                setChannel(c);
+              }}
             >
               #{c}
             </Button>
@@ -126,11 +129,45 @@ export function StaffNexusChat({ className }: { className?: string }) {
         )}
       </div>
 
+      {members.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/10 bg-card/30 p-2">
+          <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            <Lock className="h-3 w-3" /> Privado
+          </span>
+          {members.map((m: any) => (
+            <Button
+              key={m.id}
+              variant={channel === m.channel ? "default" : "ghost"}
+              size="sm"
+              className="h-7 gap-1.5 px-2 font-mono text-[10px]"
+              onClick={() => {
+                setDmName(m.name);
+                setChannel(m.channel);
+              }}
+            >
+              <Avatar className="h-4 w-4">
+                <AvatarImage src={m.avatar ?? undefined} className="object-cover" />
+                <AvatarFallback className="text-[7px] uppercase">
+                  {(m.name || "?").substring(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              {m.name}
+              <span className="opacity-50">· {m.role}</span>
+            </Button>
+          ))}
+        </div>
+      )}
+
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-primary/20 bg-card/30 backdrop-blur-sm">
         <CardContent
-          className="min-h-[320px] flex-1 space-y-3 overflow-y-auto scroll-smooth p-4 font-mono"
+          className="min-h-[320px] flex-1 space-y-3 overflow-y-auto overscroll-contain scroll-smooth p-4 font-mono"
           ref={scrollRef}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+          }}
         >
+
           {isLoading ? (
             <div className="flex h-full items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
