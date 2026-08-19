@@ -67,12 +67,14 @@ export function StaffNexusChat({ className }: { className?: string }) {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao apagar"),
   });
 
-  // Scroll apenas quando chegam mensagens novas (evita "pular" a cada refetch)
+  // Só rola para o fim quando chega mensagem nova E o leitor já estava no fim.
   const lastId = messages[messages.length - 1]?.id;
+  const atBottomRef = useRef(true);
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && atBottomRef.current) el.scrollTop = el.scrollHeight;
   }, [lastId, channel]);
+
 
   if (error) {
     const raw = (error as any)?.message ?? "Erro desconhecido";
