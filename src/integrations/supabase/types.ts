@@ -2408,6 +2408,92 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_training_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          training_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          training_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          training_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_training_progress_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "staff_trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_trainings: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          created_by: string | null
+          description: string
+          display_order: number
+          estimated_minutes: number
+          id: string
+          is_published: boolean
+          level: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          display_order?: number
+          estimated_minutes?: number
+          id?: string
+          is_published?: boolean
+          level?: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          display_order?: number
+          estimated_minutes?: number
+          id?: string
+          is_published?: boolean
+          level?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           attachment_type: string | null
