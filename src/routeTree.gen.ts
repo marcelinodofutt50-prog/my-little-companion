@@ -33,6 +33,7 @@ import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
 import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authenticated/staff-chat'
+import { Route as AuthenticatedStaffAcademyRouteImport } from './routes/_authenticated/staff-academy'
 import { Route as AuthenticatedShadowPassRouteImport } from './routes/_authenticated/shadow-pass'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
 import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authenticated/fidelidade'
@@ -178,6 +179,12 @@ const AuthenticatedStaffChatRoute = AuthenticatedStaffChatRouteImport.update({
   path: '/staff-chat',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStaffAcademyRoute =
+  AuthenticatedStaffAcademyRouteImport.update({
+    id: '/staff-academy',
+    path: '/staff-academy',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedShadowPassRoute = AuthenticatedShadowPassRouteImport.update({
   id: '/shadow-pass',
   path: '/shadow-pass',
@@ -339,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
+  '/staff-academy': typeof AuthenticatedStaffAcademyRoute
   '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
@@ -389,6 +397,7 @@ export interface FileRoutesByTo {
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
+  '/staff-academy': typeof AuthenticatedStaffAcademyRoute
   '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
@@ -441,6 +450,7 @@ export interface FileRoutesById {
   '/_authenticated/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
   '/_authenticated/shadow-pass': typeof AuthenticatedShadowPassRoute
+  '/_authenticated/staff-academy': typeof AuthenticatedStaffAcademyRoute
   '/_authenticated/staff-chat': typeof AuthenticatedStaffChatRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
@@ -493,6 +503,7 @@ export interface FileRouteTypes {
     | '/fidelidade'
     | '/play-protect'
     | '/shadow-pass'
+    | '/staff-academy'
     | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
@@ -543,6 +554,7 @@ export interface FileRouteTypes {
     | '/fidelidade'
     | '/play-protect'
     | '/shadow-pass'
+    | '/staff-academy'
     | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
@@ -594,6 +606,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fidelidade'
     | '/_authenticated/play-protect'
     | '/_authenticated/shadow-pass'
+    | '/_authenticated/staff-academy'
     | '/_authenticated/staff-chat'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
@@ -833,6 +846,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStaffChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/staff-academy': {
+      id: '/_authenticated/staff-academy'
+      path: '/staff-academy'
+      fullPath: '/staff-academy'
+      preLoaderRoute: typeof AuthenticatedStaffAcademyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/shadow-pass': {
       id: '/_authenticated/shadow-pass'
       path: '/shadow-pass'
@@ -1028,6 +1048,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFidelidadeRoute: typeof AuthenticatedFidelidadeRoute
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
   AuthenticatedShadowPassRoute: typeof AuthenticatedShadowPassRoute
+  AuthenticatedStaffAcademyRoute: typeof AuthenticatedStaffAcademyRoute
   AuthenticatedStaffChatRoute: typeof AuthenticatedStaffChatRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
   AuthenticatedTutoriaisRoute: typeof AuthenticatedTutoriaisRoute
@@ -1041,6 +1062,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFidelidadeRoute: AuthenticatedFidelidadeRoute,
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
   AuthenticatedShadowPassRoute: AuthenticatedShadowPassRoute,
+  AuthenticatedStaffAcademyRoute: AuthenticatedStaffAcademyRoute,
   AuthenticatedStaffChatRoute: AuthenticatedStaffChatRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
   AuthenticatedTutoriaisRoute: AuthenticatedTutoriaisRoute,

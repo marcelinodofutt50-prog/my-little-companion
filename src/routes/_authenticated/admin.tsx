@@ -87,6 +87,7 @@ import { AdminTagline } from "@/components/AdminTagline";
 import { AdminTeamGuide } from "@/components/AdminTeamGuide";
 import { AdminPermissionsMatrix } from "@/components/AdminPermissionsMatrix";
 import { AdminTrialMonitorPanel } from "@/components/admin/AdminTrialMonitorPanel";
+import { StaffAcademyPanel } from "@/components/staff/StaffAcademyPanel";
 import { StaffNexusChat } from "@/components/staff/StaffNexusChat";
 import { AdminVipPanel } from "@/components/admin/AdminVipPanel";
 
@@ -200,6 +201,7 @@ type Tab =
   | "selftest"
   | "trial_monitor"
   | "nexus"
+  | "academy"
   | "vip";
 
 
@@ -229,6 +231,7 @@ const TAB_DESC: Record<Tab, string> = {
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
   quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
   nexus: "Staff Nexus: canal de bate-papo interno e privado da equipe (admin, suporte e moderação).",
+  academy: "Academia da Equipe: treinamento interno para novos integrantes (só admin, suporte e moderação).",
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
 };
@@ -639,6 +642,7 @@ function AdminPage() {
         { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
         { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
         { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
+        { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
       ],
     },
     {
@@ -2235,6 +2239,7 @@ function AdminPage() {
               {tab === "trial_monitor" && <AdminTrialMonitorPanel />}
               {tab === "vip" && <AdminVipPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
+              {tab === "academy" && <StaffAcademyPanel />}
               </motion.div>
             </AnimatePresence>
           </div>

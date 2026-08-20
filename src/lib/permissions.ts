@@ -91,6 +91,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   trial_monitor: "view.system",
   vip: "view.users",
   nexus: "view.chat",
+  academy: "view.chat",
 };
 
 /** Linhas exibidas na matriz visual (Equipe → Matriz de permissões). */
