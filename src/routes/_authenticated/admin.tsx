@@ -81,7 +81,9 @@ import {
   AdminMigrationWaves,
   AdminPanelServers,
   AdminPermissionsMatrix,
+  AdminRedeemCodesPanel,
   AdminRefundsPanel,
+
   AdminSelfTestPanel,
   AdminSupportPanel,
   AdminTeamGuide,
