@@ -117,8 +117,8 @@ export function ExpiryAlertBanner({ licenses, serverNow: baseNow }: Props) {
 
       {worst.isServerFee ? (
         <Link to="/renovar-servidor" className="shrink-0">
-          <span className="inline-flex rounded-lg border border-primary/50 bg-primary/10 px-4 py-2 font-mono text-[10px] font-bold uppercase text-primary hover:bg-primary/20">
-            Renovar servidor
+          <span className="rgb-border inline-flex rounded-lg bg-primary/10 px-4 py-2 font-mono text-[10px] font-bold uppercase hover:bg-primary/20">
+            <span className="rgb-text animate-rgb-text">Renovar servidor</span>
           </span>
         </Link>
       ) : (
