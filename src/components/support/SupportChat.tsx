@@ -538,9 +538,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                 handleSend();
               }
             }}
-            rows={1}
+            rows={2}
             placeholder="Escreva sua mensagem…  (Enter envia, Shift+Enter quebra linha)"
-            className="flex-1 min-h-[42px] max-h-32 resize-none bg-background/40"
+            className="flex-1 min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
+
           />
           <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!body.trim()}>
             <Send className="h-4 w-4" />

@@ -104,7 +104,7 @@ export function AdminSupportPanel() {
   };
 
   return (
-    <div className="flex h-[80vh] bg-card/30 border border-border/40 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
+    <div className="flex h-[calc(100vh-9rem)] min-h-[620px] bg-card/30 border border-border/40 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
       {/* Sidebar de Tickets */}
       <div className="w-80 flex flex-col border-r border-border/40 bg-background/40">
         <div className="p-4 space-y-3">
