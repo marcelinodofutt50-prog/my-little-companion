@@ -165,6 +165,7 @@ import {
   requestNotifyPermission,
   showDesktopNotification,
 } from "@/lib/notify-sound";
+import { LicensePasswordSyncDialog } from "@/components/admin/LicensePasswordSyncDialog";
 import { secureSignOut } from "@/lib/session";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { SECTION_CAP, can, ROLE_LABEL, type Role } from "@/lib/permissions";
