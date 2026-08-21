@@ -38,6 +38,7 @@ export function LicenseAccessTools({
   const changePassword = useServerFn(changeMyLicensePassword);
   const repairAccess = useServerFn(repairMyLicenseAccess);
   const resyncRenewal = useServerFn(resyncMyServerRenewal);
+  const syncPanel = useServerFn(syncMyLicensesWithPanel);
 
   const [open, setOpen] = useState(false);
   const [pwd, setPwd] = useState("");
@@ -45,6 +46,8 @@ export function LicenseAccessTools({
   const [saving, setSaving] = useState(false);
   const [repairing, setRepairing] = useState(false);
   const [resyncing, setResyncing] = useState(false);
+  const [panelSyncing, setPanelSyncing] = useState(false);
+
 
   const submitPassword = async () => {
     if (pwd !== pwd2) {
