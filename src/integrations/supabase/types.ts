@@ -370,6 +370,93 @@ export type Database = {
           },
         ]
       }
+      community_giveaway_winners: {
+        Row: {
+          created_at: string
+          giveaway_id: string
+          id: string
+          plan_slug: string
+          position: number
+          prize_days: number
+          prize_kind: string
+          redeem_code_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          giveaway_id: string
+          id?: string
+          plan_slug: string
+          position: number
+          prize_days: number
+          prize_kind: string
+          redeem_code_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          giveaway_id?: string
+          id?: string
+          plan_slug?: string
+          position?: number
+          prize_days?: number
+          prize_kind?: string
+          redeem_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_giveaway_winners_giveaway_id_fkey"
+            columns: ["giveaway_id"]
+            isOneToOne: false
+            referencedRelation: "community_giveaways"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_giveaway_winners_redeem_code_id_fkey"
+            columns: ["redeem_code_id"]
+            isOneToOne: false
+            referencedRelation: "redeem_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_giveaways: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          eligible_count: number
+          id: string
+          milestone: number
+          status: string
+          title: string
+          updated_at: string
+          winner_count: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          eligible_count?: number
+          id?: string
+          milestone: number
+          status?: string
+          title: string
+          updated_at?: string
+          winner_count?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          eligible_count?: number
+          id?: string
+          milestone?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          winner_count?: number
+        }
+        Relationships: []
+      }
       community_goals: {
         Row: {
           achieved_at: string | null
@@ -1910,6 +1997,7 @@ export type Database = {
           max_uses: number
           note: string | null
           plan_slug: string | null
+          target_user_id: string | null
           updated_at: string
           uses: number
         }
@@ -1925,6 +2013,7 @@ export type Database = {
           max_uses?: number
           note?: string | null
           plan_slug?: string | null
+          target_user_id?: string | null
           updated_at?: string
           uses?: number
         }
@@ -1940,6 +2029,7 @@ export type Database = {
           max_uses?: number
           note?: string | null
           plan_slug?: string | null
+          target_user_id?: string | null
           updated_at?: string
           uses?: number
         }
@@ -3296,6 +3386,21 @@ export type Database = {
       }
       recalc_vip_tier: { Args: { _user_id: string }; Returns: string }
       release_op_lock: { Args: { _key: string }; Returns: undefined }
+      release_redeem_code_claim: {
+        Args: { _claim_id: string; _user_id: string }
+        Returns: boolean
+      }
+      reserve_redeem_code: {
+        Args: { _code: string }
+        Returns: {
+          claim_id: string
+          code_id: string
+          days: number
+          kind: string
+          note: string
+          plan_slug: string
+        }[]
+      }
       revoke_unpaid_server_licenses: {
         Args: never
         Returns: {
@@ -3305,6 +3410,7 @@ export type Database = {
           yaarsa_email: string
         }[]
       }
+      run_community_giveaway: { Args: { _milestone?: number }; Returns: Json }
       try_acquire_op_lock: {
         Args: { _holder?: string; _key: string; _ttl_seconds?: number }
         Returns: boolean
