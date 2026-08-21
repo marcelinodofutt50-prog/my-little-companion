@@ -749,7 +749,7 @@ function AdminPage() {
           className="enterprise-surface relative overflow-hidden p-5 sm:p-6"
         >
           {/* Subtle background glow */}
-          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-[80px]" />
+          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-[80px]" />
           
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
@@ -1000,7 +1000,31 @@ function AdminPage() {
             {/* Section title bar */}
             {activeMeta && (
               <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border bg-background/95 px-3 pb-3 pt-3 backdrop-blur sm:-mx-1 sm:px-1">
+                {/* Seletor de seções (mobile/tablet) */}
+                <div className="mb-2.5 lg:hidden">
+                  <label className="sr-only" htmlFor="admin-section-select">
+                    Selecionar seção do painel
+                  </label>
+                  <select
+                    id="admin-section-select"
+                    value={tab}
+                    onChange={(e) => setTab(e.target.value as typeof tab)}
+                    className="h-10 w-full max-w-full rounded-md border border-input bg-background px-3 text-xs font-medium outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  >
+                    {visibleGroups.map((g) => (
+                      <optgroup key={g.title} label={g.title}>
+                        {g.items.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.label}
+                            {(navBadges[t.id] ?? 0) > 0 ? ` (${navBadges[t.id]})` : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
+
                   <span className="text-[10px] font-semibold uppercase text-muted-foreground">
                     Administração /
                   </span>
@@ -1118,7 +1142,7 @@ function AdminPage() {
 
                     <div className="grid gap-4 md:grid-cols-3">
                       {/* Pedidos recentes */}
-                      <div className="terminal-card scanlines relative p-5 md:col-span-2">
+                      <div className="terminal-card scanlines relative min-w-0 overflow-hidden p-5 md:col-span-2">
                         <div className="mb-3 flex items-center justify-between">
                           <h3 className="font-mono text-xs uppercase tracking-wider text-cyan">
                             // pedidos recentes
@@ -1171,7 +1195,7 @@ function AdminPage() {
                       </div>
 
                       {/* Atalhos */}
-                      <div className="terminal-card scanlines relative p-5">
+                      <div className="terminal-card scanlines relative min-w-0 overflow-hidden p-5">
                         <h3 className="mb-3 font-mono text-xs uppercase tracking-wider text-violet">
                           // atalhos
                         </h3>
