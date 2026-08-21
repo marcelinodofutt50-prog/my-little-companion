@@ -12,6 +12,9 @@ export const createCheckout = createServerFn({ method: "POST" })
       useCashback: z.boolean().optional(),
       includeServer: z.boolean().optional(),
       addSigner: z.boolean().optional(),
+      /** Renovação de servidor: qual login (licença) deve ser renovado. */
+      targetLicenseId: z.string().uuid().optional(),
+
       returnOrigin: z.string().url(),
       legacyClaim: z.object({
         email: z.string().trim().email().max(255),
