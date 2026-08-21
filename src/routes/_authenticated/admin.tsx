@@ -50,7 +50,9 @@ import {
   Building2,
   Settings2,
   Paperclip,
+  Ticket,
 } from "lucide-react";
+
 
 
 import { categoryMeta } from "@/lib/support-categories";
