@@ -1569,3 +1569,42 @@ export const adminUpdateReferralStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+/**
+ * Reconciliação em massa com o painel Yaarsa (equipe).
+ * Percorre as licenças (por padrão só as que aparecem inativas no site), lê a
+ * data real no painel e reativa as que já estão liberadas por lá.
+ */
+export const adminSyncLicensesFromPanel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z.object({
+      onlyInactive: z.boolean().optional().default(true),
+      licenseId: z.string().uuid().optional(),
+      limit: z.number().int().min(1).max(200).optional().default(60),
+    }).parse(i ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { syncLicensesWithPanel } = await import("./panel-sync.server");
+
+    let query = supabaseAdmin
+      .from("licenses").select("*")
+      .is("disabled_at", null).is("suspended_at", null).eq("is_trial", false)
+      .order("created_at", { ascending: false })
+      .limit(data.limit ?? 60);
+    if (data.licenseId) query = query.eq("id", data.licenseId);
+
+    const { data: rows } = await query;
+    const now = Date.now();
+    const candidates = (rows ?? []).filter((l: any) => {
+      if (data.licenseId) return true;
+      if (!data.onlyInactive) return true;
+      const expired = l.expires_at ? new Date(l.expires_at).getTime() <= now : false;
+      return !!l.revoked || !!l.server_overdue_at || expired;
+    });
+
+    const report = await syncLicensesWithPanel(candidates as any[], { actor: "admin", userId: context.userId });
+    return { ok: true, ...report };
+  });
