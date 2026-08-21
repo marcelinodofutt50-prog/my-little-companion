@@ -1665,6 +1665,11 @@ export const adminSetLicensePassword = createServerFn({ method: "POST" })
       password_fingerprint: sha256Hex(data.newPassword),
       // A senha de pausa deixa de valer quando a senha real muda.
       suspend_password_fingerprint: null,
+      password_synced_at: new Date().toISOString(),
+      password_sync_status: data.applyToPanel ? "applied" : "manual",
+      password_sync_error: null,
+      password_sync_by: context.userId,
+
     } as any).eq("id", (lic as any).id);
     if (upErr) throw new Error("Não foi possível salvar a senha aqui.");
 
