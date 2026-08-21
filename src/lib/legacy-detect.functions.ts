@@ -63,7 +63,10 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
           ? "both"
           : hitPanels[0];
 
-    await supabase
+    // legacy_status é uma coluna protegida (o cliente não pode alterá-la
+    // diretamente), então a gravação é feita pelo client administrativo.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
       .from("profiles")
       .update({
         legacy_status: status,
