@@ -382,7 +382,10 @@ function DashboardPage() {
                 />
               )}
 
+              <RedeemCodeCard licenses={licenses ?? []} onDone={() => void refetchLicenses()} />
+
               {activeLicense && (
+
                 <section className="enterprise-surface overflow-hidden" aria-labelledby="usage-title">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
                     <div>
