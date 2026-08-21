@@ -159,9 +159,10 @@ describe("E2E — pagamento da mensalidade do servidor", () => {
     expect(after.daysLeft).toBeNull();
     expect(after.serverDaysLeft).not.toBeNull();
     expect(after.serverDaysLeft!).toBeGreaterThanOrEqual(0);
-    // 4. Yaarsa fica com a data longa, não com o dia 20
-    expect(panel.expiryOf(lic.yaarsa_email)).toBe(String(originalExpiry).slice(0, 10));
-    expect(panel.expiryOf(lic.yaarsa_email)).not.toBe(ymd(paidUntil));
+    // 4. Yaarsa fica travado no dia 20 (é o que bloqueia o BTmob se o mês
+    // seguinte não for pago), sem rebaixar a licença vitalícia no site.
+    expect(panel.expiryOf(lic.yaarsa_email)).toBe(ymd(paidUntil));
+    expect(lic.expires_at).toBe(originalExpiry);
   });
 
   it("cliente com dois logins: só o login escolhido é renovado", async () => {

@@ -63,10 +63,15 @@ export function planServerRenewal(license: RenewableLicense, paidUntil: Date): R
   // despausa nem consome os dias congelados.
   if (!license.suspended_at) patch.status = "active";
 
+  // O painel guarda a MENOR data entre a licença e o corte do servidor: é ela
+  // que trava o BTmob se a mensalidade do mês seguinte não for paga. No
+  // vitalício isso mantém o dia 20 no painel sem rebaixar a licença no site.
+  const panelDate = new Date(
+    Math.min(new Date(expiresAt).getTime(), paidUntil.getTime()),
+  );
+
   return {
-    // O painel precisa refletir a data real da licença — não o dia 20 — para o
-    // contador do site bater com o BTmob.
-    panelExpireDate: ymd(new Date(expiresAt)),
+    panelExpireDate: ymd(panelDate),
     patch,
     keepsLongerExpiry,
   };
