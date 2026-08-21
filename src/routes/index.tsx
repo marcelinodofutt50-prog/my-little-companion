@@ -412,9 +412,10 @@ function Index() {
       <SocialProofStrip />
 
       {/* Community Goals Section */}
-      <section className="py-20 relative bg-black/60 dark:bg-black/60 theme-light:bg-transparent">
+      <section className="py-14 sm:py-20 relative bg-black/60 dark:bg-black/60 theme-light:bg-transparent">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center mb-16">
+          <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-16">
+
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
