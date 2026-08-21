@@ -80,6 +80,9 @@ export const AdminVipPanel = lazyPanel(() =>
   import("@/components/admin/AdminVipPanel").then((m) => ({ default: m.AdminVipPanel })));
 export const AdminRedeemCodesPanel = lazyPanel(() =>
   import("@/components/admin/AdminRedeemCodesPanel").then((m) => ({ default: m.AdminRedeemCodesPanel })));
+export const AdminLicenseAuditPanel = lazyPanel(() =>
+  import("@/components/admin/AdminLicenseAuditPanel").then((m) => ({ default: m.AdminLicenseAuditPanel })));
+
 
 export const StaffAcademyPanel = lazyPanel(() =>
   import("@/components/staff/StaffAcademyPanel").then((m) => ({ default: m.StaffAcademyPanel })));
