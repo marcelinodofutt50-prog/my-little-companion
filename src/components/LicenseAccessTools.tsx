@@ -79,8 +79,10 @@ export function LicenseAccessTools({
   const runResync = async () => {
     setResyncing(true);
     try {
-      const res: any = await (resyncRenewal as any)();
-      if (res?.ok) toast.success(res.message);
+      // Só este login é renovado — quem tem vários não perde a taxa paga em
+      // outro acesso.
+      const res: any = await resyncRenewal({ data: { licenseId } });
+      if (res?.ok && res.fixed) toast.success(res.message);
       else toast.warning(res?.message ?? "Nenhum pagamento de servidor encontrado.");
       onDone?.();
     } catch (e: any) {
@@ -89,6 +91,7 @@ export function LicenseAccessTools({
       setResyncing(false);
     }
   };
+
 
   return (
     <>
