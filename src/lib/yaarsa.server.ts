@@ -462,6 +462,8 @@ export async function yaarsaSetPassword(
     if (!invalidAction && !/1005|not found/i.test(r.Fail || "")) return { ...r, action };
   }
   return last;
+}
+
 
 /**
  * LEITURA (best-effort) do cadastro no painel, sem alterar nada.
