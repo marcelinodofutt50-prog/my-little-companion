@@ -726,8 +726,11 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
         ? "Senha atualizada e conferida no painel. Use a nova senha no BTmob."
         : "Senha atualizada no painel. Use a nova senha no BTmob.",
     };
-
+    } finally {
+      await releaseOpLock(lockKey);
+    }
   });
+
 
 
 /**
