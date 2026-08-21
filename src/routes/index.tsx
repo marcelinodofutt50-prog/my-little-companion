@@ -423,7 +423,7 @@ function Index() {
             >
               <Users className="h-3 w-3" /> Community Evolution
             </motion.div>
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter">Objetivos da <span className="italic text-primary">Comunidade Shadow.</span></h2>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tighter">Objetivos da <span className="italic text-primary">Comunidade Shadow.</span></h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
               Juntos somos mais fortes. Desbloqueie recompensas globais para todos os membros atingindo marcos de crescimento.
             </p>
