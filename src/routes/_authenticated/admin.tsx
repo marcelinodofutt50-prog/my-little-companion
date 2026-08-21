@@ -320,7 +320,11 @@ function AdminPage() {
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
   const fixBugFn = useServerFn(adminFixLoginBug);
-  const setPasswordFn = useServerFn(adminSetLicensePassword);
+  const [pwdDialog, setPwdDialog] = useState<{ open: boolean; license: any | null }>({
+    open: false,
+    license: null,
+  });
+
   const analyzeBugFn = useServerFn(adminAnalyzeLoginBug);
   const [fixingLic, setFixingLic] = useState<string | null>(null);
   const [fixBugDialog, setFixBugDialog] = useState<{ open: boolean; licenseId: string | null }>({
