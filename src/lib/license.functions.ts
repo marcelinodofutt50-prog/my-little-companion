@@ -974,19 +974,34 @@ export const syncMyLicensesWithPanel = createServerFn({ method: "POST" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { syncLicensesWithPanel } = await import("./panel-sync.server");
+    const { acquireOpLock, releaseOpLock } = await import("./audit-trail.server");
 
-    const q = supabaseAdmin.from("licenses").select("*").eq("user_id", userId).is("disabled_at", null);
-    const { data: lics } = data?.licenseId ? await q.eq("id", data.licenseId) : await q;
+    // Um sync por cliente de cada vez: cliques repetidos não disparam duas leituras.
+    const lockKey = `panel-sync-user:${userId}`;
+    if (!(await acquireOpLock(lockKey, 60, "client"))) {
+      return {
+        ok: true, checked: 0, activated: 0, unchanged: 0, unknown: 0, items: [],
+        message: "Sua sincronização já está rodando. Aguarde alguns segundos e recarregue.",
+      };
+    }
 
-    const report = await syncLicensesWithPanel((lics ?? []) as any[], { actor: "client", userId });
+    try {
+      const q = supabaseAdmin.from("licenses").select("*").eq("user_id", userId).is("disabled_at", null);
+      const { data: lics } = data?.licenseId ? await q.eq("id", data.licenseId) : await q;
 
-    return {
-      ok: true,
-      ...report,
-      message: report.activated
-        ? `Pronto! ${report.activated} licença${report.activated === 1 ? "" : "s"} reativada${report.activated === 1 ? "" : "s"} conforme a data do painel.`
-        : report.unknown && !report.unchanged
-          ? "Não conseguimos ler a data no painel agora. Tente de novo em instantes ou fale com o suporte."
-          : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.",
-    };
+      const report = await syncLicensesWithPanel((lics ?? []) as any[], { actor: "client", userId });
+
+      return {
+        ok: true,
+        ...report,
+        message: report.activated
+          ? `Pronto! ${report.activated} licença${report.activated === 1 ? "" : "s"} reativada${report.activated === 1 ? "" : "s"} conforme a data do painel.`
+          : report.unknown && !report.unchanged
+            ? "Não conseguimos ler a data no painel agora. Tente de novo em instantes ou fale com o suporte."
+            : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.",
+      };
+    } finally {
+      await releaseOpLock(lockKey);
+    }
+
   });
