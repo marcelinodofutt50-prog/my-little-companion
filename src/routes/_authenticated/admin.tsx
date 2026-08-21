@@ -212,6 +212,8 @@ type Tab =
   | "nexus"
   | "academy"
   | "redeem"
+  | "license_audit"
+
   | "vip";
 
 
