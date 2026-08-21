@@ -14,7 +14,7 @@ import { nextDay20 } from "@/lib/admin-shared";
  *   4. data enviada ao Yaarsa (site e BTmob batendo).
  */
 
-type Lic = Record<string, any>;
+type Lic = { id: string } & Record<string, any>;
 
 /** Painel Yaarsa falso: registra a data recebida por conta. */
 class FakePanel {
