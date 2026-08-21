@@ -508,20 +508,21 @@ function Index() {
 
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 text-foreground uppercase tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold mb-4 sm:mb-6 text-foreground uppercase tracking-tight">
             {t('home.cta.ready')}
           </h2>
-          <p className="text-lg text-muted-foreground/80 mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground/80 mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed">
             {t('home.cta.desc')}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" asChild className="h-14 px-10 text-base rounded-full shadow-lg shadow-primary/10 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+            <Button size="lg" asChild className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-base rounded-full shadow-lg shadow-primary/10 w-full sm:w-auto">
               <Link to="/planos">{t('home.cta.buy')}</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
+            <Button size="lg" variant="outline" asChild className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
               <Link to="/auth">{t('home.cta.trial')}</Link>
             </Button>
           </div>
+
         </div>
       </section>
 
