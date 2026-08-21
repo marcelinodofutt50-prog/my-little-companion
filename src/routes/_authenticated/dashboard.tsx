@@ -38,6 +38,8 @@ import { LicenseCountdown } from '@/components/LicenseCountdown'
 import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
 import { LicensePauseControls } from '@/components/LicensePauseControls'
 import { LicenseAccessTools } from '@/components/LicenseAccessTools'
+import { RedeemCodeCard } from '@/components/RedeemCodeCard'
+
 import { planLabel } from '@/lib/license-display'
 import { reconcileMyRecentOrders } from '@/lib/checkout.functions'
 import { registerMyDevice } from '@/lib/device.functions'
