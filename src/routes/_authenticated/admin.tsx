@@ -2252,6 +2252,8 @@ function AdminPage() {
               {tab === "vip" && <AdminVipPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
+              {tab === "redeem" && <AdminRedeemCodesPanel />}
+
               </motion.div>
             </AnimatePresence>
           </div>
