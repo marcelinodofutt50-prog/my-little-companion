@@ -56,7 +56,24 @@ export const staffListRedeemCodes = createServerFn({ method: "GET" })
       .from("redeem_codes" as any).select("*").order("created_at", { ascending: false }).limit(200);
     const { data: uses } = await supabaseAdmin
       .from("redeem_code_uses" as any).select("*").order("created_at", { ascending: false }).limit(100);
-    return { codes: codes ?? [], uses: uses ?? [] };
+
+    // Liga cada resgate à licença que recebeu o benefício, para a equipe ver
+    // no painel qual login foi creditado por cada código.
+    const licenseIds = Array.from(
+      new Set((uses ?? []).map((u: any) => u.license_id).filter(Boolean)),
+    );
+    let licMap = new Map<string, any>();
+    if (licenseIds.length > 0) {
+      const { data: lics } = await supabaseAdmin
+        .from("licenses").select("id,yaarsa_email,plan_slug,expires_at,user_id").in("id", licenseIds);
+      licMap = new Map((lics ?? []).map((l: any) => [l.id, l]));
+    }
+    const usesWithLicense = (uses ?? []).map((u: any) => ({
+      ...u,
+      license: u.license_id ? (licMap.get(u.license_id) ?? null) : null,
+    }));
+    return { codes: codes ?? [], uses: usesWithLicense };
+
   });
 
 /** Equipe: liga/desliga um código. */
