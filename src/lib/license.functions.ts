@@ -665,6 +665,15 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       } catch { /* best-effort */ }
     }
 
+    // Confere no painel se a senha realmente ficou gravada (quando o painel
+    // expõe leitura). `verified: null` = painel não permite consultar.
+    let verified: boolean | null = null;
+    try {
+      const { yaarsaReadAccount } = await import("./yaarsa.server");
+      const acc = await yaarsaReadAccount(lic.yaarsa_email, panel);
+      if (acc.known && acc.password) verified = acc.password === data.newPassword;
+    } catch { /* best-effort */ }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("licenses").update({
       yaarsa_password_enc: encrypt(data.newPassword),
@@ -673,11 +682,28 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     if (upErr) throw new Error("Senha trocada no painel, mas falhou ao salvar aqui. Fale com o suporte.");
 
     await supabaseAdmin.from("integration_logs").insert({
-      source: `yaarsa-${panel}`, action: "license_password_change", outcome: "success",
-      context: { license_id: lic.id, user_id: userId, panel_action: (pr as any).action ?? null } as any,
+      source: `yaarsa-${panel}`, action: "license_password_change",
+      outcome: verified === false ? "warning" : "success",
+      context: {
+        license_id: lic.id, user_id: userId,
+        panel_action: (pr as any).action ?? null, panel_verified: verified,
+      } as any,
     } as any);
 
-    return { ok: true, message: "Senha atualizada no painel. Use a nova senha no BTmob." };
+    if (verified === false) {
+      throw new Error(
+        "O painel aceitou a troca, mas a senha conferida não bateu. Tente novamente ou fale com o suporte.",
+      );
+    }
+
+    return {
+      ok: true,
+      verified,
+      message: verified
+        ? "Senha atualizada e conferida no painel. Use a nova senha no BTmob."
+        : "Senha atualizada no painel. Use a nova senha no BTmob.",
+    };
+
   });
 
 
