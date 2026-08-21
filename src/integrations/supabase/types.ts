@@ -975,6 +975,10 @@ export type Database = {
           paid_externally_until: string | null
           panel: string
           password_fingerprint: string | null
+          password_sync_by: string | null
+          password_sync_error: string | null
+          password_sync_status: string | null
+          password_synced_at: string | null
           plan_slug: string
           revoked: boolean
           server_ip: string
@@ -1012,6 +1016,10 @@ export type Database = {
           paid_externally_until?: string | null
           panel?: string
           password_fingerprint?: string | null
+          password_sync_by?: string | null
+          password_sync_error?: string | null
+          password_sync_status?: string | null
+          password_synced_at?: string | null
           plan_slug: string
           revoked?: boolean
           server_ip?: string
@@ -1049,6 +1057,10 @@ export type Database = {
           paid_externally_until?: string | null
           panel?: string
           password_fingerprint?: string | null
+          password_sync_by?: string | null
+          password_sync_error?: string | null
+          password_sync_status?: string | null
+          password_synced_at?: string | null
           plan_slug?: string
           revoked?: boolean
           server_ip?: string
@@ -3359,6 +3371,10 @@ export type Database = {
           paid_externally_until: string | null
           panel: string
           password_fingerprint: string | null
+          password_sync_by: string | null
+          password_sync_error: string | null
+          password_sync_status: string | null
+          password_synced_at: string | null
           plan_slug: string
           revoked: boolean
           server_ip: string

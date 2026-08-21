@@ -129,7 +129,6 @@ import {
   adminExtendLicense,
   adminFixLoginBug,
   adminAnalyzeLoginBug,
-  adminSetLicensePassword,
   adminSetRole,
   adminSetRoleByEmail,
   adminListRoles,
@@ -166,6 +165,7 @@ import {
   requestNotifyPermission,
   showDesktopNotification,
 } from "@/lib/notify-sound";
+import { LicensePasswordSyncDialog } from "@/components/admin/LicensePasswordSyncDialog";
 import { secureSignOut } from "@/lib/session";
 import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { SECTION_CAP, can, ROLE_LABEL, type Role } from "@/lib/permissions";
@@ -320,7 +320,11 @@ function AdminPage() {
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
   const fixBugFn = useServerFn(adminFixLoginBug);
-  const setPasswordFn = useServerFn(adminSetLicensePassword);
+  const [pwdDialog, setPwdDialog] = useState<{ open: boolean; license: any | null }>({
+    open: false,
+    license: null,
+  });
+
   const analyzeBugFn = useServerFn(adminAnalyzeLoginBug);
   const [fixingLic, setFixingLic] = useState<string | null>(null);
   const [fixBugDialog, setFixBugDialog] = useState<{ open: boolean; licenseId: string | null }>({
@@ -554,28 +558,11 @@ function AdminPage() {
       toast.error(e.message);
     }
   }
-  /** Sincroniza (ou aplica) a senha do login do cliente. */
-  async function setLicensePassword(id: string) {
-    const pwd = prompt("Nova senha do login do cliente (a que você definiu no painel):");
-    if (!pwd || !pwd.trim()) return;
-    const applyToPanel = confirm(
-      "OK = aplicar esta senha TAMBÉM no painel.\nCancelar = apenas registrar aqui (você já trocou no painel).",
-    );
-    try {
-      const r: any = await setPasswordFn({
-        data: { licenseId: id, newPassword: pwd.trim(), applyToPanel },
-      });
-      toast.success(
-        r.appliedToPanel
-          ? "Senha aplicada no painel e atualizada para o cliente."
-          : "Senha atualizada no painel do cliente (aba Licenças).",
-        { duration: 8000 },
-      );
-      setLicenses(await licensesFn());
-    } catch (e: any) {
-      toast.error(e.message);
-    }
+  /** Abre o fluxo de senha (status + conferência no painel + atualização). */
+  function openPasswordDialog(license: any) {
+    setPwdDialog({ open: true, license });
   }
+
   async function recreate(id: string) {
 
     if (!confirm("Recriar credenciais do login? A senha anterior será substituída.")) return;
@@ -1936,11 +1923,20 @@ function AdminPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              title="Atualizar a senha que o cliente vê (sincronizar com o painel)"
-                              onClick={() => setLicensePassword(l.id)}
+                              title="Senha do login: conferir no painel e atualizar para o cliente"
+                              onClick={() => openPasswordDialog(l)}
                             >
-                              <KeyRound className="h-3 w-3 text-primary" />
+                              <KeyRound
+                                className={`h-3 w-3 ${
+                                  ["divergent", "unknown", "error"].includes(
+                                    String(l.password_sync_status ?? ""),
+                                  )
+                                    ? "text-amber-400"
+                                    : "text-primary"
+                                }`}
+                              />
                             </Button>
+
                             <Button
                               size="sm"
                               variant="ghost"
@@ -2339,6 +2335,19 @@ function AdminPage() {
         onOpenThread={() => {
           setCustomer360(null);
           setTab("chat");
+        }}
+      />
+
+      <LicensePasswordSyncDialog
+        license={pwdDialog.license}
+        open={pwdDialog.open}
+        onOpenChange={(open) => setPwdDialog((s) => ({ open, license: open ? s.license : null }))}
+        onDone={async () => {
+          const fresh: any = await licensesFn();
+          setLicenses(fresh);
+          setPwdDialog((s) =>
+            s.license ? { ...s, license: fresh.find((x: any) => x.id === s.license.id) ?? s.license } : s,
+          );
         }}
       />
 

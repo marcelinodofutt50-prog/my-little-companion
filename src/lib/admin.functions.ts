@@ -76,16 +76,48 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaRemoveAccount } = await import("./yaarsa.server");
-    const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await supabaseAdmin
+      .from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
-    await yaarsaRemoveAccount(lic.yaarsa_email, (lic as any).panel ?? "v457");
+
+    // Se o painel estiver fora do ar, a revogação local não pode ficar presa:
+    // registramos a falha e seguimos bloqueando o acesso aqui.
+    let panelRemoved = true;
+    let panelError: string | null = null;
+    try {
+      const r: any = await yaarsaRemoveAccount(lic.yaarsa_email, (lic as any).panel ?? "v457");
+      if (r?.Fail && !/1005|not found|não encontrado/i.test(String(r.Fail))) {
+        panelRemoved = false;
+        panelError = String(r.Fail);
+      }
+    } catch (e: any) {
+      panelRemoved = false;
+      panelError = String(e?.message ?? e);
+    }
+
     // RLS na tabela de licenças só permite leitura: a escrita precisa do
     // cliente administrativo, senão a revogação virava um "sucesso" silencioso.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: revErr } = await supabaseAdmin
-      .from("licenses").update({ revoked: true, status: "revoked" } as any).eq("id", data.licenseId);
+      .from("licenses")
+      .update({ revoked: true, status: "revoked" } as any)
+      .eq("id", data.licenseId);
     if (revErr) throw new Error(revErr.message);
-    return { ok: true };
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${(lic as any).panel ?? "v457"}`,
+      action: "admin_revoke_license",
+      outcome: panelRemoved ? "success" : "partial",
+      context: {
+        license_id: (lic as any).id,
+        actor_id: context.userId,
+        panel_removed: panelRemoved,
+        panel_error: panelError,
+      } as any,
+    } as any);
+
+    return { ok: true, panelRemoved, panelError };
+
   });
 
 export const adminExtendLicense = createServerFn({ method: "POST" })
@@ -94,7 +126,8 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaExtend } = await import("./yaarsa.server");
-    const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    const { supabaseAdmin: sbRead } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await sbRead.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
     const r = await yaarsaExtend(lic.yaarsa_email, data.newExpireDate, (lic as any).panel ?? "v457");
     if (r.Fail) throw new Error(r.Fail);
@@ -1656,7 +1689,16 @@ export const adminSetLicensePassword = createServerFn({ method: "POST" })
         (lic as any).yaarsa_username,
         (lic as any).expires_at ?? null,
       );
-      if (pr.Fail) throw new Error(`O painel não aceitou a troca: ${pr.Fail}`);
+      if (pr.Fail) {
+        await supabaseAdmin.from("licenses").update({
+          password_synced_at: new Date().toISOString(),
+          password_sync_status: "error",
+          password_sync_error: String(pr.Fail).slice(0, 300),
+          password_sync_by: context.userId,
+        } as any).eq("id", (lic as any).id);
+        throw new Error(`O painel não aceitou a troca: ${pr.Fail}`);
+      }
+
       panelApplied = true;
     }
 
@@ -1665,6 +1707,11 @@ export const adminSetLicensePassword = createServerFn({ method: "POST" })
       password_fingerprint: sha256Hex(data.newPassword),
       // A senha de pausa deixa de valer quando a senha real muda.
       suspend_password_fingerprint: null,
+      password_synced_at: new Date().toISOString(),
+      password_sync_status: data.applyToPanel ? "applied" : "manual",
+      password_sync_error: null,
+      password_sync_by: context.userId,
+
     } as any).eq("id", (lic as any).id);
     if (upErr) throw new Error("Não foi possível salvar a senha aqui.");
 
@@ -1697,4 +1744,127 @@ export const adminSetLicensePassword = createServerFn({ method: "POST" })
     });
 
     return { ok: true, appliedToPanel: panelApplied };
+  });
+
+/**
+ * Confere a senha do login direto no painel Yaarsa (sem alterar nada) e grava
+ * o resultado da última sincronização na licença. Com `adopt`, quando o painel
+ * devolve uma senha diferente da nossa, adotamos a do painel — é a que o
+ * cliente precisa ver em "Licenças".
+ */
+export const adminSyncLicensePasswordFromPanel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z.object({ licenseId: z.string().uuid(), adopt: z.boolean().optional() }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await supabaseAdmin
+      .from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    if (!lic) throw new Error("Licença não encontrada");
+
+    const panel = (lic as any).panel ?? "v457";
+    const { yaarsaReadAccount, decrypt, encrypt } = await import("./yaarsa.server");
+    const { sha256Hex } = await import("./password-safety.server");
+
+    const stamp = async (patch: Record<string, unknown>) => {
+      await supabaseAdmin.from("licenses").update({
+        password_synced_at: new Date().toISOString(),
+        password_sync_by: context.userId,
+        ...patch,
+      } as any).eq("id", (lic as any).id);
+    };
+
+    let acc: { known: boolean; expireDate: string | null; password: string | null };
+    try {
+      acc = await yaarsaReadAccount((lic as any).yaarsa_email, panel);
+    } catch (e: any) {
+      await stamp({ password_sync_status: "error", password_sync_error: String(e?.message ?? e).slice(0, 300) });
+      throw new Error("Não foi possível falar com o painel agora. Tente de novo em alguns minutos.");
+    }
+
+    if (!acc.known || !acc.password) {
+      await stamp({
+        password_sync_status: "unknown",
+        password_sync_error: "O painel não devolveu a senha desta conta.",
+      });
+      return {
+        ok: false as const,
+        status: "unknown" as const,
+        message: "O painel não informa a senha desta conta. Digite a senha nova manualmente abaixo.",
+        panelExpireDate: acc.expireDate ?? null,
+      };
+    }
+
+    let local: string | null = null;
+    try {
+      local = decrypt((lic as any).yaarsa_password_enc);
+    } catch {
+      local = null;
+    }
+
+    if (local === acc.password) {
+      await stamp({ password_sync_status: "ok", password_sync_error: null });
+      return {
+        ok: true as const,
+        status: "ok" as const,
+        message: "A senha aqui já é a mesma do painel.",
+        panelExpireDate: acc.expireDate ?? null,
+      };
+    }
+
+    if (!data.adopt) {
+      await stamp({
+        password_sync_status: "divergent",
+        password_sync_error: "A senha do painel está diferente da senha mostrada ao cliente.",
+      });
+      return {
+        ok: false as const,
+        status: "divergent" as const,
+        message: "A senha do painel está diferente. Use \"Adotar a senha do painel\" para corrigir.",
+        panelPassword: acc.password,
+        panelExpireDate: acc.expireDate ?? null,
+      };
+    }
+
+    await supabaseAdmin.from("licenses").update({
+      yaarsa_password_enc: encrypt(acc.password),
+      password_fingerprint: sha256Hex(acc.password),
+      suspend_password_fingerprint: null,
+      password_synced_at: new Date().toISOString(),
+      password_sync_status: "ok",
+      password_sync_error: null,
+      password_sync_by: context.userId,
+    } as any).eq("id", (lic as any).id);
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${panel}`,
+      action: "admin_password_pull",
+      outcome: "success",
+      context: { license_id: (lic as any).id, actor_id: context.userId } as any,
+    } as any);
+
+    const { recordLicenseAudit } = await import("./audit-trail.server");
+    await recordLicenseAudit({
+      licenseId: (lic as any).id,
+      userId: (lic as any).user_id,
+      actorId: context.userId,
+      actorKind: "staff",
+      eventType: "password_change",
+      reason: "Senha adotada do painel Yaarsa (sincronização)",
+      yaarsaEmail: (lic as any).yaarsa_email,
+      panel,
+      expiresBefore: (lic as any).expires_at ?? null,
+      expiresAfter: (lic as any).expires_at ?? null,
+      details: { source: "panel_pull" },
+    });
+
+    return {
+      ok: true as const,
+      status: "adopted" as const,
+      message: "Senha do painel adotada — o cliente já vê a senha certa.",
+      panelPassword: acc.password,
+      panelExpireDate: acc.expireDate ?? null,
+    };
   });
