@@ -744,6 +744,54 @@ export type Database = {
         }
         Relationships: []
       }
+      license_audit_events: {
+        Row: {
+          actor_id: string | null
+          actor_kind: string
+          created_at: string
+          details: Json
+          event_type: string
+          expires_after: string | null
+          expires_before: string | null
+          id: string
+          license_id: string | null
+          panel: string | null
+          reason: string | null
+          user_id: string | null
+          yaarsa_email: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_kind?: string
+          created_at?: string
+          details?: Json
+          event_type: string
+          expires_after?: string | null
+          expires_before?: string | null
+          id?: string
+          license_id?: string | null
+          panel?: string | null
+          reason?: string | null
+          user_id?: string | null
+          yaarsa_email?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_kind?: string
+          created_at?: string
+          details?: Json
+          event_type?: string
+          expires_after?: string | null
+          expires_before?: string | null
+          id?: string
+          license_id?: string | null
+          panel?: string | null
+          reason?: string | null
+          user_id?: string | null
+          yaarsa_email?: string | null
+        }
+        Relationships: []
+      }
       license_history: {
         Row: {
           action: string
@@ -1245,6 +1293,27 @@ export type Database = {
           test_base_url?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      operation_locks: {
+        Row: {
+          acquired_at: string
+          expires_at: string
+          holder: string | null
+          key: string
+        }
+        Insert: {
+          acquired_at?: string
+          expires_at: string
+          holder?: string | null
+          key: string
+        }
+        Update: {
+          acquired_at?: string
+          expires_at?: string
+          holder?: string | null
+          key?: string
         }
         Relationships: []
       }
@@ -3226,6 +3295,7 @@ export type Database = {
         }
       }
       recalc_vip_tier: { Args: { _user_id: string }; Returns: string }
+      release_op_lock: { Args: { _key: string }; Returns: undefined }
       revoke_unpaid_server_licenses: {
         Args: never
         Returns: {
@@ -3234,6 +3304,10 @@ export type Database = {
           user_id: string
           yaarsa_email: string
         }[]
+      }
+      try_acquire_op_lock: {
+        Args: { _holder?: string; _key: string; _ttl_seconds?: number }
+        Returns: boolean
       }
     }
     Enums: {

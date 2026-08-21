@@ -110,6 +110,7 @@ export const redeemMyCode = createServerFn({ method: "POST" })
     const { normalizeRedeemCode, checkRedeemCode } = await import("./redeem-rules");
     const { applyServerRenewalCode, applyDaysToLicense, createCourtesyLicense } =
       await import("./redeem.server");
+    const { withOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
     const code = normalizeRedeemCode(data.code);
     const { data: row } = await supabaseAdmin
@@ -118,57 +119,92 @@ export const redeemMyCode = createServerFn({ method: "POST" })
     if (!check.ok) throw new Error(check.message);
     const rc = row as any;
 
-    // Um código por pessoa: evita o mesmo cliente queimar o lote inteiro.
-    const { data: already } = await supabaseAdmin
-      .from("redeem_code_uses" as any)
-      .select("id").eq("code_id", rc.id).eq("user_id", userId).maybeSingle();
-    if (already) throw new Error("Você já resgatou este código.");
+    // Trava por pessoa + código: cliques repetidos ou várias abas não geram
+    // dois resgates. Quem chegar depois recebe aviso em vez de duplicar.
+    return await withOpLock(
+      `redeem:${userId}:${rc.id}`,
+      async () => {
+        // Reserva idempotente: o índice único (code_id, user_id) é a trava final.
+        const { data: claim, error: claimErr } = await supabaseAdmin
+          .from("redeem_code_uses" as any)
+          .insert({
+            code_id: rc.id,
+            code,
+            user_id: userId,
+            details: { status: "claimed", kind: rc.kind, days: rc.days } as any,
+          } as any)
+          .select("id").maybeSingle();
+        if (claimErr || !claim) throw new Error("Você já resgatou este código.");
+        const claimId = (claim as any).id as string;
 
-    // Reserva o uso ANTES de mexer no painel (evita resgate duplo em corrida).
-    const { data: reserved, error: resErr } = await supabaseAdmin
-      .from("redeem_codes" as any)
-      .update({ uses: Number(rc.uses ?? 0) + 1 } as any)
-      .eq("id", rc.id).eq("uses", rc.uses ?? 0)
-      .select("id").maybeSingle();
-    if (resErr || !reserved) throw new Error("Este código acabou de ser usado. Tente outro ou fale com o suporte.");
+        const dropClaim = async () => {
+          await supabaseAdmin.from("redeem_code_uses" as any).delete().eq("id", claimId);
+        };
 
-    const rollback = async () => {
-      await supabaseAdmin.from("redeem_codes" as any)
-        .update({ uses: Number(rc.uses ?? 0) } as any).eq("id", rc.id);
-    };
+        // Consome uma vaga do lote com verificação otimista (evita estourar max_uses).
+        const { data: reserved, error: resErr } = await supabaseAdmin
+          .from("redeem_codes" as any)
+          .update({ uses: Number(rc.uses ?? 0) + 1 } as any)
+          .eq("id", rc.id).eq("uses", rc.uses ?? 0)
+          .select("id").maybeSingle();
+        if (resErr || !reserved) {
+          await dropClaim();
+          throw new Error("Este código acabou de ser usado. Tente outro ou fale com o suporte.");
+        }
 
-    let license: any = null;
-    if (data.licenseId) {
-      const { data: lic } = await supabaseAdmin
-        .from("licenses").select("*")
-        .eq("id", data.licenseId).eq("user_id", userId).is("disabled_at", null).maybeSingle();
-      if (!lic) { await rollback(); throw new Error("Licença não encontrada na sua conta."); }
-      license = lic;
-    }
+        const rollback = async () => {
+          await supabaseAdmin.from("redeem_codes" as any)
+            .update({ uses: Number(rc.uses ?? 0) } as any).eq("id", rc.id);
+          await dropClaim();
+        };
 
-    try {
-      let outcome;
-      if (rc.kind === "server_renewal") {
-        if (!license) throw new Error("Escolha qual licença deve receber a renovação do servidor.");
-        if (license.is_trial) throw new Error("O teste grátis não paga servidor — escolha uma licença paga.");
-        outcome = await applyServerRenewalCode(license);
-      } else if (license && !license.is_trial) {
-        outcome = await applyDaysToLicense(license, Number(rc.days ?? 1));
-      } else {
-        outcome = await createCourtesyLicense(userId, Number(rc.days ?? 1), rc.plan_slug ?? "login-30d");
-      }
+        let license: any = null;
+        if (data.licenseId) {
+          const { data: lic } = await supabaseAdmin
+            .from("licenses").select("*")
+            .eq("id", data.licenseId).eq("user_id", userId).is("disabled_at", null).maybeSingle();
+          if (!lic) { await rollback(); throw new Error("Licença não encontrada na sua conta."); }
+          license = lic;
+        }
 
-      await supabaseAdmin.from("redeem_code_uses" as any).insert({
-        code_id: rc.id,
-        code,
-        user_id: userId,
-        license_id: outcome.licenseId,
-        details: { kind: rc.kind, days: rc.days, expires_at: outcome.expires_at } as any,
-      } as any);
+        try {
+          let outcome;
+          if (rc.kind === "server_renewal") {
+            if (!license) throw new Error("Escolha qual licença deve receber a renovação do servidor.");
+            if (license.is_trial) throw new Error("O teste grátis não paga servidor — escolha uma licença paga.");
+            outcome = await applyServerRenewalCode(license);
+          } else if (license && !license.is_trial) {
+            outcome = await applyDaysToLicense(license, Number(rc.days ?? 1));
+          } else {
+            outcome = await createCourtesyLicense(userId, Number(rc.days ?? 1), rc.plan_slug ?? "login-30d");
+          }
 
-      return { ok: true, ...outcome };
-    } catch (e: any) {
-      await rollback();
-      throw new Error(e?.message ?? "Não foi possível aplicar o código agora.");
-    }
+          await supabaseAdmin.from("redeem_code_uses" as any).update({
+            license_id: outcome.licenseId,
+            details: { status: "applied", kind: rc.kind, days: rc.days, expires_at: outcome.expires_at } as any,
+          } as any).eq("id", claimId);
+
+          await recordLicenseAudit({
+            licenseId: outcome.licenseId,
+            userId,
+            actorId: userId,
+            actorKind: "customer",
+            eventType: rc.kind === "server_renewal" ? "coupon_server_renewal" : "coupon_license_days",
+            reason: `Código de cortesia ${code}${rc.note ? ` — ${rc.note}` : ""}`,
+            yaarsaEmail: license?.yaarsa_email ?? null,
+            panel: license?.panel ?? null,
+            expiresBefore: license?.expires_at ?? null,
+            expiresAfter: outcome.expires_at,
+            details: { code, code_id: rc.id, days: rc.days, created_license: outcome.created },
+          });
+
+          return { ok: true, ...outcome };
+        } catch (e: any) {
+          await rollback();
+          throw new Error(e?.message ?? "Não foi possível aplicar o código agora.");
+        }
+      },
+      { ttlSeconds: 90, busyMessage: "Seu resgate já está sendo processado. Aguarde alguns segundos." },
+    );
   });
+

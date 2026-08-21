@@ -78,6 +78,7 @@ import {
   AdminEmailMetrics,
   AdminExternalPayersPanel,
   AdminHealthPanel,
+  AdminLicenseAuditPanel,
   AdminMarketPanel,
   AdminMetricsPanel,
   AdminMigrationWaves,
@@ -211,6 +212,8 @@ type Tab =
   | "nexus"
   | "academy"
   | "redeem"
+  | "license_audit"
+
   | "vip";
 
 
@@ -245,6 +248,8 @@ const TAB_DESC: Record<Tab, string> = {
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
   redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
+  license_audit: "Histórico detalhado: quando cada licença e login foi alterado (senha, sincronização com o painel ou cupom), por quem e por quê.",
+
 };
 
 
@@ -667,6 +672,7 @@ function AdminPage() {
         { id: "users", label: "Usuários", icon: Users },
         { id: "licenses", label: "Licenças", icon: KeyRound },
         { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "3d, 7d ou servidor" },
+        { id: "license_audit", label: "Histórico de Alterações", icon: ScrollText, hint: "senha, sync e cupons" },
       ],
 
     },
@@ -2255,6 +2261,7 @@ function AdminPage() {
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
               {tab === "redeem" && <AdminRedeemCodesPanel />}
+              {tab === "license_audit" && <AdminLicenseAuditPanel />}
 
               </motion.div>
             </AnimatePresence>

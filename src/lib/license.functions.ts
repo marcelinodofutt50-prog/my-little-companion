@@ -645,7 +645,15 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     const panel = (lic as any).panel ?? "v457";
     const { yaarsaSetPassword, encrypt } = await import("./yaarsa.server");
     const { sha256Hex } = await import("./password-safety.server");
+    const { acquireOpLock, releaseOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
+    // Uma troca de senha por vez nesta licença (cliques repetidos / várias abas).
+    const lockKey = `license-password:${lic.id}`;
+    if (!(await acquireOpLock(lockKey, 90, userId))) {
+      throw new Error("Já estamos trocando a senha desta licença. Aguarde alguns segundos.");
+    }
+
+    try {
     const pr = await yaarsaSetPassword(
       lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
     );
@@ -690,6 +698,21 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       } as any,
     } as any);
 
+    await recordLicenseAudit({
+      licenseId: lic.id,
+      userId,
+      actorId: userId,
+      actorKind: "customer",
+      eventType: "password_change",
+      reason: "Cliente trocou a senha do login pelo site",
+      yaarsaEmail: lic.yaarsa_email,
+      panel,
+      expiresBefore: (lic as any).expires_at ?? null,
+      expiresAfter: (lic as any).expires_at ?? null,
+      details: { panel_action: (pr as any).action ?? null, panel_verified: verified },
+    });
+
+
     if (verified === false) {
       throw new Error(
         "O painel aceitou a troca, mas a senha conferida não bateu. Tente novamente ou fale com o suporte.",
@@ -703,8 +726,11 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
         ? "Senha atualizada e conferida no painel. Use a nova senha no BTmob."
         : "Senha atualizada no painel. Use a nova senha no BTmob.",
     };
-
+    } finally {
+      await releaseOpLock(lockKey);
+    }
   });
+
 
 
 /**
@@ -948,19 +974,34 @@ export const syncMyLicensesWithPanel = createServerFn({ method: "POST" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { syncLicensesWithPanel } = await import("./panel-sync.server");
+    const { acquireOpLock, releaseOpLock } = await import("./audit-trail.server");
 
-    const q = supabaseAdmin.from("licenses").select("*").eq("user_id", userId).is("disabled_at", null);
-    const { data: lics } = data?.licenseId ? await q.eq("id", data.licenseId) : await q;
+    // Um sync por cliente de cada vez: cliques repetidos não disparam duas leituras.
+    const lockKey = `panel-sync-user:${userId}`;
+    if (!(await acquireOpLock(lockKey, 60, "client"))) {
+      return {
+        ok: true, checked: 0, activated: 0, unchanged: 0, unknown: 0, items: [],
+        message: "Sua sincronização já está rodando. Aguarde alguns segundos e recarregue.",
+      };
+    }
 
-    const report = await syncLicensesWithPanel((lics ?? []) as any[], { actor: "client", userId });
+    try {
+      const q = supabaseAdmin.from("licenses").select("*").eq("user_id", userId).is("disabled_at", null);
+      const { data: lics } = data?.licenseId ? await q.eq("id", data.licenseId) : await q;
 
-    return {
-      ok: true,
-      ...report,
-      message: report.activated
-        ? `Pronto! ${report.activated} licença${report.activated === 1 ? "" : "s"} reativada${report.activated === 1 ? "" : "s"} conforme a data do painel.`
-        : report.unknown && !report.unchanged
-          ? "Não conseguimos ler a data no painel agora. Tente de novo em instantes ou fale com o suporte."
-          : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.",
-    };
+      const report = await syncLicensesWithPanel((lics ?? []) as any[], { actor: "client", userId });
+
+      return {
+        ok: true,
+        ...report,
+        message: report.activated
+          ? `Pronto! ${report.activated} licença${report.activated === 1 ? "" : "s"} reativada${report.activated === 1 ? "" : "s"} conforme a data do painel.`
+          : report.unknown && !report.unchanged
+            ? "Não conseguimos ler a data no painel agora. Tente de novo em instantes ou fale com o suporte."
+            : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.",
+      };
+    } finally {
+      await releaseOpLock(lockKey);
+    }
+
   });

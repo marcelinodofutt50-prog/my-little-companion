@@ -15,7 +15,7 @@ export type PanelSyncItem = {
   license_id: string;
   yaarsa_email: string | null;
   panel_date: string | null;
-  action: PanelSyncDecision["action"];
+  action: PanelSyncDecision["action"] | "skip";
   reason: string;
   expires_at?: string | null;
 };
@@ -38,6 +38,7 @@ export async function syncLicensesWithPanel(
 ): Promise<PanelSyncReport> {
   const { yaarsaReadAccount } = await import("./yaarsa.server");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { acquireOpLock, releaseOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
   const report: PanelSyncReport = { checked: 0, activated: 0, unchanged: 0, unknown: 0, items: [] };
 
@@ -45,44 +46,78 @@ export async function syncLicensesWithPanel(
     if (!lic?.yaarsa_email || lic.disabled_at || lic.suspended_at) continue;
     report.checked++;
 
-    let panelDate: string | null = null;
-    try {
-      const acc = await yaarsaReadAccount(lic.yaarsa_email, lic.panel ?? "v457");
-      panelDate = acc.known ? acc.expireDate : null;
-    } catch {
-      panelDate = null;
+    // Trava por licença: se outra sessão (ou o admin) já está sincronizando
+    // esta licença, pulamos em vez de gravar duas vezes.
+    const lockKey = `panel-sync:${lic.id}`;
+    const locked = await acquireOpLock(lockKey, 45, opts.actor);
+    if (!locked) {
+      report.unchanged++;
+      report.items.push({
+        license_id: lic.id,
+        yaarsa_email: lic.yaarsa_email,
+        panel_date: null,
+        action: "skip",
+        reason: "sincronização já em andamento em outra sessão",
+      });
+      continue;
     }
 
-    const decision = evaluatePanelSync(lic, panelDate);
-    const item: PanelSyncItem = {
-      license_id: lic.id,
-      yaarsa_email: lic.yaarsa_email,
-      panel_date: panelDate,
-      action: decision.action,
-      reason: decision.reason,
-    };
+    try {
+      let panelDate: string | null = null;
+      try {
+        const acc = await yaarsaReadAccount(lic.yaarsa_email, lic.panel ?? "v457");
+        panelDate = acc.known ? acc.expireDate : null;
+      } catch {
+        panelDate = null;
+      }
 
-    if (decision.action === "activate" && decision.patch) {
-      const { error } = await supabaseAdmin
-        .from("licenses")
-        .update(decision.patch as any)
-        .eq("id", lic.id);
-      if (error) {
-        item.action = "unknown";
-        item.reason = `falha ao gravar: ${error.message}`;
+      const decision = evaluatePanelSync(lic, panelDate);
+      const item: PanelSyncItem = {
+        license_id: lic.id,
+        yaarsa_email: lic.yaarsa_email,
+        panel_date: panelDate,
+        action: decision.action,
+        reason: decision.reason,
+      };
+
+      if (decision.action === "activate" && decision.patch) {
+        const { error } = await supabaseAdmin
+          .from("licenses")
+          .update(decision.patch as any)
+          .eq("id", lic.id);
+        if (error) {
+          item.action = "unknown";
+          item.reason = `falha ao gravar: ${error.message}`;
+          report.unknown++;
+        } else {
+          item.expires_at = (decision.patch['expires_at'] as string | undefined) ?? lic.expires_at ?? null;
+          report.activated++;
+          await recordLicenseAudit({
+            licenseId: lic.id,
+            userId: lic.user_id ?? null,
+            actorId: opts.userId ?? null,
+            actorKind: opts.actor === "admin" ? "staff" : opts.actor === "client" ? "customer" : "system",
+            eventType: "panel_sync_activate",
+            reason: decision.reason,
+            yaarsaEmail: lic.yaarsa_email,
+            panel: lic.panel ?? "v457",
+            expiresBefore: lic.expires_at ?? null,
+            expiresAfter: item.expires_at ?? null,
+            details: { panel_date: panelDate, patch: decision.patch as any },
+          });
+        }
+      } else if (decision.action === "unknown") {
         report.unknown++;
       } else {
-        item.expires_at = (decision.patch['expires_at'] as string | undefined) ?? lic.expires_at ?? null;
-        report.activated++;
+        report.unchanged++;
       }
-    } else if (decision.action === "unknown") {
-      report.unknown++;
-    } else {
-      report.unchanged++;
-    }
 
-    report.items.push(item);
+      report.items.push(item);
+    } finally {
+      await releaseOpLock(lockKey);
+    }
   }
+
 
   try {
     await supabaseAdmin.from("integration_logs").insert({
