@@ -90,11 +90,12 @@ function Index() {
   }, [search?.success]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden selection:bg-primary/30">
+    <div className="relative min-h-screen overflow-hidden pb-24 md:pb-0 selection:bg-primary/30">
       <SiteHeader />
       
       {/* Hero Section */}
-      <section className="relative pt-16 pb-12 md:pt-24 md:pb-20">
+      <section className="relative pt-10 pb-10 sm:pt-16 sm:pb-12 md:pt-24 md:pb-20">
+
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
@@ -152,10 +153,10 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-4"
+            className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4"
           >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button size="lg" asChild className="group relative h-14 overflow-hidden px-10 text-xs font-mono uppercase tracking-widest rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
+              <Button size="lg" asChild className="group relative h-12 sm:h-14 w-full sm:w-auto overflow-hidden px-6 sm:px-10 text-xs font-mono uppercase tracking-widest rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
                 <Link to="/planos">
                   <motion.div 
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
@@ -167,8 +168,8 @@ function Index() {
               </Button>
             </motion.div>
             
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button size="lg" variant="outline" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5 backdrop-blur-sm">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" asChild className="h-12 sm:h-14 w-full sm:w-auto px-6 sm:px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5 backdrop-blur-sm">
                 <Link to="/auth" search={{ mode: 'up', trial: 'true' }}>
                   Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary animate-pulse" />
                 </Link>
@@ -181,58 +182,62 @@ function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
+            className="mt-10 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center sm:gap-8 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground"
           >
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> Central de atendimento: OK</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> Suporte: OK</div>
           </motion.div>
+
         </div>
       </section>
       
       {/* Enterprise Differential Section */}
-      <section className="py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-transparent">
+      <section className="py-14 sm:py-20 relative bg-black/40 dark:bg-black/40 theme-light:bg-transparent">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center mb-16">
+          <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-16">
             <span className="font-mono text-[10px] text-primary uppercase tracking-[0.3em]">// diferenciais táticos</span>
-            <h2 className="text-3xl md:text-5xl font-bold mt-4 tracking-tighter">O que nos torna <span className="italic text-primary">indetectáveis.</span></h2>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold mt-4 tracking-tighter">O que nos torna <span className="italic text-primary">indetectáveis.</span></h2>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
-              <Shield className="h-10 w-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">Bypass Play Protect</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
+            <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
+              <Shield className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">Bypass Play Protect</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">Assinatura V2/V3 com ofuscação polimórfica que engana as heurísticas do Play Protect em tempo real.</p>
             </div>
-            <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
-              <Zap className="h-10 w-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">Fast Injection</h3>
+            <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
+              <Zap className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">Fast Injection</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">Provisionamento de infraestrutura VPS dedicada em menos de 60 segundos após o PIX Mercado Pago.</p>
             </div>
-            <div className="p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
-              <Lock className="h-10 w-10 text-primary mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="text-xl font-bold mb-4 font-mono uppercase tracking-tight">AES-256 Ops</h3>
+            <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
+              <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">AES-256 Ops</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">Todas as suas credenciais e logs de operação são blindados com criptografia de nível militar ponta-a-ponta.</p>
             </div>
           </div>
         </div>
       </section>
 
+
       {/* Enterprise Management Section - Integrated Real UI Elements */}
 
 
-      <section className="py-20 relative border-y border-border/40 bg-card/20 theme-light:bg-transparent overflow-hidden">
+      <section className="py-14 sm:py-20 relative border-y border-border/40 bg-card/20 theme-light:bg-transparent overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                 ALPHA-OPS CONSOLE V4.6
               </div>
-              <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
                 Gestão Empresarial <br />
-                <span className="italic text-muted-foreground/60 text-5xl md:text-7xl block">De Alto Nível.</span>
+                <span className="italic text-muted-foreground/60 text-4xl sm:text-5xl md:text-7xl block">De Alto Nível.</span>
               </h2>
+
               
               <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
                 Painel OSINT redesenhado para transparência absoluta. Visualize a saúde da sua infraestrutura, status de nós globais e compliance de segurança em uma única interface táctica.
@@ -294,7 +299,7 @@ function Index() {
           </div>
 
           {/* BTMob Reference Grid - Animated */}
-          <div className="mt-24 pt-20 border-t border-border/20 relative">
+          <div className="mt-16 sm:mt-24 pt-12 sm:pt-20 border-t border-border/20 relative">
             {/* Ambient glow */}
             <motion.div
               aria-hidden
@@ -407,9 +412,10 @@ function Index() {
       <SocialProofStrip />
 
       {/* Community Goals Section */}
-      <section className="py-20 relative bg-black/60 dark:bg-black/60 theme-light:bg-transparent">
+      <section className="py-14 sm:py-20 relative bg-black/60 dark:bg-black/60 theme-light:bg-transparent">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center mb-16">
+          <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-16">
+
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -417,13 +423,13 @@ function Index() {
             >
               <Users className="h-3 w-3" /> Community Evolution
             </motion.div>
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter">Objetivos da <span className="italic text-primary">Comunidade Shadow.</span></h2>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tighter">Objetivos da <span className="italic text-primary">Comunidade Shadow.</span></h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
               Juntos somos mais fortes. Desbloqueie recompensas globais para todos os membros atingindo marcos de crescimento.
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-3 max-w-5xl mx-auto">
             {[
               { target: "2.5k", reward: "Shadow Nexus 2.0", benefit: "Redução de latência global", icon: Zap, progress: 85 },
               { target: "5k", reward: "VIP Giveaway", benefit: "50 licenças vitalícias", icon: Gift, progress: 42 },
@@ -434,7 +440,7 @@ function Index() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all overflow-hidden"
+                className="group relative p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                   <goal.icon className="h-24 w-24 rotate-12" />
@@ -460,9 +466,10 @@ function Index() {
       </section>
 
       {/* Feature Grid */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-14 sm:py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+
             <FeatureCard 
               icon={Zap} 
               title="Shadow Hub" 
@@ -489,7 +496,7 @@ function Index() {
       </section>
 
 
-      <div className="container mx-auto px-4 py-20 space-y-32">
+      <div className="container mx-auto px-4 py-14 sm:py-20 space-y-20 sm:space-y-32">
         <BeforeAfter />
         <ProofWall />
         <ImpossibleProof />
@@ -497,23 +504,25 @@ function Index() {
       </div>
 
       {/* Final CTA */}
-      <section className="py-20 relative overflow-hidden">
+      <section className="py-14 sm:py-20 relative overflow-hidden">
+
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 text-foreground uppercase tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold mb-4 sm:mb-6 text-foreground uppercase tracking-tight">
             {t('home.cta.ready')}
           </h2>
-          <p className="text-lg text-muted-foreground/80 mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground/80 mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed">
             {t('home.cta.desc')}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" asChild className="h-14 px-10 text-base rounded-full shadow-lg shadow-primary/10 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+            <Button size="lg" asChild className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-base rounded-full shadow-lg shadow-primary/10 w-full sm:w-auto">
               <Link to="/planos">{t('home.cta.buy')}</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="h-14 px-10 text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
+            <Button size="lg" variant="outline" asChild className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-base rounded-full w-full sm:w-auto border-primary/30 hover:bg-primary/5">
               <Link to="/auth">{t('home.cta.trial')}</Link>
             </Button>
           </div>
+
         </div>
       </section>
 
@@ -568,14 +577,15 @@ function Index() {
 
 function FeatureCard({ icon: Icon, title, desc, link }: { icon: any, title: string, desc: string, link?: string }) {
   const content = (
-    <div className="group rounded-2xl border border-border/50 bg-card p-8 transition-all hover:border-primary/30 hover:bg-card/80 h-full">
-      <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
-        <Icon className="h-6 w-6" />
+    <div className="group rounded-2xl border border-border/50 bg-card p-6 sm:p-8 transition-all hover:border-primary/30 hover:bg-card/80 h-full">
+      <div className="mb-4 sm:mb-6 inline-flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
       </div>
-      <h3 className="mb-4 text-xl font-bold text-foreground">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed">{desc}</p>
+      <h3 className="mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-foreground">{title}</h3>
+      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{desc}</p>
     </div>
   );
+
 
   if (link) {
     return <Link to={link}>{content}</Link>;
