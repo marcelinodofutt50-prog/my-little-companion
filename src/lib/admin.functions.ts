@@ -93,9 +93,26 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
     if (!lic) throw new Error("Licença não encontrada");
     const r = await yaarsaExtend(lic.yaarsa_email, data.newExpireDate, (lic as any).panel ?? "v457");
     if (r.Fail) throw new Error(r.Fail);
-    await context.supabase.from("licenses").update({ expires_at: new Date(data.newExpireDate).toISOString(), revoked: false }).eq("id", data.licenseId);
-    return { ok: true };
+
+    // Estender a data no painel não bastava: o registro continuava aparecendo
+    // como "inativo" porque `status` seguia expirado e o cron diário voltava a
+    // revogar a licença enquanto `server_paid_until` estivesse no passado.
+    const { nextDay20 } = await import("./admin-shared");
+    const target = new Date(data.newExpireDate);
+    const serverPaid = (lic as any).server_paid_until ? new Date((lic as any).server_paid_until) : null;
+    const serverOverdue = !serverPaid || serverPaid.getTime() < Date.now();
+    const patch: Record<string, unknown> = {
+      expires_at: target.toISOString(),
+      revoked: false,
+      server_overdue_at: null,
+      status: (lic as any).suspended_at ? (lic as any).status : "active",
+    };
+    if (serverOverdue) patch.server_paid_until = nextDay20().toISOString();
+
+    await context.supabase.from("licenses").update(patch as any).eq("id", data.licenseId);
+    return { ok: true, expires_at: target.toISOString(), server_paid_until: patch.server_paid_until ?? (lic as any).server_paid_until };
   });
+
 
 /**
   * "Corrigir bug de erro" — procedimento manual usado quando o cliente não

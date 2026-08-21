@@ -646,12 +646,23 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     const { yaarsaSetPassword, encrypt } = await import("./yaarsa.server");
     const { sha256Hex } = await import("./password-safety.server");
 
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username);
+    const pr = await yaarsaSetPassword(
+      lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
+    );
     if (pr.Fail) {
       if (/1005|não encontrado|not found/i.test(pr.Fail)) {
         throw new Error("Sua conta não foi localizada no painel. Use o botão 'Reparar acesso' e tente de novo.");
       }
       throw new Error("O painel não aceitou a troca de senha agora. Tente novamente em alguns minutos.");
+    }
+
+    // O painel pode ter recriado a conta pelo fallback `add`: reempurramos a
+    // data real da licença para o painel, mantendo site e BTmob sincronizados.
+    if ((lic as any).expires_at) {
+      try {
+        const { yaarsaExtend } = await import("./yaarsa.server");
+        await yaarsaExtend(lic.yaarsa_email, String((lic as any).expires_at).slice(0, 10), panel);
+      } catch { /* best-effort */ }
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -663,11 +674,12 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${panel}`, action: "license_password_change", outcome: "success",
-      context: { license_id: lic.id, user_id: userId } as any,
+      context: { license_id: lic.id, user_id: userId, panel_action: (pr as any).action ?? null } as any,
     } as any);
 
-    return { ok: true, message: "Senha atualizada no painel." };
+    return { ok: true, message: "Senha atualizada no painel. Use a nova senha no BTmob." };
   });
+
 
 /**
  * REPARAR ACESSO (cliente).
@@ -709,7 +721,9 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
     } catch { steps.push("data-refresh-falhou"); }
 
     // 2) Reaplica a senha original.
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username);
+    const pr = await yaarsaSetPassword(
+      lic.yaarsa_email, plain, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
+    );
     if (pr.Fail && /1005|não encontrado|not found/i.test(pr.Fail)) {
       // 3) Conta sumiu do painel: recria com as mesmas credenciais.
       const cr = await yaarsaCreateAccount({
@@ -764,7 +778,10 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
  */
 export const resyncMyServerRenewal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((input: any) =>
+    z.object({ licenseId: z.string().uuid().optional() }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { nextDay20 } = await import("./admin-shared");
@@ -800,9 +817,12 @@ export const resyncMyServerRenewal = createServerFn({ method: "POST" })
     const ymd = paidUntil.toISOString().slice(0, 10);
     const { yaarsaExtend } = await import("./yaarsa.server");
 
-    const { data: lics } = await supabaseAdmin
+    const licQuery = supabaseAdmin
       .from("licenses").select("*")
       .eq("user_id", userId).eq("is_trial", false).is("disabled_at", null);
+    const { data: lics } = data?.licenseId
+      ? await licQuery.eq("id", data.licenseId)
+      : await licQuery;
 
     let fixed = 0;
     for (const l of (lics ?? []) as any[]) {

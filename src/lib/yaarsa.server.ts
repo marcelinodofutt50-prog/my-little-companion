@@ -411,13 +411,26 @@ export async function yaarsaExtend(
 // Reaplica/troca a senha da conta no painel.
 // Verificado no painel real: a ação primária é `update`.
 // Tentamos `update` primeiro, depois fallbacks.
+//
+// `expireDate` (YYYY-MM-DD) é usado APENAS no fallback `add` (quando a conta
+// sumiu do painel e precisa ser recriada). Antes usávamos "ontem" aqui, o que
+// recriava a conta já vencida e derrubava o login do cliente logo depois de
+// trocar a senha. Agora o padrão é a data real da licença (ou +31 dias).
 export async function yaarsaSetPassword(
   email: string,
   password: string,
   panel: YaarsaPanel = "v457",
   username?: string,
+  expireDate?: string | null,
 ): Promise<YaarsaResponse & { action?: string }> {
   await refreshPanelOverrides();
+  const fallbackExpire = (() => {
+    const d = expireDate ? new Date(expireDate) : null;
+    if (d && Number.isFinite(d.getTime()) && d.getTime() > Date.now()) return d.toISOString().slice(0, 10);
+    const n = new Date();
+    n.setDate(n.getDate() + 31);
+    return n.toISOString().slice(0, 10);
+  })();
   const candidates = ["update", "cpassword", "cpass", "changepassword", "add"];
   let last: YaarsaResponse = { Fail: "Painel não aceitou nenhuma ação de troca de senha" };
   for (const action of candidates) {
@@ -428,11 +441,12 @@ export async function yaarsaSetPassword(
       adminkey: yaarsaAdminKey(panel),
     };
     if (username) fields.username = username;
-    
+
     if (action === "add") {
       fields.subtype = "1 Month";
-      fields.expire_date = yesterdayYMD(); 
+      fields.expire_date = fallbackExpire;
     }
+
     const r = await yaarsaPost(fields, panel);
     if (r.Success) return { ...r, action };
     

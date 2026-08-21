@@ -282,20 +282,31 @@ async function fulfillOrderInner(orderId: string) {
       return { ok: true, reason: `legacy-renewal:${licenseId ?? "unknown"}` };
     }
 
-    // Reactivate every server-overdue license for this user (uses SQL fn),
-    // then also extend any active license belonging to the user so the whole
-    // account stays paid until next day 20.
-    const { data: reactivated } = await supabaseAdmin
-      .rpc("reactivate_server_licenses_for_user", { _user_id: beneficiaryId, _paid_until: nextDay20.toISOString() });
+    // O cliente pode escolher, no checkout, QUAL login será renovado.
+    // Sem escolha (ou login inválido), mantemos o comportamento antigo:
+    // renova todos os logins pagos da conta.
+    const targetLicenseId = (order as any).metadata?.target_license_id as string | undefined;
 
-    const { data: activeLics } = await supabaseAdmin
+    const { data: allLics } = await supabaseAdmin
       .from("licenses").select("*")
       .eq("user_id", beneficiaryId).eq("is_trial", false).is("disabled_at", null);
 
-    const touched = [
-      ...(reactivated ?? []),
-      ...(activeLics ?? []).filter((l: any) => !(reactivated ?? []).some((r: any) => r.id === l.id)),
-    ];
+    const chosen = targetLicenseId
+      ? (allLics ?? []).filter((l: any) => l.id === targetLicenseId)
+      : [];
+
+    // Sem escolha explícita: reativa tudo que estava em atraso (comportamento
+    // histórico). Com escolha: só o login escolhido é renovado.
+    if (!chosen.length) {
+      await supabaseAdmin.rpc("reactivate_server_licenses_for_user", {
+        _user_id: beneficiaryId,
+        _paid_until: nextDay20.toISOString(),
+      });
+    }
+
+    const touched = chosen.length ? chosen : (allLics ?? []);
+
+
 
     // Empurra TODA licença paga do cliente para o próximo dia 20 e devolve o
     // acesso: quem pagou a taxa do servidor não pode continuar como "inativa".
