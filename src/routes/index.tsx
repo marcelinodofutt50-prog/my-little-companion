@@ -429,7 +429,7 @@ function Index() {
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-3 max-w-5xl mx-auto">
             {[
               { target: "2.5k", reward: "Shadow Nexus 2.0", benefit: "Redução de latência global", icon: Zap, progress: 85 },
               { target: "5k", reward: "VIP Giveaway", benefit: "50 licenças vitalícias", icon: Gift, progress: 42 },
