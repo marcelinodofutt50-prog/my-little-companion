@@ -78,6 +78,7 @@ import {
   AdminEmailMetrics,
   AdminExternalPayersPanel,
   AdminHealthPanel,
+  AdminLicenseAuditPanel,
   AdminMarketPanel,
   AdminMetricsPanel,
   AdminMigrationWaves,
@@ -667,6 +668,7 @@ function AdminPage() {
         { id: "users", label: "Usuários", icon: Users },
         { id: "licenses", label: "Licenças", icon: KeyRound },
         { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "3d, 7d ou servidor" },
+        { id: "license_audit", label: "Histórico de Alterações", icon: ScrollText, hint: "senha, sync e cupons" },
       ],
 
     },
@@ -2255,6 +2257,7 @@ function AdminPage() {
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
               {tab === "redeem" && <AdminRedeemCodesPanel />}
+              {tab === "license_audit" && <AdminLicenseAuditPanel />}
 
               </motion.div>
             </AnimatePresence>
