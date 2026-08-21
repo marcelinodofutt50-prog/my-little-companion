@@ -496,7 +496,7 @@ function Index() {
       </section>
 
 
-      <div className="container mx-auto px-4 py-20 space-y-32">
+      <div className="container mx-auto px-4 py-14 sm:py-20 space-y-20 sm:space-y-32">
         <BeforeAfter />
         <ProofWall />
         <ImpossibleProof />
@@ -504,7 +504,8 @@ function Index() {
       </div>
 
       {/* Final CTA */}
-      <section className="py-20 relative overflow-hidden">
+      <section className="py-14 sm:py-20 relative overflow-hidden">
+
         <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-6 text-foreground uppercase tracking-tight">
