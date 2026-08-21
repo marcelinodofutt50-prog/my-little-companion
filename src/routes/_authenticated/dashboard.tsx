@@ -586,6 +586,14 @@ function DashboardPage() {
                             <LicensePauseControls license={license} state={state} onDone={() => void refetchLicenses()} />
                           </div>
 
+                          <div className="border-t border-border/50 pt-3">
+                            <LicenseAccessTools
+                              licenseId={license.id}
+                              paused={state.paused}
+                              onDone={() => void refetchLicenses()}
+                            />
+                          </div>
+
                           <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
                             <Button
                               size="sm"
