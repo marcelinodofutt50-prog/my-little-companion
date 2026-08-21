@@ -104,9 +104,10 @@ export function AdminSupportPanel() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] min-h-[620px] bg-card/30 border border-border/40 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
+    <div className="flex flex-col md:flex-row h-[calc(100dvh-12rem)] min-h-[520px] md:h-[calc(100vh-9rem)] md:min-h-[620px] bg-card/30 border border-border/40 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
       {/* Sidebar de Tickets */}
-      <div className="w-80 flex flex-col border-r border-border/40 bg-background/40">
+      <div className={`${selectedId ? "hidden md:flex" : "flex"} w-full md:w-80 shrink-0 min-h-0 flex-col border-b md:border-b-0 md:border-r border-border/40 bg-background/40`}>
+
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono uppercase tracking-widest text-neon">// Tickets</h2>
@@ -199,28 +200,40 @@ export function AdminSupportPanel() {
       </div>
 
       {/* Área de Chat */}
-      <div className="flex-1 flex flex-col bg-background/20 relative">
+      <div className={`${selectedId ? "flex" : "hidden md:flex"} flex-1 min-w-0 min-h-0 flex-col bg-background/20 relative`}>
         {selectedThread ? (
           <>
             {/* Header do Chat */}
-            <div className="p-4 border-b border-border/40 bg-background/60 backdrop-blur-md z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    {selectedThread.subject}
-                    {selectedThread.priority === "alta" && <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/40">ALTA</Badge>}
-                    {selectedThread.priority === "critica" && <Badge variant="destructive">CRÍTICA</Badge>}
+            <div className="p-3 sm:p-4 border-b border-border/40 bg-background/60 backdrop-blur-md z-10">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 md:flex md:items-center md:justify-between">
+                <div className="flex min-w-0 items-start gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Voltar para a lista de tickets"
+                    className="h-8 w-8 shrink-0 md:hidden"
+                    onClick={() => setSelectedId(null)}
+                  >
+                    <ChevronRight className="h-4 w-4 rotate-180" />
+                  </Button>
+                  <div className="min-w-0">
+                  <h3 className="font-bold text-base sm:text-lg flex items-center gap-2 min-w-0">
+                    <span className="truncate">{selectedThread.subject}</span>
+                    {selectedThread.priority === "alta" && <Badge className="shrink-0 bg-amber-500/20 text-amber-500 border-amber-500/40">ALTA</Badge>}
+                    {selectedThread.priority === "critica" && <Badge variant="destructive" className="shrink-0">CRÍTICA</Badge>}
                   </h3>
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <User className="h-3 w-3" /> {selectedThread.profile?.email} 
+                  <p className="text-xs text-muted-foreground flex items-center gap-2 min-w-0">
+                    <User className="h-3 w-3 shrink-0" /> <span className="truncate">{selectedThread.profile?.email}</span>
                     {selectedThread.assigned_name && (
-                      <span className="flex items-center gap-1 text-primary/80">
+                      <span className="hidden sm:flex items-center gap-1 text-primary/80 truncate">
                         • Assumido por {selectedThread.assigned_name}
                       </span>
                     )}
                   </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1 md:flex-nowrap">
+
                   <Select 
                     value={selectedThread.priority} 
                     onValueChange={val => setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads())}
@@ -267,7 +280,7 @@ export function AdminSupportPanel() {
               onOpenFicha={() => toast.info("Abrindo ficha técnica...")}
             />
 
-            <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               <SupportChat 
                 threadId={selectedThread.id} 
                 userId={myId || ""} 
@@ -276,7 +289,8 @@ export function AdminSupportPanel() {
               />
             </div>
 
-            <div className="p-2 border-t border-border/20 bg-muted/10 flex items-center justify-between">
+            <div className="p-2 border-t border-border/20 bg-muted/10 flex flex-wrap items-center justify-between gap-2">
+
               <QuickRepliesDropdown onPick={(body) => {
                 // Aqui injetamos no input do chat se pudermos, ou enviamos direto
                 // Como o SupportChat é desacoplado, poderíamos usar um canal de ref ou similar
