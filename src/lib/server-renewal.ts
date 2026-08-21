@@ -128,3 +128,73 @@ export function reconcilePanelExpiry(
     alreadyAhead: true,
   };
 }
+
+/**
+ * Decide o que fazer com uma licença a partir da data lida no painel Yaarsa.
+ *
+ * Caso real: a equipe corrige a data direto no painel (cliente pagou o
+ * servidor mas o webhook falhou). O site continuava mostrando "inativa"
+ * porque ninguém relia o painel. Aqui a regra é simples:
+ *
+ * - painel com data FUTURA  → o acesso está pago/liberado: reativa a licença
+ *   e alinha a contagem de dias do site pela data do painel (nunca encurta).
+ * - painel com data PASSADA → realmente não pagou: nada muda no site.
+ * - painel sem leitura      → nada muda (best-effort, nunca piora).
+ */
+export type PanelSyncDecision = {
+  action: "activate" | "already_ok" | "expired_on_panel" | "unknown";
+  panelMs: number | null;
+  patch: Record<string, unknown> | null;
+  reason: string;
+};
+
+export function evaluatePanelSync(
+  license: RenewableLicense,
+  panelDate: string | null,
+  now: number = Date.now(),
+): PanelSyncDecision {
+  if (!panelDate) {
+    return { action: "unknown", panelMs: null, patch: null, reason: "painel não respondeu a leitura" };
+  }
+  const panelMs = Date.parse(`${panelDate}T23:59:59.000Z`);
+  if (!Number.isFinite(panelMs)) {
+    return { action: "unknown", panelMs: null, patch: null, reason: "data do painel ilegível" };
+  }
+  if (panelMs <= now) {
+    return {
+      action: "expired_on_panel",
+      panelMs,
+      patch: null,
+      reason: `painel vencido em ${panelDate} — servidor não está pago`,
+    };
+  }
+
+  const dbMs = license.expires_at ? Date.parse(license.expires_at) : null;
+  const isLifetime = license.expires_at === null;
+  const inactive =
+    !!license.revoked || !!license.server_overdue_at ||
+    (dbMs !== null && Number.isFinite(dbMs) && dbMs <= now);
+  const dbBehind = dbMs !== null && Number.isFinite(dbMs) && dbMs < panelMs;
+
+  if (!inactive && !dbBehind) {
+    return { action: "already_ok", panelMs, patch: null, reason: "site já estava alinhado com o painel" };
+  }
+
+  const patch: Record<string, unknown> = {
+    revoked: false,
+    server_overdue_at: null,
+    // A data do painel é o corte real do servidor.
+    server_paid_until: new Date(panelMs).toISOString(),
+  };
+  // Vitalício continua vitalício: só a mensalidade do servidor foi acertada.
+  if (!isLifetime) patch['expires_at'] = new Date(Math.max(panelMs, dbMs ?? 0)).toISOString();
+  // Licença pausada pelo cliente continua pausada.
+  if (!license.suspended_at) patch['status'] = "active";
+
+  return {
+    action: "activate",
+    panelMs,
+    patch,
+    reason: `painel liberado até ${panelDate}`,
+  };
+}
