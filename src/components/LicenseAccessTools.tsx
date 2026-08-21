@@ -17,7 +17,9 @@ import {
   changeMyLicensePassword,
   repairMyLicenseAccess,
   resyncMyServerRenewal,
+  syncMyLicensesWithPanel,
 } from "@/lib/license.functions";
+
 
 /**
  * Ações de autoatendimento da licença: trocar a senha do painel BTmob,
