@@ -15,7 +15,7 @@ export type PanelSyncItem = {
   license_id: string;
   yaarsa_email: string | null;
   panel_date: string | null;
-  action: PanelSyncDecision["action"];
+  action: PanelSyncDecision["action"] | "skip";
   reason: string;
   expires_at?: string | null;
 };
