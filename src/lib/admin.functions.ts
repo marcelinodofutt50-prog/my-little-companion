@@ -79,7 +79,12 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
     const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
     await yaarsaRemoveAccount(lic.yaarsa_email, (lic as any).panel ?? "v457");
-    await context.supabase.from("licenses").update({ revoked: true }).eq("id", data.licenseId);
+    // RLS na tabela de licenças só permite leitura: a escrita precisa do
+    // cliente administrativo, senão a revogação virava um "sucesso" silencioso.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: revErr } = await supabaseAdmin
+      .from("licenses").update({ revoked: true, status: "revoked" } as any).eq("id", data.licenseId);
+    if (revErr) throw new Error(revErr.message);
     return { ok: true };
   });
 
@@ -109,7 +114,10 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
     };
     if (serverOverdue) patch.server_paid_until = nextDay20().toISOString();
 
-    await context.supabase.from("licenses").update(patch as any).eq("id", data.licenseId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: extErr } = await supabaseAdmin
+      .from("licenses").update(patch as any).eq("id", data.licenseId);
+    if (extErr) throw new Error(extErr.message);
     return { ok: true, expires_at: target.toISOString(), server_paid_until: patch.server_paid_until ?? (lic as any).server_paid_until };
   });
 
