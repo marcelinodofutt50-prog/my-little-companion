@@ -466,9 +466,10 @@ function Index() {
       </section>
 
       {/* Feature Grid */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-14 sm:py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+
             <FeatureCard 
               icon={Zap} 
               title="Shadow Hub" 
