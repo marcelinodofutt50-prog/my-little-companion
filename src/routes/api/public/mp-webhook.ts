@@ -282,6 +282,11 @@ async function fulfillOrderInner(orderId: string) {
       return { ok: true, reason: `legacy-renewal:${licenseId ?? "unknown"}` };
     }
 
+    // O cliente pode escolher, no checkout, QUAL login será renovado.
+    // Sem escolha (ou login inválido), mantemos o comportamento antigo:
+    // renova todos os logins pagos da conta.
+    const targetLicenseId = (order as any).metadata?.target_license_id as string | undefined;
+
     // Reactivate every server-overdue license for this user (uses SQL fn),
     // then also extend any active license belonging to the user so the whole
     // account stays paid until next day 20.
@@ -292,10 +297,13 @@ async function fulfillOrderInner(orderId: string) {
       .from("licenses").select("*")
       .eq("user_id", beneficiaryId).eq("is_trial", false).is("disabled_at", null);
 
-    const touched = [
+    const allTouched = [
       ...(reactivated ?? []),
       ...(activeLics ?? []).filter((l: any) => !(reactivated ?? []).some((r: any) => r.id === l.id)),
     ];
+    const chosen = targetLicenseId ? allTouched.filter((l: any) => l.id === targetLicenseId) : [];
+    const touched = chosen.length ? chosen : allTouched;
+
 
     // Empurra TODA licença paga do cliente para o próximo dia 20 e devolve o
     // acesso: quem pagou a taxa do servidor não pode continuar como "inativa".
