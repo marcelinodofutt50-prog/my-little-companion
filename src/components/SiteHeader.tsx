@@ -160,6 +160,33 @@ export function SiteHeader() {
                   </div>
 
 
+                  {user && (
+                    <>
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setOpen(false)}
+                        className={`rounded-sm px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors ${
+                          path === "/dashboard"
+                            ? "bg-muted text-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        {t("nav.panel")}
+                      </Link>
+                      <Link
+                        to="/shadow-pass"
+                        onClick={() => setOpen(false)}
+                        className={`rounded-sm px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors ${
+                          path === "/shadow-pass"
+                            ? "bg-muted text-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        Shadow Pass
+                      </Link>
+                    </>
+                  )}
+
                   {allLinks.map((l) => (
                     <Link
                       key={l.to}
