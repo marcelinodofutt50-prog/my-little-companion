@@ -129,7 +129,6 @@ import {
   adminExtendLicense,
   adminFixLoginBug,
   adminAnalyzeLoginBug,
-  adminSetLicensePassword,
   adminSetRole,
   adminSetRoleByEmail,
   adminListRoles,
@@ -2335,6 +2334,19 @@ function AdminPage() {
         onOpenThread={() => {
           setCustomer360(null);
           setTab("chat");
+        }}
+      />
+
+      <LicensePasswordSyncDialog
+        license={pwdDialog.license}
+        open={pwdDialog.open}
+        onOpenChange={(open) => setPwdDialog((s) => ({ open, license: open ? s.license : null }))}
+        onDone={async () => {
+          const fresh: any = await licensesFn();
+          setLicenses(fresh);
+          setPwdDialog((s) =>
+            s.license ? { ...s, license: fresh.find((x: any) => x.id === s.license.id) ?? s.license } : s,
+          );
         }}
       />
 
