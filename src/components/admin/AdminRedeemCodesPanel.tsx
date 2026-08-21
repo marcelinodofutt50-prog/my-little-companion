@@ -273,10 +273,17 @@ export function AdminRedeemCodesPanel() {
           </h3>
           {data.uses.slice(0, 20).map((u: any) => (
             <div key={u.id} className="font-mono text-[10px] text-muted-foreground">
-              {new Date(u.created_at).toLocaleString("pt-BR")} · {u.code} · licença{" "}
-              {String(u.license_id ?? "—").slice(0, 8)}
+              {new Date(u.created_at).toLocaleString("pt-BR")} · {u.code} ·{" "}
+              {u.license
+                ? `${u.license.yaarsa_email} (${u.license.plan_slug ?? "—"}${
+                    u.license.expires_at
+                      ? ` · até ${new Date(u.license.expires_at).toLocaleDateString("pt-BR")}`
+                      : " · vitalício"
+                  })`
+                : "licença não vinculada"}
             </div>
           ))}
+
         </section>
       )}
     </div>
