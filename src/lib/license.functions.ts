@@ -645,7 +645,15 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     const panel = (lic as any).panel ?? "v457";
     const { yaarsaSetPassword, encrypt } = await import("./yaarsa.server");
     const { sha256Hex } = await import("./password-safety.server");
+    const { acquireOpLock, releaseOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
+    // Uma troca de senha por vez nesta licença (cliques repetidos / várias abas).
+    const lockKey = `license-password:${lic.id}`;
+    if (!(await acquireOpLock(lockKey, 90, userId))) {
+      throw new Error("Já estamos trocando a senha desta licença. Aguarde alguns segundos.");
+    }
+
+    try {
     const pr = await yaarsaSetPassword(
       lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
     );
@@ -689,6 +697,21 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
         panel_action: (pr as any).action ?? null, panel_verified: verified,
       } as any,
     } as any);
+
+    await recordLicenseAudit({
+      licenseId: lic.id,
+      userId,
+      actorId: userId,
+      actorKind: "customer",
+      eventType: "password_change",
+      reason: "Cliente trocou a senha do login pelo site",
+      yaarsaEmail: lic.yaarsa_email,
+      panel,
+      expiresBefore: (lic as any).expires_at ?? null,
+      expiresAfter: (lic as any).expires_at ?? null,
+      details: { panel_action: (pr as any).action ?? null, panel_verified: verified },
+    });
+
 
     if (verified === false) {
       throw new Error(
