@@ -100,7 +100,7 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
     // cliente administrativo, senão a revogação virava um "sucesso" silencioso.
     const { error: revErr } = await supabaseAdmin
       .from("licenses")
-      .update({ revoked: true, status: "revoked", disabled_at: new Date().toISOString() } as any)
+      .update({ revoked: true, status: "revoked" } as any)
       .eq("id", data.licenseId);
     if (revErr) throw new Error(revErr.message);
 
@@ -126,7 +126,8 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaExtend } = await import("./yaarsa.server");
-    const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    const { supabaseAdmin: sbRead } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await sbRead.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
     const r = await yaarsaExtend(lic.yaarsa_email, data.newExpireDate, (lic as any).panel ?? "v457");
     if (r.Fail) throw new Error(r.Fail);
