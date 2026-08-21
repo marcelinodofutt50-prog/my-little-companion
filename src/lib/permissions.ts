@@ -35,13 +35,14 @@ export type Capability =
   | "referral.pay"
   | "market.edit" | "updates.publish"
   | "announcements.create" | "announcements.approve" | "announcements.publish"
-  | "staff.manage" | "system.selftest" | "tutorials.manage";
+  | "staff.manage" | "system.selftest" | "tutorials.manage" | "redeem.manage";
 
 const SUPPORT_CAPS: Capability[] = [
   "view.overview", "view.chat", "view.apk", "view.users", "view.orders", "view.licenses",
   "chat.reply", "chat.assume", "chat.close", "apk.manage",
-  "announcements.create", "tutorials.manage", "license.issue",
+  "announcements.create", "tutorials.manage", "license.issue", "redeem.manage",
 ];
+
 
 const ALL_CAPS: Capability[] = [
   ...SUPPORT_CAPS,
@@ -92,7 +93,9 @@ export const SECTION_CAP: Record<string, Capability> = {
   vip: "view.users",
   nexus: "view.chat",
   academy: "view.chat",
+  redeem: "redeem.manage",
 };
+
 
 /** Linhas exibidas na matriz visual (Equipe → Matriz de permissões). */
 export const MATRIX_ROWS: { group: string; items: { cap: Capability; label: string; note?: string }[] }[] = [

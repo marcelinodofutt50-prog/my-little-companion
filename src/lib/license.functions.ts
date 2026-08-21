@@ -934,3 +934,33 @@ export const resyncMyServerRenewal = createServerFn({ method: "POST" })
     };
 
   });
+
+/**
+ * SINCRONIZAR COM O PAINEL (cliente).
+ * Lê a data de expiração real no painel Yaarsa e, se o acesso já está liberado
+ * por lá (ex.: o suporte acertou a data na mão), reativa a licença aqui e
+ * corrige a contagem de dias — sem nunca encurtar o acesso.
+ */
+export const syncMyLicensesWithPanel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: any) => z.object({ licenseId: z.string().uuid().optional() }).parse(input ?? {}))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { syncLicensesWithPanel } = await import("./panel-sync.server");
+
+    const q = supabaseAdmin.from("licenses").select("*").eq("user_id", userId).is("disabled_at", null);
+    const { data: lics } = data?.licenseId ? await q.eq("id", data.licenseId) : await q;
+
+    const report = await syncLicensesWithPanel((lics ?? []) as any[], { actor: "client", userId });
+
+    return {
+      ok: true,
+      ...report,
+      message: report.activated
+        ? `Pronto! ${report.activated} licença${report.activated === 1 ? "" : "s"} reativada${report.activated === 1 ? "" : "s"} conforme a data do painel.`
+        : report.unknown && !report.unchanged
+          ? "Não conseguimos ler a data no painel agora. Tente de novo em instantes ou fale com o suporte."
+          : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.",
+    };
+  });

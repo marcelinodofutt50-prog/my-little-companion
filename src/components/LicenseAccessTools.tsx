@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { KeyRound, LifeBuoy, Loader2, RefreshCw, Server, Wrench } from "lucide-react";
+import { KeyRound, LifeBuoy, Loader2, RadioTower, RefreshCw, Server, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,9 @@ import {
   changeMyLicensePassword,
   repairMyLicenseAccess,
   resyncMyServerRenewal,
+  syncMyLicensesWithPanel,
 } from "@/lib/license.functions";
+
 
 /**
  * Ações de autoatendimento da licença: trocar a senha do painel BTmob,
@@ -36,6 +38,7 @@ export function LicenseAccessTools({
   const changePassword = useServerFn(changeMyLicensePassword);
   const repairAccess = useServerFn(repairMyLicenseAccess);
   const resyncRenewal = useServerFn(resyncMyServerRenewal);
+  const syncPanel = useServerFn(syncMyLicensesWithPanel);
 
   const [open, setOpen] = useState(false);
   const [pwd, setPwd] = useState("");
@@ -43,6 +46,8 @@ export function LicenseAccessTools({
   const [saving, setSaving] = useState(false);
   const [repairing, setRepairing] = useState(false);
   const [resyncing, setResyncing] = useState(false);
+  const [panelSyncing, setPanelSyncing] = useState(false);
+
 
   const submitPassword = async () => {
     if (pwd !== pwd2) {
@@ -92,6 +97,24 @@ export function LicenseAccessTools({
       setResyncing(false);
     }
   };
+
+  // Lê a data real no painel Yaarsa: se lá já está liberado (pagamento manual
+  // ou correção do suporte), o site reativa e ajusta a contagem de dias.
+  const runPanelSync = async () => {
+    setPanelSyncing(true);
+    try {
+      const res: any = await syncPanel({ data: { licenseId } });
+      if (res?.activated) toast.success(res.message);
+      else toast.info(res?.message ?? "Nada para ajustar.");
+      onDone?.();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao consultar o painel.");
+    } finally {
+      setPanelSyncing(false);
+    }
+  };
+
+
 
 
   return (
@@ -145,7 +168,22 @@ export function LicenseAccessTools({
           )}
           Já paguei o servidor
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={panelSyncing}
+          onClick={runPanelSync}
+          className="h-8 font-mono text-[9px] uppercase tracking-wider"
+        >
+          {panelSyncing ? (
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin text-primary" />
+          ) : (
+            <RadioTower className="mr-1.5 h-3.5 w-3.5 text-primary" />
+          )}
+          Sincronizar com painel
+        </Button>
       </div>
+
       <p className="mt-2 flex items-start gap-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
         <LifeBuoy className="mt-0.5 h-3 w-3 shrink-0" />
         Não consegue entrar no BTmob? Use “Reparar acesso”. Pagou a taxa do servidor e a licença

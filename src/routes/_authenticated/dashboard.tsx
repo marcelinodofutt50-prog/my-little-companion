@@ -38,6 +38,8 @@ import { LicenseCountdown } from '@/components/LicenseCountdown'
 import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
 import { LicensePauseControls } from '@/components/LicensePauseControls'
 import { LicenseAccessTools } from '@/components/LicenseAccessTools'
+import { RedeemCodeCard } from '@/components/RedeemCodeCard'
+
 import { planLabel } from '@/lib/license-display'
 import { reconcileMyRecentOrders } from '@/lib/checkout.functions'
 import { registerMyDevice } from '@/lib/device.functions'
@@ -175,6 +177,23 @@ function DashboardPage() {
     refetchIntervalInBackground: false,
     placeholderData: (prev: any) => prev,
   })
+
+  // Licenças ao vivo: troca de senha, renovação e resgate de código aparecem
+  // na hora, sem precisar de F5.
+  useEffect(() => {
+    if (!user?.id) return
+    const channel = supabase
+      .channel(`licenses-live-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'licenses', filter: `user_id=eq.${user.id}` },
+        () => { void refetchLicenses() },
+      )
+      .subscribe()
+    return () => { void supabase.removeChannel(channel) }
+  }, [user?.id, refetchLicenses])
+
+
 
 
   const {
@@ -380,7 +399,10 @@ function DashboardPage() {
                 />
               )}
 
+              <RedeemCodeCard licenses={licenses ?? []} onDone={() => void refetchLicenses()} />
+
               {activeLicense && (
+
                 <section className="enterprise-surface overflow-hidden" aria-labelledby="usage-title">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
                     <div>

@@ -50,7 +50,9 @@ import {
   Building2,
   Settings2,
   Paperclip,
+  Ticket,
 } from "lucide-react";
+
 
 
 import { categoryMeta } from "@/lib/support-categories";
@@ -81,7 +83,9 @@ import {
   AdminMigrationWaves,
   AdminPanelServers,
   AdminPermissionsMatrix,
+  AdminRedeemCodesPanel,
   AdminRefundsPanel,
+
   AdminSelfTestPanel,
   AdminSupportPanel,
   AdminTeamGuide,
@@ -206,7 +210,9 @@ type Tab =
   | "trial_monitor"
   | "nexus"
   | "academy"
+  | "redeem"
   | "vip";
+
 
 
 // Explicação em linguagem simples de cada seção do painel.
@@ -238,7 +244,9 @@ const TAB_DESC: Record<Tab, string> = {
   academy: "Academia da Equipe: treinamento interno para novos integrantes (só admin, suporte e moderação).",
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
+  redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
 };
+
 
 
 function AdminPage() {
@@ -658,7 +666,9 @@ function AdminPage() {
         { id: "external", label: "Pagam Por Fora", icon: Wallet, hint: "extensão manual" },
         { id: "users", label: "Usuários", icon: Users },
         { id: "licenses", label: "Licenças", icon: KeyRound },
+        { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "3d, 7d ou servidor" },
       ],
+
     },
     {
       title: "Financeiro",
@@ -2244,6 +2254,8 @@ function AdminPage() {
               {tab === "vip" && <AdminVipPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
+              {tab === "redeem" && <AdminRedeemCodesPanel />}
+
               </motion.div>
             </AnimatePresence>
           </div>
