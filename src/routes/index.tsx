@@ -299,7 +299,7 @@ function Index() {
           </div>
 
           {/* BTMob Reference Grid - Animated */}
-          <div className="mt-24 pt-20 border-t border-border/20 relative">
+          <div className="mt-16 sm:mt-24 pt-12 sm:pt-20 border-t border-border/20 relative">
             {/* Ambient glow */}
             <motion.div
               aria-hidden
