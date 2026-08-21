@@ -440,7 +440,7 @@ function Index() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all overflow-hidden"
+                className="group relative p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                   <goal.icon className="h-24 w-24 rotate-12" />
