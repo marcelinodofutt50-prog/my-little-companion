@@ -67,7 +67,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 hairline-b bg-background/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:gap-4 sm:px-6">
         {/* Brand */}
         <Link to="/" className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-70">
           <img src={shadowMark} alt="" width={32} height={32} decoding="async" className="block h-7 w-7 shrink-0 object-contain sm:h-8 sm:w-8 drop-shadow-[0_0_8px_rgba(201,168,76,0.6)] brightness-110 dark:brightness-125 dark:contrast-125 transition-all duration-300" />
@@ -97,12 +97,12 @@ export function SiteHeader() {
         </nav>
 
         {/* Right actions */}
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-3">
           <div className="hidden lg:block"><SystemHealthIndicator /></div>
           {user && <InAppNotifications />}
 
           <ThemeToggle />
-          <LanguageToggle className="hidden sm:inline-flex" />
+          <span className="hidden sm:inline-flex"><LanguageToggle /></span>
 
           {user ? (
             <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export function SiteHeader() {
                 </span>
               </Link>
               <Link to="/dashboard">
-                <Button size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-[0.2em]">
+                <Button size="sm" className="rounded-none px-2.5 font-mono text-[10px] uppercase tracking-[0.2em] sm:px-3">
                   {t("nav.panel")}
                 </Button>
               </Link>
