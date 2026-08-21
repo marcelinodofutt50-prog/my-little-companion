@@ -51,7 +51,7 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
     ],
     links: [
       // Preload da imagem de fundo para eliminar flicker no primeiro paint
-      { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
+      { rel: "preload", as: "image", href: krakenCore, fetchPriority: "high" },
     ],
   }),
   component: KrakenRouteComponent,
