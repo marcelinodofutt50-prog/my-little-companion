@@ -76,16 +76,48 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { yaarsaRemoveAccount } = await import("./yaarsa.server");
-    const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await supabaseAdmin
+      .from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
-    await yaarsaRemoveAccount(lic.yaarsa_email, (lic as any).panel ?? "v457");
+
+    // Se o painel estiver fora do ar, a revogação local não pode ficar presa:
+    // registramos a falha e seguimos bloqueando o acesso aqui.
+    let panelRemoved = true;
+    let panelError: string | null = null;
+    try {
+      const r: any = await yaarsaRemoveAccount(lic.yaarsa_email, (lic as any).panel ?? "v457");
+      if (r?.Fail && !/1005|not found|não encontrado/i.test(String(r.Fail))) {
+        panelRemoved = false;
+        panelError = String(r.Fail);
+      }
+    } catch (e: any) {
+      panelRemoved = false;
+      panelError = String(e?.message ?? e);
+    }
+
     // RLS na tabela de licenças só permite leitura: a escrita precisa do
     // cliente administrativo, senão a revogação virava um "sucesso" silencioso.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: revErr } = await supabaseAdmin
-      .from("licenses").update({ revoked: true, status: "revoked" } as any).eq("id", data.licenseId);
+      .from("licenses")
+      .update({ revoked: true, status: "revoked", disabled_at: new Date().toISOString() } as any)
+      .eq("id", data.licenseId);
     if (revErr) throw new Error(revErr.message);
-    return { ok: true };
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${(lic as any).panel ?? "v457"}`,
+      action: "admin_revoke_license",
+      outcome: panelRemoved ? "success" : "partial",
+      context: {
+        license_id: (lic as any).id,
+        actor_id: context.userId,
+        panel_removed: panelRemoved,
+        panel_error: panelError,
+      } as any,
+    } as any);
+
+    return { ok: true, panelRemoved, panelError };
+
   });
 
 export const adminExtendLicense = createServerFn({ method: "POST" })
