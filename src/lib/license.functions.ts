@@ -646,7 +646,9 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     const { yaarsaSetPassword, encrypt } = await import("./yaarsa.server");
     const { sha256Hex } = await import("./password-safety.server");
 
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username);
+    const pr = await yaarsaSetPassword(
+      lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
+    );
     if (pr.Fail) {
       if (/1005|não encontrado|not found/i.test(pr.Fail)) {
         throw new Error("Sua conta não foi localizada no painel. Use o botão 'Reparar acesso' e tente de novo.");
@@ -709,7 +711,9 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
     } catch { steps.push("data-refresh-falhou"); }
 
     // 2) Reaplica a senha original.
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username);
+    const pr = await yaarsaSetPassword(
+      lic.yaarsa_email, plain, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
+    );
     if (pr.Fail && /1005|não encontrado|not found/i.test(pr.Fail)) {
       // 3) Conta sumiu do painel: recria com as mesmas credenciais.
       const cr = await yaarsaCreateAccount({
