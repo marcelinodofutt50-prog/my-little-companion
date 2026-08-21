@@ -14,7 +14,7 @@ import { nextDay20 } from "@/lib/admin-shared";
  *   4. data enviada ao Yaarsa (site e BTmob batendo).
  */
 
-type Lic = { id: string } & Record<string, any>;
+type Lic = Record<string, any>;
 
 /** Painel Yaarsa falso: registra a data recebida por conta. */
 class FakePanel {
@@ -50,12 +50,12 @@ async function simulatePaidServerFee(
 ) {
   const touched = db.rows.filter(
     (l) =>
-      isRenewable(l) &&
+      isRenewable(l as any) &&
       (opts.targetLicenseId ? l.id === opts.targetLicenseId : true),
   );
   const failures: string[] = [];
   for (const l of touched) {
-    const plan = planServerRenewal(l, opts.paidUntil);
+    const plan = planServerRenewal(l as any, opts.paidUntil);
     try {
       await panel.extend(l.yaarsa_email, plan.panelExpireDate, l.panel ?? "v457");
     } catch (e: any) {
