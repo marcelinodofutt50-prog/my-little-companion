@@ -297,20 +297,46 @@ async function fulfillOrderInner(orderId: string) {
       ...(activeLics ?? []).filter((l: any) => !(reactivated ?? []).some((r: any) => r.id === l.id)),
     ];
 
+    // Empurra TODA licença paga do cliente para o próximo dia 20 e devolve o
+    // acesso: quem pagou a taxa do servidor não pode continuar como "inativa".
+    const extendFailures: { id: string; reason: string }[] = [];
     for (const l of touched) {
-      try { await yaarsaExtend(l.yaarsa_email, ymd, (l as any).panel ?? "v457"); } catch { /* best-effort */ }
+      const panel = (l as any).panel ?? "v457";
+      try {
+        const yr = await yaarsaExtend(l.yaarsa_email, ymd, panel);
+        if (yr?.Fail) extendFailures.push({ id: l.id, reason: String(yr.Fail) });
+      } catch (e: any) {
+        extendFailures.push({ id: l.id, reason: e?.message ?? "erro de conexão com o painel" });
+      }
+      const keepsLongerExpiry = l.expires_at && new Date(l.expires_at) > nextDay20;
       await supabaseAdmin.from("licenses").update({
         server_paid_until: nextDay20.toISOString(),
-        expires_at: l.expires_at && new Date(l.expires_at) > nextDay20 ? l.expires_at : nextDay20.toISOString(),
+        expires_at: keepsLongerExpiry ? l.expires_at : nextDay20.toISOString(),
         revoked: false,
         server_overdue_at: null,
-      }).eq("id", l.id);
+        // A licença volta a valer no mesmo instante do pagamento.
+        ...(l.suspended_at ? {} : { status: "active" }),
+      } as any).eq("id", l.id);
     }
 
     await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
     await supabaseAdmin.from("webhook_logs").insert({
-      source: "mercadopago", note: `server renewal ${orderId} — ${touched.length} license(s) extended`, processed: true,
+      source: "mercadopago",
+      note: `server renewal ${orderId} — ${touched.length} license(s) extended${extendFailures.length ? ` — ${extendFailures.length} falha(s) no painel` : ""}`,
+      processed: extendFailures.length === 0 && touched.length > 0,
     });
+    await supabaseAdmin.from("integration_logs").insert({
+      source: "mercadopago",
+      action: "server_renewal",
+      outcome: touched.length === 0 ? "warning" : extendFailures.length ? "partial" : "success",
+      context: {
+        order_id: orderId,
+        user_id: beneficiaryId,
+        paid_until: nextDay20.toISOString(),
+        extended: touched.map((l: any) => l.id),
+        failures: extendFailures,
+      } as any,
+    } as any);
     return { ok: true, reason: `server-renewal:${touched.length}` };
   }
 

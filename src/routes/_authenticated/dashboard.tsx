@@ -37,6 +37,7 @@ import { licenseExpiryState } from '@/lib/expiry'
 import { LicenseCountdown } from '@/components/LicenseCountdown'
 import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
 import { LicensePauseControls } from '@/components/LicensePauseControls'
+import { LicenseAccessTools } from '@/components/LicenseAccessTools'
 import { planLabel } from '@/lib/license-display'
 import { reconcileMyRecentOrders } from '@/lib/checkout.functions'
 import { registerMyDevice } from '@/lib/device.functions'
@@ -583,6 +584,14 @@ function DashboardPage() {
 
                           <div className="border-t border-border/50 pt-3">
                             <LicensePauseControls license={license} state={state} onDone={() => void refetchLicenses()} />
+                          </div>
+
+                          <div className="border-t border-border/50 pt-3">
+                            <LicenseAccessTools
+                              licenseId={license.id}
+                              paused={state.paused}
+                              onDone={() => void refetchLicenses()}
+                            />
                           </div>
 
                           <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">

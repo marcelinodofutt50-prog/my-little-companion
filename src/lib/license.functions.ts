@@ -614,3 +614,222 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
   });
 
 
+
+/**
+ * TROCAR A SENHA DO PAINEL (cliente).
+ * Aplica a nova senha no painel BTmob/Yaarsa e só grava no banco depois que o
+ * painel confirmou — assim o que o cliente vê no site é sempre o que funciona
+ * no login. Licença pausada não troca senha (a senha de pausa é temporária).
+ */
+export const changeMyLicensePassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: any) =>
+    z.object({
+      licenseId: z.string().uuid(),
+      newPassword: z
+        .string()
+        .trim()
+        .min(6, "A senha precisa ter pelo menos 6 caracteres.")
+        .max(32, "A senha pode ter no máximo 32 caracteres.")
+        .regex(/^[A-Za-z0-9@#._-]+$/, "Use apenas letras, números e @ # . _ -"),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: lic } = await supabase
+      .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
+    if (!lic) throw new Error("Licença não encontrada.");
+    if ((lic as any).disabled_at) throw new Error("Esta licença está desativada.");
+    if ((lic as any).suspended_at) throw new Error("Despause a licença antes de trocar a senha.");
+
+    const panel = (lic as any).panel ?? "v457";
+    const { yaarsaSetPassword, encrypt } = await import("./yaarsa.server");
+    const { sha256Hex } = await import("./password-safety.server");
+
+    const pr = await yaarsaSetPassword(lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username);
+    if (pr.Fail) {
+      if (/1005|não encontrado|not found/i.test(pr.Fail)) {
+        throw new Error("Sua conta não foi localizada no painel. Use o botão 'Reparar acesso' e tente de novo.");
+      }
+      throw new Error("O painel não aceitou a troca de senha agora. Tente novamente em alguns minutos.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: upErr } = await supabaseAdmin.from("licenses").update({
+      yaarsa_password_enc: encrypt(data.newPassword),
+      password_fingerprint: sha256Hex(data.newPassword),
+    } as any).eq("id", lic.id).eq("user_id", userId);
+    if (upErr) throw new Error("Senha trocada no painel, mas falhou ao salvar aqui. Fale com o suporte.");
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${panel}`, action: "license_password_change", outcome: "success",
+      context: { license_id: lic.id, user_id: userId } as any,
+    } as any);
+
+    return { ok: true, message: "Senha atualizada no painel." };
+  });
+
+/**
+ * REPARAR ACESSO (cliente).
+ * Mesma rotina que o suporte usa: "sacode" o registro no painel (empurra a data
+ * e volta) e reaplica a senha guardada. Resolve o caso do teste grátis que é
+ * criado no banco mas não loga no BTmob por dessincronia.
+ */
+export const repairMyLicenseAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: any) => z.object({ licenseId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: lic } = await supabase
+      .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
+    if (!lic) throw new Error("Licença não encontrada.");
+    if ((lic as any).disabled_at) throw new Error("Esta licença está desativada.");
+    if ((lic as any).suspended_at) throw new Error("Esta licença está pausada — despause para reparar o acesso.");
+
+    const panel = (lic as any).panel ?? "v457";
+    const {
+      yaarsaExtend, yaarsaSetPassword, yaarsaCreateAccount, decrypt, panelFromPlanSlug,
+    } = await import("./yaarsa.server");
+
+    const expires = lic.expires_at ? new Date(lic.expires_at) : null;
+    const ymd = (d: Date) => d.toISOString().slice(0, 10);
+    const targetYmd = expires ? ymd(expires) : ymd(new Date(Date.now() + 365 * 86400000));
+
+    let plain: string | null = null;
+    try { plain = decrypt(lic.yaarsa_password_enc); } catch { plain = null; }
+    if (!plain) throw new Error("Não conseguimos recuperar sua senha registrada — fale com o suporte.");
+
+    const steps: string[] = [];
+
+    // 1) Empurra a data 1 dia e volta: força o painel a regravar o registro.
+    try {
+      const bumped = new Date((expires?.getTime() ?? Date.now()) + 86400000);
+      await yaarsaExtend(lic.yaarsa_email, ymd(bumped), panel);
+      steps.push("data-refresh");
+    } catch { steps.push("data-refresh-falhou"); }
+
+    // 2) Reaplica a senha original.
+    const pr = await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username);
+    if (pr.Fail && /1005|não encontrado|not found/i.test(pr.Fail)) {
+      // 3) Conta sumiu do painel: recria com as mesmas credenciais.
+      const cr = await yaarsaCreateAccount({
+        username: lic.yaarsa_username,
+        email: lic.yaarsa_email,
+        password: plain,
+        planSlug: (lic as any).plan_slug ?? "trial",
+        totalPaid: 0,
+        additionalInfo: `shadow-repair-${lic.id}`,
+        panel: panelFromPlanSlug((lic as any).plan_slug) ?? panel,
+      });
+      if (cr.Fail && !/1004|already|exist/i.test(cr.Fail)) {
+        throw new Error("O painel de licenças não respondeu. Tente novamente em alguns minutos.");
+      }
+      steps.push("conta-recriada");
+    } else if (pr.Fail) {
+      throw new Error("O painel de licenças recusou a sincronização agora. Tente novamente em instantes.");
+    } else {
+      steps.push("senha-reaplicada");
+    }
+
+    // 4) Restaura a data correta.
+    try {
+      await yaarsaExtend(lic.yaarsa_email, targetYmd, panel);
+      steps.push("data-restaurada");
+    } catch { steps.push("data-restaurada-falhou"); }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${panel}`, action: "license_self_repair", outcome: "success",
+      context: { license_id: lic.id, user_id: userId, steps } as any,
+    } as any);
+
+    return {
+      ok: true,
+      steps,
+      credentials: {
+        username: lic.yaarsa_username,
+        email: lic.yaarsa_email,
+        password: plain,
+        server_ip: (lic as any).server_ip ?? null,
+      },
+      message: "Acesso ressincronizado com o painel. Tente entrar novamente no BTmob.",
+    };
+  });
+
+/**
+ * "JÁ PAGUEI A TAXA DO SERVIDOR" (cliente).
+ * Reprocessa a última renovação de servidor paga do cliente: empurra todas as
+ * licenças ativas para o próximo dia 20 e tira o bloqueio por atraso, sem
+ * depender do webhook ter chegado.
+ */
+export const resyncMyServerRenewal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { nextDay20 } = await import("./admin-shared");
+
+    // 1) Existe pagamento de servidor confirmado nos últimos 45 dias?
+    const since = new Date(Date.now() - 45 * 86400000).toISOString();
+    const { data: serverPlans } = await supabaseAdmin
+      .from("plans").select("slug").eq("category", "server");
+    const serverSlugs = (serverPlans ?? []).map((p: any) => p.slug);
+
+    const { data: paidOrders } = await supabaseAdmin
+      .from("orders")
+      .select("id, plan_slug, status, paid_at, created_at")
+      .eq("user_id", userId)
+      .eq("status", "paid")
+      .gt("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const renewal = (paidOrders ?? []).find(
+      (o: any) => serverSlugs.includes(o.plan_slug) || /server|servidor|renov/i.test(o.plan_slug ?? ""),
+    );
+    if (!renewal) {
+      return {
+        ok: false,
+        message:
+          "Não encontramos um pagamento de servidor confirmado na sua conta nos últimos 45 dias. Se você acabou de pagar, aguarde alguns minutos ou envie o comprovante no suporte.",
+      };
+    }
+
+    // 2) Reaplica o ciclo em todas as licenças pagas do cliente.
+    const paidUntil = nextDay20();
+    const ymd = paidUntil.toISOString().slice(0, 10);
+    const { yaarsaExtend } = await import("./yaarsa.server");
+
+    const { data: lics } = await supabaseAdmin
+      .from("licenses").select("*")
+      .eq("user_id", userId).eq("is_trial", false).is("disabled_at", null);
+
+    let fixed = 0;
+    for (const l of (lics ?? []) as any[]) {
+      if (l.suspended_at) continue;
+      try { await yaarsaExtend(l.yaarsa_email, ymd, l.panel ?? "v457"); } catch { /* best-effort */ }
+      const keepsLongerExpiry = l.expires_at && new Date(l.expires_at) > paidUntil;
+      await supabaseAdmin.from("licenses").update({
+        server_paid_until: paidUntil.toISOString(),
+        expires_at: keepsLongerExpiry ? l.expires_at : paidUntil.toISOString(),
+        revoked: false,
+        server_overdue_at: null,
+        status: "active",
+      } as any).eq("id", l.id).eq("user_id", userId);
+      fixed++;
+    }
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: "self-service", action: "server_renewal_resync", outcome: fixed ? "success" : "warning",
+      context: { user_id: userId, order_id: renewal.id, licenses: fixed, paid_until: paidUntil.toISOString() } as any,
+    } as any);
+
+    return {
+      ok: true,
+      fixed,
+      paid_until: paidUntil.toISOString(),
+      message: fixed
+        ? `Renovação aplicada em ${fixed} licença${fixed === 1 ? "" : "s"} — válida até ${paidUntil.toLocaleDateString("pt-BR")}.`
+        : "Pagamento localizado, mas nenhuma licença ativa foi encontrada. Fale com o suporte.",
+    };
+  });
