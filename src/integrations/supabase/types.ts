@@ -1790,6 +1790,92 @@ export type Database = {
         }
         Relationships: []
       }
+      redeem_code_uses: {
+        Row: {
+          code: string
+          code_id: string
+          created_at: string
+          details: Json
+          id: string
+          license_id: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          code_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          license_id?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          code_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          license_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redeem_code_uses_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "redeem_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redeem_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          days: number | null
+          expires_at: string | null
+          id: string
+          kind: string
+          max_uses: number
+          note: string | null
+          plan_slug: string | null
+          updated_at: string
+          uses: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          days?: number | null
+          expires_at?: string | null
+          id?: string
+          kind: string
+          max_uses?: number
+          note?: string | null
+          plan_slug?: string | null
+          updated_at?: string
+          uses?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          days?: number | null
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          max_uses?: number
+          note?: string | null
+          plan_slug?: string | null
+          updated_at?: string
+          uses?: number
+        }
+        Relationships: []
+      }
       referral_codes: {
         Row: {
           code: string
