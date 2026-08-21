@@ -778,7 +778,10 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
  */
 export const resyncMyServerRenewal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((input: any) =>
+    z.object({ licenseId: z.string().uuid().optional() }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { nextDay20 } = await import("./admin-shared");
@@ -814,9 +817,12 @@ export const resyncMyServerRenewal = createServerFn({ method: "POST" })
     const ymd = paidUntil.toISOString().slice(0, 10);
     const { yaarsaExtend } = await import("./yaarsa.server");
 
-    const { data: lics } = await supabaseAdmin
+    const licQuery = supabaseAdmin
       .from("licenses").select("*")
       .eq("user_id", userId).eq("is_trial", false).is("disabled_at", null);
+    const { data: lics } = data?.licenseId
+      ? await licQuery.eq("id", data.licenseId)
+      : await licQuery;
 
     let fixed = 0;
     for (const l of (lics ?? []) as any[]) {
