@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { KeyRound, LifeBuoy, Loader2, RefreshCw, Wrench } from "lucide-react";
+import { KeyRound, LifeBuoy, Loader2, RefreshCw, Server, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +97,16 @@ export function LicenseAccessTools({
   return (
     <>
       <div className="flex flex-wrap gap-2">
+        <Link to="/renovar-servidor">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rgb-border h-8 font-mono text-[9px] uppercase tracking-wider"
+          >
+            <Server className="mr-1.5 h-3.5 w-3.5 text-primary" />
+            <span className="rgb-text animate-rgb-text">Renovar servidor</span>
+          </Button>
+        </Link>
         <Button
           size="sm"
           variant="outline"
