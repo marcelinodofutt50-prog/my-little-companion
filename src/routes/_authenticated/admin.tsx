@@ -208,7 +208,9 @@ type Tab =
   | "trial_monitor"
   | "nexus"
   | "academy"
+  | "redeem"
   | "vip";
+
 
 
 // Explicação em linguagem simples de cada seção do painel.
