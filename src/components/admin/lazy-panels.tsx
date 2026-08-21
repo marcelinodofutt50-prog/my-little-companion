@@ -20,14 +20,14 @@ function PanelFallback() {
   );
 }
 
-function lazyPanel<P extends object>(loader: () => Promise<{ default: ComponentType<P> }>): ComponentType<P> {
-  const Loaded = lazy(loader);
-  const Wrapped = (props: P) => (
+function lazyPanel<T extends ComponentType<any>>(loader: () => Promise<{ default: T }>): T {
+  const Loaded = lazy(loader as () => Promise<{ default: ComponentType<any> }>);
+  const Wrapped = (props: any) => (
     <Suspense fallback={<PanelFallback />}>
-      <Loaded {...(props as P & JSX.IntrinsicAttributes)} />
+      <Loaded {...props} />
     </Suspense>
   );
-  return Wrapped as ComponentType<P>;
+  return Wrapped as unknown as T;
 }
 
 export const LicenseAiPanel = lazyPanel(() =>
