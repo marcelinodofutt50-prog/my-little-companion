@@ -664,7 +664,9 @@ function AdminPage() {
         { id: "external", label: "Pagam Por Fora", icon: Wallet, hint: "extensão manual" },
         { id: "users", label: "Usuários", icon: Users },
         { id: "licenses", label: "Licenças", icon: KeyRound },
+        { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "3d, 7d ou servidor" },
       ],
+
     },
     {
       title: "Financeiro",
