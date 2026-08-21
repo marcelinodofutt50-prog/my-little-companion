@@ -242,7 +242,9 @@ const TAB_DESC: Record<Tab, string> = {
   academy: "Academia da Equipe: treinamento interno para novos integrantes (só admin, suporte e moderação).",
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
+  redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
 };
+
 
 
 function AdminPage() {
