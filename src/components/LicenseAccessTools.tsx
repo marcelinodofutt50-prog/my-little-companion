@@ -168,7 +168,22 @@ export function LicenseAccessTools({
           )}
           Já paguei o servidor
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={panelSyncing}
+          onClick={runPanelSync}
+          className="h-8 font-mono text-[9px] uppercase tracking-wider"
+        >
+          {panelSyncing ? (
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin text-primary" />
+          ) : (
+            <RadioTower className="mr-1.5 h-3.5 w-3.5 text-primary" />
+          )}
+          Sincronizar com painel
+        </Button>
       </div>
+
       <p className="mt-2 flex items-start gap-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
         <LifeBuoy className="mt-0.5 h-3 w-3 shrink-0" />
         Não consegue entrar no BTmob? Use “Reparar acesso”. Pagou a taxa do servidor e a licença
