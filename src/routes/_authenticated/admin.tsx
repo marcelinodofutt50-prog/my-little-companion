@@ -558,28 +558,11 @@ function AdminPage() {
       toast.error(e.message);
     }
   }
-  /** Sincroniza (ou aplica) a senha do login do cliente. */
-  async function setLicensePassword(id: string) {
-    const pwd = prompt("Nova senha do login do cliente (a que você definiu no painel):");
-    if (!pwd || !pwd.trim()) return;
-    const applyToPanel = confirm(
-      "OK = aplicar esta senha TAMBÉM no painel.\nCancelar = apenas registrar aqui (você já trocou no painel).",
-    );
-    try {
-      const r: any = await setPasswordFn({
-        data: { licenseId: id, newPassword: pwd.trim(), applyToPanel },
-      });
-      toast.success(
-        r.appliedToPanel
-          ? "Senha aplicada no painel e atualizada para o cliente."
-          : "Senha atualizada no painel do cliente (aba Licenças).",
-        { duration: 8000 },
-      );
-      setLicenses(await licensesFn());
-    } catch (e: any) {
-      toast.error(e.message);
-    }
+  /** Abre o fluxo de senha (status + conferência no painel + atualização). */
+  function openPasswordDialog(license: any) {
+    setPwdDialog({ open: true, license });
   }
+
   async function recreate(id: string) {
 
     if (!confirm("Recriar credenciais do login? A senha anterior será substituída.")) return;
