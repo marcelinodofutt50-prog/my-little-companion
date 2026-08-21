@@ -79,7 +79,7 @@ export function LicenseAccessTools({
   const runResync = async () => {
     setResyncing(true);
     try {
-      const res: any = await resyncRenewal({ data: {} });
+      const res: any = await (resyncRenewal as any)();
       if (res?.ok) toast.success(res.message);
       else toast.warning(res?.message ?? "Nenhum pagamento de servidor encontrado.");
       onDone?.();
