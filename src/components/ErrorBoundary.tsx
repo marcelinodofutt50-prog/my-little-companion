@@ -13,6 +13,18 @@ interface State {
   error: Error | null;
 }
 
+export function isChunkLoadError(error: Error | null | undefined): boolean {
+  if (!error) return false;
+  const text = `${error.name} ${error.message}`.toLowerCase();
+  return (
+    text.includes("importing a module script failed") ||
+    text.includes("failed to fetch dynamically imported module") ||
+    text.includes("error loading dynamically imported module") ||
+    text.includes("chunkloaderror") ||
+    text.includes("unable to preload css")
+  );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
