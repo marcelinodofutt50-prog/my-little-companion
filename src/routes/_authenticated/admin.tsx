@@ -749,7 +749,7 @@ function AdminPage() {
           className="enterprise-surface relative overflow-hidden p-5 sm:p-6"
         >
           {/* Subtle background glow */}
-          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-[80px]" />
+          <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-[80px]" />
           
           <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="min-w-0">
@@ -1118,7 +1118,7 @@ function AdminPage() {
 
                     <div className="grid gap-4 md:grid-cols-3">
                       {/* Pedidos recentes */}
-                      <div className="terminal-card scanlines relative p-5 md:col-span-2">
+                      <div className="terminal-card scanlines relative min-w-0 overflow-hidden p-5 md:col-span-2">
                         <div className="mb-3 flex items-center justify-between">
                           <h3 className="font-mono text-xs uppercase tracking-wider text-cyan">
                             // pedidos recentes
@@ -1171,7 +1171,7 @@ function AdminPage() {
                       </div>
 
                       {/* Atalhos */}
-                      <div className="terminal-card scanlines relative p-5">
+                      <div className="terminal-card scanlines relative min-w-0 overflow-hidden p-5">
                         <h3 className="mb-3 font-mono text-xs uppercase tracking-wider text-violet">
                           // atalhos
                         </h3>
