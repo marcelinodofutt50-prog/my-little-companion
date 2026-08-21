@@ -25,12 +25,23 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(`ErrorBoundary [${this.props.name || "Global"}]:`, error, errorInfo);
-    // Aqui poderíamos enviar para um serviço de logging externo
+
+    // Deploy novo no ar => os arquivos da versão antiga somem e o import falha.
+    // Nesse caso recarregar resolve; fazemos isso uma única vez por sessão.
+    if (isChunkLoadError(error) && typeof window !== "undefined") {
+      const key = "shadow:boundary-chunk-reload";
+      if (!window.sessionStorage.getItem(key)) {
+        window.sessionStorage.setItem(key, String(Date.now()));
+        window.location.reload();
+      }
+    }
   }
 
   public render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
+
+      const chunkError = isChunkLoadError(this.state.error);
 
       return (
         <div className="flex flex-col items-center justify-center p-8 text-center bg-destructive/5 border border-destructive/20 rounded-lg my-4 space-y-4">
@@ -39,14 +50,20 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-destructive uppercase tracking-tighter font-mono">
-              Falha Crítica no Módulo
+              {chunkError ? "Nova versão disponível" : "Falha Crítica no Módulo"}
             </h3>
             <p className="text-sm text-muted-foreground font-mono max-w-md mx-auto">
-              Ocorreu um erro inesperado no componente <span className="text-foreground">{`[${this.props.name || "Desconhecido"}]`}</span>. 
-              O log técnico foi capturado para análise.
+              {chunkError ? (
+                <>O site foi atualizado enquanto esta aba estava aberta. Recarregue a página para carregar a versão mais recente.</>
+              ) : (
+                <>
+                  Ocorreu um erro inesperado no componente <span className="text-foreground">{`[${this.props.name || "Desconhecido"}]`}</span>.
+                  O log técnico foi capturado para análise.
+                </>
+              )}
             </p>
           </div>
-          {this.state.error && (
+          {this.state.error && !chunkError && (
             <div className="p-3 bg-black/40 text-[10px] text-left font-mono overflow-auto max-h-40 w-full rounded border border-destructive/20 text-destructive/80">
               <span className="font-bold uppercase tracking-widest">[DEBUG_INFO]:</span>
               <pre className="mt-1 whitespace-pre-wrap">{`${this.state.error.name}: ${this.state.error.message}`}</pre>
@@ -58,14 +75,22 @@ export class ErrorBoundary extends Component<Props, State> {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => this.setState({ hasError: false, error: null })}
+            onClick={() => {
+              if (chunkError && typeof window !== "undefined") {
+                window.sessionStorage.removeItem("shadow:boundary-chunk-reload");
+                window.location.reload();
+                return;
+              }
+              this.setState({ hasError: false, error: null });
+            }}
             className="font-mono text-[10px] uppercase tracking-widest border-destructive/30 hover:bg-destructive/10"
           >
-            <RefreshCw className="h-3 w-3 mr-2" /> Tentar Recuperação
+            <RefreshCw className="h-3 w-3 mr-2" /> {chunkError ? "Recarregar página" : "Tentar Recuperação"}
           </Button>
         </div>
       );
     }
+
 
     return this.props.children;
   }
