@@ -45,6 +45,7 @@ import {
   Bot,
   Server,
   Video,
+  GraduationCap,
   Megaphone,
   Building2,
   Settings2,
