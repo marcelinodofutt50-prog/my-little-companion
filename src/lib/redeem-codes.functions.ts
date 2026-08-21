@@ -77,7 +77,7 @@ export const staffToggleRedeemCode = createServerFn({ method: "POST" })
 export const previewRedeemCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ code: z.string().trim().min(4).max(40) }).parse(i))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { normalizeRedeemCode, checkRedeemCode, describeRedeemCode } = await import("./redeem-rules");
 
@@ -86,6 +86,9 @@ export const previewRedeemCode = createServerFn({ method: "POST" })
       .from("redeem_codes" as any).select("*").eq("code", code).maybeSingle();
     const check = checkRedeemCode(row as any);
     if (!check.ok) return { ok: false as const, message: check.message };
+    if ((row as any).target_user_id && (row as any).target_user_id !== context.userId) {
+      return { ok: false as const, message: "Este código pertence a outro membro." };
+    }
     return {
       ok: true as const,
       kind: (row as any).kind as string,
