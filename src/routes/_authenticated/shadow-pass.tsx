@@ -32,6 +32,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { BackToDashboard } from "@/components/BackToDashboard";
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
+  head: () => ({
+    meta: [
+      { title: 'Shadow Pass | ShadowDash Store' },
+      { name: 'description', content: 'Acompanhe benefícios, missões, comunidade e sorteios do Shadow Pass.' },
+      { property: 'og:title', content: 'Shadow Pass | ShadowDash Store' },
+      { property: 'og:description', content: 'Benefícios, missões e metas da comunidade ShadowDash.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+  }),
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData({
       queryKey: ['shadow-pass-data'],
