@@ -55,43 +55,46 @@ import {
 
 import { categoryMeta } from "@/lib/support-categories";
 import { SiteHeader } from "@/components/SiteHeader";
-import { LicenseAiPanel } from "@/components/LicenseAiPanel";
 import { AdminAlertsBanner } from "@/components/AdminAlertsBanner";
-import { AdminApkPanel } from "@/components/AdminApkPanel";
-import { AdminRefundsPanel } from "@/components/AdminRefundsPanel";
-import { AdminMarketPanel } from "@/components/AdminMarketPanel";
-import { AdminUpdatesPanel } from "@/components/AdminUpdatesPanel";
-import { AdminTutorialsPanel } from "@/components/AdminTutorialsPanel";
-import { AdminAnnouncementsPanel } from "@/components/AdminAnnouncementsPanel";
-import { AdminSupportPanel } from "@/components/support/AdminSupportPanel";
-import { AdminExternalPayersPanel } from "@/components/AdminExternalPayersPanel";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
-import { RevenueSparkline } from "@/components/RevenueSparkline";
-import { AdminMetricsPanel } from "@/components/AdminMetricsPanel";
-import { AdminEmailMetrics } from "@/components/AdminEmailMetrics";
-import { AdminAntifraudPanel } from "@/components/AdminAntifraudPanel";
-import { AdminHealthPanel } from "@/components/AdminHealthPanel";
-import { AdminPanelServers } from "@/components/AdminPanelServers";
-import { AdminMigrationWaves } from "@/components/AdminMigrationWaves";
-import { AdminTrialResetPanel } from "@/components/AdminTrialResetPanel";
-import { AdminSelfTestPanel } from "@/components/AdminSelfTestPanel";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
-import { AdminAuditLog, type AuditLogEntry } from "@/components/AdminAuditLog";
+import { type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
-import { AdminCustomer360 } from "@/components/AdminCustomer360";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
-import { AdminDailyReport } from "@/components/AdminDailyReport";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 import { AdminTagline } from "@/components/AdminTagline";
-import { AdminTeamGuide } from "@/components/AdminTeamGuide";
-import { AdminPermissionsMatrix } from "@/components/AdminPermissionsMatrix";
-import { AdminTrialMonitorPanel } from "@/components/admin/AdminTrialMonitorPanel";
-import { StaffAcademyPanel } from "@/components/staff/StaffAcademyPanel";
-import { StaffNexusChat } from "@/components/staff/StaffNexusChat";
-import { AdminVipPanel } from "@/components/admin/AdminVipPanel";
 
+import {
+  AdminAnnouncementsPanel,
+  AdminAntifraudPanel,
+  AdminApkPanel,
+  AdminAuditLog,
+  AdminCustomer360,
+  AdminDailyReport,
+  AdminEmailMetrics,
+  AdminExternalPayersPanel,
+  AdminHealthPanel,
+  AdminMarketPanel,
+  AdminMetricsPanel,
+  AdminMigrationWaves,
+  AdminPanelServers,
+  AdminPermissionsMatrix,
+  AdminRefundsPanel,
+  AdminSelfTestPanel,
+  AdminSupportPanel,
+  AdminTeamGuide,
+  AdminTrialMonitorPanel,
+  AdminTrialResetPanel,
+  AdminTutorialsPanel,
+  AdminUpdatesPanel,
+  AdminVipPanel,
+  LicenseAiPanel,
+  RevenueSparkline,
+  StaffAcademyPanel,
+  StaffNexusChat,
+} from "@/components/admin/lazy-panels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
