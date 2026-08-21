@@ -9,6 +9,7 @@ export const getMyRole = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
-    const { isAdmin, isModerator } = await resolveRoles(context);
-    return { role: isAdmin ? "admin" : isModerator ? "moderator" : "user" };
+    const { isAdmin, isModerator, isSupport } = await resolveRoles(context);
+    // "support" tem as mesmas telas de atendimento que "moderator".
+    return { role: isAdmin ? "admin" : isModerator || isSupport ? "moderator" : "user" };
   });
