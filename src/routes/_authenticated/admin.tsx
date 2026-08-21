@@ -1923,11 +1923,20 @@ function AdminPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              title="Atualizar a senha que o cliente vê (sincronizar com o painel)"
-                              onClick={() => setLicensePassword(l.id)}
+                              title="Senha do login: conferir no painel e atualizar para o cliente"
+                              onClick={() => openPasswordDialog(l)}
                             >
-                              <KeyRound className="h-3 w-3 text-primary" />
+                              <KeyRound
+                                className={`h-3 w-3 ${
+                                  ["divergent", "unknown", "error"].includes(
+                                    String(l.password_sync_status ?? ""),
+                                  )
+                                    ? "text-amber-400"
+                                    : "text-primary"
+                                }`}
+                              />
                             </Button>
+
                             <Button
                               size="sm"
                               variant="ghost"
