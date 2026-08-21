@@ -90,11 +90,12 @@ function Index() {
   }, [search?.success]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden selection:bg-primary/30">
+    <div className="relative min-h-screen overflow-hidden pb-24 md:pb-0 selection:bg-primary/30">
       <SiteHeader />
       
       {/* Hero Section */}
-      <section className="relative pt-16 pb-12 md:pt-24 md:pb-20">
+      <section className="relative pt-10 pb-10 sm:pt-16 sm:pb-12 md:pt-24 md:pb-20">
+
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
