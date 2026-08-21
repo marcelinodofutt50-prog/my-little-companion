@@ -1000,7 +1000,31 @@ function AdminPage() {
             {/* Section title bar */}
             {activeMeta && (
               <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border bg-background/95 px-3 pb-3 pt-3 backdrop-blur sm:-mx-1 sm:px-1">
+                {/* Seletor de seções (mobile/tablet) */}
+                <div className="mb-2.5 lg:hidden">
+                  <label className="sr-only" htmlFor="admin-section-select">
+                    Selecionar seção do painel
+                  </label>
+                  <select
+                    id="admin-section-select"
+                    value={tab}
+                    onChange={(e) => setTab(e.target.value as typeof tab)}
+                    className="h-10 w-full max-w-full rounded-md border border-input bg-background px-3 text-xs font-medium outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  >
+                    {visibleGroups.map((g) => (
+                      <optgroup key={g.title} label={g.title}>
+                        {g.items.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.label}
+                            {(navBadges[t.id] ?? 0) > 0 ? ` (${navBadges[t.id]})` : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
+
                   <span className="text-[10px] font-semibold uppercase text-muted-foreground">
                     Administração /
                   </span>
