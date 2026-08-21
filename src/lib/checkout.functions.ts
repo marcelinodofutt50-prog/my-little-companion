@@ -191,13 +191,36 @@ export const createCheckout = createServerFn({ method: "POST" })
       };
     }
 
+
+    // ===== Renovação de servidor: o cliente escolhe QUAL login renovar =====
+    // Sem isso, quem tem mais de um login pagava uma taxa e todos os logins
+    // eram empurrados para o próximo dia 20.
+    let targetLicenseId: string | null = null;
+    if (data.targetLicenseId) {
+      if (plan.category !== "server") {
+        throw new Error("A escolha de login só se aplica à renovação de servidor.");
+      }
+      const { data: target } = await supabase
+        .from("licenses")
+        .select("id, is_trial, disabled_at")
+        .eq("id", data.targetLicenseId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!target) throw new Error("Login não encontrado na sua conta.");
+      if (target.is_trial) throw new Error("O teste grátis não usa renovação de servidor.");
+      if (target.disabled_at) throw new Error("Este login está desativado — fale com o suporte.");
+      targetLicenseId = target.id;
+    }
+
     const metadata = {
       ...(legacyMeta ? { legacy_claim: legacyMeta } : {}),
       ...(upgradeMeta ? { upgrade: upgradeMeta } : {}),
       ...(giftMeta ? { gift: giftMeta } : {}),
+      ...(targetLicenseId ? { target_license_id: targetLicenseId } : {}),
       includeServer: !!data.includeServer,
       addSigner: !!data.addSigner,
     };
+
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
