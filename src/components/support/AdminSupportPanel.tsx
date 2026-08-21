@@ -280,7 +280,7 @@ export function AdminSupportPanel() {
               onOpenFicha={() => toast.info("Abrindo ficha técnica...")}
             />
 
-            <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               <SupportChat 
                 threadId={selectedThread.id} 
                 userId={myId || ""} 
@@ -289,7 +289,8 @@ export function AdminSupportPanel() {
               />
             </div>
 
-            <div className="p-2 border-t border-border/20 bg-muted/10 flex items-center justify-between">
+            <div className="p-2 border-t border-border/20 bg-muted/10 flex flex-wrap items-center justify-between gap-2">
+
               <QuickRepliesDropdown onPick={(body) => {
                 // Aqui injetamos no input do chat se pudermos, ou enviamos direto
                 // Como o SupportChat é desacoplado, poderíamos usar um canal de ref ou similar
