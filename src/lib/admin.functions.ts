@@ -79,7 +79,12 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
     const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
     await yaarsaRemoveAccount(lic.yaarsa_email, (lic as any).panel ?? "v457");
-    await context.supabase.from("licenses").update({ revoked: true }).eq("id", data.licenseId);
+    // RLS na tabela de licenças só permite leitura: a escrita precisa do
+    // cliente administrativo, senão a revogação virava um "sucesso" silencioso.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: revErr } = await supabaseAdmin
+      .from("licenses").update({ revoked: true, status: "revoked" } as any).eq("id", data.licenseId);
+    if (revErr) throw new Error(revErr.message);
     return { ok: true };
   });
 
@@ -109,7 +114,10 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
     };
     if (serverOverdue) patch.server_paid_until = nextDay20().toISOString();
 
-    await context.supabase.from("licenses").update(patch as any).eq("id", data.licenseId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: extErr } = await supabaseAdmin
+      .from("licenses").update(patch as any).eq("id", data.licenseId);
+    if (extErr) throw new Error(extErr.message);
     return { ok: true, expires_at: target.toISOString(), server_paid_until: patch.server_paid_until ?? (lic as any).server_paid_until };
   });
 
@@ -1607,4 +1615,86 @@ export const adminSyncLicensesFromPanel = createServerFn({ method: "POST" })
 
     const report = await syncLicensesWithPanel(candidates as any[], { actor: "admin", userId: context.userId });
     return { ok: true, ...report };
+  });
+
+/**
+ * Admin trocou a senha do cliente direto no painel Yaarsa? Esta função grava a
+ * senha nova aqui para que o cliente veja em "Licenças" exatamente a senha que
+ * funciona no BMob. Com `applyToPanel`, também empurra a senha para o painel.
+ */
+export const adminSetLicensePassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z.object({
+      licenseId: z.string().uuid(),
+      newPassword: z
+        .string()
+        .trim()
+        .min(4, "A senha precisa ter pelo menos 4 caracteres.")
+        .max(64, "A senha pode ter no máximo 64 caracteres."),
+      applyToPanel: z.boolean().optional(),
+    }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await supabaseAdmin
+      .from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    if (!lic) throw new Error("Licença não encontrada");
+
+    const panel = (lic as any).panel ?? "v457";
+    const { encrypt, yaarsaSetPassword } = await import("./yaarsa.server");
+    const { sha256Hex } = await import("./password-safety.server");
+    const { recordLicenseAudit } = await import("./audit-trail.server");
+
+    let panelApplied: boolean | null = null;
+    if (data.applyToPanel) {
+      const pr = await yaarsaSetPassword(
+        (lic as any).yaarsa_email,
+        data.newPassword,
+        panel,
+        (lic as any).yaarsa_username,
+        (lic as any).expires_at ?? null,
+      );
+      if (pr.Fail) throw new Error(`O painel não aceitou a troca: ${pr.Fail}`);
+      panelApplied = true;
+    }
+
+    const { error: upErr } = await supabaseAdmin.from("licenses").update({
+      yaarsa_password_enc: encrypt(data.newPassword),
+      password_fingerprint: sha256Hex(data.newPassword),
+      // A senha de pausa deixa de valer quando a senha real muda.
+      suspend_password_fingerprint: null,
+    } as any).eq("id", (lic as any).id);
+    if (upErr) throw new Error("Não foi possível salvar a senha aqui.");
+
+    await supabaseAdmin.from("integration_logs").insert({
+      source: `yaarsa-${panel}`,
+      action: "admin_password_sync",
+      outcome: "success",
+      context: {
+        license_id: (lic as any).id,
+        user_id: (lic as any).user_id,
+        actor_id: context.userId,
+        applied_to_panel: panelApplied,
+      } as any,
+    } as any);
+
+    await recordLicenseAudit({
+      licenseId: (lic as any).id,
+      userId: (lic as any).user_id,
+      actorId: context.userId,
+      actorKind: "staff",
+      eventType: "password_change",
+      reason: data.applyToPanel
+        ? "Admin definiu uma nova senha e aplicou no painel"
+        : "Admin sincronizou a senha que já havia trocado no painel",
+      yaarsaEmail: (lic as any).yaarsa_email,
+      panel,
+      expiresBefore: (lic as any).expires_at ?? null,
+      expiresAfter: (lic as any).expires_at ?? null,
+      details: { applied_to_panel: panelApplied },
+    });
+
+    return { ok: true, appliedToPanel: panelApplied };
   });

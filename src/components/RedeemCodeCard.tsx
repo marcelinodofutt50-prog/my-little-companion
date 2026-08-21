@@ -41,6 +41,13 @@ export function RedeemCodeCard({
       }
       setInfo(res);
       if (res.needsLicense && payable.length === 1) setLicenseId(payable[0].id);
+      // Dias de licença: por padrão estendem o login que vence primeiro.
+      if (res.allowsLicense && payable.length > 0) {
+        const soonest = [...payable].sort(
+          (a: any, b: any) => +new Date(a.expires_at) - +new Date(b.expires_at),
+        )[0];
+        setLicenseId(soonest.id);
+      }
     } catch (e: any) {
       setInfo(null);
       toast.error(e?.message ?? "Não foi possível validar o código.");
@@ -57,9 +64,20 @@ export function RedeemCodeCard({
     setBusy(true);
     try {
       const res: any = await redeem({
-        data: { code, ...(licenseId ? { licenseId } : {}) },
+        data: {
+          code,
+          ...(licenseId && licenseId !== "new" ? { licenseId } : {}),
+          ...(licenseId === "new" ? { createNew: true } : {}),
+        },
       });
-      toast.success(res?.message ?? "Código aplicado!");
+      const when = res?.expires_at
+        ? new Date(res.expires_at).toLocaleDateString("pt-BR")
+        : null;
+      toast.success(
+        res?.created
+          ? `Login de cortesia criado${when ? ` — válido até ${when}` : ""}.`
+          : `Código aplicado${when ? ` — nova validade ${when}` : ""}.`,
+      );
       setCode("");
       setInfo(null);
       setLicenseId("");
@@ -70,6 +88,7 @@ export function RedeemCodeCard({
       setBusy(false);
     }
   };
+
 
   return (
     <Card className="border-border/60 bg-background/40">
@@ -105,7 +124,7 @@ export function RedeemCodeCard({
           <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
             <div className="font-mono text-[11px] text-foreground">{info.description}</div>
 
-            {info.needsLicense && (
+            {(info.needsLicense || (info.allowsLicense && payable.length > 0)) && (
               <div className="space-y-1">
                 <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                   Aplicar em qual licença?
@@ -121,14 +140,16 @@ export function RedeemCodeCard({
                       {planLabel(l.plan_slug, l.is_trial)} · {l.yaarsa_email}
                     </option>
                   ))}
+                  {info.allowsLicense && <option value="new">criar um login novo</option>}
                 </select>
-                {payable.length === 0 && (
+                {info.needsLicense && payable.length === 0 && (
                   <p className="font-mono text-[10px] text-danger">
                     Você ainda não tem uma licença paga para receber a renovação.
                   </p>
                 )}
               </div>
             )}
+
 
             <Button onClick={apply} disabled={busy} className="w-full">
               {busy && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}

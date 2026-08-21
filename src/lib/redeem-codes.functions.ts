@@ -94,9 +94,13 @@ export const previewRedeemCode = createServerFn({ method: "POST" })
       kind: (row as any).kind as string,
       days: (row as any).days as number | null,
       needsLicense: (row as any).kind === "server_renewal",
+      // Dias de licença: o cliente pode escolher qual login recebe os dias
+      // (ou criar um login novo de cortesia quando ainda não tiver nenhum).
+      allowsLicense: (row as any).kind === "license_days",
       description: describeRedeemCode(row as any),
     };
   });
+
 
 /** Cliente: resgata o código (dias de licença ou renovação de servidor). */
 export const redeemMyCode = createServerFn({ method: "POST" })
@@ -105,10 +109,13 @@ export const redeemMyCode = createServerFn({ method: "POST" })
     z.object({
       code: z.string().trim().min(4).max(40),
       licenseId: z.string().uuid().optional(),
+      /** Força criar um login de cortesia novo em vez de estender um existente. */
+      createNew: z.boolean().optional(),
     }).parse(i),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { normalizeRedeemCode } = await import("./redeem-rules");
     const { applyServerRenewalCode, applyDaysToLicense, createCourtesyLicense } =
@@ -143,7 +150,18 @@ export const redeemMyCode = createServerFn({ method: "POST" })
             .eq("id", data.licenseId).eq("user_id", userId).is("disabled_at", null).maybeSingle();
           if (!lic) { await rollback(); throw new Error("Licença não encontrada na sua conta."); }
           license = lic;
+        } else if (rc.kind === "license_days" && !data.createNew) {
+          // Sem escolha explícita: os dias vão para o login pago que vence
+          // primeiro. Antes o sistema criava um login novo sem avisar, e o
+          // cliente ficava com dois acessos em vez do dele estendido.
+          const { data: mine } = await supabaseAdmin
+            .from("licenses").select("*")
+            .eq("user_id", userId).is("disabled_at", null).eq("is_trial", false)
+            .eq("revoked", false)
+            .order("expires_at", { ascending: true }).limit(1);
+          license = mine?.[0] ?? null;
         }
+
 
         try {
           let outcome;

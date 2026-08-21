@@ -129,6 +129,7 @@ import {
   adminExtendLicense,
   adminFixLoginBug,
   adminAnalyzeLoginBug,
+  adminSetLicensePassword,
   adminSetRole,
   adminSetRoleByEmail,
   adminListRoles,
@@ -319,6 +320,7 @@ function AdminPage() {
   const renewFn = useServerFn(adminRenewClientServer);
   const recreateFn = useServerFn(adminRecreateLicense);
   const fixBugFn = useServerFn(adminFixLoginBug);
+  const setPasswordFn = useServerFn(adminSetLicensePassword);
   const analyzeBugFn = useServerFn(adminAnalyzeLoginBug);
   const [fixingLic, setFixingLic] = useState<string | null>(null);
   const [fixBugDialog, setFixBugDialog] = useState<{ open: boolean; licenseId: string | null }>({
@@ -547,6 +549,28 @@ function AdminPage() {
     try {
       await renewFn({ data: { licenseId: id } });
       toast.success("Servidor renovado");
+      setLicenses(await licensesFn());
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+  /** Sincroniza (ou aplica) a senha do login do cliente. */
+  async function setLicensePassword(id: string) {
+    const pwd = prompt("Nova senha do login do cliente (a que você definiu no painel):");
+    if (!pwd || !pwd.trim()) return;
+    const applyToPanel = confirm(
+      "OK = aplicar esta senha TAMBÉM no painel.\nCancelar = apenas registrar aqui (você já trocou no painel).",
+    );
+    try {
+      const r: any = await setPasswordFn({
+        data: { licenseId: id, newPassword: pwd.trim(), applyToPanel },
+      });
+      toast.success(
+        r.appliedToPanel
+          ? "Senha aplicada no painel e atualizada para o cliente."
+          : "Senha atualizada no painel do cliente (aba Licenças).",
+        { duration: 8000 },
+      );
       setLicenses(await licensesFn());
     } catch (e: any) {
       toast.error(e.message);
@@ -1908,6 +1932,14 @@ function AdminPage() {
                               onClick={() => renew(l.id)}
                             >
                               <RefreshCw className="h-3 w-3 text-cyan" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title="Atualizar a senha que o cliente vê (sincronizar com o painel)"
+                              onClick={() => setLicensePassword(l.id)}
+                            >
+                              <KeyRound className="h-3 w-3 text-primary" />
                             </Button>
                             <Button
                               size="sm"
