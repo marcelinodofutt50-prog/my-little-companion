@@ -656,6 +656,15 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       throw new Error("O painel não aceitou a troca de senha agora. Tente novamente em alguns minutos.");
     }
 
+    // O painel pode ter recriado a conta pelo fallback `add`: reempurramos a
+    // data real da licença para o painel, mantendo site e BTmob sincronizados.
+    if ((lic as any).expires_at) {
+      try {
+        const { yaarsaExtend } = await import("./yaarsa.server");
+        await yaarsaExtend(lic.yaarsa_email, String((lic as any).expires_at).slice(0, 10), panel);
+      } catch { /* best-effort */ }
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("licenses").update({
       yaarsa_password_enc: encrypt(data.newPassword),
@@ -665,11 +674,12 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${panel}`, action: "license_password_change", outcome: "success",
-      context: { license_id: lic.id, user_id: userId } as any,
+      context: { license_id: lic.id, user_id: userId, panel_action: (pr as any).action ?? null } as any,
     } as any);
 
-    return { ok: true, message: "Senha atualizada no painel." };
+    return { ok: true, message: "Senha atualizada no painel. Use a nova senha no BTmob." };
   });
+
 
 /**
  * REPARAR ACESSO (cliente).
