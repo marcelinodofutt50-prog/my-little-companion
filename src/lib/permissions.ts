@@ -93,7 +93,9 @@ export const SECTION_CAP: Record<string, Capability> = {
   vip: "view.users",
   nexus: "view.chat",
   academy: "view.chat",
+  redeem: "redeem.manage",
 };
+
 
 /** Linhas exibidas na matriz visual (Equipe → Matriz de permissões). */
 export const MATRIX_ROWS: { group: string; items: { cap: Capability; label: string; note?: string }[] }[] = [
