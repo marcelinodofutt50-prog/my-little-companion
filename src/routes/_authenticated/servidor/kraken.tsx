@@ -51,7 +51,7 @@ export const Route = createFileRoute('/_authenticated/servidor/kraken')({
     ],
     links: [
       // Preload da imagem de fundo para eliminar flicker no primeiro paint
-      { rel: "preload", as: "image", href: krakenCore, fetchpriority: "high" },
+      { rel: "preload", as: "image", href: krakenCore, fetchPriority: "high" },
     ],
   }),
   component: KrakenRouteComponent,
@@ -204,18 +204,34 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
     
 
     
-    // Web Audio API context para reprodução mais robusta
+    // Motor de áudio 100% local (sintetizado) — sem dependência externa/CORS
     let audioContext: AudioContext | null = null;
     let audioBuffer: AudioBuffer | null = null;
-    const audioUrl = "https://www.soundjay.com/nature/thunder-02.mp3"; // Trovão mais curto e direto
+
+    const synthesizeThunder = (ctx: AudioContext) => {
+      const duration = 2.6;
+      const rate = ctx.sampleRate;
+      const buffer = ctx.createBuffer(2, Math.floor(rate * duration), rate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = buffer.getChannelData(ch);
+        let low = 0;
+        for (let i = 0; i < data.length; i++) {
+          const t = i / rate;
+          const white = Math.random() * 2 - 1;
+          // filtro passa-baixa simples => rumble grave
+          low = low + 0.02 * (white - low);
+          const crack = Math.exp(-t * 9) * white * 0.35;
+          const rumble = Math.exp(-t * 1.5) * low * 6;
+          data[i] = Math.max(-1, Math.min(1, crack + rumble));
+        }
+      }
+      return buffer;
+    };
 
     const initAudio = async () => {
       try {
         audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const response = await fetch(audioUrl);
-        const data = await response.arrayBuffer();
-        audioBuffer = await audioContext.decodeAudioData(data);
-        console.log("Áudio de trovão carregado e pronto.");
+        audioBuffer = synthesizeThunder(audioContext);
       } catch (e) {
         console.error("Falha ao inicializar o motor de áudio:", e);
       }
@@ -244,6 +260,7 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
       
       source.start(0);
     };
+
 
     // Lightning simulation (audio only, visual flashes removed per user request)
     const lightningInterval = setInterval(() => {
