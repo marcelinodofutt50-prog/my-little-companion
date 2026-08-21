@@ -248,6 +248,8 @@ const TAB_DESC: Record<Tab, string> = {
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
   redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
+  license_audit: "Histórico detalhado: quando cada licença e login foi alterado (senha, sincronização com o painel ou cupom), por quem e por quê.",
+
 };
 
 
