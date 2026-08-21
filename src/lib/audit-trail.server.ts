@@ -64,8 +64,8 @@ export async function acquireOpLock(key: string, ttlSeconds = 60, holder?: strin
     _ttl_seconds: ttlSeconds,
     _holder: holder ?? null,
   } as any);
-  // Se a trava não estiver disponível no banco, seguimos (nunca travar o cliente).
-  if (error) return true;
+  // Sem a trava distribuída, falhamos de forma segura para não duplicar operações.
+  if (error) throw new Error("Não foi possível proteger esta operação contra duplicidade. Tente novamente.");
   return data !== false;
 }
 

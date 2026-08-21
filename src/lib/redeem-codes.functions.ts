@@ -107,55 +107,30 @@ export const redeemMyCode = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { normalizeRedeemCode, checkRedeemCode } = await import("./redeem-rules");
+    const { normalizeRedeemCode } = await import("./redeem-rules");
     const { applyServerRenewalCode, applyDaysToLicense, createCourtesyLicense } =
       await import("./redeem.server");
     const { withOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
     const code = normalizeRedeemCode(data.code);
-    const { data: row } = await supabaseAdmin
-      .from("redeem_codes" as any).select("*").eq("code", code).maybeSingle();
-    const check = checkRedeemCode(row as any);
-    if (!check.ok) throw new Error(check.message);
-    const rc = row as any;
 
-    // Trava por pessoa + código: cliques repetidos ou várias abas não geram
-    // dois resgates. Quem chegar depois recebe aviso em vez de duplicar.
     return await withOpLock(
-      `redeem:${userId}:${rc.id}`,
+      `redeem:${userId}:${code}`,
       async () => {
-        // Reserva idempotente: o índice único (code_id, user_id) é a trava final.
-        const { data: claim, error: claimErr } = await supabaseAdmin
-          .from("redeem_code_uses" as any)
-          .insert({
-            code_id: rc.id,
-            code,
-            user_id: userId,
-            details: { status: "claimed", kind: rc.kind, days: rc.days } as any,
-          } as any)
-          .select("id").maybeSingle();
-        if (claimErr || !claim) throw new Error("Você já resgatou este código.");
-        const claimId = (claim as any).id as string;
-
-        const dropClaim = async () => {
-          await supabaseAdmin.from("redeem_code_uses" as any).delete().eq("id", claimId);
-        };
-
-        // Consome uma vaga do lote com verificação otimista (evita estourar max_uses).
-        const { data: reserved, error: resErr } = await supabaseAdmin
-          .from("redeem_codes" as any)
-          .update({ uses: Number(rc.uses ?? 0) + 1 } as any)
-          .eq("id", rc.id).eq("uses", rc.uses ?? 0)
-          .select("id").maybeSingle();
-        if (resErr || !reserved) {
-          await dropClaim();
-          throw new Error("Este código acabou de ser usado. Tente outro ou fale com o suporte.");
-        }
+        const { data: reservation, error: reservationError } = await supabaseAdmin.rpc(
+          "reserve_redeem_code",
+          { _code: code, _user_id: userId },
+        );
+        if (reservationError) throw new Error(reservationError.message);
+        const rc = reservation?.[0];
+        if (!rc) throw new Error("Não foi possível reservar este código agora.");
 
         const rollback = async () => {
-          await supabaseAdmin.from("redeem_codes" as any)
-            .update({ uses: Number(rc.uses ?? 0) } as any).eq("id", rc.id);
-          await dropClaim();
+          const { error } = await supabaseAdmin.rpc("release_redeem_code_claim", {
+            _claim_id: rc.claim_id,
+            _user_id: userId,
+          });
+          if (error) console.error("[Redeem] Falha ao liberar reserva:", error.message);
         };
 
         let license: any = null;
@@ -179,10 +154,10 @@ export const redeemMyCode = createServerFn({ method: "POST" })
             outcome = await createCourtesyLicense(userId, Number(rc.days ?? 1), rc.plan_slug ?? "login-30d");
           }
 
-          await supabaseAdmin.from("redeem_code_uses" as any).update({
+          await supabaseAdmin.from("redeem_code_uses").update({
             license_id: outcome.licenseId,
-            details: { status: "applied", kind: rc.kind, days: rc.days, expires_at: outcome.expires_at } as any,
-          } as any).eq("id", claimId);
+            details: { status: "applied", kind: rc.kind, days: rc.days, expires_at: outcome.expires_at },
+          }).eq("id", rc.claim_id);
 
           await recordLicenseAudit({
             licenseId: outcome.licenseId,
@@ -195,7 +170,7 @@ export const redeemMyCode = createServerFn({ method: "POST" })
             panel: license?.panel ?? null,
             expiresBefore: license?.expires_at ?? null,
             expiresAfter: outcome.expires_at,
-            details: { code, code_id: rc.id, days: rc.days, created_license: outcome.created },
+            details: { code, code_id: rc.code_id, days: rc.days, created_license: outcome.created },
           });
 
           return { ok: true, ...outcome };

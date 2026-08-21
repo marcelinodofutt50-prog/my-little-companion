@@ -116,6 +116,48 @@ export const getShadowPassData = createServerFn({ method: "GET" })
       ),
     }));
 
+    // O sorteio é idempotente: antes da meta apenas atualiza a contagem; ao
+    // alcançar 1.000 elegíveis, a função escolhe e persiste os cinco ganhadores.
+    await supabaseAdmin.rpc("run_community_giveaway", { _milestone: 1000 });
+    const { data: giveaway } = await supabaseAdmin
+      .from("community_giveaways")
+      .select("id, milestone, title, status, eligible_count, winner_count, completed_at")
+      .eq("milestone", 1000)
+      .maybeSingle();
+
+    let giveawayWinners: Array<{
+      position: number;
+      prize_kind: string;
+      prize_days: number;
+      nickname: string;
+      isCurrentUser: boolean;
+    }> = [];
+    if (giveaway?.status === "completed") {
+      const { data: winnerRows } = await supabaseAdmin
+        .from("community_giveaway_winners")
+        .select("user_id, position, prize_kind, prize_days")
+        .eq("giveaway_id", giveaway.id)
+        .order("position");
+      const winnerIds = (winnerRows || []).map((winner) => winner.user_id);
+      const { data: winnerProfiles } = winnerIds.length
+        ? await supabaseAdmin.from("profiles").select("id, display_name, metadata").in("id", winnerIds)
+        : { data: [] };
+      giveawayWinners = (winnerRows || []).map((winner) => {
+        const winnerProfile = (winnerProfiles || []).find((candidate) => candidate.id === winner.user_id);
+        const winnerMeta = (winnerProfile?.metadata as Record<string, unknown> | null) || {};
+        const privateName = typeof winnerMeta.nickname === "string"
+          ? winnerMeta.nickname
+          : winnerProfile?.display_name;
+        return {
+          position: winner.position,
+          prize_kind: winner.prize_kind,
+          prize_days: winner.prize_days,
+          nickname: winner.user_id === userId ? privateName || "Você" : `Membro #${winner.position}`,
+          isCurrentUser: winner.user_id === userId,
+        };
+      });
+    }
+
     // 6. Staff Eligibility
     const monthsActive = profileData.created_at
       ? Math.floor(
@@ -195,6 +237,15 @@ export const getShadowPassData = createServerFn({ method: "GET" })
         conversions: profileData.conversions_count || 0,
         memberCount: currentMemberCount,
         goals: goalsWithState,
+         giveaway: {
+           title: giveaway?.title || "Sorteio de 1.000 membros",
+           milestone: giveaway?.milestone || 1000,
+           eligibleCount: giveaway?.eligible_count ?? currentMemberCount,
+           winnerCount: giveaway?.winner_count || 5,
+           status: giveaway?.status || "pending",
+           completedAt: giveaway?.completed_at || null,
+           winners: giveawayWinners,
+         },
       },
       vip: {
         tier: currentVipTier,

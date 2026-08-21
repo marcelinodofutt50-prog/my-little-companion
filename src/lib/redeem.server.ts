@@ -106,7 +106,7 @@ export async function createCourtesyLicense(
 ): Promise<RedeemOutcome> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const {
-    yaarsaCreateAccount, yaarsaExtend, generateCredentials, encrypt,
+    yaarsaCreateAccount, yaarsaExtend, yaarsaRemoveAccount, generateCredentials, encrypt,
     resolvePanelFromPlanSlug, resolvePanelServerHost,
   } = await import("./yaarsa.server");
   const { tierFromPlanSlug } = await import("./plans");
@@ -148,7 +148,14 @@ export async function createCourtesyLicense(
     } as any)
     .select("*")
     .single();
-  if (error || !lic) throw new Error("Licença criada no painel, mas falhou ao salvar aqui. Fale com o suporte.");
+  if (error || !lic) {
+    try {
+      await yaarsaRemoveAccount(creds.email, panel);
+    } catch {
+      console.error("[Redeem] Não foi possível remover a conta órfã do painel", creds.email);
+    }
+    throw new Error("Não foi possível concluir a criação da licença. O código foi liberado para uma nova tentativa.");
+  }
 
   return {
     licenseId: lic.id,

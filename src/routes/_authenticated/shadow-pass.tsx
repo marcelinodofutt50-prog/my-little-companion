@@ -471,6 +471,58 @@ function ShadowPassPage() {
                 })()}
               </CardContent>
             </Card>
+
+            <Card className="border-primary/20 bg-card/50 overflow-hidden">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base uppercase">
+                      <Gift className="h-5 w-5 text-primary" /> {community.giveaway.title}
+                    </CardTitle>
+                    <CardDescription className="mt-2">
+                      5 membros válidos serão sorteados: 1 Vitalício, 2 Mensais e 2 Semanais.
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline">
+                    {community.giveaway.status === "completed" ? "Concluído" : "Em andamento"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {community.giveaway.status === "completed" ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {community.giveaway.winners.map((winner: any) => (
+                      <div key={winner.position} className={cn(
+                        "flex items-center gap-3 rounded-lg border p-3",
+                        winner.isCurrentUser ? "border-primary bg-primary/10" : "border-border/50 bg-muted/10",
+                      )}>
+                        <Award className="h-5 w-5 text-primary" />
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-bold">{winner.nickname}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground">
+                            {winner.prize_kind === "lifetime" ? "Licença Vitalícia" : winner.prize_kind === "monthly" ? "Licença Mensal" : "Licença Semanal"}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-mono">
+                      <span>{community.giveaway.eligibleCount} membros elegíveis</span>
+                      <span>{community.giveaway.milestone}</span>
+                    </div>
+                    <Progress
+                      value={Math.min(100, (community.giveaway.eligibleCount / community.giveaway.milestone) * 100)}
+                      className="h-3"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Contas da equipe, bloqueadas ou marcadas por fraude não participam.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </section>
 
           {/* Diagnóstico de Infraestrutura (Botão Discreto) */}
