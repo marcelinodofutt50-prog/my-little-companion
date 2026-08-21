@@ -153,10 +153,10 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-4"
+            className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4"
           >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button size="lg" asChild className="group relative h-14 overflow-hidden px-10 text-xs font-mono uppercase tracking-widest rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
+              <Button size="lg" asChild className="group relative h-12 sm:h-14 w-full sm:w-auto overflow-hidden px-6 sm:px-10 text-xs font-mono uppercase tracking-widest rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
                 <Link to="/planos">
                   <motion.div 
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
@@ -168,8 +168,8 @@ function Index() {
               </Button>
             </motion.div>
             
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button size="lg" variant="outline" asChild className="h-14 px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5 backdrop-blur-sm">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" asChild className="h-12 sm:h-14 w-full sm:w-auto px-6 sm:px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5 backdrop-blur-sm">
                 <Link to="/auth" search={{ mode: 'up', trial: 'true' }}>
                   Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary animate-pulse" />
                 </Link>
@@ -182,13 +182,14 @@ function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 flex flex-wrap justify-center gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground"
+            className="mt-10 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center sm:gap-8 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground"
           >
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
-            <div className="flex items-center gap-2 tracking-tighter"><span className="text-primary">✦</span> Central de atendimento: OK</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
+            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> Suporte: OK</div>
           </motion.div>
+
         </div>
       </section>
       
