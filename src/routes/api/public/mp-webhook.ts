@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
+import { planServerRenewal } from "@/lib/server-renewal";
 
 // Backoff exponencial das tentativas de entrega automática.
 // 1ª falha → 1 min, depois 2, 4, 8, 16, 32 e teto de 60 min.
@@ -313,21 +314,15 @@ async function fulfillOrderInner(orderId: string) {
     const extendFailures: { id: string; reason: string }[] = [];
     for (const l of touched) {
       const panel = (l as any).panel ?? "v457";
+      const plan = planServerRenewal(l as any, nextDay20);
       try {
-        const yr = await yaarsaExtend(l.yaarsa_email, ymd, panel);
+        const yr = await yaarsaExtend(l.yaarsa_email, plan.panelExpireDate, panel);
         if (yr?.Fail) extendFailures.push({ id: l.id, reason: String(yr.Fail) });
       } catch (e: any) {
         extendFailures.push({ id: l.id, reason: e?.message ?? "erro de conexão com o painel" });
       }
-      const keepsLongerExpiry = l.expires_at && new Date(l.expires_at) > nextDay20;
-      await supabaseAdmin.from("licenses").update({
-        server_paid_until: nextDay20.toISOString(),
-        expires_at: keepsLongerExpiry ? l.expires_at : nextDay20.toISOString(),
-        revoked: false,
-        server_overdue_at: null,
-        // A licença volta a valer no mesmo instante do pagamento.
-        ...(l.suspended_at ? {} : { status: "active" }),
-      } as any).eq("id", l.id);
+      // Regra única compartilhada com o autoatendimento e com os testes E2E.
+      await supabaseAdmin.from("licenses").update(plan.patch as any).eq("id", l.id);
     }
 
     await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);

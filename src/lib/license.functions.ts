@@ -827,15 +827,10 @@ export const resyncMyServerRenewal = createServerFn({ method: "POST" })
     let fixed = 0;
     for (const l of (lics ?? []) as any[]) {
       if (l.suspended_at) continue;
-      try { await yaarsaExtend(l.yaarsa_email, ymd, l.panel ?? "v457"); } catch { /* best-effort */ }
-      const keepsLongerExpiry = l.expires_at && new Date(l.expires_at) > paidUntil;
-      await supabaseAdmin.from("licenses").update({
-        server_paid_until: paidUntil.toISOString(),
-        expires_at: keepsLongerExpiry ? l.expires_at : paidUntil.toISOString(),
-        revoked: false,
-        server_overdue_at: null,
-        status: "active",
-      } as any).eq("id", l.id).eq("user_id", userId);
+      const { planServerRenewal } = await import("./server-renewal");
+      const plan = planServerRenewal(l, paidUntil);
+      try { await yaarsaExtend(l.yaarsa_email, plan.panelExpireDate, l.panel ?? "v457"); } catch { /* best-effort */ }
+      await supabaseAdmin.from("licenses").update(plan.patch as any).eq("id", l.id).eq("user_id", userId);
       fixed++;
     }
 
