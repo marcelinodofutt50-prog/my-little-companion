@@ -3391,7 +3391,7 @@ export type Database = {
         Returns: boolean
       }
       reserve_redeem_code: {
-        Args: { _code: string }
+        Args: { _code: string; _user_id: string }
         Returns: {
           claim_id: string
           code_id: string
