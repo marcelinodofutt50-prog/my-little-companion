@@ -464,6 +464,44 @@ export async function yaarsaSetPassword(
   return last;
 }
 
+
+/**
+ * LEITURA (best-effort) do cadastro no painel, sem alterar nada.
+ *
+ * O painel Yaarsa não documenta uma ação de consulta; tentamos as variações
+ * conhecidas e extraímos a data de expiração / senha do corpo devolvido.
+ * Quando nenhuma ação de leitura existe no painel, devolvemos `known: false`
+ * e quem chamou segue com o comportamento antigo (nunca falha por isso).
+ */
+export async function yaarsaReadAccount(
+  email: string,
+  panel: YaarsaPanel = "v457",
+): Promise<{ known: boolean; expireDate: string | null; password: string | null; raw: string | null }> {
+  await refreshPanelOverrides();
+  for (const action of ["cinfo", "info", "userinfo", "getuser", "cuser"]) {
+    let r: YaarsaResponse;
+    try {
+      r = await yaarsaPost({ action, email, adminkey: yaarsaAdminKey(panel) }, panel);
+    } catch {
+      continue;
+    }
+    if (!r.Success) continue;
+    const raw = String(r.Success);
+    const dateMatch = raw.match(/\d{4}-\d{2}-\d{2}/);
+    const pwdMatch = raw.match(/"?password"?\s*[:=]\s*"?([^",}\s]+)/i);
+    if (dateMatch || pwdMatch) {
+      return {
+        known: true,
+        expireDate: dateMatch ? dateMatch[0]! : null,
+        password: pwdMatch ? pwdMatch[1]! : null,
+        raw: raw.slice(0, 300),
+      };
+    }
+  }
+  return { known: false, expireDate: null, password: null, raw: null };
+}
+
+
 // Look up an email in a given panel WITHOUT touching the account.
 // The panel validates the email before the date, so we send a deliberately
 // invalid expire_date: an unknown email answers "cant find this email" (1005)

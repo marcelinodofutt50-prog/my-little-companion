@@ -665,6 +665,15 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       } catch { /* best-effort */ }
     }
 
+    // Confere no painel se a senha realmente ficou gravada (quando o painel
+    // expõe leitura). `verified: null` = painel não permite consultar.
+    let verified: boolean | null = null;
+    try {
+      const { yaarsaReadAccount } = await import("./yaarsa.server");
+      const acc = await yaarsaReadAccount(lic.yaarsa_email, panel);
+      if (acc.known && acc.password) verified = acc.password === data.newPassword;
+    } catch { /* best-effort */ }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.from("licenses").update({
       yaarsa_password_enc: encrypt(data.newPassword),
@@ -673,11 +682,28 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     if (upErr) throw new Error("Senha trocada no painel, mas falhou ao salvar aqui. Fale com o suporte.");
 
     await supabaseAdmin.from("integration_logs").insert({
-      source: `yaarsa-${panel}`, action: "license_password_change", outcome: "success",
-      context: { license_id: lic.id, user_id: userId, panel_action: (pr as any).action ?? null } as any,
+      source: `yaarsa-${panel}`, action: "license_password_change",
+      outcome: verified === false ? "warning" : "success",
+      context: {
+        license_id: lic.id, user_id: userId,
+        panel_action: (pr as any).action ?? null, panel_verified: verified,
+      } as any,
     } as any);
 
-    return { ok: true, message: "Senha atualizada no painel. Use a nova senha no BTmob." };
+    if (verified === false) {
+      throw new Error(
+        "O painel aceitou a troca, mas a senha conferida não bateu. Tente novamente ou fale com o suporte.",
+      );
+    }
+
+    return {
+      ok: true,
+      verified,
+      message: verified
+        ? "Senha atualizada e conferida no painel. Use a nova senha no BTmob."
+        : "Senha atualizada no painel. Use a nova senha no BTmob.",
+    };
+
   });
 
 
@@ -804,18 +830,11 @@ export const resyncMyServerRenewal = createServerFn({ method: "POST" })
     const renewal = (paidOrders ?? []).find(
       (o: any) => serverSlugs.includes(o.plan_slug) || /server|servidor|renov/i.test(o.plan_slug ?? ""),
     );
-    if (!renewal) {
-      return {
-        ok: false,
-        message:
-          "Não encontramos um pagamento de servidor confirmado na sua conta nos últimos 45 dias. Se você acabou de pagar, aguarde alguns minutos ou envie o comprovante no suporte.",
-      };
-    }
 
-    // 2) Reaplica o ciclo em todas as licenças pagas do cliente.
+    // 2) Estado atual das licenças pagas do cliente.
     const paidUntil = nextDay20();
-    const ymd = paidUntil.toISOString().slice(0, 10);
-    const { yaarsaExtend } = await import("./yaarsa.server");
+    const { yaarsaExtend, yaarsaReadAccount } = await import("./yaarsa.server");
+    const { planServerRenewal, reconcilePanelExpiry } = await import("./server-renewal");
 
     const licQuery = supabaseAdmin
       .from("licenses").select("*")
@@ -825,26 +844,93 @@ export const resyncMyServerRenewal = createServerFn({ method: "POST" })
       : await licQuery;
 
     let fixed = 0;
+    let alignedFromPanel = 0;
+    const details: Array<Record<string, unknown>> = [];
+
     for (const l of (lics ?? []) as any[]) {
       if (l.suspended_at) continue;
-      const { planServerRenewal } = await import("./server-renewal");
-      const plan = planServerRenewal(l, paidUntil);
-      try { await yaarsaExtend(l.yaarsa_email, plan.panelExpireDate, l.panel ?? "v457"); } catch { /* best-effort */ }
-      await supabaseAdmin.from("licenses").update(plan.patch as any).eq("id", l.id).eq("user_id", userId);
-      fixed++;
+
+      // O suporte pode já ter corrigido a data direto no painel. Lemos antes
+      // de mexer para nunca encurtar o acesso de quem já está regularizado.
+      let panelDate: string | null = null;
+      try {
+        const acc = await yaarsaReadAccount(l.yaarsa_email, l.panel ?? "v457");
+        panelDate = acc.known ? acc.expireDate : null;
+      } catch { /* best-effort */ }
+
+      if (renewal) {
+        const plan = planServerRenewal(l, paidUntil);
+        const rec = reconcilePanelExpiry(plan.panelExpireDate, panelDate, plan.patch.expires_at);
+        if (rec.shouldPush) {
+          try { await yaarsaExtend(l.yaarsa_email, rec.effectivePanelDate, l.panel ?? "v457"); }
+          catch { /* best-effort */ }
+        } else {
+          alignedFromPanel++;
+        }
+        await supabaseAdmin
+          .from("licenses")
+          .update({ ...plan.patch, expires_at: rec.dbExpiresAt } as any)
+          .eq("id", l.id).eq("user_id", userId);
+        fixed++;
+        details.push({ id: l.id, panel_date: panelDate, applied: rec.effectivePanelDate, from_panel: rec.alreadyAhead });
+        continue;
+      }
+
+      // Sem pagamento localizado: ainda assim reconciliamos quando o painel já
+      // mostra uma data futura maior que a do site (ajuste manual do suporte).
+      const panelMs = panelDate ? Date.parse(`${panelDate}T23:59:59.000Z`) : NaN;
+      const dbMs = l.expires_at ? Date.parse(l.expires_at) : null;
+      const panelAhead =
+        Number.isFinite(panelMs) && panelMs > Date.now() && (dbMs === null || panelMs > dbMs);
+      if (panelAhead) {
+        const patch: Record<string, unknown> = {
+          expires_at: l.expires_at === null ? null : new Date(panelMs).toISOString(),
+          revoked: false,
+          server_overdue_at: null,
+        };
+        if (!l.suspended_at) patch['status'] = "active";
+        await supabaseAdmin.from("licenses").update(patch as any).eq("id", l.id).eq("user_id", userId);
+        alignedFromPanel++;
+        details.push({ id: l.id, panel_date: panelDate, from_panel: true });
+      }
+    }
+
+    if (!renewal && alignedFromPanel === 0) {
+      return {
+        ok: false,
+        message:
+          "Não encontramos um pagamento de servidor confirmado na sua conta nos últimos 45 dias, e o painel também não mostra uma data mais recente. Se você acabou de pagar, aguarde alguns minutos ou envie o comprovante no suporte.",
+      };
     }
 
     await supabaseAdmin.from("integration_logs").insert({
-      source: "self-service", action: "server_renewal_resync", outcome: fixed ? "success" : "warning",
-      context: { user_id: userId, order_id: renewal.id, licenses: fixed, paid_until: paidUntil.toISOString() } as any,
+      source: "self-service",
+      action: "server_renewal_resync",
+      outcome: fixed || alignedFromPanel ? "success" : "warning",
+      context: {
+        user_id: userId, order_id: renewal?.id ?? null, licenses: fixed,
+        aligned_from_panel: alignedFromPanel, paid_until: paidUntil.toISOString(), details,
+      } as any,
     } as any);
+
+    if (!renewal) {
+      return {
+        ok: true,
+        fixed: alignedFromPanel,
+        message: `Seu acesso já estava regularizado no painel — sincronizamos ${alignedFromPanel} licença${alignedFromPanel === 1 ? "" : "s"} com a data correta.`,
+      };
+    }
 
     return {
       ok: true,
       fixed,
+      aligned_from_panel: alignedFromPanel,
       paid_until: paidUntil.toISOString(),
       message: fixed
-        ? `Renovação aplicada em ${fixed} licença${fixed === 1 ? "" : "s"} — válida até ${paidUntil.toLocaleDateString("pt-BR")}.`
+        ? alignedFromPanel
+          ? `Renovação conferida em ${fixed} licença${fixed === 1 ? "" : "s"} — o painel já estava com uma data maior e ela foi preservada.`
+          : `Renovação aplicada em ${fixed} licença${fixed === 1 ? "" : "s"} — válida até ${paidUntil.toLocaleDateString("pt-BR")}.`
         : "Pagamento localizado, mas nenhuma licença ativa foi encontrada. Fale com o suporte.",
     };
+
   });

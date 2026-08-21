@@ -65,9 +65,9 @@ export function ExpiryReminder() {
         </div>
         <Link
           to={worst.trial ? "/planos" : "/renovar-servidor"}
-          className="rounded-lg border border-primary/50 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
+          className="rgb-border rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
         >
-          {worst.trial ? "Ver planos" : "Renovar agora"}
+          {worst.trial ? "Ver planos" : <span className="rgb-text animate-rgb-text">Renovar servidor</span>}
         </Link>
         <button
           aria-label="Dispensar aviso"

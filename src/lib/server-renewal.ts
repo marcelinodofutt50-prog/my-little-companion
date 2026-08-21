@@ -81,3 +81,50 @@ export function planServerRenewal(license: RenewableLicense, paidUntil: Date): R
 export function isRenewable(l: RenewableLicense): boolean {
   return !l.is_trial && !l.disabled_at;
 }
+
+/**
+ * Concilia o que já existe no painel Yaarsa com o que o site pretende gravar.
+ *
+ * Motivo: o suporte às vezes já corrigiu a data direto no painel (por causa de
+ * um bug ou de um pagamento manual). Nesse caso o site NÃO pode encurtar a
+ * data do cliente — ele apenas alinha o banco à data maior do painel.
+ *
+ * @param desiredPanelDate data (YYYY-MM-DD) que o site aplicaria no painel.
+ * @param panelDate data lida do painel (YYYY-MM-DD) ou null quando desconhecida.
+ * @param dbExpiresAt expiração atual no banco (ISO) ou null (vitalício).
+ */
+export function reconcilePanelExpiry(
+  desiredPanelDate: string,
+  panelDate: string | null,
+  dbExpiresAt: string | null,
+): { shouldPush: boolean; effectivePanelDate: string; dbExpiresAt: string | null; alreadyAhead: boolean } {
+  const panelMs = panelDate ? Date.parse(`${panelDate}T23:59:59.000Z`) : NaN;
+  const desiredMs = Date.parse(`${desiredPanelDate}T23:59:59.000Z`);
+  const alreadyAhead = Number.isFinite(panelMs) && panelMs > desiredMs;
+
+  if (!alreadyAhead) {
+    return {
+      shouldPush: true,
+      effectivePanelDate: desiredPanelDate,
+      dbExpiresAt,
+      alreadyAhead: false,
+    };
+  }
+
+  // O painel está à frente: preservamos a data do painel e puxamos o banco
+  // para cima (nunca para baixo). Vitalício (null) continua vitalício.
+  const dbMs = dbExpiresAt ? Date.parse(dbExpiresAt) : null;
+  const nextDb =
+    dbExpiresAt === null
+      ? null
+      : dbMs !== null && Number.isFinite(dbMs) && dbMs > panelMs
+        ? dbExpiresAt
+        : new Date(panelMs).toISOString();
+
+  return {
+    shouldPush: false,
+    effectivePanelDate: panelDate!,
+    dbExpiresAt: nextDb,
+    alreadyAhead: true,
+  };
+}
