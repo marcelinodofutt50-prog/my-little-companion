@@ -178,6 +178,23 @@ function DashboardPage() {
     placeholderData: (prev: any) => prev,
   })
 
+  // Licenças ao vivo: troca de senha, renovação e resgate de código aparecem
+  // na hora, sem precisar de F5.
+  useEffect(() => {
+    if (!user?.id) return
+    const channel = supabase
+      .channel(`licenses-live-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'licenses', filter: `user_id=eq.${user.id}` },
+        () => { void refetchLicenses() },
+      )
+      .subscribe()
+    return () => { void supabase.removeChannel(channel) }
+  }, [user?.id, refetchLicenses])
+
+
+
 
   const {
     data: updates = [],
