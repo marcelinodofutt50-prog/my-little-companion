@@ -225,9 +225,10 @@ function Index() {
       {/* Enterprise Management Section - Integrated Real UI Elements */}
 
 
-      <section className="py-20 relative border-y border-border/40 bg-card/20 theme-light:bg-transparent overflow-hidden">
+      <section className="py-14 sm:py-20 relative border-y border-border/40 bg-card/20 theme-light:bg-transparent overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                 ALPHA-OPS CONSOLE V4.6
