@@ -233,10 +233,11 @@ function Index() {
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                 ALPHA-OPS CONSOLE V4.6
               </div>
-              <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
                 Gestão Empresarial <br />
-                <span className="italic text-muted-foreground/60 text-5xl md:text-7xl block">De Alto Nível.</span>
+                <span className="italic text-muted-foreground/60 text-4xl sm:text-5xl md:text-7xl block">De Alto Nível.</span>
               </h2>
+
               
               <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
                 Painel OSINT redesenhado para transparência absoluta. Visualize a saúde da sua infraestrutura, status de nós globais e compliance de segurança em uma única interface táctica.
