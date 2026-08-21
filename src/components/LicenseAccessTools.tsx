@@ -98,6 +98,24 @@ export function LicenseAccessTools({
     }
   };
 
+  // Lê a data real no painel Yaarsa: se lá já está liberado (pagamento manual
+  // ou correção do suporte), o site reativa e ajusta a contagem de dias.
+  const runPanelSync = async () => {
+    setPanelSyncing(true);
+    try {
+      const res: any = await syncPanel({ data: { licenseId } });
+      if (res?.activated) toast.success(res.message);
+      else toast.info(res?.message ?? "Nada para ajustar.");
+      onDone?.();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao consultar o painel.");
+    } finally {
+      setPanelSyncing(false);
+    }
+  };
+
+
+
 
   return (
     <>
