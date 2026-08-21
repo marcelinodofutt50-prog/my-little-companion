@@ -20,8 +20,45 @@ function PanelFallback() {
   );
 }
 
+/**
+ * Em produção, quando um deploy novo entra no ar, os pedaços de JavaScript da
+ * versão antiga deixam de existir. Se a pessoa ainda estiver com a aba aberta,
+ * abrir uma aba do admin quebra com "Importing a module script failed".
+ * Aqui tentamos de novo (rede instável) e, se o arquivo realmente sumiu,
+ * recarregamos a página uma única vez para pegar a versão nova.
+ */
+const RELOAD_FLAG = "shadow:chunk-reloaded";
+
+async function loadWithRetry<T>(loader: () => Promise<T>): Promise<T> {
+  try {
+    return await loader();
+  } catch (first) {
+    await new Promise((r) => setTimeout(r, 600));
+    try {
+      return await loader();
+    } catch (second) {
+      if (typeof window !== "undefined") {
+        const already = window.sessionStorage.getItem(RELOAD_FLAG);
+        if (!already) {
+          window.sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+          window.location.reload();
+          // Mantém o Suspense em espera enquanto a página recarrega.
+          return await new Promise<T>(() => {});
+        }
+      }
+      throw second;
+    }
+  }
+}
+
+if (typeof window !== "undefined") {
+  // Uma vez que a aplicação carregou de verdade, liberamos um novo auto-reload
+  // para o próximo deploy (sem risco de loop infinito).
+  window.setTimeout(() => window.sessionStorage.removeItem(RELOAD_FLAG), 15000);
+}
+
 function lazyPanel<T extends ComponentType<any>>(loader: () => Promise<{ default: T }>): T {
-  const Loaded = lazy(loader as () => Promise<{ default: ComponentType<any> }>);
+  const Loaded = lazy(() => loadWithRetry(loader) as Promise<{ default: ComponentType<any> }>);
   const Wrapped = (props: any) => (
     <Suspense fallback={<PanelFallback />}>
       <Loaded {...props} />
@@ -29,6 +66,7 @@ function lazyPanel<T extends ComponentType<any>>(loader: () => Promise<{ default
   );
   return Wrapped as unknown as T;
 }
+
 
 export const LicenseAiPanel = lazyPanel(() =>
   import("@/components/LicenseAiPanel").then((m) => ({ default: m.LicenseAiPanel })));
