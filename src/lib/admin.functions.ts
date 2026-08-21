@@ -1656,7 +1656,16 @@ export const adminSetLicensePassword = createServerFn({ method: "POST" })
         (lic as any).yaarsa_username,
         (lic as any).expires_at ?? null,
       );
-      if (pr.Fail) throw new Error(`O painel não aceitou a troca: ${pr.Fail}`);
+      if (pr.Fail) {
+        await supabaseAdmin.from("licenses").update({
+          password_synced_at: new Date().toISOString(),
+          password_sync_status: "error",
+          password_sync_error: String(pr.Fail).slice(0, 300),
+          password_sync_by: context.userId,
+        } as any).eq("id", (lic as any).id);
+        throw new Error(`O painel não aceitou a troca: ${pr.Fail}`);
+      }
+
       panelApplied = true;
     }
 
