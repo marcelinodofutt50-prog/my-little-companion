@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { adminListThreads, adminAssumeThread, adminCloseThread } from "@/lib/admin.functions";
 import { Loader2 } from "lucide-react";
-import { adminSetThreadPriority, adminUpdateThreadCategory } from "@/lib/support-admin.functions";
+import { adminSetThreadPriority, adminUpdateThreadCategory, adminMergeDuplicateThreads } from "@/lib/support-admin.functions";
 import { SupportChat } from "./SupportChat";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
@@ -45,6 +45,26 @@ export function AdminSupportPanel() {
   const closeFn = useServerFn(adminCloseThread);
   const setPriorityFn = useServerFn(adminSetThreadPriority);
   const setCategoryFn = useServerFn(adminUpdateThreadCategory);
+  const mergeFn = useServerFn(adminMergeDuplicateThreads);
+  const [merging, setMerging] = useState(false);
+
+  const handleMergeDuplicates = async () => {
+    setMerging(true);
+    try {
+      const res: any = await mergeFn({});
+      toast.success(
+        res.merged
+          ? `${res.merged} ticket(s) duplicado(s) unificados em ${res.users} conversa(s).`
+          : "Nenhum ticket duplicado encontrado.",
+      );
+      setSelectedId(null);
+      loadThreads();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao unificar tickets");
+    } finally {
+      setMerging(false);
+    }
+  };
 
   const loadThreads = async () => {
     setLoading(true);
@@ -111,7 +131,20 @@ export function AdminSupportPanel() {
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono uppercase tracking-widest text-neon">// Tickets</h2>
-            <Badge variant="outline" className="font-mono">{threads.length}</Badge>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={handleMergeDuplicates}
+                disabled={merging}
+                className="h-7 px-2 text-[10px] font-mono uppercase"
+                title="Unificar tickets duplicados do mesmo cliente"
+              >
+                {merging ? <Loader2 className="h-3 w-3 animate-spin" /> : "Unificar"}
+              </Button>
+              <Badge variant="outline" className="font-mono">{threads.length}</Badge>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
