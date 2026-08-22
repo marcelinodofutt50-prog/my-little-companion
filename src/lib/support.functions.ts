@@ -272,33 +272,62 @@ export const sendMessage = createServerFn({ method: "POST" })
       
       // Auto-reopen logic if thread was closed
       if (thread.status === "closed") {
-        // Auto-open a fresh thread for the customer and post there.
-        const ntPayload = {
-          user_id: context.userId,
-          subject: "Suporte Shadow",
-          status: "open",
-          category: "outro",
-          priority: "normal"
-        };
-        
-        async function doCreate(p: any) {
-          // Utiliza console.error para capturar falhas de inserção silenciosas
-          const result = await context.supabase.from("support_threads").insert(p).select("id").maybeSingle();
-          if (result.error) console.error("[support.functions] Thread creation error:", result.error);
-          return result;
-        }
-        
-        let { data: nt, error: nErr } = await doCreate(ntPayload);
-        
-        if (nErr && (nErr as any).code === "PGRST204") {
-          const { category, priority, ...fallback } = ntPayload;
-          const retry = await doCreate(fallback);
-          nt = retry.data;
-          nErr = retry.error;
-        }
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        if (nErr || !nt) throw nErr || new Error("Falha ao criar atendimento");
-        effectiveThreadId = nt.id;
+        // Se o cliente já tem um atendimento ativo, reaproveita em vez de abrir outro.
+        const { data: activeExisting } = await supabaseAdmin
+          .from("support_threads")
+          .select("id")
+          .eq("user_id", context.userId)
+          .neq("status", "closed")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (activeExisting?.id) {
+          effectiveThreadId = activeExisting.id;
+        } else {
+          const ntPayload = {
+            user_id: context.userId,
+            subject: "Suporte Shadow",
+            status: "open",
+            category: "outro",
+            priority: "normal"
+          };
+
+          async function doCreate(p: any) {
+            const result = await supabaseAdmin.from("support_threads").insert(p).select("id").maybeSingle();
+            if (result.error) console.error("[support.functions] Thread creation error:", result.error);
+            return result;
+          }
+
+          let { data: nt, error: nErr } = await doCreate(ntPayload);
+
+          if (nErr && (nErr as any).code === "PGRST204") {
+            const { category, priority, ...fallback } = ntPayload;
+            const retry = await doCreate(fallback);
+            nt = retry.data;
+            nErr = retry.error;
+          }
+
+          if (nErr && (nErr as any).code === "23505") {
+            const winner = await supabaseAdmin
+              .from("support_threads")
+              .select("id")
+              .eq("user_id", context.userId)
+              .neq("status", "closed")
+              .order("created_at", { ascending: true })
+              .limit(1)
+              .maybeSingle();
+            nt = winner.data;
+            nErr = winner.error;
+          }
+
+          if (nErr || !nt) throw nErr || new Error("Falha ao criar atendimento");
+          effectiveThreadId = nt.id;
+        }
+      }
+
       }
     }
 
