@@ -17,30 +17,56 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
-    // Tática de carregamento resiliente via Admin para evitar PGRST108
-    const fetchExisting = async (client: any) => client
+
+    // Busca TODAS as threads ativas do usuário. Se por algum motivo existir mais
+    // de uma (corrida, índice ausente em algum ambiente, retry do cliente), elas
+    // são fundidas em um único atendimento — nunca criamos um ticket novo sem
+    // ter certeza de que a leitura funcionou.
+    const fetchActive = async (client: any) => client
       .from("support_threads")
       .select("*")
       .eq("user_id", context.userId)
       .neq("status", "closed")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("created_at", { ascending: true });
 
-    let { data: existing, error: existingError } = await fetchExisting(context.supabase);
+    let { data: active, error: existingError } = await fetchActive(context.supabase);
 
-    if (existingError && (existingError.code === 'PGRST108' || existingError.message?.includes('schema cache'))) {
-      console.warn("[getOrCreateThread] Schema sync issue detected. Falling back to admin tunnel...");
+    // Qualquer falha de leitura (RLS, cache de schema, rede) cai para o túnel
+    // admin. Sem isso, um erro silencioso virava "criar mais um ticket".
+    if (existingError) {
+      console.warn("[getOrCreateThread] Leitura via cliente falhou:", existingError.code, existingError.message);
       await trackSchemaFailure(existingError, "getOrCreateThread", false, { stage: "check_existing_client" }, context.userId);
-      const adminResult = await fetchExisting(supabaseAdmin);
-      existing = adminResult.data;
-      if (!adminResult.error) {
-        await trackSchemaFailure(existingError, "getOrCreateThread", true, { stage: "check_existing_admin_success" }, context.userId);
+      const adminResult = await fetchActive(supabaseAdmin);
+      if (adminResult.error) {
+        // Não sabemos se o usuário já tem atendimento aberto: abortar é melhor
+        // do que duplicar o ticket.
+        throw adminResult.error;
       }
+      active = adminResult.data;
+      await trackSchemaFailure(existingError, "getOrCreateThread", true, { stage: "check_existing_admin_success" }, context.userId);
     }
 
-    if (existing) return existing;
+    const list = (active ?? []) as any[];
+    if (list.length > 0) {
+      const survivor = list[0];
+      const extras = list.slice(1);
+      if (extras.length) {
+        const extraIds = extras.map((t) => t.id);
+        console.warn(`[getOrCreateThread] Fundindo ${extraIds.length} tickets duplicados no ${survivor.id}`);
+        // Move as mensagens e encerra as duplicatas para o suporte ver uma conversa só.
+        const { error: moveErr } = await supabaseAdmin
+          .from("support_messages")
+          .update({ thread_id: survivor.id })
+          .in("thread_id", extraIds);
+        if (moveErr) console.error("[getOrCreateThread] Falha ao mover mensagens:", moveErr.message);
+        const { error: closeErr } = await supabaseAdmin
+          .from("support_threads")
+          .update({ status: "closed", closed_at: new Date().toISOString(), unread_by_staff: 0, unread_by_customer: 0 })
+          .in("id", extraIds);
+        if (closeErr) console.error("[getOrCreateThread] Falha ao encerrar duplicatas:", closeErr.message);
+      }
+      return survivor;
+    }
 
     const threadPayload = {
       user_id: context.userId,
@@ -69,9 +95,9 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
     // mesmo atendimento. O índice do banco preserva apenas uma thread ativa;
     // nesse caso devolvemos a que venceu a corrida.
     if (error && (error as any).code === "23505") {
-      const winner = await fetchExisting(supabaseAdmin);
+      const winner = await fetchActive(supabaseAdmin);
       if (winner.error) throw winner.error;
-      if (winner.data) return winner.data;
+      if (winner.data?.length) return winner.data[0];
     }
 
     if (error) {
@@ -82,6 +108,7 @@ export const getOrCreateThread = createServerFn({ method: "POST" })
     if (!data) throw new Error("Não foi possível abrir o atendimento");
     return data;
   });
+
 
 /**
  * Lista threads do próprio usuário (histórico) para permitir consultar
