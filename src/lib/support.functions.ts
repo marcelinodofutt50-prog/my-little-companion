@@ -327,9 +327,8 @@ export const sendMessage = createServerFn({ method: "POST" })
           effectiveThreadId = nt.id;
         }
       }
-
-      }
     }
+
 
     let url: string | null = null;
     if (data.attachmentPath) {
