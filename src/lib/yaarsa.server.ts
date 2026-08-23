@@ -597,17 +597,30 @@ function captureCookies(res: Response, panel: YaarsaPanel) {
   if (parts.length) sessionCookies[panel] = parts.join("; ");
 }
 
+/**
+ * O painel Yaarsa às vezes fica pendurado sem responder. Sem limite de tempo o
+ * botão do cliente ficava "carregando" até o worker morrer. Cortamos a espera
+ * para o retry acontecer rápido.
+ */
+const YAARSA_TIMEOUT_MS = 12000;
+const WARMUP_TIMEOUT_MS = 6000;
+
 async function warmup(url: string, panel: YaarsaPanel) {
   if (warmedUp[panel]) return;
   try {
     const origin = new URL(url).origin;
-    const res = await fetch(`${origin}/`, { method: "GET", headers: browserHeaders(url, panel) });
+    const res = await fetch(`${origin}/`, {
+      method: "GET",
+      headers: browserHeaders(url, panel),
+      signal: AbortSignal.timeout(WARMUP_TIMEOUT_MS),
+    });
     captureCookies(res, panel);
   } catch {
     /* best-effort */
   }
   warmedUp[panel] = true;
 }
+
 
 async function persistLog(entry: {
   action?: string;
