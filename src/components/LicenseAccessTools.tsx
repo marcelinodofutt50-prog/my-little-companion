@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { KeyRound, LifeBuoy, Loader2, RadioTower, RefreshCw, Server, Wrench } from "lucide-react";
+import { Check, KeyRound, LifeBuoy, Loader2, RadioTower, RefreshCw, Server, Wrench, X } from "lucide-react";
 import { toast } from "sonner";
+import { isPasswordValid, passwordError, passwordRules } from "@/lib/password-policy";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -49,25 +51,34 @@ export function LicenseAccessTools({
   const [panelSyncing, setPanelSyncing] = useState(false);
 
 
+  const rules = passwordRules(pwd);
+  const pwdOk = isPasswordValid(pwd);
+
   const submitPassword = async () => {
+    if (!pwdOk) {
+      toast.error(passwordError(pwd) ?? "Senha fora da política.");
+      return;
+    }
     if (pwd !== pwd2) {
       toast.error("As senhas não são iguais.");
       return;
     }
     setSaving(true);
+    const t = toast.loading("Aplicando a nova senha no painel… isso pode levar alguns segundos.");
     try {
       const res: any = await changePassword({ data: { licenseId, newPassword: pwd.trim() } });
-      toast.success(res?.message ?? "Senha atualizada.");
+      toast.success(res?.message ?? "Senha atualizada.", { id: t });
       setOpen(false);
       setPwd("");
       setPwd2("");
       onDone?.();
     } catch (e: any) {
-      toast.error(e?.message ?? "Não foi possível trocar a senha agora.");
+      toast.error(e?.message ?? "Não foi possível trocar a senha agora.", { id: t });
     } finally {
       setSaving(false);
     }
   };
+
 
   const runRepair = async () => {
     setRepairing(true);
@@ -102,17 +113,24 @@ export function LicenseAccessTools({
   // ou correção do suporte), o site reativa e ajusta a contagem de dias.
   const runPanelSync = async () => {
     setPanelSyncing(true);
+    const t = toast.loading("Consultando o painel… a resposta do Yaarsa pode demorar alguns segundos.");
     try {
       const res: any = await syncPanel({ data: { licenseId } });
-      if (res?.activated) toast.success(res.message);
-      else toast.info(res?.message ?? "Nada para ajustar.");
+      if (res?.activated) toast.success(res.message, { id: t });
+      else if (res?.unknown) {
+        toast.warning(
+          res?.message ?? "O painel não respondeu a tempo. Tente de novo em instantes.",
+          { id: t },
+        );
+      } else toast.info(res?.message ?? "Nada para ajustar.", { id: t });
       onDone?.();
     } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao consultar o painel.");
+      toast.error(e?.message ?? "Falha ao consultar o painel.", { id: t });
     } finally {
       setPanelSyncing(false);
     }
   };
+
 
 
 
@@ -195,8 +213,8 @@ export function LicenseAccessTools({
           <DialogHeader>
             <DialogTitle className="font-display">Trocar senha do painel</DialogTitle>
             <DialogDescription>
-              A nova senha é aplicada direto no seu login do BTmob. Use de 6 a 32 caracteres
-              (letras, números e @ # . _ -).
+              A nova senha é aplicada direto no seu login do BTmob. Ela precisa ter maiúscula,
+              minúscula, número e um caractere especial (@ # . _ -).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -208,6 +226,19 @@ export function LicenseAccessTools({
               onChange={(e) => setPwd(e.target.value)}
               className="font-mono"
             />
+            <ul className="space-y-1">
+              {rules.map((r) => (
+                <li
+                  key={r.id}
+                  className={`flex items-center gap-1.5 font-mono text-[10px] ${
+                    r.ok ? "text-emerald-400" : "text-muted-foreground"
+                  }`}
+                >
+                  {r.ok ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                  {r.label}
+                </li>
+              ))}
+            </ul>
             <Input
               type="text"
               autoComplete="off"
@@ -216,15 +247,20 @@ export function LicenseAccessTools({
               onChange={(e) => setPwd2(e.target.value)}
               className="font-mono"
             />
+            {pwd2.length > 0 && pwd !== pwd2 && (
+              <p className="font-mono text-[10px] text-amber-400">As senhas não são iguais.</p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button onClick={submitPassword} disabled={saving || pwd.trim().length < 6}>
+            <Button onClick={submitPassword} disabled={saving || !pwdOk || pwd !== pwd2}>
               {saving && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
               Salvar senha
             </Button>
+          </DialogFooter>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
