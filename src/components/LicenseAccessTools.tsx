@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { KeyRound, LifeBuoy, Loader2, RadioTower, RefreshCw, Server, Wrench } from "lucide-react";
+import { Check, KeyRound, LifeBuoy, Loader2, RadioTower, RefreshCw, Server, Wrench, X } from "lucide-react";
 import { toast } from "sonner";
+import { isPasswordValid, passwordError, passwordRules } from "@/lib/password-policy";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
