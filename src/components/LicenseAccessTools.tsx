@@ -49,25 +49,34 @@ export function LicenseAccessTools({
   const [panelSyncing, setPanelSyncing] = useState(false);
 
 
+  const rules = passwordRules(pwd);
+  const pwdOk = isPasswordValid(pwd);
+
   const submitPassword = async () => {
+    if (!pwdOk) {
+      toast.error(passwordError(pwd) ?? "Senha fora da política.");
+      return;
+    }
     if (pwd !== pwd2) {
       toast.error("As senhas não são iguais.");
       return;
     }
     setSaving(true);
+    const t = toast.loading("Aplicando a nova senha no painel… isso pode levar alguns segundos.");
     try {
       const res: any = await changePassword({ data: { licenseId, newPassword: pwd.trim() } });
-      toast.success(res?.message ?? "Senha atualizada.");
+      toast.success(res?.message ?? "Senha atualizada.", { id: t });
       setOpen(false);
       setPwd("");
       setPwd2("");
       onDone?.();
     } catch (e: any) {
-      toast.error(e?.message ?? "Não foi possível trocar a senha agora.");
+      toast.error(e?.message ?? "Não foi possível trocar a senha agora.", { id: t });
     } finally {
       setSaving(false);
     }
   };
+
 
   const runRepair = async () => {
     setRepairing(true);
