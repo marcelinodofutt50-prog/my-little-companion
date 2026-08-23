@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { trackSchemaFailure } from "./tutorials.functions";
+import { isPasswordValid, passwordError } from "./password-policy";
+
 
 // Yaarsa expire_date format: YYYY-MM-DD. To block a login immediately we set
 // expire_date to yesterday; the PHP checker treats past dates as expired.
