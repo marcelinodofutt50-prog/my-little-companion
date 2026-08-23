@@ -213,8 +213,8 @@ export function LicenseAccessTools({
           <DialogHeader>
             <DialogTitle className="font-display">Trocar senha do painel</DialogTitle>
             <DialogDescription>
-              A nova senha é aplicada direto no seu login do BTmob. Use de 6 a 32 caracteres
-              (letras, números e @ # . _ -).
+              A nova senha é aplicada direto no seu login do BTmob. Ela precisa ter maiúscula,
+              minúscula, número e um caractere especial (@ # . _ -).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -226,6 +226,19 @@ export function LicenseAccessTools({
               onChange={(e) => setPwd(e.target.value)}
               className="font-mono"
             />
+            <ul className="space-y-1">
+              {rules.map((r) => (
+                <li
+                  key={r.id}
+                  className={`flex items-center gap-1.5 font-mono text-[10px] ${
+                    r.ok ? "text-emerald-400" : "text-muted-foreground"
+                  }`}
+                >
+                  {r.ok ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                  {r.label}
+                </li>
+              ))}
+            </ul>
             <Input
               type="text"
               autoComplete="off"
@@ -234,15 +247,20 @@ export function LicenseAccessTools({
               onChange={(e) => setPwd2(e.target.value)}
               className="font-mono"
             />
+            {pwd2.length > 0 && pwd !== pwd2 && (
+              <p className="font-mono text-[10px] text-amber-400">As senhas não são iguais.</p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button onClick={submitPassword} disabled={saving || pwd.trim().length < 6}>
+            <Button onClick={submitPassword} disabled={saving || !pwdOk || pwd !== pwd2}>
               {saving && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
               Salvar senha
             </Button>
+          </DialogFooter>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
