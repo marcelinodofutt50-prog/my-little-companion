@@ -728,7 +728,9 @@ async function yaarsaPost(
           method: "POST",
           headers: browserHeaders(url, panel, { "Content-Type": "application/json" }),
           body,
+          signal: AbortSignal.timeout(YAARSA_TIMEOUT_MS),
         });
+
         captureCookies(res, panel);
         status = res.status;
         text = (await res.text()).trim();
