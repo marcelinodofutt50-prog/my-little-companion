@@ -1702,7 +1702,8 @@ export const adminSetLicensePassword = createServerFn({ method: "POST" })
       panelApplied = true;
     }
 
-    const { error: upErr } = await supabaseAdmin.from("licenses").update({
+    const { updateLicenseTolerant } = await import("./license-password.server");
+    const { skipped } = await updateLicenseTolerant(supabaseAdmin, (lic as any).id, {
       yaarsa_password_enc: encrypt(data.newPassword),
       password_fingerprint: sha256Hex(data.newPassword),
       // A senha de pausa deixa de valer quando a senha real muda.
@@ -1711,9 +1712,10 @@ export const adminSetLicensePassword = createServerFn({ method: "POST" })
       password_sync_status: data.applyToPanel ? "applied" : "manual",
       password_sync_error: null,
       password_sync_by: context.userId,
-
-    } as any).eq("id", (lic as any).id);
-    if (upErr) throw new Error("Não foi possível salvar a senha aqui.");
+    });
+    if (skipped.length) {
+      console.warn("[adminSetLicensePassword] colunas ausentes no banco:", skipped.join(", "));
+    }
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${panel}`,
@@ -1768,12 +1770,18 @@ export const adminSyncLicensePasswordFromPanel = createServerFn({ method: "POST"
     const { yaarsaReadAccount, decrypt, encrypt } = await import("./yaarsa.server");
     const { sha256Hex } = await import("./password-safety.server");
 
+    const { updateLicenseTolerant } = await import("./license-password.server");
     const stamp = async (patch: Record<string, unknown>) => {
-      await supabaseAdmin.from("licenses").update({
-        password_synced_at: new Date().toISOString(),
-        password_sync_by: context.userId,
-        ...patch,
-      } as any).eq("id", (lic as any).id);
+      // O registro de status é informativo: nunca pode derrubar a operação.
+      try {
+        await updateLicenseTolerant(supabaseAdmin, (lic as any).id, {
+          password_synced_at: new Date().toISOString(),
+          password_sync_by: context.userId,
+          ...patch,
+        });
+      } catch (e: any) {
+        console.warn("[passwordSync] não foi possível gravar o status:", e?.message);
+      }
     };
 
     let acc: { known: boolean; expireDate: string | null; password: string | null };
@@ -1828,7 +1836,7 @@ export const adminSyncLicensePasswordFromPanel = createServerFn({ method: "POST"
       };
     }
 
-    await supabaseAdmin.from("licenses").update({
+    await updateLicenseTolerant(supabaseAdmin, (lic as any).id, {
       yaarsa_password_enc: encrypt(acc.password),
       password_fingerprint: sha256Hex(acc.password),
       suspend_password_fingerprint: null,
@@ -1836,7 +1844,7 @@ export const adminSyncLicensePasswordFromPanel = createServerFn({ method: "POST"
       password_sync_status: "ok",
       password_sync_error: null,
       password_sync_by: context.userId,
-    } as any).eq("id", (lic as any).id);
+    });
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${panel}`,
