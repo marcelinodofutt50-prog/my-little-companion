@@ -113,17 +113,24 @@ export function LicenseAccessTools({
   // ou correção do suporte), o site reativa e ajusta a contagem de dias.
   const runPanelSync = async () => {
     setPanelSyncing(true);
+    const t = toast.loading("Consultando o painel… a resposta do Yaarsa pode demorar alguns segundos.");
     try {
       const res: any = await syncPanel({ data: { licenseId } });
-      if (res?.activated) toast.success(res.message);
-      else toast.info(res?.message ?? "Nada para ajustar.");
+      if (res?.activated) toast.success(res.message, { id: t });
+      else if (res?.unknown) {
+        toast.warning(
+          res?.message ?? "O painel não respondeu a tempo. Tente de novo em instantes.",
+          { id: t },
+        );
+      } else toast.info(res?.message ?? "Nada para ajustar.", { id: t });
       onDone?.();
     } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao consultar o painel.");
+      toast.error(e?.message ?? "Falha ao consultar o painel.", { id: t });
     } finally {
       setPanelSyncing(false);
     }
   };
+
 
 
 
