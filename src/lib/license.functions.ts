@@ -629,11 +629,14 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       newPassword: z
         .string()
         .trim()
-        .min(6, "A senha precisa ter pelo menos 6 caracteres.")
-        .max(32, "A senha pode ter no máximo 32 caracteres.")
-        .regex(/^[A-Za-z0-9@#._-]+$/, "Use apenas letras, números e @ # . _ -"),
+        .refine((v) => isPasswordValid(v), (v) => ({
+          message:
+            passwordError(v) ??
+            "Senha fora da política: use 8+ caracteres com maiúscula, minúscula, número e um especial (@ # . _ -).",
+        })),
     }).parse(input),
   )
+
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: lic } = await supabase
