@@ -261,6 +261,19 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
 
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Refs evitam closure velha dentro da assinatura do tempo real.
+  const atBottomRef = useRef(true);
+  const msgIdsRef = useRef<Set<string>>(new Set());
+  const [dragActive, setDragActive] = useState(false);
+  const [connection, setConnection] = useState<"live" | "reconnecting">("live");
+
+  useEffect(() => {
+    atBottomRef.current = atBottom;
+  }, [atBottom]);
+
+  useEffect(() => {
+    msgIdsRef.current = new Set(msgs.map((m) => m.id));
+  }, [msgs]);
 
   const groups = useMemo(
     () => groupMessages(msgs, userId, isAdmin, customerName || "Cliente"),
@@ -277,9 +290,18 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
       if (before) {
-        setMsgs((prev) => [...newMsgs, ...prev]);
+        setMsgs((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          return [...newMsgs.filter((m) => !seen.has(m.id)), ...prev];
+        });
       } else {
-        setMsgs(newMsgs);
+        // Mantém mensagens que chegaram pelo tempo real e ainda não estão na página.
+        setMsgs((prev) => {
+          const ids = new Set(newMsgs.map((m) => m.id));
+          const extra = prev.filter((m) => !ids.has(m.id) && newMsgs.length > 0 &&
+            m.created_at > (newMsgs[newMsgs.length - 1]?.created_at ?? ""));
+          return [...newMsgs, ...extra];
+        });
       }
       setHasMore(!!r.hasMore);
     } catch (e: any) {
@@ -306,23 +328,49 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
         (payload) => {
           const next = normalizeSupportMessage(payload.new, threadId);
-          setMsgs((prev) => {
-            if (prev.some((m) => m.id === next.id)) return prev;
-            if (next.sender_id !== userId) {
-              playNotifyDing();
-              onNewMessage?.();
-              if (!atBottom) setUnseen((u) => u + 1);
-            }
-            return [...prev, next];
-          });
+          if (!next.id || msgIdsRef.current.has(next.id)) return;
+          msgIdsRef.current.add(next.id);
+          if (next.sender_id !== userId) {
+            playNotifyDing();
+            onNewMessage?.();
+            if (!atBottomRef.current) setUnseen((u) => u + 1);
+          }
+          setMsgs((prev) =>
+            prev.some((m) => m.id === next.id)
+              ? prev
+              : [...prev, next].sort((a, b) => (a.created_at < b.created_at ? -1 : 1)),
+          );
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        setConnection(status === "SUBSCRIBED" ? "live" : "reconnecting");
+        // Ao reconectar, recarregamos para não perder nada que chegou offline.
+        if (status === "SUBSCRIBED") void loadMessages();
+      });
+
+    // Rede/aba voltando: reconciliar a conversa.
+    const resync = () => {
+      if (document.visibilityState === "visible") void loadMessages();
+    };
+    document.addEventListener("visibilitychange", resync);
+    window.addEventListener("online", resync);
 
     return () => {
+      document.removeEventListener("visibilitychange", resync);
+      window.removeEventListener("online", resync);
       supabase.removeChannel(ch);
     };
   }, [threadId, userId]);
+
+  // Fecha o visualizador de imagem com Esc.
+  useEffect(() => {
+    if (!zoomUrl) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setZoomUrl(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomUrl]);
 
   useEffect(() => {
     if (!loadingOlder && atBottom) scrollToBottom();
@@ -434,7 +482,36 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         : "bg-muted/50 border border-border/40";
 
   return (
-    <div className="relative flex flex-col h-full bg-background/40 backdrop-blur-sm border border-border/40 rounded-lg overflow-hidden">
+    <div
+      className="relative flex flex-col h-full bg-background/40 backdrop-blur-sm border border-border/40 rounded-lg overflow-hidden"
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("Files")) {
+          e.preventDefault();
+          setDragActive(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target) setDragActive(false);
+      }}
+      onDrop={(e) => {
+        const file = Array.from(e.dataTransfer.files ?? [])[0];
+        if (file) {
+          e.preventDefault();
+          setDragActive(false);
+          void uploadAndSend(file);
+        }
+      }}
+    >
+      {dragActive && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary/60 bg-background/80 text-sm font-mono uppercase tracking-widest text-primary">
+          Solte o arquivo para anexar
+        </div>
+      )}
+      {connection === "reconnecting" && (
+        <div className="flex items-center justify-center gap-2 bg-amber-500/10 py-1 text-[10px] font-mono uppercase tracking-widest text-amber-400">
+          <Loader2 className="h-3 w-3 animate-spin" /> Reconectando ao chat
+        </div>
+      )}
       <SupportSummaryPanel threadId={threadId} />
       <div
 
