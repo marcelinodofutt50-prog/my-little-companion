@@ -53,6 +53,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicPaymentsMercadopagoRouteImport } from './routes/api/public/payments/mercadopago'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
+import { Route as ApiPublicHooksReconcileYaarsaRouteImport } from './routes/api/public/hooks/reconcile-yaarsa'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
 import { Route as ApiPublicHooksMigrationWaveEnforceRouteImport } from './routes/api/public/hooks/migration-wave-enforce'
 import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
@@ -290,6 +291,12 @@ const ApiPublicHooksResendConfirmationsRoute =
     path: '/api/public/hooks/resend-confirmations',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksReconcileYaarsaRoute =
+  ApiPublicHooksReconcileYaarsaRouteImport.update({
+    id: '/api/public/hooks/reconcile-yaarsa',
+    path: '/api/public/hooks/reconcile-yaarsa',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksReconcilePendingRoute =
   ApiPublicHooksReconcilePendingRouteImport.update({
     id: '/api/public/hooks/reconcile-pending',
@@ -393,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
+  '/api/public/hooks/reconcile-yaarsa': typeof ApiPublicHooksReconcileYaarsaRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
@@ -447,6 +455,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
+  '/api/public/hooks/reconcile-yaarsa': typeof ApiPublicHooksReconcileYaarsaRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
@@ -503,6 +512,7 @@ export interface FileRoutesById {
   '/api/public/hooks/expire-licenses': typeof ApiPublicHooksExpireLicensesRoute
   '/api/public/hooks/migration-wave-enforce': typeof ApiPublicHooksMigrationWaveEnforceRoute
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
+  '/api/public/hooks/reconcile-yaarsa': typeof ApiPublicHooksReconcileYaarsaRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
+    | '/api/public/hooks/reconcile-yaarsa'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
     | '/api/public/payments/mercadopago'
@@ -613,6 +624,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
+    | '/api/public/hooks/reconcile-yaarsa'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
     | '/api/public/payments/mercadopago'
@@ -668,6 +680,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/expire-licenses'
     | '/api/public/hooks/migration-wave-enforce'
     | '/api/public/hooks/reconcile-pending'
+    | '/api/public/hooks/reconcile-yaarsa'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
     | '/api/public/payments/mercadopago'
@@ -710,6 +723,7 @@ export interface RootRouteChildren {
   ApiPublicHooksExpireLicensesRoute: typeof ApiPublicHooksExpireLicensesRoute
   ApiPublicHooksMigrationWaveEnforceRoute: typeof ApiPublicHooksMigrationWaveEnforceRoute
   ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
+  ApiPublicHooksReconcileYaarsaRoute: typeof ApiPublicHooksReconcileYaarsaRoute
   ApiPublicHooksResendConfirmationsRoute: typeof ApiPublicHooksResendConfirmationsRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
   ApiPublicPaymentsMercadopagoRoute: typeof ApiPublicPaymentsMercadopagoRoute
@@ -1026,6 +1040,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksResendConfirmationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/reconcile-yaarsa': {
+      id: '/api/public/hooks/reconcile-yaarsa'
+      path: '/api/public/hooks/reconcile-yaarsa'
+      fullPath: '/api/public/hooks/reconcile-yaarsa'
+      preLoaderRoute: typeof ApiPublicHooksReconcileYaarsaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reconcile-pending': {
       id: '/api/public/hooks/reconcile-pending'
       path: '/api/public/hooks/reconcile-pending'
@@ -1185,6 +1206,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksMigrationWaveEnforceRoute:
     ApiPublicHooksMigrationWaveEnforceRoute,
   ApiPublicHooksReconcilePendingRoute: ApiPublicHooksReconcilePendingRoute,
+  ApiPublicHooksReconcileYaarsaRoute: ApiPublicHooksReconcileYaarsaRoute,
   ApiPublicHooksResendConfirmationsRoute:
     ApiPublicHooksResendConfirmationsRoute,
   ApiPublicHooksVerifyExternalPayersRoute:

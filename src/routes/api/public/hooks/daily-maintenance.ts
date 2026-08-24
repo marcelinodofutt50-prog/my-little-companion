@@ -13,6 +13,7 @@ const TASKS = [
   "verify-external-payers",
   "expire-licenses",
   "daily-license-check",
+  "reconcile-yaarsa",
   "resend-confirmations",
   "auto-close-tickets",
   "cleanup-apk-jobs",
@@ -62,11 +63,13 @@ async function runDailyMaintenance(request: Request) {
   // Telemetria best-effort: nunca derruba o cron.
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Colunas reais da tabela: source/action/outcome/context.
     await supabaseAdmin.from("integration_logs").insert({
-      integration: "cron",
-      event: "daily-maintenance",
-      status: failed.length ? "partial" : "ok",
-      payload: { results, totalMs: Date.now() - started },
+      source: "cron",
+      action: "daily-maintenance",
+      outcome: failed.length ? "partial" : "success",
+      error: failed.length ? failed.map((f) => `${f.task}:${f.status}`).join(", ") : null,
+      context: { results, totalMs: Date.now() - started },
     } as never);
   } catch {
     // tabela opcional

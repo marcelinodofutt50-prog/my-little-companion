@@ -17,11 +17,11 @@ export const Route = createFileRoute("/api/public/hooks/verify-external-payers")
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const provided = request.headers.get("x-cron-secret") || "";
-        const expected = process.env.CRON_TRIGGER_TOKEN || "";
-        if (!expected || provided.length !== expected.length || provided !== expected) {
-          return new Response("unauthorized", { status: 401 });
-        }
+        // Aceita Bearer (usado pelo orquestrador diário e pela Vercel) ou
+        // x-cron-secret, e tanto CRON_SECRET quanto CRON_TRIGGER_TOKEN.
+        const { cronUnauthorized } = await import("@/lib/cron-auth.server");
+        const denied = cronUnauthorized(request);
+        if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { yaarsaExtend } = await import("@/lib/yaarsa.server");
