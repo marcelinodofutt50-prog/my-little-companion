@@ -52,10 +52,9 @@ export const refineSupportReply = createServerFn({ method: "POST" })
           : "Tom formal, cordial e profissional.";
 
     const { generateText } = await import("ai");
-    const { createGeminiProvider } = await import("./gemini-provider.server");
-    const model = createGeminiProvider();
+    const { withGeminiFallback } = await import("./gemini-provider.server");
 
-    const { text } = await generateText({
+    const { text } = await withGeminiFallback((model) => generateText({
       model,
       system: [
         "Você reescreve mensagens de atendentes de suporte da Shadow, sempre em Português do Brasil.",
@@ -72,7 +71,7 @@ export const refineSupportReply = createServerFn({ method: "POST" })
       prompt:
         `Contexto da conversa (mais recente ao final):\n${history || "(sem mensagens anteriores)"}\n\n` +
         `Rascunho do atendente para reescrever:\n"""${data.draft}"""`,
-    });
+    }));
 
     const cleaned = (text ?? "").trim().replace(/^"+|"+$/g, "").trim();
     if (!cleaned) throw new Error("A IA não retornou texto. Tente novamente.");
