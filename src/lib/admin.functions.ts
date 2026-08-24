@@ -1571,7 +1571,7 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
     if (worstFraud) {
       alerts.push({
         level: "bad",
-        text: `Antifraude: ${worstFraud.decision} (score ${worstFraud.score ?? "?"}) — ${(worstFraud.reasons ?? []).slice?.(0, 2)?.join?.(", ") || "sem detalhe"}.`,
+        text: `Antifraude: ${worstFraud.decision} (score ${worstFraud.score ?? "?"}) — ${(Array.isArray(worstFraud.reasons) ? worstFraud.reasons.slice(0, 2).join(", ") : "") || "sem detalhe"}.`,
       });
     }
     if (activeSubscription?.cancel_at_period_end) {
