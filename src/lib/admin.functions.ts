@@ -1486,7 +1486,23 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
     const uid = data.userId;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profile, roles, licenses, orders, threads, refunds, apkJobs, cashback, referrals] = await Promise.all([
+    const [
+      profile,
+      roles,
+      licenses,
+      orders,
+      threads,
+      refunds,
+      apkJobs,
+      cashback,
+      referrals,
+      loyalty,
+      subscriptions,
+      trials,
+      fraud,
+      playProtect,
+      redeemUses,
+    ] = await Promise.all([
       supabaseAdmin.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabaseAdmin.from("user_roles").select("role").eq("user_id", uid),
       supabaseAdmin.from("licenses").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(30),
@@ -1496,14 +1512,74 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
       supabaseAdmin.from("apk_jobs").select("id,status,source_filename,created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(10),
       supabaseAdmin.from("cashback_ledger").select("amount").eq("user_id", uid),
       supabaseAdmin.from("referrals").select("id,reward_amount,reward_status,created_at").eq("referrer_id", uid).limit(20),
+      supabaseAdmin.from("user_loyalty").select("points,current_tier,days_active,last_action_at,total_spent").eq("user_id", uid).maybeSingle(),
+      supabaseAdmin.from("stripe_subscriptions").select("id,plan_slug,status,current_period_end,cancel_at_period_end,environment,created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(10),
+      supabaseAdmin.from("trials").select("used_at,license_id,device_hash").eq("user_id", uid).order("used_at", { ascending: false }).limit(5),
+      supabaseAdmin.from("fraud_assessments").select("id,score,decision,action,reasons,created_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(5),
+      supabaseAdmin.from("play_protect_grants").select("id,source,granted_at,expires_at,license_id").eq("user_id", uid).order("granted_at", { ascending: false }).limit(10),
+      supabaseAdmin.from("redeem_code_uses").select("id,code,created_at,license_id,details").eq("user_id", uid).order("created_at", { ascending: false }).limit(10),
     ]);
 
+    const now = Date.now();
     const paidOrders = (orders.data ?? []).filter((o: any) => o.status === "paid");
+    const pendingOrders = (orders.data ?? []).filter((o: any) => o.status === "pending");
     const totalSpent = paidOrders.reduce((s: number, o: any) => s + Number(o.amount || 0), 0);
     const cashbackBalance = (cashback.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-    const activeLicenses = (licenses.data ?? []).filter(
-      (l: any) => !l.revoked && !l.disabled_at && (!l.expires_at || new Date(l.expires_at) > new Date()),
+    const isActive = (l: any) =>
+      !l.revoked && !l.disabled_at && (!l.expires_at || new Date(l.expires_at).getTime() > now);
+    const activeLicenses = (licenses.data ?? []).filter(isActive);
+    const nextExpiry = activeLicenses
+      .map((l: any) => l.expires_at as string | null)
+      .filter(Boolean)
+      .sort()[0] as string | undefined;
+    const daysToExpiry = nextExpiry
+      ? Math.floor((new Date(nextExpiry).getTime() - now) / 86400000)
+      : null;
+    const lastOrder = (orders.data ?? [])[0] ?? null;
+    const activePlayProtect = (playProtect.data ?? []).filter(
+      (g: any) => !g.expires_at || new Date(g.expires_at).getTime() > now,
     );
+    const activeSubscription =
+      (subscriptions.data ?? []).find((s: any) => s.status === "active" || s.status === "trialing") ?? null;
+
+    /** Alertas prontos para o atendente agir sem ficar caçando dados. */
+    const alerts: Array<{ level: "info" | "warn" | "bad"; text: string }> = [];
+    if (activeLicenses.length === 0) {
+      alerts.push({
+        level: (licenses.data ?? []).length ? "bad" : "warn",
+        text: (licenses.data ?? []).length
+          ? "Sem licença ativa — última licença expirada ou revogada."
+          : "Nunca teve licença criada.",
+      });
+    }
+    if (daysToExpiry !== null && daysToExpiry <= 3) {
+      alerts.push({ level: "warn", text: `Licença vence em ${daysToExpiry} dia(s) — ofereça renovação.` });
+    }
+    if (activeLicenses.length > 0 && activeLicenses.every((l: any) => l.is_trial)) {
+      alerts.push({ level: "warn", text: "Cliente só tem teste grátis ativo (nenhuma compra ativa)." });
+    }
+    if (pendingOrders.length > 0) {
+      alerts.push({ level: "warn", text: `${pendingOrders.length} pedido(s) pendente(s) de pagamento.` });
+    }
+    const openRefunds = (refunds.data ?? []).filter(
+      (r: any) => r.status === "pending" || r.status === "approved",
+    );
+    if (openRefunds.length > 0) {
+      alerts.push({ level: "bad", text: `${openRefunds.length} reembolso(s) em aberto.` });
+    }
+    const worstFraud = (fraud.data ?? []).find((f: any) => f.decision && f.decision !== "allow");
+    if (worstFraud) {
+      alerts.push({
+        level: "bad",
+        text: `Antifraude: ${worstFraud.decision} (score ${worstFraud.score ?? "?"}) — ${(Array.isArray(worstFraud.reasons) ? worstFraud.reasons.slice(0, 2).join(", ") : "") || "sem detalhe"}.`,
+      });
+    }
+    if (activeSubscription?.cancel_at_period_end) {
+      alerts.push({ level: "warn", text: "Assinatura marcada para cancelar no fim do período." });
+    }
+    if ((threads.data ?? []).some((t: any) => (t.unread_by_staff ?? 0) > 0)) {
+      alerts.push({ level: "info", text: "Existem mensagens do cliente sem resposta." });
+    }
 
     return {
       profile: profile.data ?? null,
@@ -1514,15 +1590,38 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
       refunds: refunds.data ?? [],
       apkJobs: apkJobs.data ?? [],
       referrals: referrals.data ?? [],
+      loyalty: loyalty.data ?? null,
+      subscriptions: subscriptions.data ?? [],
+      trials: trials.data ?? [],
+      fraud: fraud.data ?? [],
+      playProtect: playProtect.data ?? [],
+      redeemUses: redeemUses.data ?? [],
+      alerts,
       summary: {
         totalSpent,
         paidOrdersCount: paidOrders.length,
         ordersCount: (orders.data ?? []).length,
+        pendingOrdersCount: pendingOrders.length,
         cashbackBalance,
         activeLicensesCount: activeLicenses.length,
+        licensesCount: (licenses.data ?? []).length,
         openThreads: (threads.data ?? []).filter((t: any) => t.status !== "closed").length,
         pendingRefunds: (refunds.data ?? []).filter((r: any) => r.status === "pending").length,
         firstSeen: profile.data?.created_at ?? null,
+        nextExpiry: nextExpiry ?? null,
+        daysToExpiry,
+        lastOrderAt: lastOrder?.created_at ?? null,
+        lastOrderStatus: lastOrder?.status ?? null,
+        ticketMedio: paidOrders.length ? totalSpent / paidOrders.length : 0,
+        loyaltyPoints: (loyalty.data as any)?.points ?? profile.data?.reward_points ?? 0,
+        vipTier: profile.data?.vip_tier ?? (loyalty.data as any)?.current_tier ?? null,
+        trustScore: profile.data?.trust_score ?? null,
+        referralsValid: profile.data?.referrals_valid_count ?? 0,
+        activePlayProtectCount: activePlayProtect.length,
+        subscriptionStatus: activeSubscription?.status ?? null,
+        subscriptionPlan: activeSubscription?.plan_slug ?? null,
+        subscriptionRenewsAt: activeSubscription?.current_period_end ?? null,
+        riskLevel: worstFraud ? "alto" : openRefunds.length ? "médio" : "baixo",
       },
     };
   });
