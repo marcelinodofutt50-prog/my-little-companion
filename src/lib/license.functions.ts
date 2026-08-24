@@ -1001,13 +1001,18 @@ export const syncMyLicensesWithPanel = createServerFn({ method: "POST" })
 
       const report = await syncLicensesWithPanel((lics ?? []) as any[], { actor: "client", userId });
 
-      return {
-        ok: true,
-        ...report,
-        message: report.activated
-          ? `Pronto! ${report.activated} licença${report.activated === 1 ? "" : "s"} reativada${report.activated === 1 ? "" : "s"} conforme a data do painel.`
-          : report.unknown && !report.unchanged
-            ? "Não conseguimos ler a data no painel agora. Tente de novo em instantes ou fale com o suporte."
+      const message = report.activated
+        ? `Pronto! ${report.activated} licença${report.activated === 1 ? "" : "s"} reativada${report.activated === 1 ? "" : "s"} conforme a data do painel.`
+        : report.missing
+          ? "Seu login não está mais cadastrado no painel. Use “Reparar acesso” para recriá-lo com a mesma senha."
+          : report.confirmed
+            ? "Login confirmado no painel — seu acesso está ativo. (Este painel não informa a data de vencimento por aqui.)"
+            : report.unknown && !report.unchanged
+              ? "O painel não respondeu agora. Tente de novo em instantes ou fale com o suporte."
+              : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.";
+
+      return { ok: true, ...report, message };
+
             : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.",
       };
     } finally {
