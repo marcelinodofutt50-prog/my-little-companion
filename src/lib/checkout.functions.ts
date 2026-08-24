@@ -240,27 +240,13 @@ export const createCheckout = createServerFn({ method: "POST" })
 
 
 
+    // O pagamento é finalizado dentro do próprio site (formulário embutido do
+    // Stripe) na rota /pagamento/checkout — nada de sair para outro domínio.
     const origin = data.returnOrigin.replace(/\/$/, "");
-    const notificationUrl = `${origin}/api/public/mp-webhook`;
-    const pref = await createMpPreference({
+    return {
       orderId: order.id,
-      planName: `Shadow — ${plan.name}${data.includeServer ? ' + Servidor' : ''}${data.addSigner ? ' + Signer' : ''}`,
-      amount: Number(amount.toFixed(2)),
-      payerEmail: context.claims?.email as string | undefined,
-      successUrl: `${origin}/pagamento/sucesso?order=${order.id}`,
-      pendingUrl: `${origin}/pagamento/pendente?order=${order.id}`,
-      failureUrl: `${origin}/pagamento/erro?order=${order.id}`,
-      notificationUrl,
-    });
-
-    {
-      // orders é somente-leitura para o usuário (RLS): a gravação do preference_id
-      // precisa do client privilegiado, senão a conciliação com o MP nunca acha o pedido.
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin.from("orders").update({ mp_preference_id: pref.id }).eq("id", order.id);
-    }
-
-    return { orderId: order.id, initPoint: pref.init_point, sandboxInitPoint: pref.sandbox_init_point };
+      checkoutUrl: `${origin}/pagamento/checkout?order=${order.id}`,
+    };
   });
 
 export const getOrderState = createServerFn({ method: "GET" })
