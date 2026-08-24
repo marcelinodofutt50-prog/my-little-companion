@@ -68,14 +68,17 @@ async function handleInvoicePaid(invoice: any, env: StripeEnv) {
     .maybeSingle();
 
   const userId = (sub as any)?.user_id ?? invoice.subscription_details?.metadata?.userId ?? null;
-  const planSlug = (sub as any)?.plan_slug ?? invoice.subscription_details?.metadata?.planSlug ?? lookupKey;
-  if (!userId || !planSlug) {
+  const rawPlan = (sub as any)?.plan_slug ?? invoice.subscription_details?.metadata?.planSlug ?? lookupKey;
+  if (!userId || !rawPlan) {
     await log(`fatura ${invoice.id} sem vínculo de usuário/plano`, false);
     return;
   }
 
-  const { RECURRING_DAYS_BY_SLUG } = await import("@/lib/stripe-payments.server");
-  const days = RECURRING_DAYS_BY_SLUG[planSlug] ?? 30;
+  const { RECURRING_DAYS_BY_SLUG, SLUG_BY_RECURRING_PRICE } = await import("@/lib/stripe-payments.server");
+  // A chave de preço da Stripe usa underscore; o plano do banco usa hífen.
+  const planSlug = SLUG_BY_RECURRING_PRICE[rawPlan] ?? rawPlan;
+  const days = RECURRING_DAYS_BY_SLUG[rawPlan] ?? RECURRING_DAYS_BY_SLUG[planSlug] ?? 30;
+
   const { applySubscriptionRenewal } = await import("@/lib/subscription-renewal.server");
   const result = await applySubscriptionRenewal({
     userId,
