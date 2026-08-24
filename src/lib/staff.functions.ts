@@ -2,13 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-// Helper to check if user has a specific permission
-async function hasPermission(ctx: { supabase: any; userId: string }, permission: string) {
-  const { data: hasPerm } = await ctx.supabase.rpc("has_permission", { 
-    _user_id: ctx.userId, 
-    _permission: permission 
-  });
-  return !!hasPerm;
+/**
+ * Checagem de acesso da equipe. A antiga RPC `has_permission` nunca existiu no
+ * banco, então TODA leitura de candidaturas retornava "Forbidden".
+ */
+async function isStaffUser(ctx: { supabase: any; userId: string }) {
+  const { data } = await ctx.supabase.rpc("is_staff", { _user_id: ctx.userId });
+  return !!data;
+}
+
+async function isAdminUser(ctx: { supabase: any; userId: string }) {
+  const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
+  return !!data;
 }
 
 export const submitStaffApplication = createServerFn({ method: "POST" })
@@ -23,8 +28,17 @@ export const submitStaffApplication = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { data: existing } = await supabase
+      .from("staff_applications")
+      .select("id, status")
+      .eq("user_id", userId)
+      .in("status", ["pending", "reviewing"])
+      .maybeSingle();
+    if (existing) throw new Error("Você já tem uma candidatura em análise. Aguarde o retorno da equipe.");
+
     const { error } = await supabase.from("staff_applications").insert({
       user_id: userId,
+      status: "pending",
       ...data
     });
     if (error) throw error;
@@ -34,14 +48,24 @@ export const submitStaffApplication = createServerFn({ method: "POST" })
 export const listStaffApplications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    if (!(await hasPermission(context, "applications.view"))) throw new Error("Forbidden");
-    const { supabase } = context;
-    const { data, error } = await supabase
+    if (!(await isStaffUser(context))) throw new Error("Acesso restrito à equipe.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("staff_applications")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return data;
+
+    const ids = Array.from(new Set((data ?? []).map((a: any) => a.user_id)));
+    const emails = new Map<string, string>();
+    if (ids.length) {
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, display_name")
+        .in("id", ids);
+      for (const p of profiles ?? []) emails.set((p as any).id, (p as any).email ?? (p as any).display_name ?? "");
+    }
+    return (data ?? []).map((a: any) => ({ ...a, email: emails.get(a.user_id) ?? null }));
   });
 
 export const updateApplicationStatus = createServerFn({ method: "POST" })
@@ -52,7 +76,7 @@ export const updateApplicationStatus = createServerFn({ method: "POST" })
     admin_notes: z.string().optional()
   }).parse(d))
   .handler(async ({ data, context }) => {
-    if (!(await hasPermission(context, "applications.review"))) throw new Error("Forbidden");
+    if (!(await isAdminUser(context))) throw new Error("Apenas administradores podem revisar candidaturas.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("staff_applications")
@@ -60,6 +84,19 @@ export const updateApplicationStatus = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw error;
     return { success: true };
+  });
+
+export const getMyStaffApplication = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("staff_applications")
+      .select("id, status, area, created_at, admin_notes")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data ?? null;
   });
 
 export const getStaffHierarchy = createServerFn({ method: "GET" })
