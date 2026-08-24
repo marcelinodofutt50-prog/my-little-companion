@@ -353,6 +353,7 @@ export function AdminSupportPanel() {
         )}
       </div>
 
+      {fichaUserId && (
       <AdminCustomer360
         userId={fichaUserId}
         onClose={() => setFichaUserId(null)}
