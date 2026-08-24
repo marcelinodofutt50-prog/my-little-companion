@@ -167,7 +167,7 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
 
     // Executa exatamente a mesma rotina disparada pelo webhook do PIX aprovado.
     try {
-      const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+      const { fulfillOrder } = await import("@/lib/fulfillment.server");
       const result = await fulfillOrder(orderId);
       push("Entrega automática (webhook PIX)", Boolean(result?.ok), result?.ok ? `Concluída: ${result.reason ?? "ok"}` : `Falhou: ${result?.reason ?? "desconhecido"}`);
     } catch (e: any) {
