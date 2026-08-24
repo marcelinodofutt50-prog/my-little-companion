@@ -27,11 +27,22 @@ import {
   Reply,
   X,
   ZoomIn,
+  Wand2,
+  Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { playNotifyDing } from "@/lib/notify-sound";
+import { refineSupportReply } from "@/lib/support-refine.functions";
+
+type RefineTone = "formal" | "empatico" | "direto";
+
+const REFINE_TONES: Array<{ tone: RefineTone; label: string }> = [
+  { tone: "formal", label: "Formalizar" },
+  { tone: "empatico", label: "Empático" },
+  { tone: "direto", label: "Direto" },
+];
 
 type PendingMsg = {
   clientId: string;
@@ -135,10 +146,31 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const [unseen, setUnseen] = useState(0);
   const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
+  const [refining, setRefining] = useState<null | RefineTone>(null);
+  const [preRefine, setPreRefine] = useState<string | null>(null);
 
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
   const markReadFn = useServerFn(markThreadReadByCustomer);
+  const refineFn = useServerFn(refineSupportReply);
+
+  const handleRefine = async (tone: RefineTone) => {
+    const draft = body.trim();
+    if (!draft || refining) return;
+    setRefining(tone);
+    try {
+      const res: any = await refineFn({ data: { threadId, draft, tone } });
+      if (res?.text) {
+        setPreRefine(draft);
+        setBody(res.text);
+        toast.success("Texto reformulado — revise antes de enviar.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível reformular o texto agora.");
+    } finally {
+      setRefining(null);
+    }
+  };
 
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -493,6 +525,46 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           handleSend();
         }}
       >
+        {isAdmin && (
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+              Reformular com IA
+            </span>
+            {REFINE_TONES.map((t) => (
+              <Button
+                key={t.tone}
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!body.trim() || refining !== null}
+                onClick={() => handleRefine(t.tone)}
+                className="h-6 gap-1 px-2 text-[10px]"
+              >
+                {refining === t.tone ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Wand2 className="h-3 w-3" />
+                )}
+                {t.label}
+              </Button>
+            ))}
+            {preRefine && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={refining !== null}
+                onClick={() => {
+                  setBody(preRefine);
+                  setPreRefine(null);
+                }}
+                className="h-6 gap-1 px-2 text-[10px] text-muted-foreground"
+              >
+                <Undo2 className="h-3 w-3" /> Desfazer
+              </Button>
+            )}
+          </div>
+        )}
         <div className="flex items-end gap-2">
           <input
             type="file"
