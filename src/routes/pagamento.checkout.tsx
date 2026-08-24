@@ -2,12 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
-import { AlertTriangle, ArrowLeft, CreditCard, ExternalLink, Loader2, QrCode, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
 import { getStripe, getStripeEnvironment, isPaymentsConfigured } from "@/lib/stripe";
 import { createOrderPaymentSession } from "@/lib/payments.functions";
 import { createMercadoPagoCheckout, getPaymentProviders } from "@/lib/mercadopago.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
+import mercadoPagoLogo from "@/assets/logo-mercadopago.svg";
+import stripeLogo from "@/assets/logo-stripe.svg";
+
 
 export const Route = createFileRoute("/pagamento/checkout")({
   validateSearch: (search: Record<string, unknown>): { order?: string } => ({
@@ -44,12 +47,13 @@ function CheckoutPage() {
   const stripeOn = Boolean(providers?.stripe) && isPaymentsConfigured();
   const mpOn = Boolean(providers?.mercadopago);
 
-  // Se só existe uma forma de pagamento ativa, já abre direto nela.
+  // Pré-seleciona a forma recomendada (Pix pelo Mercado Pago).
   useEffect(() => {
     if (provider || loadingProviders) return;
-    if (stripeOn && !mpOn) setProvider("stripe");
-    else if (mpOn && !stripeOn) setProvider("mercadopago");
+    if (mpOn) setProvider("mercadopago");
+    else if (stripeOn) setProvider("stripe");
   }, [provider, loadingProviders, stripeOn, mpOn]);
+
 
   const fetchClientSecret = useCallback(async () => {
     if (!order) throw new Error("Pedido não informado.");
@@ -120,31 +124,44 @@ function CheckoutPage() {
                 </p>
                 <div className="mt-2 grid gap-3 sm:grid-cols-2">
                   <ProviderCard
-                    active={provider === "stripe"}
-                    onClick={() => setProvider("stripe")}
-                    icon={<CreditCard className="h-4 w-4" />}
-                    title="Cartão internacional"
-                    subtitle="Formulário seguro aqui mesmo no site"
-                    tag="Stripe"
-                  />
-                  <ProviderCard
                     active={provider === "mercadopago"}
                     onClick={() => setProvider("mercadopago")}
-                    icon={<QrCode className="h-4 w-4" />}
-                    title="Pix, boleto ou cartão"
-                    subtitle="Pagamento aprovado na hora pelo Pix"
-                    tag="Mercado Pago"
+                    logo={mercadoPagoLogo}
+                    brand="Mercado Pago"
+                    title="Pix, cartão ou boleto"
+                    subtitle="No Pix o acesso é liberado na hora"
+                    badge="Recomendado para Pix"
+                    badgeTone="neon"
+                  />
+                  <ProviderCard
+                    active={provider === "stripe"}
+                    onClick={() => setProvider("stripe")}
+                    logo={stripeLogo}
+                    brand="Stripe"
+                    title="Cartão de crédito"
+                    subtitle="Ideal para cartão — formulário seguro aqui no site"
+                    badge="Em desenvolvimento"
+                    badgeTone="warn"
                   />
                 </div>
               </>
             )}
 
+
             <div className="mt-4 rounded-lg border border-border bg-card/60 p-3 sm:p-4">
               {provider === "stripe" ? (
-                <EmbeddedCheckoutProvider stripe={getStripe()} options={options}>
-                  <EmbeddedCheckout />
-                </EmbeddedCheckoutProvider>
+                <div className="space-y-3">
+                  <p className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-2.5 font-mono text-[11px] text-amber-400">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    Checkout de cartão em desenvolvimento (conta em verificação). Se der recusa, volte e pague pelo
+                    Mercado Pago — a liberação é a mesma.
+                  </p>
+                  <EmbeddedCheckoutProvider stripe={getStripe()} options={options}>
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                </div>
               ) : provider === "mercadopago" ? (
+
                 <div className="space-y-3">
                   <p className="font-mono text-xs text-muted-foreground">
                     Você será levado ao ambiente seguro do Mercado Pago para pagar com Pix, boleto ou cartão. Assim que o
@@ -181,35 +198,51 @@ function CheckoutPage() {
 function ProviderCard({
   active,
   onClick,
-  icon,
+  logo,
+  brand,
   title,
   subtitle,
-  tag,
+  badge,
+  badgeTone,
 }: {
   active: boolean;
   onClick: () => void;
-  icon: React.ReactNode;
+  logo: string;
+  brand: string;
   title: string;
   subtitle: string;
-  tag: string;
+  badge?: string;
+  badgeTone?: "neon" | "warn";
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "flex w-full items-start gap-3 rounded-lg border p-3 text-left transition",
         active ? "border-neon bg-neon/5" : "border-border bg-card/40 hover:border-muted-foreground/40",
       )}
     >
-      <span className={cn("mt-0.5", active ? "text-neon" : "text-muted-foreground")}>{icon}</span>
+      <img src={logo} alt={`Logo ${brand}`} className="mt-0.5 h-8 w-11 shrink-0 rounded object-contain" loading="lazy" />
       <span className="min-w-0">
-        <span className="block text-sm font-semibold">{title}</span>
+        <span className="block text-sm font-semibold">{brand}</span>
+        <span className="mt-0.5 block text-xs text-foreground/80">{title}</span>
         <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">{subtitle}</span>
-        <span className="mt-1 inline-block rounded border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {tag}
-        </span>
+        {badge && (
+          <span
+            className={cn(
+              "mt-1.5 inline-block rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider",
+              badgeTone === "warn"
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                : "border-neon/40 bg-neon/10 text-neon",
+            )}
+          >
+            {badge}
+          </span>
+        )}
       </span>
     </button>
+
   );
 }
