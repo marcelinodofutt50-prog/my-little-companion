@@ -473,11 +473,18 @@ export async function yaarsaSetPassword(
  * Quando nenhuma ação de leitura existe no painel, devolvemos `known: false`
  * e quem chamou segue com o comportamento antigo (nunca falha por isso).
  */
+// Este painel (proxy.php) não implementa ação de leitura: qualquer action
+// desconhecida devolve corpo vazio. Depois de descobrir isso uma vez, não
+// insistimos — era o que deixava o "Sincronizar com painel" lento e sem
+// resposta (5 actions × 2 endpoints por clique).
+const readUnsupported: Record<YaarsaPanel, boolean> = { v455: false, v457: false, v46: false };
+
 export async function yaarsaReadAccount(
   email: string,
   panel: YaarsaPanel = "v457",
 ): Promise<{ known: boolean; expireDate: string | null; password: string | null; raw: string | null }> {
   await refreshPanelOverrides();
+  if (readUnsupported[panel]) return { known: false, expireDate: null, password: null, raw: null };
   for (const action of ["cinfo", "info", "userinfo", "getuser", "cuser"]) {
     let r: YaarsaResponse;
     try {
@@ -498,8 +505,26 @@ export async function yaarsaReadAccount(
       };
     }
   }
+  readUnsupported[panel] = true;
   return { known: false, expireDate: null, password: null, raw: null };
 }
+
+/**
+ * Presença da conta no painel, SEM lançar erro.
+ * `found` / `missing` são respostas conclusivas; `unknown` é painel fora do ar.
+ */
+export async function yaarsaProbeAccount(
+  email: string,
+  panel: YaarsaPanel = "v457",
+): Promise<{ state: "found" | "missing" | "unknown"; detail: string }> {
+  try {
+    const r = await yaarsaLookupEmail(email, panel);
+    return { state: r.found ? "found" : "missing", detail: String(r.raw?.Fail ?? r.raw?.Success ?? "") };
+  } catch (e) {
+    return { state: "unknown", detail: String((e as Error)?.message || e) };
+  }
+}
+
 
 
 // Look up an email in a given panel WITHOUT touching the account.
