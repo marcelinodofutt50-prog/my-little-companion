@@ -27,7 +27,9 @@ async function reconcilePendingOrders(request: Request) {
         if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { findApprovedPaymentForOrder, getMpPayment } = await import("@/lib/mercadopago.server");
+        const { findPaidPaymentForOrder, serverStripeEnv } = await import("@/lib/stripe-payments.server");
+        const stripeEnv = serverStripeEnv();
+
 
         // 72h: se um painel ficou sem servidor configurado, a entrega continua
         // sendo tentada por 3 dias depois que o admin arruma a VPS.
