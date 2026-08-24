@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { adminSetThreadPriority, adminUpdateThreadCategory, adminMergeDuplicateThreads } from "@/lib/support-admin.functions";
 import { SupportChat } from "./SupportChat";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
+import { AdminCustomer360 } from "@/components/admin/lazy-panels";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { categoryMeta, SUPPORT_CATEGORY_META, SupportCategory } from "@/lib/support-categories";
 import { 
