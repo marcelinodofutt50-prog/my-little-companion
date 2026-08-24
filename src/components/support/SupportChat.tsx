@@ -328,8 +328,14 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     if (!loadingOlder && atBottom) scrollToBottom();
   }, [msgs.length, pending.length]);
 
-  const handleSend = async (attachmentPath?: string, attachmentType?: string, retryOf?: string) => {
-    const text = retryOf ? (pending.find((p) => p.clientId === retryOf)?.body ?? "") : body.trim();
+  const handleSend = async (
+    attachmentPath?: string,
+    attachmentType?: string,
+    retryOf?: string,
+    meta?: { name?: string; previewUrl?: string },
+  ) => {
+    const previous = retryOf ? pending.find((p) => p.clientId === retryOf) : undefined;
+    const text = retryOf ? (previous?.body ?? "") : body.trim();
     if (!text && !attachmentPath) return;
     const replyToId = retryOf ? null : replyTo?.id ?? null;
 
@@ -337,8 +343,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     const newPending: PendingMsg = {
       clientId,
       body: text || null,
-      attachmentPath,
-      attachmentType,
+      ...(attachmentPath ? { attachmentPath } : {}),
+      ...(attachmentType ? { attachmentType } : {}),
+      ...(meta?.name ?? previous?.attachmentName ? { attachmentName: meta?.name ?? previous?.attachmentName } : {}),
+      ...(meta?.previewUrl ?? previous?.previewUrl ? { previewUrl: meta?.previewUrl ?? previous?.previewUrl } : {}),
       status: "sending",
       created_at: new Date().toISOString(),
     };
@@ -366,7 +374,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         if (prev.some((m) => m.id === normalized.id)) return prev;
         return [...prev, normalized];
       });
-      setPending((prev) => prev.filter((p) => p.clientId !== clientId));
+      setPending((prev) => {
+        const done = prev.find((p) => p.clientId === clientId);
+        if (done?.previewUrl) URL.revokeObjectURL(done.previewUrl);
+        return prev.filter((p) => p.clientId !== clientId);
+      });
       setAtBottom(true);
     } catch (e: any) {
       const message = e?.message || "Falha ao enviar a mensagem.";
@@ -514,7 +526,20 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   : "bg-primary/60 text-primary-foreground"
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>
+              {p.body && <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>}
+              {p.previewUrl && (
+                <img
+                  src={p.previewUrl}
+                  alt="pré-visualização do anexo"
+                  className="mt-2 max-h-48 rounded-lg object-contain opacity-80"
+                />
+              )}
+              {!p.previewUrl && p.attachmentName && (
+                <div className="mt-1 flex items-center gap-2 text-xs opacity-90">
+                  <Paperclip className="h-3 w-3" />
+                  <span className="max-w-[200px] truncate">{p.attachmentName}</span>
+                </div>
+              )}
               <div className="mt-1 flex items-center justify-end gap-1 text-[10px] font-mono uppercase opacity-80">
                 {p.status === "failed" ? (
                   <>
@@ -534,7 +559,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   variant="outline"
                   size="sm"
                   className="h-6 text-[10px] gap-1"
-                  onClick={() => handleSend(p.attachmentPath, p.attachmentType, p.clientId)}
+                  onClick={() => void handleSend(p.attachmentPath, p.attachmentType, p.clientId)}
                 >
                   <RotateCw className="h-3 w-3" /> Reenviar
                 </Button>
