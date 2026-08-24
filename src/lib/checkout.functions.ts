@@ -29,7 +29,6 @@ export const createCheckout = createServerFn({ method: "POST" })
     }).parse(input)
   )
   .handler(async ({ data, context }) => {
-    const { createMpPreference } = await import("./mercadopago.server");
     const { supabase, userId } = context;
     const isLoginPlan = data.planSlug.startsWith("login-") || data.planSlug === "trial";
     const isServerPlan = data.planSlug.startsWith("server-");
@@ -262,12 +261,17 @@ export const getOrderState = createServerFn({ method: "GET" })
     // unverifiable webhook can never leave a paying customer without access.
     if (["pending", "created", "yaarsa_failed"].includes(String(order.status))) {
       try {
-        const { findApprovedPaymentForOrder } = await import("./mercadopago.server");
-        const approved = await findApprovedPaymentForOrder(data.orderId, Number(order.amount));
-        if (approved) {
+        const { findPaidPaymentForOrder, serverStripeEnv } = await import("./stripe-payments.server");
+        const paid = await findPaidPaymentForOrder(
+          serverStripeEnv(),
+          data.orderId,
+          (order as any).mp_preference_id,
+          Number(order.amount),
+        );
+        if (paid) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", data.orderId);
-          const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+          await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", data.orderId);
+          const { fulfillOrder } = await import("@/lib/fulfillment.server");
           await fulfillOrder(data.orderId);
         }
       } catch { /* reconciliation is best-effort; polling continues */ }
@@ -286,7 +290,7 @@ export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
     const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
     const { data: orders, error } = await context.supabase
       .from("orders")
-      .select("id, amount, status")
+      .select("id, amount, status, mp_preference_id")
       .eq("user_id", context.userId)
       .in("status", ["pending", "created", "yaarsa_failed"])
       .gte("created_at", cutoff)
@@ -297,12 +301,12 @@ export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
     let fulfilled = 0;
     for (const order of orders ?? []) {
       try {
-        const { findApprovedPaymentForOrder } = await import("./mercadopago.server");
-        const approved = await findApprovedPaymentForOrder(order.id, Number(order.amount));
-        if (!approved) continue;
+        const { findPaidPaymentForOrder, serverStripeEnv } = await import("./stripe-payments.server");
+        const paid = await findPaidPaymentForOrder(serverStripeEnv(), order.id, (order as any).mp_preference_id, Number(order.amount));
+        if (!paid) continue;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", order.id);
-        const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+        await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", order.id);
+        const { fulfillOrder } = await import("@/lib/fulfillment.server");
         const result = await fulfillOrder(order.id);
         if (result.ok) fulfilled += 1;
       } catch (error) {
