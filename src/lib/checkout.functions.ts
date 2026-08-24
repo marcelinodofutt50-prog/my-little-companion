@@ -317,7 +317,6 @@ export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
         await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", order.id);
         const { fulfillOrder } = await import("@/lib/fulfillment.server");
 
-        const { fulfillOrder } = await import("@/lib/fulfillment.server");
         const result = await fulfillOrder(order.id);
         if (result.ok) fulfilled += 1;
       } catch (error) {
