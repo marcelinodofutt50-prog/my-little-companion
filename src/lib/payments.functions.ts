@@ -56,7 +56,14 @@ export const createOrderPaymentSession = createServerFn({ method: "POST" })
       if (!session.clientSecret) return { error: "O provedor de pagamento não devolveu a sessão." };
       return { clientSecret: session.clientSecret };
     } catch (error) {
-      return { error: getStripeErrorMessage(error) };
+      const raw = getStripeErrorMessage(error);
+      if (/No valid payment method types/i.test(raw)) {
+        return {
+          error:
+            "A conta de pagamentos ainda está em verificação pelo provedor — o checkout em produção libera assim que a análise terminar.",
+        };
+      }
+      return { error: raw };
     }
   });
 

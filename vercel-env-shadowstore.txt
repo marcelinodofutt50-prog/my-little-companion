@@ -16,8 +16,10 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_SUPABASE_PROJECT_ID=
 
 # --- Pagamentos (Stripe via Lovable) ---
-# Copie os valores do arquivo .env.development / .env.production do projeto.
-VITE_PAYMENTS_CLIENT_TOKEN=
+# Token PÚBLICO de produção (pode colar no Vercel sem risco).
+VITE_PAYMENTS_CLIENT_TOKEN=pk_live_51U812LQ6ooGGvAgpvl5Ri3q7XI6gRBsTGR4NdPEG6HcEwCVvZ1De56Qsd9jHd7ECAjPnzBJ21zjlIyXFdYz9ejdr00tmjfCGIm
+# Token de TESTE (use este enquanto a conta estiver em verificação):
+# VITE_PAYMENTS_CLIENT_TOKEN=pk_test_51U7Kf5CtojHiDPeIOjRfc6zsKwnAJfIrHa62tQAwaQQrC9RrJHV85fEdDY47wi0tc0hJcea0R4t2vqB6hKNFY1u100hOWgu9cP
 STRIPE_SANDBOX_API_KEY=
 PAYMENTS_SANDBOX_WEBHOOK_SECRET=
 STRIPE_LIVE_API_KEY=
