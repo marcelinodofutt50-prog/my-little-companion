@@ -17,7 +17,7 @@ async function log(note: string, processed: boolean, payload?: unknown) {
  * manifest = id:<data.id>;request-id:<x-request-id>;ts:<ts>;
  */
 function verifySignature(request: Request, dataId: string): boolean {
-  const secret = process.env["MERCADOPAGO_WEBHOOK_SECRET"] || process.env["MP_WEBHOOK_SECRET"];
+  const secret = process.env["MERCADOPAGO_WEBHOOK_SECRET"];
   if (!secret) return true;
   const signature = request.headers.get("x-signature");
   if (!signature) return false;
