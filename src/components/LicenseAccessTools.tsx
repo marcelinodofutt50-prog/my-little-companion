@@ -117,6 +117,8 @@ export function LicenseAccessTools({
     try {
       const res: any = await syncPanel({ data: { licenseId } });
       if (res?.activated) toast.success(res.message, { id: t });
+      else if (res?.confirmed) toast.success(res.message, { id: t });
+      else if (res?.missing) toast.error(res.message, { id: t, duration: 8000 });
       else if (res?.unknown) {
         toast.warning(
           res?.message ?? "O painel não respondeu a tempo. Tente de novo em instantes.",
@@ -130,6 +132,7 @@ export function LicenseAccessTools({
       setPanelSyncing(false);
     }
   };
+
 
 
 
