@@ -79,6 +79,7 @@ import {
   AdminExternalPayersPanel,
   AdminHealthPanel,
   AdminLicenseAuditPanel,
+  AdminPanelIntegrityPanel,
   AdminMarketPanel,
   AdminMetricsPanel,
   AdminMigrationWaves,
@@ -214,6 +215,7 @@ type Tab =
   | "academy"
   | "redeem"
   | "license_audit"
+  | "panel_integrity"
 
   | "vip";
 
@@ -249,6 +251,7 @@ const TAB_DESC: Record<Tab, string> = {
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
   redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
+  panel_integrity: "Conferência painel x site: encontra logins que sumiram do painel Yaarsa e recria automaticamente com a mesma senha.",
   license_audit: "Histórico detalhado: quando cada licença e login foi alterado (senha, sincronização com o painel ou cupom), por quem e por quê.",
 
 };
@@ -684,6 +687,7 @@ function AdminPage() {
         { id: "licenses", label: "Licenças", icon: KeyRound },
         { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "3d, 7d ou servidor" },
         { id: "license_audit", label: "Histórico de Alterações", icon: ScrollText, hint: "senha, sync e cupons" },
+        { id: "panel_integrity", label: "Integridade dos Logins", icon: ShieldCheck, hint: "logins sumidos do painel" },
       ],
 
     },
@@ -2314,6 +2318,7 @@ function AdminPage() {
               {tab === "academy" && <StaffAcademyPanel />}
               {tab === "redeem" && <AdminRedeemCodesPanel />}
               {tab === "license_audit" && <AdminLicenseAuditPanel />}
+              {tab === "panel_integrity" && <AdminPanelIntegrityPanel />}
 
               </motion.div>
             </AnimatePresence>
