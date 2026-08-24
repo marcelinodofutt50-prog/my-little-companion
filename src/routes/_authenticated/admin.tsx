@@ -51,6 +51,7 @@ import {
   Settings2,
   Paperclip,
   Ticket,
+  Briefcase,
 } from "lucide-react";
 
 
