@@ -49,6 +49,7 @@ import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authe
 import { Route as AuthenticatedServidorKrakenRouteImport } from './routes/_authenticated/servidor/kraken'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPaymentsMercadopagoRouteImport } from './routes/api/public/payments/mercadopago'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
@@ -265,6 +266,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsMercadopagoRoute =
+  ApiPublicPaymentsMercadopagoRouteImport.update({
+    id: '/api/public/payments/mercadopago',
+    path: '/api/public/payments/mercadopago',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksVerifyExternalPayersRoute =
   ApiPublicHooksVerifyExternalPayersRouteImport.update({
     id: '/api/public/hooks/verify-external-payers',
@@ -381,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
+  '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -433,6 +441,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
+  '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -487,6 +496,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
+  '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -541,6 +551,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
+    | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -593,6 +604,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
+    | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -646,6 +658,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
+    | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -687,6 +700,7 @@ export interface RootRouteChildren {
   ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
   ApiPublicHooksResendConfirmationsRoute: typeof ApiPublicHooksResendConfirmationsRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
+  ApiPublicPaymentsMercadopagoRoute: typeof ApiPublicPaymentsMercadopagoRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -972,6 +986,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/mercadopago': {
+      id: '/api/public/payments/mercadopago'
+      path: '/api/public/payments/mercadopago'
+      fullPath: '/api/public/payments/mercadopago'
+      preLoaderRoute: typeof ApiPublicPaymentsMercadopagoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/verify-external-payers': {
       id: '/api/public/hooks/verify-external-payers'
       path: '/api/public/hooks/verify-external-payers'
@@ -1147,6 +1168,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksResendConfirmationsRoute,
   ApiPublicHooksVerifyExternalPayersRoute:
     ApiPublicHooksVerifyExternalPayersRoute,
+  ApiPublicPaymentsMercadopagoRoute: ApiPublicPaymentsMercadopagoRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
