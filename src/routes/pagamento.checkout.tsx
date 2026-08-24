@@ -120,24 +120,29 @@ function CheckoutPage() {
                 </p>
                 <div className="mt-2 grid gap-3 sm:grid-cols-2">
                   <ProviderCard
-                    active={provider === "stripe"}
-                    onClick={() => setProvider("stripe")}
-                    icon={<CreditCard className="h-4 w-4" />}
-                    title="Cartão internacional"
-                    subtitle="Formulário seguro aqui mesmo no site"
-                    tag="Stripe"
-                  />
-                  <ProviderCard
                     active={provider === "mercadopago"}
                     onClick={() => setProvider("mercadopago")}
-                    icon={<QrCode className="h-4 w-4" />}
-                    title="Pix, boleto ou cartão"
-                    subtitle="Pagamento aprovado na hora pelo Pix"
-                    tag="Mercado Pago"
+                    logo={mercadoPagoLogo}
+                    brand="Mercado Pago"
+                    title="Pix, cartão ou boleto"
+                    subtitle="No Pix o acesso é liberado na hora"
+                    badge="Recomendado para Pix"
+                    badgeTone="neon"
+                  />
+                  <ProviderCard
+                    active={provider === "stripe"}
+                    onClick={() => setProvider("stripe")}
+                    logo={stripeLogo}
+                    brand="Stripe"
+                    title="Cartão de crédito"
+                    subtitle="Ideal para cartão — formulário seguro aqui no site"
+                    badge="Em desenvolvimento"
+                    badgeTone="warn"
                   />
                 </div>
               </>
             )}
+
 
             <div className="mt-4 rounded-lg border border-border bg-card/60 p-3 sm:p-4">
               {provider === "stripe" ? (
