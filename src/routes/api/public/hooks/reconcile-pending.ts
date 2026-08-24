@@ -27,7 +27,9 @@ async function reconcilePendingOrders(request: Request) {
         if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { findApprovedPaymentForOrder, getMpPayment } = await import("@/lib/mercadopago.server");
+        const { findPaidPaymentForOrder, serverStripeEnv } = await import("@/lib/stripe-payments.server");
+        const stripeEnv = serverStripeEnv();
+
 
         // 72h: se um painel ficou sem servidor configurado, a entrega continua
         // sendo tentada por 3 dias depois que o admin arruma a VPS.
@@ -48,7 +50,7 @@ async function reconcilePendingOrders(request: Request) {
         const results: { orderId: string; action: string; detail?: string }[] = [];
 
         const now = Date.now();
-        const { MAX_FULFILLMENT_ATTEMPTS } = await import("@/routes/api/public/mp-webhook");
+        const { MAX_FULFILLMENT_ATTEMPTS } = await import("@/lib/fulfillment.server");
 
         for (const order of (orders ?? []) as any[]) {
           try {
@@ -76,64 +78,37 @@ async function reconcilePendingOrders(request: Request) {
                 .eq("status", "processing");
             }
 
-            // 1) Try authoritative search by external_reference (order id).
-
-            const approved = await findApprovedPaymentForOrder(order.id, Number(order.amount));
-            if (approved) {
-              await supabaseAdmin.from("orders").update({ mp_payment_id: String(approved.id) }).eq("id", order.id);
-              const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+            // Pergunta direto ao provedor de pagamento se este pedido foi pago
+            // (pela sessão de checkout e, como reforço, pelo id do pedido).
+            const paid = await findPaidPaymentForOrder(
+              stripeEnv,
+              order.id,
+              order.mp_preference_id,
+              Number(order.amount),
+            );
+            if (paid) {
+              await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", order.id);
+              const { fulfillOrder } = await import("@/lib/fulfillment.server");
               const result = await fulfillOrder(order.id);
               results.push({ orderId: order.id, action: result.ok ? "fulfilled" : "fulfill-error", detail: (result as any).reason });
               continue;
             }
 
-            // 2) If we already have a payment id, check its current status directly.
-            if (order.mp_payment_id) {
-              const payment = await getMpPayment(String(order.mp_payment_id));
-              if (payment.status === "approved") {
-                const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
-                const result = await fulfillOrder(order.id);
-                results.push({ orderId: order.id, action: result.ok ? "fulfilled" : "fulfill-error", detail: (result as any).reason });
-                continue;
-              }
-              if (["rejected", "cancelled", "refunded"].includes(payment.status)) {
-                await supabaseAdmin
-                  .from("orders")
-                  .update({ status: payment.status === "refunded" ? "refunded" : "failed" } as any)
-                  .eq("id", order.id);
-                results.push({ orderId: order.id, action: "marked-failed", detail: payment.status });
-                continue;
-              }
+            // Sessão expirada sem pagamento: encerra o pedido para não ficar preso.
+            if (order.mp_preference_id) {
+              try {
+                const { createStripeClient } = await import("@/lib/stripe.server");
+                const stripe = createStripeClient(stripeEnv);
+                const session = await stripe.checkout.sessions.retrieve(String(order.mp_preference_id));
+                if (session.status === "expired") {
+                  await supabaseAdmin.from("orders").update({ status: "failed" } as any).eq("id", order.id);
+                  results.push({ orderId: order.id, action: "marked-failed", detail: "session-expired" });
+                  continue;
+                }
+              } catch { /* consulta best-effort */ }
             }
 
-            // 3) Preference-only: search for any payment tied to this preference id.
-            if (order.mp_preference_id && !order.mp_payment_id) {
-              const res = await fetch(
-                `https://api.mercadopago.com/v1/payments/search?sort=date_created&criteria=desc&preference_id=${encodeURIComponent(order.mp_preference_id)}`,
-                { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` } },
-              );
-              if (res.ok) {
-                const json = (await res.json()) as { results?: Array<{ id: number; status: string; external_reference: string }> };
-                const match = (json.results ?? []).find((p) => p.external_reference === order.id);
-                if (match) {
-                  await supabaseAdmin.from("orders").update({ mp_payment_id: String(match.id) }).eq("id", order.id);
-                  if (match.status === "approved") {
-                    const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
-                    const result = await fulfillOrder(order.id);
-                    results.push({ orderId: order.id, action: result.ok ? "fulfilled" : "fulfill-error", detail: (result as any).reason });
-                    continue;
-                  }
-                  if (["rejected", "cancelled", "refunded"].includes(match.status)) {
-                    await supabaseAdmin
-                      .from("orders")
-                      .update({ status: match.status === "refunded" ? "refunded" : "failed" } as any)
-                      .eq("id", order.id);
-                    results.push({ orderId: order.id, action: "marked-failed", detail: match.status });
-                    continue;
-                  }
-                }
-              }
-            }
+
 
             results.push({ orderId: order.id, action: "no-change", detail: "still-pending" });
           } catch (e: any) {

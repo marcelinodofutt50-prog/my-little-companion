@@ -58,13 +58,13 @@ export const getKrakenStatus = createServerFn({ method: "GET" })
     // 3. Adicionar lógica de verificação autoritativa para ordens pendentes
     if (order && order.status !== 'paid' && order.status !== 'yaarsa_failed') {
       try {
-        const { findApprovedPaymentForOrder } = await import("@/lib/mercadopago.server");
-        const approved = await findApprovedPaymentForOrder(order.id, Number(order.amount));
+        const { findPaidPaymentForOrder, serverStripeEnv } = await import("@/lib/stripe-payments.server");
+        const approved = await findPaidPaymentForOrder(serverStripeEnv(), order.id, (order as any).mp_preference_id, Number(order.amount));
         
         if (approved) {
           // Se encontramos um pagamento aprovado que o webhook ainda não processou, 
           // disparamos o fulfillment em segundo plano e retornamos status positivo.
-          const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+          const { fulfillOrder } = await import("@/lib/fulfillment.server");
           // fulfillOrder is already robust, we just need to make sure the import is correct.
           // Since it's a server file in a server function, we use the relative path.
           // Não aguardamos o fulfillOrder para não travar a UI, ele é idempotente.

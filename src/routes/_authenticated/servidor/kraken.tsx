@@ -554,12 +554,12 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
                               planSlug: 'kraken-monthly',
                               returnOrigin: window.location.origin
                             }});
-                            window.location.href = r.initPoint;
+                            window.location.href = r.checkoutUrl;
                           } catch (err: any) {
                             toast.error(err.message || "Erro ao iniciar checkout");
                           }
                         }}
-                        aria-label="Adquirir Plano Mensal Kraken por 20 mil reais no Mercado Pago"
+                        aria-label="Adquirir Plano Mensal Kraken por 20 mil reais com pagamento seguro"
                       >
                         <span className="text-[10px] text-neon font-bold tracking-widest uppercase">MENSAL</span>
                         <span className="text-xl font-black text-white group-hover:scale-110 transition-transform">R$ 20.000</span>
@@ -574,12 +574,12 @@ function KrakenPage({ resolvedBg, setResolvedBg, bgLoaded, setBgLoaded }: Kraken
                               planSlug: 'kraken-lifetime',
                               returnOrigin: window.location.origin
                             }});
-                            window.location.href = r.initPoint;
+                            window.location.href = r.checkoutUrl;
                           } catch (err: any) {
                             toast.error(err.message || "Erro ao iniciar checkout");
                           }
                         }}
-                        aria-label="Adquirir Plano Vitalício Kraken por 30 mil reais no Mercado Pago"
+                        aria-label="Adquirir Plano Vitalício Kraken por 30 mil reais com pagamento seguro"
                       >
                         <span className="text-[10px] text-emerald-400 font-bold tracking-widest uppercase">VITALÍCIO</span>
                         <span className="text-xl font-black text-white group-hover:scale-110 transition-transform">R$ 30.000</span>

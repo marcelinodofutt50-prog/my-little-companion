@@ -30,6 +30,7 @@ import { Route as TutorialIdRouteImport } from './routes/tutorial.$id'
 import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso'
 import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
 import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
+import { Route as PagamentoCheckoutRouteImport } from './routes/pagamento.checkout'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
 import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authenticated/staff-chat'
@@ -41,13 +42,13 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder/index'
 import { Route as ApiPublicTutorialsRouteImport } from './routes/api/public/tutorials'
-import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
 import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
 import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authenticated/servidor/status'
 import { Route as AuthenticatedServidorKrakenRouteImport } from './routes/_authenticated/servidor/kraken'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
@@ -164,6 +165,11 @@ const PagamentoErroRoute = PagamentoErroRouteImport.update({
   path: '/pagamento/erro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagamentoCheckoutRoute = PagamentoCheckoutRouteImport.update({
+  id: '/pagamento/checkout',
+  path: '/pagamento/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
   id: '/tutoriais',
   path: '/tutoriais',
@@ -221,11 +227,6 @@ const ApiPublicTutorialsRoute = ApiPublicTutorialsRouteImport.update({
   path: '/api/public/tutorials',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
-  id: '/api/public/mp-webhook',
-  path: '/api/public/mp-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
@@ -258,6 +259,12 @@ const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksVerifyExternalPayersRoute =
   ApiPublicHooksVerifyExternalPayersRouteImport.update({
     id: '/api/public/hooks/verify-external-payers',
@@ -350,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
+  '/pagamento/checkout': typeof PagamentoCheckoutRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -360,7 +368,6 @@ export interface FileRoutesByFullPath {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/health': typeof ApiPublicHealthRoute
-  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -401,6 +409,7 @@ export interface FileRoutesByTo {
   '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
+  '/pagamento/checkout': typeof PagamentoCheckoutRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -411,7 +420,6 @@ export interface FileRoutesByTo {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/health': typeof ApiPublicHealthRoute
-  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
@@ -425,6 +433,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -454,6 +463,7 @@ export interface FileRoutesById {
   '/_authenticated/staff-chat': typeof AuthenticatedStaffChatRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
+  '/pagamento/checkout': typeof PagamentoCheckoutRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -464,7 +474,6 @@ export interface FileRoutesById {
   '/api/chat/license-ai': typeof ApiChatLicenseAiRoute
   '/api/public/backend-health': typeof ApiPublicBackendHealthRoute
   '/api/public/health': typeof ApiPublicHealthRoute
-  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/tutorials': typeof ApiPublicTutorialsRoute
   '/api/apk-builder/': typeof ApiApkBuilderIndexRoute
   '/api/public/hooks/apk-worker': typeof ApiPublicHooksApkWorkerRoute
@@ -478,6 +487,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
+    | '/pagamento/checkout'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -517,7 +528,6 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/health'
-    | '/api/public/mp-webhook'
     | '/api/public/tutorials'
     | '/api/apk-builder/'
     | '/api/public/hooks/apk-worker'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -558,6 +569,7 @@ export interface FileRouteTypes {
     | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
+    | '/pagamento/checkout'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -568,7 +580,6 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/health'
-    | '/api/public/mp-webhook'
     | '/api/public/tutorials'
     | '/api/apk-builder'
     | '/api/public/hooks/apk-worker'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -610,6 +622,7 @@ export interface FileRouteTypes {
     | '/_authenticated/staff-chat'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
+    | '/pagamento/checkout'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -620,7 +633,6 @@ export interface FileRouteTypes {
     | '/api/chat/license-ai'
     | '/api/public/backend-health'
     | '/api/public/health'
-    | '/api/public/mp-webhook'
     | '/api/public/tutorials'
     | '/api/apk-builder/'
     | '/api/public/hooks/apk-worker'
@@ -634,6 +646,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/verify-external-payers'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -654,13 +667,13 @@ export interface RootRouteChildren {
   ShadowHubRoute: typeof ShadowHubRoute
   TermosRoute: typeof TermosRoute
   TutorialRoute: typeof TutorialRouteWithChildren
+  PagamentoCheckoutRoute: typeof PagamentoCheckoutRoute
   PagamentoErroRoute: typeof PagamentoErroRoute
   PagamentoPendenteRoute: typeof PagamentoPendenteRoute
   PagamentoSucessoRoute: typeof PagamentoSucessoRoute
   ApiChatLicenseAiRoute: typeof ApiChatLicenseAiRoute
   ApiPublicBackendHealthRoute: typeof ApiPublicBackendHealthRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
-  ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicTutorialsRoute: typeof ApiPublicTutorialsRoute
   ApiApkBuilderIndexRoute: typeof ApiApkBuilderIndexRoute
   ApiPublicHooksApkWorkerRoute: typeof ApiPublicHooksApkWorkerRoute
@@ -674,6 +687,7 @@ export interface RootRouteChildren {
   ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
   ApiPublicHooksResendConfirmationsRoute: typeof ApiPublicHooksResendConfirmationsRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -825,6 +839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PagamentoErroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pagamento/checkout': {
+      id: '/pagamento/checkout'
+      path: '/pagamento/checkout'
+      fullPath: '/pagamento/checkout'
+      preLoaderRoute: typeof PagamentoCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/tutoriais': {
       id: '/_authenticated/tutoriais'
       path: '/tutoriais'
@@ -902,13 +923,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTutorialsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/mp-webhook': {
-      id: '/api/public/mp-webhook'
-      path: '/api/public/mp-webhook'
-      fullPath: '/api/public/mp-webhook'
-      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/health': {
       id: '/api/public/health'
       path: '/api/public/health'
@@ -950,6 +964,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/staff'
       preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/verify-external-payers': {
       id: '/api/public/hooks/verify-external-payers'
@@ -1103,13 +1124,13 @@ const rootRouteChildren: RootRouteChildren = {
   ShadowHubRoute: ShadowHubRoute,
   TermosRoute: TermosRoute,
   TutorialRoute: TutorialRouteWithChildren,
+  PagamentoCheckoutRoute: PagamentoCheckoutRoute,
   PagamentoErroRoute: PagamentoErroRoute,
   PagamentoPendenteRoute: PagamentoPendenteRoute,
   PagamentoSucessoRoute: PagamentoSucessoRoute,
   ApiChatLicenseAiRoute: ApiChatLicenseAiRoute,
   ApiPublicBackendHealthRoute: ApiPublicBackendHealthRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
-  ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicTutorialsRoute: ApiPublicTutorialsRoute,
   ApiApkBuilderIndexRoute: ApiApkBuilderIndexRoute,
   ApiPublicHooksApkWorkerRoute: ApiPublicHooksApkWorkerRoute,
@@ -1126,6 +1147,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksResendConfirmationsRoute,
   ApiPublicHooksVerifyExternalPayersRoute:
     ApiPublicHooksVerifyExternalPayersRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

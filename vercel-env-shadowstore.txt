@@ -15,9 +15,13 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_SUPABASE_PROJECT_ID=
 
-# --- Mercado Pago ---
-MP_ACCESS_TOKEN=
-MP_WEBHOOK_SECRET=
+# --- Pagamentos (Stripe via Lovable) ---
+# Copie os valores do arquivo .env.development / .env.production do projeto.
+VITE_PAYMENTS_CLIENT_TOKEN=
+STRIPE_SANDBOX_API_KEY=
+PAYMENTS_SANDBOX_WEBHOOK_SECRET=
+STRIPE_LIVE_API_KEY=
+PAYMENTS_LIVE_WEBHOOK_SECRET=
 
 # --- Yaarsa Panels ---
 YAARSA_BASE_URL=

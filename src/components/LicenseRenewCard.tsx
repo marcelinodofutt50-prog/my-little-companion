@@ -29,7 +29,7 @@ export function LicenseRenewCard({
     setLoading(true);
     try {
       const res = await checkoutFn({ data: { planSlug, returnOrigin: window.location.origin } });
-      const url = res.initPoint || res.sandboxInitPoint;
+      const url = res.checkoutUrl;
       if (!url) throw new Error("Não foi possível iniciar renovação");
       markCheckoutIntent(planSlug);
       window.location.href = url;

@@ -302,15 +302,20 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
     const paymentId = o.payment_id ?? o.mp_payment_id ?? o.external_id ?? null;
     if (paymentId) {
       try {
-        const { getMpPayment } = await import("@/lib/mercadopago.server");
-        const p: any = await getMpPayment(String(paymentId));
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const { serverStripeEnv } = await import("@/lib/stripe-payments.server");
+        const stripe = createStripeClient(serverStripeEnv());
+        const p: any = String(paymentId).startsWith("cs_")
+          ? await stripe.checkout.sessions.retrieve(String(paymentId))
+          : await stripe.paymentIntents.retrieve(String(paymentId));
+        const amount = Number(p?.amount_received ?? p?.amount_total ?? p?.amount ?? 0) / 100;
         gateway = {
-          status: p?.status ?? null,
-          status_detail: p?.status_detail ?? null,
-          amount: p?.transaction_amount ?? null,
-          date_approved: p?.date_approved ?? null,
-          payer_email: p?.payer?.email ?? null,
-          refunded: Number(p?.transaction_amount_refunded ?? 0) > 0,
+          status: p?.status ?? p?.payment_status ?? null,
+          status_detail: p?.last_payment_error?.message ?? null,
+          amount,
+          date_approved: p?.created ? new Date(p.created * 1000).toISOString() : null,
+          payer_email: p?.customer_details?.email ?? p?.receipt_email ?? null,
+          refunded: Boolean(p?.latest_charge?.refunded),
         };
       } catch {
         gateway = { error: "não foi possível consultar o gateway" };
@@ -438,9 +443,7 @@ export const adminVerifyRefundAi = createServerFn({ method: "POST" })
         windowDays: REFUND_WINDOW_DAYS,
         reviewDays: REFUND_REVIEW_DAYS,
         links: {
-          mercadoPago: paymentId
-            ? `https://www.mercadopago.com.br/activities/detail/${paymentId}`
-            : null,
+          gateway: paymentId ? `https://dashboard.stripe.com/payments/${paymentId}` : null,
           userSupport: r.user_id ? `/admin?user=${r.user_id}` : null,
         },
         model: "gemini-1.5-flash",

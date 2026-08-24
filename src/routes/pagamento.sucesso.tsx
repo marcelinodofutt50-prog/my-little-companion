@@ -155,7 +155,7 @@ function SuccessPage() {
               {exhausted ? (
                 <>
                   <p className="mt-4 text-center text-xs text-muted-foreground">
-                    Se o pagamento já foi feito, ele será processado em instantes. Você pode verificar no painel a qualquer momento — a licença aparece assim que o Mercado Pago confirma.
+                    Se o pagamento já foi feito, ele será processado em instantes. Você pode verificar no painel a qualquer momento — a licença aparece assim que o pagamento é confirmado.
                   </p>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <Button className="flex-1 font-mono uppercase" onClick={startPolling}>

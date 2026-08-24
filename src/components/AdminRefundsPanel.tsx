@@ -20,7 +20,7 @@ type AiResult = {
     order: Record<string, any>;
     windowDays: number;
     reviewDays: number;
-    links: { mercadoPago: string | null; userSupport: string | null };
+    links: { gateway: string | null; userSupport: string | null };
     model: string;
     verifiedAt: string;
   };
@@ -186,8 +186,8 @@ export function AdminRefundsPanel() {
                                 <div>PIX informado: <span className="text-foreground">{ev.refund.pix_key ?? "—"}</span></div>
                               </dl>
                               <div className="mt-2 flex flex-wrap items-center gap-3">
-                                {ev.links.mercadoPago && (
-                                  <a href={ev.links.mercadoPago} target="_blank" rel="noreferrer"
+                                {ev.links.gateway && (
+                                  <a href={ev.links.gateway} target="_blank" rel="noreferrer"
                                     className="inline-flex items-center gap-1 font-mono text-[10px] text-neon hover:underline">
                                     <ExternalLink className="h-3 w-3" /> ver pagamento no Mercado Pago ({ev.order.mp_payment_id})
                                   </a>
