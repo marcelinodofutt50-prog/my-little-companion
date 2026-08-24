@@ -240,3 +240,11 @@ export async function refundStripePayment(
   });
   return { id: refund.id, status: refund.status ?? null };
 }
+
+/**
+ * Ambiente usado pelas rotinas de servidor (conciliação, reembolso, cron).
+ * Se o projeto já tem as chaves de produção, usamos produção.
+ */
+export function serverStripeEnv(): StripeEnv {
+  return process.env['STRIPE_LIVE_API_KEY'] ? 'live' : 'sandbox';
+}
