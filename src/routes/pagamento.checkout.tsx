@@ -47,12 +47,13 @@ function CheckoutPage() {
   const stripeOn = Boolean(providers?.stripe) && isPaymentsConfigured();
   const mpOn = Boolean(providers?.mercadopago);
 
-  // Se só existe uma forma de pagamento ativa, já abre direto nela.
+  // Pré-seleciona a forma recomendada (Pix pelo Mercado Pago).
   useEffect(() => {
     if (provider || loadingProviders) return;
-    if (stripeOn && !mpOn) setProvider("stripe");
-    else if (mpOn && !stripeOn) setProvider("mercadopago");
+    if (mpOn) setProvider("mercadopago");
+    else if (stripeOn) setProvider("stripe");
   }, [provider, loadingProviders, stripeOn, mpOn]);
+
 
   const fetchClientSecret = useCallback(async () => {
     if (!order) throw new Error("Pedido não informado.");
