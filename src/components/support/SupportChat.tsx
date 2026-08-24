@@ -135,10 +135,31 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const [unseen, setUnseen] = useState(0);
   const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
+  const [refining, setRefining] = useState<null | RefineTone>(null);
+  const [preRefine, setPreRefine] = useState<string | null>(null);
 
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
   const markReadFn = useServerFn(markThreadReadByCustomer);
+  const refineFn = useServerFn(refineSupportReply);
+
+  const handleRefine = async (tone: RefineTone) => {
+    const draft = body.trim();
+    if (!draft || refining) return;
+    setRefining(tone);
+    try {
+      const res: any = await refineFn({ data: { threadId, draft, tone } });
+      if (res?.text) {
+        setPreRefine(draft);
+        setBody(res.text);
+        toast.success("Texto reformulado — revise antes de enviar.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível reformular o texto agora.");
+    } finally {
+      setRefining(null);
+    }
+  };
 
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
