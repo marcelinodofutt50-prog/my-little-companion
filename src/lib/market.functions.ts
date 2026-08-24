@@ -141,7 +141,6 @@ export const createMarketCheckout = createServerFn({ method: "POST" })
     }).parse(input);
   })
   .handler(async ({ data, context }) => {
-    const { createMpPreference } = await import("./mercadopago.server");
     const { supabase, userId, claims } = context;
 
     const { data: plan, error: planErr } = await supabase
