@@ -83,7 +83,7 @@ function MarketPage() {
     setBuyingSlug(slug);
     try {
       const r = await checkoutFn({ data: { planSlug: slug, returnOrigin: window.location.origin } });
-      window.location.href = r.initPoint;
+      window.location.href = r.checkoutUrl;
     } catch (err: any) {
       toast.error(err.message || "Erro ao iniciar checkout");
       setBuyingSlug(null);

@@ -104,7 +104,7 @@ function LegacyRenewalPage() {
         },
       });
       markCheckoutIntent("server-monthly-legacy");
-      window.location.href = r.initPoint;
+      window.location.href = r.checkoutUrl;
     } catch (e: any) {
       setErr(e?.message || "Falha ao iniciar checkout");
       setGoing(false);

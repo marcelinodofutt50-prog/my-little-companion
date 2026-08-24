@@ -73,24 +73,21 @@ export const runPurchaseSelfTest = createServerFn({ method: "POST" })
     );
     if (!plan?.active) return { mode: data.mode, steps, finishedAt: new Date().toISOString() };
 
-    // 3) Mercado Pago — criação de preferência (não cobra nada)
+    // 3) Provedor de pagamento — checa se o catálogo de preços responde (não cobra nada)
     let preferenceOk = false;
     try {
-      const { createMpPreference } = await import("./mercadopago.server");
-      const pref = await createMpPreference({
-        orderId: `selftest-${Date.now()}`,
-        planName: `Autoteste — ${plan.name}`,
-        amount: 1,
-        payerEmail: (context.claims?.email as string | undefined) ?? undefined,
-        successUrl: "https://www.shadowdashstore.com/pagamento/sucesso",
-        pendingUrl: "https://www.shadowdashstore.com/pagamento/pendente",
-        failureUrl: "https://www.shadowdashstore.com/pagamento/erro",
-        notificationUrl: "https://www.shadowdashstore.com/api/public/mp-webhook",
-      });
-      preferenceOk = Boolean(pref?.init_point);
-      push("Checkout Mercado Pago (PIX)", preferenceOk, preferenceOk ? "Preferência criada com sucesso — checkout operacional." : "Resposta sem init_point.");
+      const { createStripeClient } = await import("./stripe.server");
+      const { serverStripeEnv } = await import("./stripe-payments.server");
+      const stripe = createStripeClient(serverStripeEnv());
+      const prices = await stripe.prices.list({ limit: 1, active: true });
+      preferenceOk = Array.isArray(prices.data);
+      push(
+        "Checkout (cartão e Pix)",
+        preferenceOk,
+        preferenceOk ? `Provedor de pagamento respondendo (${prices.data.length} preço(s) visível(is)).` : "Provedor não respondeu à consulta de preços.",
+      );
     } catch (e: any) {
-      push("Checkout Mercado Pago (PIX)", false, e?.message ?? "Falha ao criar preferência");
+      push("Checkout (cartão e Pix)", false, e?.message ?? "Falha ao consultar o provedor de pagamento");
     }
 
     // 4) Painel Yaarsa

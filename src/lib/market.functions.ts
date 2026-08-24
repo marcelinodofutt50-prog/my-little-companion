@@ -162,19 +162,7 @@ export const createMarketCheckout = createServerFn({ method: "POST" })
     if (orderErr || !order) throw new Error(orderErr?.message || "Falha ao criar pedido");
 
     const origin = data.returnOrigin.replace(/\/$/, "");
-    const pref = await createMpPreference({
-      orderId: order.id,
-      planName: `Shadow Mercado — ${plan.name}`,
-      amount,
-      payerEmail: claims?.email as string | undefined,
-      successUrl: `${origin}/mercado/sucesso?order=${order.id}`,
-      pendingUrl: `${origin}/pagamento/pendente?order=${order.id}`,
-      failureUrl: `${origin}/pagamento/erro?order=${order.id}`,
-      notificationUrl: `${origin}/api/public/mp-webhook`,
-    });
-
-    await supabase.from("orders").update({ mp_preference_id: pref.id }).eq("id", order.id);
-    return { orderId: order.id, initPoint: pref.init_point, sandboxInitPoint: pref.sandbox_init_point };
+    return { orderId: order.id, checkoutUrl: `${origin}/pagamento/checkout?order=${order.id}` };
   });
 
 export const getMarketOrderState = createServerFn({ method: "GET" })

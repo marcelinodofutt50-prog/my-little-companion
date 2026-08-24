@@ -23,7 +23,7 @@ export const testMercadoPagoWebhook = createServerFn({ method: "POST" })
     await assertAdminRole({ supabase: context.supabase, userId: context.userId });
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { fulfillOrder } = await import("@/routes/api/public/mp-webhook");
+    const { fulfillOrder } = await import("@/lib/fulfillment.server");
 
     const paymentId = `TEST-PAYMENT-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 

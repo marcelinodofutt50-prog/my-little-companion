@@ -384,7 +384,7 @@ function PlansPage() {
       
       // Delay to ensure the loading state is visible before redirect
       setTimeout(() => {
-        window.location.href = r.initPoint;
+        window.location.href = r.checkoutUrl;
       }, 500);
     } catch (e: any) {
       console.error("[CheckoutError]", e);
