@@ -41,11 +41,14 @@ export async function syncLicensesWithPanel(
   licenses: any[],
   opts: { actor: "client" | "admin"; userId?: string } = { actor: "client" },
 ): Promise<PanelSyncReport> {
-  const { yaarsaReadAccount } = await import("./yaarsa.server");
+  const { yaarsaReadAccount, yaarsaLookupEmail } = await import("./yaarsa.server");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { acquireOpLock, releaseOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
-  const report: PanelSyncReport = { checked: 0, activated: 0, unchanged: 0, unknown: 0, items: [] };
+  const report: PanelSyncReport = {
+    checked: 0, activated: 0, unchanged: 0, unknown: 0, confirmed: 0, missing: 0, items: [],
+  };
+
 
   for (const lic of licenses) {
     if (!lic?.yaarsa_email || lic.disabled_at || lic.suspended_at) continue;
