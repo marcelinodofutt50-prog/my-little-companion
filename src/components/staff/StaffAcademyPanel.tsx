@@ -401,16 +401,7 @@ export function StaffAcademyPanel({ className }: { className?: string }) {
 
                   {isOpen && (
                     <div className="space-y-4 border-t border-primary/10 px-4 py-4">
-                      {m.video_url && (
-                        <a
-                          href={m.video_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary"
-                        >
-                          <Video className="h-3.5 w-3.5" /> Assistir vídeo do módulo
-                        </a>
-                      )}
+                      {m.video_url && <TrainingVideo url={m.video_url} />}
                       <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
                         {m.content}
                       </p>
