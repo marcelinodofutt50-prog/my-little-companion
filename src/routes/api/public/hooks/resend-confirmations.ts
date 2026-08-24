@@ -22,10 +22,9 @@ export const Route = createFileRoute("/api/public/hooks/resend-confirmations")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!process.env.CRON_TRIGGER_TOKEN || token !== process.env.CRON_TRIGGER_TOKEN) {
-          return json({ error: "Unauthorized" }, 401);
-        }
+        const { cronUnauthorized } = await import("@/lib/cron-auth.server");
+        const denied = cronUnauthorized(request);
+        if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

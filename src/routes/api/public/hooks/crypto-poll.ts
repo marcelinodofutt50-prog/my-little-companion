@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { timingSafeEqual } from "node:crypto";
 
 /**
  * Cron-triggered crypto payment poller.
@@ -95,25 +94,17 @@ async function processBatch() {
   return results;
 }
 
-function verifyCronSecret(request: Request): boolean {
-  const provided = request.headers.get("x-cron-secret") ?? "";
-  const expected = process.env.CRON_TRIGGER_TOKEN ?? "";
-  if (!expected) return false;
-  try {
-    const a = Buffer.from(provided);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
+async function verifyCronSecret(request: Request): Promise<boolean> {
+  // Fonte única: aceita Bearer ou x-cron-secret, CRON_SECRET ou CRON_TRIGGER_TOKEN.
+  const { isAuthorizedCron } = await import("@/lib/cron-auth.server");
+  return isAuthorizedCron(request);
 }
 
 export const Route = createFileRoute("/api/public/hooks/crypto-poll")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (!verifyCronSecret(request)) return new Response("unauthorized", { status: 401 });
+        if (!await verifyCronSecret(request)) return new Response("unauthorized", { status: 401 });
         const results = await processBatch();
         return Response.json({ ok: true, processed: results.length, results });
       },
