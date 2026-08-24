@@ -47,7 +47,7 @@ describe("mídia do chat de suporte", () => {
 
   it("formata tamanho de arquivo", () => {
     expect(formatBytes(0)).toBe("");
-    expect(formatBytes(2048)).toBe("2 KB");
+    expect(formatBytes(2048)).toBe("2.0 KB");
     expect(formatBytes(25 * 1024 * 1024)).toBe("25 MB");
   });
 });
