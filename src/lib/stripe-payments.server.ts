@@ -17,15 +17,26 @@ export const RECURRING_PRICE_BY_SLUG: Record<string, string> = {
   "play-protect-monthly": "play_protect_monthly",
 };
 
-/** Quantos dias cada assinatura renova por ciclo. */
+/** Caminho inverso: da chave de preço da Stripe para o plano do banco. */
+export const SLUG_BY_RECURRING_PRICE: Record<string, string> = {
+  monthly_457: "monthly_457",
+  trial: "trial",
+  kraken_monthly: "kraken-monthly",
+  play_protect_monthly: "play-protect-monthly",
+};
+
+/** Quantos dias cada assinatura renova por ciclo (aceita slug ou chave Stripe). */
 export const RECURRING_DAYS_BY_SLUG: Record<string, number> = {
   monthly_457: 30,
   "login-30d": 30,
   trial: 7,
   "login-7d": 7,
   "kraken-monthly": 30,
+  kraken_monthly: 30,
   "play-protect-monthly": 30,
+  play_protect_monthly: 30,
 };
+
 
 export function stripeEnvFromToken(token?: string | null): StripeEnv {
   if (token?.startsWith("pk_live_")) return "live";
