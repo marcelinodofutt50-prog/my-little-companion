@@ -631,13 +631,18 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       newPassword: z
         .string()
         .trim()
-        .refine((v) => isPasswordValid(v), (v) => ({
-          message:
-            passwordError(v) ??
-            "Senha fora da política: use 8+ caracteres com maiúscula, minúscula, número e um especial (@ # . _ -).",
-        })),
+        .superRefine((v, ctx) => {
+          if (isPasswordValid(v)) return;
+          ctx.addIssue({
+            code: "custom",
+            message:
+              passwordError(v) ??
+              "Senha fora da política: use 8+ caracteres com maiúscula, minúscula, número e um especial (@ # . _ -).",
+          });
+        }),
     }).parse(input),
   )
+
 
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
