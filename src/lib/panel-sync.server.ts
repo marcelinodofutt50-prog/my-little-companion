@@ -25,8 +25,13 @@ export type PanelSyncReport = {
   activated: number;
   unchanged: number;
   unknown: number;
+  /** Conta existe no painel, mas o painel não devolve a data. */
+  confirmed: number;
+  /** Conta não existe mais no painel (precisa de "Reparar acesso"). */
+  missing: number;
   items: PanelSyncItem[];
 };
+
 
 /**
  * Lê o painel de cada licença e reativa as que já estão liberadas por lá.
@@ -36,11 +41,14 @@ export async function syncLicensesWithPanel(
   licenses: any[],
   opts: { actor: "client" | "admin"; userId?: string } = { actor: "client" },
 ): Promise<PanelSyncReport> {
-  const { yaarsaReadAccount } = await import("./yaarsa.server");
+  const { yaarsaReadAccount, yaarsaLookupEmail } = await import("./yaarsa.server");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { acquireOpLock, releaseOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
-  const report: PanelSyncReport = { checked: 0, activated: 0, unchanged: 0, unknown: 0, items: [] };
+  const report: PanelSyncReport = {
+    checked: 0, activated: 0, unchanged: 0, unknown: 0, confirmed: 0, missing: 0, items: [],
+  };
+
 
   for (const lic of licenses) {
     if (!lic?.yaarsa_email || lic.disabled_at || lic.suspended_at) continue;
@@ -107,7 +115,26 @@ export async function syncLicensesWithPanel(
           });
         }
       } else if (decision.action === "unknown") {
-        report.unknown++;
+        // O painel Yaarsa nem sempre expõe uma ação de leitura de data. Nesse
+        // caso não é erro: conferimos só se a CONTA existe no painel, que é o
+        // que realmente derruba o acesso do cliente quando some de madrugada.
+        let presence: boolean | null = null;
+        try {
+          presence = (await yaarsaLookupEmail(lic.yaarsa_email, lic.panel ?? "v457")).found;
+        } catch {
+          presence = null;
+        }
+        if (presence === true) {
+          item.action = "already_ok";
+          item.reason = "conta confirmada no painel (o painel não informa a data por aqui)";
+          report.confirmed++;
+        } else if (presence === false) {
+          item.reason = "conta não encontrada no painel — use “Reparar acesso”";
+          report.missing++;
+        } else {
+          report.unknown++;
+        }
+
       } else {
         report.unchanged++;
       }
