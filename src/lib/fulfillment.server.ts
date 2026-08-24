@@ -348,8 +348,8 @@ async function fulfillOrderInner(orderId: string) {
     return { ok: true, reason: `server-renewal:${touched.length}` };
   }
 
-  // ============ Market product path (admin fulfills manually via support/chat) ============
   // ============ Market / código-fonte (entrega manual pelo admin) ============
+
   if (planRow?.category === "market" || planRow?.category === "source") {
     await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
     await supabaseAdmin.from("webhook_logs").insert({
