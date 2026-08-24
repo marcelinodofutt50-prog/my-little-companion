@@ -40,6 +40,7 @@ export function AdminSupportPanel() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
+  const [fichaUserId, setFichaUserId] = useState<string | null>(null);
 
   const listFn = useServerFn(adminListThreads);
   const assumeFn = useServerFn(adminAssumeThread);
