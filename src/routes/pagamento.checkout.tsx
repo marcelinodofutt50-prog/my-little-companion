@@ -186,35 +186,51 @@ function CheckoutPage() {
 function ProviderCard({
   active,
   onClick,
-  icon,
+  logo,
+  brand,
   title,
   subtitle,
-  tag,
+  badge,
+  badgeTone,
 }: {
   active: boolean;
   onClick: () => void;
-  icon: React.ReactNode;
+  logo: string;
+  brand: string;
   title: string;
   subtitle: string;
-  tag: string;
+  badge?: string;
+  badgeTone?: "neon" | "warn";
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "flex w-full items-start gap-3 rounded-lg border p-3 text-left transition",
         active ? "border-neon bg-neon/5" : "border-border bg-card/40 hover:border-muted-foreground/40",
       )}
     >
-      <span className={cn("mt-0.5", active ? "text-neon" : "text-muted-foreground")}>{icon}</span>
+      <img src={logo} alt={`Logo ${brand}`} className="mt-0.5 h-8 w-11 shrink-0 rounded object-contain" loading="lazy" />
       <span className="min-w-0">
-        <span className="block text-sm font-semibold">{title}</span>
+        <span className="block text-sm font-semibold">{brand}</span>
+        <span className="mt-0.5 block text-xs text-foreground/80">{title}</span>
         <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">{subtitle}</span>
-        <span className="mt-1 inline-block rounded border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {tag}
-        </span>
+        {badge && (
+          <span
+            className={cn(
+              "mt-1.5 inline-block rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider",
+              badgeTone === "warn"
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                : "border-neon/40 bg-neon/10 text-neon",
+            )}
+          >
+            {badge}
+          </span>
+        )}
       </span>
     </button>
+
   );
 }
