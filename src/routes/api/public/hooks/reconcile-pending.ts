@@ -108,7 +108,7 @@ async function reconcilePendingOrders(request: Request) {
               } catch { /* consulta best-effort */ }
             }
 
-            }
+
 
             results.push({ orderId: order.id, action: "no-change", detail: "still-pending" });
           } catch (e: any) {
