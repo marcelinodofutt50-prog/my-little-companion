@@ -41,7 +41,7 @@ export async function syncLicensesWithPanel(
   licenses: any[],
   opts: { actor: "client" | "admin"; userId?: string } = { actor: "client" },
 ): Promise<PanelSyncReport> {
-  const { yaarsaReadAccount, yaarsaLookupEmail } = await import("./yaarsa.server");
+  const { yaarsaReadAccount, yaarsaProbeAccount, ALL_PANELS, hasPanelServer } = await import("./yaarsa.server");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { acquireOpLock, releaseOpLock, recordLicenseAudit } = await import("./audit-trail.server");
 
