@@ -389,6 +389,43 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     }
   };
 
+  /** Sobe o arquivo para o storage e envia como anexo. */
+  const uploadAndSend = async (file: File) => {
+    if (uploading) return;
+    if (file.size > SUPPORT_MEDIA_MAX_BYTES) {
+      toast.error(`Arquivo muito grande (${formatBytes(file.size)}). O limite é ${formatBytes(SUPPORT_MEDIA_MAX_BYTES)}.`);
+      return;
+    }
+    if (file.size === 0) {
+      toast.error("Esse arquivo está vazio.");
+      return;
+    }
+    const isImage = (file.type || "").startsWith("image/");
+    const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
+    setUploading(true);
+    const toastId = toast.loading(`Enviando ${file.name}…`);
+    try {
+      const safeName = safeMediaFileName(file.name || "arquivo");
+      const path = `${userId}/${threadId}/${Date.now()}-${safeName}`;
+      const { error } = await supabase.storage.from(SUPPORT_MEDIA_BUCKET).upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (error) throw error;
+      toast.dismiss(toastId);
+      await handleSend(path, file.type || "application/octet-stream", undefined, {
+        name: file.name,
+        ...(previewUrl ? { previewUrl } : {}),
+      });
+    } catch (err: any) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      toast.error(err?.message || "Falha ao anexar o arquivo.", { id: toastId });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const bubbleClass = (author: Group["author"]) =>
     author === "system"
       ? "bg-cyan/10 border border-cyan/40 text-cyan"
@@ -654,25 +691,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
             type="file"
             ref={fileRef}
             hidden
-            onChange={async (e) => {
+            accept="image/*,video/*,audio/*,.pdf,.txt,.log,.zip"
+            onChange={(e) => {
               const file = e.target.files?.[0];
-              if (!file) return;
               e.target.value = "";
-              if (file.size > 20 * 1024 * 1024) {
-                toast.error("Arquivo muito grande. O limite é 20 MB.");
-                return;
-              }
-              setUploading(true);
-              try {
-                const path = `${userId}/${threadId}/${Date.now()}-${file.name}`;
-                const { error } = await supabase.storage.from("support-media").upload(path, file);
-                if (error) throw error;
-                await handleSend(path, file.type);
-              } catch (err: any) {
-                toast.error(err?.message || "Falha ao anexar o arquivo.");
-              } finally {
-                setUploading(false);
-              }
+              if (file) void uploadAndSend(file);
             }}
           />
           <Button
@@ -688,6 +711,13 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
+            onPaste={(e) => {
+              const file = Array.from(e.clipboardData?.files ?? [])[0];
+              if (file) {
+                e.preventDefault();
+                void uploadAndSend(file);
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -699,7 +729,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
             className="flex-1 min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
 
           />
-          <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!body.trim()}>
+          <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!body.trim() || uploading}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
