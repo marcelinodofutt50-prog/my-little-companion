@@ -135,7 +135,10 @@ async function fulfillOrderInner(orderId: string) {
   })();
 
   // ============ Upgrade v4.5.7 → v4.6 path ============
-  if (planRow?.category === "upgrade" && planRow?.slug === "upgrade-457-to-46") {
+  // O slug manda: no banco esse plano está cadastrado como "license", então
+  // checar só a categoria fazia o upgrade cair no fluxo de login novo.
+  if (planRow?.slug === "upgrade-457-to-46" || planRow?.slug === "upgrade_v46") {
+
     const { yaarsaCreateAccount, yaarsaExtend, generateCredentials, encrypt } = await import("@/lib/yaarsa.server");
     const ymd = nextDay20.toISOString().slice(0, 10);
 
