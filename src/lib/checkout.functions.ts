@@ -307,10 +307,16 @@ export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
     for (const order of orders ?? []) {
       try {
         const { findPaidPaymentForOrder, serverStripeEnv } = await import("./stripe-payments.server");
-        const paid = await findPaidPaymentForOrder(serverStripeEnv(), order.id, (order as any).mp_preference_id, Number(order.amount));
+        let paid = await findPaidPaymentForOrder(serverStripeEnv(), order.id, (order as any).mp_preference_id, Number(order.amount));
+        if (!paid) {
+          const { findApprovedMercadoPagoPayment } = await import("./mercadopago.server");
+          paid = await findApprovedMercadoPagoPayment(order.id, Number(order.amount));
+        }
         if (!paid) continue;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", order.id);
+        const { fulfillOrder } = await import("@/lib/fulfillment.server");
+
         const { fulfillOrder } = await import("@/lib/fulfillment.server");
         const result = await fulfillOrder(order.id);
         if (result.ok) fulfilled += 1;
