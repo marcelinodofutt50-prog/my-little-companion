@@ -352,6 +352,15 @@ export function AdminSupportPanel() {
           </div>
         )}
       </div>
+
+      <AdminCustomer360
+        userId={fichaUserId}
+        onClose={() => setFichaUserId(null)}
+        onOpenThread={(threadId: string) => {
+          setFichaUserId(null);
+          setSelectedId(threadId);
+        }}
+      />
     </div>
   );
 }
