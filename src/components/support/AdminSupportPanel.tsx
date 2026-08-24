@@ -310,7 +310,7 @@ export function AdminSupportPanel() {
             <SupportCustomerContext 
               userId={selectedThread.user_id} 
               email={selectedThread.profile?.email}
-              onOpenFicha={() => toast.info("Abrindo ficha técnica...")}
+              onOpenFicha={() => setFichaUserId(selectedThread.user_id)}
             />
 
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
