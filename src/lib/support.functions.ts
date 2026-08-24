@@ -188,7 +188,43 @@ export const listMessages = createServerFn({ method: "GET" })
     const list = normalizeSupportMessages(rows, data.threadId);
     const hasMore = list.length > limit;
     const page = hasMore ? list.slice(0, limit) : list;
-    return { messages: page.reverse(), hasMore };
+    const ordered = page.reverse();
+
+    // Links assinados vencem; geramos um link novo a cada carregamento para o
+    // anexo antigo continuar abrindo normalmente.
+    const {
+      SUPPORT_MEDIA_BUCKET,
+      SUPPORT_MEDIA_SIGNED_TTL,
+      extractSupportMediaPath,
+    } = await import("./support-media");
+    const paths = Array.from(
+      new Set(
+        ordered
+          .map((m) => extractSupportMediaPath(m.attachment_url))
+          .filter((p): p is string => !!p),
+      ),
+    );
+    if (paths.length > 0) {
+      try {
+        const { data: signed } = await context.supabase.storage
+          .from(SUPPORT_MEDIA_BUCKET)
+          .createSignedUrls(paths, SUPPORT_MEDIA_SIGNED_TTL);
+        const byPath = new Map<string, string>();
+        for (const s of signed ?? []) {
+          const key = (s as { path?: string | null }).path;
+          if (key && s.signedUrl) byPath.set(key, s.signedUrl);
+        }
+        for (const m of ordered) {
+          const p = extractSupportMediaPath(m.attachment_url);
+          const fresh = p ? byPath.get(p) : undefined;
+          if (fresh) m.attachment_url = fresh;
+        }
+      } catch {
+        // Se a assinatura falhar, mantemos o link original (pode ainda estar válido).
+      }
+    }
+
+    return { messages: ordered, hasMore };
 
   });
 
