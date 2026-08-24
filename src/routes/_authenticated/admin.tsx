@@ -98,6 +98,7 @@ import {
   AdminVipPanel,
   LicenseAiPanel,
   RevenueSparkline,
+  AdminStaffApplicationsPanel,
   StaffAcademyPanel,
   StaffNexusChat,
 } from "@/components/admin/lazy-panels";
@@ -213,6 +214,7 @@ type Tab =
   | "trial_monitor"
   | "nexus"
   | "academy"
+  | "applications"
   | "redeem"
   | "license_audit"
   | "panel_integrity"
@@ -247,6 +249,7 @@ const TAB_DESC: Record<Tab, string> = {
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
   quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
   nexus: "Staff Nexus: canal de bate-papo interno e privado da equipe (admin, suporte e moderação).",
+  applications: "Candidaturas para a equipe: quem pediu para virar staff (R$ 350/mês, suporte + assinatura de APKs).",
   academy: "Academia da Equipe: treinamento interno para novos integrantes (só admin, suporte e moderação).",
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
@@ -674,6 +677,7 @@ function AdminPage() {
         { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
         { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
         { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
+        { id: "applications", label: "Candidaturas Staff", icon: Briefcase, hint: "pedidos para entrar na equipe" },
       ],
     },
     {
@@ -2316,6 +2320,7 @@ function AdminPage() {
               {tab === "vip" && <AdminVipPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
+              {tab === "applications" && <AdminStaffApplicationsPanel />}
               {tab === "redeem" && <AdminRedeemCodesPanel />}
               {tab === "license_audit" && <AdminLicenseAuditPanel />}
               {tab === "panel_integrity" && <AdminPanelIntegrityPanel />}
