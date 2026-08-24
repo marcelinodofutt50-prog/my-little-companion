@@ -18,7 +18,11 @@ async function run(request: Request) {
     const limit = Number(url.searchParams.get("limit") ?? 60);
     const { auditPanelIntegrity } = await import("@/lib/panel-integrity.server");
     const report = await auditPanelIntegrity({ limit, autoRepair: true });
-    return Response.json({ ok: true, ...report, rows: report.rows.filter((r) => r.status !== "ok") });
+    return Response.json({
+      success: true,
+      ...report,
+      rows: report.rows.filter((r) => r.status !== "ok"),
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ ok: false, error: message }), {
