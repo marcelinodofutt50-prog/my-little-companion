@@ -262,12 +262,16 @@ export const getOrderState = createServerFn({ method: "GET" })
     if (["pending", "created", "yaarsa_failed"].includes(String(order.status))) {
       try {
         const { findPaidPaymentForOrder, serverStripeEnv } = await import("./stripe-payments.server");
-        const paid = await findPaidPaymentForOrder(
+        let paid = await findPaidPaymentForOrder(
           serverStripeEnv(),
           data.orderId,
           (order as any).mp_preference_id,
           Number(order.amount),
         );
+        if (!paid) {
+          const { findApprovedMercadoPagoPayment } = await import("./mercadopago.server");
+          paid = await findApprovedMercadoPagoPayment(data.orderId, Number(order.amount));
+        }
         if (paid) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", data.orderId);
@@ -276,6 +280,7 @@ export const getOrderState = createServerFn({ method: "GET" })
         }
       } catch { /* reconciliation is best-effort; polling continues */ }
     }
+
 
     const { data: freshOrder } = await context.supabase
       .from("orders").select("*").eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();
