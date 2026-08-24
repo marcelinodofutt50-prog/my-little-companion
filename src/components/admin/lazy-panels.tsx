@@ -124,6 +124,9 @@ export const AdminPanelIntegrityPanel = lazyPanel(() =>
   import("@/components/admin/AdminPanelIntegrityPanel").then((m) => ({ default: m.AdminPanelIntegrityPanel })));
 
 
+export const AdminStaffApplicationsPanel = lazyPanel(() =>
+  import("@/components/admin/AdminStaffApplicationsPanel").then((m) => ({ default: m.AdminStaffApplicationsPanel })));
+
 export const StaffAcademyPanel = lazyPanel(() =>
   import("@/components/staff/StaffAcademyPanel").then((m) => ({ default: m.StaffAcademyPanel })));
 export const StaffNexusChat = lazyPanel(() =>

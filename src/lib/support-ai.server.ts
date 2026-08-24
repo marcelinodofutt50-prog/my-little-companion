@@ -1,8 +1,9 @@
 import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
-import { createGeminiProvider } from "./gemini-provider.server";
+import { withGeminiFallback } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { decrypt, yaarsaExtend, yaarsaSetPassword } from "./yaarsa.server";
+import { buildPixInstructions, isCheckoutFailureMessage } from "./pix";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", o atendente automatizado de primeiro nível da Shadow.
 Fale como um técnico humano experiente: direto, gentil, sem enrolação e SEMPRE em Português do Brasil.
@@ -38,6 +39,10 @@ POLÍTICA DO TESTE GRÁTIS (seja específico, nunca genérico):
   Peça o código de protocolo (formato TRL-AAMMDD-XXXXXX ou APK-...) para revisão humana.
 - Com licença comprada: trate normalmente como suporte técnico, sem acusações.
 
+PAGAMENTO / CHECKOUT:
+- Se o cliente disser que não consegue abrir ou concluir o checkout (Mercado Pago/Stripe/cartão/Pix),
+  chame 'sendPixInstructions'. Ela já envia a chave PIX oficial e o passo a passo. Não digite a chave você mesmo.
+
 REGRAS CRÍTICAS:
 - Se for só conversa ("oi", "bom dia") sem relato de erro, NÃO chame 'postAIMessage'.
 - Nunca invente status de pagamento; use apenas dados do 'checkCustomerStatus'.
@@ -64,6 +69,31 @@ async function resolveSystemSender(): Promise<string | null> {
   return systemSenderCache;
 }
 
+/** Grava uma mensagem automática no chat (usada pela IA e pelo fluxo do PIX). */
+async function postSystemMessage(threadId: string, body: string) {
+  const senderId = await resolveSystemSender();
+  if (!senderId) {
+    console.error("[support-ai] nenhum admin cadastrado para assinar a mensagem automática");
+    return { success: false, error: "sem remetente de sistema" };
+  }
+  const { error } = await supabaseAdmin.from("support_messages").insert({
+    thread_id: threadId,
+    sender_id: senderId,
+    is_admin: true,
+    is_system: true,
+    body: `🤖 **Assistente Shadow:** ${body}`,
+  });
+  if (error) {
+    console.error("[support-ai] falha ao gravar resposta automática:", error);
+    return { success: false, error: error.message };
+  }
+  await supabaseAdmin
+    .from("support_threads")
+    .update({ unread_by_customer: 1, last_staff_message_at: new Date().toISOString() })
+    .eq("id", threadId);
+  return { success: true };
+}
+
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
   const triggers = [
@@ -74,15 +104,20 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   ];
 
   const msgLower = userMessage.toLowerCase();
+
+  // Falha no checkout: resposta determinística e imediata com os dados do PIX,
+  // sem depender da IA (que pode estar sem cota).
+  if (isCheckoutFailureMessage(userMessage)) {
+    await postSystemMessage(threadId, buildPixInstructions());
+    return;
+  }
+
   const hasTrigger = triggers.some(t => msgLower.includes(t));
-  
+
   if (!hasTrigger) return;
 
   try {
-    const model = createGeminiProvider();
-
-    
-    await generateText({
+    await withGeminiFallback((model) => generateText({
       model,
       system: SUPPORT_AI_SYSTEM,
       prompt: `Usuário (ID: ${userId}) na conversa ${threadId} disse: "${userMessage}"`,
@@ -136,39 +171,18 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
         postAIMessage: tool({
           description: "Envia uma mensagem de resposta da IA para o chat do suporte.",
           inputSchema: z.object({ body: z.string() }),
-          execute: async ({ body }) => {
-            const senderId = await resolveSystemSender();
-            if (!senderId) {
-              console.error("[support-ai] nenhum admin cadastrado para assinar a mensagem automática");
-              return { success: false, error: "sem remetente de sistema" };
-            }
-            const { data: msg, error } = await supabaseAdmin.from("support_messages").insert({
-              thread_id: threadId,
-              sender_id: senderId,
-              is_admin: true,
-              is_system: true,
-              body: `🤖 **Assistente Shadow:** ${body}`
-            }).select("id").single();
-
-            if (error) {
-              console.error("[support-ai] falha ao gravar resposta automática:", error);
-              return { success: false, error: error.message };
-            }
-
-            if (msg) {
-              // Mark thread as unread for the customer so they see the AI notification
-              await supabaseAdmin
-                .from("support_threads")
-                .update({ unread_by_customer: 1, last_staff_message_at: new Date().toISOString() })
-                .eq("id", threadId);
-            }
-            return { success: true };
-          }
+          execute: async ({ body }) => postSystemMessage(threadId, body)
+        }),
+        sendPixInstructions: tool({
+          description:
+            "Envia os dados oficiais do PIX quando o cliente não consegue abrir/concluir o checkout.",
+          inputSchema: z.object({}),
+          execute: async () => postSystemMessage(threadId, buildPixInstructions())
         })
       },
       // Sem isso o modelo para logo após a 1ª ferramenta e nunca responde ao cliente.
       stopWhen: stepCountIs(8)
-    });
+    }));
 
   } catch (err) {
     console.error(`[support-ai] execution error for thread ${threadId}:`, err);

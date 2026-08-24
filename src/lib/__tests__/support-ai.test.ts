@@ -13,6 +13,8 @@ vi.mock("ai", () => ({
 
 vi.mock("../gemini-provider.server", () => ({
   createGeminiProvider: vi.fn(() => ({})),
+  withGeminiFallback: vi.fn((run: any) => run({})),
+  describeAiError: vi.fn((e: any) => String(e?.message ?? e)),
 }));
 
 // Criando o mock do Supabase com todas as funções encadeadas
@@ -118,5 +120,27 @@ describe("Support AI Proactive Flow", () => {
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_messages");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_threads");
     expect(mockSupabaseQuery.update).toHaveBeenCalledWith({ unread_by_customer: 1, last_staff_message_at: expect.any(String) });
+  });
+});
+
+
+describe("PIX automático no checkout", () => {
+  const threadId = "00000000-0000-0000-0000-000000000001";
+  const userId = "00000000-0000-0000-0000-000000000002";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSupabaseQuery.maybeSingle.mockResolvedValue({
+      data: { user_id: "00000000-0000-0000-0000-000000000003" },
+      error: null,
+    });
+  });
+
+  it("envia a chave PIX sem chamar a IA quando o checkout falha", async () => {
+    await triggerSupportAI(threadId, userId, "não estou conseguindo abrir o checkout para pagar");
+    expect(generateText).not.toHaveBeenCalled();
+    const body = mockSupabaseQuery.insert.mock.calls[0][0].body as string;
+    expect(body).toContain("bbfccc7e-73d6-4d19-ab8e-ac069ef622a4");
+    expect(body).toContain("Bruno Gomes");
   });
 });
