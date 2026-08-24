@@ -30,6 +30,7 @@ import { Route as TutorialIdRouteImport } from './routes/tutorial.$id'
 import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso'
 import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
 import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
+import { Route as PagamentoCheckoutRouteImport } from './routes/pagamento.checkout'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
 import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authenticated/staff-chat'
@@ -162,6 +163,11 @@ const PagamentoPendenteRoute = PagamentoPendenteRouteImport.update({
 const PagamentoErroRoute = PagamentoErroRouteImport.update({
   id: '/pagamento/erro',
   path: '/pagamento/erro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoCheckoutRoute = PagamentoCheckoutRouteImport.update({
+  id: '/pagamento/checkout',
+  path: '/pagamento/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
@@ -351,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
+  '/pagamento/checkout': typeof PagamentoCheckoutRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -402,6 +409,7 @@ export interface FileRoutesByTo {
   '/staff-chat': typeof AuthenticatedStaffChatRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
+  '/pagamento/checkout': typeof PagamentoCheckoutRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -455,6 +463,7 @@ export interface FileRoutesById {
   '/_authenticated/staff-chat': typeof AuthenticatedStaffChatRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
+  '/pagamento/checkout': typeof PagamentoCheckoutRoute
   '/pagamento/erro': typeof PagamentoErroRoute
   '/pagamento/pendente': typeof PagamentoPendenteRoute
   '/pagamento/sucesso': typeof PagamentoSucessoRoute
@@ -508,6 +517,7 @@ export interface FileRouteTypes {
     | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
+    | '/pagamento/checkout'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/staff-chat'
     | '/suporte'
     | '/tutoriais'
+    | '/pagamento/checkout'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/_authenticated/staff-chat'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
+    | '/pagamento/checkout'
     | '/pagamento/erro'
     | '/pagamento/pendente'
     | '/pagamento/sucesso'
@@ -655,6 +667,7 @@ export interface RootRouteChildren {
   ShadowHubRoute: typeof ShadowHubRoute
   TermosRoute: typeof TermosRoute
   TutorialRoute: typeof TutorialRouteWithChildren
+  PagamentoCheckoutRoute: typeof PagamentoCheckoutRoute
   PagamentoErroRoute: typeof PagamentoErroRoute
   PagamentoPendenteRoute: typeof PagamentoPendenteRoute
   PagamentoSucessoRoute: typeof PagamentoSucessoRoute
@@ -824,6 +837,13 @@ declare module '@tanstack/react-router' {
       path: '/pagamento/erro'
       fullPath: '/pagamento/erro'
       preLoaderRoute: typeof PagamentoErroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/checkout': {
+      id: '/pagamento/checkout'
+      path: '/pagamento/checkout'
+      fullPath: '/pagamento/checkout'
+      preLoaderRoute: typeof PagamentoCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/tutoriais': {
@@ -1104,6 +1124,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShadowHubRoute: ShadowHubRoute,
   TermosRoute: TermosRoute,
   TutorialRoute: TutorialRouteWithChildren,
+  PagamentoCheckoutRoute: PagamentoCheckoutRoute,
   PagamentoErroRoute: PagamentoErroRoute,
   PagamentoPendenteRoute: PagamentoPendenteRoute,
   PagamentoSucessoRoute: PagamentoSucessoRoute,
