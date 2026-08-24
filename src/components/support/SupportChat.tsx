@@ -29,11 +29,21 @@ import {
   ZoomIn,
   Wand2,
   Undo2,
+  FileText,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { playNotifyDing } from "@/lib/notify-sound";
+import {
+  SUPPORT_MEDIA_BUCKET,
+  SUPPORT_MEDIA_MAX_BYTES,
+  formatBytes,
+  mediaFileName,
+  mediaKind,
+  safeMediaFileName,
+} from "@/lib/support-media";
 import { refineSupportReply } from "@/lib/support-refine.functions";
 
 type RefineTone = "formal" | "empatico" | "direto";
@@ -49,6 +59,8 @@ type PendingMsg = {
   body: string | null;
   attachmentPath?: string;
   attachmentType?: string;
+  attachmentName?: string;
+  previewUrl?: string;
   status: "sending" | "failed";
   error?: string;
   created_at: string;
