@@ -146,6 +146,81 @@ function groupMessages(
 }
 
 
+/** Bolha de anexo: imagem, vídeo, áudio, PDF ou arquivo genérico. */
+function Attachment({
+  url,
+  type,
+  onZoom,
+}: {
+  url: string;
+  type: string | null;
+  onZoom: (url: string) => void;
+}) {
+  const [broken, setBroken] = useState(false);
+  const kind = mediaKind(type, url);
+  const name = mediaFileName(url);
+
+  if (broken || kind === "file" || kind === "pdf") {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 flex items-center gap-2 rounded-lg border border-border/30 bg-muted/30 p-2 text-xs hover:bg-muted/50"
+      >
+        {kind === "pdf" ? <FileText className="h-4 w-4 shrink-0" /> : <Paperclip className="h-4 w-4 shrink-0" />}
+        <span className="min-w-0 flex-1 truncate">{name}</span>
+        <Download className="h-3.5 w-3.5 shrink-0 opacity-70" />
+      </a>
+    );
+  }
+
+  if (kind === "video") {
+    return (
+      <div className="mt-2 overflow-hidden rounded-lg border border-border/20 bg-black/30">
+        <video
+          src={url}
+          controls
+          preload="metadata"
+          playsInline
+          className="max-h-72 w-full"
+          onError={() => setBroken(true)}
+        />
+      </div>
+    );
+  }
+
+  if (kind === "audio") {
+    return (
+      <div className="mt-2 rounded-lg border border-border/20 bg-muted/30 p-2">
+        <audio src={url} controls preload="metadata" className="w-full" onError={() => setBroken(true)} />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="group/img relative mt-2 block overflow-hidden rounded-lg border border-border/20"
+      onClick={() => onZoom(url)}
+      aria-label="Ampliar imagem do anexo"
+    >
+      <img
+        src={url}
+        alt={name}
+        loading="lazy"
+        decoding="async"
+        onError={() => setBroken(true)}
+        className="max-h-60 w-full cursor-zoom-in bg-black/20 object-contain"
+      />
+      <span className="absolute bottom-1 right-1 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover/img:opacity-100">
+        <ZoomIn className="h-3 w-3" />
+      </span>
+    </button>
+  );
+}
+
+
 export function SupportChat({ threadId, userId, isAdmin = false, customerName, onNewMessage }: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
@@ -417,35 +492,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                       <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</p>
                     )}
                     {m.attachment_url && (
-                      <div className="mt-2 rounded-lg overflow-hidden border border-border/20">
-                        {m.attachment_type?.startsWith("image/") ? (
-                          <button
-                            type="button"
-                            className="group/img relative block w-full"
-                            onClick={() => setZoomUrl(m.attachment_url)}
-                            aria-label="Ampliar imagem do anexo"
-                          >
-                            <img
-                              src={m.attachment_url}
-                              alt="anexo enviado no atendimento"
-                              loading="lazy"
-                              className="max-h-60 w-full cursor-zoom-in object-contain bg-black/20"
-                            />
-                            <span className="absolute bottom-1 right-1 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover/img:opacity-100">
-                              <ZoomIn className="h-3 w-3" />
-                            </span>
-                          </button>
-                        ) : (
-                          <a
-                            href={m.attachment_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-2 p-2 bg-muted/30 hover:bg-muted/50 text-xs"
-                          >
-                            <Paperclip className="h-3 w-3" /> Baixar anexo
-                          </a>
-                        )}
-                      </div>
+                      <Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} />
                     )}
                     <div className="mt-1 text-[10px] font-mono opacity-60 text-right">
                       {hhmm(m.created_at)}
