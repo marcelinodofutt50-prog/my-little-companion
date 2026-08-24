@@ -88,7 +88,7 @@ function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <PaymentTestModeBanner />
+      <PaymentTestModeBanner anyProviderActive={stripeOn || mpOn} />
       <div className="mx-auto w-full max-w-3xl px-4 py-8">
         <Link to="/planos" className="mb-6 inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-3.5 w-3.5" /> Voltar aos planos
