@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { adminSetThreadPriority, adminUpdateThreadCategory, adminMergeDuplicateThreads } from "@/lib/support-admin.functions";
 import { SupportChat } from "./SupportChat";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
+import { AdminCustomer360 } from "@/components/admin/lazy-panels";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { categoryMeta, SUPPORT_CATEGORY_META, SupportCategory } from "@/lib/support-categories";
 import { 
@@ -39,6 +40,7 @@ export function AdminSupportPanel() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
+  const [fichaUserId, setFichaUserId] = useState<string | null>(null);
 
   const listFn = useServerFn(adminListThreads);
   const assumeFn = useServerFn(adminAssumeThread);
@@ -310,7 +312,7 @@ export function AdminSupportPanel() {
             <SupportCustomerContext 
               userId={selectedThread.user_id} 
               email={selectedThread.profile?.email}
-              onOpenFicha={() => toast.info("Abrindo ficha técnica...")}
+              onOpenFicha={() => setFichaUserId(selectedThread.user_id)}
             />
 
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -350,6 +352,17 @@ export function AdminSupportPanel() {
           </div>
         )}
       </div>
+
+      {fichaUserId && (
+      <AdminCustomer360
+        userId={fichaUserId}
+        onClose={() => setFichaUserId(null)}
+        onOpenThread={(threadId: string) => {
+          setFichaUserId(null);
+          setSelectedId(threadId);
+        }}
+      />
+      )}
     </div>
   );
 }
