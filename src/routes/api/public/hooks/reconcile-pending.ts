@@ -50,7 +50,7 @@ async function reconcilePendingOrders(request: Request) {
         const results: { orderId: string; action: string; detail?: string }[] = [];
 
         const now = Date.now();
-        const { MAX_FULFILLMENT_ATTEMPTS } = await import("@/routes/api/public/mp-webhook");
+        const { MAX_FULFILLMENT_ATTEMPTS } = await import("@/lib/fulfillment.server");
 
         for (const order of (orders ?? []) as any[]) {
           try {
