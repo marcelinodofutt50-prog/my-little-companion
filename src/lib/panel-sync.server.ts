@@ -115,7 +115,26 @@ export async function syncLicensesWithPanel(
           });
         }
       } else if (decision.action === "unknown") {
-        report.unknown++;
+        // O painel Yaarsa nem sempre expõe uma ação de leitura de data. Nesse
+        // caso não é erro: conferimos só se a CONTA existe no painel, que é o
+        // que realmente derruba o acesso do cliente quando some de madrugada.
+        let presence: boolean | null = null;
+        try {
+          presence = (await yaarsaLookupEmail(lic.yaarsa_email, lic.panel ?? "v457")).found;
+        } catch {
+          presence = null;
+        }
+        if (presence === true) {
+          item.action = "already_ok";
+          item.reason = "conta confirmada no painel (o painel não informa a data por aqui)";
+          report.confirmed++;
+        } else if (presence === false) {
+          item.reason = "conta não encontrada no painel — use “Reparar acesso”";
+          report.missing++;
+        } else {
+          report.unknown++;
+        }
+
       } else {
         report.unchanged++;
       }
