@@ -362,6 +362,7 @@ export function AdminSupportPanel() {
           setSelectedId(threadId);
         }}
       />
+      )}
     </div>
   );
 }
