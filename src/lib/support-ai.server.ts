@@ -1,6 +1,6 @@
 import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
-import { createGeminiProvider } from "./gemini-provider.server";
+import { withGeminiFallback } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { decrypt, yaarsaExtend, yaarsaSetPassword } from "./yaarsa.server";
 import { buildPixInstructions, isCheckoutFailureMessage } from "./pix";
@@ -38,6 +38,10 @@ POLÍTICA DO TESTE GRÁTIS (seja específico, nunca genérico):
   mesmo aparelho já usado, e-mail variante da mesma caixa, e-mail temporário, ou várias contas na mesma rede.
   Peça o código de protocolo (formato TRL-AAMMDD-XXXXXX ou APK-...) para revisão humana.
 - Com licença comprada: trate normalmente como suporte técnico, sem acusações.
+
+PAGAMENTO / CHECKOUT:
+- Se o cliente disser que não consegue abrir ou concluir o checkout (Mercado Pago/Stripe/cartão/Pix),
+  chame 'sendPixInstructions'. Ela já envia a chave PIX oficial e o passo a passo. Não digite a chave você mesmo.
 
 REGRAS CRÍTICAS:
 - Se for só conversa ("oi", "bom dia") sem relato de erro, NÃO chame 'postAIMessage'.
@@ -113,10 +117,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   if (!hasTrigger) return;
 
   try {
-    const model = createGeminiProvider();
-
-    
-    await generateText({
+    await withGeminiFallback((model) => generateText({
       model,
       system: SUPPORT_AI_SYSTEM,
       prompt: `Usuário (ID: ${userId}) na conversa ${threadId} disse: "${userMessage}"`,
@@ -181,7 +182,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
       },
       // Sem isso o modelo para logo após a 1ª ferramenta e nunca responde ao cliente.
       stopWhen: stepCountIs(8)
-    });
+    }));
 
   } catch (err) {
     console.error(`[support-ai] execution error for thread ${threadId}:`, err);
