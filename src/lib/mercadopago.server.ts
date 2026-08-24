@@ -8,19 +8,25 @@
 
 const MP_API = "https://api.mercadopago.com";
 
+/** Aceita os dois nomes usados no projeto/deploy. */
+function readAccessToken(): string | undefined {
+  const token = process.env["MERCADOPAGO_ACCESS_TOKEN"] || process.env["MP_ACCESS_TOKEN"];
+  return token && token.trim() !== "" ? token.trim() : undefined;
+}
+
 export function mercadoPagoAccessToken(): string {
-  const token = process.env["MERCADOPAGO_ACCESS_TOKEN"];
+  const token = readAccessToken();
   if (!token) throw new Error("O Mercado Pago ainda não foi configurado neste projeto.");
   return token;
 }
 
 export function isMercadoPagoConfigured(): boolean {
-  return Boolean(process.env["MERCADOPAGO_ACCESS_TOKEN"]);
+  return Boolean(readAccessToken());
 }
 
 /** Conta de teste (TEST-...) ou conta de produção. */
 export function mercadoPagoEnvironment(): "sandbox" | "live" {
-  return process.env["MERCADOPAGO_ACCESS_TOKEN"]?.startsWith("TEST-") ? "sandbox" : "live";
+  return readAccessToken()?.startsWith("TEST-") ? "sandbox" : "live";
 }
 
 async function mpFetch<T>(path: string, init?: RequestInit & { idempotencyKey?: string }): Promise<T> {
