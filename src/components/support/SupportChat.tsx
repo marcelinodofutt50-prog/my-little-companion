@@ -29,11 +29,21 @@ import {
   ZoomIn,
   Wand2,
   Undo2,
+  FileText,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { playNotifyDing } from "@/lib/notify-sound";
+import {
+  SUPPORT_MEDIA_BUCKET,
+  SUPPORT_MEDIA_MAX_BYTES,
+  formatBytes,
+  mediaFileName,
+  mediaKind,
+  safeMediaFileName,
+} from "@/lib/support-media";
 import { refineSupportReply } from "@/lib/support-refine.functions";
 
 type RefineTone = "formal" | "empatico" | "direto";
@@ -49,6 +59,8 @@ type PendingMsg = {
   body: string | null;
   attachmentPath?: string;
   attachmentType?: string;
+  attachmentName?: string;
+  previewUrl?: string;
   status: "sending" | "failed";
   error?: string;
   created_at: string;
@@ -134,6 +146,81 @@ function groupMessages(
 }
 
 
+/** Bolha de anexo: imagem, vídeo, áudio, PDF ou arquivo genérico. */
+function Attachment({
+  url,
+  type,
+  onZoom,
+}: {
+  url: string;
+  type: string | null;
+  onZoom: (url: string) => void;
+}) {
+  const [broken, setBroken] = useState(false);
+  const kind = mediaKind(type, url);
+  const name = mediaFileName(url);
+
+  if (broken || kind === "file" || kind === "pdf") {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 flex items-center gap-2 rounded-lg border border-border/30 bg-muted/30 p-2 text-xs hover:bg-muted/50"
+      >
+        {kind === "pdf" ? <FileText className="h-4 w-4 shrink-0" /> : <Paperclip className="h-4 w-4 shrink-0" />}
+        <span className="min-w-0 flex-1 truncate">{name}</span>
+        <Download className="h-3.5 w-3.5 shrink-0 opacity-70" />
+      </a>
+    );
+  }
+
+  if (kind === "video") {
+    return (
+      <div className="mt-2 overflow-hidden rounded-lg border border-border/20 bg-black/30">
+        <video
+          src={url}
+          controls
+          preload="metadata"
+          playsInline
+          className="max-h-72 w-full"
+          onError={() => setBroken(true)}
+        />
+      </div>
+    );
+  }
+
+  if (kind === "audio") {
+    return (
+      <div className="mt-2 rounded-lg border border-border/20 bg-muted/30 p-2">
+        <audio src={url} controls preload="metadata" className="w-full" onError={() => setBroken(true)} />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="group/img relative mt-2 block overflow-hidden rounded-lg border border-border/20"
+      onClick={() => onZoom(url)}
+      aria-label="Ampliar imagem do anexo"
+    >
+      <img
+        src={url}
+        alt={name}
+        loading="lazy"
+        decoding="async"
+        onError={() => setBroken(true)}
+        className="max-h-60 w-full cursor-zoom-in bg-black/20 object-contain"
+      />
+      <span className="absolute bottom-1 right-1 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover/img:opacity-100">
+        <ZoomIn className="h-3 w-3" />
+      </span>
+    </button>
+  );
+}
+
+
 export function SupportChat({ threadId, userId, isAdmin = false, customerName, onNewMessage }: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
@@ -174,6 +261,19 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
 
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Refs evitam closure velha dentro da assinatura do tempo real.
+  const atBottomRef = useRef(true);
+  const msgIdsRef = useRef<Set<string>>(new Set());
+  const [dragActive, setDragActive] = useState(false);
+  const [connection, setConnection] = useState<"live" | "reconnecting">("live");
+
+  useEffect(() => {
+    atBottomRef.current = atBottom;
+  }, [atBottom]);
+
+  useEffect(() => {
+    msgIdsRef.current = new Set(msgs.map((m) => m.id));
+  }, [msgs]);
 
   const groups = useMemo(
     () => groupMessages(msgs, userId, isAdmin, customerName || "Cliente"),
@@ -190,9 +290,18 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
       if (before) {
-        setMsgs((prev) => [...newMsgs, ...prev]);
+        setMsgs((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          return [...newMsgs.filter((m) => !seen.has(m.id)), ...prev];
+        });
       } else {
-        setMsgs(newMsgs);
+        // Mantém mensagens que chegaram pelo tempo real e ainda não estão na página.
+        setMsgs((prev) => {
+          const ids = new Set(newMsgs.map((m) => m.id));
+          const extra = prev.filter((m) => !ids.has(m.id) && newMsgs.length > 0 &&
+            m.created_at > (newMsgs[newMsgs.length - 1]?.created_at ?? ""));
+          return [...newMsgs, ...extra];
+        });
       }
       setHasMore(!!r.hasMore);
     } catch (e: any) {
@@ -212,6 +321,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       markReadFn({ data: { threadId } }).catch(() => {});
     }
 
+    let subscribedOnce = false;
     const ch = supabase
       .channel(`thread-${threadId}`)
       .on(
@@ -219,30 +329,64 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
         (payload) => {
           const next = normalizeSupportMessage(payload.new, threadId);
-          setMsgs((prev) => {
-            if (prev.some((m) => m.id === next.id)) return prev;
-            if (next.sender_id !== userId) {
-              playNotifyDing();
-              onNewMessage?.();
-              if (!atBottom) setUnseen((u) => u + 1);
-            }
-            return [...prev, next];
-          });
+          if (!next.id || msgIdsRef.current.has(next.id)) return;
+          msgIdsRef.current.add(next.id);
+          if (next.sender_id !== userId) {
+            playNotifyDing();
+            onNewMessage?.();
+            if (!atBottomRef.current) setUnseen((u) => u + 1);
+          }
+          setMsgs((prev) =>
+            prev.some((m) => m.id === next.id)
+              ? prev
+              : [...prev, next].sort((a, b) => (a.created_at < b.created_at ? -1 : 1)),
+          );
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        setConnection(status === "SUBSCRIBED" ? "live" : "reconnecting");
+        if (status !== "SUBSCRIBED") return;
+        // Só recarrega em RE-conexão (a carga inicial já aconteceu acima).
+        if (subscribedOnce) void loadMessages();
+        subscribedOnce = true;
+      });
+
+    // Rede/aba voltando: reconciliar a conversa.
+    const resync = () => {
+      if (document.visibilityState === "visible") void loadMessages();
+    };
+    document.addEventListener("visibilitychange", resync);
+    window.addEventListener("online", resync);
 
     return () => {
+      document.removeEventListener("visibilitychange", resync);
+      window.removeEventListener("online", resync);
       supabase.removeChannel(ch);
     };
   }, [threadId, userId]);
+
+  // Fecha o visualizador de imagem com Esc.
+  useEffect(() => {
+    if (!zoomUrl) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setZoomUrl(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomUrl]);
 
   useEffect(() => {
     if (!loadingOlder && atBottom) scrollToBottom();
   }, [msgs.length, pending.length]);
 
-  const handleSend = async (attachmentPath?: string, attachmentType?: string, retryOf?: string) => {
-    const text = retryOf ? (pending.find((p) => p.clientId === retryOf)?.body ?? "") : body.trim();
+  const handleSend = async (
+    attachmentPath?: string,
+    attachmentType?: string,
+    retryOf?: string,
+    meta?: { name?: string; previewUrl?: string },
+  ) => {
+    const previous = retryOf ? pending.find((p) => p.clientId === retryOf) : undefined;
+    const text = retryOf ? (previous?.body ?? "") : body.trim();
     if (!text && !attachmentPath) return;
     const replyToId = retryOf ? null : replyTo?.id ?? null;
 
@@ -250,8 +394,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     const newPending: PendingMsg = {
       clientId,
       body: text || null,
-      attachmentPath,
-      attachmentType,
+      ...(attachmentPath ? { attachmentPath } : {}),
+      ...(attachmentType ? { attachmentType } : {}),
+      ...(meta?.name ?? previous?.attachmentName ? { attachmentName: meta?.name ?? previous?.attachmentName } : {}),
+      ...(meta?.previewUrl ?? previous?.previewUrl ? { previewUrl: meta?.previewUrl ?? previous?.previewUrl } : {}),
       status: "sending",
       created_at: new Date().toISOString(),
     };
@@ -279,7 +425,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         if (prev.some((m) => m.id === normalized.id)) return prev;
         return [...prev, normalized];
       });
-      setPending((prev) => prev.filter((p) => p.clientId !== clientId));
+      setPending((prev) => {
+        const done = prev.find((p) => p.clientId === clientId);
+        if (done?.previewUrl) URL.revokeObjectURL(done.previewUrl);
+        return prev.filter((p) => p.clientId !== clientId);
+      });
       setAtBottom(true);
     } catch (e: any) {
       const message = e?.message || "Falha ao enviar a mensagem.";
@@ -287,6 +437,43 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         prev.map((p) => (p.clientId === clientId ? { ...p, status: "failed", error: message } : p)),
       );
       toast.error(message);
+    }
+  };
+
+  /** Sobe o arquivo para o storage e envia como anexo. */
+  const uploadAndSend = async (file: File) => {
+    if (uploading) return;
+    if (file.size > SUPPORT_MEDIA_MAX_BYTES) {
+      toast.error(`Arquivo muito grande (${formatBytes(file.size)}). O limite é ${formatBytes(SUPPORT_MEDIA_MAX_BYTES)}.`);
+      return;
+    }
+    if (file.size === 0) {
+      toast.error("Esse arquivo está vazio.");
+      return;
+    }
+    const isImage = (file.type || "").startsWith("image/");
+    const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
+    setUploading(true);
+    const toastId = toast.loading(`Enviando ${file.name}…`);
+    try {
+      const safeName = safeMediaFileName(file.name || "arquivo");
+      const path = `${userId}/${threadId}/${Date.now()}-${safeName}`;
+      const { error } = await supabase.storage.from(SUPPORT_MEDIA_BUCKET).upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (error) throw error;
+      toast.dismiss(toastId);
+      await handleSend(path, file.type || "application/octet-stream", undefined, {
+        name: file.name,
+        ...(previewUrl ? { previewUrl } : {}),
+      });
+    } catch (err: any) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      toast.error(err?.message || "Falha ao anexar o arquivo.", { id: toastId });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -298,7 +485,36 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         : "bg-muted/50 border border-border/40";
 
   return (
-    <div className="relative flex flex-col h-full bg-background/40 backdrop-blur-sm border border-border/40 rounded-lg overflow-hidden">
+    <div
+      className="relative flex flex-col h-full bg-background/40 backdrop-blur-sm border border-border/40 rounded-lg overflow-hidden"
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("Files")) {
+          e.preventDefault();
+          setDragActive(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target) setDragActive(false);
+      }}
+      onDrop={(e) => {
+        const file = Array.from(e.dataTransfer.files ?? [])[0];
+        if (file) {
+          e.preventDefault();
+          setDragActive(false);
+          void uploadAndSend(file);
+        }
+      }}
+    >
+      {dragActive && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary/60 bg-background/80 text-sm font-mono uppercase tracking-widest text-primary">
+          Solte o arquivo para anexar
+        </div>
+      )}
+      {connection === "reconnecting" && (
+        <div className="flex items-center justify-center gap-2 bg-amber-500/10 py-1 text-[10px] font-mono uppercase tracking-widest text-amber-400">
+          <Loader2 className="h-3 w-3 animate-spin" /> Reconectando ao chat
+        </div>
+      )}
       <SupportSummaryPanel threadId={threadId} />
       <div
 
@@ -405,35 +621,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                       <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</p>
                     )}
                     {m.attachment_url && (
-                      <div className="mt-2 rounded-lg overflow-hidden border border-border/20">
-                        {m.attachment_type?.startsWith("image/") ? (
-                          <button
-                            type="button"
-                            className="group/img relative block w-full"
-                            onClick={() => setZoomUrl(m.attachment_url)}
-                            aria-label="Ampliar imagem do anexo"
-                          >
-                            <img
-                              src={m.attachment_url}
-                              alt="anexo enviado no atendimento"
-                              loading="lazy"
-                              className="max-h-60 w-full cursor-zoom-in object-contain bg-black/20"
-                            />
-                            <span className="absolute bottom-1 right-1 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover/img:opacity-100">
-                              <ZoomIn className="h-3 w-3" />
-                            </span>
-                          </button>
-                        ) : (
-                          <a
-                            href={m.attachment_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-2 p-2 bg-muted/30 hover:bg-muted/50 text-xs"
-                          >
-                            <Paperclip className="h-3 w-3" /> Baixar anexo
-                          </a>
-                        )}
-                      </div>
+                      <Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} />
                     )}
                     <div className="mt-1 text-[10px] font-mono opacity-60 text-right">
                       {hhmm(m.created_at)}
@@ -455,7 +643,20 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   : "bg-primary/60 text-primary-foreground"
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>
+              {p.body && <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>}
+              {p.previewUrl && (
+                <img
+                  src={p.previewUrl}
+                  alt="pré-visualização do anexo"
+                  className="mt-2 max-h-48 rounded-lg object-contain opacity-80"
+                />
+              )}
+              {!p.previewUrl && p.attachmentName && (
+                <div className="mt-1 flex items-center gap-2 text-xs opacity-90">
+                  <Paperclip className="h-3 w-3" />
+                  <span className="max-w-[200px] truncate">{p.attachmentName}</span>
+                </div>
+              )}
               <div className="mt-1 flex items-center justify-end gap-1 text-[10px] font-mono uppercase opacity-80">
                 {p.status === "failed" ? (
                   <>
@@ -475,7 +676,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   variant="outline"
                   size="sm"
                   className="h-6 text-[10px] gap-1"
-                  onClick={() => handleSend(p.attachmentPath, p.attachmentType, p.clientId)}
+                  onClick={() => void handleSend(p.attachmentPath, p.attachmentType, p.clientId)}
                 >
                   <RotateCw className="h-3 w-3" /> Reenviar
                 </Button>
@@ -570,25 +771,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
             type="file"
             ref={fileRef}
             hidden
-            onChange={async (e) => {
+            accept="image/*,video/*,audio/*,.pdf,.txt,.log,.zip"
+            onChange={(e) => {
               const file = e.target.files?.[0];
-              if (!file) return;
               e.target.value = "";
-              if (file.size > 20 * 1024 * 1024) {
-                toast.error("Arquivo muito grande. O limite é 20 MB.");
-                return;
-              }
-              setUploading(true);
-              try {
-                const path = `${userId}/${threadId}/${Date.now()}-${file.name}`;
-                const { error } = await supabase.storage.from("support-media").upload(path, file);
-                if (error) throw error;
-                await handleSend(path, file.type);
-              } catch (err: any) {
-                toast.error(err?.message || "Falha ao anexar o arquivo.");
-              } finally {
-                setUploading(false);
-              }
+              if (file) void uploadAndSend(file);
             }}
           />
           <Button
@@ -604,6 +791,13 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
+            onPaste={(e) => {
+              const file = Array.from(e.clipboardData?.files ?? [])[0];
+              if (file) {
+                e.preventDefault();
+                void uploadAndSend(file);
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -615,7 +809,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
             className="flex-1 min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
 
           />
-          <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!body.trim()}>
+          <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!body.trim() || uploading}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
