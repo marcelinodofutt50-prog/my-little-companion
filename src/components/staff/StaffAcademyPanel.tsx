@@ -25,10 +25,10 @@ import {
   Plus,
   Trash2,
   Users,
-  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { TrainingVideo } from "./TrainingVideo";
 
 const LEVEL_LABEL: Record<string, string> = {
   basico: "Básico",
