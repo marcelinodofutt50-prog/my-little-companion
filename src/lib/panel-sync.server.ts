@@ -115,25 +115,42 @@ export async function syncLicensesWithPanel(
           });
         }
       } else if (decision.action === "unknown") {
-        // O painel Yaarsa nem sempre expõe uma ação de leitura de data. Nesse
-        // caso não é erro: conferimos só se a CONTA existe no painel, que é o
-        // que realmente derruba o acesso do cliente quando some de madrugada.
-        let presence: boolean | null = null;
-        try {
-          presence = (await yaarsaLookupEmail(lic.yaarsa_email, lic.panel ?? "v457")).found;
-        } catch {
-          presence = null;
+        // O painel Yaarsa não expõe leitura de data. Então conferimos o que
+        // realmente derruba o cliente: a conta ainda existe no painel? Se não
+        // estiver no painel esperado, procuramos nos outros (conta migrada) e
+        // corrigimos o painel salvo aqui.
+        const current = (lic.panel ?? "v457") as (typeof ALL_PANELS)[number];
+        let probe = await yaarsaProbeAccount(lic.yaarsa_email, current);
+
+        if (probe.state !== "found") {
+          for (const p of ALL_PANELS) {
+            if (p === current) continue;
+            if (p === "v455" && !hasPanelServer("v455")) continue;
+            const alt = await yaarsaProbeAccount(lic.yaarsa_email, p);
+            if (alt.state === "found") {
+              await supabaseAdmin.from("licenses").update({ panel: p } as any).eq("id", lic.id);
+              item.reason = `conta encontrada no painel ${p} — painel corrigido aqui`;
+              probe = alt;
+              break;
+            }
+            if (probe.state === "unknown" && alt.state === "missing") probe = alt;
+          }
         }
-        if (presence === true) {
+
+        if (probe.state === "found") {
           item.action = "already_ok";
-          item.reason = "conta confirmada no painel (o painel não informa a data por aqui)";
+          if (!item.reason.startsWith("conta encontrada"))
+            item.reason = "conta confirmada no painel (o painel não informa a data por aqui)";
           report.confirmed++;
-        } else if (presence === false) {
+        } else if (probe.state === "missing") {
           item.reason = "conta não encontrada no painel — use “Reparar acesso”";
           report.missing++;
         } else {
+          item.reason = `painel indisponível: ${probe.detail.slice(0, 120)}`;
           report.unknown++;
         }
+
+
 
       } else {
         report.unchanged++;
