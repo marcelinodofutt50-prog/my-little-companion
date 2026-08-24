@@ -1013,8 +1013,7 @@ export const syncMyLicensesWithPanel = createServerFn({ method: "POST" })
 
       return { ok: true, ...report, message };
 
-            : "Tudo conferido: a data do painel é a mesma que aparece aqui. Se o servidor não foi pago, use 'Renovar servidor'.",
-      };
+
     } finally {
       await releaseOpLock(lockKey);
     }
