@@ -25,8 +25,13 @@ export type PanelSyncReport = {
   activated: number;
   unchanged: number;
   unknown: number;
+  /** Conta existe no painel, mas o painel não devolve a data. */
+  confirmed: number;
+  /** Conta não existe mais no painel (precisa de "Reparar acesso"). */
+  missing: number;
   items: PanelSyncItem[];
 };
+
 
 /**
  * Lê o painel de cada licença e reativa as que já estão liberadas por lá.
