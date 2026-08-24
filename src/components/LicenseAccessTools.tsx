@@ -261,7 +261,6 @@ export function LicenseAccessTools({
             </Button>
           </DialogFooter>
 
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
