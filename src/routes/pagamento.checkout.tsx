@@ -2,12 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
-import { AlertTriangle, ArrowLeft, CreditCard, ExternalLink, Loader2, QrCode, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
 import { getStripe, getStripeEnvironment, isPaymentsConfigured } from "@/lib/stripe";
 import { createOrderPaymentSession } from "@/lib/payments.functions";
 import { createMercadoPagoCheckout, getPaymentProviders } from "@/lib/mercadopago.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
+import mercadoPagoLogo from "@/assets/logo-mercadopago.svg";
+import stripeLogo from "@/assets/logo-stripe.svg";
+
 
 export const Route = createFileRoute("/pagamento/checkout")({
   validateSearch: (search: Record<string, unknown>): { order?: string } => ({
