@@ -321,6 +321,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       markReadFn({ data: { threadId } }).catch(() => {});
     }
 
+    let subscribedOnce = false;
     const ch = supabase
       .channel(`thread-${threadId}`)
       .on(
@@ -344,8 +345,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       )
       .subscribe((status) => {
         setConnection(status === "SUBSCRIBED" ? "live" : "reconnecting");
-        // Ao reconectar, recarregamos para não perder nada que chegou offline.
-        if (status === "SUBSCRIBED") void loadMessages();
+        if (status !== "SUBSCRIBED") return;
+        // Só recarrega em RE-conexão (a carga inicial já aconteceu acima).
+        if (subscribedOnce) void loadMessages();
+        subscribedOnce = true;
       });
 
     // Rede/aba voltando: reconciliar a conversa.
