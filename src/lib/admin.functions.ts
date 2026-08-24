@@ -1486,7 +1486,23 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
     const uid = data.userId;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profile, roles, licenses, orders, threads, refunds, apkJobs, cashback, referrals] = await Promise.all([
+    const [
+      profile,
+      roles,
+      licenses,
+      orders,
+      threads,
+      refunds,
+      apkJobs,
+      cashback,
+      referrals,
+      loyalty,
+      subscriptions,
+      trials,
+      fraud,
+      playProtect,
+      redeemUses,
+    ] = await Promise.all([
       supabaseAdmin.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabaseAdmin.from("user_roles").select("role").eq("user_id", uid),
       supabaseAdmin.from("licenses").select("*").eq("user_id", uid).order("created_at", { ascending: false }).limit(30),
