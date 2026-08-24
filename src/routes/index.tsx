@@ -67,7 +67,7 @@ export const Route = createFileRoute("/")({
     { title: "Shadow — OSINT & Digital Asset Manager" },
     { name: "description", content: "O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, Bypass Play Protect e infraestrutura VPS dedicada." },
     { property: "og:title", content: "Shadow — OSINT & Digital Asset Manager" },
-    { property: "og:description", content: "Acesse a elite do gerenciamento de ativos digitais. Ativação instantânea via Mercado Pago." },
+    { property: "og:description", content: "Acesse a elite do gerenciamento de ativos digitais. Ativação instantânea após o pagamento." },
     { property: "og:type", content: "website" },
     { property: "og:url", content: siteUrl("/") },
     { name: "twitter:card", content: "summary_large_image" },
@@ -210,7 +210,7 @@ function Index() {
             <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
               <Zap className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />
               <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">Fast Injection</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Provisionamento de infraestrutura VPS dedicada em menos de 60 segundos após o PIX Mercado Pago.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Provisionamento de infraestrutura VPS dedicada em menos de 60 segundos após o pagamento.</p>
             </div>
             <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
               <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />

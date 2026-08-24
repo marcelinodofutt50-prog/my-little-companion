@@ -44,7 +44,7 @@ function TermsPage() {
         </Section>
 
         <Section title="2. Licenças e entrega">
-          <p>As licenças são pessoais e intransferíveis. Após a confirmação do pagamento pelo provedor oficial (Mercado Pago), a licença é criada automaticamente e as credenciais ficam disponíveis no painel do cliente, normalmente em menos de um minuto.</p>
+          <p>As licenças são pessoais e intransferíveis. Após a confirmação do pagamento pelo provedor oficial de pagamentos, a licença é criada automaticamente e as credenciais ficam disponíveis no painel do cliente, normalmente em menos de um minuto.</p>
           <p>É proibido revender, compartilhar ou redistribuir credenciais sem autorização expressa. O descumprimento pode gerar revogação imediata sem reembolso.</p>
         </Section>
 

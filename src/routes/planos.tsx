@@ -45,9 +45,9 @@ export const Route = createFileRoute("/planos")({
   head: () => ({ 
     meta: [
       { title: "Planos Shadow — Licenças, servidor e código-fonte" },
-      { name: "description", content: "Pagamento oficial via PIX Mercado Pago. Ativação automática em menos de 1 minuto. Shadow 4.6+ com Bypass Play Protect e Bypass Dropper inclusos." },
+      { name: "description", content: "Pagamento oficial com cartão ou Pix. Ativação automática em menos de 1 minuto. Shadow 4.6+ com Bypass Play Protect e Bypass Dropper inclusos." },
       { property: "og:title", content: "Planos Shadow — Licenças, servidor e código-fonte" },
-      { property: "og:description", content: "PIX oficial Mercado Pago, ativação automática em menos de 1 minuto e garantia de 7 dias." },
+      { property: "og:description", content: "Cartão ou Pix, ativação automática em menos de 1 minuto e garantia de 7 dias." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: siteUrl("/planos") },
       { name: "twitter:card", content: "summary_large_image" },
@@ -582,7 +582,7 @@ function PlansPage() {
             transition={{ delay: 0.2 }}
             className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70"
           >
-            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Mercado Pago</span>
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Pagamento seguro</span>
             <span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-primary" /> &lt; 1 min</span>
             <span className="flex items-center gap-1.5"><HeadphonesIcon className="h-3.5 w-3.5 text-primary" /> Suporte 24/7</span>
             <span className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-primary" /> AES-256</span>
@@ -1183,7 +1183,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
               <div>
                 <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">Total à Pagar</span>
                 <div className="flex items-center gap-1.5 text-[10px] text-primary/80">
-                  <CreditCard className="h-3 w-3" /> Mercado Pago (PIX)
+                  <CreditCard className="h-3 w-3" /> Cartão ou Pix
                 </div>
               </div>
               <span className="font-display text-3xl font-bold text-primary">{formatBrl(total)}</span>
@@ -1290,7 +1290,7 @@ function PreCheckoutFaq() {
     { q: "Ativação demora quanto?", a: "Menos de 60 segundos após o PIX cair. Automático." },
     { q: "E se der erro?", a: "Reembolso integral e botão 'Tentar novamente' no painel." },
     { q: "Posso testar antes?", a: "Sim, trial de 1 dia grátis para toda conta nova." },
-    { q: "Preciso de nota fiscal?", a: "Sim, o comprovante do Mercado Pago é emitido no ato." },
+    { q: "Preciso de nota fiscal?", a: "Sim, o comprovante do pagamento é emitido no ato." },
   ];
   return (
     <section className="mt-10 mb-6">
@@ -1339,7 +1339,7 @@ function FaqSection() {
     { q: "Shadow 4.5.5, 30 dias e Play Protect", a: "Os preços oficiais são: Shadow 4.5.5 (Trial) por R$ 450, Plano Mensal (4.5.7) por R$ 750, Plano Vitalício (4.6) por R$ 1.700, Shadow Bypass (Signer) por R$ 450 e a taxa de manutenção do servidor por R$ 450." },
     { q: "Posso trocar de plano depois?", a: "Sim. Cliente v4.5.7 pode fazer upgrade para v4.6 vitalício — o processo é automático e mantém seu histórico de ativações." },
     { q: "O cupom BTMOB40 é seguro?", a: "Sim. Ele dá 40% de cashback no primeiro depósito, que fica no seu saldo e pode ser usado em compras futuras (limitado a 50% do valor de cada compra)." },
-    { q: "Vocês emitem nota?", a: "Sim, o comprovante oficial do Mercado Pago é emitido no ato do pagamento e enviado por email pela própria operadora." },
+    { q: "Vocês emitem nota?", a: "Sim, o comprovante oficial do pagamento é emitido no ato do pagamento e enviado por email pela própria operadora." },
   ];
   const [search, setSearch] = useState("");
   const term = search.trim().toLowerCase();
@@ -1600,7 +1600,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       </Button>
       <div className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
         <Shield className="h-3 w-3 text-primary/60" />
-        {hasBenefit ? "valor final confirmado no checkout" : "pagamento oficial mercado pago"}
+        {hasBenefit ? "valor final confirmado no checkout" : "pagamento seguro no site"}
       </div>
     </div>
   );

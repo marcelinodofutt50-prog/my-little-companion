@@ -44,7 +44,7 @@ function PrivacyPage() {
         </Section>
 
         <Section title="2. Pagamentos">
-          <p>Os pagamentos são processados pelo provedor oficial (Mercado Pago). Não armazenamos dados de cartão. Recebemos apenas o status e os identificadores da transação para liberar sua licença.</p>
+          <p>Os pagamentos são processados pelo provedor oficial de pagamentos. Não armazenamos dados de cartão. Recebemos apenas o status e os identificadores da transação para liberar sua licença.</p>
         </Section>
 
         <Section title="3. Finalidade do uso">

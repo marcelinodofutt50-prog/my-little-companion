@@ -129,7 +129,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "ShadowDash Store: O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, Bypass Play Protect e infraestrutura VPS dedicada." },
       { name: "theme-color", content: "#f9f7f2" },
       { property: "og:title", content: "Shadow — Advanced OSINT & Digital Asset Manager" },
-      { property: "og:description", content: "Acesse a elite do gerenciamento de ativos digitais. Ativação instantânea via Mercado Pago." },
+      { property: "og:description", content: "Acesse a elite do gerenciamento de ativos digitais. Ativação instantânea após o pagamento." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.shadowdashstore.com" },
       { name: "twitter:card", content: "summary_large_image" },
