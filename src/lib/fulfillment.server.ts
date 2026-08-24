@@ -349,15 +349,15 @@ async function fulfillOrderInner(orderId: string) {
   }
 
   // ============ Market product path (admin fulfills manually via support/chat) ============
-  if (planRow?.category === "market") {
+  // ============ Market / código-fonte (entrega manual pelo admin) ============
+  if (planRow?.category === "market" || planRow?.category === "source") {
     await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
     await supabaseAdmin.from("webhook_logs").insert({
-      source: "mercadopago", note: `market purchase ${orderId} paid (${planRow.slug}) — aguardando entrega admin`, processed: true,
+      source: "stripe", note: `${planRow.category} purchase ${orderId} paid (${planRow.slug}) — aguardando entrega admin`, processed: true,
     });
-    return { ok: true, reason: `market:${planRow.slug}` };
+    return { ok: true, reason: `${planRow.category}:${planRow.slug}` };
   }
 
-  // ============ New-license path (default: login plans) ============
   const { resolvePanelFromPlanSlug } = await import("@/lib/yaarsa.server");
   const targetPanel = await resolvePanelFromPlanSlug(order.plan_slug);
   const creds = generateCredentials();
