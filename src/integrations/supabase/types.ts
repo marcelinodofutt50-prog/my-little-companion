@@ -1696,6 +1696,42 @@ export type Database = {
         }
         Relationships: []
       }
+      product_feedback: {
+        Row: {
+          admin_note: string | null
+          category: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          message: string
+          rating: number | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message: string
+          rating?: number | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          message?: string
+          rating?: number | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

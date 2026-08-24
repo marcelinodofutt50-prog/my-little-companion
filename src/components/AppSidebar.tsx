@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard,
-  Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull, Trophy, User } from "lucide-react";
+  Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull, Trophy, User, Lightbulb } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -38,6 +38,7 @@ const primary: Item[] = [
   { title: "Marketplace", url: "/mercado", icon: Store, tKey: "nav.market" as const },
   { title: "Affiliates", url: "/indicacoes", icon: Users, tKey: "nav.referrals" as const },
   { title: "Gift Center", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
+  { title: "Sugestões", url: "/sugestoes", icon: Lightbulb, tKey: "nav.feedback" as const },
 ];
 
 

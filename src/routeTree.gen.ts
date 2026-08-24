@@ -33,6 +33,7 @@ import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
 import { Route as PagamentoCheckoutRouteImport } from './routes/pagamento.checkout'
 import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
+import { Route as AuthenticatedSugestoesRouteImport } from './routes/_authenticated/sugestoes'
 import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authenticated/staff-chat'
 import { Route as AuthenticatedStaffAcademyRouteImport } from './routes/_authenticated/staff-academy'
 import { Route as AuthenticatedShadowPassRouteImport } from './routes/_authenticated/shadow-pass'
@@ -179,6 +180,11 @@ const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
 const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSugestoesRoute = AuthenticatedSugestoesRouteImport.update({
+  id: '/sugestoes',
+  path: '/sugestoes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStaffChatRoute = AuthenticatedStaffChatRouteImport.update({
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/staff-academy': typeof AuthenticatedStaffAcademyRoute
   '/staff-chat': typeof AuthenticatedStaffChatRoute
+  '/sugestoes': typeof AuthenticatedSugestoesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/checkout': typeof PagamentoCheckoutRoute
@@ -415,6 +422,7 @@ export interface FileRoutesByTo {
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/staff-academy': typeof AuthenticatedStaffAcademyRoute
   '/staff-chat': typeof AuthenticatedStaffChatRoute
+  '/sugestoes': typeof AuthenticatedSugestoesRoute
   '/suporte': typeof AuthenticatedSuporteRoute
   '/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/checkout': typeof PagamentoCheckoutRoute
@@ -470,6 +478,7 @@ export interface FileRoutesById {
   '/_authenticated/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/_authenticated/staff-academy': typeof AuthenticatedStaffAcademyRoute
   '/_authenticated/staff-chat': typeof AuthenticatedStaffChatRoute
+  '/_authenticated/sugestoes': typeof AuthenticatedSugestoesRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
   '/_authenticated/tutoriais': typeof AuthenticatedTutoriaisRoute
   '/pagamento/checkout': typeof PagamentoCheckoutRoute
@@ -525,6 +534,7 @@ export interface FileRouteTypes {
     | '/shadow-pass'
     | '/staff-academy'
     | '/staff-chat'
+    | '/sugestoes'
     | '/suporte'
     | '/tutoriais'
     | '/pagamento/checkout'
@@ -578,6 +588,7 @@ export interface FileRouteTypes {
     | '/shadow-pass'
     | '/staff-academy'
     | '/staff-chat'
+    | '/sugestoes'
     | '/suporte'
     | '/tutoriais'
     | '/pagamento/checkout'
@@ -632,6 +643,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shadow-pass'
     | '/_authenticated/staff-academy'
     | '/_authenticated/staff-chat'
+    | '/_authenticated/sugestoes'
     | '/_authenticated/suporte'
     | '/_authenticated/tutoriais'
     | '/pagamento/checkout'
@@ -874,6 +886,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuporteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sugestoes': {
+      id: '/_authenticated/sugestoes'
+      path: '/sugestoes'
+      fullPath: '/sugestoes'
+      preLoaderRoute: typeof AuthenticatedSugestoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/staff-chat': {
       id: '/_authenticated/staff-chat'
       path: '/staff-chat'
@@ -1092,6 +1111,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedShadowPassRoute: typeof AuthenticatedShadowPassRoute
   AuthenticatedStaffAcademyRoute: typeof AuthenticatedStaffAcademyRoute
   AuthenticatedStaffChatRoute: typeof AuthenticatedStaffChatRoute
+  AuthenticatedSugestoesRoute: typeof AuthenticatedSugestoesRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
   AuthenticatedTutoriaisRoute: typeof AuthenticatedTutoriaisRoute
   AuthenticatedServidorKrakenRoute: typeof AuthenticatedServidorKrakenRoute
@@ -1106,6 +1126,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShadowPassRoute: AuthenticatedShadowPassRoute,
   AuthenticatedStaffAcademyRoute: AuthenticatedStaffAcademyRoute,
   AuthenticatedStaffChatRoute: AuthenticatedStaffChatRoute,
+  AuthenticatedSugestoesRoute: AuthenticatedSugestoesRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
   AuthenticatedTutoriaisRoute: AuthenticatedTutoriaisRoute,
   AuthenticatedServidorKrakenRoute: AuthenticatedServidorKrakenRoute,
