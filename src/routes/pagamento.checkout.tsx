@@ -110,9 +110,13 @@ function CheckoutPage() {
             <Loader2 className="h-4 w-4 animate-spin" /> Carregando formas de pagamento…
           </div>
         ) : !stripeOn && !mpOn ? (
-          <div className="mt-6 rounded-lg border border-border bg-card/60 p-4">
+          <div className="mt-6 space-y-2 rounded-lg border border-border bg-card/60 p-4">
             <p className="flex items-center gap-2 font-mono text-xs text-danger">
-              <AlertTriangle className="h-4 w-4" /> Pagamentos ainda não estão ativados nesta versão do site.
+              <AlertTriangle className="h-4 w-4" /> Pagamentos indisponíveis no momento.
+            </p>
+            <p className="font-mono text-[11px] text-muted-foreground">
+              Estamos ajustando o checkout. Fale com o suporte pelo Telegram para concluir sua compra — seu pedido
+              (&nbsp;{order.slice(0, 8)}&nbsp;) continua salvo e a licença é liberada normalmente.
             </p>
           </div>
         ) : (
