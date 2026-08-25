@@ -124,7 +124,7 @@ describe("Support AI Proactive Flow", () => {
 });
 
 
-describe("PIX automático no checkout", () => {
+describe("PIX com confirmação", () => {
   const threadId = "00000000-0000-0000-0000-000000000001";
   const userId = "00000000-0000-0000-0000-000000000002";
 
@@ -134,13 +134,32 @@ describe("PIX automático no checkout", () => {
       data: { user_id: "00000000-0000-0000-0000-000000000003" },
       error: null,
     });
+    mockSupabaseQuery.limit.mockReturnThis();
+    mockSupabaseQuery.then.mockImplementation((onFulfilled: any) =>
+      Promise.resolve({ data: [], error: null }).then(onFulfilled),
+    );
   });
 
-  it("envia a chave PIX sem chamar a IA quando o checkout falha", async () => {
+  it("pede confirmação (sem mandar a chave) quando o checkout falha", async () => {
     await triggerSupportAI(threadId, userId, "não estou conseguindo abrir o checkout para pagar");
     expect(generateText).not.toHaveBeenCalled();
     const body = mockSupabaseQuery.insert.mock.calls[0][0].body as string;
+    expect(body).toContain("chave PIX");
+    expect(body).not.toContain("bbfccc7e-73d6-4d19-ab8e-ac069ef622a4");
+  });
+
+  it("envia a chave só depois do cliente confirmar", async () => {
+    mockSupabaseQuery.then.mockImplementationOnce((onFulfilled: any) =>
+      Promise.resolve({ data: [{ body: "quer a chave PIX?\n[pix-offer]" }], error: null }).then(onFulfilled),
+    );
+    await triggerSupportAI(threadId, userId, "sim, pode mandar");
+    const body = mockSupabaseQuery.insert.mock.calls[0][0].body as string;
     expect(body).toContain("bbfccc7e-73d6-4d19-ab8e-ac069ef622a4");
     expect(body).toContain("Bruno Gomes");
+  });
+
+  it("não menciona PIX em assunto que não é pagamento", async () => {
+    await triggerSupportAI(threadId, userId, "bom dia, tudo certo?");
+    expect(mockSupabaseQuery.insert).not.toHaveBeenCalled();
   });
 });
