@@ -3,7 +3,14 @@ import { z } from "zod";
 import { withGeminiFallback } from "./gemini-provider.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { decrypt, yaarsaExtend, yaarsaSetPassword } from "./yaarsa.server";
-import { buildPixInstructions, isCheckoutFailureMessage } from "./pix";
+import {
+  PIX_OFFER_MARKER,
+  buildPixInstructions,
+  buildPixOffer,
+  isAffirmativeReply,
+  isCheckoutFailureMessage,
+  isExplicitPixRequest,
+} from "./pix";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", o atendente automatizado de primeiro nível da Shadow.
 Fale como um técnico humano experiente: direto, gentil, sem enrolação e SEMPRE em Português do Brasil.
@@ -40,8 +47,11 @@ POLÍTICA DO TESTE GRÁTIS (seja específico, nunca genérico):
 - Com licença comprada: trate normalmente como suporte técnico, sem acusações.
 
 PAGAMENTO / CHECKOUT:
-- Se o cliente disser que não consegue abrir ou concluir o checkout (Mercado Pago/Stripe/cartão/Pix),
-  chame 'sendPixInstructions'. Ela já envia a chave PIX oficial e o passo a passo. Não digite a chave você mesmo.
+- Só fale de PIX se o cliente relatar problema para abrir/concluir o checkout ou pagar. Em qualquer
+  outro assunto, NÃO mencione PIX.
+- Nesse caso, chame 'offerPix' primeiro: ela pergunta se ele quer receber a chave. Aguarde a resposta.
+- Só chame 'sendPixInstructions' com customerConfirmed = true depois que o cliente responder que sim.
+- Nunca digite a chave PIX você mesmo, nem envie sem confirmação.
 
 REGRAS CRÍTICAS:
 - Se for só conversa ("oi", "bom dia") sem relato de erro, NÃO chame 'postAIMessage'.
@@ -92,6 +102,27 @@ async function postSystemMessage(threadId: string, body: string) {
     .update({ unread_by_customer: 1, last_staff_message_at: new Date().toISOString() })
     .eq("id", threadId);
   return { success: true };
+}
+
+/**
+ * Verifica se já perguntamos ao cliente se ele quer a chave PIX (e ainda não
+ * enviamos). Enquanto essa oferta estiver de pé, só o "sim" dele libera o envio.
+ */
+async function hasPendingPixOffer(threadId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from("support_messages")
+    .select("body, is_system")
+    .eq("thread_id", threadId)
+    .eq("is_system", true)
+    .order("created_at", { ascending: false })
+    .limit(3);
+  const recent = (data ?? []) as { body: string | null }[];
+  for (const m of recent) {
+    const body = m.body ?? "";
+    if (body.includes(SHADOW_PIX_KEY)) return false; // já enviamos a chave
+    if (body.includes(PIX_OFFER_MARKER)) return true;
+  }
+  return false;
 }
 
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
@@ -182,11 +213,24 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
           inputSchema: z.object({ body: z.string() }),
           execute: async ({ body }) => postSystemMessage(threadId, body)
         }),
+        offerPix: tool({
+          description:
+            "Pergunta ao cliente se ele quer receber a chave PIX. Use APENAS quando ele relatar " +
+            "problema para abrir/concluir o checkout. Nunca envie a chave sem o 'sim' dele.",
+          inputSchema: z.object({}),
+          execute: async () => postSystemMessage(threadId, buildPixOffer())
+        }),
         sendPixInstructions: tool({
           description:
-            "Envia os dados oficiais do PIX quando o cliente não consegue abrir/concluir o checkout.",
-          inputSchema: z.object({}),
-          execute: async () => postSystemMessage(threadId, buildPixInstructions())
+            "Envia os dados oficiais do PIX. Só pode ser usada DEPOIS que o cliente confirmou " +
+            "que quer pagar por PIX (respondeu sim à pergunta de 'offerPix').",
+          inputSchema: z.object({ customerConfirmed: z.boolean() }),
+          execute: async ({ customerConfirmed }) => {
+            if (!customerConfirmed) {
+              return postSystemMessage(threadId, buildPixOffer());
+            }
+            return postSystemMessage(threadId, buildPixInstructions());
+          }
         })
       },
       // Sem isso o modelo para logo após a 1ª ferramenta e nunca responde ao cliente.
