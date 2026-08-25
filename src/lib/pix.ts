@@ -31,3 +31,32 @@ export function isCheckoutFailureMessage(text: string): boolean {
     );
   return payment && failure;
 }
+
+/** Marcador invisível para identificar que já oferecemos o PIX na conversa. */
+export const PIX_OFFER_MARKER = "[pix-offer]";
+
+/** Pergunta de confirmação enviada ANTES de mandar a chave PIX. */
+export function buildPixOffer(): string {
+  return [
+    "Pelo que entendi, o checkout não está abrindo/concluindo aí, certo?",
+    "",
+    "Posso te enviar nossa **chave PIX** para pagar direto por aqui?",
+    "",
+    "Responda **sim** que eu mando a chave e o passo a passo. ⚡",
+    PIX_OFFER_MARKER,
+  ].join("\n");
+}
+
+/** Resposta afirmativa curta do cliente ("sim", "pode mandar", "manda aí"...). */
+export function isAffirmativeReply(text: string): boolean {
+  const t = (text || "").toLowerCase().trim();
+  if (!t || t.length > 120) return false;
+  return /(^|\b)(sim|isso|claro|quero|pode(\s+(mandar|enviar|ser|mander))?|manda|manda[r]?\s+(a[ií]|a chave|o pix)|envia|bora|blz|beleza|ok|okay|por favor|pfv|pfvr|aceito|positivo|s[ií]m)(\b|$)/.test(t);
+}
+
+/** Cliente pedindo o PIX explicitamente (não precisa de confirmação). */
+export function isExplicitPixRequest(text: string): boolean {
+  const t = (text || "").toLowerCase();
+  return /(manda|envia|passa|qual|quero|me\s+d[áa])[^.!?]{0,20}\b(pix|chave)\b/.test(t)
+    || /\bchave\s+pix\b/.test(t);
+}
