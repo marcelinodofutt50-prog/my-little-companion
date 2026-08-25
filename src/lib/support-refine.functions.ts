@@ -36,12 +36,12 @@ export const refineSupportReply = createServerFn({ method: "POST" })
       .select("body, is_admin, is_system, created_at")
       .eq("thread_id", data.threadId)
       .order("created_at", { ascending: false })
-      .limit(12);
+      .limit(6);
 
     const history = (messages ?? [])
       .reverse()
       .filter((m) => (m.body ?? "").trim())
-      .map((m) => `${m.is_system ? "Assistente" : m.is_admin ? "Suporte" : "Cliente"}: ${(m.body ?? "").slice(0, 500)}`)
+      .map((m) => `${m.is_system ? "Assistente" : m.is_admin ? "Suporte" : "Cliente"}: ${(m.body ?? "").slice(0, 300)}`)
       .join("\n");
 
     const toneRule =
@@ -56,6 +56,7 @@ export const refineSupportReply = createServerFn({ method: "POST" })
 
     const { text } = await withGeminiFallback((model) => generateText({
       model,
+      maxOutputTokens: 500,
       system: [
         "Você reescreve mensagens de atendentes de suporte da Shadow, sempre em Português do Brasil.",
         toneRule,
