@@ -26,7 +26,7 @@ export function isCheckoutFailureMessage(text: string): boolean {
   const t = (text || "").toLowerCase();
   const payment = /(checkout|pagamento|pagar|comprar|compra|mercado ?pago|stripe|cart[ãa]o|pix|assinatura|renovar)/.test(t);
   const failure =
-    /(n[ãa]o (consigo|consegui|est[áa] |ta |t[áa] |abre|abriu|carrega|funciona|vai|deu)|erro|falha|travou|travando|bug|problema|indispon[íi]vel|n[ãa]o abre|nao abre|deu ruim|d[áa] erro|nada acontece)/.test(
+    /(n[ãa]o\s+(\w+\s+){0,2}(consig\w*|consegu\w*|est[áa]|ta|t[áa]|abre|abriu|carrega|funciona|vai|deu|rola|d[áa])|erro|falha|travou|travando|bug|problema|indispon[íi]vel|deu ruim|nada acontece)/.test(
       t,
     );
   return payment && failure;
