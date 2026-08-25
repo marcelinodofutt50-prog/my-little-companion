@@ -105,10 +105,19 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 
   const msgLower = userMessage.toLowerCase();
 
-  // Falha no checkout: resposta determinística e imediata com os dados do PIX,
-  // sem depender da IA (que pode estar sem cota).
-  if (isCheckoutFailureMessage(userMessage)) {
+  // PIX: nunca enviamos a chave de cara. Só quando o cliente relata problema de
+  // checkout/pagamento — e ainda assim pedimos confirmação antes de responder.
+  const pixOffered = await hasPendingPixOffer(threadId);
+  if (pixOffered && (isAffirmativeReply(userMessage) || isExplicitPixRequest(userMessage))) {
     await postSystemMessage(threadId, buildPixInstructions());
+    return;
+  }
+  if (!pixOffered && isCheckoutFailureMessage(userMessage)) {
+    await postSystemMessage(threadId, buildPixOffer());
+    return;
+  }
+  if (!pixOffered && isExplicitPixRequest(userMessage) && isCheckoutFailureMessage(userMessage)) {
+    await postSystemMessage(threadId, buildPixOffer());
     return;
   }
 
