@@ -10,6 +10,7 @@ import {
   isAffirmativeReply,
   isCheckoutFailureMessage,
   isExplicitPixRequest,
+  SHADOW_PIX,
 } from "./pix";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", o atendente automatizado de primeiro nível da Shadow.
@@ -119,7 +120,7 @@ async function hasPendingPixOffer(threadId: string): Promise<boolean> {
   const recent = (data ?? []) as { body: string | null }[];
   for (const m of recent) {
     const body = m.body ?? "";
-    if (body.includes(SHADOW_PIX_KEY)) return false; // já enviamos a chave
+    if (body.includes(SHADOW_PIX.key)) return false; // já enviamos a chave
     if (body.includes(PIX_OFFER_MARKER)) return true;
   }
   return false;
