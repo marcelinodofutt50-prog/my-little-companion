@@ -9,7 +9,7 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
  * retornavam 404 (o chat quebrava com uma página de erro HTML). Normalizamos
  * qualquer nome legado para o modelo atual.
  */
-const DEFAULT_MODEL = "gemini-3.6-flash";
+const DEFAULT_MODEL = "gemini-3.7-flash";
 
 function normalize(modelName: string) {
   const bare = (modelName || "").replace(/^google\//, "").trim();
@@ -22,7 +22,7 @@ function lovableModel(bare: string, key: string) {
     name: "lovable",
     baseURL: "https://ai.gateway.lovable.dev/v1",
     headers: {
-      Authorization: `Bearer ${key}`,
+      "Lovable-API-Key": key,
       "X-Lovable-AIG-SDK": "vercel-ai-sdk",
     },
   });
