@@ -816,40 +816,44 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
         </div>
       </form>
 
-      {zoomUrl && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
-          role="dialog"
-          aria-label="Visualização ampliada do anexo"
-          onClick={() => setZoomUrl(null)}
-        >
-          <img
-            src={zoomUrl}
-            alt="anexo ampliado"
-            className="max-h-[90vh] max-w-[95vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <Button
-            type="button"
-            size="icon"
-            variant="secondary"
-            aria-label="Fechar imagem"
-            className="absolute right-4 top-4 h-9 w-9 rounded-full"
+      {zoomUrl && typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 bg-black/95 p-4 pt-16 pb-16"
+            style={{ height: "100dvh", width: "100vw" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Visualização ampliada do anexo"
             onClick={() => setZoomUrl(null)}
           >
-            <X className="h-4 w-4" />
-          </Button>
-          <a
-            href={zoomUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-4 py-1.5 text-xs"
-          >
-            Abrir em nova aba
-          </a>
-        </div>
-      )}
+            <img
+              src={zoomUrl}
+              alt="anexo ampliado"
+              className="max-h-full max-w-full object-contain select-none"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              aria-label="Fechar imagem"
+              className="absolute right-4 top-4 h-10 w-10 rounded-full"
+              onClick={() => setZoomUrl(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <a
+              href={zoomUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-4 py-1.5 text-xs"
+            >
+              Abrir em nova aba
+            </a>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
