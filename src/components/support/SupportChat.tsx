@@ -824,25 +824,27 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       {zoomUrl && typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 bg-black/95 p-4 pt-16 pb-16"
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 p-4"
             style={{ height: "100dvh", width: "100vw" }}
             role="dialog"
             aria-modal="true"
             aria-label="Visualização ampliada do anexo"
             onClick={() => setZoomUrl(null)}
           >
-            <img
-              src={zoomUrl}
-              alt="anexo ampliado"
-              className="max-h-full max-w-full object-contain select-none"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="relative flex max-h-[82dvh] w-full max-w-[min(92vw,1200px)] items-center justify-center">
+              <img
+                src={zoomUrl}
+                alt="anexo ampliado"
+                className="max-h-[82dvh] max-w-full rounded-lg object-contain select-none shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
             <Button
               type="button"
               size="icon"
               variant="secondary"
               aria-label="Fechar imagem"
-              className="absolute right-4 top-4 h-10 w-10 rounded-full"
+              className="absolute right-4 top-4 h-10 w-10 rounded-full shadow-lg"
               onClick={() => setZoomUrl(null)}
             >
               <X className="h-4 w-4" />
@@ -852,7 +854,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
               target="_blank"
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-4 py-1.5 text-xs"
+              className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-background/90 px-4 py-1.5 text-xs shadow-lg backdrop-blur-sm"
             >
               Abrir em nova aba
             </a>

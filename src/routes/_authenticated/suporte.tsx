@@ -429,7 +429,7 @@ function SupportPage() {
           </div>
         )}
 
-        <div className="mt-5 terminal-card scanlines relative h-[88vh] min-h-[640px] max-h-[calc(100dvh-140px)] overflow-hidden flex flex-col">
+        <div className="mt-5 terminal-card scanlines relative h-[60vh] min-h-[420px] max-h-[calc(100dvh-220px)] sm:h-[68vh] sm:max-h-[calc(100dvh-200px)] md:h-[72vh] lg:h-[76vh] overflow-hidden flex flex-col">
           {thread?.id && uid ? (
             <SupportChat 
               threadId={thread.id} 
