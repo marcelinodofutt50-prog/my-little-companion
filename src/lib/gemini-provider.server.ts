@@ -13,7 +13,7 @@ const DEFAULT_MODEL = "gemini-3.7-flash";
 
 function normalize(modelName: string) {
   const bare = (modelName || "").replace(/^google\//, "").trim();
-  if (!bare || /^gemini-(1\.5|1\.0|pro|2\.0)/.test(bare)) return DEFAULT_MODEL;
+  if (!bare || /^gemini-(1\.5|1\.0|pro|2\.0|3\.6)/.test(bare)) return DEFAULT_MODEL;
   return bare;
 }
 
@@ -45,10 +45,9 @@ export function createGeminiProvider(modelName: string = DEFAULT_MODEL) {
 }
 
 /**
- * Lista de modelos disponíveis, na ordem de preferência. Usada para tentar o
- * gateway e, se ele falhar (cota, 429, 5xx), cair para a chave direta do
- * Google — e vice-versa. Sem isso, um estouro de cota do tier gratuito
- * derrubava a reescrita de mensagens no suporte.
+ * Lista de modelos disponíveis, na ordem de preferência. Quando o gateway está
+ * configurado, ele é a única origem para evitar duplicar consumo após limites.
+ * A chave direta só é usada em instalações sem o gateway.
  */
 export function geminiProviderChain(modelName: string = DEFAULT_MODEL) {
   const bare = normalize(modelName);
@@ -56,8 +55,9 @@ export function geminiProviderChain(modelName: string = DEFAULT_MODEL) {
   const lovableKey = process.env.LOVABLE_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
 
-  if (lovableKey) chain.push({ label: "lovable-gateway", model: lovableModel(bare, lovableKey) });
-  if (geminiKey) {
+  if (lovableKey) {
+    chain.push({ label: "lovable-gateway", model: lovableModel(bare, lovableKey) });
+  } else if (geminiKey) {
     const google = createGoogleGenerativeAI({ apiKey: geminiKey });
     chain.push({ label: "google-direct", model: google(bare) as any });
   }

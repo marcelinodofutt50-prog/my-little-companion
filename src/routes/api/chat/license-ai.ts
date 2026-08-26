@@ -204,7 +204,7 @@ export const Route = createFileRoute("/api/chat/license-ai")({
 
         try {
           const result = streamText({
-            model: createGeminiProvider("gemini-3.6-flash"),
+            model: createGeminiProvider("gemini-3.7-flash"),
             system: SYSTEM_PROMPT,
             messages: await convertToModelMessages(messages),
             tools,
