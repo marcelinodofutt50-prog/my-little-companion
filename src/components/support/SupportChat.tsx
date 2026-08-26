@@ -372,8 +372,13 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setZoomUrl(null);
     };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [zoomUrl]);
 
   useEffect(() => {
