@@ -13,7 +13,7 @@ const DEFAULT_MODEL = "gemini-3.7-flash";
 
 function normalize(modelName: string) {
   const bare = (modelName || "").replace(/^google\//, "").trim();
-  if (!bare || /^gemini-(1\.5|1\.0|pro|2\.0)/.test(bare)) return DEFAULT_MODEL;
+  if (!bare || /^gemini-(1\.5|1\.0|pro|2\.0|3\.6)/.test(bare)) return DEFAULT_MODEL;
   return bare;
 }
 
