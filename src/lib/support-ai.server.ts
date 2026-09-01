@@ -12,6 +12,12 @@ import {
   isExplicitPixRequest,
   SHADOW_PIX,
 } from "./pix";
+import {
+  buildTrainingReply,
+  buildVisualErrorReply,
+  isTrainingQuestion,
+  isVisualNetworkError,
+} from "./support-canned";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", o atendente automatizado de primeiro nível da Shadow.
 Fale como um técnico humano experiente: direto, gentil, sem enrolação e SEMPRE em Português do Brasil.
@@ -150,6 +156,17 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   }
   if (!pixOffered && isExplicitPixRequest(userMessage) && isCheckoutFailureMessage(userMessage)) {
     await postSystemMessage(threadId, buildPixOffer());
+    return;
+  }
+
+  // Respostas determinísticas (sem IA): dúvidas de treinamento BTmob/login e o
+  // "network error" visual. São recorrentes e têm resposta fixa — não gastamos quota.
+  if (isTrainingQuestion(userMessage)) {
+    await postSystemMessage(threadId, buildTrainingReply());
+    return;
+  }
+  if (isVisualNetworkError(userMessage)) {
+    await postSystemMessage(threadId, buildVisualErrorReply());
     return;
   }
 
