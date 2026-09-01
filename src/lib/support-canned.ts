@@ -10,7 +10,7 @@ export function isTrainingQuestion(text: string): boolean {
   const topic =
     /(criar|cria|gerar|gera|montar|fazer|faz)[^.!?]{0,40}(aplicativo|app|apk|btmob)/.test(t) ||
     /\bbtmob\b[^.!?]{0,40}(criar|cria|app|aplicativo|apk)/.test(t) ||
-    /(usar|usa|utilizar|utiliza|mexer|funciona)[^.!?]{0,30}(login|painel|licen[çc]a|app|apk|btmob)/.test(t) ||
+    /(usar|uso|usa|utilizar|utiliza|utilizo|mexer|funciona)[^.!?]{0,30}(login|painel|licen[çc]a|app|apk|btmob)/.test(t) ||
     /(login|painel|licen[çc]a)[^.!?]{0,30}(usar|usa|funciona|entrar|acessar)/.test(t);
   return asksHow && topic;
 }
