@@ -4,9 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseAdminKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const frontendUrl = process.env.VITE_SUPABASE_URL!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseAdminKey);
+const hasCreds = Boolean(supabaseUrl && supabaseAdminKey && frontendUrl);
+const supabaseAdmin = hasCreds ? createClient(supabaseUrl, supabaseAdminKey) : (null as any);
 
-describe('Shadow Protocol v25.0: Forensic Production Audit', () => {
+describe.skipIf(!hasCreds)('Shadow Protocol v25.0: Forensic Production Audit', () => {
   console.log(`[Forensic Audit] Connecting to: ${supabaseUrl}`);
 
   beforeAll(() => {
