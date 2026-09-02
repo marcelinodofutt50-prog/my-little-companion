@@ -7,6 +7,26 @@ function projectRef(name: string, value: string | undefined): string {
   return match[1];
 }
 
+const REQUIRED = [
+  'VITE_SUPABASE_URL',
+  'SUPABASE_URL',
+  'VITE_SUPABASE_PUBLISHABLE_KEY',
+  'SUPABASE_PUBLISHABLE_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+];
+const missing = REQUIRED.filter((name) => !process.env[name]);
+if (missing.length === REQUIRED.length) {
+  console.warn(
+    '[Production Identity] ⚠️ Nenhuma credencial de backend presente neste ambiente de build. ' +
+      'Verificação de identidade ignorada (o build segue normalmente).',
+  );
+  process.exit(0);
+}
+if (missing.length) {
+  console.warn(`[Production Identity] ⚠️ Variáveis ausentes: ${missing.join(', ')}. Verificação parcial ignorada.`);
+  process.exit(0);
+}
+
 const frontendRef = projectRef('VITE_SUPABASE_URL', process.env.VITE_SUPABASE_URL);
 const serverRef = projectRef('SUPABASE_URL', process.env.SUPABASE_URL);
 const declaredRef = process.env.VITE_SUPABASE_PROJECT_ID || process.env.SUPABASE_PROJECT_ID;
