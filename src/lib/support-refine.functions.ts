@@ -54,9 +54,12 @@ export const refineSupportReply = createServerFn({ method: "POST" })
     const { generateText } = await import("ai");
     const { withGeminiFallback } = await import("./gemini-provider.server");
 
+    // Modelos "flash" com raciocínio gastam centenas de tokens antes de escrever
+    // e estouravam o limite, devolvendo texto vazio (o botão parecia não funcionar).
+    // Para reescrita usamos o modelo leve, sem raciocínio, com folga de tokens.
     const { text } = await withGeminiFallback((model) => generateText({
       model,
-      maxOutputTokens: 500,
+      maxOutputTokens: 1200,
       system: [
         "Você reescreve mensagens de atendentes de suporte da Shadow, sempre em Português do Brasil.",
         toneRule,
@@ -72,7 +75,7 @@ export const refineSupportReply = createServerFn({ method: "POST" })
       prompt:
         `Contexto da conversa (mais recente ao final):\n${history || "(sem mensagens anteriores)"}\n\n` +
         `Rascunho do atendente para reescrever:\n"""${data.draft}"""`,
-    }));
+    }), "gemini-3.1-flash-lite");
 
     const cleaned = (text ?? "").trim().replace(/^"+|"+$/g, "").trim();
     if (!cleaned) throw new Error("A IA não retornou texto. Tente novamente.");
