@@ -5,7 +5,9 @@ import { describe, it, expect } from 'vitest';
  * ou fora do schema cache do PostgREST (PGRST205 / PGRST108 / 42P01).
  */
 
-describe('Tutorial Progress Synchronization (end-to-end)', () => {
+const hasCreds = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+describe.skipIf(!hasCreds)('Tutorial Progress Synchronization (end-to-end)', () => {
   it('public.tutorial_progress must exist and be exposed in the schema cache', async () => {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { error } = await supabaseAdmin.from('tutorial_progress').select('id').limit(1);

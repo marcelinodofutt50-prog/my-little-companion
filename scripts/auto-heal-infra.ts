@@ -13,8 +13,8 @@ async function heal() {
   console.log(`[Shadow Protocol] Project ID: ${projectId}`);
 
   if (!frontendUrl || !url || !key) {
-    console.error("[Shadow Protocol] ❌ FALHA CRÍTICA: VITE_SUPABASE_URL, SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configurados.");
-    process.exit(1);
+    console.warn("[Shadow Protocol] ⚠️ Credenciais de backend ausentes no build. Auto-healing ignorado (build segue).");
+    process.exit(0);
   }
 
   const frontendProjectId = frontendUrl.split('//')[1]?.split('.')[0];
