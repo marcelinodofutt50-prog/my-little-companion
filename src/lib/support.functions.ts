@@ -224,7 +224,10 @@ export const listMessages = createServerFn({ method: "GET" })
       }
     }
 
-    return { messages: ordered, hasMore };
+    // Identidade de quem atendeu: o cliente precisa saber com quem está falando.
+    const senders = await loadSupportSenders(ordered.map((m) => (m.is_admin ? m.sender_id : null)));
+
+    return { messages: ordered, hasMore, senders };
 
   });
 
