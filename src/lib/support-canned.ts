@@ -49,3 +49,64 @@ export function buildVisualErrorReply(): string {
     "Apareceu algum outro erro além desse? 🛡️",
   ].join("\n");
 }
+
+/* ------------------------------------------------------------------ *
+ * Verificação de login com PIN de segurança
+ * ------------------------------------------------------------------ */
+
+/** Marcador invisível ao cliente que identifica o pedido de PIN já enviado. */
+export const PIN_REQUEST_MARKER = "<!--pin-request-->";
+
+/** Cliente relatando problema de login/acesso ao painel ou à licença. */
+export function isLoginAccessIssue(text: string): boolean {
+  const t = (text || "").toLowerCase();
+  if (isTrainingQuestion(t)) return false;
+  const problem =
+    /(n[ãa]o|nao|sem)\s+(consigo|consegue|to|tô|estou|est[aá]|d[aá]|deu)/.test(t) ||
+    /(erro|invalid|inv[áa]lid|expirou|venceu|vencid|bloque|negad|problema|bug|falha|n[ãa]o funciona|nao funciona)/.test(t);
+  const topic =
+    /(login|logar|entrar|acessar|acesso|senha|conta|usu[áa]rio|painel|licen[çc]a|btmob|yaarsa)/.test(t);
+  return problem && topic;
+}
+
+/** Extrai um PIN no formato ABCD-2345 (ou 8 caracteres colados) da mensagem. */
+export function extractPin(text: string): string | null {
+  const t = (text || "").toUpperCase();
+  const m = t.match(/\b([A-Z0-9]{4})[-\s]?([A-Z0-9]{4})\b/);
+  if (!m) return null;
+  const pin = `${m[1]}${m[2]}`;
+  if (!/[A-Z]/.test(pin) && !/[0-9]/.test(pin)) return null;
+  return pin;
+}
+
+export function buildPinRequest(): string {
+  return [
+    `${PIN_REQUEST_MARKER}Quer que nossa equipe **verifique o seu login** agora? 🛡️`,
+    "",
+    "1. Abra o **Shadow Pass** (ou o cantinho aqui do chat) e copie seu **PIN de segurança**.",
+    "2. Envie o PIN aqui nesta conversa.",
+    "3. Assim que recebermos, o PIN é **queimado na hora** e um novo é gerado pra você.",
+    "",
+    "Só com o PIN a equipe consegue ver os dados do seu acesso e continuar o reparo. Pode enviar? ⚡",
+  ].join("\n");
+}
+
+export function buildPinAcceptedReply(): string {
+  return [
+    "PIN confirmado ✅ Já **revoguei esse PIN** e gerei um novo pra você no Shadow Pass.",
+    "",
+    "A equipe está liberada para conferir os dados do seu login e seguir com o reparo.",
+    "",
+    "Fica aqui um instante que já te retorno. 🎧",
+  ].join("\n");
+}
+
+export function buildPinRejectedReply(): string {
+  return [
+    "Esse PIN não confere ou já foi usado (ele muda a cada consulta). 🛡️",
+    "",
+    "1. Abra o **Shadow Pass** ou o cantinho do chat.",
+    "2. Toque em **Mostrar** e copie o PIN atual.",
+    "3. Envie ele aqui de novo.",
+  ].join("\n");
+}
