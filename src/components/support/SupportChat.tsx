@@ -76,11 +76,21 @@ interface SupportChatProps {
   onNewMessage?: () => void;
 }
 
+export type SenderInfo = {
+  id: string;
+  name: string;
+  avatar: string | null;
+  role: string;
+  roleLabel: string;
+};
+
 type Group = {
   key: string;
   dayLabel: string;
   author: "me" | "staff" | "system";
   authorLabel: string;
+  /** Identidade do atendente (foto/cargo) quando a mensagem é da equipe. */
+  sender?: SenderInfo | undefined;
   messages: SupportMessage[];
 };
 
@@ -113,17 +123,21 @@ function groupMessages(
   userId: string,
   viewerIsAdmin: boolean,
   customerLabel = "Cliente",
+  senders: Record<string, SenderInfo> = {},
 ): Group[] {
   const groups: Group[] = [];
   for (const m of msgs) {
     const mine = !!m.sender_id && m.sender_id === userId;
     const author: Group["author"] = m.is_system ? "system" : mine ? "me" : "staff";
+    const sender = !mine && m.is_admin && m.sender_id ? senders[m.sender_id] : undefined;
     const label = m.is_system
       ? "Assistente Shadow"
       : mine
         ? "Você"
         : m.is_admin
-          ? "Suporte Shadow"
+          ? sender
+            ? `${sender.name} · ${sender.roleLabel}`
+            : "Suporte Shadow"
           : viewerIsAdmin
             ? customerLabel
             : "Suporte Shadow";
@@ -140,12 +154,59 @@ function groupMessages(
     if (withinWindow) {
       last!.messages.push(m);
     } else {
-      groups.push({ key: m.id || `${author}-${m.created_at}`, dayLabel: day, author, authorLabel: label, messages: [m] });
+      groups.push({
+        key: m.id || `${author}-${m.created_at}`,
+        dayLabel: day,
+        author,
+        authorLabel: label,
+        sender,
+        messages: [m],
+      });
     }
   }
   return groups;
 }
 
+
+const ROLE_STYLES: Record<string, string> = {
+  admin: "border-primary/40 bg-primary/10 text-primary",
+  support: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  moderator: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  staff: "border-border/50 bg-muted/40 text-muted-foreground",
+};
+
+/** Mostra foto, nome e cargo do atendente para o cliente saber com quem fala. */
+function SenderBadge({ sender }: { sender: SenderInfo }) {
+  const initials = sender.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+  return (
+    <span className="flex items-center gap-1.5">
+      {sender.avatar ? (
+        <img
+          src={sender.avatar}
+          alt={`Foto de ${sender.name}`}
+          loading="lazy"
+          className="h-5 w-5 rounded-full border border-border/50 object-cover"
+        />
+      ) : (
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-[8px] font-bold text-primary">
+          {initials || "S"}
+        </span>
+      )}
+      <span className="normal-case text-foreground/90">{sender.name}</span>
+      <span
+        className={`rounded-full border px-1.5 py-px text-[8px] tracking-widest ${
+          ROLE_STYLES[sender.role] ?? ROLE_STYLES['staff']
+        }`}
+      >
+        {sender.roleLabel}
+      </span>
+    </span>
+  );
+}
 
 /** Bolha de anexo: imagem, vídeo, áudio, PDF ou arquivo genérico. */
 function Attachment({
@@ -267,6 +328,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const msgIdsRef = useRef<Set<string>>(new Set());
   const [dragActive, setDragActive] = useState(false);
   const [connection, setConnection] = useState<"live" | "reconnecting">("live");
+  const [senders, setSenders] = useState<Record<string, SenderInfo>>({});
 
   useEffect(() => {
     atBottomRef.current = atBottom;
@@ -276,9 +338,14 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     msgIdsRef.current = new Set(msgs.map((m) => m.id));
   }, [msgs]);
 
+  const sendersRef = useRef<Record<string, SenderInfo>>({});
+  useEffect(() => {
+    sendersRef.current = senders;
+  }, [senders]);
+
   const groups = useMemo(
-    () => groupMessages(msgs, userId, isAdmin, customerName || "Cliente"),
-    [msgs, userId, isAdmin, customerName],
+    () => groupMessages(msgs, userId, isAdmin, customerName || "Cliente", senders),
+    [msgs, userId, isAdmin, customerName, senders],
   );
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -290,6 +357,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     try {
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
+      if (r.senders) setSenders((prev) => ({ ...prev, ...r.senders }));
       if (before) {
         setMsgs((prev) => {
           const seen = new Set(prev.map((m) => m.id));
@@ -332,6 +400,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           const next = normalizeSupportMessage(payload.new, threadId);
           if (!next.id || msgIdsRef.current.has(next.id)) return;
           msgIdsRef.current.add(next.id);
+          if (next.is_admin && next.sender_id && !sendersRef.current[next.sender_id]) {
+            // Atendente novo na conversa: buscamos nome/foto/cargo dele.
+            void loadMessages();
+          }
           if (next.sender_id !== userId) {
             playNotifyDing();
             onNewMessage?.();
@@ -584,14 +656,20 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                 }`}
               >
                 <div className="flex items-center gap-1.5 px-1 text-[10px] font-mono uppercase tracking-wide text-muted-foreground">
-                  {g.author === "system" ? (
-                    <Bot className="h-3 w-3" />
-                  ) : g.author === "staff" ? (
-                    <ShieldCheck className="h-3 w-3" />
+                  {g.sender ? (
+                    <SenderBadge sender={g.sender} />
                   ) : (
-                    <User className="h-3 w-3" />
+                    <>
+                      {g.author === "system" ? (
+                        <Bot className="h-3 w-3" />
+                      ) : g.author === "staff" ? (
+                        <ShieldCheck className="h-3 w-3" />
+                      ) : (
+                        <User className="h-3 w-3" />
+                      )}
+                      <span>{g.authorLabel}</span>
+                    </>
                   )}
-                  <span>{g.authorLabel}</span>
                 </div>
 
                 {g.messages.map((m) => {

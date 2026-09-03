@@ -9,8 +9,8 @@ import { assertStaffChannelAccess } from "./staff-chat.server";
  * Somente admin cria, edita ou apaga módulos.
  */
 
-async function requireAdmin(userId: string) {
-  const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+async function requireAdmin(userId: string, fallback?: any) {
+  const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, fallback);
   if (role !== "admin") {
     throw new Error("Apenas administradores podem editar os módulos de treinamento interno.");
   }
@@ -36,10 +36,12 @@ export const listStaffTrainings = createServerFn({ method: "GET" })
         .eq("user_id", userId);
     }
 
+    const primary = supabaseAdmin ?? supabase;
     let [{ data: modules, error }, { data: progress }]: [any, any] = await Promise.all([
-      readModules(supabaseAdmin),
-      readProgress(supabaseAdmin),
+      readModules(primary),
+      readProgress(primary),
     ]);
+
 
     if (error && supabase) {
       console.error("[StaffAcademy] Admin falhou, tentando como usuário:", error.code, error.message);
@@ -85,8 +87,8 @@ export const setStaffTrainingProgress = createServerFn({ method: "POST" })
     z.object({ trainingId: z.string().uuid(), completed: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { userId } = context;
-    const { supabaseAdmin } = await assertStaffChannelAccess(userId);
+    const { userId, supabase } = context as any;
+    const { supabaseAdmin } = await assertStaffChannelAccess(userId, supabase);
     const { error } = await supabaseAdmin.from("staff_training_progress").upsert(
       {
         user_id: userId,
@@ -124,7 +126,7 @@ export const saveStaffTraining = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const supabaseAdmin = await requireAdmin(context.userId);
+    const supabaseAdmin = await requireAdmin(context.userId, (context as any).supabase);
     const payload: Record<string, any> = { ...data, created_by: context.userId };
     if (!payload.id) delete payload.id;
     const { error } = await supabaseAdmin
@@ -138,7 +140,7 @@ export const deleteStaffTraining = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const supabaseAdmin = await requireAdmin(context.userId);
+    const supabaseAdmin = await requireAdmin(context.userId, (context as any).supabase);
     const { error } = await supabaseAdmin.from("staff_trainings").delete().eq("id", data.id);
     if (error) throw new Error("Falha ao remover módulo: " + error.message);
     return { ok: true };
@@ -148,7 +150,7 @@ export const deleteStaffTraining = createServerFn({ method: "POST" })
 export const getStaffTrainingOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const supabaseAdmin = await requireAdmin(context.userId);
+    const supabaseAdmin = await requireAdmin(context.userId, (context as any).supabase);
 
     const [{ data: roles }, { data: modules }, { data: progress }] = await Promise.all([
       supabaseAdmin.from("user_roles").select("user_id, role"),
@@ -156,11 +158,11 @@ export const getStaffTrainingOverview = createServerFn({ method: "GET" })
       supabaseAdmin.from("staff_training_progress").select("user_id, training_id, completed"),
     ]);
 
-    const staffIds = Array.from(
+    const staffIds: string[] = Array.from(
       new Set(
         (roles ?? [])
           .filter((r: any) => ["admin", "moderator", "support"].includes(String(r.role)))
-          .map((r: any) => r.user_id),
+          .map((r: any) => String(r.user_id)),
       ),
     );
 
@@ -182,7 +184,7 @@ export const getStaffTrainingOverview = createServerFn({ method: "GET" })
       }
     }
 
-    const members = staffIds.map((id) => {
+    const members = staffIds.map((id: string) => {
       const p = profileMap.get(id) || {};
       const roleRow = (roles ?? []).find((r: any) => r.user_id === id) as any;
       return {
@@ -195,6 +197,6 @@ export const getStaffTrainingOverview = createServerFn({ method: "GET" })
       };
     });
 
-    members.sort((a, b) => b.done - a.done);
+    members.sort((a: any, b: any) => b.done - a.done);
     return { members, total };
   });

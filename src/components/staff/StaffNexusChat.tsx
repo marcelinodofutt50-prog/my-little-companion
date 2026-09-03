@@ -180,7 +180,7 @@ export function StaffNexusChat({ className }: { className?: string }) {
               </p>
             </div>
           ) : (
-            messages.map((msg) => (
+            messages.map((msg: any) => (
               <div
                 key={msg.id}
                 className="group flex items-start gap-3 rounded-lg p-2 transition-colors hover:bg-foreground/5"

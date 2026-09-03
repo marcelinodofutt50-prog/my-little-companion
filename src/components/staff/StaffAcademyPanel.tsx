@@ -203,12 +203,12 @@ export function StaffAcademyPanel({ className }: { className?: string }) {
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               Conclusão por membro da equipe
             </p>
-            {(overview?.members ?? []).length === 0 ? (
+            {((overview as any)?.members ?? []).length === 0 ? (
               <p className="py-4 text-center text-xs text-muted-foreground">
                 Nenhum membro da equipe encontrado.
               </p>
             ) : (
-              (overview?.members ?? []).map((m: any) => (
+              ((overview as any)?.members ?? []).map((m: any) => (
                 <div key={m.id} className="flex items-center gap-3 rounded-lg bg-background/40 p-2">
                   <Avatar className="h-7 w-7 border border-primary/20">
                     <AvatarImage src={m.avatar ?? undefined} className="object-cover" />

@@ -15,7 +15,7 @@ export const getStaffMessages = createServerFn({ method: "GET" })
   )
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
-    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, (context as any).supabase);
     assertChannelMembership(input.channel, userId);
 
     const { data: rows, error } = await supabaseAdmin
@@ -84,7 +84,7 @@ export const sendStaffMessage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data: input, context }) => {
     const { userId } = context;
-    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, (context as any).supabase);
     assertChannelMembership(input.channel, userId);
 
     const { data, error } = await supabaseAdmin
@@ -107,7 +107,7 @@ export const deleteStaffMessage = createServerFn({ method: "POST" })
   .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, (context as any).supabase);
 
     let q = supabaseAdmin.from("staff_messages").delete().eq("id", data.id);
     // Admin pode remover qualquer mensagem; demais só as próprias.
@@ -123,7 +123,7 @@ export const listStaffDirectory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { userId } = context;
-    const { supabaseAdmin } = await assertStaffChannelAccess(userId);
+    const { supabaseAdmin } = await assertStaffChannelAccess(userId, (context as any).supabase);
 
     const { data: roles, error } = await supabaseAdmin
       .from("user_roles")
@@ -162,6 +162,6 @@ export const listStaffDirectory = createServerFn({ method: "GET" })
       };
     });
 
-    members.sort((a, b) => a.name.localeCompare(b.name));
+    members.sort((a: any, b: any) => a.name.localeCompare(b.name));
     return { members };
   });

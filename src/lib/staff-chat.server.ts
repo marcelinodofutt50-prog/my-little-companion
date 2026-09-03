@@ -4,11 +4,19 @@ export class StaffAccessError extends Error {}
 export class StaffInfraError extends Error {}
 
 export async function assertStaffChannelAccess(userId: string, fallbackClient?: any) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  let { data: roles, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
+  const { getSupabaseAdminSafe } = await import("./supabase-admin.server");
+  const supabaseAdmin = await getSupabaseAdminSafe();
+
+  let roles: any[] | null = null;
+  let error: any = null;
+
+  if (supabaseAdmin) {
+    const res = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId);
+    roles = res.data;
+    error = res.error;
+  } else {
+    error = { code: "NO_SERVICE_KEY", message: "Chave de serviço indisponível." };
+  }
 
   // Se a chave de serviço estiver indisponível em produção, lemos os cargos
   // com o próprio usuário (a política já libera a leitura do próprio cargo).
@@ -32,7 +40,15 @@ export async function assertStaffChannelAccess(userId: string, fallbackClient?: 
       "Acesso negado: sua conta não possui cargo de admin, moderador ou suporte.",
     );
   }
-  return { supabaseAdmin, role };
+  // Sem chave de serviço, seguimos com o cliente do próprio usuário: as RLS
+  // internas já liberam leitura/escrita para admin, suporte e moderação.
+  const client = supabaseAdmin ?? fallbackClient;
+  if (!client) {
+    throw new StaffInfraError(
+      "O canal interno está sem acesso ao banco neste ambiente. Tente novamente em instantes.",
+    );
+  }
+  return { supabaseAdmin: client, role, usingServiceKey: !!supabaseAdmin };
 }
 
 export function throwStaffChannelError(
