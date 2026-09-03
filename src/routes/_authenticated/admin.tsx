@@ -87,6 +87,7 @@ import {
   AdminPanelServers,
   AdminPermissionsMatrix,
   AdminRedeemCodesPanel,
+  AdminFeedbackPanel,
   AdminRefundsPanel,
 
   AdminSelfTestPanel,
@@ -219,6 +220,7 @@ type Tab =
   | "redeem"
   | "license_audit"
   | "panel_integrity"
+  | "feedback"
 
   | "vip";
 
@@ -257,6 +259,7 @@ const TAB_DESC: Record<Tab, string> = {
   redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
   panel_integrity: "Conferência painel x site: encontra logins que sumiram do painel Yaarsa e recria automaticamente com a mesma senha.",
   license_audit: "Histórico detalhado: quando cada licença e login foi alterado (senha, sincronização com o painel ou cupom), por quem e por quê.",
+  feedback: "Sugestões e críticas enviadas pelos clientes (inclusive anônimas). Responda, marque em análise ou resolva.",
 
 };
 
@@ -679,6 +682,7 @@ function AdminPage() {
         { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
         { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
         { id: "applications", label: "Candidaturas Staff", icon: Briefcase, hint: "pedidos para entrar na equipe" },
+        { id: "feedback", label: "Sugestões & Críticas", icon: MessageSquare, hint: "feedback dos clientes" },
       ],
     },
     {
@@ -2325,6 +2329,7 @@ function AdminPage() {
               {tab === "redeem" && <AdminRedeemCodesPanel />}
               {tab === "license_audit" && <AdminLicenseAuditPanel />}
               {tab === "panel_integrity" && <AdminPanelIntegrityPanel />}
+              {tab === "feedback" && <AdminFeedbackPanel />}
 
               </motion.div>
             </AnimatePresence>
