@@ -113,7 +113,10 @@ async function postWebhook(body: unknown, headers: Record<string, string> = {}) 
 const ORDER = "11111111-1111-4111-8111-111111111111";
 
 beforeEach(() => {
-  db.orders = [{ id: ORDER, amount: 39.9, status: "pending", mp_payment_id: null }];
+  db.orders = [
+    { id: ORDER, amount: 39.9, status: "pending", plan_slug: "monthly_457", mp_payment_id: null },
+  ];
+  db.plans = [{ slug: "monthly_457", name: "Mensal", price_brl: 39.9, active: true }];
   db.logs = [];
   fulfilled.length = 0;
   payments = {};
