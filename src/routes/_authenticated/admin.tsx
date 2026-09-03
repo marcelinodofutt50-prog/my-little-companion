@@ -681,6 +681,7 @@ function AdminPage() {
         { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
         { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
         { id: "applications", label: "Candidaturas Staff", icon: Briefcase, hint: "pedidos para entrar na equipe" },
+        { id: "feedback", label: "Sugestões & Críticas", icon: MessageSquare, hint: "feedback dos clientes" },
       ],
     },
     {
