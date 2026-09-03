@@ -72,6 +72,7 @@ export async function healLicenseLogin(
     encrypt,
     decrypt,
     hasPanelServer,
+    isPanelHealthy,
     refreshPanelOverrides,
   } = await import("./yaarsa.server");
 
@@ -83,7 +84,8 @@ export async function healLicenseLogin(
     /* segue com o ambiente */
   }
   const configured = (p: "v455" | "v457" | "v46") =>
-    typeof hasPanelServer === "function" ? hasPanelServer(p) : true;
+    (typeof hasPanelServer === "function" ? hasPanelServer(p) : true) &&
+    (typeof isPanelHealthy === "function" ? isPanelHealthy(p) : true);
   const preferred = normalizePanel(lic.panel);
   const panel = configured(preferred)
     ? preferred

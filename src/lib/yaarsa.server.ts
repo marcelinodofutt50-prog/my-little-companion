@@ -663,6 +663,33 @@ async function warmup(url: string, panel: YaarsaPanel) {
 }
 
 
+/**
+ * Disjuntor de painel: quando um painel responde 404/5xx ou não responde, ele
+ * fica marcado como "fora do ar" por alguns minutos. Assim paramos de gastar
+ * tentativas (e tempo do cliente) num servidor que já sabemos que está quebrado
+ * — os fluxos de trial/correção pulam direto para o painel saudável.
+ */
+const panelOutage: Partial<Record<YaarsaPanel, number>> = {};
+const PANEL_OUTAGE_MS = 5 * 60 * 1000;
+
+export function markPanelUnhealthy(panel: YaarsaPanel) {
+  panelOutage[panel] = Date.now() + PANEL_OUTAGE_MS;
+}
+
+export function markPanelHealthy(panel: YaarsaPanel) {
+  delete panelOutage[panel];
+}
+
+export function isPanelHealthy(panel: YaarsaPanel): boolean {
+  const until = panelOutage[panel];
+  if (!until) return true;
+  if (Date.now() > until) {
+    delete panelOutage[panel];
+    return true;
+  }
+  return false;
+}
+
 async function persistLog(entry: {
   action?: string;
   endpoint_kind?: string;
@@ -677,6 +704,16 @@ async function persistLog(entry: {
   context?: Record<string, unknown>;
   panel?: YaarsaPanel;
 }) {
+  if (entry.panel) {
+    if (entry.outcome === "success") markPanelHealthy(entry.panel);
+    else if (
+      entry.outcome === "network_error" ||
+      (entry.outcome === "http_error" &&
+        (entry.http_status === 404 || (entry.http_status ?? 0) >= 500))
+    ) {
+      markPanelUnhealthy(entry.panel);
+    }
+  }
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("integration_logs").insert({
