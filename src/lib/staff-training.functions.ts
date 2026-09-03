@@ -20,30 +20,52 @@ async function requireAdmin(userId: string) {
 export const listStaffTrainings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { userId } = context;
-    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+    const { userId, supabase } = context as any;
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, supabase);
 
-    const [{ data: modules, error }, { data: progress }] = await Promise.all([
-      supabaseAdmin
-        .from("staff_trainings")
-        .select("*")
-        .order("display_order", { ascending: true }),
-      supabaseAdmin
+    // Em produção a chave de serviço pode falhar (formato novo de chave /
+    // variável ausente). Nesse caso lemos como o próprio usuário — as
+    // políticas já liberam leitura para admin/suporte/moderação.
+    async function readModules(client: any) {
+      return client.from("staff_trainings").select("*").order("display_order", { ascending: true });
+    }
+    async function readProgress(client: any) {
+      return client
         .from("staff_training_progress")
         .select("training_id, completed, completed_at")
-        .eq("user_id", userId),
+        .eq("user_id", userId);
+    }
+
+    let [{ data: modules, error }, { data: progress }]: [any, any] = await Promise.all([
+      readModules(supabaseAdmin),
+      readProgress(supabaseAdmin),
     ]);
+
+    if (error && supabase) {
+      console.error("[StaffAcademy] Admin falhou, tentando como usuário:", error.code, error.message);
+      const retry = await readModules(supabase);
+      if (!retry.error) {
+        modules = retry.data;
+        error = null as any;
+        const p = await readProgress(supabase);
+        progress = p.data;
+      } else {
+        error = retry.error;
+      }
+    }
 
     if (error) {
       console.error("[StaffAcademy] Falha ao listar módulos:", error.code, error.message);
-      throw new Error("Não foi possível carregar a Academia da Equipe. Tente novamente.");
+      throw new Error(
+        `Não foi possível carregar a Academia da Equipe (${error.code ?? "erro"}). Tente novamente.`,
+      );
     }
 
     const done = new Set(
       (progress ?? []).filter((p: any) => p.completed).map((p: any) => p.training_id),
     );
 
-    const items = (modules ?? [])
+    const items: any[] = (modules ?? [])
       .filter((m: any) => m.is_published || role === "admin")
       .map((m: any) => ({ ...m, completed: done.has(m.id) }));
 
@@ -55,6 +77,7 @@ export const listStaffTrainings = createServerFn({ method: "GET" })
       total: items.filter((m: any) => m.is_published).length,
     };
   });
+
 
 export const setStaffTrainingProgress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

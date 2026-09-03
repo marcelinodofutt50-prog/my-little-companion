@@ -3,12 +3,22 @@ const STAFF_ROLES = ["admin", "moderator", "support"];
 export class StaffAccessError extends Error {}
 export class StaffInfraError extends Error {}
 
-export async function assertStaffChannelAccess(userId: string) {
+export async function assertStaffChannelAccess(userId: string, fallbackClient?: any) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: roles, error } = await supabaseAdmin
+  let { data: roles, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
+
+  // Se a chave de serviço estiver indisponível em produção, lemos os cargos
+  // com o próprio usuário (a política já libera a leitura do próprio cargo).
+  if (error && fallbackClient) {
+    const retry = await fallbackClient.from("user_roles").select("role").eq("user_id", userId);
+    if (!retry.error) {
+      roles = retry.data;
+      error = null as any;
+    }
+  }
 
   if (error) {
     console.error("[StaffNexus] Falha ao ler user_roles:", error.code, error.message);
