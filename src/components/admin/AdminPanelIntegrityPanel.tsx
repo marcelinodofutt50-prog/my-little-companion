@@ -41,6 +41,28 @@ export function AdminPanelIntegrityPanel() {
   const [history, setHistory] = useState<any[]>([]);
   const [running, setRunning] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [healing, setHealing] = useState<string | null>(null);
+  const healFn = useServerFn(adminHealLicenseLogin);
+
+  const heal = useCallback(
+    async (licenseId: string) => {
+      setHealing(licenseId);
+      try {
+        const res: any = await healFn({ data: { licenseId } });
+        toast.success(
+          res?.action === "recreated"
+            ? `Login novo emitido: ${res.credentials.email}`
+            : "Conta recriada no painel com as mesmas credenciais.",
+          { description: res?.message },
+        );
+      } catch (e: any) {
+        toast.error(e?.message ?? "Não foi possível corrigir este login.");
+      } finally {
+        setHealing(null);
+      }
+    },
+    [healFn],
+  );
 
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
