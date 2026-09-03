@@ -4,6 +4,68 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
 import { trackSchemaFailure } from "./tutorials.functions";
 
+export type SupportSender = {
+  id: string;
+  name: string;
+  avatar: string | null;
+  role: "admin" | "support" | "moderator" | "staff";
+  roleLabel: string;
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  support: "Suporte",
+  moderator: "Moderação",
+  staff: "Equipe Shadow",
+};
+
+/**
+ * Carrega nome, foto e cargo de cada atendente que aparece na conversa,
+ * para o cliente saber exatamente com quem está falando.
+ */
+async function loadSupportSenders(
+  ids: (string | null)[],
+): Promise<Record<string, SupportSender>> {
+  const unique = Array.from(new Set(ids.filter((v): v is string => !!v)));
+  const out: Record<string, SupportSender> = {};
+  if (unique.length === 0) return out;
+
+  const { getSupabaseAdminSafe } = await import("./supabase-admin.server");
+  const client = await getSupabaseAdminSafe();
+  if (!client) return out;
+
+  try {
+    const [{ data: profiles }, { data: roles }] = await Promise.all([
+      client.from("profiles").select("id, display_name, full_name, email, avatar_url").in("id", unique),
+      client.from("user_roles").select("user_id, role").in("user_id", unique),
+    ]);
+
+    const roleByUser = new Map<string, string>();
+    for (const r of roles ?? []) {
+      const current = roleByUser.get(r.user_id);
+      // admin tem precedência sobre os demais cargos
+      if (!current || r.role === "admin") roleByUser.set(r.user_id, String(r.role));
+    }
+
+    for (const id of unique) {
+      const p: any = (profiles ?? []).find((x: any) => x.id === id) ?? {};
+      const rawRole = roleByUser.get(id);
+      const role = (rawRole && rawRole in ROLE_LABELS ? rawRole : "staff") as SupportSender["role"];
+      out[id] = {
+        id,
+        name: p.display_name || p.full_name || p.email?.split("@")[0] || "Equipe Shadow",
+        avatar: p.avatar_url ?? null,
+        role,
+        roleLabel: ROLE_LABELS[role] ?? ROLE_LABELS['staff']!,
+      };
+    }
+  } catch (error: any) {
+    console.error("[Support] Falha ao carregar identidade da equipe:", error?.message ?? error);
+  }
+
+  return out;
+}
+
 /**
  * Retorna a thread aberta do usuário. Se a última thread estiver fechada
  * (status = 'closed'), cria uma nova automaticamente. Assim o cliente sempre
