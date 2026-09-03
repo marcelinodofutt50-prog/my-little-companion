@@ -219,6 +219,7 @@ type Tab =
   | "redeem"
   | "license_audit"
   | "panel_integrity"
+  | "feedback"
 
   | "vip";
 
