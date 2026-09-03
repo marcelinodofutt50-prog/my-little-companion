@@ -24,20 +24,17 @@ export const createMercadoPagoCheckout = createServerFn({ method: "POST" })
 
     const { data: order } = await supabase
       .from("orders")
-      .select("id, user_id, plan_slug, amount, status")
+      .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata")
       .eq("id", data.orderId)
       .eq("user_id", userId)
       .maybeSingle();
     if (!order) return { error: "Pedido não encontrado." };
     if (order.status === "paid") return { error: "Este pedido já foi pago." };
 
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("name")
-      .eq("slug", order.plan_slug)
-      .maybeSingle();
-
     try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { assertCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
+      const integrity = await assertCanonicalOrderAmount(supabaseAdmin, order as any);
       const { createOrderPreference, isMercadoPagoConfigured } = await import("@/lib/mercadopago.server");
       if (!isMercadoPagoConfigured()) {
         return { error: "O Mercado Pago ainda não está configurado nesta versão do site." };
@@ -46,13 +43,13 @@ export const createMercadoPagoCheckout = createServerFn({ method: "POST" })
       const origin = data.returnOrigin.replace(/\/$/, "");
       const pref = await createOrderPreference({
         order: order as any,
-        planName: plan?.name ?? order.plan_slug,
+        planName: integrity.planName ?? order.plan_slug,
+        expectedAmount: integrity.expectedAmount,
         buyerEmail: (claims?.email as string | undefined) ?? undefined,
         returnOrigin: origin,
         notificationUrl: `${origin}/api/public/payments/mercadopago`,
       });
 
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin
         .from("orders")
         .update({ mp_preference_id: pref.preferenceId } as any)

@@ -30,24 +30,20 @@ export const createOrderPaymentSession = createServerFn({ method: "POST" })
     if (!order) return { error: "Pedido não encontrado." };
     if (order.status === "paid") return { error: "Este pedido já foi pago." };
 
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("name, price_brl")
-      .eq("slug", order.plan_slug)
-      .maybeSingle();
-
     try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { assertCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
+      const integrity = await assertCanonicalOrderAmount(supabaseAdmin, order as any);
       const { createOrderCheckoutSession } = await import("@/lib/stripe-payments.server");
       const session = await createOrderCheckoutSession({
         env: data.environment as StripeEnv,
         order: order as any,
-        planName: plan?.name ?? order.plan_slug,
-        planPriceBrl: Number(plan?.price_brl ?? order.amount),
+        planName: integrity.planName ?? order.plan_slug,
+        planPriceBrl: integrity.expectedAmount,
         buyerEmail: (claims?.email as string | undefined) ?? undefined,
         returnUrl: data.returnUrl,
       });
 
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin
         .from("orders")
         .update({ mp_preference_id: session.sessionId } as any)

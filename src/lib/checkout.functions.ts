@@ -218,10 +218,20 @@ export const createCheckout = createServerFn({ method: "POST" })
       ...(targetLicenseId ? { target_license_id: targetLicenseId } : {}),
       includeServer: !!data.includeServer,
       addSigner: !!data.addSigner,
+      price_snapshot: {
+        base_brl: Number(plan.price_brl),
+        coupon_code: couponRow?.code ?? null,
+        cashback_used_brl: Number(cashbackUsed.toFixed(2)),
+        include_server: !!data.includeServer,
+        add_signer: !!data.addSigner,
+        total_brl: Number(amount.toFixed(2)),
+        calculated_at: new Date().toISOString(),
+      },
     };
 
 
-    const { data: order, error: orderErr } = await supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order, error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert({
         user_id: userId,
@@ -262,18 +272,20 @@ export const getOrderState = createServerFn({ method: "GET" })
     if (["pending", "created", "yaarsa_failed"].includes(String(order.status))) {
       try {
         const { findPaidPaymentForOrder, serverStripeEnv } = await import("./stripe-payments.server");
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { assertCanonicalOrderAmount } = await import("./order-integrity.server");
+        const integrity = await assertCanonicalOrderAmount(supabaseAdmin, order as any);
         let paid = await findPaidPaymentForOrder(
           serverStripeEnv(),
           data.orderId,
           (order as any).mp_preference_id,
-          Number(order.amount),
+          integrity.expectedAmount,
         );
         if (!paid) {
           const { findApprovedMercadoPagoPayment } = await import("./mercadopago.server");
-          paid = await findApprovedMercadoPagoPayment(data.orderId, Number(order.amount));
+          paid = await findApprovedMercadoPagoPayment(data.orderId, integrity.expectedAmount);
         }
         if (paid) {
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", data.orderId);
           const { fulfillOrder } = await import("@/lib/fulfillment.server");
           await fulfillOrder(data.orderId);
@@ -295,7 +307,7 @@ export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
     const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
     const { data: orders, error } = await context.supabase
       .from("orders")
-      .select("id, amount, status, mp_preference_id")
+      .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, mp_preference_id")
       .eq("user_id", context.userId)
       .in("status", ["pending", "created", "yaarsa_failed"])
       .gte("created_at", cutoff)
@@ -307,13 +319,15 @@ export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
     for (const order of orders ?? []) {
       try {
         const { findPaidPaymentForOrder, serverStripeEnv } = await import("./stripe-payments.server");
-        let paid = await findPaidPaymentForOrder(serverStripeEnv(), order.id, (order as any).mp_preference_id, Number(order.amount));
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { assertCanonicalOrderAmount } = await import("./order-integrity.server");
+        const integrity = await assertCanonicalOrderAmount(supabaseAdmin, order as any);
+        let paid = await findPaidPaymentForOrder(serverStripeEnv(), order.id, (order as any).mp_preference_id, integrity.expectedAmount);
         if (!paid) {
           const { findApprovedMercadoPagoPayment } = await import("./mercadopago.server");
-          paid = await findApprovedMercadoPagoPayment(order.id, Number(order.amount));
+          paid = await findApprovedMercadoPagoPayment(order.id, integrity.expectedAmount);
         }
         if (!paid) continue;
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         await supabaseAdmin.from("orders").update({ mp_payment_id: String(paid.id) }).eq("id", order.id);
         const { fulfillOrder } = await import("@/lib/fulfillment.server");
 

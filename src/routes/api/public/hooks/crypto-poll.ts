@@ -44,7 +44,8 @@ async function processBatch() {
       let amountCrypto: number | null = p.amount_crypto ?? null;
       let amountBrlVerified: number | null = p.amount_brl_verified ?? null;
       let fxRate: number | null = p.fx_rate_brl ?? null;
-      if (res.ok && res.found && res.addressMatches && res.amountSats && amountBrlVerified == null) {
+      const hasPositiveAmount = res.amountSats !== undefined && BigInt(res.amountSats) > 0n;
+      if (res.ok && res.found && res.addressMatches && hasPositiveAmount && amountBrlVerified == null) {
         try {
           const { getBrlPrice, toBrl, decimalsFor } = await import("@/lib/crypto-price.server");
           const { price } = await getBrlPrice(coin);
@@ -62,6 +63,9 @@ async function processBatch() {
       } else if (!res.addressMatches) {
         nextStatus = "rejected";
         failReason = res.reason ?? "endereço de destino não confere";
+      } else if (!hasPositiveAmount || !amountBrlVerified || amountBrlVerified <= 0) {
+        nextStatus = "rejected";
+        failReason = "valor on-chain ausente ou zero";
       } else if (res.confirmations >= (p.required_confirmations ?? 6)) {
         nextStatus = "confirmed";
         verifiedAt = new Date().toISOString();

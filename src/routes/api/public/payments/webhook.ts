@@ -20,6 +20,24 @@ async function fulfillFromSession(session: any) {
     return;
   }
 
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .select("id,user_id,plan_slug,amount,status,coupon_code,cashback_used,metadata")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order) {
+    await log(`pedido ${orderId} não encontrado`, false);
+    return;
+  }
+  const { validateCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
+  const integrity = await validateCanonicalOrderAmount(supabaseAdmin, order as any);
+  const paidAmount = Number(session.amount_total ?? 0) / 100;
+  const currency = String(session.currency ?? "").toLowerCase();
+  if (!integrity.ok || currency !== "brl" || paidAmount < integrity.expectedAmount - 0.01) {
+    await log(`sessão ${session.id} bloqueada por preço/moeda inválidos`, false);
+    return;
+  }
+
   const paymentRef =
     (typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id) ??
     (typeof session.subscription === "string" ? session.subscription : session.subscription?.id) ??

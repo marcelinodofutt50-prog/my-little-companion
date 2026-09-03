@@ -1,0 +1,5 @@
+- [ ] Bloquear criação/alteração direta de pedidos
+- [ ] Validar preço canônico em checkouts e webhooks
+- [ ] Corrigir bypass cripto de valor zero
+- [ ] Restaurar Academia no ambiente publicado
+- [ ] Executar testes, E2E e auditoria final

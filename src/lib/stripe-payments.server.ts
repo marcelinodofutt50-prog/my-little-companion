@@ -134,7 +134,10 @@ export async function createOrderCheckoutSession(params: {
   });
 
   const lookupKey = subscriptionPriceForOrder(order, params.planPriceBrl);
-  const amountCents = Math.round(Number(order.amount) * 100);
+  if (!Number.isFinite(params.planPriceBrl) || params.planPriceBrl < 1 || Math.abs(Number(order.amount) - params.planPriceBrl) > 0.009) {
+    throw new Error("Pedido bloqueado por divergência de preço.");
+  }
+  const amountCents = Math.round(params.planPriceBrl * 100);
   const metadata = {
     orderId: order.id,
     userId: order.user_id,

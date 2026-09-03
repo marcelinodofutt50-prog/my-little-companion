@@ -61,6 +61,12 @@ async function heal() {
     console.log("[Shadow Protocol] ✅ community_messages is accessible.");
   }
 
+  for (const table of ['staff_trainings', 'staff_training_progress']) {
+    const { error } = await supabase.from(table).select('id').limit(1);
+    if (error) throw new Error(`[Shadow Protocol] ${table} is unavailable: [${error.code}] ${error.message}`);
+    console.log(`[Shadow Protocol] ✅ ${table} is accessible.`);
+  }
+
   console.log("[Shadow Protocol] Auto-healing cycle finished.\n");
 }
 
