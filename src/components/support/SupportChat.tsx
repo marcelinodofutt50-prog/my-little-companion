@@ -312,6 +312,22 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [body, setBody] = useState("");
+  // Rascunho por conversa: evita perder o texto ao trocar de ticket ou recarregar.
+  const draftKey = `shadow:draft:${threadId}`;
+  useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem(draftKey) : null;
+      setBody(saved ?? "");
+    } catch { /* storage indisponível */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId]);
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      if (body.trim()) window.localStorage.setItem(draftKey, body);
+      else window.localStorage.removeItem(draftKey);
+    } catch { /* storage indisponível */ }
+  }, [body, draftKey]);
   const [uploading, setUploading] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
