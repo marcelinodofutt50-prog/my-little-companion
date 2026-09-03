@@ -13,6 +13,7 @@ import {
   Check,
   X,
   ScrollText,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -332,6 +333,43 @@ export function AdminPanelServers() {
           estende a validade e apaga tudo no fim). Só libere vendas quando aparecer{" "}
           <span className="font-semibold text-primary">Pronto para vender</span>.
         </div>
+      </div>
+
+      <div className="rounded-lg border border-primary/30 bg-card/40 p-4">
+        <div className="flex items-center gap-2 font-mono text-sm">
+          <Gift className="h-4 w-4 text-primary" />
+          <span className="font-semibold">Servidor dos próximos testes grátis</span>
+        </div>
+        <p className="mt-1 font-mono text-[11px] leading-relaxed text-muted-foreground">
+          Escolha em qual VPS os próximos trials serão criados. Vale na hora, sem deploy. Os testes
+          já criados continuam no servidor de origem.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(["auto", "v455", "v457", "v46"] as const).map((opt) => {
+            const active = (trial?.choice ?? "auto") === opt;
+            const disabled =
+              busy !== null || (opt !== "auto" && trial ? !trial.available[opt] : false);
+            return (
+              <Button
+                key={opt}
+                size="sm"
+                variant={active ? "default" : "outline"}
+                disabled={disabled}
+                onClick={() => chooseTrialPanel(opt)}
+                className="font-mono text-[10px] uppercase"
+              >
+                {busy === `trial-${opt}` && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
+                {opt === "auto" ? "Automático" : PANEL_META[opt].title}
+              </Button>
+            );
+          })}
+        </div>
+        <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+          Em uso agora:{" "}
+          <span className="text-foreground">
+            {trial ? PANEL_META[trial.effective].title : "carregando…"}
+          </span>
+        </p>
       </div>
 
       {(["v455", "v457", "v46"] as PanelKey[]).map((panel) => {
