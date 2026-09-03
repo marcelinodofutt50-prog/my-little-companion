@@ -44,14 +44,15 @@ async function processBatch() {
       let amountCrypto: number | null = p.amount_crypto ?? null;
       let amountBrlVerified: number | null = p.amount_brl_verified ?? null;
       let fxRate: number | null = p.fx_rate_brl ?? null;
-      const hasPositiveAmount = res.amountSats !== undefined && BigInt(res.amountSats) > 0n;
-      if (res.ok && res.found && res.addressMatches && hasPositiveAmount && amountBrlVerified == null) {
+      const amountSats = res.amountSats;
+      const hasPositiveAmount = amountSats !== undefined && BigInt(amountSats) > 0n;
+      if (res.ok && res.found && res.addressMatches && amountSats !== undefined && hasPositiveAmount && amountBrlVerified == null) {
         try {
           const { getBrlPrice, toBrl, decimalsFor } = await import("@/lib/crypto-price.server");
           const { price } = await getBrlPrice(coin);
           const decs = decimalsFor(coin, network);
-          amountCrypto = Number(BigInt(res.amountSats)) / 10 ** decs;
-          amountBrlVerified = toBrl(res.amountSats, decs, price);
+          amountCrypto = Number(BigInt(amountSats)) / 10 ** decs;
+          amountBrlVerified = toBrl(amountSats, decs, price);
           fxRate = price;
         } catch { /* keep nulls; guard will refuse if plan expects a value */ }
       }

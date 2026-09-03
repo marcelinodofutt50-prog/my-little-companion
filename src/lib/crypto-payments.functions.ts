@@ -129,12 +129,13 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
       let amountCrypto: number | null = null;
       let amountBrlVerified: number | null = null;
       let fxRate: number | null = null;
-      const hasPositiveAmount = res.amountSats !== undefined && BigInt(res.amountSats) > 0n;
-      if (res.found && res.addressMatches && hasPositiveAmount) {
+      const amountSats = res.amountSats;
+      const hasPositiveAmount = amountSats !== undefined && BigInt(amountSats) > 0n;
+      if (res.found && res.addressMatches && amountSats !== undefined && hasPositiveAmount) {
         const { price } = await getBrlPrice(data.coin);
         const decs = decimalsFor(data.coin, data.network);
-        amountCrypto = Number(BigInt(res.amountSats)) / 10 ** decs;
-        amountBrlVerified = toBrl(res.amountSats, decs, price);
+        amountCrypto = Number(BigInt(amountSats)) / 10 ** decs;
+        amountBrlVerified = toBrl(amountSats, decs, price);
         fxRate = price;
       }
 
