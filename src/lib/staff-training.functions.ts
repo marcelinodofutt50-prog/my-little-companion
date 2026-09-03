@@ -36,10 +36,12 @@ export const listStaffTrainings = createServerFn({ method: "GET" })
         .eq("user_id", userId);
     }
 
+    const primary = supabaseAdmin ?? supabase;
     let [{ data: modules, error }, { data: progress }]: [any, any] = await Promise.all([
-      readModules(supabaseAdmin),
-      readProgress(supabaseAdmin),
+      readModules(primary),
+      readProgress(primary),
     ]);
+
 
     if (error && supabase) {
       console.error("[StaffAcademy] Admin falhou, tentando como usuário:", error.code, error.message);
