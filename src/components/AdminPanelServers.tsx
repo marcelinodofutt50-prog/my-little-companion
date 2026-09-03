@@ -97,6 +97,8 @@ export function AdminPanelServers() {
   const testCurrentFn = useServerFn(adminTestCurrentPanel);
   const fullCheckFn = useServerFn(adminFullPanelCheck);
   const logFn = useServerFn(adminPanelServerLog);
+  const trialPanelFn = useServerFn(adminGetTrialPanel);
+  const setTrialPanelFn = useServerFn(adminSetTrialPanel);
 
   async function load() {
     setLoading(true);
