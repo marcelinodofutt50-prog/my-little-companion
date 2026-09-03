@@ -694,13 +694,49 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
 
                 {g.messages.map((m) => {
                   const quoted = m.reply_to_id ? msgs.find((q) => q.id === m.reply_to_id) : null;
+                  const staffSender = g.author === "staff" ? g.sender : undefined;
+                  const initials = staffSender?.name
+                    ?.split(/\s+/)
+                    .slice(0, 2)
+                    .map((p) => p[0]?.toUpperCase() ?? "")
+                    .join("") || "S";
                   return (
                   <div
                     key={m.id}
-                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2 ${bubbleClass(g.author)} ${
+                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl ${g.author === "staff" ? "pl-3 pr-4 py-3" : "px-4 py-2"} ${bubbleClass(g.author)} ${
                       g.author === "system" ? "text-center" : ""
                     }`}
                   >
+                    {staffSender && (
+                      <div className="mb-2 flex items-center gap-2 border-b border-border/20 pb-2">
+                        {staffSender.avatar ? (
+                          <img
+                            src={staffSender.avatar}
+                            alt={`Foto de ${staffSender.name}`}
+                            loading="lazy"
+                            className="h-7 w-7 rounded-full border border-border/50 object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-[10px] font-bold text-primary">
+                            {initials}
+                          </span>
+                        )}
+                        <div className="flex flex-col leading-none">
+                          <span className="text-xs font-semibold text-foreground/90">{staffSender.name}</span>
+                          <span className={`mt-0.5 w-fit rounded-full border px-1.5 py-px text-[8px] tracking-widest ${ROLE_STYLES[staffSender.role] ?? ROLE_STYLES['staff']}`}>
+                            {staffSender.roleLabel}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {g.author === "staff" && !staffSender && (
+                      <div className="mb-2 flex items-center gap-2 border-b border-border/20 pb-2 text-muted-foreground">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-border/50 bg-muted/50">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="text-xs font-medium">{g.authorLabel}</span>
+                      </div>
+                    )}
                     {quoted && (
                       <div className="mb-2 rounded-lg border-l-2 border-current/40 bg-black/20 px-2 py-1 text-[11px] opacity-80">
                         <span className="block font-mono text-[9px] uppercase tracking-wide opacity-70">
