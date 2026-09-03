@@ -42,15 +42,15 @@ export function LicensePinReveal({ userId }: { userId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<any[] | null>(null);
 
-  async function reveal() {
-    if (pin.replace(/[^A-Za-z0-9]/g, "").length < 4) {
+  async function reveal(useChatGrant = false) {
+    if (!useChatGrant && pin.replace(/[^A-Za-z0-9]/g, "").length < 4) {
       setError("Digite o PIN que o cliente informou.");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const res: any = await revealFn({ data: { userId, pin } });
+      const res: any = await revealFn({ data: { userId, pin: useChatGrant ? "" : pin } });
       if (!res.ok) {
         setRows(null);
         setError(res.message);
@@ -103,6 +103,16 @@ export function LicensePinReveal({ userId }: { userId: string }) {
           <span className="ml-1.5 text-[11px]">Revelar</span>
         </Button>
       </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 w-full text-[11px]"
+        disabled={loading}
+        onClick={() => void reveal(true)}
+      >
+        <KeyRound className="mr-1.5 h-3 w-3" /> O cliente já enviou o PIN no chat
+      </Button>
 
       {error && <p className="text-[11px] text-destructive">{error}</p>}
 
