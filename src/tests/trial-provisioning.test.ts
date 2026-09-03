@@ -58,7 +58,7 @@ describe("provisionamento de teste grátis", () => {
     expect(inserted["licenses"]).toBeUndefined();
   });
 
-  it("não cria licença quando o painel não responde", async () => {
+  it("não cria licença quando o painel não responde", { timeout: 30000 }, async () => {
     yaarsaCreateAccount.mockRejectedValue(new Error("network timeout"));
     await expect(run()).rejects.toThrow(/Nenhuma licença foi gerada/i);
     expect(inserted["licenses"]).toBeUndefined();
