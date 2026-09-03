@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, HelpCircle, Loader2, RefreshCw, ShieldChec
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { staffAuditPanelIntegrity, staffPanelIntegrityHistory } from "@/lib/panel-integrity.functions";
+import { adminHealLicenseLogin } from "@/lib/admin.functions";
 
 type Row = {
   licenseId: string;
@@ -41,6 +42,28 @@ export function AdminPanelIntegrityPanel() {
   const [history, setHistory] = useState<any[]>([]);
   const [running, setRunning] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [healing, setHealing] = useState<string | null>(null);
+  const healFn = useServerFn(adminHealLicenseLogin);
+
+  const heal = useCallback(
+    async (licenseId: string) => {
+      setHealing(licenseId);
+      try {
+        const res: any = await healFn({ data: { licenseId } });
+        toast.success(
+          res?.action === "recreated"
+            ? `Login novo emitido: ${res.credentials.email}`
+            : "Conta recriada no painel com as mesmas credenciais.",
+          { description: res?.message },
+        );
+      } catch (e: any) {
+        toast.error(e?.message ?? "Não foi possível corrigir este login.");
+      } finally {
+        setHealing(null);
+      }
+    },
+    [healFn],
+  );
 
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
@@ -153,6 +176,20 @@ export function AdminPanelIntegrityPanel() {
                   </span>
                 </div>
                 {r.detail && <p className="mt-1 text-[11px] text-muted-foreground">{r.detail}</p>}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2"
+                  disabled={healing === r.licenseId}
+                  onClick={() => void heal(r.licenseId)}
+                >
+                  {healing === r.licenseId ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wrench className="mr-2 h-4 w-4" />
+                  )}
+                  Corrigir login deste cliente
+                </Button>
               </div>
             );
           })}

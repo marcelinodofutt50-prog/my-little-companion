@@ -1975,3 +1975,41 @@ export const adminSyncLicensePasswordFromPanel = createServerFn({ method: "POST"
       panelExpireDate: acc.expireDate ?? null,
     };
   });
+
+/**
+ * CORRIGIR LOGIN DO CLIENTE (admin/suporte).
+ *
+ * Verifica no painel se a conta realmente existe (tentando criá-la com as
+ * credenciais atuais). Se não existir, cria; se existir com credenciais
+ * divergentes, apaga e emite um login novo, gravando na licença.
+ */
+export const adminHealLicenseLogin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z.object({ licenseId: z.string().uuid(), forceRecreate: z.boolean().optional() }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await supabaseAdmin
+      .from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    if (!lic) throw new Error("Licença não encontrada");
+
+    const { healLicenseLogin } = await import("./license-heal.server");
+    const result = await healLicenseLogin(
+      {
+        id: (lic as any).id,
+        user_id: (lic as any).user_id,
+        plan_slug: (lic as any).plan_slug ?? null,
+        yaarsa_username: (lic as any).yaarsa_username,
+        yaarsa_email: (lic as any).yaarsa_email,
+        yaarsa_password_enc: (lic as any).yaarsa_password_enc,
+        panel: (lic as any).panel ?? null,
+        expires_at: (lic as any).expires_at ?? null,
+        is_trial: (lic as any).is_trial ?? null,
+        server_ip: (lic as any).server_ip ?? null,
+      },
+      { reason: "admin_corrigir_login", ...(data.forceRecreate ? { forceRecreate: true } : {}) },
+    );
+    return result;
+  });
