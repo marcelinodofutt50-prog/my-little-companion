@@ -43,7 +43,7 @@ export const listMyPinReveals = createServerFn({ method: "GET" })
  */
 export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
   .validator((d: unknown) =>
-    z.object({ userId: z.string().uuid(), pin: z.string().min(4).max(24) }).parse(d),
+    z.object({ userId: z.string().uuid(), pin: z.string().max(24).optional() }).parse(d),
   )
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
@@ -53,10 +53,21 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
     const admin = await getSupabaseAdminSafe();
     if (!admin) throw new Error("Serviço de segurança indisponível agora. Tente de novo em instantes.");
 
-    const { verifyAndConsumePin, logPinReveal } = await import("./security-pin.server");
+    const { verifyAndConsumePin, logPinReveal, hasActiveChatGrant } = await import("./security-pin.server");
     const staffEmail = (context.claims?.["email"] as string | undefined) ?? null;
 
-    const check = await verifyAndConsumePin(admin, data.userId, data.pin);
+    // O cliente pode ter liberado a consulta enviando o PIN no próprio chat:
+    // nesse caso o PIN já foi queimado lá e a equipe segue sem digitar nada.
+    const provided = (data.pin ?? "").replace(/[^A-Za-z0-9]/g, "");
+    const granted = provided.length < 4 ? await hasActiveChatGrant(admin, data.userId) : false;
+    if (provided.length < 4 && !granted) {
+      return {
+        ok: false as const,
+        message: "Peça o PIN ao cliente (ou peça para ele enviar o PIN aqui no chat para liberar).",
+      };
+    }
+
+    const check = granted ? ({ ok: true } as const) : await verifyAndConsumePin(admin, data.userId, provided);
     if (!check.ok) {
       await logPinReveal(admin, {
         userId: data.userId,
