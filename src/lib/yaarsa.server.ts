@@ -377,6 +377,19 @@ function friendlyYaarsaFail(message: string, statusCode?: number): string {
   return m;
 }
 
+/**
+ * O painel BTmob guarda o usuário numa coluna de 8 caracteres. Nomes maiores
+ * fazem a criação falhar com "Data too long for column 'usrname'" — a conta
+ * nunca aparece no painel. Normalizamos antes de enviar.
+ */
+export const YAARSA_USERNAME_MAX = 8;
+
+export function sanitizePanelUsername(raw: string): string {
+  const cleaned = (raw || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const base = cleaned || "user";
+  return base.slice(0, YAARSA_USERNAME_MAX);
+}
+
 export async function yaarsaCreateAccount(input: {
   username: string;
   email: string;
@@ -391,7 +404,7 @@ export async function yaarsaCreateAccount(input: {
   return yaarsaPost(
     {
       action: "add",
-      username: input.username,
+      username: sanitizePanelUsername(input.username),
       email: input.email,
       password: input.password,
       adminkey: yaarsaAdminKey(panel),

@@ -74,6 +74,7 @@ export async function healLicenseLogin(
     encrypt,
     decrypt,
     hasPanelServer,
+    sanitizePanelUsername,
     isPanelHealthy,
     refreshPanelOverrides,
   } = await import("./yaarsa.server");
@@ -119,7 +120,7 @@ export async function healLicenseLogin(
     let created: { Success?: unknown; Fail?: unknown };
     try {
       created = await yaarsaCreateAccount({
-        username: lic.yaarsa_username as string,
+        username: sanitizePanelUsername(lic.yaarsa_username as string),
         email: lic.yaarsa_email as string,
         password: currentPassword as string,
         planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
@@ -147,13 +148,20 @@ export async function healLicenseLogin(
       } catch {
         steps.push("validade-nao-ajustada");
       }
+      // O painel corta o usuário em 8 caracteres: a licença precisa mostrar
+      // exatamente o que existe lá, senão o cliente tenta entrar com outro nome.
+      const panelUsername = sanitizePanelUsername(lic.yaarsa_username as string);
+      if (panelUsername !== lic.yaarsa_username) {
+        await updateLicenseTolerant(supabaseAdmin, lic.id, { yaarsa_username: panelUsername });
+        steps.push("usuario-ajustado-ao-painel");
+      }
       await logHeal(supabaseAdmin, lic, panel, "created", reason, steps);
       return {
         ok: true,
         action: "created",
         panel,
         credentials: {
-          username: lic.yaarsa_username as string,
+          username: sanitizePanelUsername(lic.yaarsa_username as string),
           email: lic.yaarsa_email as string,
           password: currentPassword as string,
           server_ip: lic.server_ip ?? null,
@@ -185,7 +193,7 @@ export async function healLicenseLogin(
     if (currentPassword && lic.yaarsa_email && lic.yaarsa_username) {
       return {
         generated: false,
-        username: lic.yaarsa_username as string,
+        username: sanitizePanelUsername(lic.yaarsa_username as string),
         email: lic.yaarsa_email as string,
         password: currentPassword,
       };
