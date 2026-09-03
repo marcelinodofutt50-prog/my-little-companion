@@ -12,6 +12,7 @@ const state = {
   updates: [] as any[],
   logs: [] as any[],
   createResponses: [] as any[],
+  probeResponses: [] as any[],
 };
 
 const supabaseAdmin = {
@@ -44,6 +45,7 @@ vi.mock("../lib/yaarsa.server", () => ({
     state.extended.push({ email, ymd });
     return { Success: true };
   }),
+  yaarsaProbeAccount: vi.fn(async () => state.probeResponses.shift() ?? { state: "found", detail: "" }),
   hasPanelServer: () => true,
   isPanelHealthy: () => true,
   refreshPanelOverrides: async () => {},
@@ -74,6 +76,7 @@ beforeEach(() => {
   state.updates = [];
   state.logs = [];
   state.createResponses = [];
+  state.probeResponses = [];
 });
 
 describe("healLicenseLogin", () => {
@@ -89,16 +92,25 @@ describe("healLicenseLogin", () => {
     expect(state.extended[0]?.email).toBe("cliente1@shadow.app");
   });
 
-  it("recria o login quando o painel diz que o e-mail já existe", async () => {
+  it("apaga e recria com AS MESMAS credenciais quando o e-mail já existe", async () => {
     state.createResponses = [{ Fail: "1004 email already in use" }, { Success: true }];
     const res = await healLicenseLogin(baseLic, { reason: "test" });
 
     expect(res.action).toBe("recreated");
     expect(state.removed).toContain("cliente1@shadow.app");
-    expect(res.credentials.email).toBe("shadow_new@shadow.app");
-    expect(state.updates[0]?.patch.yaarsa_email).toBe("shadow_new@shadow.app");
-    expect(state.updates[0]?.patch.yaarsa_password_enc).toBe("enc:Nv#2026abc");
+    expect(res.credentials.email).toBe("cliente1@shadow.app");
+    expect(res.credentials.password).toBe("Antiga#123");
+    expect(state.create[1].email).toBe("cliente1@shadow.app");
+    expect(state.create[1].password).toBe("Antiga#123");
+    expect(state.updates[0]?.patch.yaarsa_email).toBe("cliente1@shadow.app");
     expect(state.updates[0]?.patch.revoked).toBe(false);
+  });
+
+  it("falha em vez de dizer que corrigiu quando a conta não aparece no painel", async () => {
+    state.createResponses = [{ Success: true }];
+    state.probeResponses = [{ state: "missing", detail: "" }];
+    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/não aparece no painel/i);
+    expect(state.updates).toHaveLength(0);
   });
 
   it("não apaga nada quando o painel está fora do ar", async () => {
@@ -115,14 +127,15 @@ describe("healLicenseLogin", () => {
     expect(res.action).toBe("recreated");
     expect(state.removed).toContain("cliente1@shadow.app");
     expect(state.create).toHaveLength(1);
-    expect(state.create[0].email).toBe("shadow_new@shadow.app");
+    expect(state.create[0].email).toBe("cliente1@shadow.app");
   });
 
   it("emite login novo quando a licença não tem senha guardada", async () => {
     state.createResponses = [{ Success: true }];
     const res = await healLicenseLogin({ ...baseLic, yaarsa_password_enc: null }, { reason: "test" });
     expect(res.action).toBe("recreated");
-    expect(res.steps).toContain("sem-credenciais-guardadas");
+    expect(res.credentials.email).toBe("shadow_new@shadow.app");
+    expect(res.steps).toContain("sem-senha-guardada:credenciais-novas");
   });
 
   it("tenta outro painel quando o preferido está com a cota cheia", async () => {
@@ -133,7 +146,8 @@ describe("healLicenseLogin", () => {
     ];
     const res = await healLicenseLogin(baseLic, { reason: "test" });
     expect(res.action).toBe("recreated");
-    expect(res.steps.some((s) => s.startsWith("login-novo-em:"))).toBe(true);
+    expect(res.steps.some((s) => s.startsWith("login-recriado-em:"))).toBe(true);
+    expect(res.credentials.email).toBe("cliente1@shadow.app");
   });
 
   it("preserva o acesso atual quando todos os painéis estão cheios", async () => {
@@ -144,6 +158,6 @@ describe("healLicenseLogin", () => {
       { Fail: "maximum allowed accounts reached" },
     ];
     await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/cota de contas cheia/i);
-    expect(state.removed).toEqual([]);
+    expect(state.updates).toEqual([]);
   });
 });

@@ -67,19 +67,27 @@ describe("Support AI Proactive Flow", () => {
     expect(generateText).not.toHaveBeenCalled();
   });
 
-  it("should trigger AI for login error messages", async () => {
+  it("pede o PIN de segurança quando o cliente relata problema de login", async () => {
+    mockSupabaseQuery.maybeSingle.mockResolvedValue({ data: { user_id: adminId }, error: null });
     await triggerSupportAI(threadId, userId, "Estou com erro ao logar no btmob");
+    expect(generateText).not.toHaveBeenCalled();
+    const body = mockSupabaseQuery.insert.mock.calls[0][0].body as string;
+    expect(body).toContain("PIN de segurança");
+  });
+
+  it("should trigger AI for generic license questions", async () => {
+    await triggerSupportAI(threadId, userId, "quanto tempo dura minha licenca?");
     expect(generateText).toHaveBeenCalled();
-    
+
     const callArgs = (generateText as any).mock.calls[0][0];
-    expect(callArgs.prompt).toContain("Estou com erro ao logar no btmob");
+    expect(callArgs.prompt).toContain("quanto tempo dura minha licenca?");
     expect(callArgs.tools).toHaveProperty("checkCustomerStatus");
     expect(callArgs.tools).toHaveProperty("fixLogin");
     expect(callArgs.tools).toHaveProperty("postAIMessage");
   });
 
   it("should execute checkCustomerStatus tool correctly", async () => {
-    await triggerSupportAI(threadId, userId, "erro de senha");
+    await triggerSupportAI(threadId, userId, "quanto tempo dura minha licenca?");
     const tools = (generateText as any).mock.calls[0][0].tools;
     
     const result = await tools.checkCustomerStatus.execute({});
@@ -101,7 +109,7 @@ describe("Support AI Proactive Flow", () => {
 
     mockSupabaseQuery.maybeSingle.mockResolvedValueOnce({ data: mockLicense, error: null });
 
-    await triggerSupportAI(threadId, userId, "senha invalida");
+    await triggerSupportAI(threadId, userId, "quanto tempo dura minha licenca?");
     const tools = (generateText as any).mock.calls[0][0].tools;
     
     const result = await tools.fixLogin.execute({ licenseId: mockLicense.id });
@@ -111,12 +119,11 @@ describe("Support AI Proactive Flow", () => {
   it("should execute postAIMessage and mark thread as unread", async () => {
     mockSupabaseQuery.maybeSingle.mockResolvedValueOnce({ data: { user_id: adminId }, error: null });
 
-    await triggerSupportAI(threadId, userId, "bug no login");
+    await triggerSupportAI(threadId, userId, "quanto tempo dura minha licenca?");
     const tools = (generateText as any).mock.calls[0][0].tools;
 
     await tools.postAIMessage.execute({ body: "Test message" });
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("user_roles");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_messages");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_threads");
     expect(mockSupabaseQuery.update).toHaveBeenCalledWith({ unread_by_customer: 1, last_staff_message_at: expect.any(String) });

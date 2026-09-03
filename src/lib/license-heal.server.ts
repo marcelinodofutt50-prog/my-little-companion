@@ -10,10 +10,11 @@
  *   1. Tentamos CRIAR a conta no painel com exatamente as credenciais que o
  *      site mostra. O painel é a fonte da verdade: se ele aceitar, a conta não
  *      existia e agora passa a existir — problema resolvido.
- *   2. Se o painel responder "e-mail já em uso" (1004), a conta existe mas as
- *      credenciais do site não batem. Nesse caso apagamos a conta antiga no
- *      painel, revogamos as credenciais antigas e criamos um login novo,
- *      gravando-o na licença (é o que o cliente passa a ver em "Licenças").
+ *   2. Se o painel responder "e-mail já em uso" (1004), a conta existe mas está
+ *      inconsistente. Nesse caso APAGAMOS a conta no painel e a recriamos com
+ *      EXATAMENTE o mesmo e-mail, usuário e senha que já estão na licença — o
+ *      cliente continua com o mesmo login, só que desbugado. Só emitimos
+ *      credenciais novas quando a licença não tem nenhuma senha guardada.
  *   3. Ajustamos a data de expiração para a validade real da licença.
  */
 
@@ -67,6 +68,7 @@ export async function healLicenseLogin(
   const {
     yaarsaCreateAccount,
     yaarsaRemoveAccount,
+    yaarsaProbeAccount,
     yaarsaExtend,
     generateCredentials,
     encrypt,
@@ -131,6 +133,14 @@ export async function healLicenseLogin(
 
     if (created.Success) {
       steps.push("conta-criada-no-painel");
+      const probe = await yaarsaProbeAccount(lic.yaarsa_email as string, panel);
+      steps.push(`conferencia:${probe.state}`);
+      if (probe.state === "missing") {
+        await logHeal(supabaseAdmin, lic, panel, "ghost_create", reason, steps);
+        throw new Error(
+          `O servidor ${panel} disse que criou a conta, mas ela não aparece no painel. Não mexi em mais nada — verifique o painel antes de tentar de novo.`,
+        );
+      }
       try {
         await yaarsaExtend(lic.yaarsa_email as string, targetYmd, panel);
         steps.push("validade-ajustada");
@@ -168,11 +178,41 @@ export async function healLicenseLogin(
     steps.push(opts?.forceRecreate ? "recriacao-forcada" : "sem-credenciais-guardadas");
   }
 
-  // 2) A conta existe (ou não temos como validar). Emitimos o login novo ANTES
-  //    de apagar o antigo: se o painel estiver cheio ou fora do ar, o cliente
-  //    continua com o acesso que já tinha em vez de ficar sem nada.
-  const creds = generateCredentials();
+  // 2) A conta existe no painel mas está inconsistente. Regra do time: NÃO
+  //    inventamos login novo — apagamos e recriamos com as MESMAS credenciais
+  //    que já estão na licença, para o cliente não precisar trocar nada.
+  const { generated, username, email, password } = (() => {
+    if (currentPassword && lic.yaarsa_email && lic.yaarsa_username) {
+      return {
+        generated: false,
+        username: lic.yaarsa_username as string,
+        email: lic.yaarsa_email as string,
+        password: currentPassword,
+      };
+    }
+    const c = generateCredentials();
+    return { generated: true, username: c.username, email: c.email, password: c.password };
+  })();
+  if (generated) steps.push("sem-senha-guardada:credenciais-novas");
+
   const panelOrder = [panel, ...(["v457", "v46", "v455"] as const).filter((p) => p !== panel && configured(p))];
+
+  // Apaga a conta bugada em TODOS os painéis configurados, senão a recriação
+  // volta a bater em "e-mail já em uso".
+  if (!generated) {
+    for (const candidate of panelOrder) {
+      try {
+        const removed = await yaarsaRemoveAccount(email, candidate);
+        if (removed.Fail && !NOT_FOUND_RE.test(String(removed.Fail))) {
+          steps.push(`remocao-${candidate}:${String(removed.Fail).slice(0, 60)}`);
+        } else if (removed.Success) {
+          steps.push(`conta-removida:${candidate}`);
+        }
+      } catch (e: any) {
+        steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
+      }
+    }
+  }
 
   let usedPanel: "v455" | "v457" | "v46" = panel;
   let lastFail = "";
@@ -181,9 +221,9 @@ export async function healLicenseLogin(
     let fresh: { Success?: unknown; Fail?: unknown };
     try {
       fresh = await yaarsaCreateAccount({
-        username: creds.username,
-        email: creds.email,
-        password: creds.password,
+        username,
+        email,
+        password,
         planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
         totalPaid: 0,
         additionalInfo: `shadow-heal-new-${lic.id.slice(0, 8)}`,
@@ -192,52 +232,47 @@ export async function healLicenseLogin(
     } catch (e: any) {
       fresh = { Fail: String(e?.message ?? e) };
     }
+
     if (fresh.Success || EXISTS_RE.test(String(fresh.Fail ?? ""))) {
+      // Confirmação obrigatória: só damos por resolvido se o painel realmente
+      // devolver a conta na consulta (era aqui que "corrigia" sem existir).
+      const probe = await yaarsaProbeAccount(email, candidate);
+      steps.push(`conferencia-${candidate}:${probe.state}`);
+      if (probe.state === "missing") {
+        lastFail = `conta não apareceu no painel ${candidate}`;
+        continue;
+      }
       usedPanel = candidate;
       issued = true;
-      if (candidate !== panel) steps.push(`login-novo-em:${candidate}`);
+      if (candidate !== panel) steps.push(`login-recriado-em:${candidate}`);
       break;
     }
+
     lastFail = String(fresh.Fail ?? "");
     steps.push(`falha-${candidate}:${lastFail.slice(0, 60)}`);
-    if (QUOTA_RE.test(lastFail)) continue; // painel lotado: tenta o próximo
   }
 
   if (!issued) {
     await logHeal(supabaseAdmin, lic, panel, "failed", reason, [...steps, lastFail.slice(0, 200)]);
     throw new Error(
       QUOTA_RE.test(lastFail)
-        ? "Os servidores estão com a cota de contas cheia agora. Seu login atual continua ativo — avise o suporte para liberar espaço."
-        : "Não foi possível emitir um login novo agora. Seu acesso atual foi preservado. Tente de novo em alguns minutos ou fale com o suporte.",
+        ? "Os servidores estão com a cota de contas cheia agora. Libere espaço no painel e tente de novo — as credenciais do cliente não foram alteradas."
+        : `Não consegui recriar o login no painel${lastFail ? `: ${lastFail.slice(0, 140)}` : ""}. As credenciais do cliente continuam as mesmas.`,
     );
   }
-  steps.push("login-novo-emitido");
-
-  // Só agora removemos a conta antiga (o cliente nunca fica sem acesso).
-  if (lic.yaarsa_email && lic.yaarsa_email !== creds.email) {
-    try {
-      const removed = await yaarsaRemoveAccount(lic.yaarsa_email, panel);
-      if (removed.Fail && !NOT_FOUND_RE.test(String(removed.Fail))) {
-        steps.push(`remocao-antiga-falhou:${String(removed.Fail).slice(0, 60)}`);
-      } else {
-        steps.push("conta-antiga-removida");
-      }
-    } catch (e: any) {
-      steps.push(`remocao-antiga-erro:${String(e?.message ?? e).slice(0, 60)}`);
-    }
-  }
+  steps.push(generated ? "login-novo-emitido" : "login-recriado-mesmas-credenciais");
 
   try {
-    await yaarsaExtend(creds.email, targetYmd, usedPanel);
+    await yaarsaExtend(email, targetYmd, usedPanel);
     steps.push("validade-ajustada");
   } catch {
     steps.push("validade-nao-ajustada");
   }
 
   await updateLicenseTolerant(supabaseAdmin, lic.id, {
-    yaarsa_username: creds.username,
-    yaarsa_email: creds.email,
-    yaarsa_password_enc: encrypt(creds.password),
+    yaarsa_username: username,
+    yaarsa_email: email,
+    yaarsa_password_enc: encrypt(password),
     panel: usedPanel,
     revoked: false,
     suspended_at: null,
@@ -251,13 +286,14 @@ export async function healLicenseLogin(
     action: "recreated",
     panel: usedPanel,
     credentials: {
-      username: creds.username,
-      email: creds.email,
-      password: creds.password,
+      username,
+      email,
+      password,
       server_ip: lic.server_ip ?? null,
     },
-    message:
-      "O login antigo estava inconsistente no servidor. Emitimos um login novo — use o e-mail e a senha que aparecem agora em Licenças.",
+    message: generated
+      ? "A licença não tinha senha guardada, então emitimos um login novo — use o e-mail e a senha que aparecem agora em Licenças."
+      : "O login estava travado no servidor. Apagamos e recriamos a conta com o MESMO e-mail e a MESMA senha. Tente entrar de novo no BTmob.",
     steps,
   };
 }
