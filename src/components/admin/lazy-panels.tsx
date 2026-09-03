@@ -133,3 +133,5 @@ export const StaffNexusChat = lazyPanel(() =>
   import("@/components/staff/StaffNexusChat").then((m) => ({ default: m.StaffNexusChat })));
 export const RevenueSparkline = lazyPanel(() =>
   import("@/components/RevenueSparkline").then((m) => ({ default: m.RevenueSparkline })));
+export const AdminFeedbackPanel = lazyPanel(() =>
+  import("@/components/admin/AdminFeedbackPanel").then((m) => ({ default: m.AdminFeedbackPanel })));
