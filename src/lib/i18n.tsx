@@ -25,6 +25,8 @@ const DICT: Dict = {
   "nav.playprotect": { pt: "Bypass Play Protect", en: "Bypass Play Protect" },
   "nav.tutorials": { pt: "Centro de Treinamento", en: "Training Hub" },
   "nav.kraken": { pt: "Kraken (2.0)", en: "Kraken (2.0)" },
+  "nav.feedback": { pt: "Sugestões & Críticas", en: "Feedback" },
+  "dash.copied": { pt: "Copiado!", en: "Copied!" },
 
 
   // ===== Dashboard =====
