@@ -27,6 +27,7 @@ import {
   adminFullPanelCheck,
   adminPanelServerLog,
   adminGetTrialPanel,
+  adminTrialProvisionAlerts,
   adminSetTrialPanel,
 } from "@/lib/panel-servers.functions";
 
@@ -99,6 +100,8 @@ export function AdminPanelServers() {
   const fullCheckFn = useServerFn(adminFullPanelCheck);
   const logFn = useServerFn(adminPanelServerLog);
   const trialPanelFn = useServerFn(adminGetTrialPanel);
+  const alertsFn = useServerFn(adminTrialProvisionAlerts);
+  const [trialAlerts, setTrialAlerts] = useState<any[]>([]);
   const setTrialPanelFn = useServerFn(adminSetTrialPanel);
 
   async function load() {
@@ -115,6 +118,12 @@ export function AdminPanelServers() {
         setTrial(tp);
       } catch {
         /* opcional */
+      }
+      try {
+        const al: any = await alertsFn();
+        setTrialAlerts(al.alerts ?? []);
+      } catch {
+        /* alertas são opcionais */
       }
       try {
         const lg: any = await logFn();
@@ -334,6 +343,34 @@ export function AdminPanelServers() {
           <span className="font-semibold text-primary">Pronto para vender</span>.
         </div>
       </div>
+
+      {trialAlerts.length > 0 && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+          <div className="font-mono text-sm font-semibold text-destructive">
+            Testes grátis que falharam ({trialAlerts.length})
+          </div>
+          <p className="mt-1 font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Nenhuma licença foi gerada nestes casos — o painel recusou a criação da conta.
+            Se aparecer <span className="font-semibold">cota cheia</span>, libere espaço na VPS ou
+            aponte os próximos testes para outro servidor abaixo.
+          </p>
+          <ul className="mt-2 space-y-1 font-mono text-[11px]">
+            {trialAlerts.map((a) => (
+              <li key={a.id} className="rounded border border-border/50 bg-background/40 px-2 py-1">
+                <span className="text-muted-foreground">
+                  {new Date(a.at).toLocaleString("pt-BR")}
+                </span>{" "}
+                <span className={a.limitHit ? "font-semibold text-amber-300" : "text-foreground"}>
+                  {a.limitHit ? "cota cheia" : "painel indisponível"}
+                </span>{" "}
+                <span className="text-muted-foreground">
+                  · {(a.panels ?? []).join(", ") || "—"} · {a.reason?.slice(0, 120)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="rounded-lg border border-primary/30 bg-card/40 p-4">
         <div className="flex items-center gap-2 font-mono text-sm">
