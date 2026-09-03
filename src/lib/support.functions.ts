@@ -36,7 +36,10 @@ async function loadSupportSenders(
 
   try {
     const [{ data: profiles }, { data: roles }] = await Promise.all([
-      client.from("profiles").select("id, display_name, full_name, email, avatar_url").in("id", unique),
+      client
+        .from("profiles")
+        .select("id, display_name, full_name, email, avatar_url, metadata")
+        .in("id", unique),
       client.from("user_roles").select("user_id, role").in("user_id", unique),
     ]);
 
@@ -49,16 +52,23 @@ async function loadSupportSenders(
 
     for (const id of unique) {
       const p: any = (profiles ?? []).find((x: any) => x.id === id) ?? {};
+      const meta: any = p.metadata ?? {};
       const rawRole = roleByUser.get(id);
       const role = (rawRole && rawRole in ROLE_LABELS ? rawRole : "staff") as SupportSender["role"];
       out[id] = {
         id,
-        name: p.display_name || p.full_name || p.email?.split("@")[0] || "Equipe Shadow",
-        avatar: p.avatar_url ?? null,
+        name:
+          meta.nickname ||
+          p.display_name ||
+          p.full_name ||
+          p.email?.split("@")[0] ||
+          "Equipe Shadow",
+        avatar: meta.avatar_url || p.avatar_url || null,
         role,
         roleLabel: ROLE_LABELS[role] ?? ROLE_LABELS['staff']!,
       };
     }
+
   } catch (error: any) {
     console.error("[Support] Falha ao carregar identidade da equipe:", error?.message ?? error);
   }
