@@ -142,7 +142,7 @@ export async function internalGenerateTrial(
     is_trial: true,
     status: 'trial',
     origin_type: 'trial',
-    panel: panelFromPlanSlug("trial") || "v455",
+    panel: trialPanel || "v455",
   };
 
   const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
