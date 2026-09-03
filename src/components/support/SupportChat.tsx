@@ -364,6 +364,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const fileRef = useRef<HTMLInputElement>(null);
   // Refs evitam closure velha dentro da assinatura do tempo real.
   const atBottomRef = useRef(true);
+  const pendingRef = useRef<PendingMsg[]>([]);
   const msgIdsRef = useRef<Set<string>>(new Set());
   const [dragActive, setDragActive] = useState(false);
   const [connection, setConnection] = useState<"live" | "reconnecting">("live");
@@ -372,6 +373,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   useEffect(() => {
     atBottomRef.current = atBottom;
   }, [atBottom]);
+
+  useEffect(() => {
+    pendingRef.current = pending;
+  }, [pending]);
 
   useEffect(() => {
     msgIdsRef.current = new Set(msgs.map((m) => m.id));
@@ -509,6 +514,24 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     if (!loadingOlder && atBottom) scrollToBottom();
   }, [msgs.length, pending.length]);
 
+  /**
+   * Voltou a internet? Reenviamos sozinhos as mensagens que falharam, na ordem
+   * em que o cliente escreveu — ele não precisa clicar em "tentar de novo".
+   */
+  const handleSendRef = useRef<((...a: any[]) => Promise<void>) | null>(null);
+  useEffect(() => {
+    const retryFailed = async () => {
+      const failed = pendingRef.current.filter((p) => p.status === "failed" && !p.attachmentPath);
+      for (const item of failed) {
+        try {
+          await handleSendRef.current?.(undefined, undefined, item.clientId);
+        } catch { /* mantém marcada como falha */ }
+      }
+    };
+    window.addEventListener("online", retryFailed);
+    return () => window.removeEventListener("online", retryFailed);
+  }, []);
+
   const handleSend = async (
     attachmentPath?: string,
     attachmentType?: string,
@@ -519,6 +542,10 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     const text = retryOf ? (previous?.body ?? "") : body.trim();
     if (!text && !attachmentPath) return;
     const replyToId = retryOf ? null : replyTo?.id ?? null;
+
+    if (typeof navigator !== "undefined" && navigator.onLine === false && !retryOf) {
+      toast.error("Você está sem internet. A mensagem será enviada assim que a conexão voltar.");
+    }
 
     const clientId = retryOf ?? `local-${Date.now()}`;
     const newPending: PendingMsg = {
@@ -569,6 +596,8 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       toast.error(message);
     }
   };
+
+  handleSendRef.current = handleSend as any;
 
   /** Sobe o arquivo para o storage e envia como anexo. */
   const uploadAndSend = async (file: File) => {
