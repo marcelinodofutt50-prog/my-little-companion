@@ -148,14 +148,23 @@ export const createMarketCheckout = createServerFn({ method: "POST" })
     if (planErr || !plan) throw new Error("Produto não encontrado");
 
     const amount = Number(plan.price_brl);
-    const { data: order, error: orderErr } = await supabase
+    if (!Number.isFinite(amount) || amount < 1) throw new Error("Produto com preço inválido");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order, error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert({
         user_id: userId,
         plan_slug: plan.slug,
         amount,
         status: "pending",
-        metadata: { market: true } as any,
+        metadata: {
+          market: true,
+          price_snapshot: {
+            base_brl: amount,
+            total_brl: amount,
+            calculated_at: new Date().toISOString(),
+          },
+        } as any,
       } as any)
       .select("id")
       .single();

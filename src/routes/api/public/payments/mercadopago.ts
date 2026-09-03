@@ -18,7 +18,7 @@ async function log(note: string, processed: boolean, payload?: unknown) {
  */
 function verifySignature(request: Request, dataId: string): boolean {
   const secret = process.env["MERCADOPAGO_WEBHOOK_SECRET"];
-  if (!secret) return true;
+  if (!secret) return false;
   const signature = request.headers.get("x-signature");
   if (!signature) return false;
   const parts = Object.fromEntries(
@@ -70,14 +70,20 @@ async function handlePayment(paymentId: string) {
   // Confere se o valor pago cobre o pedido (evita entrega por valor menor).
   const { data: order } = await supabaseAdmin
     .from("orders")
-    .select("id, amount, status")
+    .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata")
     .eq("id", orderId)
     .maybeSingle();
   if (!order) {
     await log(`pedido ${orderId} não encontrado para o pagamento ${paymentId}`, false);
     return;
   }
-  if (Number(payment.transaction_amount ?? 0) < Number(order.amount) - 0.01) {
+  const { validateCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
+  const integrity = await validateCanonicalOrderAmount(supabaseAdmin, order as any);
+  if (!integrity.ok) {
+    await log(`pedido ${orderId} bloqueado por divergência de preço (${integrity.reason})`, false);
+    return;
+  }
+  if (Number(payment.transaction_amount ?? 0) < integrity.expectedAmount - 0.01) {
     await log(`pagamento ${paymentId} abaixo do valor do pedido ${orderId}`, false);
     return;
   }

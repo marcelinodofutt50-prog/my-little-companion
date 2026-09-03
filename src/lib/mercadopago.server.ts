@@ -54,12 +54,16 @@ export type MpPreference = { preferenceId: string; initPoint: string };
 export async function createOrderPreference(params: {
   order: { id: string; user_id: string; plan_slug: string; amount: number | string };
   planName: string;
+  expectedAmount: number;
   buyerEmail?: string;
   returnOrigin: string;
   notificationUrl?: string;
 }): Promise<MpPreference> {
   const origin = params.returnOrigin.replace(/\/$/, "");
-  const amount = Number(Number(params.order.amount).toFixed(2));
+  const amount = Number(params.expectedAmount.toFixed(2));
+  if (!Number.isFinite(amount) || amount < 1 || Math.abs(amount - Number(params.order.amount)) > 0.009) {
+    throw new Error("Pedido bloqueado por divergência de preço.");
+  }
 
   const pref = await mpFetch<{ id: string; init_point: string; sandbox_init_point?: string }>(
     "/checkout/preferences",

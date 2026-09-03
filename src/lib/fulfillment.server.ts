@@ -75,6 +75,19 @@ async function fulfillOrderInner(orderId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { yaarsaCreateAccount, generateCredentials, encrypt } = await import("@/lib/yaarsa.server");
 
+  const { data: pendingOrder } = await supabaseAdmin
+    .from("orders")
+    .select("id,user_id,plan_slug,amount,status,coupon_code,cashback_used,metadata")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!pendingOrder) return { ok: false, reason: "order-not-found" };
+  const { validateCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
+  const integrity = await validateCanonicalOrderAmount(supabaseAdmin, pendingOrder as any);
+  if (!integrity.ok) {
+    await supabaseAdmin.from("orders").update({ status: "cancelled" } as any).eq("id", orderId);
+    return { ok: false, reason: `price-integrity:${integrity.reason}` };
+  }
+
   // Release orders stuck in "processing" for more than 10 minutes so a webhook
   // retry can safely pick them up again.
   const staleCutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();

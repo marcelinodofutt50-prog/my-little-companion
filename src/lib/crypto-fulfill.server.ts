@@ -28,7 +28,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
   const planPrice = Number(claimed.amount_brl ?? 0);
   const paidBrl = Number(claimed.amount_brl_verified ?? 0);
   const MIN_RATIO = 0.97; // 3% tolerance (fees + FX spread)
-  if (planPrice > 0 && paidBrl > 0 && paidBrl < planPrice * MIN_RATIO) {
+  if (!Number.isFinite(planPrice) || planPrice <= 0 || !Number.isFinite(paidBrl) || paidBrl <= 0 || paidBrl < planPrice * MIN_RATIO) {
     await supabaseAdmin.from("crypto_payments").update({
       status: "rejected",
       failure_reason: `underpayment: pago R$${paidBrl.toFixed(2)} < requerido R$${(planPrice * MIN_RATIO).toFixed(2)}`,

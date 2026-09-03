@@ -129,7 +129,8 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
       let amountCrypto: number | null = null;
       let amountBrlVerified: number | null = null;
       let fxRate: number | null = null;
-      if (res.found && res.addressMatches && res.amountSats) {
+      const hasPositiveAmount = res.amountSats !== undefined && BigInt(res.amountSats) > 0n;
+      if (res.found && res.addressMatches && hasPositiveAmount) {
         const { price } = await getBrlPrice(data.coin);
         const decs = decimalsFor(data.coin, data.network);
         amountCrypto = Number(BigInt(res.amountSats)) / 10 ** decs;
@@ -142,6 +143,7 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
       let verifiedAt: string | null = null;
       if (!res.found) nextStatus = "pending";
       else if (!res.addressMatches) { nextStatus = "rejected"; failReason = res.reason ?? "endereço de destino não confere"; }
+      else if (!hasPositiveAmount || !amountBrlVerified || amountBrlVerified <= 0) { nextStatus = "rejected"; failReason = "valor on-chain ausente ou zero"; }
       else if (res.confirmations >= 6) { nextStatus = "confirmed"; verifiedAt = new Date().toISOString(); }
 
       await supabaseAdmin.from("crypto_payments").update({

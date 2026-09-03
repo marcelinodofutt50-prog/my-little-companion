@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertStaffChannelAccess } from "./staff-chat.server";
+import { assertStaffChannelAccess, throwStaffChannelError } from "./staff-chat.server";
 
 /**
  * Academia da Equipe — centro de treinamento INTERNO.
@@ -58,9 +58,7 @@ export const listStaffTrainings = createServerFn({ method: "GET" })
 
     if (error) {
       console.error("[StaffAcademy] Falha ao listar módulos:", error.code, error.message);
-      throw new Error(
-        `Não foi possível carregar a Academia da Equipe (${error.code ?? "erro"}). Tente novamente.`,
-      );
+      throwStaffChannelError(error, "Carregar a Academia da Equipe");
     }
 
     const done = new Set(
