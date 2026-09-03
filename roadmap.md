@@ -1,5 +1,5 @@
-- [ ] Bloquear criação/alteração direta de pedidos
-- [ ] Validar preço canônico em checkouts e webhooks
-- [ ] Corrigir bypass cripto de valor zero
-- [ ] Restaurar Academia no ambiente publicado
-- [ ] Executar testes, E2E e auditoria final
+- [x] Bloquear criação/alteração direta de pedidos
+- [x] Validar preço canônico em checkouts e webhooks
+- [x] Corrigir bypass cripto de valor zero
+- [x] Restaurar Academia no ambiente publicado (migração aplicada no banco da Vercel)
+- [x] Executar testes, E2E e auditoria final (188 testes, typecheck e build OK)
