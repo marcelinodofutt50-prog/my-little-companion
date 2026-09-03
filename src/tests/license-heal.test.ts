@@ -44,6 +44,8 @@ vi.mock("../lib/yaarsa.server", () => ({
     state.extended.push({ email, ymd });
     return { Success: true };
   }),
+  hasPanelServer: () => true,
+  refreshPanelOverrides: async () => {},
   generateCredentials: () => ({ username: "shadow_new", email: "shadow_new@shadow.app", password: "Nv#2026abc" }),
   encrypt: (v: string) => `enc:${v}`,
   decrypt: (v: string) => String(v).replace(/^enc:/, ""),

@@ -111,7 +111,7 @@ export async function healLicenseLogin(
   // 1) A conta existe no painel? Descobrimos tentando criá-la com as mesmas
   //    credenciais que o cliente vê no site.
   if (canProbeExisting) {
-    let created: { Success?: boolean; Fail?: string };
+    let created: { Success?: unknown; Fail?: unknown };
     try {
       created = await yaarsaCreateAccount({
         username: lic.yaarsa_username as string,
