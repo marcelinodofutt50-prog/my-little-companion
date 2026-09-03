@@ -13,6 +13,12 @@ import {
   SHADOW_PIX,
 } from "./pix";
 import {
+  PIN_REQUEST_MARKER,
+  buildPinAcceptedReply,
+  buildPinRejectedReply,
+  buildPinRequest,
+  extractPin,
+  isLoginAccessIssue,
   buildTrainingReply,
   buildVisualErrorReply,
   isTrainingQuestion,
@@ -132,6 +138,23 @@ async function hasPendingPixOffer(threadId: string): Promise<boolean> {
   return false;
 }
 
+/** Já pedimos o PIN nesta conversa e ainda não recebemos? */
+async function hasPendingPinRequest(threadId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from("support_messages")
+    .select("body")
+    .eq("thread_id", threadId)
+    .eq("is_system", true)
+    .order("created_at", { ascending: false })
+    .limit(3);
+  for (const m of (data ?? []) as { body: string | null }[]) {
+    const body = m.body ?? "";
+    if (body.includes("PIN confirmado")) return false;
+    if (body.includes(PIN_REQUEST_MARKER)) return true;
+  }
+  return false;
+}
+
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
   const triggers = [
@@ -156,6 +179,26 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   }
   if (!pixOffered && isExplicitPixRequest(userMessage) && isCheckoutFailureMessage(userMessage)) {
     await postSystemMessage(threadId, buildPixOffer());
+    return;
+  }
+
+  // Verificação de login protegida por PIN: pedimos o PIN, o cliente envia no
+  // chat, o PIN é queimado na hora e a equipe fica liberada por 30 minutos.
+  const pinAsked = await hasPendingPinRequest(threadId);
+  const sentPin = extractPin(userMessage);
+  if (pinAsked && sentPin) {
+    const { verifyAndConsumePin, grantChatAccess } = await import("./security-pin.server");
+    const check = await verifyAndConsumePin(supabaseAdmin, userId, sentPin);
+    if (check.ok) {
+      await grantChatAccess(supabaseAdmin, userId, threadId);
+      await postSystemMessage(threadId, buildPinAcceptedReply());
+    } else {
+      await postSystemMessage(threadId, buildPinRejectedReply());
+    }
+    return;
+  }
+  if (!pinAsked && isLoginAccessIssue(userMessage)) {
+    await postSystemMessage(threadId, buildPinRequest());
     return;
   }
 

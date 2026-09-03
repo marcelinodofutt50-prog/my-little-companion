@@ -57,3 +57,15 @@ describe("mensagens prontas", () => {
     expect(msg).toMatch(/não interfere/i);
   });
 });
+
+describe("verificação de login por PIN", () => {
+  it("detecta relato de problema de login", async () => {
+    const { isLoginAccessIssue, extractPin } = await import("../support-canned");
+    expect(isLoginAccessIssue("não consigo logar, senha inválida")).toBe(true);
+    expect(isLoginAccessIssue("deu erro no painel btmob")).toBe(true);
+    expect(isLoginAccessIssue("oi bom dia")).toBe(false);
+    expect(isLoginAccessIssue("como criar aplicativo na btmob?")).toBe(false);
+    expect(extractPin("meu pin é abcd-2345")).toBe("ABCD2345");
+    expect(extractPin("oi tudo bem")).toBe(null);
+  });
+});
