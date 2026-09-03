@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { adminListThreads, adminAssumeThread, adminCloseThread } from "@/lib/admin.functions";
+import { adminListThreads, adminAssumeThread, adminCloseThread, adminHealUserLogins } from "@/lib/admin.functions";
 import { Loader2 } from "lucide-react";
 import { adminSetThreadPriority, adminUpdateThreadCategory, adminMergeDuplicateThreads } from "@/lib/support-admin.functions";
 import { SupportChat } from "./SupportChat";
@@ -19,7 +19,8 @@ import {
   Filter,
   AlertCircle,
   Hash,
-  ShieldCheck
+  ShieldCheck,
+  Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ export function AdminSupportPanel() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
   const [fichaUserId, setFichaUserId] = useState<string | null>(null);
+  const [healing, setHealing] = useState(false);
 
   const listFn = useServerFn(adminListThreads);
   const assumeFn = useServerFn(adminAssumeThread);
@@ -48,6 +50,29 @@ export function AdminSupportPanel() {
   const setPriorityFn = useServerFn(adminSetThreadPriority);
   const setCategoryFn = useServerFn(adminUpdateThreadCategory);
   const mergeFn = useServerFn(adminMergeDuplicateThreads);
+  const healUserFn = useServerFn(adminHealUserLogins);
+
+  /** Corrige os logins (BTmob/Yaarsa) do cliente dono deste ticket. */
+  const handleHealBugs = async (userId: string) => {
+    if (!userId) return;
+    setHealing(true);
+    try {
+      const res: any = await healUserFn({ data: { userId } });
+      const failed = (res?.healed ?? []).filter((h: any) => h.action === "failed");
+      const desc = (res?.healed ?? [])
+        .map((h: any) => `${h.panel}: ${h.action === "recreated" ? `novo login ${h.credentials?.email}` : h.action === "created" ? "conta criada no painel" : h.action === "failed" ? h.error ?? "falhou" : "já estava OK"}`)
+        .join(" • ");
+      if (failed.length > 0 && failed.length === (res?.healed ?? []).length) {
+        toast.error(res?.message ?? "Não foi possível corrigir.", { description: desc });
+      } else {
+        toast.success(res?.message ?? "Correção concluída.", { description: desc || undefined });
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao corrigir os bugs deste cliente.");
+    } finally {
+      setHealing(false);
+    }
+  };
   const [merging, setMerging] = useState(false);
 
   const handleMergeDuplicates = async () => {
