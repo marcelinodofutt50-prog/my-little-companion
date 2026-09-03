@@ -389,7 +389,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const loadMessages = async (before?: string) => {
     try {
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
+      // eslint-disable-next-line no-console
+      console.log("[SupportChat] listMessages response:", JSON.stringify({ keys: Object.keys(r || {}), firstMessage: r?.messages?.[0], senders: r?.senders }));
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
+      // eslint-disable-next-line no-console
+      console.log("[SupportChat] normalized first:", JSON.stringify(newMsgs[0]));
       if (r.senders) setSenders((prev) => ({ ...prev, ...r.senders }));
       if (before) {
         setMsgs((prev) => {
@@ -407,6 +411,8 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       }
       setHasMore(!!r.hasMore);
     } catch (e: any) {
+      // eslint-disable-next-line no-console
+      console.error("[SupportChat] listMessages error:", e);
       toast.error("Erro ao carregar mensagens");
     } finally {
       setLoading(false);
