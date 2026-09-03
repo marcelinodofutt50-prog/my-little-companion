@@ -299,7 +299,7 @@ export const adminTrialProvisionAlerts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
+    const { getSupabaseAdminSafe } = await import("@/lib/supabase-admin.server");
     const admin = await getSupabaseAdminSafe();
     if (!admin) return { alerts: [] as any[] };
     const { data } = await admin
