@@ -407,6 +407,8 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       }
       setHasMore(!!r.hasMore);
     } catch (e: any) {
+      // eslint-disable-next-line no-console
+      console.error("[SupportChat] listMessages error:", e);
       toast.error("Erro ao carregar mensagens");
     } finally {
       setLoading(false);
