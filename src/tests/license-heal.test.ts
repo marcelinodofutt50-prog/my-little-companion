@@ -125,8 +125,25 @@ describe("healLicenseLogin", () => {
     expect(res.steps).toContain("sem-credenciais-guardadas");
   });
 
-  it("falha com mensagem amigável quando não consegue emitir login novo", async () => {
-    state.createResponses = [{ Fail: "1004 already in use" }, { Fail: "quota exceeded" }];
-    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/login novo/i);
+  it("tenta outro painel quando o preferido está com a cota cheia", async () => {
+    state.createResponses = [
+      { Fail: "1004 already in use" },
+      { Fail: "maximum allowed accounts reached" },
+      { Success: true },
+    ];
+    const res = await healLicenseLogin(baseLic, { reason: "test" });
+    expect(res.action).toBe("recreated");
+    expect(res.steps.some((s) => s.startsWith("login-novo-em:"))).toBe(true);
+  });
+
+  it("preserva o acesso atual quando todos os painéis estão cheios", async () => {
+    state.createResponses = [
+      { Fail: "1004 already in use" },
+      { Fail: "maximum allowed accounts reached" },
+      { Fail: "maximum allowed accounts reached" },
+      { Fail: "maximum allowed accounts reached" },
+    ];
+    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/cota de contas cheia/i);
+    expect(state.removed).toEqual([]);
   });
 });
