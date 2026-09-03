@@ -56,7 +56,8 @@ function fakeTable(name: string) {
       return api;
     },
     maybeSingle: () => {
-      const row = db.orders.find((o) =>
+      const source: any[] = name === "plans" ? db.plans : db.orders;
+      const row = source.find((o) =>
         Object.entries(state.filters).every(([k, v]) => String((o as any)[k] ?? "") === String(v)),
       );
       return Promise.resolve({ data: row ?? null, error: null });
