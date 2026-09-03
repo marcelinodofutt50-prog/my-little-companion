@@ -209,7 +209,23 @@ function DashboardPage() {
   })
 
 
-  const displayName = profile?.full_name || profile?.display_name || user?.email?.split('@')[0]
+  // Identidade oficial do Shadow Pass (apelido + foto). Nunca mostramos o e-mail
+  // como nome quando o operador já configurou o Pass.
+  const identityFn = useServerFn(getMyIdentity)
+  const { data: shadowIdentity } = useQuery({
+    queryKey: ['my-identity', user?.id],
+    queryFn: () => identityFn({}),
+    enabled: !!user?.id,
+    staleTime: 60_000,
+  })
+  const profileMeta = (profile as any)?.metadata || {}
+  const displayName =
+    shadowIdentity?.nickname ||
+    profileMeta.nickname ||
+    profile?.display_name ||
+    profile?.full_name ||
+    user?.email?.split('@')[0]
+  const displayAvatar = shadowIdentity?.avatar || profileMeta.avatar_url || (profile as any)?.avatar_url || null
   const email = user?.email || ''
 
   const handleSync = async () => {
