@@ -289,3 +289,32 @@ export const adminSetTrialPanel = createServerFn({ method: "POST" })
     }).catch(() => {});
     return { ok: true, choice: data.panel, effective };
   });
+
+/**
+ * Últimas falhas de provisionamento de teste grátis (cota cheia, painel fora).
+ * Serve de alerta no admin: antes ninguém sabia que a chave tinha batido o
+ * limite de contas e os testes falhavam em silêncio.
+ */
+export const adminTrialProvisionAlerts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { getSupabaseAdminSafe } = await import("@/lib/supabase-admin.server");
+    const admin = await getSupabaseAdminSafe();
+    if (!admin) return { alerts: [] as any[] };
+    const { data } = await admin
+      .from("integration_logs")
+      .select("id, created_at, error_message, payload")
+      .eq("action", "trial_provision_failed")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    return {
+      alerts: (data ?? []).map((r: any) => ({
+        id: r.id,
+        at: r.created_at,
+        reason: r.error_message ?? "",
+        limitHit: !!r.payload?.limit_hit,
+        panels: (r.payload?.panels ?? []) as string[],
+      })),
+    };
+  });

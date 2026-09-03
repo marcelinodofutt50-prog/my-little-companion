@@ -69,60 +69,93 @@ export async function internalGenerateTrial(
   }
 
 
-  // 3) Call Yaarsa with Retry logic for stability
-  let yr: any;
-  let attempts = 0;
-  const maxAttempts = 5; // Increased retry limit for production stability
-  
-  while (attempts < maxAttempts) {
-    try {
-      console.log(`[internalGenerateTrial] Attempting Yaarsa call ${attempts + 1}/${maxAttempts} for user ${userId}`);
-      yr = await yaarsaCreateAccount({
-        username: creds.username,
-        email: creds.email,
-        password: creds.password,
-        planSlug: "trial",
-        totalPaid: 0,
-        additionalInfo: "shadow-trial-evolution",
-        panel: trialPanel,
-      });
+  // 3) Provisionamento no painel — com failover por painel.
+  // REGRA DE OURO: a licença só é gravada se o painel confirmar que a conta
+  // existe de verdade. Nunca criamos licença "fantasma" quando o painel cai
+  // ou quando o limite de contas da chave foi atingido.
+  const { ALL_PANELS, hasPanelServer } = await import("./yaarsa.server");
+  const isLimitFail = (m: string) =>
+    /maximum allowed accounts reached|allowed accounts|limite.*\d+|\d+.*accounts/i.test(m);
+  const isAlreadyExists = (m: string) => /1004|already|exist|existe/i.test(m);
 
-      // Yaarsa refusal handling
-      if (yr.Success) {
-        console.log(`[internalGenerateTrial] Yaarsa success for user ${userId}`);
-        break;
-      }
-      
-      const alreadyExists = !!yr.Fail && /1004|already|exist|existe/i.test(yr.Fail);
-      if (alreadyExists) {
-        console.log(`[internalGenerateTrial] Yaarsa account already exists for user ${userId}, proceeding with sync.`);
-        break;
+  const candidates: string[] = [trialPanel, ...ALL_PANELS.filter((p) => p !== trialPanel && hasPanelServer(p))];
+
+  let usedPanel: string = trialPanel;
+  let provisioned = false;
+  let existedBefore = false;
+  let lastFail = "";
+  let limitHit = false;
+
+  outer: for (const panel of candidates) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      let yr: any;
+      try {
+        yr = await yaarsaCreateAccount({
+          username: creds.username,
+          email: creds.email,
+          password: creds.password,
+          planSlug: "trial",
+          totalPaid: 0,
+          additionalInfo: "shadow-trial-evolution",
+          panel: panel as any,
+        });
+      } catch (err: any) {
+        lastFail = err?.message || "falha de rede com o painel";
+        await new Promise((r) => setTimeout(r, 2 ** attempt * 800));
+        continue;
       }
 
-      // Handle specific refusal codes
-      if (yr.Fail === "YAARSA_REFUSAL") {
-        console.warn(`[internalGenerateTrial] Yaarsa license server reported instability (YAARSA_REFUSAL). Retrying...`);
-      } else {
-        console.warn(`[internalGenerateTrial] Yaarsa refusal: ${yr.Fail}. Retrying...`);
+      if (yr?.Success) {
+        usedPanel = panel;
+        provisioned = true;
+        break outer;
       }
-    } catch (err: any) {
-      console.error(`[internalGenerateTrial] Yaarsa connection error on attempt ${attempts + 1}:`, err.message);
-    }
-    
-    attempts++;
-    if (attempts < maxAttempts) {
-      const delay = Math.pow(2, attempts - 1) * 1000;
-      await new Promise(r => setTimeout(r, delay));
+
+      const fail = String(yr?.Fail ?? yr?.error ?? "resposta inválida do painel");
+      lastFail = fail;
+
+      if (isAlreadyExists(fail)) {
+        usedPanel = panel;
+        provisioned = true;
+        existedBefore = true;
+        break outer;
+      }
+
+      if (isLimitFail(fail)) {
+        // Limite de contas da chave: não adianta repetir no mesmo painel.
+        limitHit = true;
+        console.warn(`[internalGenerateTrial] Painel ${panel} sem vagas (${fail}). Tentando próximo painel.`);
+        continue outer;
+      }
+
+      await new Promise((r) => setTimeout(r, 2 ** attempt * 800));
     }
   }
-  
-  const alreadyExists = yr?.Fail && /1004|already|exist|existe/i.test(yr.Fail);
-  
-  if (yr?.Fail && !alreadyExists) {
-    console.error(`[internalGenerateTrial] Yaarsa final failure after ${attempts} attempts: ${yr.Fail}`);
+
+  if (!provisioned) {
+    // Libera a trava para o usuário poder tentar de novo depois.
     await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
-    throw new Error(`Shadow Node Refusal: ${yr.Fail}. O servidor de licenças está instável ou a configuração é inválida. Contate o suporte técnico.`);
+    try {
+      await supabaseAdmin.from("integration_logs").insert({
+        action: "trial_provision_failed",
+        status: "error",
+        error_message: lastFail.slice(0, 500),
+        payload: { user_id: userId, panels: candidates, limit_hit: limitHit } as any,
+      } as any);
+    } catch { /* log é best-effort */ }
+
+    if (limitHit) {
+      throw new Error(
+        "Os servidores de teste estão com a cota de contas cheia neste momento. Já avisamos a equipe — tente novamente mais tarde ou fale com o suporte para liberar seu acesso."
+      );
+    }
+    throw new Error(
+      `Não conseguimos criar sua conta de teste no servidor agora (${lastFail}). Nenhuma licença foi gerada — tente novamente em alguns minutos.`
+    );
   }
+
+  const alreadyExists = existedBefore;
+
 
 
   // AUTO-HEAL: Se o Yaarsa disse que a conta existe, mas não temos o registro 
@@ -142,7 +175,7 @@ export async function internalGenerateTrial(
     is_trial: true,
     status: 'trial',
     origin_type: 'trial',
-    panel: trialPanel || "v455",
+    panel: usedPanel || trialPanel || "v455",
   };
 
   const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
