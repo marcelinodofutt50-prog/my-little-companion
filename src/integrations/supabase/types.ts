@@ -1610,6 +1610,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pin_reveal_logs: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          license_id: string | null
+          scope: string
+          staff_email: string | null
+          staff_id: string | null
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          license_id?: string | null
+          scope?: string
+          staff_email?: string | null
+          staff_id?: string | null
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          license_id?: string | null
+          scope?: string
+          staff_email?: string | null
+          staff_id?: string | null
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           active: boolean
@@ -2491,6 +2527,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_pins: {
+        Row: {
+          created_at: string
+          last_used_at: string | null
+          pin: string
+          rotated_at: string
+          updated_at: string
+          user_id: string
+          uses_count: number
+        }
+        Insert: {
+          created_at?: string
+          last_used_at?: string | null
+          pin: string
+          rotated_at?: string
+          updated_at?: string
+          user_id: string
+          uses_count?: number
+        }
+        Update: {
+          created_at?: string
+          last_used_at?: string | null
+          pin?: string
+          rotated_at?: string
+          updated_at?: string
+          user_id?: string
+          uses_count?: number
+        }
+        Relationships: []
       }
       signup_attempts: {
         Row: {
