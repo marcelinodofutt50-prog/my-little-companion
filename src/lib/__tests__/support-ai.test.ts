@@ -68,6 +68,7 @@ describe("Support AI Proactive Flow", () => {
   });
 
   it("pede o PIN de segurança quando o cliente relata problema de login", async () => {
+    mockSupabaseQuery.maybeSingle.mockResolvedValue({ data: { user_id: adminId }, error: null });
     await triggerSupportAI(threadId, userId, "Estou com erro ao logar no btmob");
     expect(generateText).not.toHaveBeenCalled();
     const body = mockSupabaseQuery.insert.mock.calls[0][0].body as string;
