@@ -148,6 +148,13 @@ export async function healLicenseLogin(
       } catch {
         steps.push("validade-nao-ajustada");
       }
+      // O painel corta o usuário em 8 caracteres: a licença precisa mostrar
+      // exatamente o que existe lá, senão o cliente tenta entrar com outro nome.
+      const panelUsername = sanitizePanelUsername(lic.yaarsa_username as string);
+      if (panelUsername !== lic.yaarsa_username) {
+        await updateLicenseTolerant(supabaseAdmin, lic.id, { yaarsa_username: panelUsername });
+        steps.push("usuario-ajustado-ao-painel");
+      }
       await logHeal(supabaseAdmin, lic, panel, "created", reason, steps);
       return {
         ok: true,
