@@ -158,11 +158,11 @@ export const getStaffTrainingOverview = createServerFn({ method: "GET" })
       supabaseAdmin.from("staff_training_progress").select("user_id, training_id, completed"),
     ]);
 
-    const staffIds = Array.from(
+    const staffIds: string[] = Array.from(
       new Set(
         (roles ?? [])
           .filter((r: any) => ["admin", "moderator", "support"].includes(String(r.role)))
-          .map((r: any) => r.user_id),
+          .map((r: any) => String(r.user_id)),
       ),
     );
 
@@ -184,7 +184,7 @@ export const getStaffTrainingOverview = createServerFn({ method: "GET" })
       }
     }
 
-    const members = staffIds.map((id) => {
+    const members = staffIds.map((id: string) => {
       const p = profileMap.get(id) || {};
       const roleRow = (roles ?? []).find((r: any) => r.user_id === id) as any;
       return {
@@ -197,6 +197,6 @@ export const getStaffTrainingOverview = createServerFn({ method: "GET" })
       };
     });
 
-    members.sort((a, b) => b.done - a.done);
+    members.sort((a: any, b: any) => b.done - a.done);
     return { members, total };
   });

@@ -162,6 +162,6 @@ export const listStaffDirectory = createServerFn({ method: "GET" })
       };
     });
 
-    members.sort((a, b) => a.name.localeCompare(b.name));
+    members.sort((a: any, b: any) => a.name.localeCompare(b.name));
     return { members };
   });
