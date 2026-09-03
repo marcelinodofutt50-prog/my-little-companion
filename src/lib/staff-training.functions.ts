@@ -9,7 +9,7 @@ import { assertStaffChannelAccess } from "./staff-chat.server";
  * Somente admin cria, edita ou apaga módulos.
  */
 
-async function requireAdmin(userId: string) {
+async function requireAdmin(userId: string, fallback?: any) {
   const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, fallback);
   if (role !== "admin") {
     throw new Error("Apenas administradores podem editar os módulos de treinamento interno.");
@@ -87,8 +87,8 @@ export const setStaffTrainingProgress = createServerFn({ method: "POST" })
     z.object({ trainingId: z.string().uuid(), completed: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { userId } = context;
-    const { supabaseAdmin } = await assertStaffChannelAccess(userId, fallback);
+    const { userId, supabase } = context as any;
+    const { supabaseAdmin } = await assertStaffChannelAccess(userId, supabase);
     const { error } = await supabaseAdmin.from("staff_training_progress").upsert(
       {
         user_id: userId,
@@ -126,7 +126,7 @@ export const saveStaffTraining = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const supabaseAdmin = await requireAdmin(context.userId);
+    const supabaseAdmin = await requireAdmin(context.userId, (context as any).supabase);
     const payload: Record<string, any> = { ...data, created_by: context.userId };
     if (!payload.id) delete payload.id;
     const { error } = await supabaseAdmin
@@ -140,7 +140,7 @@ export const deleteStaffTraining = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const supabaseAdmin = await requireAdmin(context.userId);
+    const supabaseAdmin = await requireAdmin(context.userId, (context as any).supabase);
     const { error } = await supabaseAdmin.from("staff_trainings").delete().eq("id", data.id);
     if (error) throw new Error("Falha ao remover módulo: " + error.message);
     return { ok: true };
@@ -150,7 +150,7 @@ export const deleteStaffTraining = createServerFn({ method: "POST" })
 export const getStaffTrainingOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const supabaseAdmin = await requireAdmin(context.userId);
+    const supabaseAdmin = await requireAdmin(context.userId, (context as any).supabase);
 
     const [{ data: roles }, { data: modules }, { data: progress }] = await Promise.all([
       supabaseAdmin.from("user_roles").select("user_id, role"),
