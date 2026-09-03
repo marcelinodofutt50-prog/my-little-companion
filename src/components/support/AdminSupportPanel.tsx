@@ -297,6 +297,17 @@ export function AdminSupportPanel() {
                     </SelectContent>
                   </Select>
 
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={healing}
+                    className="h-8 font-mono text-[10px] uppercase border-cyan-500/40 text-cyan-400 hover:text-cyan-300"
+                    onClick={() => handleHealBugs(selectedThread.user_id)}
+                  >
+                    {healing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Wrench className="h-3 w-3 mr-1" />}
+                    Corrigir Bugs
+                  </Button>
+
                   <Button 
                     size="sm" 
                     variant="destructive" 
