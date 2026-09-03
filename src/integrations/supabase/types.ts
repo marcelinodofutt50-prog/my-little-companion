@@ -2863,7 +2863,10 @@ export type Database = {
           is_admin: boolean
           is_system: boolean
           reply_to_id: string | null
+          sender_avatar_url: string | null
           sender_id: string
+          sender_name: string | null
+          sender_role: string | null
           thread_id: string
         }
         Insert: {
@@ -2875,7 +2878,10 @@ export type Database = {
           is_admin?: boolean
           is_system?: boolean
           reply_to_id?: string | null
+          sender_avatar_url?: string | null
           sender_id: string
+          sender_name?: string | null
+          sender_role?: string | null
           thread_id: string
         }
         Update: {
@@ -2887,7 +2893,10 @@ export type Database = {
           is_admin?: boolean
           is_system?: boolean
           reply_to_id?: string | null
+          sender_avatar_url?: string | null
           sender_id?: string
+          sender_name?: string | null
+          sender_role?: string | null
           thread_id?: string
         }
         Relationships: [

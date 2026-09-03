@@ -175,6 +175,28 @@ const ROLE_STYLES: Record<string, string> = {
   staff: "border-border/50 bg-muted/40 text-muted-foreground",
 };
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  support: "Suporte",
+  moderator: "Moderação",
+  staff: "Equipe Shadow",
+};
+
+function messageSender(m: SupportMessage, fallback?: SenderInfo): SenderInfo | undefined {
+  if (!m.is_admin || m.is_system || !m.sender_id) return undefined;
+  if (m.sender_name) {
+    const role = m.sender_role ?? "staff";
+    return {
+      id: m.sender_id ?? fallback?.id ?? "",
+      name: m.sender_name,
+      avatar: m.sender_avatar_url ?? null,
+      role,
+      roleLabel: ROLE_LABELS[role] ?? ROLE_LABELS.staff,
+    };
+  }
+  return fallback;
+}
+
 /** Mostra foto, nome e cargo do atendente para o cliente saber com quem fala. */
 function SenderBadge({ sender }: { sender: SenderInfo }) {
   const initials = sender.name
@@ -694,7 +716,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
 
                 {g.messages.map((m) => {
                   const quoted = m.reply_to_id ? msgs.find((q) => q.id === m.reply_to_id) : null;
-                  const staffSender = g.author === "staff" ? g.sender : undefined;
+                  const staffSender = messageSender(m, g.author === "staff" ? g.sender : undefined);
                   const initials = staffSender?.name
                     ?.split(/\s+/)
                     .slice(0, 2)
@@ -703,7 +725,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   return (
                   <div
                     key={m.id}
-                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl ${g.author === "staff" ? "pl-3 pr-4 py-3" : "px-4 py-2"} ${bubbleClass(g.author)} ${
+                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl ${staffSender ? "pl-3 pr-4 py-3" : "px-4 py-2"} ${bubbleClass(g.author)} ${
                       g.author === "system" ? "text-center" : ""
                     }`}
                   >
