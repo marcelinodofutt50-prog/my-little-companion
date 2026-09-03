@@ -165,37 +165,67 @@ export async function healLicenseLogin(
     steps.push(opts?.forceRecreate ? "recriacao-forcada" : "sem-credenciais-guardadas");
   }
 
-  // 2) A conta existe (ou não temos como validar): apaga no painel e emite um
-  //    login novo, revogando as credenciais antigas.
-  if (lic.yaarsa_email) {
-    const removed = await yaarsaRemoveAccount(lic.yaarsa_email, panel);
-    if (removed.Fail && !NOT_FOUND_RE.test(String(removed.Fail))) {
-      steps.push(`remocao-antiga-falhou:${String(removed.Fail).slice(0, 60)}`);
-    } else {
-      steps.push("conta-antiga-removida");
+  // 2) A conta existe (ou não temos como validar). Emitimos o login novo ANTES
+  //    de apagar o antigo: se o painel estiver cheio ou fora do ar, o cliente
+  //    continua com o acesso que já tinha em vez de ficar sem nada.
+  const creds = generateCredentials();
+  const panelOrder = [panel, ...(["v457", "v46", "v455"] as const).filter((p) => p !== panel && configured(p))];
+
+  let usedPanel: "v455" | "v457" | "v46" = panel;
+  let lastFail = "";
+  let issued = false;
+  for (const candidate of panelOrder) {
+    let fresh: { Success?: unknown; Fail?: unknown };
+    try {
+      fresh = await yaarsaCreateAccount({
+        username: creds.username,
+        email: creds.email,
+        password: creds.password,
+        planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
+        totalPaid: 0,
+        additionalInfo: `shadow-heal-new-${lic.id.slice(0, 8)}`,
+        panel: candidate,
+      });
+    } catch (e: any) {
+      fresh = { Fail: String(e?.message ?? e) };
     }
+    if (fresh.Success || EXISTS_RE.test(String(fresh.Fail ?? ""))) {
+      usedPanel = candidate;
+      issued = true;
+      if (candidate !== panel) steps.push(`login-novo-em:${candidate}`);
+      break;
+    }
+    lastFail = String(fresh.Fail ?? "");
+    steps.push(`falha-${candidate}:${lastFail.slice(0, 60)}`);
+    if (QUOTA_RE.test(lastFail)) continue; // painel lotado: tenta o próximo
   }
 
-  const creds = generateCredentials();
-  const fresh = await yaarsaCreateAccount({
-    username: creds.username,
-    email: creds.email,
-    password: creds.password,
-    planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
-    totalPaid: 0,
-    additionalInfo: `shadow-heal-new-${lic.id.slice(0, 8)}`,
-    panel,
-  });
-  if (fresh.Fail) {
-    await logHeal(supabaseAdmin, lic, panel, "failed", reason, [...steps, String(fresh.Fail)]);
+  if (!issued) {
+    await logHeal(supabaseAdmin, lic, panel, "failed", reason, [...steps, lastFail.slice(0, 200)]);
     throw new Error(
-      "Não foi possível emitir um login novo agora. Tente novamente em alguns minutos ou fale com o suporte.",
+      QUOTA_RE.test(lastFail)
+        ? "Os servidores estão com a cota de contas cheia agora. Seu login atual continua ativo — avise o suporte para liberar espaço."
+        : "Não foi possível emitir um login novo agora. Seu acesso atual foi preservado. Tente de novo em alguns minutos ou fale com o suporte.",
     );
   }
   steps.push("login-novo-emitido");
 
+  // Só agora removemos a conta antiga (o cliente nunca fica sem acesso).
+  if (lic.yaarsa_email && lic.yaarsa_email !== creds.email) {
+    try {
+      const removed = await yaarsaRemoveAccount(lic.yaarsa_email, panel);
+      if (removed.Fail && !NOT_FOUND_RE.test(String(removed.Fail))) {
+        steps.push(`remocao-antiga-falhou:${String(removed.Fail).slice(0, 60)}`);
+      } else {
+        steps.push("conta-antiga-removida");
+      }
+    } catch (e: any) {
+      steps.push(`remocao-antiga-erro:${String(e?.message ?? e).slice(0, 60)}`);
+    }
+  }
+
   try {
-    await yaarsaExtend(creds.email, targetYmd, panel);
+    await yaarsaExtend(creds.email, targetYmd, usedPanel);
     steps.push("validade-ajustada");
   } catch {
     steps.push("validade-nao-ajustada");
@@ -205,12 +235,13 @@ export async function healLicenseLogin(
     yaarsa_username: creds.username,
     yaarsa_email: creds.email,
     yaarsa_password_enc: encrypt(creds.password),
+    panel: usedPanel,
     revoked: false,
     suspended_at: null,
   });
   steps.push("licenca-atualizada");
 
-  await logHeal(supabaseAdmin, lic, panel, "recreated", reason, steps);
+  await logHeal(supabaseAdmin, lic, usedPanel, "recreated", reason, steps);
 
   return {
     ok: true,
