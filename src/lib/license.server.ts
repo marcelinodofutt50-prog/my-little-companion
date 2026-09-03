@@ -20,7 +20,8 @@ export async function internalGenerateTrial(
   fingerprint?: { deviceHash?: string | null; attrsHash?: string | null; ipPrefixHash?: string | null } | null
 ): Promise<TrialResult> {
 
-  const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, panelFromPlanSlug } = await import("./yaarsa.server");
+  const { yaarsaCreateAccount, deriveCredentials, encrypt, decrypt, expireDateFor, resolveTrialPanel } = await import("./yaarsa.server");
+  const trialPanel = await resolveTrialPanel();
   
   const creds = deriveCredentials(`shadow-trial:v2:${userId}`); // v2 to avoid conflicts with old trial logic if needed, or stick to v1
 
@@ -83,7 +84,7 @@ export async function internalGenerateTrial(
         planSlug: "trial",
         totalPaid: 0,
         additionalInfo: "shadow-trial-evolution",
-        panel: panelFromPlanSlug("trial"),
+        panel: trialPanel,
       });
 
       // Yaarsa refusal handling
@@ -141,7 +142,7 @@ export async function internalGenerateTrial(
     is_trial: true,
     status: 'trial',
     origin_type: 'trial',
-    panel: panelFromPlanSlug("trial") || "v455",
+    panel: trialPanel || "v455",
   };
 
   const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();

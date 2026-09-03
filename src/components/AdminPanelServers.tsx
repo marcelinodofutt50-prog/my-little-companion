@@ -13,6 +13,7 @@ import {
   Check,
   X,
   ScrollText,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,8 @@ import {
   adminTestCurrentPanel,
   adminFullPanelCheck,
   adminPanelServerLog,
+  adminGetTrialPanel,
+  adminSetTrialPanel,
 } from "@/lib/panel-servers.functions";
 
 type PanelKey = "v455" | "v457" | "v46";
@@ -65,6 +68,11 @@ export function AdminPanelServers() {
     v46: { label: "", baseUrl: "", adminKey: "", notes: "" },
   });
   const [busy, setBusy] = useState<string | null>(null);
+  const [trial, setTrial] = useState<{
+    choice: "auto" | PanelKey;
+    effective: PanelKey;
+    available: Record<string, boolean>;
+  } | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [checks, setChecks] = useState<
     Record<
@@ -90,6 +98,8 @@ export function AdminPanelServers() {
   const testCurrentFn = useServerFn(adminTestCurrentPanel);
   const fullCheckFn = useServerFn(adminFullPanelCheck);
   const logFn = useServerFn(adminPanelServerLog);
+  const trialPanelFn = useServerFn(adminGetTrialPanel);
+  const setTrialPanelFn = useServerFn(adminSetTrialPanel);
 
   async function load() {
     setLoading(true);
@@ -100,6 +110,12 @@ export function AdminPanelServers() {
       setEnvFallback(res.envFallback ?? {});
       setEffectiveIp(res.effectiveIp ?? {});
       setSource(res.source ?? {});
+      try {
+        const tp: any = await trialPanelFn();
+        setTrial(tp);
+      } catch {
+        /* opcional */
+      }
       try {
         const lg: any = await logFn();
         setEvents(lg.events ?? []);
@@ -128,6 +144,26 @@ export function AdminPanelServers() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function chooseTrialPanel(panel: "auto" | PanelKey) {
+    setBusy(`trial-${panel}`);
+    try {
+      const res: any = await setTrialPanelFn({ data: { panel } });
+      if (res.ok) {
+        toast.success(
+          panel === "auto"
+            ? "Os próximos testes grátis voltam a usar a escolha automática."
+            : `Os próximos testes grátis serão criados no ${PANEL_META[res.effective as PanelKey].title}.`,
+        );
+        setTrial((t) => (t ? { ...t, choice: panel, effective: res.effective } : t));
+      } else {
+        toast.error(res.message ?? "Não consegui salvar a escolha.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao salvar a escolha");
+    }
+    setBusy(null);
+  }
 
   function setDraft(panel: PanelKey, patch: Partial<Draft>) {
     setDrafts((d) => ({ ...d, [panel]: { ...d[panel], ...patch } }));
@@ -297,6 +333,43 @@ export function AdminPanelServers() {
           estende a validade e apaga tudo no fim). Só libere vendas quando aparecer{" "}
           <span className="font-semibold text-primary">Pronto para vender</span>.
         </div>
+      </div>
+
+      <div className="rounded-lg border border-primary/30 bg-card/40 p-4">
+        <div className="flex items-center gap-2 font-mono text-sm">
+          <Gift className="h-4 w-4 text-primary" />
+          <span className="font-semibold">Servidor dos próximos testes grátis</span>
+        </div>
+        <p className="mt-1 font-mono text-[11px] leading-relaxed text-muted-foreground">
+          Escolha em qual VPS os próximos trials serão criados. Vale na hora, sem deploy. Os testes
+          já criados continuam no servidor de origem.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(["auto", "v455", "v457", "v46"] as const).map((opt) => {
+            const active = (trial?.choice ?? "auto") === opt;
+            const disabled =
+              busy !== null || (opt !== "auto" && trial ? !trial.available[opt] : false);
+            return (
+              <Button
+                key={opt}
+                size="sm"
+                variant={active ? "default" : "outline"}
+                disabled={disabled}
+                onClick={() => chooseTrialPanel(opt)}
+                className="font-mono text-[10px] uppercase"
+              >
+                {busy === `trial-${opt}` && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
+                {opt === "auto" ? "Automático" : PANEL_META[opt].title}
+              </Button>
+            );
+          })}
+        </div>
+        <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+          Em uso agora:{" "}
+          <span className="text-foreground">
+            {trial ? PANEL_META[trial.effective].title : "carregando…"}
+          </span>
+        </p>
       </div>
 
       {(["v455", "v457", "v46"] as PanelKey[]).map((panel) => {
