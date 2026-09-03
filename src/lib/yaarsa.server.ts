@@ -21,6 +21,22 @@ function yesterdayYMD(): string {
 export type YaarsaPanel = "v455" | "v457" | "v46";
 export const ALL_PANELS: YaarsaPanel[] = ["v455", "v457", "v46"];
 
+/**
+ * Painel onde os próximos testes grátis serão criados.
+ * O admin escolhe pelo site; "auto" mantém a regra padrão (semanal).
+ */
+export async function resolveTrialPanel(): Promise<YaarsaPanel> {
+  await refreshPanelOverrides();
+  try {
+    const { getTrialPanelChoice } = await import("@/lib/app-settings.server");
+    const choice = await getTrialPanelChoice();
+    if (choice !== "auto" && hasPanelServer(choice)) return choice;
+  } catch {
+    // sem configuração: segue a regra padrão
+  }
+  return panelFromPlanSlug("trial");
+}
+
 /** Semanal só vai para a VPS 4.5.5 quando existe uma configurada. */
 function weeklyPanel(): YaarsaPanel {
   return hasPanelServer("v455") ? "v455" : "v457";
