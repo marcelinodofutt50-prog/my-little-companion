@@ -21,7 +21,7 @@ export const listStaffTrainings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { userId, supabase } = context as any;
-    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+    const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, supabase);
 
     // Em produção a chave de serviço pode falhar (formato novo de chave /
     // variável ausente). Nesse caso lemos como o próprio usuário — as
