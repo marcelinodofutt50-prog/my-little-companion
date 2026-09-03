@@ -15,10 +15,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 // ---------- fakes ----------
-type Order = { id: string; amount: number; status: string; mp_payment_id?: string | null };
+type Order = {
+  id: string;
+  amount: number;
+  status: string;
+  plan_slug?: string;
+  mp_payment_id?: string | null;
+};
+type Plan = { slug: string; name: string; price_brl: number; active: boolean };
 
 const db = {
   orders: [] as Order[],
+  plans: [] as Plan[],
   logs: [] as { note: string; processed: boolean }[],
 };
 
