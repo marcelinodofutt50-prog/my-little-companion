@@ -10,7 +10,7 @@ import { assertStaffChannelAccess } from "./staff-chat.server";
  */
 
 async function requireAdmin(userId: string) {
-  const { supabaseAdmin, role } = await assertStaffChannelAccess(userId);
+  const { supabaseAdmin, role } = await assertStaffChannelAccess(userId, fallback);
   if (role !== "admin") {
     throw new Error("Apenas administradores podem editar os módulos de treinamento interno.");
   }
@@ -88,7 +88,7 @@ export const setStaffTrainingProgress = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const { supabaseAdmin } = await assertStaffChannelAccess(userId);
+    const { supabaseAdmin } = await assertStaffChannelAccess(userId, fallback);
     const { error } = await supabaseAdmin.from("staff_training_progress").upsert(
       {
         user_id: userId,
