@@ -47,6 +47,8 @@ vi.mock("../lib/yaarsa.server", () => ({
   }),
   yaarsaProbeAccount: vi.fn(async () => state.probeResponses.shift() ?? { state: "found", detail: "" }),
   hasPanelServer: () => true,
+  sanitizePanelUsername: (u: string) =>
+    (u || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user",
   isPanelHealthy: () => true,
   refreshPanelOverrides: async () => {},
   generateCredentials: () => ({ username: "shadow_new", email: "shadow_new@shadow.app", password: "Nv#2026abc" }),
