@@ -25,6 +25,8 @@ import {
   adminTestCurrentPanel,
   adminFullPanelCheck,
   adminPanelServerLog,
+  adminGetTrialPanel,
+  adminSetTrialPanel,
 } from "@/lib/panel-servers.functions";
 
 type PanelKey = "v455" | "v457" | "v46";
@@ -65,6 +67,11 @@ export function AdminPanelServers() {
     v46: { label: "", baseUrl: "", adminKey: "", notes: "" },
   });
   const [busy, setBusy] = useState<string | null>(null);
+  const [trial, setTrial] = useState<{
+    choice: "auto" | PanelKey;
+    effective: PanelKey;
+    available: Record<string, boolean>;
+  } | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [checks, setChecks] = useState<
     Record<
@@ -101,6 +108,12 @@ export function AdminPanelServers() {
       setEffectiveIp(res.effectiveIp ?? {});
       setSource(res.source ?? {});
       try {
+        const tp: any = await trialPanelFn();
+        setTrial(tp);
+      } catch {
+        /* opcional */
+      }
+      try {
         const lg: any = await logFn();
         setEvents(lg.events ?? []);
       } catch {
@@ -128,6 +141,26 @@ export function AdminPanelServers() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function chooseTrialPanel(panel: "auto" | PanelKey) {
+    setBusy(`trial-${panel}`);
+    try {
+      const res: any = await setTrialPanelFn({ data: { panel } });
+      if (res.ok) {
+        toast.success(
+          panel === "auto"
+            ? "Os próximos testes grátis voltam a usar a escolha automática."
+            : `Os próximos testes grátis serão criados no ${PANEL_META[res.effective as PanelKey].title}.`,
+        );
+        setTrial((t) => (t ? { ...t, choice: panel, effective: res.effective } : t));
+      } else {
+        toast.error(res.message ?? "Não consegui salvar a escolha.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao salvar a escolha");
+    }
+    setBusy(null);
+  }
 
   function setDraft(panel: PanelKey, patch: Partial<Draft>) {
     setDrafts((d) => ({ ...d, [panel]: { ...d[panel], ...patch } }));
