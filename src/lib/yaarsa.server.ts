@@ -404,7 +404,7 @@ export async function yaarsaCreateAccount(input: {
   return yaarsaPost(
     {
       action: "add",
-      username: input.username,
+      username: sanitizePanelUsername(input.username),
       email: input.email,
       password: input.password,
       adminkey: yaarsaAdminKey(panel),
