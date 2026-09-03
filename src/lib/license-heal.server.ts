@@ -104,15 +104,20 @@ export async function healLicenseLogin(
   // 1) A conta existe no painel? Descobrimos tentando criá-la com as mesmas
   //    credenciais que o cliente vê no site.
   if (canProbeExisting) {
-    const created = await yaarsaCreateAccount({
-      username: lic.yaarsa_username as string,
-      email: lic.yaarsa_email as string,
-      password: currentPassword as string,
-      planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
-      totalPaid: 0,
-      additionalInfo: `shadow-heal-${lic.id.slice(0, 8)}`,
-      panel,
-    });
+    let created: { Success?: boolean; Fail?: string };
+    try {
+      created = await yaarsaCreateAccount({
+        username: lic.yaarsa_username as string,
+        email: lic.yaarsa_email as string,
+        password: currentPassword as string,
+        planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
+        totalPaid: 0,
+        additionalInfo: `shadow-heal-${lic.id.slice(0, 8)}`,
+        panel,
+      });
+    } catch (e: any) {
+      created = { Fail: String(e?.message ?? e) };
+    }
 
     if (created.Success) {
       steps.push("conta-criada-no-painel");
@@ -142,11 +147,13 @@ export async function healLicenseLogin(
     const fail = String(created.Fail ?? "");
     if (!EXISTS_RE.test(fail)) {
       // Painel fora do ar / chave inválida: não mexemos em nada.
+      await logHeal(supabaseAdmin, lic, panel, "unreachable", reason, [...steps, fail.slice(0, 200)]);
       throw new Error(
-        "O servidor de licenças não respondeu agora. Tente novamente em alguns minutos ou fale com o suporte.",
+        `O servidor de licenças (${panel}) não respondeu agora${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
       );
     }
     steps.push("conta-ja-existia");
+
   } else {
     steps.push(opts?.forceRecreate ? "recriacao-forcada" : "sem-credenciais-guardadas");
   }
