@@ -122,3 +122,30 @@ export async function logPinReveal(admin: any, row: {
     /* auditoria é best-effort */
   }
 }
+
+/** Janela em que a equipe fica liberada após o cliente enviar o PIN no chat. */
+export const CHAT_GRANT_MINUTES = 30;
+
+/** Registra que o cliente liberou a consulta enviando o PIN no chat. */
+export async function grantChatAccess(admin: any, userId: string, threadId?: string | null) {
+  await logPinReveal(admin, {
+    userId,
+    scope: "chat_grant",
+    success: true,
+    details: { threadId: threadId ?? null, minutes: CHAT_GRANT_MINUTES },
+  });
+}
+
+/** A equipe pode revelar sem digitar PIN enquanto a liberação do chat estiver válida. */
+export async function hasActiveChatGrant(admin: any, userId: string): Promise<boolean> {
+  const since = new Date(Date.now() - CHAT_GRANT_MINUTES * 60_000).toISOString();
+  const { data } = await admin
+    .from("pin_reveal_logs")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("scope", "chat_grant")
+    .eq("success", true)
+    .gte("created_at", since)
+    .limit(1);
+  return (data ?? []).length > 0;
+}
