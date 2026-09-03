@@ -59,7 +59,6 @@ export async function healLicenseLogin(
   lic: HealLicense,
   opts?: { reason?: string; forceRecreate?: boolean },
 ): Promise<HealResult> {
-  const panel = normalizePanel(lic.panel);
   const reason = opts?.reason ?? "self_repair";
   const steps: string[] = [];
 
@@ -71,7 +70,19 @@ export async function healLicenseLogin(
     generateCredentials,
     encrypt,
     decrypt,
+    hasPanelServer,
+    refreshPanelOverrides,
   } = await import("./yaarsa.server");
+
+  // Painéis sem VPS/admin key configurada não respondem. Nesse caso caímos no
+  // painel que estiver realmente configurado, em vez de falhar para o cliente.
+  await refreshPanelOverrides().catch(() => {});
+  const preferred = normalizePanel(lic.panel);
+  const panel = hasPanelServer(preferred)
+    ? preferred
+    : (["v457", "v46", "v455"] as const).find((p) => hasPanelServer(p)) ?? preferred;
+  if (panel !== preferred) steps.push(`painel-alternativo:${preferred}->${panel}`);
+
 
   const targetYmd = panelExpireDateFor({
     expires_at: lic.expires_at,
