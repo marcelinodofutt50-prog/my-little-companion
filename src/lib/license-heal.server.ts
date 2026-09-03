@@ -76,12 +76,19 @@ export async function healLicenseLogin(
 
   // Painéis sem VPS/admin key configurada não respondem. Nesse caso caímos no
   // painel que estiver realmente configurado, em vez de falhar para o cliente.
-  await refreshPanelOverrides().catch(() => {});
+  try {
+    await refreshPanelOverrides?.();
+  } catch {
+    /* segue com o ambiente */
+  }
+  const configured = (p: "v455" | "v457" | "v46") =>
+    typeof hasPanelServer === "function" ? hasPanelServer(p) : true;
   const preferred = normalizePanel(lic.panel);
-  const panel = hasPanelServer(preferred)
+  const panel = configured(preferred)
     ? preferred
-    : (["v457", "v46", "v455"] as const).find((p) => hasPanelServer(p)) ?? preferred;
+    : ((["v457", "v46", "v455"] as const).find(configured) ?? preferred);
   if (panel !== preferred) steps.push(`painel-alternativo:${preferred}->${panel}`);
+
 
 
   const targetYmd = panelExpireDateFor({
