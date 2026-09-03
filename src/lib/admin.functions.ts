@@ -2013,3 +2013,83 @@ export const adminHealLicenseLogin = createServerFn({ method: "POST" })
     );
     return result;
   });
+
+/**
+ * CORRIGIR BUGS DO CLIENTE (a partir do chat do suporte).
+ *
+ * Roda o motor de correção de login em todas as licenças ativas do cliente
+ * e devolve um resumo por licença para o admin colar no chat.
+ */
+export const adminHealUserLogins = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z.object({ userId: z.string().uuid(), forceRecreate: z.boolean().optional() }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("licenses")
+      .select("*")
+      .eq("user_id", data.userId)
+      .order("created_at", { ascending: false });
+
+    const licenses = (rows ?? []).filter((l: any) =>
+      !["revoked", "cancelled", "expired"].includes(String(l.status ?? "")),
+    );
+    if (licenses.length === 0) {
+      return { ok: true as const, healed: [], message: "Este cliente não tem licença ativa para corrigir." };
+    }
+
+    const { healLicenseLogin } = await import("./license-heal.server");
+    const healed: Array<{
+      licenseId: string;
+      panel: string;
+      action: string;
+      message: string;
+      credentials?: { email: string; password: string } | undefined;
+      error?: string;
+    }> = [];
+
+    for (const lic of licenses as any[]) {
+      try {
+        const res = await healLicenseLogin(
+          {
+            id: lic.id,
+            user_id: lic.user_id,
+            plan_slug: lic.plan_slug ?? null,
+            yaarsa_username: lic.yaarsa_username,
+            yaarsa_email: lic.yaarsa_email,
+            yaarsa_password_enc: lic.yaarsa_password_enc,
+            panel: lic.panel ?? null,
+            expires_at: lic.expires_at ?? null,
+            is_trial: lic.is_trial ?? null,
+            server_ip: lic.server_ip ?? null,
+          },
+          { reason: "admin_chat_corrigir_bugs", ...(data.forceRecreate ? { forceRecreate: true } : {}) },
+        );
+        healed.push({
+          licenseId: lic.id,
+          panel: res.panel,
+          action: res.action,
+          message: res.message,
+          credentials: { email: res.credentials.email, password: res.credentials.password },
+        });
+      } catch (e: any) {
+        healed.push({
+          licenseId: lic.id,
+          panel: String(lic.panel ?? "—"),
+          action: "failed",
+          message: "Não foi possível corrigir esta licença.",
+          error: e?.message ?? String(e),
+        });
+      }
+    }
+
+    const okCount = healed.filter((h) => h.action !== "failed").length;
+    return {
+      ok: true as const,
+      healed,
+      message: `${okCount}/${healed.length} licença(s) verificadas e corrigidas.`,
+    };
+  });
