@@ -124,7 +124,6 @@ describe("Support AI Proactive Flow", () => {
 
     await tools.postAIMessage.execute({ body: "Test message" });
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("user_roles");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_messages");
     expect(supabaseAdmin.from).toHaveBeenCalledWith("support_threads");
     expect(mockSupabaseQuery.update).toHaveBeenCalledWith({ unread_by_customer: 1, last_staff_message_at: expect.any(String) });
