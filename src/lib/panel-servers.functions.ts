@@ -240,3 +240,52 @@ export const adminPanelServerLog = createServerFn({ method: "GET" })
     const { listPanelEvents } = await import("@/lib/panel-servers.server");
     return { events: await listPanelEvents(25) };
   });
+
+/** Qual servidor está escolhido para os próximos testes grátis. */
+export const adminGetTrialPanel = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { getTrialPanelChoice } = await import("@/lib/app-settings.server");
+    const { hasPanelServer, refreshPanelOverrides, resolveTrialPanel } = await import("@/lib/yaarsa.server");
+    await refreshPanelOverrides(true);
+    const choice = await getTrialPanelChoice(true);
+    return {
+      choice,
+      effective: await resolveTrialPanel(),
+      available: {
+        v455: hasPanelServer("v455"),
+        v457: hasPanelServer("v457"),
+        v46: hasPanelServer("v46"),
+      },
+    };
+  });
+
+/** Define em qual servidor os próximos testes grátis serão criados. */
+export const adminSetTrialPanel = createServerFn({ method: "POST" })
+  .validator((d: unknown) =>
+    z.object({ panel: z.enum(["auto", "v455", "v457", "v46"]) }).parse(d),
+  )
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { setSetting, TRIAL_PANEL_KEY } = await import("@/lib/app-settings.server");
+    const { hasPanelServer, refreshPanelOverrides, resolveTrialPanel, panelBaseUrl } =
+      await import("@/lib/yaarsa.server");
+    await refreshPanelOverrides(true);
+    if (data.panel !== "auto" && !hasPanelServer(data.panel)) {
+      return { ok: false, message: "Esse servidor ainda não tem endereço configurado." };
+    }
+    await setSetting(TRIAL_PANEL_KEY, data.panel, context.userId);
+    const effective = await resolveTrialPanel();
+    const { logPanelEvent } = await import("@/lib/panel-servers.server");
+    await logPanelEvent({
+      panel: effective,
+      action: "trial_panel_definido",
+      outcome: "ok",
+      message: `Próximos testes grátis passam a ser criados no ${effective}.`,
+      actorEmail: (context.claims?.email as string | undefined) ?? null,
+      baseUrl: panelBaseUrl(effective),
+    }).catch(() => {});
+    return { ok: true, choice: data.panel, effective };
+  });
