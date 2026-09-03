@@ -153,6 +153,20 @@ export function AdminPanelIntegrityPanel() {
                   </span>
                 </div>
                 {r.detail && <p className="mt-1 text-[11px] text-muted-foreground">{r.detail}</p>}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2"
+                  disabled={healing === r.licenseId}
+                  onClick={() => void heal(r.licenseId)}
+                >
+                  {healing === r.licenseId ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wrench className="mr-2 h-4 w-4" />
+                  )}
+                  Corrigir login deste cliente
+                </Button>
               </div>
             );
           })}
