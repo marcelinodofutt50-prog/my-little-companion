@@ -760,75 +760,29 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
     if ((lic as any).disabled_at) throw new Error("Esta licença está desativada.");
     if ((lic as any).suspended_at) throw new Error("Esta licença está pausada — despause para reparar o acesso.");
 
-    const panel = (lic as any).panel ?? "v457";
-    const {
-      yaarsaExtend, yaarsaSetPassword, yaarsaCreateAccount, decrypt, panelFromPlanSlug,
-    } = await import("./yaarsa.server");
-
-    const expires = lic.expires_at ? new Date(lic.expires_at) : null;
-    const ymd = (d: Date) => d.toISOString().slice(0, 10);
-    const targetYmd = expires ? ymd(expires) : ymd(new Date(Date.now() + 365 * 86400000));
-
-    let plain: string | null = null;
-    try { plain = decrypt(lic.yaarsa_password_enc); } catch { plain = null; }
-    if (!plain) throw new Error("Não conseguimos recuperar sua senha registrada — fale com o suporte.");
-
-    const steps: string[] = [];
-
-    // 1) Empurra a data 1 dia e volta: força o painel a regravar o registro.
-    try {
-      const bumped = new Date((expires?.getTime() ?? Date.now()) + 86400000);
-      await yaarsaExtend(lic.yaarsa_email, ymd(bumped), panel);
-      steps.push("data-refresh");
-    } catch { steps.push("data-refresh-falhou"); }
-
-    // 2) Reaplica a senha original.
-    const pr = await yaarsaSetPassword(
-      lic.yaarsa_email, plain, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
+    const { healLicenseLogin } = await import("./license-heal.server");
+    const result = await healLicenseLogin(
+      {
+        id: lic.id,
+        user_id: userId,
+        plan_slug: (lic as any).plan_slug ?? null,
+        yaarsa_username: lic.yaarsa_username,
+        yaarsa_email: lic.yaarsa_email,
+        yaarsa_password_enc: lic.yaarsa_password_enc,
+        panel: (lic as any).panel ?? null,
+        expires_at: (lic as any).expires_at ?? null,
+        is_trial: (lic as any).is_trial ?? null,
+        server_ip: (lic as any).server_ip ?? null,
+      },
+      { reason: "cliente_corrigir_erros" },
     );
-    if (pr.Fail && /1005|não encontrado|not found/i.test(pr.Fail)) {
-      // 3) Conta sumiu do painel: recria com as mesmas credenciais.
-      const cr = await yaarsaCreateAccount({
-        username: lic.yaarsa_username,
-        email: lic.yaarsa_email,
-        password: plain,
-        planSlug: (lic as any).plan_slug ?? "trial",
-        totalPaid: 0,
-        additionalInfo: `shadow-repair-${lic.id}`,
-        panel: panelFromPlanSlug((lic as any).plan_slug) ?? panel,
-      });
-      if (cr.Fail && !/1004|already|exist/i.test(cr.Fail)) {
-        throw new Error("O painel de licenças não respondeu. Tente novamente em alguns minutos.");
-      }
-      steps.push("conta-recriada");
-    } else if (pr.Fail) {
-      throw new Error("O painel de licenças recusou a sincronização agora. Tente novamente em instantes.");
-    } else {
-      steps.push("senha-reaplicada");
-    }
-
-    // 4) Restaura a data correta.
-    try {
-      await yaarsaExtend(lic.yaarsa_email, targetYmd, panel);
-      steps.push("data-restaurada");
-    } catch { steps.push("data-restaurada-falhou"); }
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("integration_logs").insert({
-      source: `yaarsa-${panel}`, action: "license_self_repair", outcome: "success",
-      context: { license_id: lic.id, user_id: userId, steps } as any,
-    } as any);
 
     return {
       ok: true,
-      steps,
-      credentials: {
-        username: lic.yaarsa_username,
-        email: lic.yaarsa_email,
-        password: plain,
-        server_ip: (lic as any).server_ip ?? null,
-      },
-      message: "Acesso ressincronizado com o painel. Tente entrar novamente no BTmob.",
+      action: result.action,
+      steps: result.steps,
+      credentials: result.credentials,
+      message: result.message,
     };
   });
 
