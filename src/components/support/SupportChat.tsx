@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { SecurityPinCard } from "@/components/SecurityPinCard";
 import { SupportSummaryPanel } from "./SupportSummaryPanel";
 
 import {
@@ -650,6 +651,14 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
             Falando com
           </span>
           <SenderBadge sender={currentAgent} />
+        </div>
+      )}
+      {!isAdmin && (
+        <div className="flex items-center justify-end gap-2 border-b border-border/40 bg-card/20 px-3 py-1.5">
+          <span className="hidden font-mono text-[9px] uppercase tracking-widest text-muted-foreground sm:inline">
+            Só informe se o atendente pedir
+          </span>
+          <SecurityPinCard compact />
         </div>
       )}
       <SupportSummaryPanel threadId={threadId} />

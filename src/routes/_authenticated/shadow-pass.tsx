@@ -30,6 +30,7 @@ import { generateTrial } from '@/lib/license.functions';
 import { getDeviceSignature } from '@/lib/device-signature';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BackToDashboard } from "@/components/BackToDashboard";
+import { SecurityPinCard } from "@/components/SecurityPinCard";
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   head: () => ({
@@ -308,6 +309,8 @@ function ShadowPassPage() {
           </div>
         </div>
       </header>
+
+      <SecurityPinCard className="mb-6" />
 
       {/* Main Content with Tabs */}
       <Tabs defaultValue="progress" className="w-full space-y-6 md:space-y-8">

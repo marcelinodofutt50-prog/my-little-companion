@@ -22,6 +22,7 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { LicensePinReveal } from "@/components/admin/LicensePinReveal";
 
 const brl = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 const dt = (v?: string | null) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
@@ -304,6 +305,8 @@ export function AdminCustomer360({
               </TabsContent>
 
               <TabsContent value="licencas" className="mt-4 space-y-4">
+                {userId && <LicensePinReveal userId={userId} />}
+
                 <Section title="Licenças" count={data.licenses.length}>
                   {data.licenses.length === 0
                     ? empty
