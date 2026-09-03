@@ -40,7 +40,15 @@ export async function assertStaffChannelAccess(userId: string, fallbackClient?: 
       "Acesso negado: sua conta não possui cargo de admin, moderador ou suporte.",
     );
   }
-  return { supabaseAdmin, role };
+  // Sem chave de serviço, seguimos com o cliente do próprio usuário: as RLS
+  // internas já liberam leitura/escrita para admin, suporte e moderação.
+  const client = supabaseAdmin ?? fallbackClient;
+  if (!client) {
+    throw new StaffInfraError(
+      "O canal interno está sem acesso ao banco neste ambiente. Tente novamente em instantes.",
+    );
+  }
+  return { supabaseAdmin: client, role, usingServiceKey: !!supabaseAdmin };
 }
 
 export function throwStaffChannelError(
