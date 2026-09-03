@@ -348,6 +348,17 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     [msgs, userId, isAdmin, customerName, senders],
   );
 
+  // Último atendente que respondeu — mostrado no topo para o cliente saber com quem fala.
+  const currentAgent = useMemo(() => {
+    if (isAdmin) return undefined;
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const m = msgs[i]!;
+      if (m.is_admin && m.sender_id && senders[m.sender_id]) return senders[m.sender_id];
+    }
+    return undefined;
+  }, [msgs, senders, isAdmin]);
+
+
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior });
     setUnseen(0);
@@ -593,7 +604,16 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           <Loader2 className="h-3 w-3 animate-spin" /> Reconectando ao chat
         </div>
       )}
+      {currentAgent && (
+        <div className="flex items-center gap-2 border-b border-border/40 bg-card/40 px-3 py-2">
+          <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            Falando com
+          </span>
+          <SenderBadge sender={currentAgent} />
+        </div>
+      )}
       <SupportSummaryPanel threadId={threadId} />
+
       <div
 
         ref={listRef}
