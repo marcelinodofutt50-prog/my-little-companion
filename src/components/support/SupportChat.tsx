@@ -348,6 +348,17 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     [msgs, userId, isAdmin, customerName, senders],
   );
 
+  // Último atendente que respondeu — mostrado no topo para o cliente saber com quem fala.
+  const currentAgent = useMemo(() => {
+    if (isAdmin) return undefined;
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const m = msgs[i]!;
+      if (m.is_admin && m.sender_id && senders[m.sender_id]) return senders[m.sender_id];
+    }
+    return undefined;
+  }, [msgs, senders, isAdmin]);
+
+
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior });
     setUnseen(0);
