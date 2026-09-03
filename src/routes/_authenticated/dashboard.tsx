@@ -29,6 +29,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/lib/i18n'
 import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
 import { listMyLicenses, syncAllMyLicenses } from '@/lib/license.functions'
+import { getMyIdentity } from '@/lib/identity.functions'
 import { triggerDownload, friendlyDownloadError } from '@/lib/download'
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
@@ -310,7 +311,11 @@ function DashboardPage() {
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-5">
                     <div className="rounded-full border border-primary/20 bg-background/70 p-2 shadow-sm">
-                      <img src={shadowMark} alt="Shadow" width={72} height={72} className="h-14 w-14 object-contain md:h-16 md:w-16 drop-shadow-[0_0_8px_rgba(201,168,76,0.6)] brightness-110 dark:brightness-125 light:mix-blend-multiply" />
+                      {displayAvatar ? (
+                        <img src={displayAvatar} alt={displayName || 'Shadow Pass'} width={72} height={72} className="h-14 w-14 rounded-full object-cover md:h-16 md:w-16 ring-1 ring-primary/40" />
+                      ) : (
+                        <img src={shadowMark} alt="Shadow" width={72} height={72} className="h-14 w-14 object-contain md:h-16 md:w-16 drop-shadow-[0_0_8px_rgba(201,168,76,0.6)] brightness-110 dark:brightness-125 light:mix-blend-multiply" />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <div className="mb-1 flex items-center gap-2 font-mono text-[9px] uppercase text-muted-foreground">
