@@ -87,6 +87,7 @@ import {
   AdminPanelServers,
   AdminPermissionsMatrix,
   AdminRedeemCodesPanel,
+  AdminFeedbackPanel,
   AdminRefundsPanel,
 
   AdminSelfTestPanel,
@@ -2328,6 +2329,7 @@ function AdminPage() {
               {tab === "redeem" && <AdminRedeemCodesPanel />}
               {tab === "license_audit" && <AdminLicenseAuditPanel />}
               {tab === "panel_integrity" && <AdminPanelIntegrityPanel />}
+              {tab === "feedback" && <AdminFeedbackPanel />}
 
               </motion.div>
             </AnimatePresence>
