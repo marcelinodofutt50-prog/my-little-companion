@@ -45,6 +45,7 @@ export type HealLicense = {
 };
 
 const EXISTS_RE = /1004|already|in use|em uso|exist/i;
+const QUOTA_RE = /maximum allowed accounts|quota|limit reached|limite/i;
 const NOT_FOUND_RE = /1005|not\s*found|cant.?find|não\s*encontrad/i;
 
 function normalizePanel(p: string | null | undefined): "v455" | "v457" | "v46" {
@@ -246,7 +247,7 @@ export async function healLicenseLogin(
   return {
     ok: true,
     action: "recreated",
-    panel,
+    panel: usedPanel,
     credentials: {
       username: creds.username,
       email: creds.email,
