@@ -352,6 +352,27 @@ export const sendMessage = createServerFn({ method: "POST" })
     const { resolveRoles } = await import("@/lib/roles.server");
     const { isStaff } = await resolveRoles(context);
 
+    // Carrega identidade do atendente para gravar diretamente na mensagem.
+    // Assim o cliente vê nome/foto/cargo mesmo sem permissões em profiles/user_roles.
+    let staffIdentity: { name: string | null; role: string | null; avatar: string | null } = {
+      name: null,
+      role: null,
+      avatar: null,
+    };
+    if (isStaff) {
+      const [{ data: myProfile }, { data: myRoles }] = await Promise.all([
+        context.supabase.from("profiles").select("display_name, full_name, email, avatar_url, metadata").eq("id", context.userId).maybeSingle(),
+        context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
+      ]);
+      const meta: any = (myProfile as any)?.metadata ?? {};
+      const rawRole = (myRoles ?? []).find((r: any) => r.role === "admin")?.role ?? (myRoles?.[0] as any)?.role;
+      staffIdentity = {
+        name: meta.nickname || (myProfile as any)?.display_name || (myProfile as any)?.full_name || (myProfile as any)?.email?.split("@")[0] || null,
+        role: rawRole || null,
+        avatar: meta.avatar_url || (myProfile as any)?.avatar_url || null,
+      };
+    }
+
     // Load thread once; validate access and closed-state.
     const fetchThread = async (client: any) => client
       .from("support_threads")
@@ -458,6 +479,13 @@ export const sendMessage = createServerFn({ method: "POST" })
       body: data.body ?? null,
       attachment_url: url,
       attachment_type: data.attachmentType ?? null,
+      ...(isStaff
+        ? {
+            sender_name: staffIdentity.name,
+            sender_role: staffIdentity.role,
+            sender_avatar_url: staffIdentity.avatar,
+          }
+        : {}),
     };
 
     // Only add reply_to_id if it's explicitly provided

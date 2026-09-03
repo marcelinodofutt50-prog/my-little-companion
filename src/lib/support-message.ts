@@ -16,6 +16,10 @@ export type SupportMessage = {
   attachment_url: string | null;
   attachment_type: string | null;
   reply_to_id: string | null;
+  /** Identidade do atendente gravada diretamente na mensagem — funciona sem permissões extras. */
+  sender_name: string | null;
+  sender_role: string | null;
+  sender_avatar_url: string | null;
   created_at: string;
 };
 
@@ -30,6 +34,9 @@ export function normalizeSupportMessage(row: any, fallbackThreadId?: string): Su
     attachment_url: row?.attachment_url ?? null,
     attachment_type: row?.attachment_type ?? null,
     reply_to_id: row?.reply_to_id ?? null,
+    sender_name: row?.sender_name ?? null,
+    sender_role: row?.sender_role ?? null,
+    sender_avatar_url: row?.sender_avatar_url ?? null,
     created_at: row?.created_at ?? new Date().toISOString(),
   };
 }
