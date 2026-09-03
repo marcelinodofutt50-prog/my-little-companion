@@ -168,6 +168,46 @@ function groupMessages(
 }
 
 
+const ROLE_STYLES: Record<string, string> = {
+  admin: "border-primary/40 bg-primary/10 text-primary",
+  support: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  moderator: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  staff: "border-border/50 bg-muted/40 text-muted-foreground",
+};
+
+/** Mostra foto, nome e cargo do atendente para o cliente saber com quem fala. */
+function SenderBadge({ sender }: { sender: SenderInfo }) {
+  const initials = sender.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+  return (
+    <span className="flex items-center gap-1.5">
+      {sender.avatar ? (
+        <img
+          src={sender.avatar}
+          alt={`Foto de ${sender.name}`}
+          loading="lazy"
+          className="h-5 w-5 rounded-full border border-border/50 object-cover"
+        />
+      ) : (
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-[8px] font-bold text-primary">
+          {initials || "S"}
+        </span>
+      )}
+      <span className="normal-case text-foreground/90">{sender.name}</span>
+      <span
+        className={`rounded-full border px-1.5 py-px text-[8px] tracking-widest ${
+          ROLE_STYLES[sender.role] ?? ROLE_STYLES['staff']
+        }`}
+      >
+        {sender.roleLabel}
+      </span>
+    </span>
+  );
+}
+
 /** Bolha de anexo: imagem, vídeo, áudio, PDF ou arquivo genérico. */
 function Attachment({
   url,
