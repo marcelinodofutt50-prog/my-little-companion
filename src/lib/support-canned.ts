@@ -55,7 +55,8 @@ export function buildVisualErrorReply(): string {
  * ------------------------------------------------------------------ */
 
 /** Marcador invisível ao cliente que identifica o pedido de PIN já enviado. */
-export const PIN_REQUEST_MARKER = "<!--pin-request-->";
+/* Caracteres invisíveis: identificam a mensagem sem poluir o chat. */
+export const PIN_REQUEST_MARKER = "\u200b\u2060\u200b";
 
 /** Cliente relatando problema de login/acesso ao painel ou à licença. */
 export function isLoginAccessIssue(text: string): boolean {
