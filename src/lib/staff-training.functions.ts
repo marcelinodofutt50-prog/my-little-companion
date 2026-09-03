@@ -36,7 +36,7 @@ export const listStaffTrainings = createServerFn({ method: "GET" })
         .eq("user_id", userId);
     }
 
-    let [{ data: modules, error }, { data: progress }] = await Promise.all([
+    let [{ data: modules, error }, { data: progress }]: [any, any] = await Promise.all([
       readModules(supabaseAdmin),
       readProgress(supabaseAdmin),
     ]);
@@ -65,7 +65,7 @@ export const listStaffTrainings = createServerFn({ method: "GET" })
       (progress ?? []).filter((p: any) => p.completed).map((p: any) => p.training_id),
     );
 
-    const items = (modules ?? [])
+    const items: any[] = (modules ?? [])
       .filter((m: any) => m.is_published || role === "admin")
       .map((m: any) => ({ ...m, completed: done.has(m.id) }));
 
