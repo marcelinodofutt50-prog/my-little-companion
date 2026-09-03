@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, HelpCircle, Loader2, RefreshCw, ShieldChec
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { staffAuditPanelIntegrity, staffPanelIntegrityHistory } from "@/lib/panel-integrity.functions";
+import { adminHealLicenseLogin } from "@/lib/admin.functions";
 
 type Row = {
   licenseId: string;
