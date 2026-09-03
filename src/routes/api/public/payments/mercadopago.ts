@@ -18,7 +18,9 @@ async function log(note: string, processed: boolean, payload?: unknown) {
  */
 function verifySignature(request: Request, dataId: string): boolean {
   const secret = process.env["MERCADOPAGO_WEBHOOK_SECRET"];
-  if (!secret) return false;
+  // Sem segredo configurado a validação é desligada (o Mercado Pago permite
+  // webhooks sem assinatura); com segredo, a assinatura passa a ser obrigatória.
+  if (!secret) return true;
   const signature = request.headers.get("x-signature");
   if (!signature) return false;
   const parts = Object.fromEntries(

@@ -15,10 +15,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 // ---------- fakes ----------
-type Order = { id: string; amount: number; status: string; mp_payment_id?: string | null };
+type Order = {
+  id: string;
+  amount: number;
+  status: string;
+  plan_slug?: string;
+  mp_payment_id?: string | null;
+};
+type Plan = { slug: string; name: string; price_brl: number; active: boolean };
 
 const db = {
   orders: [] as Order[],
+  plans: [] as Plan[],
   logs: [] as { note: string; processed: boolean }[],
 };
 
@@ -48,7 +56,8 @@ function fakeTable(name: string) {
       return api;
     },
     maybeSingle: () => {
-      const row = db.orders.find((o) =>
+      const source: any[] = name === "plans" ? db.plans : db.orders;
+      const row = source.find((o) =>
         Object.entries(state.filters).every(([k, v]) => String((o as any)[k] ?? "") === String(v)),
       );
       return Promise.resolve({ data: row ?? null, error: null });
@@ -104,7 +113,10 @@ async function postWebhook(body: unknown, headers: Record<string, string> = {}) 
 const ORDER = "11111111-1111-4111-8111-111111111111";
 
 beforeEach(() => {
-  db.orders = [{ id: ORDER, amount: 39.9, status: "pending", mp_payment_id: null }];
+  db.orders = [
+    { id: ORDER, amount: 39.9, status: "pending", plan_slug: "monthly_457", mp_payment_id: null },
+  ];
+  db.plans = [{ slug: "monthly_457", name: "Mensal", price_brl: 39.9, active: true }];
   db.logs = [];
   fulfilled.length = 0;
   payments = {};
