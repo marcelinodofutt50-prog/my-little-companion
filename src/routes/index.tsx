@@ -55,9 +55,9 @@ import {
 // Hardcoded paths to assets
 import btmobDashboardAsset from "@/assets/btmob_conexion_1_v2.png";
 import btmobUpdatesAsset from "@/assets/btmob_conexion_2_v2.png";
-import btmobDualAsset from "@/assets/btmob_dual_dashboard_v2.png.asset.json";
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-101";
-const btmobCoreDashboard = btmobDualAsset.url;
+// Asset externalizado (/__l5e/) não existe na Vercel — usa o arquivo público local.
+const btmobCoreDashboard = "/assets/btmob_core_dashboard.png";
 const btmob1 = btmobDashboardAsset;
 const btmob2 = btmobUpdatesAsset;
 

@@ -15,7 +15,8 @@ import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progre
 import { useTutorialMedia } from "@/lib/tutorial-media";
 
 import { toast } from "sonner";
-import trainingBgAsset from "@/assets/kraken_v31_final.webp.asset.json";
+// Asset externalizado (/__l5e/) não existe na Vercel — usa o arquivo público local.
+const trainingBgAsset = { url: "/assets/kraken_v28_final.webp" };
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 import { BackToDashboard } from "@/components/BackToDashboard";
