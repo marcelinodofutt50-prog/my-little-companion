@@ -102,11 +102,20 @@ export const Route = createFileRoute("/api/public/hooks/expire-licenses")({
 
 
         await supabaseAdmin.from("integration_logs").insert({
-          source: "auto-expire", action: "cron", outcome: "success",
-          context: { checked: rows.length, removed } as any,
+          source: "auto-expire", action: "cron", outcome: pendingPanel ? "partial" : "success",
+          context: {
+            checked: rows.length, retried: pendingRows.length, removed, pending_panel: pendingPanel,
+          } as any,
         } as any);
 
-        return Response.json({ ok: true, checked: rows.length, removed });
+        return Response.json({
+          ok: true,
+          checked: rows.length,
+          retried: pendingRows.length,
+          removed,
+          pending_panel: pendingPanel,
+        });
+
       },
       GET: async () => new Response("ok", { status: 200 }),
     },
