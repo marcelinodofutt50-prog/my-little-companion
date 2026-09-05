@@ -413,21 +413,17 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
       if (r.senders) setSenders((prev) => ({ ...prev, ...r.senders }));
-      if (before) {
-        setMsgs((prev) => {
-          const seen = new Set(prev.map((m) => m.id));
-          return [...newMsgs.filter((m) => !seen.has(m.id)), ...prev];
-        });
-      } else {
-        // Mantém mensagens que chegaram pelo tempo real e ainda não estão na página.
-        setMsgs((prev) => {
-          const ids = new Set(newMsgs.map((m) => m.id));
-          const extra = prev.filter((m) => !ids.has(m.id) && newMsgs.length > 0 &&
-            m.created_at > (newMsgs[newMsgs.length - 1]?.created_at ?? ""));
-          return [...newMsgs, ...extra];
-        });
-      }
-      setHasMore(!!r.hasMore);
+      // Sempre mesclamos: recarregar (reconexão, aba voltando) não pode apagar
+      // o histórico antigo que o cliente já abriu nem mensagens em tempo real.
+      setMsgs((prev) => {
+        const byId = new Map(prev.map((m) => [m.id, m]));
+        for (const m of newMsgs) byId.set(m.id, m);
+        return Array.from(byId.values()).sort((a, b) =>
+          a.created_at === b.created_at ? (a.id < b.id ? -1 : 1) : a.created_at < b.created_at ? -1 : 1,
+        );
+      });
+      if (before) setHasMore(!!r.hasMore);
+      else if (msgs.length === 0) setHasMore(!!r.hasMore);
     } catch (e: any) {
       // eslint-disable-next-line no-console
       console.error("[SupportChat] listMessages error:", e);
@@ -437,6 +433,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       setLoadingOlder(false);
     }
   };
+
 
   useEffect(() => {
     setLoading(true);
