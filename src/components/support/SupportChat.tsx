@@ -383,6 +383,16 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   }, [msgs]);
 
   const sendersRef = useRef<Record<string, SenderInfo>>({});
+  // Evita recarregar a conversa em loop quando um atendente ainda não tem ficha.
+  const requestedSendersRef = useRef<Set<string>>(new Set());
+  // Libera as pré-visualizações locais ao sair do chat (evita vazar memória).
+  useEffect(
+    () => () => {
+      for (const p of pendingRef.current) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+    },
+    [],
+  );
+
   useEffect(() => {
     sendersRef.current = senders;
   }, [senders]);
