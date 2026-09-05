@@ -1042,10 +1042,12 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
               }
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              // isComposing: teclados com acento/IME não podem enviar no meio da palavra.
+              if (e.key === "Enter" && !e.shiftKey && !(e.nativeEvent as any).isComposing) {
                 e.preventDefault();
-                handleSend();
+                if (body.trim()) handleSend();
               }
+
             }}
             rows={2}
             placeholder="Escreva sua mensagem…  (Enter envia, Shift+Enter quebra linha)"
