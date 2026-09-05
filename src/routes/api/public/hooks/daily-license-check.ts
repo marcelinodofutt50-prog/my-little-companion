@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/public/hooks/daily-license-check")({
         if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { yaarsaExtend } = await import("@/lib/yaarsa.server");
+        const { suspendAccountAnyPanel, yesterdayYmd } = await import("@/lib/license-cron.server");
 
         const { data: affected, error } = await supabaseAdmin
           .rpc("revoke_unpaid_server_licenses");
@@ -31,39 +31,35 @@ export const Route = createFileRoute("/api/public/hooks/daily-license-check")({
         }
 
         const list = (affected ?? []) as Array<{ id: string; user_id: string; yaarsa_email: string; panel: string | null }>;
-        const yesterday = (() => {
-          const d = new Date(); d.setDate(d.getDate() - 1);
-          return d.toISOString().slice(0, 10);
-        })();
+        const yesterday = yesterdayYmd();
 
         let ySuspended = 0;
         const perLicenseRows: any[] = [];
         for (const l of list) {
-          // Only site-registered clients reach this loop (rows come from public.licenses),
-          // and we suspend each one in its own panel (v4.5.7 = 191, v4.6 = 200).
-          const panel = (l.panel === "v46" ? "v46" : "v457") as "v457" | "v46";
-          let suspended = false;
-          let yaarsaError: string | null = null;
-          try {
-            const r = await yaarsaExtend(l.yaarsa_email, yesterday, panel);
-            if (!r.Fail) { ySuspended++; suspended = true; }
-            else yaarsaError = String(r.Fail || "yaarsa_fail");
-          } catch (e: any) { yaarsaError = e?.message || "yaarsa_exception"; }
+          // Procura a conta no painel gravado e, se não estiver lá, nos demais
+          // (v455 semanal, v457, v46) antes de dar a suspensão como perdida.
+          const res = await suspendAccountAnyPanel(l.yaarsa_email, l.panel, yesterday);
+          const suspended = res.status === "done";
+          if (suspended) ySuspended++;
           perLicenseRows.push({
             source: "auto-revoke",
             action: "revoke_license",
-            outcome: suspended ? "revoked" : "revoked_yaarsa_failed",
-            error: yaarsaError,
+            outcome: suspended
+              ? "revoked"
+              : res.status === "missing" ? "revoked_account_absent" : "revoked_yaarsa_failed",
+            error: res.error,
             context: {
               license_id: l.id,
               user_id: l.user_id,
               yaarsa_email: l.yaarsa_email,
-              panel,
+              panel: res.panel ?? l.panel,
+              panels_tried: res.tried,
               reason: "server_overdue_day20",
               suspended_until: yesterday,
             } as any,
           });
         }
+
         if (perLicenseRows.length) {
           await supabaseAdmin.from("integration_logs").insert(perLicenseRows as any);
         }

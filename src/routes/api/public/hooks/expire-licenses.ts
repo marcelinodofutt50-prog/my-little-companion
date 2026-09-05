@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/public/hooks/expire-licenses")({
         if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { yaarsaRemoveAccount } = await import("@/lib/yaarsa.server");
+        const { removeAccountAnyPanel } = await import("@/lib/license-cron.server");
 
         const nowIso = new Date().toISOString();
         const { data: due, error } = await supabaseAdmin
@@ -44,46 +44,78 @@ export const Route = createFileRoute("/api/public/hooks/expire-licenses")({
           yaarsa_email: string; panel: string | null; expires_at: string;
         }>;
 
-        let removed = 0;
-        const logs: any[] = [];
-        for (const l of rows) {
-          const panel = (l.panel === "v46" ? "v46" : "v457") as "v457" | "v46";
-          let ok = false;
-          let err: string | null = null;
-          try {
-            const r = await yaarsaRemoveAccount(l.yaarsa_email, panel);
-            if (!r.Fail || /not.*found|inexist|1005/i.test(r.Fail)) ok = true;
-            else err = String(r.Fail);
-          } catch (e: any) { err = e?.message || "yaarsa_exception"; }
+        // Reprocessa remoções que falharam nas rodadas anteriores (painel fora do ar):
+        // sem isso o cliente continuava logando mesmo com a licença vencida no site.
+        const retryCutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { data: stuck } = await supabaseAdmin
+          .from("licenses")
+          .select("id, user_id, plan_slug, is_trial, yaarsa_email, panel, expires_at")
+          .not("disabled_at", "is", null)
+          .neq("plan_slug", "login-lifetime")
+          .gte("disabled_at", retryCutoff)
+          .lt("expires_at", nowIso)
+          .limit(50);
 
-          // Sempre marca no banco (mesmo se painel falhou): a licença venceu.
-          // Se o painel falhar, ficará no log e podemos reprocessar depois.
-          await supabaseAdmin.from("licenses").update({
-            disabled_at: nowIso,
-            revoked: true,
-          }).eq("id", l.id);
+        const pendingRows = ((stuck ?? []) as typeof rows).filter(
+          (s) => !rows.some((r) => r.id === s.id),
+        );
+
+        let removed = 0;
+        let pendingPanel = 0;
+        const logs: any[] = [];
+
+        const processRemoval = async (l: (typeof rows)[number], retry: boolean) => {
+          const res = await removeAccountAnyPanel(l.yaarsa_email, l.panel);
+          const ok = res.status === "done" || res.status === "missing";
+
+          if (!retry) {
+            // A licença venceu: fecha no banco mesmo que o painel esteja fora do ar.
+            await supabaseAdmin.from("licenses").update({
+              disabled_at: nowIso,
+              revoked: true,
+            }).eq("id", l.id);
+          }
 
           if (ok) removed++;
+          else pendingPanel++;
+
           logs.push({
             source: "auto-expire",
-            action: "expire_license",
-            outcome: ok ? "removed" : "removed_yaarsa_failed",
-            error: err,
+            action: retry ? "expire_license_retry" : "expire_license",
+            outcome: ok
+              ? res.status === "missing" ? "already_absent" : "removed"
+              : "removed_yaarsa_failed",
+            error: res.error,
             context: {
               license_id: l.id, user_id: l.user_id, plan_slug: l.plan_slug,
-              is_trial: l.is_trial, yaarsa_email: l.yaarsa_email, panel,
+              is_trial: l.is_trial, yaarsa_email: l.yaarsa_email,
+              panel: res.panel ?? l.panel, panels_tried: res.tried,
               expired_at: l.expires_at,
             } as any,
           });
-        }
+        };
+
+        for (const l of rows) await processRemoval(l, false);
+        for (const l of pendingRows) await processRemoval(l, true);
+
         if (logs.length) await supabaseAdmin.from("integration_logs").insert(logs as any);
 
+
         await supabaseAdmin.from("integration_logs").insert({
-          source: "auto-expire", action: "cron", outcome: "success",
-          context: { checked: rows.length, removed } as any,
+          source: "auto-expire", action: "cron", outcome: pendingPanel ? "partial" : "success",
+          context: {
+            checked: rows.length, retried: pendingRows.length, removed, pending_panel: pendingPanel,
+          } as any,
         } as any);
 
-        return Response.json({ ok: true, checked: rows.length, removed });
+        return Response.json({
+          ok: true,
+          checked: rows.length,
+          retried: pendingRows.length,
+          removed,
+          pending_panel: pendingPanel,
+        });
+
       },
       GET: async () => new Response("ok", { status: 200 }),
     },
