@@ -439,6 +439,16 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
     setLoading(true);
     setMsgs([]);
     setUnseen(0);
+    setHasMore(false);
+    // Ao trocar de conversa, nada da anterior pode vazar para esta.
+    setReplyTo(null);
+    setPreRefine(null);
+    setPending((prev) => {
+      for (const p of prev) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+      return [];
+    });
+    msgIdsRef.current = new Set();
+    requestedSendersRef.current = new Set();
     loadMessages();
     if (!isAdmin) {
       markReadFn({ data: { threadId } }).catch(() => {});
@@ -454,8 +464,15 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           const next = normalizeSupportMessage(payload.new, threadId);
           if (!next.id || msgIdsRef.current.has(next.id)) return;
           msgIdsRef.current.add(next.id);
-          if (next.is_admin && next.sender_id && !sendersRef.current[next.sender_id]) {
-            // Atendente novo na conversa: buscamos nome/foto/cargo dele.
+          if (
+            next.is_admin &&
+            next.sender_id &&
+            !next.sender_name &&
+            !sendersRef.current[next.sender_id] &&
+            !requestedSendersRef.current.has(next.sender_id)
+          ) {
+            // Atendente novo na conversa: buscamos nome/foto/cargo dele uma única vez.
+            requestedSendersRef.current.add(next.sender_id);
             void loadMessages();
           }
           if (next.sender_id !== userId) {
@@ -491,6 +508,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       supabase.removeChannel(ch);
     };
   }, [threadId, userId]);
+
 
   // Fecha o visualizador de imagem com Esc.
   useEffect(() => {
