@@ -458,7 +458,7 @@ export function AdminCustomer360({
                                 {l.password_synced_at ? ` em ${d(l.password_synced_at)}` : ""}
                               </div>
                             )}
-                            <LicenseActions license={l} onDone={() => userId && fetchData(userId)} />
+                            <LicenseActions license={l} onDone={async () => { if (userId) await fetchData(userId); }} />
                           </div>
 
                         );
