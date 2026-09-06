@@ -33,6 +33,7 @@ import {
   Undo2,
   FileText,
   Download,
+  CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -666,7 +667,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       ? "bg-cyan/10 border border-cyan/40 text-cyan"
       : author === "me"
         ? "bg-primary text-primary-foreground"
-        : "bg-muted/50 border border-border/40";
+        : "bg-card/80 border border-border/50";
 
   return (
     <div
@@ -726,7 +727,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           setAtBottom(bottom);
           if (bottom) setUnseen(0);
         }}
-        className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-5"
+        className="chat-canvas flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4"
       >
         {hasMore && (
           <Button
@@ -764,21 +765,19 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           return (
             <div key={g.key} className="space-y-2">
               {showDay && (
-                <div className="flex items-center gap-3 py-1">
-                  <span className="h-px flex-1 bg-border/40" />
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                <div className="flex justify-center py-1">
+                  <span className="rounded-full border border-border/40 bg-muted/60 px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground shadow-sm">
                     {g.dayLabel}
                   </span>
-                  <span className="h-px flex-1 bg-border/40" />
                 </div>
               )}
 
               <div
-                className={`flex flex-col gap-1 ${
+                className={`flex flex-col gap-0.5 ${
                   g.author === "me" ? "items-end" : g.author === "system" ? "items-center" : "items-start"
                 }`}
               >
-                <div className="flex items-center gap-1.5 px-1 text-[10px] font-mono uppercase tracking-wide text-muted-foreground">
+                <div className="flex items-center gap-1.5 px-1 pb-0.5 text-[10px] font-mono uppercase tracking-wide text-muted-foreground">
                   {g.sender ? (
                     <SenderBadge sender={g.sender} />
                   ) : (
@@ -795,9 +794,19 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   )}
                 </div>
 
-                {g.messages.map((m) => {
+                {g.messages.map((m, mi) => {
                   const quoted = m.reply_to_id ? msgs.find((q) => q.id === m.reply_to_id) : null;
                   const staffSender = messageSender(m, g.author === "staff" ? g.sender : undefined);
+                  const isLast = mi === g.messages.length - 1;
+                  // Rabinho da bolha só na última do bloco, como no WhatsApp.
+                  const tail =
+                    g.author === "system"
+                      ? ""
+                      : isLast
+                        ? g.author === "me"
+                          ? "rounded-br-sm"
+                          : "rounded-bl-sm"
+                        : "";
                   const initials = staffSender?.name
                     ?.split(/\s+/)
                     .slice(0, 2)
@@ -806,10 +815,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   return (
                   <div
                     key={m.id}
-                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl ${staffSender ? "pl-3 pr-4 py-3" : "px-4 py-2"} ${bubbleClass(g.author)} ${
+                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl shadow-sm ${tail} ${staffSender ? "pl-3 pr-4 py-3" : "px-3 py-2"} ${bubbleClass(g.author)} ${
                       g.author === "system" ? "text-center" : ""
                     }`}
                   >
+
                     {staffSender && (
                       <div className="mb-2 flex items-center gap-2 border-b border-border/20 pb-2">
                         {staffSender.avatar ? (
@@ -861,14 +871,24 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                       </button>
                     )}
                     {m.body && (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                        {m.body}
+                        {/* Espaço reservado para o horário caber na última linha, como no WhatsApp. */}
+                        <span className="pointer-events-none inline-block w-14 select-none align-bottom" />
+                      </p>
                     )}
                     {m.attachment_url && (
                       <Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} />
                     )}
-                    <div className="mt-1 text-[10px] font-mono opacity-60 text-right">
-                      {hhmm(m.created_at)}
+                    <div
+                      className={`flex items-center gap-1 text-[10px] tabular-nums opacity-70 ${
+                        g.author === "system" ? "justify-center pt-1" : "justify-end"
+                      } ${m.body ? "-mt-4" : "mt-1"}`}
+                    >
+                      <span>{hhmm(m.created_at)}</span>
+                      {g.author === "me" && <CheckCheck className="h-3 w-3" />}
                     </div>
+
                   </div>
                   );
                 })}

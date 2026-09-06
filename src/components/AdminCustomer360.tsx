@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { adminCustomer360 } from "@/lib/admin.functions";
+import {
+  adminCustomer360,
+  adminExtendLicense,
+  adminRevokeLicense,
+  adminHealLicenseLogin,
+} from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Copy,
   ShieldCheck,
@@ -20,9 +26,16 @@ import {
   Gift,
   Smartphone,
   Clock,
+  CalendarPlus,
+  Ban,
+  Wrench,
+  KeyRound,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { LicensePinReveal } from "@/components/admin/LicensePinReveal";
+import { LicensePasswordSyncDialog } from "@/components/admin/LicensePasswordSyncDialog";
+
 
 const brl = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 const dt = (v?: string | null) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
@@ -84,6 +97,117 @@ function CopyLine({ value, label }: { value?: string | null; label: string }) {
     </button>
   );
 }
+
+/** Ações rápidas de uma licença direto na ficha do cliente. */
+function LicenseActions({ license, onDone }: { license: any; onDone: () => void | Promise<void> }) {
+  const extendFn = useServerFn(adminExtendLicense);
+  const revokeFn = useServerFn(adminRevokeLicense);
+  const healFn = useServerFn(adminHealLicenseLogin);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [days, setDays] = useState("");
+  const [pwOpen, setPwOpen] = useState(false);
+
+  const base = () => {
+    const exp = license.expires_at ? new Date(license.expires_at) : null;
+    return exp && exp.getTime() > Date.now() ? exp : new Date();
+  };
+
+  const run = async (key: string, fn: () => Promise<any>, okMsg: string) => {
+    setBusy(key);
+    try {
+      await fn();
+      toast.success(okMsg);
+      await onDone();
+    } catch (e: any) {
+      toast.error("Não deu certo", { description: e?.message ?? String(e) });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const extend = (n: number) => {
+    const target = new Date(base().getTime() + n * 86400000);
+    return run(
+      `ext-${n}`,
+      () => extendFn({ data: { licenseId: license.id, newExpireDate: target.toISOString().slice(0, 10) } }),
+      `Licença estendida em ${n} dia(s) — vence ${target.toLocaleDateString("pt-BR")}`,
+    );
+  };
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-border/40 pt-2">
+      {[7, 15, 30].map((n) => (
+        <Button
+          key={n}
+          size="sm"
+          variant="outline"
+          disabled={busy !== null}
+          className="h-6 gap-1 px-2 text-[10px]"
+          onClick={() => void extend(n)}
+        >
+          {busy === `ext-${n}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <CalendarPlus className="h-3 w-3" />}
+          +{n}d
+        </Button>
+      ))}
+      <div className="flex items-center gap-1">
+        <Input
+          value={days}
+          onChange={(e) => setDays(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          placeholder="dias"
+          inputMode="numeric"
+          className="h-6 w-14 px-1.5 text-[11px]"
+        />
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={busy !== null || !Number(days)}
+          className="h-6 px-2 text-[10px]"
+          onClick={() => void extend(Number(days)).then(() => setDays(""))}
+        >
+          Aplicar
+        </Button>
+      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={busy !== null}
+        className="h-6 gap-1 px-2 text-[10px]"
+        onClick={() =>
+          void run("heal", () => healFn({ data: { licenseId: license.id } }), "Login recriado no painel")
+        }
+      >
+        {busy === "heal" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wrench className="h-3 w-3" />}
+        Corrigir login
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={busy !== null}
+        className="h-6 gap-1 px-2 text-[10px]"
+        onClick={() => setPwOpen(true)}
+      >
+        <KeyRound className="h-3 w-3" /> Senha
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        disabled={busy !== null}
+        className="h-6 gap-1 px-2 text-[10px] text-destructive hover:text-destructive"
+        onClick={() => {
+          if (!confirm("Revogar esta licença? O cliente perde o acesso imediatamente.")) return;
+          void run("revoke", () => revokeFn({ data: { licenseId: license.id } }), "Licença revogada");
+        }}
+      >
+        {busy === "revoke" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Ban className="h-3 w-3" />}
+        Revogar
+      </Button>
+
+      <LicensePasswordSyncDialog license={license} open={pwOpen} onOpenChange={setPwOpen} onDone={onDone} />
+    </div>
+  );
+}
+
+
 
 export function AdminCustomer360({
   userId,
@@ -334,7 +458,9 @@ export function AdminCustomer360({
                                 {l.password_synced_at ? ` em ${d(l.password_synced_at)}` : ""}
                               </div>
                             )}
+                            <LicenseActions license={l} onDone={async () => { if (userId) await fetchData(userId); }} />
                           </div>
+
                         );
                       })}
                 </Section>

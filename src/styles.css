@@ -717,3 +717,9 @@ html.rgb-mode body { animation: hue-cycle 18s linear infinite; }
   html.rgb-mode body { animation: none; }
   .rainbow-text, .rainbow-ring::before, .rainbow-bar { animation: none; }
 }
+
+/* Fundo discreto do chat ao vivo, no espírito do WhatsApp (pontinhos suaves). */
+.chat-canvas {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
