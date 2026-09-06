@@ -870,14 +870,24 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                       </button>
                     )}
                     {m.body && (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{m.body}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                        {m.body}
+                        {/* Espaço reservado para o horário caber na última linha, como no WhatsApp. */}
+                        <span className="pointer-events-none inline-block w-14 select-none align-bottom" />
+                      </p>
                     )}
                     {m.attachment_url && (
                       <Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} />
                     )}
-                    <div className="mt-1 text-[10px] font-mono opacity-60 text-right">
-                      {hhmm(m.created_at)}
+                    <div
+                      className={`flex items-center gap-1 text-[10px] tabular-nums opacity-70 ${
+                        g.author === "system" ? "justify-center pt-1" : "justify-end"
+                      } ${m.body ? "-mt-4" : "mt-1"}`}
+                    >
+                      <span>{hhmm(m.created_at)}</span>
+                      {g.author === "me" && <CheckCheck className="h-3 w-3" />}
                     </div>
+
                   </div>
                   );
                 })}
