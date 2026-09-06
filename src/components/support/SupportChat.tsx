@@ -33,6 +33,7 @@ import {
   Undo2,
   FileText,
   Download,
+  CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -666,7 +667,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
       ? "bg-cyan/10 border border-cyan/40 text-cyan"
       : author === "me"
         ? "bg-primary text-primary-foreground"
-        : "bg-muted/50 border border-border/40";
+        : "bg-card/80 border border-border/50";
 
   return (
     <div
@@ -726,7 +727,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           setAtBottom(bottom);
           if (bottom) setUnseen(0);
         }}
-        className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-5"
+        className="chat-canvas flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4"
       >
         {hasMore && (
           <Button
