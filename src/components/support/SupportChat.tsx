@@ -764,21 +764,19 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           return (
             <div key={g.key} className="space-y-2">
               {showDay && (
-                <div className="flex items-center gap-3 py-1">
-                  <span className="h-px flex-1 bg-border/40" />
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                <div className="flex justify-center py-1">
+                  <span className="rounded-full border border-border/40 bg-muted/60 px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground shadow-sm">
                     {g.dayLabel}
                   </span>
-                  <span className="h-px flex-1 bg-border/40" />
                 </div>
               )}
 
               <div
-                className={`flex flex-col gap-1 ${
+                className={`flex flex-col gap-0.5 ${
                   g.author === "me" ? "items-end" : g.author === "system" ? "items-center" : "items-start"
                 }`}
               >
-                <div className="flex items-center gap-1.5 px-1 text-[10px] font-mono uppercase tracking-wide text-muted-foreground">
+                <div className="flex items-center gap-1.5 px-1 pb-0.5 text-[10px] font-mono uppercase tracking-wide text-muted-foreground">
                   {g.sender ? (
                     <SenderBadge sender={g.sender} />
                   ) : (
@@ -795,9 +793,19 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   )}
                 </div>
 
-                {g.messages.map((m) => {
+                {g.messages.map((m, mi) => {
                   const quoted = m.reply_to_id ? msgs.find((q) => q.id === m.reply_to_id) : null;
                   const staffSender = messageSender(m, g.author === "staff" ? g.sender : undefined);
+                  const isLast = mi === g.messages.length - 1;
+                  // Rabinho da bolha só na última do bloco, como no WhatsApp.
+                  const tail =
+                    g.author === "system"
+                      ? ""
+                      : isLast
+                        ? g.author === "me"
+                          ? "rounded-br-sm"
+                          : "rounded-bl-sm"
+                        : "";
                   const initials = staffSender?.name
                     ?.split(/\s+/)
                     .slice(0, 2)
@@ -806,10 +814,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
                   return (
                   <div
                     key={m.id}
-                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl ${staffSender ? "pl-3 pr-4 py-3" : "px-4 py-2"} ${bubbleClass(g.author)} ${
+                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl shadow-sm ${tail} ${staffSender ? "pl-3 pr-4 py-3" : "px-3 py-2"} ${bubbleClass(g.author)} ${
                       g.author === "system" ? "text-center" : ""
                     }`}
                   >
+
                     {staffSender && (
                       <div className="mb-2 flex items-center gap-2 border-b border-border/20 pb-2">
                         {staffSender.avatar ? (
