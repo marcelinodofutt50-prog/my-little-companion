@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { adminCustomer360 } from "@/lib/admin.functions";
+import {
+  adminCustomer360,
+  adminExtendLicense,
+  adminRevokeLicense,
+  adminHealLicenseLogin,
+} from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Copy,
   ShieldCheck,
@@ -20,9 +26,16 @@ import {
   Gift,
   Smartphone,
   Clock,
+  CalendarPlus,
+  Ban,
+  Wrench,
+  KeyRound,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { LicensePinReveal } from "@/components/admin/LicensePinReveal";
+import { LicensePasswordSyncDialog } from "@/components/admin/LicensePasswordSyncDialog";
+
 
 const brl = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 const dt = (v?: string | null) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
