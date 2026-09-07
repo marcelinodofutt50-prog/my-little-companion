@@ -131,11 +131,15 @@ function groupMessages(
   for (const m of msgs) {
     const mine = !!m.sender_id && m.sender_id === userId;
     const author: Group["author"] = m.is_system ? "system" : mine ? "me" : "staff";
-    const sender = !mine && m.is_admin && m.sender_id ? senders[m.sender_id] : undefined;
+    // Também mostramos identidade nas mensagens do próprio atendente, para a
+    // equipe enxergar nome + cargo do lado das próprias respostas.
+    const sender = m.is_admin && m.sender_id ? senders[m.sender_id] : undefined;
     const label = m.is_system
       ? "Assistente Shadow"
       : mine
-        ? "Você"
+        ? sender
+          ? `${sender.name} · ${sender.roleLabel}`
+          : "Você"
         : m.is_admin
           ? sender
             ? `${sender.name} · ${sender.roleLabel}`
@@ -187,11 +191,11 @@ const ROLE_LABELS: Record<string, string> = {
 function messageSender(m: SupportMessage, fallback?: SenderInfo): SenderInfo | undefined {
   if (!m.is_admin || m.is_system || !m.sender_id) return undefined;
   if (m.sender_name) {
-    const role = m.sender_role ?? "staff";
+    const role = m.sender_role ?? fallback?.role ?? "staff";
     return {
       id: m.sender_id ?? fallback?.id ?? "",
       name: m.sender_name,
-      avatar: m.sender_avatar_url ?? null,
+      avatar: m.sender_avatar_url ?? fallback?.avatar ?? null,
       role,
       roleLabel: ROLE_LABELS[role] ?? ROLE_LABELS.staff,
     };
@@ -796,7 +800,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
 
                 {g.messages.map((m, mi) => {
                   const quoted = m.reply_to_id ? msgs.find((q) => q.id === m.reply_to_id) : null;
-                  const staffSender = messageSender(m, g.author === "staff" ? g.sender : undefined);
+                  const staffSender = messageSender(m, g.sender);
                   const isLast = mi === g.messages.length - 1;
                   // Rabinho da bolha só na última do bloco, como no WhatsApp.
                   const tail =

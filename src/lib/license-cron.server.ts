@@ -42,6 +42,9 @@ export function panelOrder(preferred: string | null | undefined): YaarsaPanel[] 
   return [first, ...rest].filter((p) => hasPanelServer(p));
 }
 
+/** Erros passageiros (painel engasgado) merecem uma segunda tentativa. */
+const TRANSIENT_RE = /timeout|timed?.?out|econn|network|fetch failed|502|503|504|temporar|php|internal/i;
+
 async function sweep(
   email: string,
   preferred: string | null | undefined,
@@ -55,17 +58,22 @@ async function sweep(
 
   for (const panel of order) {
     tried.push(panel);
-    try {
-      const r: any = await run(panel);
-      const fail = r?.Fail ? String(r.Fail) : "";
-      if (!fail) return { status: "done", panel, error: null, tried };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let fail = "";
+      try {
+        const r: any = await run(panel);
+        fail = r?.Fail ? String(r.Fail) : "";
+        if (!fail) return { status: "done", panel, error: null, tried };
+      } catch (e: any) {
+        fail = e?.message || "yaarsa_exception";
+      }
       if (NOT_FOUND_RE.test(fail)) {
         sawMissing = true;
-        continue; // conta não está neste painel: tenta o próximo
+        break; // conta não está neste painel: tenta o próximo
       }
       lastError = fail;
-    } catch (e: any) {
-      lastError = e?.message || "yaarsa_exception";
+      if (attempt === 0 && TRANSIENT_RE.test(fail)) continue; // repete uma vez
+      break;
     }
   }
 
@@ -85,6 +93,21 @@ export function suspendAccountAnyPanel(
   preferred: string | null | undefined,
   ymd: string,
 ) {
+  return sweep(email, preferred, (panel) => yaarsaExtend(email, ymd, panel));
+}
+
+/**
+ * Alinha a validade da conta no painel com a validade salva no site.
+ * O painel corta o login à meia-noite, então gravamos +1 dia de folga.
+ */
+export function setExpiryAnyPanel(
+  email: string,
+  preferred: string | null | undefined,
+  expiresAt: string | Date,
+) {
+  const d = new Date(expiresAt);
+  d.setDate(d.getDate() + 1);
+  const ymd = d.toISOString().slice(0, 10);
   return sweep(email, preferred, (panel) => yaarsaExtend(email, ymd, panel));
 }
 
