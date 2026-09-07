@@ -207,7 +207,7 @@ export async function healLicenseLogin(
       const fail = lastCreateFail;
       await logHeal(supabaseAdmin, lic, panel, "unreachable", reason, [...steps, fail.slice(0, 200)]);
       throw new Error(
-        `Os servidores de licenças não responderam agora${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
+        `O servidor de licenças não respondeu agora (tentei todos os servidores disponíveis)${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
       );
     }
     steps.push("conta-ja-existia");
