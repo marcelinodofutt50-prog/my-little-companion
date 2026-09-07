@@ -478,7 +478,7 @@ function PlansPage() {
     );
   }
 
-  const { licenses, servers, sources, upgrades, addons } = useMemo(() => {
+  const { licenses, servers, sources, upgrades, addons, partners } = useMemo(() => {
     const seen = new Set<string>();
     const unique = plans.filter((p) => {
       const key = `${p.category}|${p.price_brl}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
