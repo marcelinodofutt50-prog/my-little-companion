@@ -118,7 +118,13 @@ export const adminListPartners = createServerFn({ method: "GET" })
     const { data: profiles } = ids.length
       ? await supabaseAdmin.from("profiles").select("id, email, display_name").in("id", ids)
       : { data: [] as any[] };
-    return { entitlements: ents ?? [], requests: reqs ?? [], profiles: profiles ?? [] };
+    // Nunca devolvemos a senha guardada aqui: só a marca de que existe.
+    const safeReqs = ((reqs ?? []) as any[]).map(({ ssh_password_enc, ...r }) => ({
+      ...r,
+      ssh_password_enc: ssh_password_enc ? true : null,
+    }));
+    return { entitlements: ents ?? [], requests: safeReqs, profiles: profiles ?? [] };
+
   });
 
 /** Painel do admin: atualiza andamento do chamado / dados do servidor entregue. */
