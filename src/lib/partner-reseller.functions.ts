@@ -78,6 +78,7 @@ export const getPartnerDesk = createServerFn({ method: "GET" })
 
 /** Cadastra um cliente do parceiro. */
 export const partnerCreateCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -87,7 +88,6 @@ export const partnerCreateCustomer = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const guard = await requireResellerPartner(context);
     if (guard.error) return { error: guard.error };
@@ -107,6 +107,7 @@ export const partnerCreateCustomer = createServerFn({ method: "POST" })
 
 /** Cria a licença do cliente e já abre a conta no painel. */
 export const partnerCreateLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -116,7 +117,6 @@ export const partnerCreateLicense = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const guard = await requireResellerPartner(context);
     if (guard.error) return { error: guard.error };
@@ -178,8 +178,8 @@ export const partnerCreateLicense = createServerFn({ method: "POST" })
 
 /** Tenta novamente colocar a licença no painel (ou confirma que já está lá). */
 export const partnerSyncLicense = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
   .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const guard = await requireResellerPartner(context);
     if (guard.error) return { error: guard.error };
@@ -205,7 +205,7 @@ export const partnerSyncLicense = createServerFn({ method: "POST" })
     let ok = false;
     let detail = "";
 
-    if ((probe as any)?.exists) {
+    if (probe.state === "found") {
       const pw = await yaarsa.yaarsaSetPassword(
         (lic as any).panel_email,
         password,
@@ -244,8 +244,8 @@ export const partnerSyncLicense = createServerFn({ method: "POST" })
 
 /** Mostra o login do cliente (senha em texto) para o parceiro repassar. */
 export const partnerRevealLicense = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
   .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const guard = await requireResellerPartner(context);
     if (guard.error) return { error: guard.error };
@@ -269,6 +269,7 @@ export const partnerRevealLicense = createServerFn({ method: "POST" })
 
 /** Registra o pagamento do cliente, renova a validade e grava no histórico. */
 export const partnerRegisterPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -280,7 +281,6 @@ export const partnerRegisterPayment = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const guard = await requireResellerPartner(context);
     if (guard.error) return { error: guard.error };
@@ -337,8 +337,8 @@ export const partnerRegisterPayment = createServerFn({ method: "POST" })
 
 /** Cancela a licença do cliente e apaga a conta do painel. */
 export const partnerCancelLicense = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
   .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const guard = await requireResellerPartner(context);
     if (guard.error) return { error: guard.error };
