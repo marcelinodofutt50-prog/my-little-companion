@@ -68,6 +68,7 @@ function PartnerPage() {
   const [kind, setKind] = useState<"reseller" | "deploy" | "managed">("deploy");
   const [serverIp, setServerIp] = useState("");
   const [sshUser, setSshUser] = useState("");
+  const [sshPassword, setSshPassword] = useState("");
   const [contact, setContact] = useState("");
   const [notes, setNotes] = useState("");
   const [sending, setSending] = useState(false);
@@ -83,7 +84,20 @@ function PartnerPage() {
     else if (data.hasManaged) setKind("managed");
   }, [data]);
 
+  // Para instalação/gestão a equipe precisa entrar na VPS: os três campos são obrigatórios.
+  const needsAccess = kind === "deploy" || kind === "managed";
+  const accessPending =
+    needsAccess &&
+    !requests.some(
+      (r: any) => r.kind === kind && r.server_ip && r.ssh_user && r.form_submitted_at,
+    );
+
   async function onSubmit() {
+    if (needsAccess) {
+      if (!serverIp.trim()) return toast.error("Informe o IP da sua VPS.");
+      if (!sshUser.trim()) return toast.error("Informe o usuário da VPS (ex: root).");
+      if (!sshPassword.trim() && accessPending) return toast.error("Informe a senha da VPS.");
+    }
     setSending(true);
     try {
       const res: any = await submit({
@@ -91,6 +105,7 @@ function PartnerPage() {
           kind,
           serverIp: serverIp.trim() || null,
           sshUser: sshUser.trim() || null,
+          sshPassword: sshPassword.trim() || null,
           contact: contact.trim() || null,
           notes: notes.trim() || null,
         },
@@ -100,6 +115,7 @@ function PartnerPage() {
       } else {
         toast.success("Dados enviados! Nossa equipe já vai olhar.");
         setNotes("");
+        setSshPassword("");
         void qc.invalidateQueries({ queryKey: ["partner-area"] });
       }
     } catch (e) {
@@ -186,11 +202,17 @@ function PartnerPage() {
 
       {hasAny ? (
         <section className="mt-10 rounded-2xl border border-border/50 bg-card/40 p-5 md:p-6">
-          <h2 className="font-display text-lg">Dados do servidor</h2>
+          <h2 className="font-display text-lg">Dados de acesso da sua VPS</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Envie o endereço e um contato. Nunca peça nem escreva sua senha aqui — a equipe combina o acesso com você
-            direto no suporte.
+            Para instalar e cuidar do seu servidor a equipe precisa entrar nele. Preencha o IP, o usuário e a senha —
+            a senha fica guardada protegida e só a administração consegue abrir. Depois da instalação, troque a senha
+            se preferir.
           </p>
+          {accessPending ? (
+            <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
+              Falta você enviar os dados da VPS. Sem eles a equipe não consegue começar a instalação.
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
             {(["reseller", "deploy", "managed"] as const).map((k) => (
               <button
@@ -208,7 +230,14 @@ function PartnerPage() {
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <Input placeholder="IP ou domínio" value={serverIp} onChange={(e) => setServerIp(e.target.value)} />
-            <Input placeholder="Usuário de acesso (ex: root)" value={sshUser} onChange={(e) => setSshUser(e.target.value)} />
+            <Input placeholder="Usuário da VPS (ex: root)" value={sshUser} onChange={(e) => setSshUser(e.target.value)} />
+            <Input
+              type="password"
+              autoComplete="new-password"
+              placeholder={accessPending ? "Senha da VPS" : "Senha da VPS (só se mudou)"}
+              value={sshPassword}
+              onChange={(e) => setSshPassword(e.target.value)}
+            />
             <Input placeholder="WhatsApp ou Telegram" value={contact} onChange={(e) => setContact(e.target.value)} />
           </div>
           <Textarea
