@@ -522,6 +522,7 @@ function PlansPage() {
       sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
       upgrades: applyBillingFilter(upgradeList),
       addons: applyBillingFilter(addonList),
+      partners: unique.filter((p) => p.category === "partner").sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
     };
   }, [plans, isLegacy, usage, billingCycle]);
 
