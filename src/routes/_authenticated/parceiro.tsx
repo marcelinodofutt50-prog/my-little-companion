@@ -247,6 +247,9 @@ function PartnerPage() {
           </div>
         </section>
       ) : null}
+
+      {data?.hasReseller ? <PartnerResellerDesk /> : null}
     </div>
+
   );
 }
