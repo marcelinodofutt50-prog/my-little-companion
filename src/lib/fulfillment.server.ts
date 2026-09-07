@@ -384,9 +384,19 @@ async function fulfillOrderInner(orderId: string) {
     await supabaseAdmin.from("integration_logs").insert({
       source: "partner",
       action: "entitlement_granted",
-      outcome: granted.ok ? "success" : "warning",
+      outcome: granted.ok ? "success" : "error",
       context: { order_id: orderId, user_id: beneficiaryId, plan: planRow.slug, kind: granted.kind, entitlement_id: granted.entitlementId, error: granted.error ?? null } as any,
     } as any);
+    if (!granted.ok) {
+      // Pagamento recebido, mas o acesso não foi liberado: devolve falha para o webhook
+      // tentar de novo (a liberação é idempotente por pedido) e alerta a equipe.
+      await supabaseAdmin.from("webhook_logs").insert({
+        source: "partner",
+        note: `Falha ao liberar parceria do pedido ${orderId} (${planRow.slug}): ${granted.error ?? "erro desconhecido"}`,
+        processed: false,
+      } as any);
+      return { ok: false, reason: `partner-grant-failed:${granted.error ?? "unknown"}` };
+    }
     return { ok: true, reason: `partner:${granted.kind}` };
   }
 
