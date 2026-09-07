@@ -155,8 +155,26 @@ async function hasPendingPinRequest(threadId: string): Promise<boolean> {
   return false;
 }
 
+/** Já avisamos sobre o fim de semana nesta conversa hoje? */
+async function weekendNoticeSentToday(threadId: string): Promise<boolean> {
+  const key = `${WEEKEND_NOTICE_MARKER}${saoPauloDayKey()}`;
+  const { data } = await supabaseAdmin
+    .from("support_messages")
+    .select("body")
+    .eq("thread_id", threadId)
+    .eq("is_system", true)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  return ((data ?? []) as { body: string | null }[]).some((m) => (m.body ?? "").includes(key));
+}
+
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
+
+  // Fim de semana: avisamos uma vez por dia que não há horário fixo de resposta.
+  if (isWeekendInSaoPaulo() && !(await weekendNoticeSentToday(threadId))) {
+    await postSystemMessage(threadId, buildWeekendNotice());
+  }
   const triggers = [
     "erro", "error", "login", "logar", "senha", "entrar", "acessar", "acesso", "expirou", "venceu",
     "vencid", "inválid", "invalid", "bug", "conectar", "conexão", "btmob", "yaarsa", "painel",
