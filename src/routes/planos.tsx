@@ -947,6 +947,12 @@ function PlansPage() {
 
         </div>
 
+        {partners.length > 0 ? (
+          <PartnerSection plans={partners} onBuy={buy} loadingPlan={loadingPlan} />
+        ) : null}
+
+
+
         {plans.length === 0 ? (
           <div className="mb-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/30 bg-primary/5 p-12 text-center">
             <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary/40" />
