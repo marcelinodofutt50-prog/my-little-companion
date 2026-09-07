@@ -22,25 +22,20 @@ export const fixAccountLogin = createServerFn({ method: "POST" })
     if (lErr || !lic) throw new Error("Licença não encontrada ou acesso negado");
     if (lic.revoked || lic.disabled_at) throw new Error("Esta licença não está mais ativa.");
 
-    const { yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
-    const panel = (lic.panel || "v457") as any;
-    
-    // Decrypt the original password and re-apply it to the panel.
-    // This solves 90% of "Login Incorreto" issues where the panel is out of sync.
-    const plain = decrypt(lic.yaarsa_password_enc);
-    
-    await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username);
-
-    // Record the fix action
-    await supabaseAdmin.from("integration_logs").insert({
-      source: "support-diagnostic",
-      action: "fix_login_sync",
-      outcome: "success",
-      context: { license_id: lic.id, email: lic.yaarsa_email }
-    } as any);
-
-    return { 
-      ok: true, 
-      message: "O registro do seu login foi reiniciado e sincronizado com sucesso. Tente entrar novamente." 
-    };
+    const { healLicenseLogin } = await import("./license-heal.server");
+    return healLicenseLogin(
+      {
+        id: lic.id,
+        user_id: context.userId,
+        plan_slug: lic.plan_slug ?? null,
+        yaarsa_username: lic.yaarsa_username,
+        yaarsa_email: lic.yaarsa_email,
+        yaarsa_password_enc: lic.yaarsa_password_enc,
+        panel: lic.panel ?? null,
+        expires_at: lic.expires_at ?? null,
+        is_trial: lic.is_trial ?? null,
+        server_ip: lic.server_ip ?? null,
+      },
+      { reason: "cliente_suporte_corrigir_login" },
+    );
   });

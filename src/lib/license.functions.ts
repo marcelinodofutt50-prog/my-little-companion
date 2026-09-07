@@ -567,8 +567,9 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
 
     if (!licenses || licenses.length === 0) return { ok: true, synced: 0 };
 
-    const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
-    const results = [];
+    const { yaarsaExtend } = await import("./yaarsa.server");
+    const { healLicenseLogin } = await import("./license-heal.server");
+    const results: Array<{ id: string; status: string; message?: string }> = [];
 
     for (const lic of licenses) {
       const panel = (lic as any).panel ?? "v457";
@@ -592,27 +593,46 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
         continue;
       }
 
-      // Healer Logic: Se a licença não está suspensa mas o cliente reporta erro,
-      // nós "re-empurramos" a data e a senha para garantir o registro no painel Yaarsa.
-      if (expiresAt) {
-        try {
-          const ymd = expiresAt.toISOString().slice(0, 10);
-          // 1. Garante data
-          await yaarsaExtend(lic.yaarsa_email, ymd, panel);
-          
-          // 2. Garante senha original
-          const plain = decrypt(lic.yaarsa_password_enc);
-          await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username);
-          
-          results.push({ id: lic.id, status: "restored" });
-        } catch (e) {
-          console.error(`[syncAllMyLicenses] Fail for ${lic.id}:`, e);
-          results.push({ id: lic.id, status: "failed" });
-        }
+      // Usa exatamente o mesmo motor do botão por licença e do admin. Ele cria
+      // a conta ausente ou apaga/recria com as MESMAS credenciais e confirma a
+      // presença no painel antes de declarar sucesso.
+      if (!expiresAt) continue;
+      try {
+        const healed = await healLicenseLogin(
+          {
+            id: lic.id,
+            user_id: userId,
+            plan_slug: (lic as any).plan_slug ?? null,
+            yaarsa_username: lic.yaarsa_username,
+            yaarsa_email: lic.yaarsa_email,
+            yaarsa_password_enc: lic.yaarsa_password_enc,
+            panel: (lic as any).panel ?? null,
+            expires_at: lic.expires_at,
+            is_trial: (lic as any).is_trial ?? null,
+            server_ip: (lic as any).server_ip ?? null,
+          },
+          { reason: "cliente_corrigir_erros_dashboard" },
+        );
+        results.push({ id: lic.id, status: healed.action, message: healed.message });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        console.error(`[syncAllMyLicenses] Fail for ${lic.id}:`, e);
+        results.push({ id: lic.id, status: "failed", message });
       }
     }
 
-    return { ok: true, synced: results.length, details: results };
+    const synced = results.filter((r) => r.status !== "failed").length;
+    const failed = results.filter((r) => r.status === "failed").length;
+    return {
+      ok: failed === 0,
+      synced,
+      failed,
+      details: results,
+      message:
+        failed === 0
+          ? `${synced} licença(s) corrigida(s) e confirmada(s) no painel.`
+          : `${synced} licença(s) corrigida(s); ${failed} não puderam ser confirmadas.`,
+    };
   });
 
 

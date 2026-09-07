@@ -74,7 +74,7 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { yaarsaRemoveAccount } = await import("./yaarsa.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await supabaseAdmin
@@ -124,7 +124,7 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ licenseId: z.string().uuid(), newExpireDate: z.string() }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { yaarsaExtend, hasPanelServer, refreshPanelOverrides } = await import("./yaarsa.server");
     const { supabaseAdmin: sbRead } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await sbRead.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
@@ -2022,7 +2022,7 @@ export const adminHealLicenseLogin = createServerFn({ method: "POST" })
     z.object({ licenseId: z.string().uuid(), forceRecreate: z.boolean().optional() }).parse(i),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await supabaseAdmin
       .from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
@@ -2059,7 +2059,7 @@ export const adminHealUserLogins = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), forceRecreate: z.boolean().optional() }).parse(i),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("licenses")

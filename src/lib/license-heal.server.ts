@@ -70,7 +70,6 @@ export async function healLicenseLogin(
     yaarsaRemoveAccount,
     yaarsaProbeAccount,
     yaarsaExtend,
-    generateCredentials,
     encrypt,
     decrypt,
     hasPanelServer,
@@ -86,14 +85,24 @@ export async function healLicenseLogin(
   } catch {
     /* segue com o ambiente */
   }
-  const configured = (p: "v455" | "v457" | "v46") =>
-    (typeof hasPanelServer === "function" ? hasPanelServer(p) : true) &&
-    (typeof isPanelHealthy === "function" ? isPanelHealthy(p) : true);
+  // Correção manual nunca deve excluir um servidor apenas porque o disjuntor o
+  // marcou como indisponível numa chamada anterior. Priorizamos os saudáveis,
+  // mas ainda tentamos todos os servidores configurados antes de desistir.
+  const hasServer = (p: "v455" | "v457" | "v46") =>
+    typeof hasPanelServer === "function" ? hasPanelServer(p) : true;
+  const healthy = (p: "v455" | "v457" | "v46") =>
+    typeof isPanelHealthy === "function" ? isPanelHealthy(p) : true;
   const preferred = normalizePanel(lic.panel);
-  let panel = configured(preferred)
+  let panel = hasServer(preferred) && healthy(preferred)
     ? preferred
-    : ((["v457", "v46", "v455"] as const).find(configured) ?? preferred);
+    : ((["v457", "v46", "v455"] as const).find((p) => hasServer(p) && healthy(p)) ?? preferred);
   if (panel !== preferred) steps.push(`painel-alternativo:${preferred}->${panel}`);
+
+  const panelCandidates = () => {
+    const all = [panel, preferred, "v457", "v46", "v455"] as const;
+    const unique = all.filter((p, index) => all.indexOf(p) === index && hasServer(p));
+    return [...unique.filter(healthy), ...unique.filter((p) => !healthy(p))];
+  };
 
 
 
@@ -119,7 +128,7 @@ export async function healLicenseLogin(
   //    erro interno (PHP), consultamos a conta e tentamos os outros servidores
   //    antes de desistir — antes disso o cliente via só "não respondeu".
   if (canProbeExisting) {
-    const tryPanels = [panel, ...(["v457", "v46", "v455"] as const).filter((p) => p !== panel && configured(p))];
+    const tryPanels = panelCandidates();
     let created: { Success?: unknown; Fail?: unknown } = { Fail: "" };
     let exists = false;
     let lastCreateFail = "";
@@ -219,21 +228,21 @@ export async function healLicenseLogin(
   // 2) A conta existe no painel mas está inconsistente. Regra do time: NÃO
   //    inventamos login novo — apagamos e recriamos com as MESMAS credenciais
   //    que já estão na licença, para o cliente não precisar trocar nada.
-  const { generated, username, email, password } = (() => {
-    if (currentPassword && lic.yaarsa_email && lic.yaarsa_username) {
-      return {
-        generated: false,
-        username: sanitizePanelUsername(lic.yaarsa_username as string),
-        email: lic.yaarsa_email as string,
-        password: currentPassword,
-      };
-    }
-    const c = generateCredentials();
-    return { generated: true, username: c.username, email: c.email, password: c.password };
-  })();
-  if (generated) steps.push("sem-senha-guardada:credenciais-novas");
+  // Uma correção nunca pode trocar silenciosamente o login exibido ao cliente.
+  // Se os dados antigos não puderem ser recuperados, paramos para intervenção
+  // do suporte em vez de criar uma conta diferente.
+  if (!currentPassword || !lic.yaarsa_email || !lic.yaarsa_username) {
+    await logHeal(supabaseAdmin, lic, panel, "missing_credentials", reason, steps);
+    throw new Error(
+      "Esta licença não tem todas as credenciais originais salvas. Nenhum login novo foi criado; atualize a senha na ficha do cliente e tente novamente.",
+    );
+  }
+  const generated = false;
+  const username = sanitizePanelUsername(lic.yaarsa_username);
+  const email = lic.yaarsa_email;
+  const password = currentPassword;
 
-  const panelOrder = [panel, ...(["v457", "v46", "v455"] as const).filter((p) => p !== panel && configured(p))];
+  const panelOrder = panelCandidates();
 
   // Apaga a conta bugada em TODOS os painéis configurados, senão a recriação
   // volta a bater em "e-mail já em uso".
