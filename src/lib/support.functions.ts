@@ -350,7 +350,7 @@ export const sendMessage = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { resolveRoles } = await import("@/lib/roles.server");
-    const { isStaff } = await resolveRoles(context);
+    const { isStaff, isAdmin: isAdminRole, isModerator, isSupport } = await resolveRoles(context);
 
     // Carrega identidade do atendente para gravar diretamente na mensagem.
     // Assim o cliente vê nome/foto/cargo mesmo sem permissões em profiles/user_roles.
