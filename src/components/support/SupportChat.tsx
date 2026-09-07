@@ -191,11 +191,11 @@ const ROLE_LABELS: Record<string, string> = {
 function messageSender(m: SupportMessage, fallback?: SenderInfo): SenderInfo | undefined {
   if (!m.is_admin || m.is_system || !m.sender_id) return undefined;
   if (m.sender_name) {
-    const role = m.sender_role ?? "staff";
+    const role = m.sender_role ?? fallback?.role ?? "staff";
     return {
       id: m.sender_id ?? fallback?.id ?? "",
       name: m.sender_name,
-      avatar: m.sender_avatar_url ?? null,
+      avatar: m.sender_avatar_url ?? fallback?.avatar ?? null,
       role,
       roleLabel: ROLE_LABELS[role] ?? ROLE_LABELS.staff,
     };
