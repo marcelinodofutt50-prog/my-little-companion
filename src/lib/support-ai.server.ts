@@ -23,6 +23,10 @@ import {
   buildVisualErrorReply,
   isTrainingQuestion,
   isVisualNetworkError,
+  WEEKEND_NOTICE_MARKER,
+  isWeekendInSaoPaulo,
+  saoPauloDayKey,
+  buildWeekendNotice,
 } from "./support-canned";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", o atendente automatizado de primeiro nível da Shadow.
