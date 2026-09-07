@@ -115,11 +115,33 @@ describe("healLicenseLogin", () => {
     expect(state.updates).toHaveLength(0);
   });
 
-  it("não apaga nada quando o painel está fora do ar", async () => {
-    state.createResponses = [{ Fail: "connection timeout" }];
+  it("não apaga nada quando TODOS os painéis estão fora do ar", async () => {
+    state.createResponses = [
+      { Fail: "connection timeout" },
+      { Fail: "connection timeout" },
+      { Fail: "connection timeout" },
+    ];
+    state.probeResponses = [
+      { state: "unknown", detail: "" },
+      { state: "unknown", detail: "" },
+      { state: "unknown", detail: "" },
+    ];
     await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/não respondeu/i);
     expect(state.removed).toHaveLength(0);
     expect(state.updates).toHaveLength(0);
+  });
+
+  it("tenta os outros servidores quando o painel devolve erro interno (PHP)", async () => {
+    state.createResponses = [
+      { Fail: "Warning: Trying to access array offset on null" },
+      { Success: true },
+    ];
+    state.probeResponses = [{ state: "missing", detail: "" }, { state: "found", detail: "" }];
+    const res = await healLicenseLogin(baseLic, { reason: "test" });
+
+    expect(res.action).toBe("created");
+    expect(state.create).toHaveLength(2);
+    expect(state.removed).toHaveLength(0);
   });
 
   it("força a recriação quando pedido explicitamente", async () => {
