@@ -90,7 +90,7 @@ export async function healLicenseLogin(
     (typeof hasPanelServer === "function" ? hasPanelServer(p) : true) &&
     (typeof isPanelHealthy === "function" ? isPanelHealthy(p) : true);
   const preferred = normalizePanel(lic.panel);
-  const panel = configured(preferred)
+  let panel = configured(preferred)
     ? preferred
     : ((["v457", "v46", "v455"] as const).find(configured) ?? preferred);
   if (panel !== preferred) steps.push(`painel-alternativo:${preferred}->${panel}`);
@@ -115,21 +115,51 @@ export async function healLicenseLogin(
     !opts?.forceRecreate && !!lic.yaarsa_email && !!currentPassword && !!lic.yaarsa_username;
 
   // 1) A conta existe no painel? Descobrimos tentando criá-la com as mesmas
-  //    credenciais que o cliente vê no site.
+  //    credenciais que o cliente vê no site. Se o painel preferido devolver
+  //    erro interno (PHP), consultamos a conta e tentamos os outros servidores
+  //    antes de desistir — antes disso o cliente via só "não respondeu".
   if (canProbeExisting) {
-    let created: { Success?: unknown; Fail?: unknown };
-    try {
-      created = await yaarsaCreateAccount({
-        username: sanitizePanelUsername(lic.yaarsa_username as string),
-        email: lic.yaarsa_email as string,
-        password: currentPassword as string,
-        planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
-        totalPaid: 0,
-        additionalInfo: `shadow-heal-${lic.id.slice(0, 8)}`,
-        panel,
-      });
-    } catch (e: any) {
-      created = { Fail: String(e?.message ?? e) };
+    const tryPanels = [panel, ...(["v457", "v46", "v455"] as const).filter((p) => p !== panel && configured(p))];
+    let created: { Success?: unknown; Fail?: unknown } = { Fail: "" };
+    let exists = false;
+    let lastCreateFail = "";
+
+    for (const candidate of tryPanels) {
+      let attempt: { Success?: unknown; Fail?: unknown };
+      try {
+        attempt = await yaarsaCreateAccount({
+          username: sanitizePanelUsername(lic.yaarsa_username as string),
+          email: lic.yaarsa_email as string,
+          password: currentPassword as string,
+          planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
+          totalPaid: 0,
+          additionalInfo: `shadow-heal-${lic.id.slice(0, 8)}`,
+          panel: candidate,
+        });
+      } catch (e: any) {
+        attempt = { Fail: String(e?.message ?? e) };
+      }
+
+      const failText = String(attempt.Fail ?? "");
+      if (attempt.Success || EXISTS_RE.test(failText)) {
+        panel = candidate;
+        created = attempt;
+        exists = !attempt.Success;
+        break;
+      }
+
+      lastCreateFail = failText;
+      steps.push(`criacao-falhou-${candidate}:${failText.slice(0, 60)}`);
+
+      // Erro interno do painel não significa que a conta não existe: conferimos.
+      const probe = await yaarsaProbeAccount(lic.yaarsa_email as string, candidate);
+      steps.push(`sondagem-${candidate}:${probe.state}`);
+      if (probe.state === "found") {
+        panel = candidate;
+        created = { Fail: "1004 already in use (confirmado por sondagem)" };
+        exists = true;
+        break;
+      }
     }
 
     if (created.Success) {
@@ -172,12 +202,12 @@ export async function healLicenseLogin(
       };
     }
 
-    const fail = String(created.Fail ?? "");
-    if (!EXISTS_RE.test(fail)) {
-      // Painel fora do ar / chave inválida: não mexemos em nada.
+    if (!exists) {
+      // Nenhum servidor respondeu de forma útil: não mexemos em nada.
+      const fail = lastCreateFail;
       await logHeal(supabaseAdmin, lic, panel, "unreachable", reason, [...steps, fail.slice(0, 200)]);
       throw new Error(
-        `O servidor de licenças (${panel}) não respondeu agora${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
+        `O servidor de licenças não respondeu agora (tentei todos os servidores disponíveis)${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
       );
     }
     steps.push("conta-ja-existia");

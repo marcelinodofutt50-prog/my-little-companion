@@ -125,12 +125,37 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
   .validator((i: unknown) => z.object({ licenseId: z.string().uuid(), newExpireDate: z.string() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { yaarsaExtend } = await import("./yaarsa.server");
+    const { yaarsaExtend, hasPanelServer, refreshPanelOverrides } = await import("./yaarsa.server");
     const { supabaseAdmin: sbRead } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await sbRead.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
-    const r = await yaarsaExtend(lic.yaarsa_email, data.newExpireDate, (lic as any).panel ?? "v457");
-    if (r.Fail) throw new Error(r.Fail);
+
+    // O painel cai/devolve erro interno de vez em quando. A validade no NOSSO
+    // banco é a fonte da verdade do acesso pago, então ela é sempre gravada;
+    // a sincronização com o painel tenta todos os servidores configurados.
+    try {
+      await refreshPanelOverrides?.();
+    } catch {
+      /* segue com o ambiente atual */
+    }
+    const preferred = ((lic as any).panel ?? "v457") as "v455" | "v457" | "v46";
+    const order = [preferred, ...(["v457", "v46", "v455"] as const).filter((p) => p !== preferred)].filter(
+      (p) => (typeof hasPanelServer === "function" ? hasPanelServer(p) : true),
+    );
+    let panelSynced = false;
+    let panelError = "";
+    for (const candidate of order.length ? order : [preferred]) {
+      try {
+        const r = await yaarsaExtend(lic.yaarsa_email, data.newExpireDate, candidate);
+        if (!r.Fail) {
+          panelSynced = true;
+          break;
+        }
+        panelError = String(r.Fail);
+      } catch (e: any) {
+        panelError = String(e?.message ?? e);
+      }
+    }
 
     // Estender a data no painel não bastava: o registro continuava aparecendo
     // como "inativo" porque `status` seguia expirado e o cron diário voltava a
@@ -151,7 +176,15 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
     const { error: extErr } = await supabaseAdmin
       .from("licenses").update(patch as any).eq("id", data.licenseId);
     if (extErr) throw new Error(extErr.message);
-    return { ok: true, expires_at: target.toISOString(), server_paid_until: patch.server_paid_until ?? (lic as any).server_paid_until };
+    return {
+      ok: true,
+      expires_at: target.toISOString(),
+      server_paid_until: patch.server_paid_until ?? (lic as any).server_paid_until,
+      panelSynced,
+      warning: panelSynced
+        ? null
+        : `A validade foi salva aqui, mas o painel de logins não confirmou agora${panelError ? ` (${panelError.slice(0, 120)})` : ""}. Use "Corrigir login" se o cliente não conseguir entrar.`,
+    };
   });
 
 

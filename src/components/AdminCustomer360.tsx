@@ -115,8 +115,9 @@ function LicenseActions({ license, onDone }: { license: any; onDone: () => void 
   const run = async (key: string, fn: () => Promise<any>, okMsg: string) => {
     setBusy(key);
     try {
-      await fn();
-      toast.success(okMsg);
+      const res: any = await fn();
+      if (res?.warning) toast.warning("Salvo com ressalva", { description: String(res.warning) });
+      else toast.success(okMsg);
       await onDone();
     } catch (e: any) {
       toast.error("Não deu certo", { description: e?.message ?? String(e) });
