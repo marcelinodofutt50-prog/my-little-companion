@@ -613,7 +613,22 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
           },
           { reason: "cliente_corrigir_erros_dashboard" },
         );
-        results.push({ id: lic.id, status: healed.action, message: healed.message });
+        // Depois de garantir que a conta existe, alinhamos a validade do painel
+        // com a validade salva aqui — era a divergência que fazia o login
+        // vencer antes (ou continuar ativo depois) do prazo mostrado no site.
+        let expiryNote: string | undefined;
+        if ((lic as any).plan_slug !== "login-lifetime") {
+          const { setExpiryAnyPanel } = await import("./license-cron.server");
+          const sync = await setExpiryAnyPanel(lic.yaarsa_email, (lic as any).panel, expiresAt);
+          if (sync.status === "failed") {
+            expiryNote = `validade não confirmada no painel (${sync.error ?? "sem resposta"})`;
+          }
+        }
+        results.push({
+          id: lic.id,
+          status: healed.action,
+          message: expiryNote ? `${healed.message} — ${expiryNote}` : healed.message,
+        });
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         console.error(`[syncAllMyLicenses] Fail for ${lic.id}:`, e);
