@@ -135,3 +135,5 @@ export const RevenueSparkline = lazyPanel(() =>
   import("@/components/RevenueSparkline").then((m) => ({ default: m.RevenueSparkline })));
 export const AdminFeedbackPanel = lazyPanel(() =>
   import("@/components/admin/AdminFeedbackPanel").then((m) => ({ default: m.AdminFeedbackPanel })));
+export const AdminPartnersPanel = lazyPanel(() =>
+  import("@/components/admin/AdminPartnersPanel").then((m) => ({ default: m.AdminPartnersPanel })));

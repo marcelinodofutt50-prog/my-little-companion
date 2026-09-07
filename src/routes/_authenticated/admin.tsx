@@ -221,6 +221,7 @@ type Tab =
   | "license_audit"
   | "panel_integrity"
   | "feedback"
+  | "partners"
 
   | "vip";
 
@@ -708,6 +709,7 @@ function AdminPage() {
         { id: "market", label: "Mercado", icon: Store, hint: "produtos & catálogo" },
         { id: "referrals", label: "Indicações", icon: Gift, hint: "cashback / pix" },
         { id: "refunds", label: "Reembolsos", icon: RotateCcw, hint: "prazo 2 dias" },
+        { id: "partners", label: "Parceiros & VPS", icon: Server, hint: "acessos enviados" },
       ],
     },
     {
@@ -2330,6 +2332,7 @@ function AdminPage() {
               {tab === "license_audit" && <AdminLicenseAuditPanel />}
               {tab === "panel_integrity" && <AdminPanelIntegrityPanel />}
               {tab === "feedback" && <AdminFeedbackPanel />}
+              {tab === "partners" && <AdminPartnersPanel />}
 
               </motion.div>
             </AnimatePresence>
