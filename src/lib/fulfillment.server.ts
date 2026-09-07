@@ -371,6 +371,27 @@ async function fulfillOrderInner(orderId: string) {
     return { ok: true, reason: `${planRow.category}:${planRow.slug}` };
   }
 
+  // ============ Parceria: revenda / subida de servidor / gestão mensal ============
+  if (planRow?.category === "partner") {
+    const { grantPartnerEntitlement } = await import("@/lib/partner.server");
+    const granted = await grantPartnerEntitlement(supabaseAdmin, {
+      userId: beneficiaryId,
+      orderId,
+      planSlug: planRow.slug,
+      days: null,
+    });
+    await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
+    await supabaseAdmin.from("integration_logs").insert({
+      source: "partner",
+      action: "entitlement_granted",
+      outcome: granted.ok ? "success" : "warning",
+      context: { order_id: orderId, user_id: beneficiaryId, plan: planRow.slug, kind: granted.kind, entitlement_id: granted.entitlementId, error: granted.error ?? null } as any,
+    } as any);
+    return { ok: true, reason: `partner:${granted.kind}` };
+  }
+
+
+
   const { resolvePanelFromPlanSlug } = await import("@/lib/yaarsa.server");
   const targetPanel = await resolvePanelFromPlanSlug(order.plan_slug);
   const creds = generateCredentials();
