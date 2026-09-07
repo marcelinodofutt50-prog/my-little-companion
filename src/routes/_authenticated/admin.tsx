@@ -88,6 +88,7 @@ import {
   AdminPermissionsMatrix,
   AdminRedeemCodesPanel,
   AdminFeedbackPanel,
+  AdminPartnersPanel,
   AdminRefundsPanel,
 
   AdminSelfTestPanel,
@@ -229,6 +230,7 @@ type Tab =
 
 // Explicação em linguagem simples de cada seção do painel.
 const TAB_DESC: Record<Tab, string> = {
+  partners: "Parceiros: dados da VPS enviados pelo cliente para a equipe instalar e cuidar.",
   overview: "Resumo do dia: quanto entrou, o que está pendente e atalhos rápidos.",
   ia: "Diagnóstico automático: a IA aponta erros e o que precisa de atenção.",
   chat: "Conversas ao vivo com os clientes. Assuma o ticket e responda por aqui.",
