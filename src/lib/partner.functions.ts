@@ -89,14 +89,14 @@ export const submitPartnerServerInfo = createServerFn({ method: "POST" })
 
 
     if (open?.id) {
-      const { error } = await supabaseAdmin.from("partner_service_requests").update(payload).eq("id", open.id);
+      const { error } = await supabaseAdmin.from("partner_service_requests").update(payload as any).eq("id", open.id);
       if (error) return { error: error.message };
       return { ok: true, requestId: open.id };
     }
 
     const { data: created, error } = await supabaseAdmin
       .from("partner_service_requests")
-      .insert({ user_id: context.userId, entitlement_id: (ent as any).id, kind: data.kind, status: "open", ...payload })
+      .insert({ user_id: context.userId, entitlement_id: (ent as any).id, kind: data.kind, status: "open", ...payload } as any)
       .select("id")
       .single();
     if (error) return { error: error.message };
@@ -192,8 +192,8 @@ export const adminRevealPartnerServerPassword = createServerFn({ method: "POST" 
     const { decrypt } = await import("@/lib/yaarsa.server");
     await supabaseAdmin.from("audit_logs").insert({
       user_id: context.userId,
-      action: "partner_server_password_reveal",
-      details: { request_id: (req as any).id, owner: (req as any).user_id },
+      event: "partner_server_password_reveal",
+      metadata: { request_id: (req as any).id, owner: (req as any).user_id },
     });
     return { ok: true, password: decrypt((req as any).ssh_password_enc) };
   });
