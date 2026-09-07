@@ -899,7 +899,10 @@ async function yaarsaPost(
           error: String((err as Error)?.message || err),
           context: { routing: routingSummary, response: responseMeta },
         });
+        // Timeout/queda de rede é quase sempre temporário: tenta de novo antes de trocar de endpoint.
+        if (attempt < MAX_ATTEMPTS - 1) continue;
         break;
+
       }
 
       const latency = Date.now() - started;
