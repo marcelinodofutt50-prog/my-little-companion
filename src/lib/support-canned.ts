@@ -111,3 +111,31 @@ export function buildPinRejectedReply(): string {
     "3. Envie ele aqui de novo.",
   ].join("\n");
 }
+
+export const WEEKEND_NOTICE_MARKER = "[[weekend-notice]]";
+
+/** Sábado ou domingo no horário de Brasília. */
+export function isWeekendInSaoPaulo(now: Date = new Date()): boolean {
+  const day = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "short",
+  }).format(now);
+  return day === "Sat" || day === "Sun";
+}
+
+/** Data (AAAA-MM-DD) no horário de Brasília, pra avisar só uma vez por dia. */
+export function saoPauloDayKey(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(now);
+}
+
+export function buildWeekendNotice(now: Date = new Date()): string {
+  return [
+    `${WEEKEND_NOTICE_MARKER}${saoPauloDayKey(now)}`,
+    "Oi! Recebemos sua mensagem 👋",
+    "",
+    "Hoje é **fim de semana** e nesses dias a equipe **não tem horário fixo** de atendimento —",
+    "respondemos assim que alguém estiver disponível, pode ser a qualquer momento.",
+    "",
+    "Pode deixar tudo escrito aqui (com prints, se ajudar) que respondemos na sequência. ⚡",
+  ].join("\n");
+}

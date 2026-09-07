@@ -1761,10 +1761,12 @@ export type Database = {
           contact: string | null
           created_at: string
           entitlement_id: string | null
+          form_submitted_at: string | null
           id: string
           kind: string
           notes: string | null
           server_ip: string | null
+          ssh_password_enc: string | null
           ssh_user: string | null
           staff_notes: string | null
           status: string
@@ -1775,10 +1777,12 @@ export type Database = {
           contact?: string | null
           created_at?: string
           entitlement_id?: string | null
+          form_submitted_at?: string | null
           id?: string
           kind: string
           notes?: string | null
           server_ip?: string | null
+          ssh_password_enc?: string | null
           ssh_user?: string | null
           staff_notes?: string | null
           status?: string
@@ -1789,10 +1793,12 @@ export type Database = {
           contact?: string | null
           created_at?: string
           entitlement_id?: string | null
+          form_submitted_at?: string | null
           id?: string
           kind?: string
           notes?: string | null
           server_ip?: string | null
+          ssh_password_enc?: string | null
           ssh_user?: string | null
           staff_notes?: string | null
           status?: string
