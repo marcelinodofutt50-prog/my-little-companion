@@ -40,6 +40,7 @@ export const submitPartnerServerInfo = createServerFn({ method: "POST" })
         kind: z.enum(["reseller", "deploy", "managed"]),
         serverIp: z.string().trim().max(120).optional().nullable(),
         sshUser: z.string().trim().max(60).optional().nullable(),
+        sshPassword: z.string().trim().max(200).optional().nullable(),
         contact: z.string().trim().max(160).optional().nullable(),
         notes: z.string().trim().max(2000).optional().nullable(),
       })
@@ -59,7 +60,8 @@ export const submitPartnerServerInfo = createServerFn({ method: "POST" })
     const ent = (ents ?? []).find((e: any) => isEntitlementActive(e));
     if (!ent) return { error: "Você ainda não tem esse serviço ativo. Finalize a compra na página de planos." };
 
-    // Nunca guardamos senha: só IP, usuário e contato pra equipe combinar o acesso.
+    // O serviço de instalação precisa do acesso à VPS. A senha é guardada
+    // criptografada e só a equipe autorizada consegue revelar.
     const { data: open } = await supabaseAdmin
       .from("partner_service_requests")
       .select("id")
@@ -70,9 +72,12 @@ export const submitPartnerServerInfo = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
 
-    const payload = {
+    const { encrypt } = await import("@/lib/yaarsa.server");
+    const payload: Record<string, unknown> = {
       server_ip: data.serverIp || null,
       ssh_user: data.sshUser || null,
+      ssh_password_enc: data.sshPassword ? encrypt(data.sshPassword) : null,
+      form_submitted_at: new Date().toISOString(),
       contact: data.contact || null,
       notes: data.notes || null,
       updated_at: new Date().toISOString(),
@@ -158,4 +163,32 @@ export const adminUpdatePartner = createServerFn({ method: "POST" })
     }
 
     return { ok: true };
+  });
+
+/** Admin/equipe: revela a senha da VPS enviada pelo cliente (fica no log de auditoria). */
+export const adminRevealPartnerServerPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => z.object({ requestId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) return { error: "Apenas o administrador pode ver essa senha." };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: req } = await supabaseAdmin
+      .from("partner_service_requests")
+      .select("id, user_id, ssh_password_enc")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (!req || !(req as any).ssh_password_enc) return { error: "Esse chamado não tem senha guardada." };
+
+    const { decrypt } = await import("@/lib/yaarsa.server");
+    await supabaseAdmin.from("audit_logs").insert({
+      user_id: context.userId,
+      action: "partner_server_password_reveal",
+      details: { request_id: (req as any).id, owner: (req as any).user_id },
+    });
+    return { ok: true, password: decrypt((req as any).ssh_password_enc) };
   });
