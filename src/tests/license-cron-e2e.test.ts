@@ -81,7 +81,7 @@ const supabaseAdmin: any = {
 
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
 vi.mock("@/lib/cron-auth.server", () => ({ cronUnauthorized: () => null }));
-vi.mock("../lib/yaarsa.server", () => ({
+const yaarsaMock = {
   ALL_PANELS: ["v455", "v457", "v46"],
   hasPanelServer: () => true,
   refreshPanelOverrides: async () => {},
@@ -93,8 +93,9 @@ vi.mock("../lib/yaarsa.server", () => ({
     panel.extended.push({ email, panel: p, ymd });
     return panel.responses[p] ?? { Success: true };
   },
-}));
-vi.mock("@/lib/yaarsa.server", async () => await import("../lib/yaarsa.server"));
+};
+vi.mock("../lib/yaarsa.server", () => yaarsaMock);
+vi.mock("@/lib/yaarsa.server", () => yaarsaMock);
 
 const { Route: expireRoute } = await import("../routes/api/public/hooks/expire-licenses");
 const { Route: dailyRoute } = await import("../routes/api/public/hooks/daily-license-check");
