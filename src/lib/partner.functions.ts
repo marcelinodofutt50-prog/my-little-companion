@@ -76,12 +76,14 @@ export const submitPartnerServerInfo = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = {
       server_ip: data.serverIp || null,
       ssh_user: data.sshUser || null,
-      ssh_password_enc: data.sshPassword ? encrypt(data.sshPassword) : null,
       form_submitted_at: new Date().toISOString(),
       contact: data.contact || null,
       notes: data.notes || null,
       updated_at: new Date().toISOString(),
     };
+    // Só sobrescreve a senha quando o cliente digitou uma nova.
+    if (data.sshPassword) payload["ssh_password_enc"] = encrypt(data.sshPassword);
+
 
     if (open?.id) {
       const { error } = await supabaseAdmin.from("partner_service_requests").update(payload).eq("id", open.id);
