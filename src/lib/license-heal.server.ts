@@ -90,7 +90,7 @@ export async function healLicenseLogin(
     (typeof hasPanelServer === "function" ? hasPanelServer(p) : true) &&
     (typeof isPanelHealthy === "function" ? isPanelHealthy(p) : true);
   const preferred = normalizePanel(lic.panel);
-  const panel = configured(preferred)
+  let panel = configured(preferred)
     ? preferred
     : ((["v457", "v46", "v455"] as const).find(configured) ?? preferred);
   if (panel !== preferred) steps.push(`painel-alternativo:${preferred}->${panel}`);
