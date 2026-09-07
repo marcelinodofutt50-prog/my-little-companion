@@ -800,7 +800,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
 
                 {g.messages.map((m, mi) => {
                   const quoted = m.reply_to_id ? msgs.find((q) => q.id === m.reply_to_id) : null;
-                  const staffSender = messageSender(m, g.author === "staff" ? g.sender : undefined);
+                  const staffSender = messageSender(m, g.sender);
                   const isLast = mi === g.messages.length - 1;
                   // Rabinho da bolha só na última do bloco, como no WhatsApp.
                   const tail =
