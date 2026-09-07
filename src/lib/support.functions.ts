@@ -365,7 +365,13 @@ export const sendMessage = createServerFn({ method: "POST" })
         context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
       ]);
       const meta: any = (myProfile as any)?.metadata ?? {};
-      const rawRole = (myRoles ?? []).find((r: any) => r.role === "admin")?.role ?? (myRoles?.[0] as any)?.role;
+      // O cargo precisa aparecer sempre. Se a leitura direta de user_roles for
+      // bloqueada por RLS, usamos o cargo já resolvido pelas RPCs.
+      const resolvedRole = isAdminRole ? "admin" : isModerator ? "moderator" : isSupport ? "support" : "staff";
+      const rawRole =
+        (myRoles ?? []).find((r: any) => r.role === "admin")?.role ??
+        (myRoles?.[0] as any)?.role ??
+        resolvedRole;
       staffIdentity = {
         name: meta.nickname || (myProfile as any)?.display_name || (myProfile as any)?.full_name || (myProfile as any)?.email?.split("@")[0] || null,
         role: rawRole || null,
