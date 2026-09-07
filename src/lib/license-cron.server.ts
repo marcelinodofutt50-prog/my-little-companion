@@ -96,6 +96,21 @@ export function suspendAccountAnyPanel(
   return sweep(email, preferred, (panel) => yaarsaExtend(email, ymd, panel));
 }
 
+/**
+ * Alinha a validade da conta no painel com a validade salva no site.
+ * O painel corta o login à meia-noite, então gravamos +1 dia de folga.
+ */
+export function setExpiryAnyPanel(
+  email: string,
+  preferred: string | null | undefined,
+  expiresAt: string | Date,
+) {
+  const d = new Date(expiresAt);
+  d.setDate(d.getDate() + 1);
+  const ymd = d.toISOString().slice(0, 10);
+  return sweep(email, preferred, (panel) => yaarsaExtend(email, ymd, panel));
+}
+
 export function yesterdayYmd(): string {
   const d = new Date();
   d.setDate(d.getDate() - 1);
