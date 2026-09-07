@@ -1559,6 +1559,107 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_entitlements: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          kind: string
+          metadata: Json
+          order_id: string | null
+          plan_slug: string
+          server_host: string | null
+          server_notes: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind: string
+          metadata?: Json
+          order_id?: string | null
+          plan_slug: string
+          server_host?: string | null
+          server_notes?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          order_id?: string | null
+          plan_slug?: string
+          server_host?: string | null
+          server_notes?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      partner_service_requests: {
+        Row: {
+          contact: string | null
+          created_at: string
+          entitlement_id: string | null
+          id: string
+          kind: string
+          notes: string | null
+          server_ip: string | null
+          ssh_user: string | null
+          staff_notes: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          entitlement_id?: string | null
+          id?: string
+          kind: string
+          notes?: string | null
+          server_ip?: string | null
+          ssh_user?: string | null
+          staff_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          entitlement_id?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+          server_ip?: string | null
+          ssh_user?: string | null
+          staff_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_service_requests_entitlement_id_fkey"
+            columns: ["entitlement_id"]
+            isOneToOne: false
+            referencedRelation: "partner_entitlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_requests: {
         Row: {
           admin_notes: string | null
