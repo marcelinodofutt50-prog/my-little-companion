@@ -15,7 +15,10 @@ export const getMyPartnerArea = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false }),
       context.supabase
         .from("partner_service_requests" as any)
-        .select("id, kind, status, server_ip, contact, notes, staff_notes, created_at, updated_at")
+        .select(
+          "id, kind, status, server_ip, ssh_user, form_submitted_at, contact, notes, staff_notes, created_at, updated_at",
+        )
+
         .eq("user_id", context.userId)
         .order("created_at", { ascending: false })
         .limit(20),
