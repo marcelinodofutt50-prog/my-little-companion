@@ -24,6 +24,7 @@ import { useI18n } from "@/lib/i18n";
 import { TrustBadges } from "@/components/TrustBadges";
 import { HowItWorksSteps } from "@/components/HowItWorksSteps";
 import { PlanAdvisor } from "@/components/PlanAdvisor";
+import { PartnerSection } from "@/components/PartnerSection";
 import { CheckoutFaqFloat } from "@/components/CheckoutFaqFloat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -478,7 +479,7 @@ function PlansPage() {
     );
   }
 
-  const { licenses, servers, sources, upgrades, addons } = useMemo(() => {
+  const { licenses, servers, sources, upgrades, addons, partners } = useMemo(() => {
     const seen = new Set<string>();
     const unique = plans.filter((p) => {
       const key = `${p.category}|${p.price_brl}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
@@ -522,6 +523,7 @@ function PlansPage() {
       sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
       upgrades: applyBillingFilter(upgradeList),
       addons: applyBillingFilter(addonList),
+      partners: unique.filter((p) => p.category === "partner").sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
     };
   }, [plans, isLegacy, usage, billingCycle]);
 
@@ -945,6 +947,12 @@ function PlansPage() {
           </div>
 
         </div>
+
+        {partners.length > 0 ? (
+          <PartnerSection plans={partners} onBuy={buy} loadingPlan={loadingPlan} />
+        ) : null}
+
+
 
         {plans.length === 0 ? (
           <div className="mb-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/30 bg-primary/5 p-12 text-center">

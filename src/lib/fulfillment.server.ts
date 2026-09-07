@@ -371,6 +371,37 @@ async function fulfillOrderInner(orderId: string) {
     return { ok: true, reason: `${planRow.category}:${planRow.slug}` };
   }
 
+  // ============ Parceria: revenda / subida de servidor / gestão mensal ============
+  if (planRow?.category === "partner") {
+    const { grantPartnerEntitlement } = await import("@/lib/partner.server");
+    const granted = await grantPartnerEntitlement(supabaseAdmin, {
+      userId: beneficiaryId,
+      orderId,
+      planSlug: planRow.slug,
+      days: null,
+    });
+    await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
+    await supabaseAdmin.from("integration_logs").insert({
+      source: "partner",
+      action: "entitlement_granted",
+      outcome: granted.ok ? "success" : "error",
+      context: { order_id: orderId, user_id: beneficiaryId, plan: planRow.slug, kind: granted.kind, entitlement_id: granted.entitlementId, error: granted.error ?? null } as any,
+    } as any);
+    if (!granted.ok) {
+      // Pagamento recebido, mas o acesso não foi liberado: devolve falha para o webhook
+      // tentar de novo (a liberação é idempotente por pedido) e alerta a equipe.
+      await supabaseAdmin.from("webhook_logs").insert({
+        source: "partner",
+        note: `Falha ao liberar parceria do pedido ${orderId} (${planRow.slug}): ${granted.error ?? "erro desconhecido"}`,
+        processed: false,
+      } as any);
+      return { ok: false, reason: `partner-grant-failed:${granted.error ?? "unknown"}` };
+    }
+    return { ok: true, reason: `partner:${granted.kind}` };
+  }
+
+
+
   const { resolvePanelFromPlanSlug } = await import("@/lib/yaarsa.server");
   const targetPanel = await resolvePanelFromPlanSlug(order.plan_slug);
   const creds = generateCredentials();

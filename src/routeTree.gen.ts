@@ -39,6 +39,7 @@ import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authentica
 import { Route as AuthenticatedStaffAcademyRouteImport } from './routes/_authenticated/staff-academy'
 import { Route as AuthenticatedShadowPassRouteImport } from './routes/_authenticated/shadow-pass'
 import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
+import { Route as AuthenticatedParceiroRouteImport } from './routes/_authenticated/parceiro'
 import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authenticated/fidelidade'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -217,6 +218,11 @@ const AuthenticatedPlayProtectRoute =
     path: '/play-protect',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedParceiroRoute = AuthenticatedParceiroRouteImport.update({
+  id: '/parceiro',
+  path: '/parceiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFidelidadeRoute = AuthenticatedFidelidadeRouteImport.update({
   id: '/fidelidade',
   path: '/fidelidade',
@@ -378,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
+  '/parceiro': typeof AuthenticatedParceiroRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/staff-academy': typeof AuthenticatedStaffAcademyRoute
@@ -434,6 +441,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
+  '/parceiro': typeof AuthenticatedParceiroRoute
   '/play-protect': typeof AuthenticatedPlayProtectRoute
   '/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/staff-academy': typeof AuthenticatedStaffAcademyRoute
@@ -492,6 +500,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fidelidade': typeof AuthenticatedFidelidadeRoute
+  '/_authenticated/parceiro': typeof AuthenticatedParceiroRoute
   '/_authenticated/play-protect': typeof AuthenticatedPlayProtectRoute
   '/_authenticated/shadow-pass': typeof AuthenticatedShadowPassRoute
   '/_authenticated/staff-academy': typeof AuthenticatedStaffAcademyRoute
@@ -550,6 +559,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/fidelidade'
+    | '/parceiro'
     | '/play-protect'
     | '/shadow-pass'
     | '/staff-academy'
@@ -606,6 +616,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/fidelidade'
+    | '/parceiro'
     | '/play-protect'
     | '/shadow-pass'
     | '/staff-academy'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/fidelidade'
+    | '/_authenticated/parceiro'
     | '/_authenticated/play-protect'
     | '/_authenticated/shadow-pass'
     | '/_authenticated/staff-academy'
@@ -955,6 +967,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlayProtectRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/parceiro': {
+      id: '/_authenticated/parceiro'
+      path: '/parceiro'
+      fullPath: '/parceiro'
+      preLoaderRoute: typeof AuthenticatedParceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fidelidade': {
       id: '/_authenticated/fidelidade'
       path: '/fidelidade'
@@ -1148,6 +1167,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFidelidadeRoute: typeof AuthenticatedFidelidadeRoute
+  AuthenticatedParceiroRoute: typeof AuthenticatedParceiroRoute
   AuthenticatedPlayProtectRoute: typeof AuthenticatedPlayProtectRoute
   AuthenticatedShadowPassRoute: typeof AuthenticatedShadowPassRoute
   AuthenticatedStaffAcademyRoute: typeof AuthenticatedStaffAcademyRoute
@@ -1164,6 +1184,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFidelidadeRoute: AuthenticatedFidelidadeRoute,
+  AuthenticatedParceiroRoute: AuthenticatedParceiroRoute,
   AuthenticatedPlayProtectRoute: AuthenticatedPlayProtectRoute,
   AuthenticatedShadowPassRoute: AuthenticatedShadowPassRoute,
   AuthenticatedStaffAcademyRoute: AuthenticatedStaffAcademyRoute,
