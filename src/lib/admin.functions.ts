@@ -176,7 +176,15 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
     const { error: extErr } = await supabaseAdmin
       .from("licenses").update(patch as any).eq("id", data.licenseId);
     if (extErr) throw new Error(extErr.message);
-    return { ok: true, expires_at: target.toISOString(), server_paid_until: patch.server_paid_until ?? (lic as any).server_paid_until };
+    return {
+      ok: true,
+      expires_at: target.toISOString(),
+      server_paid_until: patch.server_paid_until ?? (lic as any).server_paid_until,
+      panelSynced,
+      warning: panelSynced
+        ? null
+        : `A validade foi salva aqui, mas o painel de logins não confirmou agora${panelError ? ` (${panelError.slice(0, 120)})` : ""}. Use "Corrigir login" se o cliente não conseguir entrar.`,
+    };
   });
 
 
