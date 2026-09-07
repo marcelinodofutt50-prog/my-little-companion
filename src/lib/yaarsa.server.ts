@@ -862,6 +862,8 @@ async function yaarsaPost(
             statusCode: res.status,
             attempt: attempt + 1
           };
+          const transientHttp =
+            res.status === 408 || res.status === 429 || res.status >= 500;
           await persistLog({
             panel,
             action,
@@ -870,13 +872,16 @@ async function yaarsaPost(
             attempt: attempt + 1,
             http_status: status,
             latency_ms: latency,
-            outcome: "http_error",
+            outcome: transientHttp && attempt < MAX_ATTEMPTS - 1 ? "http_error_retry" : "http_error",
             payload: debugPayload,
             response_body: text,
             error: lastFail.Fail,
             context: { routing: routingSummary, response: responseMeta },
           });
+          // Erros temporários (timeout/sobrecarga do painel) merecem nova tentativa.
+          if (transientHttp && attempt < MAX_ATTEMPTS - 1) continue;
           break;
+
         }
       } catch (err) {
         const latency = Date.now() - started;
