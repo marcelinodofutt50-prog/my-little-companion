@@ -24,6 +24,7 @@ import { useI18n } from "@/lib/i18n";
 import { TrustBadges } from "@/components/TrustBadges";
 import { HowItWorksSteps } from "@/components/HowItWorksSteps";
 import { PlanAdvisor } from "@/components/PlanAdvisor";
+import { PartnerSection } from "@/components/PartnerSection";
 import { CheckoutFaqFloat } from "@/components/CheckoutFaqFloat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
