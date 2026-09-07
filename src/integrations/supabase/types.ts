@@ -1559,6 +1559,39 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_customers: {
+        Row: {
+          archived_at: string | null
+          contact: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          partner_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          partner_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          partner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       partner_entitlements: {
         Row: {
           created_at: string
@@ -1606,6 +1639,122 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      partner_licenses: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          expires_at: string | null
+          id: string
+          last_sync_at: string | null
+          paid: boolean
+          panel: string
+          panel_email: string | null
+          panel_password_enc: string | null
+          panel_username: string | null
+          partner_id: string
+          plan_slug: string
+          price_cents: number
+          status: string
+          sync_error: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          expires_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          paid?: boolean
+          panel?: string
+          panel_email?: string | null
+          panel_password_enc?: string | null
+          panel_username?: string | null
+          partner_id: string
+          plan_slug?: string
+          price_cents?: number
+          status?: string
+          sync_error?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          expires_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          paid?: boolean
+          panel?: string
+          panel_email?: string | null
+          panel_password_enc?: string | null
+          panel_username?: string | null
+          partner_id?: string
+          plan_slug?: string
+          price_cents?: number
+          status?: string
+          sync_error?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_licenses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "partner_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          customer_id: string | null
+          id: string
+          license_id: string | null
+          method: string
+          note: string | null
+          paid_at: string
+          partner_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          license_id?: string | null
+          method?: string
+          note?: string | null
+          paid_at?: string
+          partner_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          license_id?: string | null
+          method?: string
+          note?: string | null
+          paid_at?: string
+          partner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "partner_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_payments_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "partner_licenses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partner_service_requests: {
         Row: {
