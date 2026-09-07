@@ -116,8 +116,7 @@ function TutorialsPage() {
       if (forceRepair) {
         toast.loading("Sincronizando banco de dados...", { id: "sync-toast" });
         const { supabase } = await import("@/integrations/supabase/client");
-        await (supabase as any).rpc("force_refresh_schema_permissions");
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // O recarregamento de permissões é server-only; aqui só reaquecemos a leitura.
         await (supabase as any).from("tutorials").select("id").limit(1);
         await new Promise(resolve => setTimeout(resolve, 1500));
       }

@@ -14,7 +14,10 @@ export const getPlayProtectStatus = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
 
     // Force expired stale jobs cleanup
-    try { await supabase.rpc("expire_stale_apk_jobs"); } catch { /* ignore */ }
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.rpc("expire_stale_apk_jobs");
+    } catch { /* ignore */ }
 
     // Check if the user has an active plan that specifically supports Play Protect
     const { hasActivePlayProtect } = await import("@/lib/play-protect-access.server");

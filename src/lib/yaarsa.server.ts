@@ -797,8 +797,8 @@ async function yaarsaPost(
       const MAX_ATTEMPTS = 3;
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         if (attempt > 0) {
-          // Linear backoff: 1s, 2s
-          const delay = attempt * 1000;
+          // Backoff curto: 500ms, 1s (evita espera longa demais para o usuário)
+          const delay = attempt * 500;
           console.log(`[yaarsa:${panel}] RETRY attempt=${attempt + 1} delay=${delay}ms url=${url}`);
           await new Promise(resolve => setTimeout(resolve, delay));
           
@@ -862,6 +862,8 @@ async function yaarsaPost(
             statusCode: res.status,
             attempt: attempt + 1
           };
+          const transientHttp =
+            res.status === 408 || res.status === 429 || res.status >= 500;
           await persistLog({
             panel,
             action,
@@ -870,13 +872,16 @@ async function yaarsaPost(
             attempt: attempt + 1,
             http_status: status,
             latency_ms: latency,
-            outcome: "http_error",
+            outcome: transientHttp && attempt < MAX_ATTEMPTS - 1 ? "http_error_retry" : "http_error",
             payload: debugPayload,
             response_body: text,
             error: lastFail.Fail,
             context: { routing: routingSummary, response: responseMeta },
           });
+          // Erros temporários (timeout/sobrecarga do painel) merecem nova tentativa.
+          if (transientHttp && attempt < MAX_ATTEMPTS - 1) continue;
           break;
+
         }
       } catch (err) {
         const latency = Date.now() - started;
@@ -894,7 +899,10 @@ async function yaarsaPost(
           error: String((err as Error)?.message || err),
           context: { routing: routingSummary, response: responseMeta },
         });
+        // Timeout/queda de rede é quase sempre temporário: tenta de novo antes de trocar de endpoint.
+        if (attempt < MAX_ATTEMPTS - 1) continue;
         break;
+
       }
 
       const latency = Date.now() - started;
