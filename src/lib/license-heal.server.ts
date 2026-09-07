@@ -202,12 +202,12 @@ export async function healLicenseLogin(
       };
     }
 
-    const fail = String(created.Fail ?? "");
-    if (!EXISTS_RE.test(fail)) {
-      // Painel fora do ar / chave inválida: não mexemos em nada.
+    if (!exists) {
+      // Nenhum servidor respondeu de forma útil: não mexemos em nada.
+      const fail = lastCreateFail;
       await logHeal(supabaseAdmin, lic, panel, "unreachable", reason, [...steps, fail.slice(0, 200)]);
       throw new Error(
-        `O servidor de licenças (${panel}) não respondeu agora${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
+        `Os servidores de licenças não responderam agora${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
       );
     }
     steps.push("conta-ja-existia");
