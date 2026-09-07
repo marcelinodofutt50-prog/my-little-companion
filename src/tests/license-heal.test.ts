@@ -51,7 +51,6 @@ vi.mock("../lib/yaarsa.server", () => ({
     (u || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user",
   isPanelHealthy: () => true,
   refreshPanelOverrides: async () => {},
-  generateCredentials: () => ({ username: "shadow_new", email: "shadow_new@shadow.app", password: "Nv#2026abc" }),
   encrypt: (v: string) => `enc:${v}`,
   decrypt: (v: string) => String(v).replace(/^enc:/, ""),
 }));
@@ -154,12 +153,24 @@ describe("healLicenseLogin", () => {
     expect(state.create[0].email).toBe("cliente1@shadow.app");
   });
 
-  it("emite login novo quando a licença não tem senha guardada", async () => {
-    state.createResponses = [{ Success: true }];
-    const res = await healLicenseLogin({ ...baseLic, yaarsa_password_enc: null }, { reason: "test" });
-    expect(res.action).toBe("recreated");
-    expect(res.credentials.email).toBe("shadow_new@shadow.app");
-    expect(res.steps).toContain("sem-senha-guardada:credenciais-novas");
+  it("nunca inventa login novo quando a licença não tem senha guardada", async () => {
+    await expect(
+      healLicenseLogin({ ...baseLic, yaarsa_password_enc: null }, { reason: "test" }),
+    ).rejects.toThrow(/nenhum login novo foi criado/i);
+    expect(state.create).toHaveLength(0);
+    expect(state.removed).toHaveLength(0);
+  });
+
+  it("tenta até servidores marcados como indisponíveis numa correção manual", async () => {
+    const mod = await import("../lib/yaarsa.server");
+    vi.mocked(mod.isPanelHealthy).mockImplementation((panel: string) => panel !== "v457");
+    state.createResponses = [{ Fail: "connection timeout" }, { Success: true }];
+    state.probeResponses = [{ state: "unknown", detail: "timeout" }, { state: "found", detail: "" }];
+
+    const res = await healLicenseLogin(baseLic, { reason: "test" });
+    expect(res.action).toBe("created");
+    expect(state.create.length).toBeGreaterThanOrEqual(2);
+    vi.mocked(mod.isPanelHealthy).mockImplementation(() => true);
   });
 
   it("tenta outro painel quando o preferido está com a cota cheia", async () => {

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertStaff } from "./admin-helpers.server";
 
 /**
  * Procedimento "Fix Login" (sacudir registro):
@@ -7,8 +8,11 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  * forçando uma atualização de expiração (+1 dia e volta).
  */
 export const fixLoginInconsistency = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((d: { licenseId: string }) => d)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await supabaseAdmin.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic || lic.disabled_at) throw new Error("Licença inválida ou inexistente");
 

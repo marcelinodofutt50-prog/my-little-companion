@@ -239,11 +239,20 @@ function DashboardPage() {
     try {
       const result = await syncLicensesFn()
       if (result.ok) {
-        toast.success(`Integridade restaurada! ${result.synced} licença(s) foram sincronizadas com sucesso.`)
-        refetchLicenses()
+        toast.success(result.message || `Integridade restaurada! ${result.synced} licença(s) foram confirmadas.`)
+      } else {
+        const firstFailure = result.details?.find((item: any) => item.status === 'failed')?.message
+        toast.error(result.message || "Não foi possível confirmar todas as licenças.", {
+          description: firstFailure || "Tente novamente ou contate o suporte.",
+          duration: 9000,
+        })
       }
-    } catch (err) {
-      toast.error("Falha na sincronização automática. Tente novamente ou contate o suporte.")
+      void refetchLicenses()
+    } catch (err: any) {
+      toast.error("Falha na sincronização automática.", {
+        description: err?.message || "Tente novamente ou contate o suporte.",
+        duration: 9000,
+      })
     } finally {
       setSyncing(false)
     }

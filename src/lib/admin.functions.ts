@@ -74,7 +74,7 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { yaarsaRemoveAccount } = await import("./yaarsa.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await supabaseAdmin
@@ -124,7 +124,7 @@ export const adminExtendLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ licenseId: z.string().uuid(), newExpireDate: z.string() }).parse(i))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { yaarsaExtend, hasPanelServer, refreshPanelOverrides } = await import("./yaarsa.server");
     const { supabaseAdmin: sbRead } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await sbRead.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
