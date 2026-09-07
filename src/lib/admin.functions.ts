@@ -2022,7 +2022,7 @@ export const adminHealLicenseLogin = createServerFn({ method: "POST" })
     z.object({ licenseId: z.string().uuid(), forceRecreate: z.boolean().optional() }).parse(i),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lic } = await supabaseAdmin
       .from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
@@ -2059,7 +2059,7 @@ export const adminHealUserLogins = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), forceRecreate: z.boolean().optional() }).parse(i),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("licenses")
