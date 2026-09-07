@@ -9,27 +9,23 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * Toda escrita passa por aqui e exige um acesso "reseller" ativo.
  */
 
-const PLAN_DAYS: Record<string, number> = {
-  "login-7d": 7,
-  "login-30d": 30,
-  "login-lifetime": 7300,
-};
-
-function addDays(base: Date, days: number) {
-  const d = new Date(base);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+import {
+  addDays,
+  decideSyncAction,
+  isResellerEntitlementActive,
+  PARTNER_PLAN_DAYS as PLAN_DAYS,
+  planPartnerRenewal,
+  summarizeDesk,
+} from "@/lib/partner-reseller.server";
 
 async function requireResellerPartner(context: any) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { isEntitlementActive } = await import("@/lib/partner.server");
   const { data: ents } = await supabaseAdmin
     .from("partner_entitlements")
     .select("id, kind, status, expires_at")
     .eq("user_id", context.userId)
     .eq("kind", "reseller");
-  const ent = (ents ?? []).find((e: any) => isEntitlementActive(e));
+  const ent = (ents ?? []).find((e: any) => isResellerEntitlementActive(e));
   if (!ent) return { admin: supabaseAdmin, error: "Você precisa de um servidor de revenda ativo para usar esta área." };
   return { admin: supabaseAdmin, entitlementId: (ent as any).id };
 }
@@ -67,12 +63,7 @@ export const getPartnerDesk = createServerFn({ method: "GET" })
       customers: (customers ?? []) as any[],
       licenses: lic,
       payments: pay,
-      summary: {
-        customers: (customers ?? []).length,
-        activeLicenses: lic.filter((l) => l.status === "active").length,
-        pendingSync: lic.filter((l) => l.status === "pending_sync").length,
-        revenueCents: pay.reduce((s, p) => s + (p.amount_cents ?? 0), 0),
-      },
+      summary: summarizeDesk(lic, pay, (customers ?? []) as any[]),
     };
   });
 
@@ -205,7 +196,16 @@ export const partnerSyncLicense = createServerFn({ method: "POST" })
     let ok = false;
     let detail = "";
 
-    if (probe.state === "found") {
+    const action = decideSyncAction(probe.state);
+    if (action === "abort") {
+      await admin
+        .from("partner_licenses")
+        .update({ sync_error: "O painel não respondeu agora. Tente sincronizar em instantes." })
+        .eq("id", data.licenseId);
+      return { error: "O painel não respondeu agora. Tente sincronizar em instantes." };
+    }
+
+    if (action === "reaffirm") {
       const pw = await yaarsa.yaarsaSetPassword(
         (lic as any).panel_email,
         password,
@@ -215,7 +215,13 @@ export const partnerSyncLicense = createServerFn({ method: "POST" })
       );
       ok = Boolean(pw.Success);
       detail = pw.Fail || "";
-      if (ok && expireDate) await yaarsa.yaarsaExtend((lic as any).panel_email, expireDate, panel);
+      if (ok && expireDate) {
+        const ext = await yaarsa.yaarsaExtend((lic as any).panel_email, expireDate, panel);
+        if (!ext.Success) {
+          ok = false;
+          detail = ext.Fail || "O painel não confirmou a validade.";
+        }
+      }
     } else {
       const res = await yaarsa.yaarsaCreateAccount({
         username: (lic as any).panel_username || yaarsa.sanitizePanelUsername((lic as any).panel_email),
@@ -227,7 +233,13 @@ export const partnerSyncLicense = createServerFn({ method: "POST" })
       });
       ok = Boolean(res.Success);
       detail = res.Fail || "";
-      if (ok && expireDate) await yaarsa.yaarsaExtend((lic as any).panel_email, expireDate, panel);
+      if (ok && expireDate) {
+        const ext = await yaarsa.yaarsaExtend((lic as any).panel_email, expireDate, panel);
+        if (!ext.Success) {
+          ok = false;
+          detail = ext.Fail || "O painel não confirmou a validade.";
+        }
+      }
     }
 
     await admin
@@ -308,9 +320,7 @@ export const partnerRegisterPayment = createServerFn({ method: "POST" })
     let panelWarning: string | null = null;
 
     if (data.renew) {
-      const days = PLAN_DAYS[(lic as any).plan_slug] ?? 30;
-      const base = newExpires && newExpires.getTime() > Date.now() ? newExpires : new Date();
-      newExpires = addDays(base, days);
+      newExpires = planPartnerRenewal((lic as any).plan_slug, (lic as any).expires_at ?? null);
       const yaarsa = await import("@/lib/yaarsa.server");
       const res = await yaarsa.yaarsaExtend(
         (lic as any).panel_email,
