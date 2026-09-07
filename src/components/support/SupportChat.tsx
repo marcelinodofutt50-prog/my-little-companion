@@ -131,11 +131,15 @@ function groupMessages(
   for (const m of msgs) {
     const mine = !!m.sender_id && m.sender_id === userId;
     const author: Group["author"] = m.is_system ? "system" : mine ? "me" : "staff";
-    const sender = !mine && m.is_admin && m.sender_id ? senders[m.sender_id] : undefined;
+    // Também mostramos identidade nas mensagens do próprio atendente, para a
+    // equipe enxergar nome + cargo do lado das próprias respostas.
+    const sender = m.is_admin && m.sender_id ? senders[m.sender_id] : undefined;
     const label = m.is_system
       ? "Assistente Shadow"
       : mine
-        ? "Você"
+        ? sender
+          ? `${sender.name} · ${sender.roleLabel}`
+          : "Você"
         : m.is_admin
           ? sender
             ? `${sender.name} · ${sender.roleLabel}`
