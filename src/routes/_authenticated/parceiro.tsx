@@ -14,6 +14,8 @@ import {
   Users,
 } from "lucide-react";
 import { getMyPartnerArea, submitPartnerServerInfo } from "@/lib/partner.functions";
+import { PartnerResellerDesk } from "@/components/partner/PartnerResellerDesk";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
