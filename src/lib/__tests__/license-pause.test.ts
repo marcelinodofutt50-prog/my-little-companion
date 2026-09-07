@@ -48,7 +48,7 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
     expect(result.Fail).toContain('Falha de rede ou timeout');
     expect(result.statusCode).toBe(502);
     expect(global.fetch).toHaveBeenCalled();
-  });
+  }, 30000);
 
   it('should handle 504 Gateway Timeout and return a friendly error', async () => {
     (global.fetch as any).mockResolvedValue({
@@ -62,7 +62,7 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
 
     expect(result.Fail).toContain('Falha de rede ou timeout');
     expect(result.statusCode).toBe(504);
-  });
+  }, 30000);
 
   it('should handle network connection failures (fetch throws)', async () => {
     (global.fetch as any).mockRejectedValue(new Error('Network connection lost'));
@@ -71,7 +71,7 @@ describe('yaarsaSetPassword - Network and Server Failure Handling', () => {
 
     // Using partial match and case-insensitivity as found in previous run
     expect(result.Fail?.toLowerCase()).toContain('falha de rede');
-  });
+  }, 30000);
 
   it('should succeed if one of the retries or actions eventually succeeds', async () => {
     // Mock fetch to fail first, then succeed

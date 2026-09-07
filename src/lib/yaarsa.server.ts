@@ -797,8 +797,8 @@ async function yaarsaPost(
       const MAX_ATTEMPTS = 3;
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         if (attempt > 0) {
-          // Linear backoff: 1s, 2s
-          const delay = attempt * 1000;
+          // Backoff curto: 500ms, 1s (evita espera longa demais para o usuário)
+          const delay = attempt * 500;
           console.log(`[yaarsa:${panel}] RETRY attempt=${attempt + 1} delay=${delay}ms url=${url}`);
           await new Promise(resolve => setTimeout(resolve, delay));
           
