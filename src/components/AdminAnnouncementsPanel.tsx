@@ -133,6 +133,13 @@ export function AdminAnnouncementsPanel() {
       toast.error("Preencha título e mensagem");
       return;
     }
+    // Publicado só faz sentido visível: evita o aviso "publicado" que nunca aparece.
+    const isActive = form.status === "published" ? true : form.is_active;
+    const endsAt = fromLocalInput(form.ends_at);
+    if (form.status === "published" && endsAt && new Date(endsAt).getTime() < Date.now()) {
+      toast.error("A data em 'Some em' já passou — o aviso não apareceria para ninguém.");
+      return;
+    }
     setSaving(true);
     try {
       await saveFn({
