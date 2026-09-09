@@ -56,8 +56,42 @@ function normalizePanel(p: string | null | undefined): "v455" | "v457" | "v46" {
 /**
  * Repara o login de UMA licença. Nunca deixa o cliente sem credenciais
  * funcionais: ou a conta antiga passa a existir, ou uma nova é emitida.
+ *
+ * A correção é EXCLUSIVA por licença: dois cliques (cliente + suporte, ou duas
+ * abas) não podem apagar/recriar a mesma conta ao mesmo tempo — era assim que
+ * o cliente terminava sem conta nenhuma no painel.
  */
 export async function healLicenseLogin(
+  lic: HealLicense,
+  opts?: { reason?: string; forceRecreate?: boolean },
+): Promise<HealResult> {
+  const lockKey = `license-heal:${lic.id}`;
+  let locked = false;
+  try {
+    const { acquireOpLock } = await import("./audit-trail.server");
+    locked = await acquireOpLock(lockKey, 180, opts?.reason ?? "heal");
+    if (!locked) {
+      throw new Error(
+        "Já existe uma correção em andamento para esta licença. Aguarde alguns segundos e confira o login antes de tentar de novo.",
+      );
+    }
+  } catch (e: any) {
+    // Se a trava em si estiver indisponível, seguimos — mas nunca engolimos o
+    // aviso de "já em andamento".
+    if (String(e?.message ?? "").startsWith("Já existe uma correção")) throw e;
+  }
+
+  try {
+    return await runHeal(lic, opts);
+  } finally {
+    if (locked) {
+      const { releaseOpLock } = await import("./audit-trail.server");
+      await releaseOpLock(lockKey);
+    }
+  }
+}
+
+async function runHeal(
   lic: HealLicense,
   opts?: { reason?: string; forceRecreate?: boolean },
 ): Promise<HealResult> {
