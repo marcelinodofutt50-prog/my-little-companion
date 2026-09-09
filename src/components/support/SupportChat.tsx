@@ -617,6 +617,13 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           replyToId: replyToId ?? undefined,
         },
       });
+      // O servidor pode reabrir/reaproveitar outra conversa (thread fechada).
+      // Nesse caso avisamos a página para seguir a conversa nova, senão o
+      // cliente ficaria olhando um canal onde nada mais chega.
+      const serverThreadId = typeof res?.thread_id === "string" ? res.thread_id : null;
+      if (serverThreadId && serverThreadId !== threadId) {
+        onThreadMigrated?.(serverThreadId);
+      }
       setMsgs((prev) => {
         const normalized = normalizeSupportMessage(res, threadId);
         if (prev.some((m) => m.id === normalized.id)) return prev;
