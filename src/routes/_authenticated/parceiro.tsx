@@ -156,6 +156,17 @@ function PartnerPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
+          {isAdmin && entitlements.length === 0 ? (
+            <div className="rounded-2xl border border-primary/40 bg-primary/5 p-5 md:col-span-2">
+              <div className="flex items-center gap-2 font-display text-lg">
+                <Crown className="h-4 w-4 text-primary" /> Acesso da administração
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Você é da administração, então tem acesso liberado a toda a Área do Parceiro, incluindo a mesa de
+                revenda abaixo, mesmo sem ter contratado um plano.
+              </p>
+            </div>
+          ) : null}
           {entitlements.map((e: any) => (
             <div
               key={e.id}
