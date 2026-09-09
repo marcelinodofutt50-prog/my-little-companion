@@ -20,12 +20,12 @@ import {
 
 /** Administradores têm acesso total à área do parceiro, sem precisar comprar. */
 async function isAdminUser(context: any) {
-  try {
-    const { data } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    return Boolean(data);
-  } catch {
-    return false;
-  }
+  const { resolveRoles } = await import("@/lib/roles.server");
+  const { isAdmin } = await resolveRoles({
+    supabase: context.supabase,
+    userId: context.userId,
+  });
+  return isAdmin;
 }
 
 async function requireResellerPartner(context: any) {
