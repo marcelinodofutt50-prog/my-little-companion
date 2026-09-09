@@ -437,8 +437,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           a.created_at === b.created_at ? (a.id < b.id ? -1 : 1) : a.created_at < b.created_at ? -1 : 1,
         );
       });
-      if (before) setHasMore(!!r.hasMore);
-      else if (msgs.length === 0) setHasMore(!!r.hasMore);
+      setHasMore(!!r.hasMore);
     } catch (e: any) {
       // eslint-disable-next-line no-console
       console.error("[SupportChat] listMessages error:", e);
