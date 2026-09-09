@@ -160,9 +160,15 @@ export function AdminAnnouncementsPanel() {
           attachment_name: form.attachment_name || null,
         },
       });
-      const msg = form.status === "published" ? "Anúncio publicado" : 
-                 form.status === "review" ? "Enviado para revisão" : "Salvo como rascunho";
-      toast.success(msg);
+      if (form.status === "published") {
+        toast.success("Anúncio publicado — já aparece no painel dos clientes");
+      } else {
+        toast.warning(
+          form.status === "review"
+            ? "Enviado para revisão — ainda NÃO aparece para os clientes"
+            : "Salvo como rascunho — ainda NÃO aparece para os clientes",
+        );
+      }
       setForm(emptyForm);
       setShowForm(false);
       await refresh();
