@@ -385,7 +385,9 @@ export function AdminAnnouncementsPanel() {
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div>
-              <label className="font-mono text-[10px] uppercase text-muted-foreground">Status do Fluxo</label>
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">
+                Status do Fluxo <span className="text-primary">(só "Publicado" aparece p/ clientes)</span>
+              </label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value as AnnouncementStatus })}
@@ -463,7 +465,7 @@ export function AdminAnnouncementsPanel() {
             </Button>
             <Button size="sm" onClick={submit} disabled={saving} className="gap-1.5 font-mono text-[11px] uppercase">
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Megaphone className="h-3.5 w-3.5" />}
-              {form.id ? "Salvar" : "Publicar anúncio"}
+              {form.status === "published" ? (form.id ? "Salvar e publicar" : "Publicar anúncio") : "Salvar sem publicar"}
             </Button>
           </div>
         </div>
