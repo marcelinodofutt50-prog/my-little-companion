@@ -60,6 +60,7 @@ export function AdminRedeemCodesPanel() {
         data: {
           kind,
           ...(kind === "license_days" ? { days, planSlug: planSlug as any } : {}),
+          ...(kind === "partner_access" ? { partnerPlan: partnerPlan as any } : {}),
           quantity,
           maxUses,
           validForDays,
