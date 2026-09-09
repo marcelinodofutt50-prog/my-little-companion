@@ -570,13 +570,16 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   }, []);
 
   const handleSend = async (
-    attachmentPath?: string,
-    attachmentType?: string,
+    attachmentPathArg?: string,
+    attachmentTypeArg?: string,
     retryOf?: string,
     meta?: { name?: string; previewUrl?: string },
   ) => {
-    const previous = retryOf ? pending.find((p) => p.clientId === retryOf) : undefined;
-    const text = retryOf ? (previous?.body ?? "") : body.trim();
+    const previous = retryOf ? pendingRef.current.find((p) => p.clientId === retryOf) : undefined;
+    const text = (retryOf ? (previous?.body ?? "") : body.trim()).slice(0, MAX_BODY);
+    // Reenvio de anexo reaproveita o arquivo que já subiu para o storage.
+    const attachmentPath = attachmentPathArg ?? previous?.attachmentPath;
+    const attachmentType = attachmentTypeArg ?? previous?.attachmentType;
     if (!text && !attachmentPath) return;
     const replyToId = retryOf ? null : replyTo?.id ?? null;
 
