@@ -673,6 +673,9 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
           ? `${synced} licença(s) corrigida(s) e confirmada(s) no painel.`
           : `${synced} licença(s) corrigida(s); ${failed} não puderam ser confirmadas.`,
     };
+    } finally {
+      if (syncLocked) await releaseOpLock(syncLockKey);
+    }
   });
 
 
