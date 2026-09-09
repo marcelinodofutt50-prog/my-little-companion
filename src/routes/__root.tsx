@@ -340,6 +340,8 @@ function InnerRootComponent() {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
+      // Nunca reutilize dados privados da conta anterior durante uma troca de sessão.
+      queryClient.removeQueries({ queryKey: ["partner-area"] });
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
     return () => sub.subscription.unsubscribe();

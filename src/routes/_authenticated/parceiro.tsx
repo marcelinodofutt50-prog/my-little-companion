@@ -322,7 +322,7 @@ function PartnerPage() {
         </section>
       ) : null}
 
-      {data?.hasReseller ? <PartnerResellerDesk /> : null}
+      {data?.hasReseller || isAdmin ? <PartnerResellerDesk /> : null}
 
       {isAdmin ? (
         <section className="mt-10 border-t border-border/60 pt-8">
