@@ -75,7 +75,8 @@ function PartnerPage() {
 
   const entitlements = data?.entitlements ?? [];
   const requests = data?.requests ?? [];
-  const hasAny = entitlements.length > 0;
+  const isAdmin = Boolean((data as any)?.isAdmin);
+  const hasAny = entitlements.length > 0 || isAdmin;
 
   useEffect(() => {
     if (!data) return;
