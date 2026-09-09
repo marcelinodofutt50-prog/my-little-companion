@@ -554,9 +554,17 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
  * Se detectada expiração no painel que não condiz com o banco (ou vice-versa),
  * tenta forçar a atualização dos dados e credenciais.
  */
+type SyncAllResult = {
+  ok: boolean;
+  synced: number;
+  failed: number;
+  details: Array<{ id: string; status: string; message?: string }>;
+  message: string;
+};
+
 export const syncAllMyLicenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<SyncAllResult> => {
     const { supabase, userId } = context;
 
     // Um "Corrigir Erros" por vez por cliente: cliques repetidos ou várias abas
