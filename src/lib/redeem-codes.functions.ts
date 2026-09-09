@@ -24,18 +24,25 @@ export const staffCreateRedeemCodes = createServerFn({ method: "POST" })
     const { assertStaff } = await import("@/lib/admin-helpers.server");
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { generateRedeemCode } = await import("./redeem-rules");
+    const { generateRedeemCode, PARTNER_CODE_PLANS } = await import("./redeem-rules");
 
     if (data.kind === "license_days" && !data.days) {
       throw new Error("Informe quantos dias o código vale.");
     }
+    if (data.kind === "partner_access" && !data.partnerPlan) {
+      throw new Error("Escolha qual serviço de parceria o código libera.");
+    }
+
+    const partnerPlan = data.kind === "partner_access" ? data.partnerPlan! : null;
+    const partnerDays = partnerPlan ? (data.days ?? PARTNER_CODE_PLANS[partnerPlan]?.days ?? null) : null;
 
     const expiresAt = new Date(Date.now() + data.validForDays * 86400000).toISOString();
     const rows = Array.from({ length: data.quantity }, () => ({
       code: generateRedeemCode(),
       kind: data.kind,
-      days: data.kind === "license_days" ? data.days! : null,
-      plan_slug: data.kind === "license_days" ? (data.planSlug ?? "login-30d") : null,
+      days: data.kind === "license_days" ? data.days! : partnerDays,
+      plan_slug:
+        data.kind === "license_days" ? (data.planSlug ?? "login-30d") : partnerPlan,
       max_uses: data.maxUses,
       expires_at: expiresAt,
       note: data.note ?? null,
