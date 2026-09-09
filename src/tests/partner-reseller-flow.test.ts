@@ -9,7 +9,6 @@ import {
   resolveLicenseDays,
   daysLeft,
   buildCredentialMessage,
-  summarizeDesk,
 } from "@/lib/partner-reseller.server";
 
 /**
