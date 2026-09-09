@@ -558,6 +558,24 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+
+    // Um "Corrigir Erros" por vez por cliente: cliques repetidos ou várias abas
+    // não podem disparar recriação de conta em paralelo no painel.
+    const { acquireOpLock, releaseOpLock } = await import("./audit-trail.server");
+    const syncLockKey = `license-sync-all:${userId}`;
+    let syncLocked = false;
+    try {
+      syncLocked = await acquireOpLock(syncLockKey, 300, userId);
+      if (!syncLocked) {
+        throw new Error(
+          "A correção anterior ainda está rodando. Aguarde alguns segundos e recarregue a página para ver o resultado.",
+        );
+      }
+    } catch (e: any) {
+      if (String(e?.message ?? "").startsWith("A correção anterior")) throw e;
+    }
+
+    try {
     const { data: licenses } = await supabase
       .from("licenses")
       .select("*")
@@ -565,7 +583,14 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
       .is("disabled_at", null)
       .eq("revoked", false);
 
-    if (!licenses || licenses.length === 0) return { ok: true, synced: 0 };
+    if (!licenses || licenses.length === 0)
+      return {
+        ok: true,
+        synced: 0,
+        failed: 0,
+        details: [] as Array<{ id: string; status: string; message?: string }>,
+        message: "Nenhuma licença ativa para corrigir.",
+      };
 
     const { yaarsaExtend } = await import("./yaarsa.server");
     const { healLicenseLogin } = await import("./license-heal.server");
