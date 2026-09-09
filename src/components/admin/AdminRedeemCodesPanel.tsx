@@ -259,7 +259,11 @@ export function AdminRedeemCodesPanel() {
                     </button>
                   </div>
                   <div className="font-mono text-[10px] text-muted-foreground">
-                    {c.kind === "server_renewal" ? "renovação de servidor" : `${c.days} dia(s) · ${c.plan_slug}`}
+                    {c.kind === "server_renewal"
+                      ? "renovação de servidor"
+                      : c.kind === "partner_access"
+                        ? `parceria · ${c.plan_slug}${c.days ? ` · ${c.days} dia(s)` : ""}`
+                        : `${c.days} dia(s) · ${c.plan_slug}`}
                     {" · "}usos {c.uses}/{c.max_uses}
                     {c.expires_at ? ` · vence ${new Date(c.expires_at).toLocaleDateString("pt-BR")}` : ""}
                     {c.note ? ` · ${c.note}` : ""}
