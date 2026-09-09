@@ -7,9 +7,13 @@ export const staffCreateRedeemCodes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) =>
     z.object({
-      kind: z.enum(["license_days", "server_renewal"]),
+      kind: z.enum(["license_days", "server_renewal", "partner_access"]),
       days: z.number().int().min(1).max(365).optional(),
       planSlug: z.enum(["login-7d", "login-30d", "login-lifetime"]).optional(),
+      /** Plano de parceria liberado quando o tipo é "partner_access". */
+      partnerPlan: z
+        .enum(["partner-reseller-60d", "server-deploy-basic", "server-deploy-managed", "server-managed-monthly"])
+        .optional(),
       quantity: z.number().int().min(1).max(50).default(1),
       maxUses: z.number().int().min(1).max(500).default(1),
       validForDays: z.number().int().min(1).max(365).default(30),
