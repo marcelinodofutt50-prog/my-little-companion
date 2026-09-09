@@ -1084,9 +1084,11 @@ export function SupportChat({
           >
             {uploading ? <Loader2 className="animate-spin h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
           </Button>
+          <div className="flex-1 relative">
           <Textarea
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            maxLength={MAX_BODY}
+            onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY))}
             onPaste={(e) => {
               const file = Array.from(e.clipboardData?.files ?? [])[0];
               if (file) {
