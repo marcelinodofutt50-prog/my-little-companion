@@ -171,6 +171,42 @@ export const redeemMyCode = createServerFn({ method: "POST" })
           if (error) console.error("[Redeem] Falha ao liberar reserva:", error.message);
         };
 
+        // Código de parceria: libera a Área do Parceiro, sem mexer em licença.
+        if (rc.kind === "partner_access") {
+          try {
+            const { grantPartnerEntitlementFromCode } = await import("@/lib/partner.server");
+            const granted = await grantPartnerEntitlementFromCode(supabaseAdmin, {
+              userId,
+              planSlug: rc.plan_slug ?? "partner-reseller-60d",
+              days: rc.days ?? null,
+              claimId: rc.claim_id,
+              note: rc.note ?? null,
+            });
+            if (!granted.ok) throw new Error(granted.error ?? "Não foi possível liberar o acesso de parceiro.");
+
+            await supabaseAdmin.from("redeem_code_uses").update({
+              details: {
+                status: "applied",
+                kind: rc.kind,
+                plan_slug: rc.plan_slug,
+                entitlement_id: granted.entitlementId,
+                expires_at: granted.expiresAt ?? null,
+              },
+            }).eq("id", rc.claim_id);
+
+            return {
+              ok: true,
+              partner: true as const,
+              partnerKind: granted.kind,
+              planSlug: rc.plan_slug ?? null,
+              expires_at: granted.expiresAt ?? null,
+            };
+          } catch (e: any) {
+            await rollback();
+            throw new Error(e?.message ?? "Não foi possível aplicar o código agora.");
+          }
+        }
+
         let license: any = null;
         if (data.licenseId) {
           const { data: lic } = await supabaseAdmin
