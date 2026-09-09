@@ -44,9 +44,10 @@ async function bestTierRank(ctx: { supabase: any; userId: string }): Promise<num
   const active = (lics ?? []).filter(
     (l: any) => !l.disabled_at && !l.revoked && !l.suspended_at && (!l.expires_at || l.expires_at > now),
   );
+  // Piso 0: todo usuário logado enxerga os avisos marcados como "Todos".
   return active.reduce(
     (acc: number, l: any) => Math.max(acc, tierRank[(l.version_tier ?? "monthly_457") as VersionTier] ?? 0),
-    -1,
+    0,
   );
 }
 
@@ -67,7 +68,7 @@ export const listMyAnnouncements = createServerFn({ method: "GET" })
       }
 
       try {
-        let rank = -1;
+        let rank = 0;
         try {
           rank = await bestTierRank(context);
         } catch (err: any) {

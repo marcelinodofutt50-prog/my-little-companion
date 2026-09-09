@@ -50,7 +50,7 @@ const emptyForm = {
   starts_at: "",
   ends_at: "",
   is_active: true,
-  status: "draft" as AnnouncementStatus,
+  status: "published" as AnnouncementStatus,
   tags: [] as string[],
   image_url: "" as string | undefined,
   attachment_url: "" as string | undefined,
@@ -81,6 +81,13 @@ export function AdminAnnouncementsPanel() {
   const canCreate = useMemo(() => can(myRole, "announcements.create"), [myRole]);
   const canApprove = useMemo(() => can(myRole, "announcements.approve"), [myRole]);
   const canPublish = useMemo(() => can(myRole, "announcements.publish"), [myRole]);
+
+  // Quem não pode publicar não pode ficar com o formulário travado em "Publicado".
+  useEffect(() => {
+    if (myRole && !canPublish) {
+      setForm((f) => (f.status === "published" ? { ...f, status: "draft" } : f));
+    }
+  }, [myRole, canPublish]);
 
   async function refresh() {
     setLoading(true);
@@ -126,6 +133,13 @@ export function AdminAnnouncementsPanel() {
       toast.error("Preencha título e mensagem");
       return;
     }
+    // Publicado só faz sentido visível: evita o aviso "publicado" que nunca aparece.
+    const isActive = form.status === "published" ? true : form.is_active;
+    const endsAt = fromLocalInput(form.ends_at);
+    if (form.status === "published" && endsAt && new Date(endsAt).getTime() < Date.now()) {
+      toast.error("A data em 'Some em' já passou — o aviso não apareceria para ninguém.");
+      return;
+    }
     setSaving(true);
     try {
       await saveFn({
@@ -137,8 +151,8 @@ export function AdminAnnouncementsPanel() {
           min_tier: form.min_tier,
           event_at: fromLocalInput(form.event_at),
           starts_at: fromLocalInput(form.starts_at),
-          ends_at: fromLocalInput(form.ends_at),
-          is_active: form.is_active,
+          ends_at: endsAt,
+          is_active: isActive,
           status: form.status,
           tags: form.tags,
           image_url: form.image_url || null,
@@ -146,9 +160,15 @@ export function AdminAnnouncementsPanel() {
           attachment_name: form.attachment_name || null,
         },
       });
-      const msg = form.status === "published" ? "Anúncio publicado" : 
-                 form.status === "review" ? "Enviado para revisão" : "Salvo como rascunho";
-      toast.success(msg);
+      if (form.status === "published") {
+        toast.success("Anúncio publicado — já aparece no painel dos clientes");
+      } else {
+        toast.warning(
+          form.status === "review"
+            ? "Enviado para revisão — ainda NÃO aparece para os clientes"
+            : "Salvo como rascunho — ainda NÃO aparece para os clientes",
+        );
+      }
       setForm(emptyForm);
       setShowForm(false);
       await refresh();
@@ -365,7 +385,9 @@ export function AdminAnnouncementsPanel() {
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div>
-              <label className="font-mono text-[10px] uppercase text-muted-foreground">Status do Fluxo</label>
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">
+                Status do Fluxo <span className="text-primary">(só "Publicado" aparece p/ clientes)</span>
+              </label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value as AnnouncementStatus })}
@@ -443,7 +465,7 @@ export function AdminAnnouncementsPanel() {
             </Button>
             <Button size="sm" onClick={submit} disabled={saving} className="gap-1.5 font-mono text-[11px] uppercase">
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Megaphone className="h-3.5 w-3.5" />}
-              {form.id ? "Salvar" : "Publicar anúncio"}
+              {form.status === "published" ? (form.id ? "Salvar e publicar" : "Publicar anúncio") : "Salvar sem publicar"}
             </Button>
           </div>
         </div>
