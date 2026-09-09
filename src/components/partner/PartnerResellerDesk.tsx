@@ -27,7 +27,7 @@ import {
   partnerRevealLicense,
   partnerSyncLicense,
 } from "@/lib/partner-reseller.functions";
-import { buildCredentialMessage, daysLeft, resolveLicenseDays } from "@/lib/partner-reseller.server";
+import { buildCredentialMessage, daysLeft, resolveLicenseDays } from "@/lib/partner-reseller-rules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,7 +72,7 @@ type Issued = {
 
 export function PartnerResellerDesk() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["partner-desk"], queryFn: () => getPartnerDesk({}) });
+  const { data, isLoading } = useQuery({ queryKey: ["partner-desk"], queryFn: () => getPartnerDesk() });
 
   const createCustomer = useServerFn(partnerCreateCustomer);
   const createLicense = useServerFn(partnerCreateLicense);
