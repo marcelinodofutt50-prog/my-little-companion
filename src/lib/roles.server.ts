@@ -45,8 +45,9 @@ export async function resolveRoles(ctx: { supabase: any; userId: string }) {
   let isModerator = m.value;
   let isSupport = s.value;
 
-  // Se qualquer RPC falhou (erro, não "false"), confirmamos pelo banco.
-  if (!a.ok || !m.ok || !s.ok) {
+  // Se qualquer RPC falhou ou todas responderam false, confirmamos pela fonte
+  // administrativa. Isso cobre cache de schema desatualizado sem confiar no cliente.
+  if (!a.ok || !m.ok || !s.ok || (!isAdmin && !isModerator && !isSupport)) {
     const roles = await readRolesViaAdmin(ctx.userId);
     isAdmin = isAdmin || roles.has("admin");
     isModerator = isModerator || roles.has("moderator");

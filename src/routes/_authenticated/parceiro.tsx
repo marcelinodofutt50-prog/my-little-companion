@@ -9,12 +9,15 @@ import {
   Clock,
   Crown,
   Loader2,
+  RefreshCw,
   Server,
   ShieldCheck,
   Users,
 } from "lucide-react";
 import { getMyPartnerArea, submitPartnerServerInfo } from "@/lib/partner.functions";
 import { PartnerResellerDesk } from "@/components/partner/PartnerResellerDesk";
+import { RedeemCodeCard } from "@/components/RedeemCodeCard";
+import { AdminRedeemCodesPanel } from "@/components/admin/AdminRedeemCodesPanel";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +65,16 @@ function fmtDate(v: string | null) {
 
 function PartnerPage() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["partner-area"], queryFn: () => getMyPartnerArea({}) });
+  const routeContext = Route.useRouteContext() as { user?: { id?: string } };
+  const userId = routeContext.user?.id ?? "current";
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["partner-area", userId],
+    queryFn: () => getMyPartnerArea({}),
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
+    retry: 2,
+  });
   const submit = useServerFn(submitPartnerServerInfo);
 
   const [kind, setKind] = useState<"reseller" | "deploy" | "managed">("deploy");
@@ -136,9 +148,28 @@ function PartnerPage() {
         </p>
       </header>
 
+      <section className="mb-8">
+        <RedeemCodeCard
+          onDone={() => {
+            void qc.invalidateQueries({ queryKey: ["partner-area", userId] });
+            void refetch();
+          }}
+        />
+      </section>
+
       {isLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Carregando sua área...
+        </div>
+      ) : isError ? (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-5 text-center">
+          <h2 className="font-display text-lg">Não foi possível confirmar seu acesso</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {(error as Error)?.message ?? "Tente carregar novamente."}
+          </p>
+          <Button className="mt-4" variant="outline" onClick={() => void refetch()}>
+            <RefreshCw className="mr-2 h-4 w-4" /> Tentar novamente
+          </Button>
         </div>
       ) : !hasAny ? (
         <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-8 text-center">
@@ -291,7 +322,22 @@ function PartnerPage() {
         </section>
       ) : null}
 
-      {data?.hasReseller ? <PartnerResellerDesk /> : null}
+      {data?.hasReseller || isAdmin ? <PartnerResellerDesk /> : null}
+
+      {isAdmin ? (
+        <section className="mt-10 border-t border-border/60 pt-8">
+          <div className="mb-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">
+              // administração
+            </div>
+            <h2 className="mt-1 font-display text-xl">Códigos da Área do Parceiro</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Gere, copie, acompanhe e desative códigos que liberam os serviços de parceria.
+            </p>
+          </div>
+          <AdminRedeemCodesPanel partnerOnly />
+        </section>
+      ) : null}
     </div>
 
   );

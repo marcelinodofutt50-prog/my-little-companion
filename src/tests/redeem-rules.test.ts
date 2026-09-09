@@ -23,11 +23,17 @@ describe("regras dos códigos de cortesia", () => {
     expect(checkRedeemCode({ code: "A", kind: "license_days", uses: 1, max_uses: 1 }, now)).toMatchObject({ reason: "used_up" });
   });
 
-  it("soma dias sobre a validade restante e descreve ambos os benefícios", () => {
+  it("soma dias sobre a validade restante e descreve todos os benefícios", () => {
     const now = Date.parse("2026-08-21T00:00:00Z");
     expect(extendedExpiry("2026-08-25T00:00:00Z", 3, now).toISOString()).toBe("2026-08-28T00:00:00.000Z");
     expect(extendedExpiry("2026-08-01T00:00:00Z", 7, now).toISOString()).toBe("2026-08-28T00:00:00.000Z");
     expect(describeRedeemCode({ code: "A", kind: "license_days", days: 7 })).toContain("7 dias");
     expect(describeRedeemCode({ code: "B", kind: "server_renewal" })).toContain("dia 20");
+    expect(
+      describeRedeemCode({ code: "C", kind: "partner_access", plan_slug: "partner-reseller-60d", days: 60 }),
+    ).toBe("Servidor de Revenda — 60 dias");
+    expect(
+      describeRedeemCode({ code: "D", kind: "partner_access", plan_slug: "server-deploy-managed" }),
+    ).toBe("Subida + Proteção + Supervisão");
   });
 });

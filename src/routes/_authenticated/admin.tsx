@@ -697,7 +697,7 @@ function AdminPage() {
         { id: "external", label: "Pagam Por Fora", icon: Wallet, hint: "extensão manual" },
         { id: "users", label: "Usuários", icon: Users },
         { id: "licenses", label: "Licenças", icon: KeyRound },
-        { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "3d, 7d ou servidor" },
+        { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "licenças, servidor e parceiros" },
         { id: "license_audit", label: "Histórico de Alterações", icon: ScrollText, hint: "senha, sync e cupons" },
         { id: "panel_integrity", label: "Integridade dos Logins", icon: ShieldCheck, hint: "logins sumidos do painel" },
       ],

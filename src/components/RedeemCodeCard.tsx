@@ -102,8 +102,8 @@ export function RedeemCodeCard({
           </h3>
         </div>
         <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
-          Recebeu um código da equipe? Use aqui para liberar dias de licença ou adiantar a
-          mensalidade do servidor até o próximo dia 20.
+          Recebeu um código da equipe? Use aqui para liberar a Área do Parceiro, dias de licença
+          ou adiantar a mensalidade do servidor até o próximo dia 20.
         </p>
 
         <div className="flex flex-col gap-2 sm:flex-row">

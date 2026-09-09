@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { grantPartnerEntitlement, isEntitlementActive, PARTNER_PLANS, partnerKindFromSlug } from "@/lib/partner.server";
+import {
+  grantPartnerEntitlement,
+  grantPartnerEntitlementFromCode,
+  isEntitlementActive,
+  PARTNER_PLANS,
+  partnerKindFromSlug,
+} from "@/lib/partner.server";
 
 /** Stub mínimo do supabaseAdmin usado pelo fulfillment de parceria. */
 function makeAdmin(seed: { entitlements?: any[]; requests?: any[] } = {}) {
@@ -15,6 +21,10 @@ function makeAdmin(seed: { entitlements?: any[]; requests?: any[] } = {}) {
       select: () => api,
       eq: (col: string, val: any) => { filters.push((r) => r[col] === val); return api; },
       in: (col: string, vals: any[]) => { filters.push((r) => vals.includes(r[col])); return api; },
+      contains: (col: string, value: any) => {
+        filters.push((r) => Object.entries(value).every(([k, v]) => r[col]?.[k] === v));
+        return api;
+      },
       order: () => api,
       limit: () => api,
       maybeSingle: async () => ({ data: rows().filter((r) => filters.every((f) => f(r)))[0] ?? null }),
@@ -106,6 +116,36 @@ describe("produtos de parceria", () => {
     const admin = makeAdmin();
     const res = await grantPartnerEntitlement(admin, { userId: "u1", orderId: "o3", planSlug: "login-30d" });
     expect(res.ok).toBe(false);
+  });
+
+  it("libera revenda por código e não aplica o mesmo resgate duas vezes", async () => {
+    const admin = makeAdmin();
+    const input = {
+      userId: "u1",
+      planSlug: "partner-reseller-60d",
+      claimId: "claim-1",
+    };
+    const first = await grantPartnerEntitlementFromCode(admin, input);
+    const second = await grantPartnerEntitlementFromCode(admin, input);
+    expect(first.ok).toBe(true);
+    expect(first.kind).toBe("reseller");
+    expect(second.entitlementId).toBe(first.entitlementId);
+    expect(admin.state.entitlements).toHaveLength(1);
+    expect(admin.state.entitlements[0].metadata.redeem_claim_id).toBe("claim-1");
+  });
+
+  it("código de instalação abre um único atendimento", async () => {
+    const admin = makeAdmin();
+    const input = {
+      userId: "u2",
+      planSlug: "server-deploy-basic",
+      claimId: "claim-2",
+    };
+    await grantPartnerEntitlementFromCode(admin, input);
+    await grantPartnerEntitlementFromCode(admin, input);
+    expect(admin.state.entitlements).toHaveLength(1);
+    expect(admin.state.requests).toHaveLength(1);
+    expect(admin.state.requests[0].status).toBe("open");
   });
 
   it("considera vencido quando a data passou", () => {
