@@ -11,10 +11,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
   addDays,
+  buildCredentialMessage,
   decideSyncAction,
   isResellerEntitlementActive,
-  PARTNER_PLAN_DAYS as PLAN_DAYS,
   planPartnerRenewal,
+  resolveLicenseDays,
   summarizeDesk,
 } from "@/lib/partner-reseller.server";
 
