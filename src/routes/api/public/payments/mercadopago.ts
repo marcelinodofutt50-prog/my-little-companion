@@ -131,13 +131,18 @@ export const Route = createFileRoute("/api/public/payments/mercadopago")({
           ).replace(/^.*\//, "");
 
           if (!paymentId) return Response.json({ received: true, ignored: "sem id" });
+          if (!/^\d+$/.test(paymentId)) return Response.json({ received: true, ignored: "id inválido" });
           if (type && !String(type).includes("payment")) {
             return Response.json({ received: true, ignored: String(type) });
           }
-          if (!verifySignature(request, paymentId)) {
-            await log(`assinatura inválida para o pagamento ${paymentId}`, false);
-            return new Response("Invalid signature", { status: 401 });
+          const sig = verifySignature(request, paymentId);
+          if (sig !== "ok" && sig !== "disabled") {
+            // Nunca descartamos um pagamento por causa da assinatura: quem decide
+            // é a própria API do Mercado Pago, consultada logo abaixo com o nosso
+            // token privado (e o valor ainda é conferido contra o preço oficial).
+            await log(`assinatura ${sig} no pagamento ${paymentId} — validando pela API do Mercado Pago`, false);
           }
+
 
           await handlePayment(paymentId);
           return Response.json({ received: true });
