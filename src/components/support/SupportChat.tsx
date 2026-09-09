@@ -497,7 +497,15 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           setMsgs((prev) =>
             prev.some((m) => m.id === next.id)
               ? prev
-              : [...prev, next].sort((a, b) => (a.created_at < b.created_at ? -1 : 1)),
+              : [...prev, next].sort((a, b) =>
+                  a.created_at === b.created_at
+                    ? a.id < b.id
+                      ? -1
+                      : 1
+                    : a.created_at < b.created_at
+                      ? -1
+                      : 1,
+                ),
           );
         },
       )
