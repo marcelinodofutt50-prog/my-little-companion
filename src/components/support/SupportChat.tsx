@@ -1106,9 +1106,19 @@ export function SupportChat({
             }}
             rows={2}
             placeholder="Escreva sua mensagem…  (Enter envia, Shift+Enter quebra linha)"
-            className="flex-1 min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
-
+            className="w-full min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
           />
+          {body.length > MAX_BODY - 500 && (
+            <span
+              className={`pointer-events-none absolute bottom-1.5 right-2 font-mono text-[10px] ${
+                body.length >= MAX_BODY ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              {body.length}/{MAX_BODY}
+            </span>
+          )}
+          </div>
+
           <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!body.trim() || uploading}>
             <Send className="h-4 w-4" />
           </Button>
