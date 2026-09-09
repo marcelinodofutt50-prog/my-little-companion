@@ -103,7 +103,7 @@ async function reconcilePendingOrders(request: Request) {
               const { validateCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
               const { data: fullOrder } = await supabaseAdmin
                 .from("orders")
-                .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata")
+                .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, created_at")
                 .eq("id", order.id)
                 .maybeSingle();
               const integrity = await validateCanonicalOrderAmount(supabaseAdmin, fullOrder as any);

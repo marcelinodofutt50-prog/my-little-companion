@@ -86,7 +86,7 @@ async function handlePayment(paymentId: string) {
   // Confere se o valor pago cobre o pedido (evita entrega por valor menor).
   const { data: order } = await supabaseAdmin
     .from("orders")
-    .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata")
+    .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, created_at")
     .eq("id", orderId)
     .maybeSingle();
   if (!order) {
