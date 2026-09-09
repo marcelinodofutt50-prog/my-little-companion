@@ -28,7 +28,8 @@ export function AdminRedeemCodesPanel() {
   const [syncing, setSyncing] = useState(false);
   const [syncReport, setSyncReport] = useState<any>(null);
 
-  const [kind, setKind] = useState<"license_days" | "server_renewal">("license_days");
+  const [kind, setKind] = useState<"license_days" | "server_renewal" | "partner_access">("license_days");
+  const [partnerPlan, setPartnerPlan] = useState("partner-reseller-60d");
   const [days, setDays] = useState(7);
   const [planSlug, setPlanSlug] = useState("login-30d");
   const [quantity, setQuantity] = useState(1);
