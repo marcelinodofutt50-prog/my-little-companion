@@ -313,7 +313,17 @@ function Attachment({
 }
 
 
-export function SupportChat({ threadId, userId, isAdmin = false, customerName, onNewMessage }: SupportChatProps) {
+/** Mesmo limite validado no servidor — evita erro depois de escrever muito. */
+const MAX_BODY = 4000;
+
+export function SupportChat({
+  threadId,
+  userId,
+  isAdmin = false,
+  customerName,
+  onNewMessage,
+  onThreadMigrated,
+}: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
   const [loading, setLoading] = useState(true);
