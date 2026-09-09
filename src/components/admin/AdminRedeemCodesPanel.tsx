@@ -16,7 +16,7 @@ import { adminSyncLicensesFromPanel } from "@/lib/admin.functions";
  * - Gera códigos de licença (3d, 7d, 30d…) e de renovação de servidor.
  * - Reconcilia com o painel Yaarsa: reativa quem já está liberado por lá.
  */
-export function AdminRedeemCodesPanel() {
+export function AdminRedeemCodesPanel({ partnerOnly = false }: { partnerOnly?: boolean }) {
   const listFn = useServerFn(staffListRedeemCodes);
   const createFn = useServerFn(staffCreateRedeemCodes);
   const toggleFn = useServerFn(staffToggleRedeemCode);
@@ -36,6 +36,10 @@ export function AdminRedeemCodesPanel() {
   const [maxUses, setMaxUses] = useState(1);
   const [validForDays, setValidForDays] = useState(30);
   const [note, setNote] = useState("");
+
+  useEffect(() => {
+    if (partnerOnly) setKind("partner_access");
+  }, [partnerOnly]);
 
   const load = async () => {
     setLoading(true);
@@ -109,10 +113,11 @@ export function AdminRedeemCodesPanel() {
             <select
               value={kind}
               onChange={(e) => setKind(e.target.value as any)}
+              disabled={partnerOnly}
               className="w-full rounded-md border border-border bg-background px-2 py-2 font-mono text-xs"
             >
-              <option value="license_days">Dias de licença</option>
-              <option value="server_renewal">Renovação de servidor (dia 20)</option>
+              {!partnerOnly && <option value="license_days">Dias de licença</option>}
+              {!partnerOnly && <option value="server_renewal">Renovação de servidor (dia 20)</option>}
               <option value="partner_access">Acesso da Área do Parceiro</option>
             </select>
           </label>
@@ -198,7 +203,7 @@ export function AdminRedeemCodesPanel() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border/60 bg-background/40 p-4">
+      {!partnerOnly && <section className="rounded-lg border border-border/60 bg-background/40 p-4">
         <h3 className="mb-1 font-mono text-[11px] font-bold uppercase tracking-widest text-cyan">
           Sincronizar com o painel Yaarsa
         </h3>
@@ -224,7 +229,7 @@ export function AdminRedeemCodesPanel() {
             ))}
           </div>
         )}
-      </section>
+      </section>}
 
       <section className="space-y-2">
         <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest text-primary">

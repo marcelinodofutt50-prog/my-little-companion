@@ -3,7 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Situação de parceria do cliente logado: acessos liberados + chamados abertos. */
-export const getMyPartnerArea = createServerFn({ method: "GET" })
+// POST evita que respostas personalizadas por usuário sejam reaproveitadas
+// por caches HTTP/CDN entre trocas de sessão.
+export const getMyPartnerArea = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { isEntitlementActive } = await import("@/lib/partner.server");
@@ -115,8 +117,8 @@ export const submitPartnerServerInfo = createServerFn({ method: "POST" })
 export const adminListPartners = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Forbidden");
+    const { assertAdminRole } = await import("@/lib/roles.server");
+    await assertAdminRole(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: ents }, { data: reqs }] = await Promise.all([
       supabaseAdmin.from("partner_entitlements").select("*").order("created_at", { ascending: false }).limit(200),
@@ -152,8 +154,8 @@ export const adminUpdatePartner = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Forbidden");
+    const { assertAdminRole } = await import("@/lib/roles.server");
+    await assertAdminRole(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     if (data.requestId) {
@@ -189,10 +191,8 @@ export const adminRevealPartnerServerPassword = createServerFn({ method: "POST" 
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => z.object({ requestId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { resolveRoles } = await import("@/lib/roles.server");
+    const { isAdmin } = await resolveRoles(context);
     if (!isAdmin) return { error: "Apenas o administrador pode ver essa senha." };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
