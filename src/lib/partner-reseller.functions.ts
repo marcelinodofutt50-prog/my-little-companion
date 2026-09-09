@@ -18,6 +18,16 @@ import {
   summarizeDesk,
 } from "@/lib/partner-reseller.server";
 
+/** Administradores têm acesso total à área do parceiro, sem precisar comprar. */
+async function isAdminUser(context: any) {
+  try {
+    const { data } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+}
+
 async function requireResellerPartner(context: any) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: ents } = await supabaseAdmin
@@ -26,8 +36,9 @@ async function requireResellerPartner(context: any) {
     .eq("user_id", context.userId)
     .eq("kind", "reseller");
   const ent = (ents ?? []).find((e: any) => isResellerEntitlementActive(e));
-  if (!ent) return { admin: supabaseAdmin, error: "Você precisa de um servidor de revenda ativo para usar esta área." };
-  return { admin: supabaseAdmin, entitlementId: (ent as any).id };
+  if (ent) return { admin: supabaseAdmin, entitlementId: (ent as any).id };
+  if (await isAdminUser(context)) return { admin: supabaseAdmin, entitlementId: undefined };
+  return { admin: supabaseAdmin, error: "Você precisa de um servidor de revenda ativo para usar esta área." };
 }
 
 /** Tudo que a tela do parceiro precisa: clientes, licenças, pagamentos e resumo. */
