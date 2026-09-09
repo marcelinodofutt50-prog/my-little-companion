@@ -50,11 +50,54 @@ export function isResellerEntitlementActive(row: {
   return new Date(row.expires_at).getTime() > now.getTime();
 }
 
-export function summarizeDesk(licenses: any[], payments: any[], customers: any[]) {
+export function summarizeDesk(licenses: any[], payments: any[], customers: any[], now: Date = new Date()) {
+  const expiringSoon = licenses.filter((l) => {
+    if (l.status !== "active") return false;
+    const left = daysLeft(l.expires_at ?? null, now);
+    return left !== null && left >= 0 && left <= 5;
+  }).length;
   return {
     customers: customers.length,
     activeLicenses: licenses.filter((l) => l.status === "active").length,
     pendingSync: licenses.filter((l) => l.status === "pending_sync").length,
+    expiringSoon,
     revenueCents: payments.reduce((s, p) => s + (p.amount_cents ?? 0), 0),
   };
+}
+
+/** Duração final da licença: a do plano, ou o prazo personalizado do parceiro. */
+export function resolveLicenseDays(planSlug: string, daysOverride?: number | null): number {
+  if (typeof daysOverride === "number" && Number.isFinite(daysOverride) && daysOverride > 0) {
+    return Math.min(3650, Math.round(daysOverride));
+  }
+  return PARTNER_PLAN_DAYS[planSlug] ?? 30;
+}
+
+/** Dias que faltam para vencer (negativo = já venceu). `null` quando não expira. */
+export function daysLeft(expiresAt: string | null, now: Date = new Date()): number | null {
+  if (!expiresAt) return null;
+  const end = new Date(expiresAt).getTime();
+  if (Number.isNaN(end)) return null;
+  return Math.ceil((end - now.getTime()) / 86_400_000);
+}
+
+/** Mensagem pronta para o parceiro mandar ao cliente dele (WhatsApp/Telegram). */
+export function buildCredentialMessage(input: {
+  customerName?: string | null;
+  email: string;
+  username: string;
+  password: string;
+  expiresAt?: string | null;
+}): string {
+  const hello = input.customerName ? `Olá, ${input.customerName}!` : "Olá!";
+  const validade = input.expiresAt
+    ? `\nValidade: ${new Date(input.expiresAt).toLocaleDateString("pt-BR")}`
+    : "";
+  return (
+    `${hello}\nSeu acesso está pronto:\n\n` +
+    `E-mail: ${input.email}\n` +
+    `Usuário: ${input.username}\n` +
+    `Senha: ${input.password}${validade}\n\n` +
+    `Guarde estes dados. Qualquer dúvida, é só chamar.`
+  );
 }
