@@ -77,7 +77,7 @@ async function fulfillOrderInner(orderId: string) {
 
   const { data: pendingOrder } = await supabaseAdmin
     .from("orders")
-    .select("id,user_id,plan_slug,amount,status,coupon_code,cashback_used,metadata")
+    .select("id,user_id,plan_slug,amount,status,coupon_code,cashback_used,metadata,created_at")
     .eq("id", orderId)
     .maybeSingle();
   if (!pendingOrder) return { ok: false, reason: "order-not-found" };

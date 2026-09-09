@@ -307,7 +307,7 @@ export const reconcileMyRecentOrders = createServerFn({ method: "POST" })
     const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
     const { data: orders, error } = await context.supabase
       .from("orders")
-      .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, mp_preference_id")
+      .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, mp_preference_id, created_at")
       .eq("user_id", context.userId)
       .in("status", ["pending", "created", "yaarsa_failed"])
       .gte("created_at", cutoff)

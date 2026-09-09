@@ -94,6 +94,32 @@ async function reconcilePendingOrders(request: Request) {
               continue;
             }
 
+            // Mercado Pago: mesma rede de segurança. Sem isso, um Pix aprovado
+            // cujo aviso não chegou (ou foi recusado por assinatura) ficava
+            // pendente para sempre e o cliente não recebia o login.
+            const { findApprovedMercadoPagoPayment } = await import("@/lib/mercadopago.server");
+            const mpPaid = await findApprovedMercadoPagoPayment(order.id, Number(order.amount));
+            if (mpPaid) {
+              const { validateCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
+              const { data: fullOrder } = await supabaseAdmin
+                .from("orders")
+                .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, created_at")
+                .eq("id", order.id)
+                .maybeSingle();
+              const integrity = await validateCanonicalOrderAmount(supabaseAdmin, fullOrder as any);
+              if (!integrity.ok || mpPaid.amount < integrity.expectedAmount - 0.01) {
+                results.push({ orderId: order.id, action: "blocked", detail: `preço divergente (${integrity.reason ?? "valor menor"})` });
+                continue;
+              }
+              await supabaseAdmin.from("orders").update({ mp_payment_id: String(mpPaid.id) } as any).eq("id", order.id);
+              const { fulfillOrder } = await import("@/lib/fulfillment.server");
+              const result = await fulfillOrder(order.id);
+              results.push({ orderId: order.id, action: result.ok ? "fulfilled-mp" : "fulfill-error", detail: (result as any).reason });
+              continue;
+            }
+
+
+
             // Sessão expirada sem pagamento: encerra o pedido para não ficar preso.
             if (order.mp_preference_id) {
               try {

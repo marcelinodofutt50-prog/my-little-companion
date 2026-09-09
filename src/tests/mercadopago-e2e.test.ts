@@ -176,13 +176,20 @@ describe("Mercado Pago — casos em que NÃO pode entregar", () => {
     expect(fulfilled).toEqual([ORDER]);
   });
 
-  it("assinatura inválida é rejeitada com 401", async () => {
+  it("assinatura que não confere não impede a entrega de um pagamento real", async () => {
     process.env["MERCADOPAGO_WEBHOOK_SECRET"] = "segredo-de-teste";
     payments["9014"] = { id: 9014, status: "approved", transaction_amount: 39.9, external_reference: ORDER };
     const res = await postWebhook({ type: "payment", data: { id: "9014" } }, { "x-signature": "ts=1,v1=abc" });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    expect(fulfilled).toEqual([ORDER]);
+  });
+
+  it("id de pagamento inventado (não numérico) é ignorado", async () => {
+    const res = await postWebhook({ type: "payment", data: { id: "abc/../x" } });
+    expect(res.status).toBe(200);
     expect(fulfilled).toEqual([]);
   });
+
 
   it("evento que não é de pagamento é ignorado com 200", async () => {
     const res = await postWebhook({ type: "merchant_order", data: { id: "555" } });

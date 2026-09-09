@@ -1,4 +1,4 @@
-import { applyDiscount, evaluateCoupon, MIN_CHARGE_BRL } from "./coupon-rules";
+import { applyDiscount, clampDiscountPct, evaluateCoupon, MIN_CHARGE_BRL } from "./coupon-rules";
 
 type DbClient = any;
 
@@ -11,6 +11,7 @@ export type CanonicalOrder = {
   cashback_used?: number | string | null;
   metadata?: Record<string, unknown> | null;
   status?: string | null;
+  created_at?: string | null;
 };
 
 export type CanonicalAmountResult = {
@@ -55,11 +56,24 @@ export async function validateCanonicalOrderAmount(
       .select("code,active,user_id,expires_at,plan_slug,uses_left,discount_pct")
       .eq("code", String(order.coupon_code).toUpperCase())
       .maybeSingle();
-    const verdict = evaluateCoupon(coupon, { userId: order.user_id, planSlug: order.plan_slug });
-    if (!verdict.ok) {
+    // O desconto é conferido como estava NO MOMENTO DA COMPRA. Cupons de curta
+    // duração (winback) venciam antes da confirmação do Pix e derrubavam
+    // pedidos já pagos; o mesmo valia para o uso consumido pela própria compra.
+    const placedAt = order.created_at ? new Date(order.created_at).getTime() : Date.now();
+    const verdict = evaluateCoupon(coupon, {
+      userId: order.user_id,
+      planSlug: order.plan_slug,
+      now: Number.isFinite(placedAt) ? placedAt : Date.now(),
+    });
+    const lockedIn =
+      !verdict.ok && coupon && ["expired", "used_up", "inactive"].includes(verdict.reason) && !!order.created_at;
+    if (!verdict.ok && !lockedIn) {
       return { ok: false, expectedAmount: money(expectedAmount), actualAmount, reason: `invalid-coupon:${verdict.reason}`, planName: plan.name };
     }
-    expectedAmount = applyDiscount(expectedAmount, verdict.discountPct);
+    expectedAmount = applyDiscount(
+      expectedAmount,
+      verdict.ok ? verdict.discountPct : clampDiscountPct((coupon as any)?.discount_pct),
+    );
   }
 
   const cashbackUsed = Number(order.cashback_used ?? 0);

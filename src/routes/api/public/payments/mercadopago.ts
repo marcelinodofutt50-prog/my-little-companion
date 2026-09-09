@@ -12,32 +12,46 @@ async function log(note: string, processed: boolean, payload?: unknown) {
 }
 
 /**
- * Assinatura do Mercado Pago (opcional — só validada quando o segredo está
- * configurado). Formato: x-signature: ts=...,v1=...
- * manifest = id:<data.id>;request-id:<x-request-id>;ts:<ts>;
+ * Assinatura do Mercado Pago. Formato: x-signature: ts=...,v1=...
+ * manifest padrão = id:<data.id>;request-id:<x-request-id>;ts:<ts>;
+ *
+ * O Mercado Pago varia o manifesto conforme a notificação (com/sem
+ * request-id, id em minúsculo ou cru, id vindo da query string). Por isso
+ * testamos todas as combinações válidas antes de dizer que não confere.
  */
-function verifySignature(request: Request, dataId: string): boolean {
+function verifySignature(request: Request, dataId: string): "ok" | "mismatch" | "absent" | "disabled" {
   const secret = process.env["MERCADOPAGO_WEBHOOK_SECRET"];
-  // Sem segredo configurado a validação é desligada (o Mercado Pago permite
-  // webhooks sem assinatura); com segredo, a assinatura passa a ser obrigatória.
-  if (!secret) return true;
+  if (!secret) return "disabled";
   const signature = request.headers.get("x-signature");
-  if (!signature) return false;
+  if (!signature) return "absent";
   const parts = Object.fromEntries(
     signature.split(",").map((p) => p.split("=").map((s) => s.trim()) as [string, string]),
   );
   const ts = parts["ts"];
   const v1 = parts["v1"];
-  if (!ts || !v1) return false;
+  if (!ts || !v1) return "absent";
+
   const requestId = request.headers.get("x-request-id") ?? "";
-  const manifest = `id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`;
-  const expected = createHmac("sha256", secret).update(manifest).digest("hex");
-  try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(v1));
-  } catch {
-    return false;
+  const queryId = new URL(request.url).searchParams.get("data.id") ?? "";
+  const ids = [...new Set([dataId, dataId.toLowerCase(), queryId, queryId.toLowerCase()].filter(Boolean))];
+
+  const manifests: string[] = [];
+  for (const id of ids) {
+    if (requestId) manifests.push(`id:${id};request-id:${requestId};ts:${ts};`);
+    manifests.push(`id:${id};ts:${ts};`);
   }
+
+  for (const manifest of manifests) {
+    const expected = createHmac("sha256", secret).update(manifest).digest("hex");
+    try {
+      if (timingSafeEqual(Buffer.from(expected), Buffer.from(v1))) return "ok";
+    } catch {
+      /* tamanhos diferentes: segue para a próxima variação */
+    }
+  }
+  return "mismatch";
 }
+
 
 async function handlePayment(paymentId: string) {
   const { getMercadoPagoPayment } = await import("@/lib/mercadopago.server");
@@ -72,7 +86,7 @@ async function handlePayment(paymentId: string) {
   // Confere se o valor pago cobre o pedido (evita entrega por valor menor).
   const { data: order } = await supabaseAdmin
     .from("orders")
-    .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata")
+    .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, created_at")
     .eq("id", orderId)
     .maybeSingle();
   if (!order) {
@@ -117,13 +131,18 @@ export const Route = createFileRoute("/api/public/payments/mercadopago")({
           ).replace(/^.*\//, "");
 
           if (!paymentId) return Response.json({ received: true, ignored: "sem id" });
+          if (!/^\d+$/.test(paymentId)) return Response.json({ received: true, ignored: "id inválido" });
           if (type && !String(type).includes("payment")) {
             return Response.json({ received: true, ignored: String(type) });
           }
-          if (!verifySignature(request, paymentId)) {
-            await log(`assinatura inválida para o pagamento ${paymentId}`, false);
-            return new Response("Invalid signature", { status: 401 });
+          const sig = verifySignature(request, paymentId);
+          if (sig !== "ok" && sig !== "disabled") {
+            // Nunca descartamos um pagamento por causa da assinatura: quem decide
+            // é a própria API do Mercado Pago, consultada logo abaixo com o nosso
+            // token privado (e o valor ainda é conferido contra o preço oficial).
+            await log(`assinatura ${sig} no pagamento ${paymentId} — validando pela API do Mercado Pago`, false);
           }
+
 
           await handlePayment(paymentId);
           return Response.json({ received: true });
