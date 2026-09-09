@@ -76,6 +76,8 @@ interface SupportChatProps {
   /** Nome exibido para as mensagens do cliente quando um admin está lendo. */
   customerName?: string;
   onNewMessage?: () => void;
+  /** Chamado quando o servidor moveu o envio para outra conversa (thread reaberta). */
+  onThreadMigrated?: (threadId: string) => void;
 }
 
 export type SenderInfo = {
