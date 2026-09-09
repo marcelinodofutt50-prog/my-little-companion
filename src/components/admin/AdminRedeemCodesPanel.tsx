@@ -113,8 +113,26 @@ export function AdminRedeemCodesPanel() {
             >
               <option value="license_days">Dias de licença</option>
               <option value="server_renewal">Renovação de servidor (dia 20)</option>
+              <option value="partner_access">Acesso da Área do Parceiro</option>
             </select>
           </label>
+
+          {kind === "partner_access" && (
+            <label className="space-y-1">
+              <span className="font-mono text-[10px] uppercase text-muted-foreground">Serviço de parceria</span>
+              <select
+                value={partnerPlan}
+                onChange={(e) => setPartnerPlan(e.target.value)}
+                className="w-full rounded-md border border-border bg-background px-2 py-2 font-mono text-xs"
+              >
+                <option value="partner-reseller-60d">Servidor de Revenda · 60 dias</option>
+                <option value="server-managed-monthly">Gestão Mensal · 30 dias</option>
+                <option value="server-deploy-basic">Subimos seu Servidor</option>
+                <option value="server-deploy-managed">Subida + Proteção + Supervisão</option>
+              </select>
+            </label>
+          )}
+
 
           {kind === "license_days" && (
             <>
