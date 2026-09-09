@@ -107,15 +107,34 @@ export const partnerCreateCustomer = createServerFn({ method: "POST" })
     return { ok: true, customerId: created.id };
   });
 
-/** Cria a licença do cliente e já abre a conta no painel. */
+/**
+ * Emite licença(s) para um cliente e já abre as contas no painel.
+ *
+ * Aceita cadastrar o cliente na hora (`newCustomer`), prazo personalizado
+ * (`days`) e emissão em lote (`quantity`), para o parceiro não precisar
+ * repetir o formulário a cada venda.
+ */
 export const partnerCreateLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
-        customerId: z.string().uuid(),
+        customerId: z.string().uuid().optional().nullable(),
+        newCustomer: z
+          .object({
+            name: z.string().trim().min(2).max(120),
+            contact: z.string().trim().max(160).optional().nullable(),
+          })
+          .optional()
+          .nullable(),
         planSlug: z.enum(["login-7d", "login-30d", "login-lifetime"]).default("login-30d"),
+        days: z.number().int().min(1).max(3650).optional().nullable(),
         priceCents: z.number().int().min(0).max(10_000_00).default(0),
+        quantity: z.number().int().min(1).max(10).default(1),
+        note: z.string().trim().max(300).optional().nullable(),
+      })
+      .refine((v) => Boolean(v.customerId || v.newCustomer), {
+        message: "Escolha um cliente ou cadastre um novo.",
       })
       .parse(input),
   )
@@ -124,57 +143,180 @@ export const partnerCreateLicense = createServerFn({ method: "POST" })
     if (guard.error) return { error: guard.error };
     const admin = guard.admin;
 
-    const { data: customer } = await admin
-      .from("partner_customers")
-      .select("id, name")
-      .eq("id", data.customerId)
-      .eq("partner_id", context.userId)
-      .maybeSingle();
-    if (!customer) return { error: "Cliente não encontrado na sua carteira." };
+    // 1) Cliente: existente ou criado agora, no mesmo passo.
+    let customerId = data.customerId ?? null;
+    let customerName = "";
+    if (customerId) {
+      const { data: customer } = await admin
+        .from("partner_customers")
+        .select("id, name")
+        .eq("id", customerId)
+        .eq("partner_id", context.userId)
+        .maybeSingle();
+      if (!customer) return { error: "Cliente não encontrado na sua carteira." };
+      customerName = (customer as any).name;
+    } else if (data.newCustomer) {
+      const { data: created, error } = await admin
+        .from("partner_customers")
+        .insert({
+          partner_id: context.userId,
+          name: data.newCustomer.name,
+          contact: data.newCustomer.contact || null,
+          notes: data.note || null,
+        })
+        .select("id, name")
+        .single();
+      if (error) return { error: error.message };
+      customerId = (created as any).id;
+      customerName = (created as any).name;
+    }
+    if (!customerId) return { error: "Escolha um cliente ou cadastre um novo." };
 
     const yaarsa = await import("@/lib/yaarsa.server");
-    const panel = await yaarsa.resolveTrialPanel();
-    const creds = yaarsa.generateCredentials();
-    const username = yaarsa.sanitizePanelUsername(creds.username);
-    const expiresAt = addDays(new Date(), PLAN_DAYS[data.planSlug] ?? 30);
+    const days = resolveLicenseDays(data.planSlug, data.days ?? null);
+    const expiresAt = addDays(new Date(), days);
 
-    const res = await yaarsa.yaarsaCreateAccount({
-      username,
-      email: creds.email,
-      password: creds.password,
-      planSlug: data.planSlug,
-      totalPaid: Math.round(data.priceCents / 100),
-      additionalInfo: `revenda:${context.userId.slice(0, 8)}:${(customer as any).name}`.slice(0, 120),
-      panel,
-    });
+    const created: Array<{
+      licenseId: string;
+      synced: boolean;
+      warning: string | null;
+      login: { email: string; username: string; password: string };
+      message: string;
+    }> = [];
+    const failures: string[] = [];
 
-    const synced = Boolean(res.Success);
-    const { data: created, error } = await admin
+    for (let i = 0; i < data.quantity; i++) {
+      const panel = await yaarsa.resolveTrialPanel();
+      const creds = yaarsa.generateCredentials();
+      const username = yaarsa.sanitizePanelUsername(creds.username);
+
+      let res: any;
+      try {
+        res = await yaarsa.yaarsaCreateAccount({
+          username,
+          email: creds.email,
+          password: creds.password,
+          planSlug: data.planSlug,
+          totalPaid: Math.round(data.priceCents / 100),
+          additionalInfo: `revenda:${context.userId.slice(0, 8)}:${customerName}`.slice(0, 120),
+          panel,
+        });
+      } catch (e) {
+        res = { Success: false, Fail: (e as Error)?.message ?? "O painel não respondeu." };
+      }
+
+      const synced = Boolean(res?.Success);
+      const { data: row, error } = await admin
+        .from("partner_licenses")
+        .insert({
+          partner_id: context.userId,
+          customer_id: customerId,
+          plan_slug: data.planSlug,
+          panel,
+          panel_username: username,
+          panel_email: creds.email,
+          panel_password_enc: yaarsa.encrypt(creds.password),
+          status: synced ? "active" : "pending_sync",
+          expires_at: expiresAt.toISOString(),
+          price_cents: data.priceCents,
+          last_sync_at: synced ? new Date().toISOString() : null,
+          sync_error: synced ? null : res?.Fail || "O painel não confirmou a criação.",
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        failures.push(error.message);
+        continue;
+      }
+
+      created.push({
+        licenseId: (row as any).id,
+        synced,
+        warning: synced ? null : res?.Fail || "Login salvo, mas o painel ainda não confirmou. Use 'Sincronizar'.",
+        login: { email: creds.email, username, password: creds.password },
+        message: buildCredentialMessage({
+          customerName,
+          email: creds.email,
+          username,
+          password: creds.password,
+          expiresAt: expiresAt.toISOString(),
+        }),
+      });
+    }
+
+    if (created.length === 0) {
+      return { error: failures[0] ?? "Não foi possível emitir a licença agora." };
+    }
+
+    const pending = created.filter((c) => !c.synced).length;
+    return {
+      ok: true,
+      customerId,
+      customerName,
+      days,
+      expiresAt: expiresAt.toISOString(),
+      created,
+      // Compatibilidade com a primeira versão da tela.
+      licenseId: created[0]!.licenseId,
+      login: created[0]!.login,
+      synced: pending === 0,
+      warning:
+        pending === 0
+          ? null
+          : `${pending} de ${created.length} login(s) ainda não foram confirmados no painel. Use "Sincronizar".`,
+    };
+  });
+
+/** Adiciona dias na licença sem registrar pagamento (cortesia, ajuste, atraso). */
+export const partnerExtendLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ licenseId: z.string().uuid(), days: z.number().int().min(1).max(3650) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const guard = await requireResellerPartner(context);
+    if (guard.error) return { error: guard.error };
+    const admin = guard.admin;
+
+    const { data: lic } = await admin
       .from("partner_licenses")
-      .insert({
-        partner_id: context.userId,
-        customer_id: data.customerId,
-        plan_slug: data.planSlug,
-        panel,
-        panel_username: username,
-        panel_email: creds.email,
-        panel_password_enc: yaarsa.encrypt(creds.password),
-        status: synced ? "active" : "pending_sync",
-        expires_at: expiresAt.toISOString(),
-        price_cents: data.priceCents,
-        last_sync_at: synced ? new Date().toISOString() : null,
-        sync_error: synced ? null : res.Fail || "O painel não confirmou a criação.",
+      .select("id, panel, panel_email, expires_at, status, last_sync_at")
+      .eq("id", data.licenseId)
+      .eq("partner_id", context.userId)
+      .maybeSingle();
+    if (!lic) return { error: "Licença não encontrada." };
+    if ((lic as any).status === "cancelled") return { error: "Esta licença foi cancelada." };
+
+    // Nunca encurta: soma a partir da data futura, se ainda estiver válida.
+    const now = new Date();
+    const current = (lic as any).expires_at ? new Date((lic as any).expires_at) : null;
+    const base = current && current.getTime() > now.getTime() ? current : now;
+    const newExpires = addDays(base, data.days);
+
+    const { yaarsaExtend } = await import("@/lib/yaarsa.server");
+    const res = await yaarsaExtend(
+      (lic as any).panel_email,
+      newExpires.toISOString().slice(0, 10),
+      ((lic as any).panel || "v457") as any,
+    );
+    const ok = Boolean(res?.Success);
+
+    const { error } = await admin
+      .from("partner_licenses")
+      .update({
+        expires_at: newExpires.toISOString(),
+        status: ok ? "active" : "pending_sync",
+        sync_error: ok ? null : res?.Fail || "O painel não confirmou a nova validade.",
+        last_sync_at: ok ? new Date().toISOString() : (lic as any).last_sync_at,
       })
-      .select("id")
-      .single();
+      .eq("id", (lic as any).id);
     if (error) return { error: error.message };
 
     return {
       ok: true,
-      licenseId: created.id,
-      synced,
-      login: { email: creds.email, username, password: creds.password },
-      warning: synced ? null : res.Fail || "Login salvo, mas o painel ainda não confirmou. Use 'Sincronizar'.",
+      expiresAt: newExpires.toISOString(),
+      warning: ok ? null : res?.Fail || "Validade salva aqui, mas o painel ainda não confirmou.",
     };
   });
 
