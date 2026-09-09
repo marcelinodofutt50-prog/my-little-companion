@@ -74,9 +74,11 @@ export function RedeemCodeCard({
         ? new Date(res.expires_at).toLocaleDateString("pt-BR")
         : null;
       toast.success(
-        res?.created
-          ? `Login de cortesia criado${when ? ` — válido até ${when}` : ""}.`
-          : `Código aplicado${when ? ` — nova validade ${when}` : ""}.`,
+        res?.partner
+          ? `Área do Parceiro liberada${when ? ` — válida até ${when}` : ""}.`
+          : res?.created
+            ? `Login de cortesia criado${when ? ` — válido até ${when}` : ""}.`
+            : `Código aplicado${when ? ` — nova validade ${when}` : ""}.`,
       );
       setCode("");
       setInfo(null);

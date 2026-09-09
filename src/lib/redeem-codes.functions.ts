@@ -7,9 +7,13 @@ export const staffCreateRedeemCodes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) =>
     z.object({
-      kind: z.enum(["license_days", "server_renewal"]),
+      kind: z.enum(["license_days", "server_renewal", "partner_access"]),
       days: z.number().int().min(1).max(365).optional(),
       planSlug: z.enum(["login-7d", "login-30d", "login-lifetime"]).optional(),
+      /** Plano de parceria liberado quando o tipo é "partner_access". */
+      partnerPlan: z
+        .enum(["partner-reseller-60d", "server-deploy-basic", "server-deploy-managed", "server-managed-monthly"])
+        .optional(),
       quantity: z.number().int().min(1).max(50).default(1),
       maxUses: z.number().int().min(1).max(500).default(1),
       validForDays: z.number().int().min(1).max(365).default(30),
@@ -20,18 +24,25 @@ export const staffCreateRedeemCodes = createServerFn({ method: "POST" })
     const { assertStaff } = await import("@/lib/admin-helpers.server");
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { generateRedeemCode } = await import("./redeem-rules");
+    const { generateRedeemCode, PARTNER_CODE_PLANS } = await import("./redeem-rules");
 
     if (data.kind === "license_days" && !data.days) {
       throw new Error("Informe quantos dias o código vale.");
     }
+    if (data.kind === "partner_access" && !data.partnerPlan) {
+      throw new Error("Escolha qual serviço de parceria o código libera.");
+    }
+
+    const partnerPlan = data.kind === "partner_access" ? data.partnerPlan! : null;
+    const partnerDays = partnerPlan ? (data.days ?? PARTNER_CODE_PLANS[partnerPlan]?.days ?? null) : null;
 
     const expiresAt = new Date(Date.now() + data.validForDays * 86400000).toISOString();
     const rows = Array.from({ length: data.quantity }, () => ({
       code: generateRedeemCode(),
       kind: data.kind,
-      days: data.kind === "license_days" ? data.days! : null,
-      plan_slug: data.kind === "license_days" ? (data.planSlug ?? "login-30d") : null,
+      days: data.kind === "license_days" ? data.days! : partnerDays,
+      plan_slug:
+        data.kind === "license_days" ? (data.planSlug ?? "login-30d") : partnerPlan,
       max_uses: data.maxUses,
       expires_at: expiresAt,
       note: data.note ?? null,
@@ -159,6 +170,42 @@ export const redeemMyCode = createServerFn({ method: "POST" })
           });
           if (error) console.error("[Redeem] Falha ao liberar reserva:", error.message);
         };
+
+        // Código de parceria: libera a Área do Parceiro, sem mexer em licença.
+        if (rc.kind === "partner_access") {
+          try {
+            const { grantPartnerEntitlementFromCode } = await import("@/lib/partner.server");
+            const granted = await grantPartnerEntitlementFromCode(supabaseAdmin, {
+              userId,
+              planSlug: rc.plan_slug ?? "partner-reseller-60d",
+              days: rc.days ?? null,
+              claimId: rc.claim_id,
+              note: rc.note ?? null,
+            });
+            if (!granted.ok) throw new Error(granted.error ?? "Não foi possível liberar o acesso de parceiro.");
+
+            await supabaseAdmin.from("redeem_code_uses").update({
+              details: {
+                status: "applied",
+                kind: rc.kind,
+                plan_slug: rc.plan_slug,
+                entitlement_id: granted.entitlementId,
+                expires_at: granted.expiresAt ?? null,
+              },
+            }).eq("id", rc.claim_id);
+
+            return {
+              ok: true,
+              partner: true as const,
+              partnerKind: granted.kind,
+              planSlug: rc.plan_slug ?? null,
+              expires_at: granted.expiresAt ?? null,
+            };
+          } catch (e: any) {
+            await rollback();
+            throw new Error(e?.message ?? "Não foi possível aplicar o código agora.");
+          }
+        }
 
         let license: any = null;
         if (data.licenseId) {

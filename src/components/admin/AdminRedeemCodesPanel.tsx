@@ -28,7 +28,8 @@ export function AdminRedeemCodesPanel() {
   const [syncing, setSyncing] = useState(false);
   const [syncReport, setSyncReport] = useState<any>(null);
 
-  const [kind, setKind] = useState<"license_days" | "server_renewal">("license_days");
+  const [kind, setKind] = useState<"license_days" | "server_renewal" | "partner_access">("license_days");
+  const [partnerPlan, setPartnerPlan] = useState("partner-reseller-60d");
   const [days, setDays] = useState(7);
   const [planSlug, setPlanSlug] = useState("login-30d");
   const [quantity, setQuantity] = useState(1);
@@ -59,6 +60,7 @@ export function AdminRedeemCodesPanel() {
         data: {
           kind,
           ...(kind === "license_days" ? { days, planSlug: planSlug as any } : {}),
+          ...(kind === "partner_access" ? { partnerPlan: partnerPlan as any } : {}),
           quantity,
           maxUses,
           validForDays,
@@ -111,8 +113,26 @@ export function AdminRedeemCodesPanel() {
             >
               <option value="license_days">Dias de licença</option>
               <option value="server_renewal">Renovação de servidor (dia 20)</option>
+              <option value="partner_access">Acesso da Área do Parceiro</option>
             </select>
           </label>
+
+          {kind === "partner_access" && (
+            <label className="space-y-1">
+              <span className="font-mono text-[10px] uppercase text-muted-foreground">Serviço de parceria</span>
+              <select
+                value={partnerPlan}
+                onChange={(e) => setPartnerPlan(e.target.value)}
+                className="w-full rounded-md border border-border bg-background px-2 py-2 font-mono text-xs"
+              >
+                <option value="partner-reseller-60d">Servidor de Revenda · 60 dias</option>
+                <option value="server-managed-monthly">Gestão Mensal · 30 dias</option>
+                <option value="server-deploy-basic">Subimos seu Servidor</option>
+                <option value="server-deploy-managed">Subida + Proteção + Supervisão</option>
+              </select>
+            </label>
+          )}
+
 
           {kind === "license_days" && (
             <>
@@ -239,7 +259,11 @@ export function AdminRedeemCodesPanel() {
                     </button>
                   </div>
                   <div className="font-mono text-[10px] text-muted-foreground">
-                    {c.kind === "server_renewal" ? "renovação de servidor" : `${c.days} dia(s) · ${c.plan_slug}`}
+                    {c.kind === "server_renewal"
+                      ? "renovação de servidor"
+                      : c.kind === "partner_access"
+                        ? `parceria · ${c.plan_slug}${c.days ? ` · ${c.days} dia(s)` : ""}`
+                        : `${c.days} dia(s) · ${c.plan_slug}`}
                     {" · "}usos {c.uses}/{c.max_uses}
                     {c.expires_at ? ` · vence ${new Date(c.expires_at).toLocaleDateString("pt-BR")}` : ""}
                     {c.note ? ` · ${c.note}` : ""}
