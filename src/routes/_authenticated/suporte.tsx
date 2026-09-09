@@ -435,6 +435,7 @@ function SupportPage() {
               threadId={thread.id} 
               userId={uid} 
               onNewMessage={() => markReadFn({ data: { threadId: thread.id } })}
+              onThreadMigrated={(id) => setThread((prev) => (prev && prev.id === id ? prev : { ...(prev ?? {}), id }))}
             />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
