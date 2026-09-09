@@ -558,7 +558,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const handleSendRef = useRef<((...a: any[]) => Promise<void>) | null>(null);
   useEffect(() => {
     const retryFailed = async () => {
-      const failed = pendingRef.current.filter((p) => p.status === "failed" && !p.attachmentPath);
+      const failed = pendingRef.current.filter((p) => p.status === "failed");
       for (const item of failed) {
         try {
           await handleSendRef.current?.(undefined, undefined, item.clientId);
