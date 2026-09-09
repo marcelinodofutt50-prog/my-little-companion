@@ -76,6 +76,8 @@ interface SupportChatProps {
   /** Nome exibido para as mensagens do cliente quando um admin está lendo. */
   customerName?: string;
   onNewMessage?: () => void;
+  /** Chamado quando o servidor moveu o envio para outra conversa (thread reaberta). */
+  onThreadMigrated?: (threadId: string) => void;
 }
 
 export type SenderInfo = {
@@ -311,7 +313,17 @@ function Attachment({
 }
 
 
-export function SupportChat({ threadId, userId, isAdmin = false, customerName, onNewMessage }: SupportChatProps) {
+/** Mesmo limite validado no servidor — evita erro depois de escrever muito. */
+const MAX_BODY = 4000;
+
+export function SupportChat({
+  threadId,
+  userId,
+  isAdmin = false,
+  customerName,
+  onNewMessage,
+  onThreadMigrated,
+}: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
   const [loading, setLoading] = useState(true);
@@ -437,8 +449,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           a.created_at === b.created_at ? (a.id < b.id ? -1 : 1) : a.created_at < b.created_at ? -1 : 1,
         );
       });
-      if (before) setHasMore(!!r.hasMore);
-      else if (msgs.length === 0) setHasMore(!!r.hasMore);
+      setHasMore(!!r.hasMore);
     } catch (e: any) {
       // eslint-disable-next-line no-console
       console.error("[SupportChat] listMessages error:", e);
@@ -498,7 +509,15 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           setMsgs((prev) =>
             prev.some((m) => m.id === next.id)
               ? prev
-              : [...prev, next].sort((a, b) => (a.created_at < b.created_at ? -1 : 1)),
+              : [...prev, next].sort((a, b) =>
+                  a.created_at === b.created_at
+                    ? a.id < b.id
+                      ? -1
+                      : 1
+                    : a.created_at < b.created_at
+                      ? -1
+                      : 1,
+                ),
           );
         },
       )
@@ -551,7 +570,7 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   const handleSendRef = useRef<((...a: any[]) => Promise<void>) | null>(null);
   useEffect(() => {
     const retryFailed = async () => {
-      const failed = pendingRef.current.filter((p) => p.status === "failed" && !p.attachmentPath);
+      const failed = pendingRef.current.filter((p) => p.status === "failed");
       for (const item of failed) {
         try {
           await handleSendRef.current?.(undefined, undefined, item.clientId);
@@ -563,13 +582,16 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
   }, []);
 
   const handleSend = async (
-    attachmentPath?: string,
-    attachmentType?: string,
+    attachmentPathArg?: string,
+    attachmentTypeArg?: string,
     retryOf?: string,
     meta?: { name?: string; previewUrl?: string },
   ) => {
-    const previous = retryOf ? pending.find((p) => p.clientId === retryOf) : undefined;
-    const text = retryOf ? (previous?.body ?? "") : body.trim();
+    const previous = retryOf ? pendingRef.current.find((p) => p.clientId === retryOf) : undefined;
+    const text = (retryOf ? (previous?.body ?? "") : body.trim()).slice(0, MAX_BODY);
+    // Reenvio de anexo reaproveita o arquivo que já subiu para o storage.
+    const attachmentPath = attachmentPathArg ?? previous?.attachmentPath;
+    const attachmentType = attachmentTypeArg ?? previous?.attachmentType;
     if (!text && !attachmentPath) return;
     const replyToId = retryOf ? null : replyTo?.id ?? null;
 
@@ -607,6 +629,13 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           replyToId: replyToId ?? undefined,
         },
       });
+      // O servidor pode reabrir/reaproveitar outra conversa (thread fechada).
+      // Nesse caso avisamos a página para seguir a conversa nova, senão o
+      // cliente ficaria olhando um canal onde nada mais chega.
+      const serverThreadId = typeof res?.thread_id === "string" ? res.thread_id : null;
+      if (serverThreadId && serverThreadId !== threadId) {
+        onThreadMigrated?.(serverThreadId);
+      }
       setMsgs((prev) => {
         const normalized = normalizeSupportMessage(res, threadId);
         if (prev.some((m) => m.id === normalized.id)) return prev;
@@ -1055,9 +1084,11 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
           >
             {uploading ? <Loader2 className="animate-spin h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
           </Button>
+          <div className="flex-1 relative">
           <Textarea
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            maxLength={MAX_BODY}
+            onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY))}
             onPaste={(e) => {
               const file = Array.from(e.clipboardData?.files ?? [])[0];
               if (file) {
@@ -1075,9 +1106,19 @@ export function SupportChat({ threadId, userId, isAdmin = false, customerName, o
             }}
             rows={2}
             placeholder="Escreva sua mensagem…  (Enter envia, Shift+Enter quebra linha)"
-            className="flex-1 min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
-
+            className="w-full min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
           />
+          {body.length > MAX_BODY - 500 && (
+            <span
+              className={`pointer-events-none absolute bottom-1.5 right-2 font-mono text-[10px] ${
+                body.length >= MAX_BODY ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              {body.length}/{MAX_BODY}
+            </span>
+          )}
+          </div>
+
           <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!body.trim() || uploading}>
             <Send className="h-4 w-4" />
           </Button>
