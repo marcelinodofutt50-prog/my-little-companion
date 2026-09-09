@@ -50,7 +50,7 @@ const emptyForm = {
   starts_at: "",
   ends_at: "",
   is_active: true,
-  status: "draft" as AnnouncementStatus,
+  status: "published" as AnnouncementStatus,
   tags: [] as string[],
   image_url: "" as string | undefined,
   attachment_url: "" as string | undefined,
@@ -81,6 +81,13 @@ export function AdminAnnouncementsPanel() {
   const canCreate = useMemo(() => can(myRole, "announcements.create"), [myRole]);
   const canApprove = useMemo(() => can(myRole, "announcements.approve"), [myRole]);
   const canPublish = useMemo(() => can(myRole, "announcements.publish"), [myRole]);
+
+  // Quem não pode publicar não pode ficar com o formulário travado em "Publicado".
+  useEffect(() => {
+    if (myRole && !canPublish) {
+      setForm((f) => (f.status === "published" ? { ...f, status: "draft" } : f));
+    }
+  }, [myRole, canPublish]);
 
   async function refresh() {
     setLoading(true);
