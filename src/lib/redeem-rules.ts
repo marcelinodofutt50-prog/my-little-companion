@@ -60,6 +60,12 @@ export function checkRedeemCode(code: RedeemCodeLike | null | undefined, now = D
 /** Rótulo curto do benefício, usado no painel e na confirmação ao cliente. */
 export function describeRedeemCode(code: RedeemCodeLike): string {
   if (code.kind === "server_renewal") return "Renovação do servidor (até o próximo dia 20)";
+  if (code.kind === "partner_access") {
+    const plan = PARTNER_CODE_PLANS[code.plan_slug ?? ""];
+    const label = plan?.label ?? "Área do Parceiro";
+    const d = Number(code.days ?? plan?.days ?? 0);
+    return d > 0 ? `${label} — ${d} dia${d === 1 ? "" : "s"}` : label;
+  }
   const d = Number(code.days ?? 0);
   return `Licença de ${d} dia${d === 1 ? "" : "s"}`;
 }
