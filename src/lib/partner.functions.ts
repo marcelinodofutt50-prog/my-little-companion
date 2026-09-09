@@ -25,12 +25,22 @@ export const getMyPartnerArea = createServerFn({ method: "GET" })
     ]);
 
     const entitlements = ((ents ?? []) as any[]).map((e) => ({ ...e, active: isEntitlementActive(e) }));
+
+    let isAdmin = false;
+    try {
+      const { data } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+      isAdmin = Boolean(data);
+    } catch {
+      isAdmin = false;
+    }
+
     return {
       entitlements,
       requests: (reqs ?? []) as any[],
-      hasReseller: entitlements.some((e) => e.kind === "reseller" && e.active),
-      hasManaged: entitlements.some((e) => e.kind === "managed" && e.active),
-      hasDeploy: entitlements.some((e) => e.kind === "deploy"),
+      isAdmin,
+      hasReseller: isAdmin || entitlements.some((e) => e.kind === "reseller" && e.active),
+      hasManaged: isAdmin || entitlements.some((e) => e.kind === "managed" && e.active),
+      hasDeploy: isAdmin || entitlements.some((e) => e.kind === "deploy"),
     };
   });
 
