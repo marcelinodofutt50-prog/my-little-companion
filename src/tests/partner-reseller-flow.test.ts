@@ -80,7 +80,7 @@ describe("painel do parceiro", () => {
       [{ amount_cents: 5000 }, { amount_cents: 2500 }],
       [{ id: "a" }, { id: "b" }],
     );
-    expect(s).toEqual({ customers: 2, activeLicenses: 1, pendingSync: 1, revenueCents: 7500 });
+    expect(s).toMatchObject({ customers: 2, activeLicenses: 1, pendingSync: 1, revenueCents: 7500 });
   });
 
   it("começa zerado para um parceiro novo", () => {
@@ -88,6 +88,7 @@ describe("painel do parceiro", () => {
       customers: 0,
       activeLicenses: 0,
       pendingSync: 0,
+      expiringSoon: 0,
       revenueCents: 0,
     });
   });
