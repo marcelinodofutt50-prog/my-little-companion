@@ -96,6 +96,87 @@ export async function grantPartnerEntitlement(
   return { ok: true, kind: meta.kind, entitlementId: created.id };
 }
 
+/**
+ * Libera um acesso de parceria a partir de um código de cortesia (sem pedido).
+ * Idempotente pelo resgate: o mesmo código nunca libera o acesso duas vezes.
+ */
+export async function grantPartnerEntitlementFromCode(
+  admin: any,
+  input: { userId: string; planSlug: string; days?: number | null; claimId: string; note?: string | null },
+): Promise<{ ok: boolean; kind: PartnerKind | "unknown"; entitlementId?: string; expiresAt?: string | null; error?: string }> {
+  const meta = PARTNER_PLANS[input.planSlug];
+  if (!meta) return { ok: false, kind: "unknown", error: `plano de parceria desconhecido: ${input.planSlug}` };
+
+  const { data: already } = await admin
+    .from("partner_entitlements")
+    .select("id, expires_at")
+    .eq("user_id", input.userId)
+    .contains("metadata", { redeem_claim_id: input.claimId })
+    .maybeSingle();
+  if (already?.id) {
+    return { ok: true, kind: meta.kind, entitlementId: already.id, expiresAt: already.expires_at ?? null };
+  }
+
+  const days = input.days ?? meta.days;
+
+  if (days) {
+    const { data: existing } = await admin
+      .from("partner_entitlements")
+      .select("id, expires_at, status")
+      .eq("user_id", input.userId)
+      .eq("kind", meta.kind)
+      .in("status", ["active", "pending_setup", "expired"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.id) {
+      const current = existing.expires_at ? new Date(existing.expires_at) : new Date();
+      const base = current.getTime() > Date.now() ? current : new Date();
+      const expiresAt = addDays(base, days).toISOString();
+      const { error } = await admin
+        .from("partner_entitlements")
+        .update({
+          expires_at: expiresAt,
+          status: "active",
+          plan_slug: input.planSlug,
+          metadata: { source: "redeem_code", redeem_claim_id: input.claimId, note: input.note ?? null },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+      if (error) return { ok: false, kind: meta.kind, error: error.message };
+      return { ok: true, kind: meta.kind, entitlementId: existing.id, expiresAt };
+    }
+  }
+
+  const expiresAt = days ? addDays(new Date(), days).toISOString() : null;
+  const { data: created, error } = await admin
+    .from("partner_entitlements")
+    .insert({
+      user_id: input.userId,
+      plan_slug: input.planSlug,
+      kind: meta.kind,
+      status: meta.kind === "deploy" ? "pending_setup" : "active",
+      expires_at: expiresAt,
+      metadata: { source: "redeem_code", redeem_claim_id: input.claimId, note: input.note ?? null },
+    })
+    .select("id")
+    .single();
+  if (error) return { ok: false, kind: meta.kind, error: error.message };
+
+  if (meta.kind === "deploy") {
+    await admin.from("partner_service_requests").insert({
+      user_id: input.userId,
+      entitlement_id: created.id,
+      kind: "deploy",
+      status: "open",
+      notes: `Liberado por código de cortesia — ${meta.label}`,
+    });
+  }
+
+  return { ok: true, kind: meta.kind, entitlementId: created.id, expiresAt };
+}
+
 export function isEntitlementActive(row: { status: string; expires_at: string | null }): boolean {
   if (row.status === "cancelled") return false;
   if (row.expires_at && new Date(row.expires_at).getTime() < Date.now()) return false;
