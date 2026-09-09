@@ -6,6 +6,10 @@ import {
   PARTNER_PLAN_DAYS,
   planPartnerRenewal,
   summarizeDesk,
+  resolveLicenseDays,
+  daysLeft,
+  buildCredentialMessage,
+  summarizeDesk,
 } from "@/lib/partner-reseller.server";
 
 /**
@@ -87,5 +91,58 @@ describe("painel do parceiro", () => {
       pendingSync: 0,
       revenueCents: 0,
     });
+  });
+});
+
+describe("emissão estruturada de licenças", () => {
+  it("usa os dias do plano quando não há prazo personalizado", () => {
+    expect(resolveLicenseDays("login-7d", null)).toBe(7);
+    expect(resolveLicenseDays("login-30d", undefined)).toBe(30);
+    expect(resolveLicenseDays("plano-desconhecido", null)).toBe(30);
+  });
+
+  it("respeita o prazo personalizado e limita a 3650 dias", () => {
+    expect(resolveLicenseDays("login-7d", 45)).toBe(45);
+    expect(resolveLicenseDays("login-7d", 99999)).toBe(3650);
+    expect(resolveLicenseDays("login-7d", 0)).toBe(7);
+    expect(resolveLicenseDays("login-7d", -5)).toBe(7);
+  });
+
+  it("calcula os dias restantes e o vencimento", () => {
+    const now = new Date("2026-01-10T12:00:00Z");
+    expect(daysLeft(null, now)).toBeNull();
+    expect(daysLeft("2026-01-15T12:00:00Z", now)).toBe(5);
+    expect(daysLeft("2026-01-05T12:00:00Z", now)).toBe(-5);
+  });
+
+  it("monta a mensagem pronta com todos os dados do acesso", () => {
+    const msg = buildCredentialMessage({
+      customerName: "João",
+      email: "a@b.com",
+      username: "joao123",
+      password: "S3nh@Forte",
+      expiresAt: "2026-02-01T00:00:00Z",
+    });
+    expect(msg).toContain("Olá, João!");
+    expect(msg).toContain("a@b.com");
+    expect(msg).toContain("joao123");
+    expect(msg).toContain("S3nh@Forte");
+    expect(msg).toContain("Validade:");
+  });
+
+  it("conta licenças que vencem em até 5 dias", () => {
+    const now = new Date("2026-01-10T12:00:00Z");
+    const s = summarizeDesk(
+      [
+        { status: "active", expires_at: "2026-01-12T12:00:00Z" },
+        { status: "active", expires_at: "2026-03-12T12:00:00Z" },
+        { status: "cancelled", expires_at: "2026-01-11T12:00:00Z" },
+      ],
+      [],
+      [],
+      now,
+    );
+    expect(s.activeLicenses).toBe(2);
+    expect(s.expiringSoon).toBe(1);
   });
 });
