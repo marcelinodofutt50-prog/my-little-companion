@@ -1,7 +1,15 @@
 // Regras puras dos códigos de resgate (cortesias da equipe).
 // Compartilhadas entre a criação no painel, o resgate do cliente e os testes.
 
-export type RedeemKind = "license_days" | "server_renewal";
+export type RedeemKind = "license_days" | "server_renewal" | "partner_access";
+
+/** Planos de parceria que um código pode liberar. */
+export const PARTNER_CODE_PLANS: Record<string, { label: string; days: number | null }> = {
+  "partner-reseller-60d": { label: "Servidor de Revenda", days: 60 },
+  "server-deploy-basic": { label: "Subimos seu Servidor", days: null },
+  "server-deploy-managed": { label: "Subida + Proteção + Supervisão", days: null },
+  "server-managed-monthly": { label: "Gestão Mensal do Servidor", days: 30 },
+};
 
 export type RedeemCodeLike = {
   code: string;
