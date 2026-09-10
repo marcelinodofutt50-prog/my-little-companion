@@ -196,3 +196,36 @@ describe("healLicenseLogin", () => {
     expect(state.updates).toEqual([]);
   });
 });
+
+describe("healLicenseLogin — proteções adicionais", () => {
+  it("devolve a conta ao painel quando a recriação falha em todos os servidores", async () => {
+    // existe -> apaga -> todas as recriações falham -> restauração
+    state.createResponses = [
+      { Fail: "1004 already in use" },
+      { Fail: "maximum allowed accounts reached" },
+      { Fail: "maximum allowed accounts reached" },
+      { Fail: "maximum allowed accounts reached" },
+      { Success: true }, // restauração
+    ];
+    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/cota de contas cheia/i);
+    expect(state.removed.length).toBeGreaterThan(0);
+    // a última criação usa exatamente as credenciais originais do cliente
+    const last = state.create[state.create.length - 1];
+    expect(last.email).toBe("cliente1@shadow.app");
+    expect(last.password).toBe("Antiga#123");
+    expect(state.updates).toEqual([]);
+  });
+
+  it("não apaga a conta em painéis onde ela não existe", async () => {
+    state.createResponses = [{ Fail: "1004 already in use" }, { Success: true }];
+    state.probeResponses = [
+      { state: "found", detail: "" },   // remoção no painel preferido
+      { state: "missing", detail: "" }, // outros painéis: não remove
+      { state: "missing", detail: "" },
+      { state: "found", detail: "" },   // conferência da recriação
+    ];
+    const res = await healLicenseLogin(baseLic, { reason: "test" });
+    expect(res.action).toBe("recreated");
+    expect(state.removed).toEqual(["cliente1@shadow.app"]);
+  });
+});
