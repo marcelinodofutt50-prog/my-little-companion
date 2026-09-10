@@ -769,7 +769,29 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(data.newPassword),
       password_fingerprint: sha256Hex(data.newPassword),
     } as any).eq("id", lic.id).eq("user_id", userId);
-    if (upErr) throw new Error("Senha trocada no painel, mas falhou ao salvar aqui. Fale com o suporte.");
+    if (upErr) {
+      // Não podemos deixar o painel com uma senha que o site não conhece:
+      // devolvemos a senha anterior antes de avisar o cliente.
+      let rolledBack = false;
+      try {
+        const { decrypt } = await import("./yaarsa.server");
+        const previous = decrypt((lic as any).yaarsa_password_enc);
+        if (previous && previous.length >= 4) {
+          const rb = await yaarsaSetPassword(lic.yaarsa_email, previous, panel, lic.yaarsa_username);
+          rolledBack = !rb.Fail;
+        }
+      } catch { /* best-effort */ }
+      await supabaseAdmin.from("integration_logs").insert({
+        source: `yaarsa-${panel}`, action: "license_password_change", outcome: "error",
+        error: upErr.message,
+        context: { license_id: lic.id, user_id: userId, rolled_back: rolledBack } as any,
+      } as any).catch?.(() => {});
+      throw new Error(
+        rolledBack
+          ? "Não deu para salvar a nova senha aqui, então voltamos a senha anterior no painel. Continue usando a senha antiga e tente de novo."
+          : "Senha trocada no painel, mas falhou ao salvar aqui. Fale com o suporte.",
+      );
+    }
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${panel}`, action: "license_password_change",
