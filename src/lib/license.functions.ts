@@ -629,7 +629,8 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
       // Usa exatamente o mesmo motor do botão por licença e do admin. Ele cria
       // a conta ausente ou apaga/recria com as MESMAS credenciais e confirma a
       // presença no painel antes de declarar sucesso.
-      if (!expiresAt) continue;
+      // Licença vitalícia não tem `expires_at` — antes ela era pulada e o
+      // botão "Corrigir Erros" nunca reparava esse login.
       try {
         const healed = await healLicenseLogin(
           {
