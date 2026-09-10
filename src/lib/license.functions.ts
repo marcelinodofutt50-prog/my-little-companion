@@ -781,11 +781,13 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
           rolledBack = !rb.Fail;
         }
       } catch { /* best-effort */ }
-      await supabaseAdmin.from("integration_logs").insert({
-        source: `yaarsa-${panel}`, action: "license_password_change", outcome: "error",
-        error: upErr.message,
-        context: { license_id: lic.id, user_id: userId, rolled_back: rolledBack } as any,
-      } as any).catch?.(() => {});
+      try {
+        await supabaseAdmin.from("integration_logs").insert({
+          source: `yaarsa-${panel}`, action: "license_password_change", outcome: "error",
+          error: upErr.message,
+          context: { license_id: lic.id, user_id: userId, rolled_back: rolledBack } as any,
+        } as any);
+      } catch { /* telemetria best-effort */ }
       throw new Error(
         rolledBack
           ? "Não deu para salvar a nova senha aqui, então voltamos a senha anterior no painel. Continue usando a senha antiga e tente de novo."
