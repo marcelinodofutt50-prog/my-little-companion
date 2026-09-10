@@ -278,15 +278,27 @@ async function runHeal(
 
   const panelOrder = panelCandidates();
 
-  // Apaga a conta bugada em TODOS os painéis configurados, senão a recriação
-  // volta a bater em "e-mail já em uso".
+  // Apaga a conta bugada onde ela realmente existe. Antes apagávamos em todos
+  // os painéis "no escuro": se a recriação falhasse depois, o cliente ficava
+  // sem conta nenhuma. Agora só removemos onde a sondagem confirma a conta.
+  const removedFrom: Array<"v455" | "v457" | "v46"> = [];
   if (!generated) {
     for (const candidate of panelOrder) {
+      let present = true;
+      try {
+        const probe = await yaarsaProbeAccount(email, candidate);
+        present = probe.state === "found";
+        if (probe.state === "unknown") present = candidate === panel; // painel mudo: só o preferido
+      } catch {
+        present = candidate === panel;
+      }
+      if (!present) continue;
       try {
         const removed = await yaarsaRemoveAccount(email, candidate);
         if (removed.Fail && !NOT_FOUND_RE.test(String(removed.Fail))) {
           steps.push(`remocao-${candidate}:${String(removed.Fail).slice(0, 60)}`);
-        } else if (removed.Success) {
+        } else {
+          removedFrom.push(candidate);
           steps.push(`conta-removida:${candidate}`);
         }
       } catch (e: any) {
