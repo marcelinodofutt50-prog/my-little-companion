@@ -346,7 +346,49 @@ async function runHeal(
   }
 
   if (!issued) {
-    await logHeal(supabaseAdmin, lic, panel, "failed", reason, [...steps, lastFail.slice(0, 200)]);
+    // Última linha de defesa: se apagamos a conta e nenhuma recriação passou,
+    // tentamos devolver a conta ao painel de origem para o cliente não ficar
+    // sem acesso nenhum por causa da tentativa de correção.
+    let restored = false;
+    for (const candidate of removedFrom) {
+      try {
+        const back = await yaarsaCreateAccount({
+          username,
+          email,
+          password,
+          planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
+          totalPaid: 0,
+          additionalInfo: `shadow-heal-restore-${lic.id.slice(0, 8)}`,
+          panel: candidate,
+        });
+        if (back.Success || EXISTS_RE.test(String(back.Fail ?? ""))) {
+          const probe = await yaarsaProbeAccount(email, candidate);
+          if (probe.state !== "missing") {
+            restored = true;
+            steps.push(`conta-restaurada:${candidate}`);
+            try { await yaarsaExtend(email, targetYmd, candidate); } catch { /* best-effort */ }
+            break;
+          }
+        }
+      } catch (e: any) {
+        steps.push(`restauracao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
+      }
+    }
+    if (removedFrom.length && !restored) steps.push("ATENCAO:conta-removida-sem-restauracao");
+
+    await logHeal(
+      supabaseAdmin,
+      lic,
+      panel,
+      removedFrom.length && !restored ? "failed_account_lost" : "failed",
+      reason,
+      [...steps, lastFail.slice(0, 200)],
+    );
+    if (removedFrom.length && !restored) {
+      throw new Error(
+        "Os servidores recusaram a recriação e não consegui devolver a conta ao painel. As credenciais continuam as mesmas — acione o suporte para recriar manualmente antes de tentar de novo.",
+      );
+    }
     throw new Error(
       QUOTA_RE.test(lastFail)
         ? "Os servidores estão com a cota de contas cheia agora. Libere espaço no painel e tente de novo — as credenciais do cliente não foram alteradas."
