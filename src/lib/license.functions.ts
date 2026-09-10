@@ -651,7 +651,7 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
         // com a validade salva aqui — era a divergência que fazia o login
         // vencer antes (ou continuar ativo depois) do prazo mostrado no site.
         let expiryNote: string | undefined;
-        if ((lic as any).plan_slug !== "login-lifetime") {
+        if (expiresAt && (lic as any).plan_slug !== "login-lifetime") {
           const { setExpiryAnyPanel } = await import("./license-cron.server");
           const sync = await setExpiryAnyPanel(lic.yaarsa_email, (lic as any).panel, expiresAt);
           if (sync.status === "failed") {
