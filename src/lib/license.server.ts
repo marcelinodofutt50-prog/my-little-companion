@@ -183,6 +183,15 @@ export async function internalGenerateTrial(
     // Se falhar a inserção da licença (ex: unique constraint no email), 
     // precisamos limpar a intenção para não bloquear o usuário.
     await supabaseAdmin.from("trials").delete().eq("user_id", userId).is("license_id", null);
+    // A conta acabou de ser criada no painel e não tem licença nenhuma
+    // apontando para ela: removemos para não virar conta órfã ocupando cota
+    // (e barrando a próxima tentativa com "e-mail já em uso").
+    if (!existedBefore) {
+      try {
+        const { yaarsaRemoveAccount } = await import("./yaarsa.server");
+        await yaarsaRemoveAccount(creds.email, usedPanel as any);
+      } catch { /* best-effort */ }
+    }
     throw new Error(licErr?.message || "Falha ao gravar licença");
   }
 
