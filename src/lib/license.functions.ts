@@ -774,15 +774,24 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     let verified: boolean | null = null;
     try {
       const { yaarsaReadAccount } = await import("./yaarsa.server");
-      const acc = await yaarsaReadAccount(lic.yaarsa_email, panel);
+      const acc = await yaarsaReadAccount(lic.yaarsa_email, usedPanel);
       if (acc.known && acc.password) verified = acc.password === data.newPassword;
     } catch { /* best-effort */ }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: upErr } = await supabaseAdmin.from("licenses").update({
-      yaarsa_password_enc: encrypt(data.newPassword),
-      password_fingerprint: sha256Hex(data.newPassword),
-    } as any).eq("id", lic.id).eq("user_id", userId);
+    const { updateLicenseTolerant } = await import("./license-password.server");
+    // Colunas opcionais (fingerprint/painel) podem não existir em bancos
+    // atrasados; o helper descarta só o que faltar e salva a senha do cliente.
+    let upErr: { message: string } | null = null;
+    try {
+      await updateLicenseTolerant(supabaseAdmin, lic.id, {
+        yaarsa_password_enc: encrypt(data.newPassword),
+        password_fingerprint: sha256Hex(data.newPassword),
+        ...(usedPanel !== panel ? { panel: usedPanel } : {}),
+      });
+    } catch (e: any) {
+      upErr = { message: String(e?.message ?? e) };
+    }
     if (upErr) {
       // Não podemos deixar o painel com uma senha que o site não conhece:
       // devolvemos a senha anterior antes de avisar o cliente.
@@ -791,10 +800,11 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
         const { decrypt } = await import("./yaarsa.server");
         const previous = decrypt((lic as any).yaarsa_password_enc);
         if (previous && previous.length >= 4) {
-          const rb = await yaarsaSetPassword(lic.yaarsa_email, previous, panel, lic.yaarsa_username);
+          const rb = await yaarsaSetPassword(lic.yaarsa_email, previous, usedPanel, lic.yaarsa_username);
           rolledBack = !rb.Fail;
         }
       } catch { /* best-effort */ }
+
       try {
         await supabaseAdmin.from("integration_logs").insert({
           source: `yaarsa-${panel}`, action: "license_password_change", outcome: "error",
