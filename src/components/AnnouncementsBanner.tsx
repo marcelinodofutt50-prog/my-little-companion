@@ -14,9 +14,28 @@ function loadDismissed(): string[] {
 }
 
 function styleFor(sev: Announcement["severity"]) {
-  if (sev === "critical") return "border-red-500/50 bg-red-500/10 text-red-200";
-  if (sev === "warning") return "border-amber-400/50 bg-amber-400/10 text-amber-200";
-  return "border-neon/40 bg-neon/10 text-neon";
+  if (sev === "critical") {
+    return {
+      outer: "border-l-4 border-l-red-500 bg-red-950/60 text-red-100",
+      badge: "bg-red-500/15 text-red-300 ring-1 ring-red-500/40",
+    };
+  }
+  if (sev === "warning") {
+    return {
+      outer: "border-l-4 border-l-amber-400 bg-amber-950/50 text-amber-100",
+      badge: "bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/40",
+    };
+  }
+  return {
+    outer: "border-l-4 border-l-neon bg-neon/10 text-neon",
+    badge: "bg-neon/15 text-neon ring-1 ring-neon/40",
+  };
+}
+
+function severityLabel(sev: Announcement["severity"]) {
+  if (sev === "critical") return "CRÍTICO";
+  if (sev === "warning") return "WARNING";
+  return "INFO";
 }
 
 function fmtEvent(iso: string) {
