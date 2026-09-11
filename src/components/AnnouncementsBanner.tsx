@@ -76,30 +76,41 @@ export function AnnouncementsBanner() {
   if (visible.length === 0) return null;
 
   return (
-    <div className="space-y-2">
-      {visible.map((a) => (
-        <div key={a.id} className={`relative rounded-lg border p-3 pr-9 ${styleFor(a.severity)}`}>
-          <button
-            onClick={() => dismiss(a.id)}
-            aria-label="Fechar aviso"
-            className="absolute right-2 top-2 rounded p-1 opacity-70 transition hover:opacity-100"
+    <div className="w-full bg-background/95 backdrop-blur">
+      {visible.map((a) => {
+        const styles = styleFor(a.severity);
+        return (
+          <div
+            key={a.id}
+            className={`relative border-b border-border/10 p-3 pr-10 ${styles.outer}`}
           >
-            <X className="h-3.5 w-3.5" />
-          </button>
-          <div className="flex items-start gap-2">
-            <Megaphone className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="min-w-0">
-              <div className="font-display text-sm font-semibold">{a.title}</div>
-              <p className="mt-0.5 whitespace-pre-wrap text-[12px] leading-relaxed opacity-90">{a.body}</p>
-              {a.event_at && (
-                <div className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider opacity-80">
-                  <Clock className="h-3 w-3" /> {fmtEvent(a.event_at)}
+            <button
+              onClick={() => dismiss(a.id)}
+              aria-label="Fechar aviso"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 opacity-70 transition hover:opacity-100 hover:bg-white/5"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="mx-auto flex max-w-7xl items-start gap-3">
+              <Megaphone className="mt-0.5 h-4 w-4 shrink-0 opacity-80" />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider ${styles.badge}`}>
+                    {severityLabel(a.severity)}
+                  </span>
+                  <span className="font-display text-sm font-semibold">{a.title}</span>
                 </div>
-              )}
+                <p className="mt-1 whitespace-pre-wrap text-[12px] leading-relaxed opacity-90">{a.body}</p>
+                {a.event_at && (
+                  <div className="mt-1.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider opacity-80">
+                    <Clock className="h-3 w-3" /> {fmtEvent(a.event_at)}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
