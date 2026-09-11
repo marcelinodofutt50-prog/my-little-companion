@@ -12,6 +12,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { redirectLocalhostAuthToCanonical } from "@/lib/site-url";
 import { Toaster } from "sonner";
 import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
+import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 
 
 import appCss from "../styles.css?url";
@@ -351,6 +352,9 @@ function InnerRootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
+          <div className="sticky top-0 z-[60] w-full">
+            <AnnouncementsBanner />
+          </div>
           <Outlet />
           <ThemedToaster />
           <PaymentSuccessOverlay />
