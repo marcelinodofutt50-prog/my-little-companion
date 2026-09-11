@@ -476,22 +476,40 @@ export async function yaarsaSetPassword(
       fields.expire_date = fallbackExpire;
     }
 
-    const r = await yaarsaPost(fields, panel);
+    let r: YaarsaResponse;
+    try {
+      r = await yaarsaPost(fields, panel);
+    } catch (e: any) {
+      last = { Fail: String(e?.message ?? "falha de rede com o painel") };
+      continue;
+    }
     if (r.Success) return { ...r, action };
-    
+
     // Se a senha foi alterada com sucesso mas o painel retornou erro de "email em uso" no action 'add', tratamos como sucesso
     if (action === "add" && /1004|already|use/i.test(r.Fail || "")) {
        return { Success: "Account verified/updated via add fallback", action };
     }
 
     last = r;
-    const invalidAction = /1001|ação inválida|invalid action|resposta inesperada/i.test(
-      String(r.Fail ?? ""),
-    );
-    if (!invalidAction && !/1005|not found/i.test(r.Fail || "")) return { ...r, action };
+    const fail = String(r.Fail ?? "");
+    // Ação inexistente no painel OU erro interno do PHP quando a ação não
+    // sabe lidar com o registro ("Trying to access array offset on null").
+    // Nesses casos não desistimos: tentamos a próxima variação conhecida.
+    const keepTrying =
+      /1001|ação inválida|invalid action|resposta inesperada/i.test(fail) ||
+      /array offset|undefined (index|offset|array key)|internal server error|<br\s*\/?>/i.test(fail) ||
+      /1005|not found|não encontrado|no such/i.test(fail) ||
+      /timeout|aborted|network|fetch failed/i.test(fail);
+    if (!keepTrying) return { ...r, action };
   }
   return last;
 }
+
+/** O painel não conhece (ou não conseguiu ler) esta conta. */
+export function looksLikeMissingAccount(fail?: string | null): boolean {
+  return /1005|not found|não encontrado|no such|array offset on null/i.test(String(fail ?? ""));
+}
+
 
 
 /**
