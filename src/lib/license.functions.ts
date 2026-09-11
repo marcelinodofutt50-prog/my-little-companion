@@ -629,7 +629,8 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
       // Usa exatamente o mesmo motor do botão por licença e do admin. Ele cria
       // a conta ausente ou apaga/recria com as MESMAS credenciais e confirma a
       // presença no painel antes de declarar sucesso.
-      if (!expiresAt) continue;
+      // Licença vitalícia não tem `expires_at` — antes ela era pulada e o
+      // botão "Corrigir Erros" nunca reparava esse login.
       try {
         const healed = await healLicenseLogin(
           {
@@ -650,7 +651,7 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
         // com a validade salva aqui — era a divergência que fazia o login
         // vencer antes (ou continuar ativo depois) do prazo mostrado no site.
         let expiryNote: string | undefined;
-        if ((lic as any).plan_slug !== "login-lifetime") {
+        if (expiresAt && (lic as any).plan_slug !== "login-lifetime") {
           const { setExpiryAnyPanel } = await import("./license-cron.server");
           const sync = await setExpiryAnyPanel(lic.yaarsa_email, (lic as any).panel, expiresAt);
           if (sync.status === "failed") {
@@ -768,7 +769,31 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(data.newPassword),
       password_fingerprint: sha256Hex(data.newPassword),
     } as any).eq("id", lic.id).eq("user_id", userId);
-    if (upErr) throw new Error("Senha trocada no painel, mas falhou ao salvar aqui. Fale com o suporte.");
+    if (upErr) {
+      // Não podemos deixar o painel com uma senha que o site não conhece:
+      // devolvemos a senha anterior antes de avisar o cliente.
+      let rolledBack = false;
+      try {
+        const { decrypt } = await import("./yaarsa.server");
+        const previous = decrypt((lic as any).yaarsa_password_enc);
+        if (previous && previous.length >= 4) {
+          const rb = await yaarsaSetPassword(lic.yaarsa_email, previous, panel, lic.yaarsa_username);
+          rolledBack = !rb.Fail;
+        }
+      } catch { /* best-effort */ }
+      try {
+        await supabaseAdmin.from("integration_logs").insert({
+          source: `yaarsa-${panel}`, action: "license_password_change", outcome: "error",
+          error: upErr.message,
+          context: { license_id: lic.id, user_id: userId, rolled_back: rolledBack } as any,
+        } as any);
+      } catch { /* telemetria best-effort */ }
+      throw new Error(
+        rolledBack
+          ? "Não deu para salvar a nova senha aqui, então voltamos a senha anterior no painel. Continue usando a senha antiga e tente de novo."
+          : "Senha trocada no painel, mas falhou ao salvar aqui. Fale com o suporte.",
+      );
+    }
 
     await supabaseAdmin.from("integration_logs").insert({
       source: `yaarsa-${panel}`, action: "license_password_change",
