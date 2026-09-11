@@ -736,14 +736,27 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     }
 
     try {
-    const pr = await yaarsaSetPassword(
-      lic.yaarsa_email, data.newPassword, panel, lic.yaarsa_username, (lic as any).expires_at ?? null,
-    );
+    // A licença pode estar marcada com o painel errado (migração, correção
+    // manual). Tentamos o painel dela primeiro e, se a conta não for
+    // encontrada, os outros — assim o botão para de "não fazer nada".
+    const order = [panel, "v457", "v455", "v46"].filter((p, i, a) => a.indexOf(p) === i) as any[];
+    let pr: any = { Fail: "Painel não respondeu" };
+    let usedPanel = panel;
+    for (const p of order) {
+      pr = await yaarsaSetPassword(
+        lic.yaarsa_email, data.newPassword, p, lic.yaarsa_username, (lic as any).expires_at ?? null,
+      );
+      usedPanel = p;
+      if (!pr.Fail) break;
+      const { looksLikeMissingAccount } = await import("./yaarsa.server");
+      if (!looksLikeMissingAccount(pr.Fail)) break;
+    }
     if (pr.Fail) {
-      if (/1005|não encontrado|not found/i.test(pr.Fail)) {
+      const { looksLikeMissingAccount } = await import("./yaarsa.server");
+      if (looksLikeMissingAccount(pr.Fail)) {
         throw new Error("Sua conta não foi localizada no painel. Use o botão 'Reparar acesso' e tente de novo.");
       }
-      throw new Error("O painel não aceitou a troca de senha agora. Tente novamente em alguns minutos.");
+      throw new Error(`O painel não aceitou a troca de senha agora (${String(pr.Fail).slice(0, 120)}). Tente novamente em alguns minutos.`);
     }
 
     // O painel pode ter recriado a conta pelo fallback `add`: reempurramos a
@@ -751,24 +764,34 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     if ((lic as any).expires_at) {
       try {
         const { yaarsaExtend } = await import("./yaarsa.server");
-        await yaarsaExtend(lic.yaarsa_email, String((lic as any).expires_at).slice(0, 10), panel);
+        await yaarsaExtend(lic.yaarsa_email, String((lic as any).expires_at).slice(0, 10), usedPanel);
       } catch { /* best-effort */ }
     }
+
 
     // Confere no painel se a senha realmente ficou gravada (quando o painel
     // expõe leitura). `verified: null` = painel não permite consultar.
     let verified: boolean | null = null;
     try {
       const { yaarsaReadAccount } = await import("./yaarsa.server");
-      const acc = await yaarsaReadAccount(lic.yaarsa_email, panel);
+      const acc = await yaarsaReadAccount(lic.yaarsa_email, usedPanel);
       if (acc.known && acc.password) verified = acc.password === data.newPassword;
     } catch { /* best-effort */ }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: upErr } = await supabaseAdmin.from("licenses").update({
-      yaarsa_password_enc: encrypt(data.newPassword),
-      password_fingerprint: sha256Hex(data.newPassword),
-    } as any).eq("id", lic.id).eq("user_id", userId);
+    const { updateLicenseTolerant } = await import("./license-password.server");
+    // Colunas opcionais (fingerprint/painel) podem não existir em bancos
+    // atrasados; o helper descarta só o que faltar e salva a senha do cliente.
+    let upErr: { message: string } | null = null;
+    try {
+      await updateLicenseTolerant(supabaseAdmin, lic.id, {
+        yaarsa_password_enc: encrypt(data.newPassword),
+        password_fingerprint: sha256Hex(data.newPassword),
+        ...(usedPanel !== panel ? { panel: usedPanel } : {}),
+      });
+    } catch (e: any) {
+      upErr = { message: String(e?.message ?? e) };
+    }
     if (upErr) {
       // Não podemos deixar o painel com uma senha que o site não conhece:
       // devolvemos a senha anterior antes de avisar o cliente.
@@ -777,10 +800,11 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
         const { decrypt } = await import("./yaarsa.server");
         const previous = decrypt((lic as any).yaarsa_password_enc);
         if (previous && previous.length >= 4) {
-          const rb = await yaarsaSetPassword(lic.yaarsa_email, previous, panel, lic.yaarsa_username);
+          const rb = await yaarsaSetPassword(lic.yaarsa_email, previous, usedPanel, lic.yaarsa_username);
           rolledBack = !rb.Fail;
         }
       } catch { /* best-effort */ }
+
       try {
         await supabaseAdmin.from("integration_logs").insert({
           source: `yaarsa-${panel}`, action: "license_password_change", outcome: "error",
