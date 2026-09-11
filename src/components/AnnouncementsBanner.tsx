@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Megaphone, X, Clock } from "lucide-react";
 import { listMyAnnouncements, type Announcement } from "@/lib/announcements.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 const DISMISS_KEY = "shadow-announcements-dismissed-v1";
 
@@ -54,11 +55,31 @@ export function AnnouncementsBanner() {
   useEffect(() => {
     setDismissed(loadDismissed());
     let alive = true;
-    listFn()
-      .then((r) => alive && setRows((r as Announcement[]) ?? []))
-      .catch(() => void 0);
+
+    const load = async () => {
+      // Só busca avisos quando existe sessão: sem token o serverFn responde 401.
+      const { data } = await supabase.auth.getSession();
+      if (!alive || !data.session) {
+        if (alive) setRows([]);
+        return;
+      }
+      try {
+        const r = await listFn();
+        if (alive) setRows((r as Announcement[]) ?? []);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    void load();
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") setRows([]);
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") void load();
+    });
+
     return () => {
       alive = false;
+      sub.subscription.unsubscribe();
     };
   }, []);
 
