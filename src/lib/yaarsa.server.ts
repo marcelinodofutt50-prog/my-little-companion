@@ -128,6 +128,21 @@ export function hasPanelServer(panel: YaarsaPanel): boolean {
   return !!(effective(panel).baseUrl || process.env[PANEL_CONFIG[panel].baseEnv]);
 }
 
+/**
+ * Dá para OPERAR nesse painel? Diferente de `hasPanelServer`: mesmo sem VPS
+ * própria, a 4.5.5 aponta para a mesma máquina da 4.5.7 e funciona com a
+ * mesma admin key. Sem isso, licenças marcadas como 4.5.5 eram simplesmente
+ * puladas em todos os fluxos (reparo, senha, sincronização).
+ */
+export function isPanelUsable(panel: YaarsaPanel): boolean {
+  try {
+    return !!panelBaseUrl(panel) && !!yaarsaAdminKey(panel);
+  } catch {
+    return false;
+  }
+}
+
+
 export async function refreshPanelOverrides(force = false): Promise<void> {
   try {
     const { loadPanelOverrides } = await import("@/lib/panel-servers.server");
@@ -243,7 +258,24 @@ const PANEL_LABEL: Record<YaarsaPanel, string> = { v455: "4.5.5", v457: "4.5.7",
 function yaarsaAdminKey(panel: YaarsaPanel): string {
   const cfg = PANEL_CONFIG[panel];
   const override = effective(panel).adminKey;
-  const raw = override || process.env[cfg.keyEnv];
+  let raw = override || process.env[cfg.keyEnv];
+
+  // Painéis que compartilham a MESMA máquina compartilham a admin key. Sem
+  // isso, a 4.5.5 (que hoje aponta para a VPS da 4.5.7) falhava em tudo com
+  // "nenhuma admin key configurada".
+  if (!raw) {
+    const myUrl = panelBaseUrl(panel);
+    for (const other of ALL_PANELS) {
+      if (other === panel) continue;
+      if (panelBaseUrl(other) !== myUrl) continue;
+      const otherKey = effective(other).adminKey || process.env[PANEL_CONFIG[other].keyEnv];
+      if (otherKey) {
+        raw = otherKey;
+        break;
+      }
+    }
+  }
+
   if (!raw) {
     throw new Error(
       `Nenhuma admin key configurada para o painel ${PANEL_LABEL[panel]}. Preencha o endereço e a admin key no formulário abaixo e clique em "Verificação completa" ou "Salvar e usar".`,
@@ -251,6 +283,7 @@ function yaarsaAdminKey(panel: YaarsaPanel): string {
   }
   return sanitizeAdminKey(raw, override ? `admin key do painel ${PANEL_LABEL[panel]}` : cfg.keyEnv);
 }
+
 
 
 function encKey(): Buffer {
@@ -695,19 +728,28 @@ async function warmup(url: string, panel: YaarsaPanel) {
 
 
 /**
- * Disjuntor de painel: quando um painel responde 404/5xx ou não responde, ele
- * fica marcado como "fora do ar" por alguns minutos. Assim paramos de gastar
- * tentativas (e tempo do cliente) num servidor que já sabemos que está quebrado
- * — os fluxos de trial/correção pulam direto para o painel saudável.
+ * Disjuntor de painel: quando um painel realmente para de responder, ele fica
+ * marcado como "fora do ar" por pouco tempo.
+ *
+ * IMPORTANTE: um 404 NÃO derruba mais o painel. Nós sondamos vários caminhos
+ * no mesmo servidor (`proxy.php`, `private/createacc.php`, …) e os que não
+ * existem devolvem 404 — era isso que marcava o painel como quebrado logo
+ * depois do primeiro clique e fazia os botões do cliente pararem de funcionar
+ * até o cache do worker expirar. Também exigimos duas falhas seguidas.
  */
 const panelOutage: Partial<Record<YaarsaPanel, number>> = {};
-const PANEL_OUTAGE_MS = 5 * 60 * 1000;
+const panelFailStreak: Partial<Record<YaarsaPanel, number>> = {};
+const PANEL_OUTAGE_MS = 60 * 1000;
+const PANEL_FAILS_TO_TRIP = 2;
 
 export function markPanelUnhealthy(panel: YaarsaPanel) {
-  panelOutage[panel] = Date.now() + PANEL_OUTAGE_MS;
+  const streak = (panelFailStreak[panel] ?? 0) + 1;
+  panelFailStreak[panel] = streak;
+  if (streak >= PANEL_FAILS_TO_TRIP) panelOutage[panel] = Date.now() + PANEL_OUTAGE_MS;
 }
 
 export function markPanelHealthy(panel: YaarsaPanel) {
+  panelFailStreak[panel] = 0;
   delete panelOutage[panel];
 }
 
@@ -716,10 +758,12 @@ export function isPanelHealthy(panel: YaarsaPanel): boolean {
   if (!until) return true;
   if (Date.now() > until) {
     delete panelOutage[panel];
+    panelFailStreak[panel] = 0;
     return true;
   }
   return false;
 }
+
 
 async function persistLog(entry: {
   action?: string;
@@ -739,10 +783,11 @@ async function persistLog(entry: {
     if (entry.outcome === "success") markPanelHealthy(entry.panel);
     else if (
       entry.outcome === "network_error" ||
-      (entry.outcome === "http_error" &&
-        (entry.http_status === 404 || (entry.http_status ?? 0) >= 500))
+      // 404 = caminho inexistente na sondagem de endpoints, não servidor fora.
+      (entry.outcome === "http_error" && (entry.http_status ?? 0) >= 500)
     ) {
       markPanelUnhealthy(entry.panel);
+
     }
   }
   try {
