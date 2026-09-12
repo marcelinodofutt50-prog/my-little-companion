@@ -573,7 +573,7 @@ export const syncAllMyLicenses = createServerFn({ method: "POST" })
     const syncLockKey = `license-sync-all:${userId}`;
     let syncLocked = false;
     try {
-      syncLocked = await acquireOpLock(syncLockKey, 300, userId);
+      syncLocked = await acquireOpLock(syncLockKey, 120, userId);
       if (!syncLocked) {
         throw new Error(
           "A correção anterior ainda está rodando. Aguarde alguns segundos e recarregue a página para ver o resultado.",
@@ -731,7 +731,7 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
 
     // Uma troca de senha por vez nesta licença (cliques repetidos / várias abas).
     const lockKey = `license-password:${lic.id}`;
-    if (!(await acquireOpLock(lockKey, 90, userId))) {
+    if (!(await acquireOpLock(lockKey, 60, userId))) {
       throw new Error("Já estamos trocando a senha desta licença. Aguarde alguns segundos.");
     }
 
@@ -739,13 +739,21 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     // A licença pode estar marcada com o painel errado (migração, correção
     // manual). Tentamos o painel dela primeiro e, se a conta não for
     // encontrada, os outros — assim o botão para de "não fazer nada".
-    const order = [panel, "v457", "v455", "v46"].filter((p, i, a) => a.indexOf(p) === i) as any[];
+    const { isPanelUsable } = await import("./yaarsa.server");
+    const order = ([panel, "v457", "v455", "v46"] as any[])
+      .filter((p, i, a) => a.indexOf(p) === i)
+      .filter((p) => isPanelUsable(p));
+    if (order.length === 0) order.push(panel);
     let pr: any = { Fail: "Painel não respondeu" };
     let usedPanel = panel;
     for (const p of order) {
-      pr = await yaarsaSetPassword(
-        lic.yaarsa_email, data.newPassword, p, lic.yaarsa_username, (lic as any).expires_at ?? null,
-      );
+      try {
+        pr = await yaarsaSetPassword(
+          lic.yaarsa_email, data.newPassword, p, lic.yaarsa_username, (lic as any).expires_at ?? null,
+        );
+      } catch (e: any) {
+        pr = { Fail: String(e?.message ?? e) };
+      }
       usedPanel = p;
       if (!pr.Fail) break;
       const { looksLikeMissingAccount } = await import("./yaarsa.server");
