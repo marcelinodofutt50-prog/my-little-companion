@@ -128,6 +128,21 @@ export function hasPanelServer(panel: YaarsaPanel): boolean {
   return !!(effective(panel).baseUrl || process.env[PANEL_CONFIG[panel].baseEnv]);
 }
 
+/**
+ * Dá para OPERAR nesse painel? Diferente de `hasPanelServer`: mesmo sem VPS
+ * própria, a 4.5.5 aponta para a mesma máquina da 4.5.7 e funciona com a
+ * mesma admin key. Sem isso, licenças marcadas como 4.5.5 eram simplesmente
+ * puladas em todos os fluxos (reparo, senha, sincronização).
+ */
+export function isPanelUsable(panel: YaarsaPanel): boolean {
+  try {
+    return !!panelBaseUrl(panel) && !!yaarsaAdminKey(panel);
+  } catch {
+    return false;
+  }
+}
+
+
 export async function refreshPanelOverrides(force = false): Promise<void> {
   try {
     const { loadPanelOverrides } = await import("@/lib/panel-servers.server");
