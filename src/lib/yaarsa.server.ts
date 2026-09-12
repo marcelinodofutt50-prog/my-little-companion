@@ -258,7 +258,24 @@ const PANEL_LABEL: Record<YaarsaPanel, string> = { v455: "4.5.5", v457: "4.5.7",
 function yaarsaAdminKey(panel: YaarsaPanel): string {
   const cfg = PANEL_CONFIG[panel];
   const override = effective(panel).adminKey;
-  const raw = override || process.env[cfg.keyEnv];
+  let raw = override || process.env[cfg.keyEnv];
+
+  // Painéis que compartilham a MESMA máquina compartilham a admin key. Sem
+  // isso, a 4.5.5 (que hoje aponta para a VPS da 4.5.7) falhava em tudo com
+  // "nenhuma admin key configurada".
+  if (!raw) {
+    const myUrl = panelBaseUrl(panel);
+    for (const other of ALL_PANELS) {
+      if (other === panel) continue;
+      if (panelBaseUrl(other) !== myUrl) continue;
+      const otherKey = effective(other).adminKey || process.env[PANEL_CONFIG[other].keyEnv];
+      if (otherKey) {
+        raw = otherKey;
+        break;
+      }
+    }
+  }
+
   if (!raw) {
     throw new Error(
       `Nenhuma admin key configurada para o painel ${PANEL_LABEL[panel]}. Preencha o endereço e a admin key no formulário abaixo e clique em "Verificação completa" ou "Salvar e usar".`,
@@ -266,6 +283,7 @@ function yaarsaAdminKey(panel: YaarsaPanel): string {
   }
   return sanitizeAdminKey(raw, override ? `admin key do painel ${PANEL_LABEL[panel]}` : cfg.keyEnv);
 }
+
 
 
 function encKey(): Buffer {
