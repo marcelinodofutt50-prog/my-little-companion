@@ -69,7 +69,7 @@ export async function healLicenseLogin(
   let locked = false;
   try {
     const { acquireOpLock } = await import("./audit-trail.server");
-    locked = await acquireOpLock(lockKey, 180, opts?.reason ?? "heal");
+    locked = await acquireOpLock(lockKey, 120, `${opts?.reason ?? "heal"}:${lic.id}`);
     if (!locked) {
       throw new Error(
         "Já existe uma correção em andamento para esta licença. Aguarde alguns segundos e confira o login antes de tentar de novo.",
@@ -107,6 +107,7 @@ async function runHeal(
     encrypt,
     decrypt,
     hasPanelServer,
+    isPanelUsable,
     sanitizePanelUsername,
     isPanelHealthy,
     refreshPanelOverrides,
@@ -122,8 +123,14 @@ async function runHeal(
   // Correção manual nunca deve excluir um servidor apenas porque o disjuntor o
   // marcou como indisponível numa chamada anterior. Priorizamos os saudáveis,
   // mas ainda tentamos todos os servidores configurados antes de desistir.
+  // Um painel serve se der para operar nele (endereço + admin key), mesmo que
+  // ele não tenha VPS própria — a 4.5.5 usa a mesma máquina da 4.5.7.
   const hasServer = (p: "v455" | "v457" | "v46") =>
-    typeof hasPanelServer === "function" ? hasPanelServer(p) : true;
+    typeof isPanelUsable === "function"
+      ? isPanelUsable(p)
+      : typeof hasPanelServer === "function"
+        ? hasPanelServer(p)
+        : true;
   const healthy = (p: "v455" | "v457" | "v46") =>
     typeof isPanelHealthy === "function" ? isPanelHealthy(p) : true;
   const preferred = normalizePanel(lic.panel);
