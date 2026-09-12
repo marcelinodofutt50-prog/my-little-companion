@@ -783,10 +783,11 @@ async function persistLog(entry: {
     if (entry.outcome === "success") markPanelHealthy(entry.panel);
     else if (
       entry.outcome === "network_error" ||
-      (entry.outcome === "http_error" &&
-        (entry.http_status === 404 || (entry.http_status ?? 0) >= 500))
+      // 404 = caminho inexistente na sondagem de endpoints, não servidor fora.
+      (entry.outcome === "http_error" && (entry.http_status ?? 0) >= 500)
     ) {
       markPanelUnhealthy(entry.panel);
+
     }
   }
   try {
