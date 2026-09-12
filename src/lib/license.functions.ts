@@ -807,7 +807,7 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
 
       try {
         await supabaseAdmin.from("integration_logs").insert({
-          source: `yaarsa-${panel}`, action: "license_password_change", outcome: "error",
+          source: `yaarsa-${usedPanel}`, action: "license_password_change", outcome: "error",
           error: upErr.message,
           context: { license_id: lic.id, user_id: userId, rolled_back: rolledBack } as any,
         } as any);
@@ -820,7 +820,7 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     }
 
     await supabaseAdmin.from("integration_logs").insert({
-      source: `yaarsa-${panel}`, action: "license_password_change",
+      source: `yaarsa-${usedPanel}`, action: "license_password_change",
       outcome: verified === false ? "warning" : "success",
       context: {
         license_id: lic.id, user_id: userId,
@@ -836,7 +836,7 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
       eventType: "password_change",
       reason: "Cliente trocou a senha do login pelo site",
       yaarsaEmail: lic.yaarsa_email,
-      panel,
+      panel: usedPanel,
       expiresBefore: (lic as any).expires_at ?? null,
       expiresAfter: (lic as any).expires_at ?? null,
       details: { panel_action: (pr as any).action ?? null, panel_verified: verified },
