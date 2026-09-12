@@ -59,15 +59,41 @@ export class OperationBusyError extends Error {
 /** Tenta pegar a trava; devolve `false` se outra sessão já está executando. */
 export async function acquireOpLock(key: string, ttlSeconds = 60, holder?: string): Promise<boolean> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.rpc("try_acquire_op_lock" as any, {
-    _key: key,
-    _ttl_seconds: ttlSeconds,
-    _holder: holder ?? null,
-  } as any);
+  const take = async () =>
+    supabaseAdmin.rpc("try_acquire_op_lock" as any, {
+      _key: key,
+      _ttl_seconds: ttlSeconds,
+      _holder: holder ?? null,
+    } as any);
+
+  const { data, error } = await take();
   // Sem a trava distribuída, falhamos de forma segura para não duplicar operações.
   if (error) throw new Error("Não foi possível proteger esta operação contra duplicidade. Tente novamente.");
-  return data !== false;
+  if (data !== false) return true;
+
+  // A execução anterior pode ter morrido no meio (timeout do servidor) e
+  // deixado a trava presa até o TTL — era isso que fazia o botão funcionar
+  // uma vez e depois "travar". Se a trava é do MESMO dono e já passou de 20s
+  // sem terminar, ela é liberada e tentamos de novo.
+  if (!holder) return false;
+  try {
+    const { data: row } = await supabaseAdmin
+      .from("operation_locks")
+      .select("holder, acquired_at")
+      .eq("key", key)
+      .maybeSingle();
+    const acquiredAt = row?.acquired_at ? new Date(row.acquired_at as string).getTime() : 0;
+    if (row?.holder === holder && Date.now() - acquiredAt > 20_000) {
+      await supabaseAdmin.from("operation_locks").delete().eq("key", key);
+      const retry = await take();
+      return !retry.error && retry.data !== false;
+    }
+  } catch {
+    /* mantém o comportamento de "ocupado" */
+  }
+  return false;
 }
+
 
 export async function releaseOpLock(key: string): Promise<void> {
   try {
