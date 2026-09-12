@@ -48,6 +48,7 @@ vi.mock("../lib/yaarsa.server", () => ({
   }),
   yaarsaProbeAccount: vi.fn(async () => state.probeResponses.shift() ?? { state: "found", detail: "" }),
   hasPanelServer: () => true,
+  isPanelUsable: () => true,
   sanitizePanelUsername: (u: string) =>
     (u || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user",
   isPanelHealthy: (panel: string) => !state.unhealthyPanels.has(panel),
