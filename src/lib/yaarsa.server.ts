@@ -728,19 +728,28 @@ async function warmup(url: string, panel: YaarsaPanel) {
 
 
 /**
- * Disjuntor de painel: quando um painel responde 404/5xx ou não responde, ele
- * fica marcado como "fora do ar" por alguns minutos. Assim paramos de gastar
- * tentativas (e tempo do cliente) num servidor que já sabemos que está quebrado
- * — os fluxos de trial/correção pulam direto para o painel saudável.
+ * Disjuntor de painel: quando um painel realmente para de responder, ele fica
+ * marcado como "fora do ar" por pouco tempo.
+ *
+ * IMPORTANTE: um 404 NÃO derruba mais o painel. Nós sondamos vários caminhos
+ * no mesmo servidor (`proxy.php`, `private/createacc.php`, …) e os que não
+ * existem devolvem 404 — era isso que marcava o painel como quebrado logo
+ * depois do primeiro clique e fazia os botões do cliente pararem de funcionar
+ * até o cache do worker expirar. Também exigimos duas falhas seguidas.
  */
 const panelOutage: Partial<Record<YaarsaPanel, number>> = {};
-const PANEL_OUTAGE_MS = 5 * 60 * 1000;
+const panelFailStreak: Partial<Record<YaarsaPanel, number>> = {};
+const PANEL_OUTAGE_MS = 60 * 1000;
+const PANEL_FAILS_TO_TRIP = 2;
 
 export function markPanelUnhealthy(panel: YaarsaPanel) {
-  panelOutage[panel] = Date.now() + PANEL_OUTAGE_MS;
+  const streak = (panelFailStreak[panel] ?? 0) + 1;
+  panelFailStreak[panel] = streak;
+  if (streak >= PANEL_FAILS_TO_TRIP) panelOutage[panel] = Date.now() + PANEL_OUTAGE_MS;
 }
 
 export function markPanelHealthy(panel: YaarsaPanel) {
+  panelFailStreak[panel] = 0;
   delete panelOutage[panel];
 }
 
@@ -749,10 +758,12 @@ export function isPanelHealthy(panel: YaarsaPanel): boolean {
   if (!until) return true;
   if (Date.now() > until) {
     delete panelOutage[panel];
+    panelFailStreak[panel] = 0;
     return true;
   }
   return false;
 }
+
 
 async function persistLog(entry: {
   action?: string;
