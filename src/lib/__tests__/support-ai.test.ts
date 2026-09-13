@@ -56,9 +56,17 @@ describe("Support AI Proactive Flow", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Quarta-feira ao meio-dia em Brasília: sem o aviso de fim de semana,
+    // os testes medem só a resposta que estão verificando.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-09-16T15:00:00Z"));
     // Reset defaults for maybeSingle/single
     mockSupabaseQuery.maybeSingle.mockResolvedValue({ data: null, error: null });
     mockSupabaseQuery.single.mockResolvedValue({ data: { id: "mock-id" }, error: null });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("should ignore messages without triggers", async () => {
