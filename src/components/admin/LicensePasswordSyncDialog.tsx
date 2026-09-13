@@ -170,15 +170,37 @@ export function LicensePasswordSyncDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="font-mono text-[10px] uppercase text-muted-foreground">
-              Nova senha do cliente
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">
+                Nova senha do cliente
+              </label>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 gap-1 px-2 font-mono text-[10px] uppercase"
+                onClick={() => setPassword(generateStrongPassword())}
+              >
+                <Sparkles className="h-3 w-3" /> Gerar senha forte
+              </Button>
+            </div>
             <Input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="a senha que você definiu no painel"
               className="font-mono"
             />
+            {password.length > 0 && (
+              <ul className="space-y-0.5">
+                {passwordRules(password).map((r) => (
+                  <li
+                    key={r.id}
+                    className={`font-mono text-[10px] ${r.ok ? "text-emerald-400" : "text-amber-400"}`}
+                  >
+                    {r.ok ? "✓" : "✗"} {r.label}
+                  </li>
+                ))}
+              </ul>
+            )}
             <label className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
               <input
                 type="checkbox"
