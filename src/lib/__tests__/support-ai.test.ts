@@ -144,6 +144,8 @@ describe("PIX com confirmação", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-09-16T15:00:00Z")); // quarta-feira
     mockSupabaseQuery.maybeSingle.mockResolvedValue({
       data: { user_id: "00000000-0000-0000-0000-000000000003" },
       error: null,
@@ -152,6 +154,10 @@ describe("PIX com confirmação", () => {
     mockSupabaseQuery.then.mockImplementation((onFulfilled: any) =>
       Promise.resolve({ data: [], error: null }).then(onFulfilled),
     );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("pede confirmação (sem mandar a chave) quando o checkout falha", async () => {
@@ -175,5 +181,13 @@ describe("PIX com confirmação", () => {
   it("não menciona PIX em assunto que não é pagamento", async () => {
     await triggerSupportAI(threadId, userId, "bom dia, tudo certo?");
     expect(mockSupabaseQuery.insert).not.toHaveBeenCalled();
+  });
+
+  it("no fim de semana avisa do plantão e ainda assim responde o cliente", async () => {
+    vi.setSystemTime(new Date("2026-09-13T15:00:00Z")); // domingo
+    await triggerSupportAI(threadId, userId, "não estou conseguindo abrir o checkout para pagar");
+    const bodies = mockSupabaseQuery.insert.mock.calls.map((c: any) => c[0].body as string);
+    expect(bodies.some((b) => b.includes("[[weekend-notice]]"))).toBe(true);
+    expect(bodies.some((b) => b.includes("chave PIX"))).toBe(true);
   });
 });
