@@ -1,7 +1,4 @@
-
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { triggerSupportAI } from "../support-ai.server";
 import { generateText } from "ai";
 import { supabaseAdmin } from "../../../src/integrations/supabase/client.server";
