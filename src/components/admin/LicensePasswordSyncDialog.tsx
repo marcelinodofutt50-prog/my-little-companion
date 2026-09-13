@@ -90,8 +90,15 @@ export function LicensePasswordSyncDialog({
   };
 
   const save = async () => {
-    if (password.trim().length < 4) {
+    const pwd = password.trim();
+    if (pwd.length < 4) {
       toast.error("A senha precisa ter pelo menos 4 caracteres.");
+      return;
+    }
+    // Só bloqueia quando a senha vai ser gravada no painel: registrar uma senha
+    // fraca que já existe lá continua permitido (é só um espelho do painel).
+    if (applyToPanel && !isPasswordValid(pwd)) {
+      toast.error(passwordError(pwd) ?? "Senha fora da política do painel.");
       return;
     }
     setSaving(true);
