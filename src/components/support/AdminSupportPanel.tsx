@@ -358,6 +358,7 @@ export function AdminSupportPanel() {
                 userId={myId || ""} 
                 isAdmin={true} 
                 customerName={selectedThread.profile?.display_name || selectedThread.profile?.email || "Cliente"} 
+                insertDraft={draft}
               />
             </div>
 
