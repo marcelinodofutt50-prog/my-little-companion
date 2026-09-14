@@ -3462,6 +3462,7 @@ export type Database = {
           is_active: boolean
           min_tier: string
           notes: string | null
+          part_paths: string[] | null
           size_bytes: number | null
           storage_path: string
           title: string
@@ -3476,6 +3477,7 @@ export type Database = {
           is_active?: boolean
           min_tier?: string
           notes?: string | null
+          part_paths?: string[] | null
           size_bytes?: number | null
           storage_path: string
           title: string
@@ -3490,6 +3492,7 @@ export type Database = {
           is_active?: boolean
           min_tier?: string
           notes?: string | null
+          part_paths?: string[] | null
           size_bytes?: number | null
           storage_path?: string
           title?: string

@@ -1,0 +1,1 @@
+alter table public.updates add column if not exists part_paths text[];
