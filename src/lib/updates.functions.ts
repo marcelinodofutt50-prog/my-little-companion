@@ -58,7 +58,7 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("updates")
-      .select("id, storage_path, filename, min_tier, is_active")
+      .select("id, storage_path, part_paths, filename, min_tier, is_active")
       .eq("id", data.id)
       .maybeSingle();
     if (!row || !row.is_active) throw new Error("Update indisponível");
@@ -78,11 +78,19 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
       if (bestRank < tierRank[row.min_tier as VersionTier]) throw new Error("Seu plano não libera este update");
     }
 
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("updates")
-      .createSignedUrl(row.storage_path, DOWNLOAD_TTL, { download: row.filename });
-    if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
-    return { url: signed.signedUrl, filename: row.filename };
+    const paths = ((row as any).part_paths as string[] | null)?.length
+      ? ((row as any).part_paths as string[])
+      : [row.storage_path];
+
+    const urls: string[] = [];
+    for (const p of paths) {
+      const { data: signed, error } = await supabaseAdmin.storage
+        .from("updates")
+        .createSignedUrl(p, DOWNLOAD_TTL, { download: row.filename });
+      if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
+      urls.push(signed.signedUrl);
+    }
+    return { url: urls[0]!, urls, filename: row.filename };
   });
 
 // ============ ADMIN ============
