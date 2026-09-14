@@ -43,6 +43,7 @@ export function AdminSupportPanel() {
   const [myId, setMyId] = useState<string | null>(null);
   const [fichaUserId, setFichaUserId] = useState<string | null>(null);
   const [healing, setHealing] = useState(false);
+  const [draft, setDraft] = useState<{ text: string; nonce: number } | null>(null);
 
   const listFn = useServerFn(adminListThreads);
   const assumeFn = useServerFn(adminAssumeThread);
