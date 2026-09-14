@@ -328,6 +328,7 @@ export function SupportChat({
   customerName,
   onNewMessage,
   onThreadMigrated,
+  insertDraft,
 }: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
