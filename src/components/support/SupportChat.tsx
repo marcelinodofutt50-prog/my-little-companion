@@ -78,6 +78,11 @@ interface SupportChatProps {
   onNewMessage?: () => void;
   /** Chamado quando o servidor moveu o envio para outra conversa (thread reaberta). */
   onThreadMigrated?: (threadId: string) => void;
+  /**
+   * Texto vindo de fora (respostas rápidas do admin). O `nonce` permite inserir
+   * o mesmo template várias vezes seguidas.
+   */
+  insertDraft?: { text: string; nonce: number } | null;
 }
 
 export type SenderInfo = {
@@ -323,6 +328,7 @@ export function SupportChat({
   customerName,
   onNewMessage,
   onThreadMigrated,
+  insertDraft,
 }: SupportChatProps) {
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
@@ -379,6 +385,24 @@ export function SupportChat({
 
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+
+  // Insere o template escolhido no campo de mensagem (sem enviar sozinho).
+  const lastDraftNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (!insertDraft || insertDraft.nonce === lastDraftNonce.current) return;
+    lastDraftNonce.current = insertDraft.nonce;
+    setBody((prev) => {
+      const base = prev.trim();
+      return (base ? `${base}\n\n${insertDraft.text}` : insertDraft.text).slice(0, MAX_BODY);
+    });
+    requestAnimationFrame(() => {
+      const el = textRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+  }, [insertDraft]);
   // Refs evitam closure velha dentro da assinatura do tempo real.
   const atBottomRef = useRef(true);
   const pendingRef = useRef<PendingMsg[]>([]);
@@ -1086,6 +1110,7 @@ export function SupportChat({
           </Button>
           <div className="flex-1 relative">
           <Textarea
+            ref={textRef}
             value={body}
             maxLength={MAX_BODY}
             onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY))}

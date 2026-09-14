@@ -43,6 +43,7 @@ export function AdminSupportPanel() {
   const [myId, setMyId] = useState<string | null>(null);
   const [fichaUserId, setFichaUserId] = useState<string | null>(null);
   const [healing, setHealing] = useState(false);
+  const [draft, setDraft] = useState<{ text: string; nonce: number } | null>(null);
 
   const listFn = useServerFn(adminListThreads);
   const assumeFn = useServerFn(adminAssumeThread);
@@ -183,7 +184,7 @@ export function AdminSupportPanel() {
             />
           </div>
           <div className="flex gap-1 p-1 bg-muted/30 rounded-lg">
-            {(["open", "mine", "closed"] as const).map(f => (
+            {(["open", "mine", "closed", "all"] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -191,7 +192,7 @@ export function AdminSupportPanel() {
                   filter === f ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted/50 text-muted-foreground"
                 }`}
               >
-                {f === "mine" ? "Meus" : f === "open" ? "Abertos" : "Fim"}
+                {f === "mine" ? "Meus" : f === "open" ? "Abertos" : f === "closed" ? "Fim" : "Todos"}
               </button>
             ))}
           </div>
@@ -357,17 +358,17 @@ export function AdminSupportPanel() {
                 userId={myId || ""} 
                 isAdmin={true} 
                 customerName={selectedThread.profile?.display_name || selectedThread.profile?.email || "Cliente"} 
+                insertDraft={draft}
               />
             </div>
 
             <div className="p-2 border-t border-border/20 bg-muted/10 flex flex-wrap items-center justify-between gap-2">
 
-              <QuickRepliesDropdown onPick={(body) => {
-                // Aqui injetamos no input do chat se pudermos, ou enviamos direto
-                // Como o SupportChat é desacoplado, poderíamos usar um canal de ref ou similar
-                // Por simplicidade, vamos apenas mostrar as respostas
-                toast.info("Respostas rápidas prontas para uso");
-              }} />
+              <QuickRepliesDropdown
+                onPick={(body) =>
+                  setDraft({ text: body, nonce: Date.now() })
+                }
+              />
               
               {!selectedThread.assigned_to && (
                 <Button 
