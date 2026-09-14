@@ -184,7 +184,7 @@ export function AdminSupportPanel() {
             />
           </div>
           <div className="flex gap-1 p-1 bg-muted/30 rounded-lg">
-            {(["open", "mine", "closed"] as const).map(f => (
+            {(["open", "mine", "closed", "all"] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
