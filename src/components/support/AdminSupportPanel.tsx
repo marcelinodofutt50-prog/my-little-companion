@@ -362,12 +362,11 @@ export function AdminSupportPanel() {
 
             <div className="p-2 border-t border-border/20 bg-muted/10 flex flex-wrap items-center justify-between gap-2">
 
-              <QuickRepliesDropdown onPick={(body) => {
-                // Aqui injetamos no input do chat se pudermos, ou enviamos direto
-                // Como o SupportChat é desacoplado, poderíamos usar um canal de ref ou similar
-                // Por simplicidade, vamos apenas mostrar as respostas
-                toast.info("Respostas rápidas prontas para uso");
-              }} />
+              <QuickRepliesDropdown
+                onPick={(body) =>
+                  setDraft({ text: body, nonce: Date.now() })
+                }
+              />
               
               {!selectedThread.assigned_to && (
                 <Button 
