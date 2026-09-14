@@ -385,6 +385,24 @@ export function SupportChat({
 
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+
+  // Insere o template escolhido no campo de mensagem (sem enviar sozinho).
+  const lastDraftNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (!insertDraft || insertDraft.nonce === lastDraftNonce.current) return;
+    lastDraftNonce.current = insertDraft.nonce;
+    setBody((prev) => {
+      const base = prev.trim();
+      return (base ? `${base}\n\n${insertDraft.text}` : insertDraft.text).slice(0, MAX_BODY);
+    });
+    requestAnimationFrame(() => {
+      const el = textRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+  }, [insertDraft]);
   // Refs evitam closure velha dentro da assinatura do tempo real.
   const atBottomRef = useRef(true);
   const pendingRef = useRef<PendingMsg[]>([]);
