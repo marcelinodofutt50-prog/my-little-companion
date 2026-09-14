@@ -78,6 +78,11 @@ interface SupportChatProps {
   onNewMessage?: () => void;
   /** Chamado quando o servidor moveu o envio para outra conversa (thread reaberta). */
   onThreadMigrated?: (threadId: string) => void;
+  /**
+   * Texto vindo de fora (respostas rápidas do admin). O `nonce` permite inserir
+   * o mesmo template várias vezes seguidas.
+   */
+  insertDraft?: { text: string; nonce: number } | null;
 }
 
 export type SenderInfo = {
