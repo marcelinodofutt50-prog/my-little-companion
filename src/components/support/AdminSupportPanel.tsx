@@ -192,7 +192,7 @@ export function AdminSupportPanel() {
                   filter === f ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted/50 text-muted-foreground"
                 }`}
               >
-                {f === "mine" ? "Meus" : f === "open" ? "Abertos" : "Fim"}
+                {f === "mine" ? "Meus" : f === "open" ? "Abertos" : f === "closed" ? "Fim" : "Todos"}
               </button>
             ))}
           </div>
