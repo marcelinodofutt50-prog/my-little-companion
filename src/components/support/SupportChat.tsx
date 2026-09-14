@@ -1110,6 +1110,7 @@ export function SupportChat({
           </Button>
           <div className="flex-1 relative">
           <Textarea
+            ref={textRef}
             value={body}
             maxLength={MAX_BODY}
             onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY))}
