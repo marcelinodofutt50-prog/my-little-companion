@@ -130,10 +130,10 @@ export const adminUploadMarketImage = createServerFn({ method: "POST" })
     const path = `${data.slug}/${Date.now()}.${ext}`;
     const bytes = Buffer.from(data.dataBase64, "base64");
     if (bytes.length > 5_000_000) throw new Error("Imagem maior que 5 MB");
-    const { error } = await supabaseAdmin.storage.from("market-images").upload(path, bytes, { contentType: data.contentType, upsert: true });
-    if (error) throw new Error(error.message);
-    const { data: signed } = await supabaseAdmin.storage.from("market-images").createSignedUrl(path, SIGNED_TTL);
-    return { path, signedUrl: signed?.signedUrl ?? null };
+    const { uploadBytes, createDownload } = await import("@/lib/storage-gateway.server");
+    const saved = await uploadBytes("market-images", path, bytes, { contentType: data.contentType, upsert: true });
+    const signedUrl = await createDownload("market-images", saved.path, SIGNED_TTL).catch(() => null);
+    return { path: saved.path, signedUrl };
   });
 
 export const createMarketCheckout = createServerFn({ method: "POST" })
