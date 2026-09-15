@@ -145,22 +145,31 @@ export const adminPublishUpdate = createServerFn({ method: "POST" })
       version: z.string().trim().min(1).max(40),
       notes: z.string().trim().max(4000).optional().nullable(),
       min_tier: z.enum(["weekly", "monthly_457", "lifetime_46", "upgrade"]),
-      storage_path: z.string().min(1).max(400),
+      storage_path: z.string().max(400).optional().nullable(),
       part_paths: z.array(z.string().min(1).max(400)).min(1).max(400).optional(),
+      external_url: z.string().max(2000).optional().nullable(),
       filename: z.string().min(1).max(200),
-      size_bytes: z.number().int().positive().max(5_000_000_000).optional().nullable(),
-    }).parse(input),
+      size_bytes: z.number().int().positive().max(20_000_000_000).optional().nullable(),
+    })
+      .refine((v) => Boolean(v.external_url?.trim() || v.storage_path?.trim()), {
+        message: "Envie um arquivo ou informe o link externo.",
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { normalizeExternalUrl } = await import("@/lib/update-links");
+    const externalUrl = data.external_url?.trim() ? normalizeExternalUrl(data.external_url) : null;
+    const storagePath = externalUrl ? "" : (data.storage_path ?? "");
     const { error } = await supabaseAdmin.from("updates").insert({
       title: data.title,
       version: data.version,
       notes: data.notes ?? null,
       min_tier: data.min_tier,
-      storage_path: data.storage_path,
-      part_paths: data.part_paths ?? [data.storage_path],
+      storage_path: storagePath,
+      part_paths: externalUrl ? null : (data.part_paths ?? [storagePath]),
+      external_url: externalUrl,
       filename: data.filename,
       size_bytes: data.size_bytes ?? null,
       created_by: context.userId,
