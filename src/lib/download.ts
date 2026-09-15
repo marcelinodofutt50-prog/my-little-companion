@@ -19,6 +19,27 @@ export function triggerDownload(url: string, filename?: string) {
   setTimeout(() => a.remove(), 1000);
 }
 
+/**
+ * Baixa um arquivo que foi enviado em pedaços e remonta tudo num arquivo só.
+ * Com um pedaço apenas, usa o caminho direto (mais leve, funciona no Safari).
+ */
+export async function downloadParts(urls: string[], filename: string) {
+  if (urls.length <= 1) {
+    triggerDownload(urls[0]!, filename);
+    return;
+  }
+  const blobs: Blob[] = [];
+  for (const u of urls) {
+    const res = await fetch(u);
+    if (!res.ok) throw new Error(`Falha ao baixar parte (${res.status})`);
+    blobs.push(await res.blob());
+  }
+  const merged = new Blob(blobs, { type: "application/octet-stream" });
+  const objectUrl = URL.createObjectURL(merged);
+  triggerDownload(objectUrl, filename);
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
 /** Executa uma promise com tentativas extras (falhas de rede transitórias). */
 export async function withRetry<T>(fn: () => Promise<T>, attempts = 3, delayMs = 800): Promise<T> {
   let lastErr: unknown;

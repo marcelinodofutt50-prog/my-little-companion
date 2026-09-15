@@ -65,22 +65,47 @@ export function AdminUpdatesPanel() {
     if (!file) { toast.error("Selecione um arquivo"); return; }
     setPublishing(true);
     try {
-      const { uploadUrl, path } = await uploadFn({ data: { filename: file.name } });
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("PUT", uploadUrl, true);
-        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload falhou (${xhr.status})`)));
-        xhr.onerror = () => reject(new Error("Erro de rede"));
-        xhr.send(file);
-      });
+      // O armazenamento só aceita envios de até 50 MB por requisição:
+      // arquivos maiores vão em pedaços e são remontados no download do cliente.
+      const CHUNK = 40 * 1024 * 1024;
+      const total = file.size;
+      const partCount = Math.max(1, Math.ceil(total / CHUNK));
+      const paths: string[] = [];
+      let uploadedBase = 0;
+
+      for (let i = 0; i < partCount; i++) {
+        const blob = file.slice(i * CHUNK, Math.min((i + 1) * CHUNK, total));
+        const partName = partCount > 1 ? `${file.name}.part${String(i + 1).padStart(3, "0")}` : file.name;
+        const { uploadUrl, path } = await uploadFn({ data: { filename: partName } });
+        const base = uploadedBase;
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", uploadUrl, true);
+          xhr.setRequestHeader("Content-Type", "application/octet-stream");
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) setUploadPct(Math.round(((base + e.loaded) / total) * 100));
+          };
+          xhr.onload = () =>
+            xhr.status >= 200 && xhr.status < 300
+              ? resolve()
+              : reject(new Error(
+                  xhr.status === 413
+                    ? "Arquivo recusado pelo armazenamento (parte grande demais)."
+                    : `Upload falhou (${xhr.status})`,
+                ));
+          xhr.onerror = () => reject(new Error("Erro de rede durante o envio"));
+          xhr.send(blob);
+        });
+        uploadedBase += blob.size;
+        paths.push(path);
+        setUploadPct(Math.round((uploadedBase / total) * 100));
+      }
+
       await publishFn({
         data: {
           title: title.trim(), version: version.trim(), notes: notes.trim() || null,
-          min_tier: minTier, storage_path: path, filename: file.name, size_bytes: file.size,
+          min_tier: minTier, storage_path: paths[0]!, part_paths: paths,
+          filename: file.name, size_bytes: file.size,
         },
       });
       toast.success("Update publicado — já aparece pros clientes.");

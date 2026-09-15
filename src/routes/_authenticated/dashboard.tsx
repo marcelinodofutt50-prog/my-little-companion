@@ -30,7 +30,7 @@ import { useI18n } from '@/lib/i18n'
 import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
 import { listMyLicenses, syncAllMyLicenses } from '@/lib/license.functions'
 import { getMyIdentity } from '@/lib/identity.functions'
-import { triggerDownload, friendlyDownloadError } from '@/lib/download'
+import { triggerDownload, downloadParts, friendlyDownloadError } from '@/lib/download'
 const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
 import { useServerNow } from '@/hooks/use-server-now'
@@ -295,7 +295,7 @@ function DashboardPage() {
     setDownloadingId(id)
     try {
       const file = await getDownload({ data: { id } })
-      triggerDownload(file.url, file.filename)
+      await downloadParts((file as any).urls?.length ? (file as any).urls : [file.url], file.filename)
     } catch (error) {
       toast.error(friendlyDownloadError(error))
     } finally {
