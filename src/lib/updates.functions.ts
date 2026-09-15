@@ -104,13 +104,10 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
       ? ((row as any).part_paths as string[])
       : [row.storage_path];
 
+    const { createDownload } = await import("@/lib/storage-gateway.server");
     const urls: string[] = [];
     for (const p of paths) {
-      const { data: signed, error } = await supabaseAdmin.storage
-        .from("updates")
-        .createSignedUrl(p, DOWNLOAD_TTL, { download: row.filename });
-      if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
-      urls.push(signed.signedUrl);
+      urls.push(await createDownload("updates", p, DOWNLOAD_TTL, { download: row.filename }));
     }
     return { url: urls[0]!, urls, filename: row.filename, external: false };
   });
