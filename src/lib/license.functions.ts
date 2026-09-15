@@ -62,14 +62,22 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
       throw new Error("Divergência na senha registrada desta licença — fale com o suporte.");
     }
 
-    // 1) trava a data no painel
-    const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
+    const { retryPanelCall } = await import("./panel-retry.server");
+
+    // 1) trava a data no painel (repetimos em falha passageira do painel)
+    const yr = await retryPanelCall(
+      () => yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel),
+      { label: "pause:extend" },
+    );
     if (yr.Fail) {
       console.error("[suspendMyLicense] Yaarsa Date Fail:", yr.Fail);
       // Fallback 1: Alguns painéis recusam a data de "ontem" se ela cair num range inválido.
       // Tentamos uma data fixa bem antiga (1970) para forçar o bloqueio por expiração.
-      const yrRetry = await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
-      
+      const yrRetry = await retryPanelCall(
+        () => yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel),
+        { label: "pause:extend-1970" },
+      );
+
       if (yrRetry.Fail) {
         console.error("[suspendMyLicense] Yaarsa Date Retry Fail:", yrRetry.Fail);
         // Fallback Final: Se o painel estiver offline ou com erro de conexão persistente,
@@ -88,7 +96,10 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     if (sha256Hex(tempPassword) === originalFp) {
       throw new Error("Falha ao gerar senha de pausa segura — tente novamente.");
     }
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
+    const pr = await retryPanelCall(
+      () => yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username),
+      { label: "pause:password" },
+    );
     if (pr.Fail) {
       // Se for apenas erro de "não encontrado", tentamos criar a conta (upsert informal)
       if (/1005|não encontrado|not found/i.test(pr.Fail)) {
