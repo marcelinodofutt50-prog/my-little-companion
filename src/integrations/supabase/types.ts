@@ -3469,6 +3469,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          external_url: string | null
           filename: string
           id: string
           is_active: boolean
@@ -3484,6 +3485,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          external_url?: string | null
           filename: string
           id?: string
           is_active?: boolean
@@ -3491,7 +3493,7 @@ export type Database = {
           notes?: string | null
           part_paths?: string[] | null
           size_bytes?: number | null
-          storage_path: string
+          storage_path?: string
           title: string
           updated_at?: string
           version: string
@@ -3499,6 +3501,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          external_url?: string | null
           filename?: string
           id?: string
           is_active?: boolean
