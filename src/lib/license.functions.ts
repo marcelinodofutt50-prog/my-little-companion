@@ -913,21 +913,31 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
     if ((lic as any).suspended_at) throw new Error("Esta licença está pausada — despause para reparar o acesso.");
 
     const { healLicenseLogin } = await import("./license-heal.server");
-    const result = await healLicenseLogin(
-      {
-        id: lic.id,
-        user_id: userId,
-        plan_slug: (lic as any).plan_slug ?? null,
-        yaarsa_username: lic.yaarsa_username,
-        yaarsa_email: lic.yaarsa_email,
-        yaarsa_password_enc: lic.yaarsa_password_enc,
-        panel: (lic as any).panel ?? null,
-        expires_at: (lic as any).expires_at ?? null,
-        is_trial: (lic as any).is_trial ?? null,
-        server_ip: (lic as any).server_ip ?? null,
-      },
-      { reason: "cliente_corrigir_erros" },
-    );
+    const { isTransientPanelFail } = await import("./panel-retry.server");
+    const payload = {
+      id: lic.id,
+      user_id: userId,
+      plan_slug: (lic as any).plan_slug ?? null,
+      yaarsa_username: lic.yaarsa_username,
+      yaarsa_email: lic.yaarsa_email,
+      yaarsa_password_enc: lic.yaarsa_password_enc,
+      panel: (lic as any).panel ?? null,
+      expires_at: (lic as any).expires_at ?? null,
+      is_trial: (lic as any).is_trial ?? null,
+      server_ip: (lic as any).server_ip ?? null,
+    };
+
+    // O painel cai por alguns segundos com frequência. Em falha passageira
+    // tentamos de novo aqui mesmo, para o cliente não precisar clicar duas vezes.
+    let result;
+    try {
+      result = await healLicenseLogin(payload, { reason: "cliente_corrigir_erros" });
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
+      if (!isTransientPanelFail(msg)) throw e;
+      await new Promise((r) => setTimeout(r, 1500));
+      result = await healLicenseLogin(payload, { reason: "cliente_corrigir_erros_retry" });
+    }
 
     return {
       ok: true,
