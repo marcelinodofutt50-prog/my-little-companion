@@ -233,13 +233,13 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const safeName = (job.result_filename || "app-protegido.apk").replace(/[^\w.\-]+/g, "_");
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("apk-results")
-      .createSignedUrl(job.result_path, 60 * 60, { 
-        download: safeName,
-        transform: undefined // Ensure no transformation for APKs
-      });
-    if (error || !signed) throw new Error(error?.message || APK_EXPIRED_MESSAGE);
+    const { createDownload } = await import("@/lib/storage-gateway.server");
+    let signedUrl: string;
+    try {
+      signedUrl = await createDownload("apk-results", job.result_path, 60 * 60, { download: safeName });
+    } catch (e: any) {
+      throw new Error(e?.message || APK_EXPIRED_MESSAGE);
+    }
 
     // Registra o download: a partir daqui o arquivo tem prazo para ser
     // descartado (48h), o que libera espaço e evita downloads repetidos.
