@@ -219,7 +219,8 @@ export const adminDeleteUpdate = createServerFn({ method: "POST" })
       new Set([...(((row as any)?.part_paths as string[] | null) ?? []), ...(row?.storage_path ? [row.storage_path] : [])]),
     );
     if (toRemove.length) {
-      await supabaseAdmin.storage.from("updates").remove(toRemove);
+      const { removeObjects } = await import("@/lib/storage-gateway.server");
+      await removeObjects("updates", toRemove).catch(() => {});
     }
     const { error } = await supabaseAdmin.from("updates").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
