@@ -295,6 +295,11 @@ function DashboardPage() {
     setDownloadingId(id)
     try {
       const file = await getDownload({ data: { id } })
+      // Link externo: abre direto na origem, sem baixar e remontar por aqui.
+      if ((file as any).external) {
+        window.open(file.url, '_blank', 'noopener,noreferrer')
+        return
+      }
       await downloadParts((file as any).urls?.length ? (file as any).urls : [file.url], file.filename)
     } catch (error) {
       toast.error(friendlyDownloadError(error))

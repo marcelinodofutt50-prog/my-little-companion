@@ -56,12 +56,26 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
   .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
+    // Bancos que ainda não receberam a coluna do link externo continuam
+    // funcionando com o download tradicional.
+    let row: any = null;
+    const full = await supabaseAdmin
       .from("updates")
-      .select("id, storage_path, part_paths, filename, min_tier, is_active")
+      .select("id, storage_path, part_paths, external_url, filename, min_tier, is_active")
       .eq("id", data.id)
       .maybeSingle();
+    if (full.error && /external_url/i.test(full.error.message)) {
+      const legacy = await supabaseAdmin
+        .from("updates")
+        .select("id, storage_path, part_paths, filename, min_tier, is_active")
+        .eq("id", data.id)
+        .maybeSingle();
+      row = legacy.data;
+    } else {
+      row = full.data;
+    }
     if (!row || !row.is_active) throw new Error("Update indisponível");
+
 
     // Verify tier access
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
@@ -78,6 +92,14 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
       if (bestRank < tierRank[row.min_tier as VersionTier]) throw new Error("Seu plano não libera este update");
     }
 
+    // Link externo: o cliente baixa direto da origem (Drive, R2, etc.), sem
+    // passar pelo nosso armazenamento — é o caminho recomendado para arquivos
+    // grandes, porque não consome a cota de tráfego do projeto.
+    const external = ((row as any).external_url as string | null) ?? null;
+    if (external) {
+      return { url: external, urls: [external], filename: row.filename, external: true };
+    }
+
     const paths = ((row as any).part_paths as string[] | null)?.length
       ? ((row as any).part_paths as string[])
       : [row.storage_path];
@@ -90,7 +112,7 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
       if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
       urls.push(signed.signedUrl);
     }
-    return { url: urls[0]!, urls, filename: row.filename };
+    return { url: urls[0]!, urls, filename: row.filename, external: false };
   });
 
 // ============ ADMIN ============
@@ -136,28 +158,44 @@ export const adminPublishUpdate = createServerFn({ method: "POST" })
       version: z.string().trim().min(1).max(40),
       notes: z.string().trim().max(4000).optional().nullable(),
       min_tier: z.enum(["weekly", "monthly_457", "lifetime_46", "upgrade"]),
-      storage_path: z.string().min(1).max(400),
+      storage_path: z.string().max(400).optional().nullable(),
       part_paths: z.array(z.string().min(1).max(400)).min(1).max(400).optional(),
+      external_url: z.string().max(2000).optional().nullable(),
       filename: z.string().min(1).max(200),
-      size_bytes: z.number().int().positive().max(5_000_000_000).optional().nullable(),
-    }).parse(input),
+      size_bytes: z.number().int().positive().max(20_000_000_000).optional().nullable(),
+    })
+      .refine((v) => Boolean(v.external_url?.trim() || v.storage_path?.trim()), {
+        message: "Envie um arquivo ou informe o link externo.",
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { normalizeExternalUrl } = await import("@/lib/update-links");
+    const externalUrl = data.external_url?.trim() ? normalizeExternalUrl(data.external_url) : null;
+    const storagePath = externalUrl ? "" : (data.storage_path ?? "");
     const { error } = await supabaseAdmin.from("updates").insert({
       title: data.title,
       version: data.version,
       notes: data.notes ?? null,
       min_tier: data.min_tier,
-      storage_path: data.storage_path,
-      part_paths: data.part_paths ?? [data.storage_path],
+      storage_path: storagePath,
+      part_paths: externalUrl ? null : (data.part_paths ?? [storagePath]),
+      external_url: externalUrl,
       filename: data.filename,
       size_bytes: data.size_bytes ?? null,
       created_by: context.userId,
       is_active: true,
     } as any);
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (externalUrl && /external_url/i.test(error.message)) {
+        throw new Error(
+          "Este banco ainda não tem o campo de link externo habilitado. Publique por envio de arquivo ou avise o suporte técnico.",
+        );
+      }
+      throw new Error(error.message);
+    }
     return { ok: true };
   });
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Upload, Loader2, RefreshCw, Trash2, Package, Eye, EyeOff, PlusCircle } from "lucide-react";
+import { Upload, Loader2, RefreshCw, Trash2, Package, Eye, EyeOff, PlusCircle, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,11 +12,12 @@ import {
   adminDeleteUpdate,
 } from "@/lib/updates.functions";
 import { tierLabel, type VersionTier } from "@/lib/plans";
+import { normalizeExternalUrl, externalHostLabel, EXTERNAL_URL_HELP } from "@/lib/update-links";
 
 type UpdateRow = {
   id: string; title: string; version: string; notes: string | null;
   min_tier: VersionTier; filename: string; size_bytes: number | null;
-  is_active: boolean; created_at: string;
+  is_active: boolean; created_at: string; external_url?: string | null;
 };
 
 function fmtBytes(n: number | null) {
@@ -43,6 +44,10 @@ export function AdminUpdatesPanel() {
   const [uploadPct, setUploadPct] = useState(0);
   const [publishing, setPublishing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<"link" | "upload">("link");
+  const [externalUrl, setExternalUrl] = useState("");
+  const [linkFilename, setLinkFilename] = useState("");
+  const [linkSizeMb, setLinkSizeMb] = useState("");
 
   async function refresh() {
     setLoading(true);
@@ -58,10 +63,39 @@ export function AdminUpdatesPanel() {
   function resetForm() {
     setTitle(""); setVersion(""); setNotes(""); setMinTier("monthly_457");
     setFile(null); setUploadPct(0); if (fileRef.current) fileRef.current.value = "";
+    setExternalUrl(""); setLinkFilename(""); setLinkSizeMb("");
   }
 
   async function submit() {
     if (!title.trim() || !version.trim()) { toast.error("Título e versão obrigatórios"); return; }
+
+    if (mode === "link") {
+      let normalized: string;
+      try {
+        normalized = normalizeExternalUrl(externalUrl);
+      } catch (e: any) {
+        toast.error(e?.message || "Link inválido"); return;
+      }
+      const name = linkFilename.trim();
+      if (!name) { toast.error("Informe o nome do arquivo (ex.: BTMOB_v4.6.1.rar)"); return; }
+      setPublishing(true);
+      try {
+        await publishFn({
+          data: {
+            title: title.trim(), version: version.trim(), notes: notes.trim() || null,
+            min_tier: minTier, external_url: normalized, filename: name,
+            size_bytes: linkSizeMb.trim() ? Math.round(Number(linkSizeMb) * 1024 * 1024) : null,
+          },
+        });
+        toast.success("Update publicado com link externo — sem gastar tráfego do sistema.");
+        resetForm(); setShowForm(false);
+        await refresh();
+      } catch (e: any) {
+        toast.error(e?.message || "Falha ao publicar");
+      } finally { setPublishing(false); }
+      return;
+    }
+
     if (!file) { toast.error("Selecione um arquivo"); return; }
     setPublishing(true);
     try {
@@ -187,20 +221,86 @@ export function AdminUpdatesPanel() {
               className="mt-1 w-full rounded-md border border-input bg-background p-2 font-mono text-xs"
             />
           </div>
-          <div>
-            <label className="font-mono text-[10px] uppercase text-muted-foreground">Arquivo (.rar, .zip, .apk)</label>
-            <input
-              ref={fileRef}
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="mt-1 block w-full text-xs file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground"
-            />
-            {file && (
-              <div className="mt-1 font-mono text-[10px] text-muted-foreground">
-                {file.name} · {fmtBytes(file.size)}
-              </div>
-            )}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setMode("link")}
+              className={`rounded-md border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition ${
+                mode === "link" ? "border-neon/60 bg-neon/10 text-neon" : "border-input text-muted-foreground"
+              }`}
+            >
+              <LinkIcon className="mr-1 inline h-3 w-3" /> Link externo (recomendado)
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("upload")}
+              className={`rounded-md border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition ${
+                mode === "upload" ? "border-neon/60 bg-neon/10 text-neon" : "border-input text-muted-foreground"
+              }`}
+            >
+              <Upload className="mr-1 inline h-3 w-3" /> Enviar arquivo
+            </button>
           </div>
+
+          {mode === "link" ? (
+            <div className="space-y-3 rounded-md border border-neon/20 bg-neon/[0.03] p-3">
+              <p className="text-[11px] text-muted-foreground">
+                O cliente baixa direto da origem do arquivo. Isso <strong>não consome o tráfego mensal</strong> do
+                sistema — ideal para os arquivos grandes de 70 MB ou mais. {EXTERNAL_URL_HELP}
+              </p>
+              <div>
+                <label className="font-mono text-[10px] uppercase text-muted-foreground">Link do arquivo</label>
+                <Input
+                  value={externalUrl}
+                  onChange={(e) => setExternalUrl(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/..."
+                  className="mt-1 font-mono text-xs"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div>
+                  <label className="font-mono text-[10px] uppercase text-muted-foreground">Nome do arquivo</label>
+                  <Input
+                    value={linkFilename}
+                    onChange={(e) => setLinkFilename(e.target.value)}
+                    placeholder="BTMOB_v4.6.1.rar"
+                    className="mt-1 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="font-mono text-[10px] uppercase text-muted-foreground">Tamanho em MB (opcional)</label>
+                  <Input
+                    value={linkSizeMb}
+                    onChange={(e) => setLinkSizeMb(e.target.value.replace(/[^\d.]/g, ""))}
+                    placeholder="76.8"
+                    inputMode="decimal"
+                    className="mt-1 font-mono text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">Arquivo (.rar, .zip, .apk)</label>
+              <input
+                ref={fileRef}
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="mt-1 block w-full text-xs file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground"
+              />
+              {file && (
+                <div className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  {file.name} · {fmtBytes(file.size)}
+                </div>
+              )}
+              {file && file.size > 50 * 1024 * 1024 && (
+                <div className="mt-2 rounded border border-amber-400/40 bg-amber-400/10 p-2 text-[11px] text-amber-200">
+                  Arquivo grande: cada download desses consome o tráfego mensal do sistema. Prefira publicar por link
+                  externo.
+                </div>
+              )}
+            </div>
+          )}
           {publishing && uploadPct > 0 && (
             <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-primary transition-[width]" style={{ width: `${uploadPct}%` }} />
@@ -246,9 +346,15 @@ export function AdminUpdatesPanel() {
                         oculto
                       </span>
                     )}
+                    {r.external_url && (
+                      <span className="rounded border border-emerald-400/40 bg-emerald-400/10 px-1.5 py-0.5 font-mono text-[9px] uppercase text-emerald-300">
+                        link externo
+                      </span>
+                    )}
                   </div>
                   <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
                     {r.filename} · {fmtBytes(r.size_bytes)} · {new Date(r.created_at).toLocaleString("pt-BR")}
+                    {r.external_url && ` · ${externalHostLabel(r.external_url) ?? "externo"}`}
                   </div>
                   {r.notes && <div className="mt-1 whitespace-pre-wrap text-[11px] text-muted-foreground">{r.notes}</div>}
                 </div>
