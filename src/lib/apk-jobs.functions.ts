@@ -254,7 +254,7 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
       } as any)
       .eq("id", job.id);
 
-    return { url: signed.signedUrl, filename: safeName };
+    return { url: signedUrl, filename: safeName };
   });
 
 /** Admin ou Suporte (moderador) — a fila do Play Protect é operada pelos dois. */
@@ -332,11 +332,9 @@ export const adminGetApkSourceDownload = createServerFn({ method: "POST" })
       await supabaseAdmin.from("apk_jobs").update({ status: "processing", started_at: new Date().toISOString() } as any).eq("id", data.id);
     }
     const safeName = (job.source_filename || "origem.apk").replace(/[^\w.\-]+/g, "_");
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("apk-uploads")
-      .createSignedUrl(job.source_path, 60 * 60, { download: safeName });
-    if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
-    return { url: signed.signedUrl, filename: safeName };
+    const { createDownload } = await import("@/lib/storage-gateway.server");
+    const url = await createDownload("apk-uploads", job.source_path, 60 * 60, { download: safeName });
+    return { url, filename: safeName };
   });
 
 // Admin: create signed upload URL for the processed APK result
@@ -359,11 +357,9 @@ export const adminCreateApkResultUpload = createServerFn({ method: "POST" })
     if (!job) throw new Error("Job não encontrado");
     const cleanName = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
     const resultPath = `${job.user_id}/${job.id}/result-${cleanName}`;
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("apk-results")
-      .createSignedUploadUrl(resultPath);
-    if (error || !signed) throw new Error(error?.message || "Falha ao gerar URL de upload");
-    return { uploadUrl: signed.signedUrl, token: signed.token, path: resultPath };
+    const { createUpload } = await import("@/lib/storage-gateway.server");
+    const signed = await createUpload("apk-results", resultPath);
+    return { uploadUrl: signed.uploadUrl, token: signed.token, path: signed.path };
   });
 
 // Admin: mark job done after uploading result. resultPath is reconstructed
@@ -460,8 +456,9 @@ const TERMINAL_STATUSES = ["done", "failed", "expired", "cancelled"] as const;
 async function removeJobFiles(admin: any, rows: any[]) {
   const sources = rows.map((r) => r.source_path).filter(Boolean);
   const results = rows.map((r) => r.result_path).filter(Boolean);
-  try { if (sources.length) await admin.storage.from("apk-uploads").remove(sources); } catch { /* ignore */ }
-  try { if (results.length) await admin.storage.from("apk-results").remove(results); } catch { /* ignore */ }
+  const { removeObjects } = await import("@/lib/storage-gateway.server");
+  try { if (sources.length) await removeObjects("apk-uploads", sources); } catch { /* ignore */ }
+  try { if (results.length) await removeObjects("apk-results", results); } catch { /* ignore */ }
 }
 
 // Client: clear own finished jobs. Os registros continuam no banco (marcados
