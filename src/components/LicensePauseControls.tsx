@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { suspendMyLicense, reactivateMyLicense } from '@/lib/license.functions'
 import type { LicenseExpiryState } from '@/lib/expiry'
 import { canPauseLicense, canResumeLicense } from '@/lib/license-pause-rules'
+import { friendlyPanelError } from '@/lib/panel-errors'
 
 type Props = {
   license: any
