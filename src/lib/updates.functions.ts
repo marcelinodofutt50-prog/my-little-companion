@@ -137,14 +137,11 @@ export const adminCreateUpdateUpload = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createUpload } = await import("@/lib/storage-gateway.server");
     const safe = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safe}`;
-    const { data: up, error } = await supabaseAdmin.storage
-      .from("updates")
-      .createSignedUploadUrl(path);
-    if (error || !up) throw new Error(error?.message || "Falha ao gerar upload URL");
-    return { uploadUrl: up.signedUrl, path, token: up.token };
+    const rawPath = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safe}`;
+    const up = await createUpload("updates", rawPath);
+    return { uploadUrl: up.uploadUrl, path: up.path, token: up.token };
   });
 
 export const adminPublishUpdate = createServerFn({ method: "POST" })
