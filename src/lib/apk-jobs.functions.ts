@@ -213,12 +213,15 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: job } = await supabase
       .from("apk_jobs")
-      .select("id,status,result_path,result_filename")
+      .select("id,status,result_path,result_filename,created_at,completed_at,downloaded_at,download_count,purged_at")
       .eq("id", data.id)
       .eq("user_id", userId)
       .maybeSingle();
     if (!job) throw new Error("Job não encontrado");
+    const anyJob = job as any;
+    if (anyJob.purged_at) throw new Error(APK_EXPIRED_MESSAGE);
     if (job.status !== "done" || !job.result_path) throw new Error("Resultado ainda não disponível");
+    if ((anyJob.download_count ?? 0) >= APK_MAX_DOWNLOADS) throw new Error(APK_DOWNLOAD_LIMIT_MESSAGE);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const safeName = (job.result_filename || "app-protegido.apk").replace(/[^\w.\-]+/g, "_");
@@ -228,7 +231,21 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
         download: safeName,
         transform: undefined // Ensure no transformation for APKs
       });
-    if (error || !signed) throw new Error(error?.message || "Falha ao gerar link de download");
+    if (error || !signed) throw new Error(error?.message || APK_EXPIRED_MESSAGE);
+
+    // Registra o download: a partir daqui o arquivo tem prazo para ser
+    // descartado (48h), o que libera espaço e evita downloads repetidos.
+    const nowIso = new Date().toISOString();
+    const downloadedAt = anyJob.downloaded_at ?? nowIso;
+    await supabaseAdmin
+      .from("apk_jobs")
+      .update({
+        downloaded_at: downloadedAt,
+        download_count: (anyJob.download_count ?? 0) + 1,
+        purge_after: computePurgeAfter({ ...anyJob, downloaded_at: downloadedAt }),
+      } as any)
+      .eq("id", job.id);
+
     return { url: signed.signedUrl, filename: safeName };
   });
 
