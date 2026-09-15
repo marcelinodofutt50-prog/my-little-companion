@@ -34,15 +34,20 @@ export const uploadAvatar = createServerFn({ method: "POST" })
     const ext = data.contentType.split("/")[1]!.replace("jpeg", "jpg");
     const path = `${userId}/${Date.now()}.${ext}`;
 
-    const { error: upErr } = await supabaseAdmin.storage
-      .from("avatars")
-      .upload(path, bytes, { contentType: data.contentType, upsert: true, cacheControl: "3600" });
+    const { uploadBytes, publicUrlFor } = await import("@/lib/storage-gateway.server");
+    let storedPath = path;
+    try {
+      const saved = await uploadBytes("avatars", path, bytes, {
+        contentType: data.contentType,
+        upsert: true,
+        cacheControl: "3600",
+      });
+      storedPath = saved.path;
+    } catch (e: any) {
+      throw new Error("Falha no upload: " + (e?.message ?? "erro desconhecido"));
+    }
 
-    if (upErr) throw new Error("Falha no upload: " + upErr.message);
-
-    const {
-      data: { publicUrl },
-    } = supabaseAdmin.storage.from("avatars").getPublicUrl(path);
+    const publicUrl = publicUrlFor("avatars", storedPath);
 
     const { data: current } = await supabaseAdmin
       .from("profiles")

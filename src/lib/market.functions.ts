@@ -4,11 +4,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const SIGNED_TTL = 60 * 60 * 24 * 7; // 7 days
 
-async function signImage(admin: any, path: string | null): Promise<string | null> {
+async function signImage(_admin: any, path: string | null): Promise<string | null> {
   if (!path) return null;
   if (/^https?:\/\//i.test(path)) return path;
-  const { data } = await admin.storage.from("market-images").createSignedUrl(path, SIGNED_TTL);
-  return data?.signedUrl ?? null;
+  const { createDownload } = await import("@/lib/storage-gateway.server");
+  try {
+    return await createDownload("market-images", path, SIGNED_TTL);
+  } catch {
+    return null;
+  }
 }
 
 export const listMarketProducts = createServerFn({ method: "GET" }).handler(async () => {
