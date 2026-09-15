@@ -137,8 +137,9 @@ export const adminPublishUpdate = createServerFn({ method: "POST" })
       notes: z.string().trim().max(4000).optional().nullable(),
       min_tier: z.enum(["weekly", "monthly_457", "lifetime_46", "upgrade"]),
       storage_path: z.string().min(1).max(400),
+      part_paths: z.array(z.string().min(1).max(400)).min(1).max(400).optional(),
       filename: z.string().min(1).max(200),
-      size_bytes: z.number().int().positive().max(2_000_000_000).optional().nullable(),
+      size_bytes: z.number().int().positive().max(5_000_000_000).optional().nullable(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -150,6 +151,7 @@ export const adminPublishUpdate = createServerFn({ method: "POST" })
       notes: data.notes ?? null,
       min_tier: data.min_tier,
       storage_path: data.storage_path,
+      part_paths: data.part_paths ?? [data.storage_path],
       filename: data.filename,
       size_bytes: data.size_bytes ?? null,
       created_by: context.userId,
