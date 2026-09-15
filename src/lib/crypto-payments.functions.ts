@@ -89,11 +89,13 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
       if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Comprovante maior que 5MB.");
       const ext = data.proofMime === "image/png" ? "png" : data.proofMime === "image/webp" ? "webp" : "jpg";
       const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabaseAdmin.storage
-        .from("crypto-proofs")
-        .upload(path, bytes, { contentType: data.proofMime, upsert: false });
-      if (upErr) throw new Error(`Falha ao enviar comprovante: ${upErr.message}`);
-      proofPath = path;
+      const { uploadBytes } = await import("@/lib/storage-gateway.server");
+      try {
+        const saved = await uploadBytes("crypto-proofs", path, bytes, { contentType: data.proofMime });
+        proofPath = saved.path;
+      } catch (e: any) {
+        throw new Error(`Falha ao enviar comprovante: ${e?.message ?? "erro desconhecido"}`);
+      }
     }
 
     // ---- 6. Insert payment row ----

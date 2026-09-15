@@ -4,11 +4,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const SIGNED_TTL = 60 * 60 * 24 * 7; // 7 days
 
-async function signImage(admin: any, path: string | null): Promise<string | null> {
+async function signImage(_admin: any, path: string | null): Promise<string | null> {
   if (!path) return null;
   if (/^https?:\/\//i.test(path)) return path;
-  const { data } = await admin.storage.from("market-images").createSignedUrl(path, SIGNED_TTL);
-  return data?.signedUrl ?? null;
+  const { createDownload } = await import("@/lib/storage-gateway.server");
+  try {
+    return await createDownload("market-images", path, SIGNED_TTL);
+  } catch {
+    return null;
+  }
 }
 
 export const listMarketProducts = createServerFn({ method: "GET" }).handler(async () => {
@@ -126,10 +130,10 @@ export const adminUploadMarketImage = createServerFn({ method: "POST" })
     const path = `${data.slug}/${Date.now()}.${ext}`;
     const bytes = Buffer.from(data.dataBase64, "base64");
     if (bytes.length > 5_000_000) throw new Error("Imagem maior que 5 MB");
-    const { error } = await supabaseAdmin.storage.from("market-images").upload(path, bytes, { contentType: data.contentType, upsert: true });
-    if (error) throw new Error(error.message);
-    const { data: signed } = await supabaseAdmin.storage.from("market-images").createSignedUrl(path, SIGNED_TTL);
-    return { path, signedUrl: signed?.signedUrl ?? null };
+    const { uploadBytes, createDownload } = await import("@/lib/storage-gateway.server");
+    const saved = await uploadBytes("market-images", path, bytes, { contentType: data.contentType, upsert: true });
+    const signedUrl = await createDownload("market-images", saved.path, SIGNED_TTL).catch(() => null);
+    return { path: saved.path, signedUrl };
   });
 
 export const createMarketCheckout = createServerFn({ method: "POST" })

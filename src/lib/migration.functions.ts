@@ -106,14 +106,9 @@ export const getMigrationProofUrls = createServerFn({ method: "POST" })
     z.object({ paths: z.array(z.string().min(1).max(400)).max(6) }).parse(i),
   )
   .handler(async ({ data, context }) => {
-    const out: { path: string; url: string | null }[] = [];
-    for (const path of data.paths) {
-      const { data: signed } = await context.supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(path, 60 * 60);
-      out.push({ path, url: signed?.signedUrl ?? null });
-    }
-    return out;
+    const { createDownloads } = await import("@/lib/storage-gateway.server");
+    const signed = await createDownloads(BUCKET, data.paths, 60 * 60).catch(() => ({} as Record<string, string>));
+    return data.paths.map((path) => ({ path, url: signed[path] ?? null }));
   });
 
 const MAX_TOTAL_PROOFS = 12;
@@ -189,4 +184,29 @@ export const addMigrationProofs = createServerFn({ method: "POST" })
     }
 
     return row;
+  });
+
+/** Ticket de envio para comprovantes de migração (storage pode ser secundário). */
+export const createMigrationProofUpload = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) => z.object({ filename: z.string().trim().min(1).max(200) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const safe = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60);
+    const { createUpload } = await import("@/lib/storage-gateway.server");
+    const up = await createUpload(BUCKET, `${context.userId}/${Date.now()}-${safe}`);
+    return { path: up.path, uploadUrl: up.uploadUrl, token: up.token };
+  });
+
+/** Remove um comprovante ainda não enviado (o dono só apaga o que é dele). */
+export const removeMigrationProof = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) => z.object({ path: z.string().trim().min(1).max(400) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { stripSecondaryPrefix } = await import("@/lib/storage-routing");
+    if (!stripSecondaryPrefix(data.path).startsWith(`${context.userId}/`)) {
+      throw new Error("Caminho inválido");
+    }
+    const { removeObjects } = await import("@/lib/storage-gateway.server");
+    await removeObjects(BUCKET, [data.path]).catch(() => {});
+    return { ok: true };
   });

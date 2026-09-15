@@ -104,13 +104,10 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
       ? ((row as any).part_paths as string[])
       : [row.storage_path];
 
+    const { createDownload } = await import("@/lib/storage-gateway.server");
     const urls: string[] = [];
     for (const p of paths) {
-      const { data: signed, error } = await supabaseAdmin.storage
-        .from("updates")
-        .createSignedUrl(p, DOWNLOAD_TTL, { download: row.filename });
-      if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
-      urls.push(signed.signedUrl);
+      urls.push(await createDownload("updates", p, DOWNLOAD_TTL, { download: row.filename }));
     }
     return { url: urls[0]!, urls, filename: row.filename, external: false };
   });
@@ -140,14 +137,11 @@ export const adminCreateUpdateUpload = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createUpload } = await import("@/lib/storage-gateway.server");
     const safe = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safe}`;
-    const { data: up, error } = await supabaseAdmin.storage
-      .from("updates")
-      .createSignedUploadUrl(path);
-    if (error || !up) throw new Error(error?.message || "Falha ao gerar upload URL");
-    return { uploadUrl: up.signedUrl, path, token: up.token };
+    const rawPath = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safe}`;
+    const up = await createUpload("updates", rawPath);
+    return { uploadUrl: up.uploadUrl, path: up.path, token: up.token };
   });
 
 export const adminPublishUpdate = createServerFn({ method: "POST" })
@@ -225,7 +219,8 @@ export const adminDeleteUpdate = createServerFn({ method: "POST" })
       new Set([...(((row as any)?.part_paths as string[] | null) ?? []), ...(row?.storage_path ? [row.storage_path] : [])]),
     );
     if (toRemove.length) {
-      await supabaseAdmin.storage.from("updates").remove(toRemove);
+      const { removeObjects } = await import("@/lib/storage-gateway.server");
+      await removeObjects("updates", toRemove).catch(() => {});
     }
     const { error } = await supabaseAdmin.from("updates").delete().eq("id", data.id);
     if (error) throw new Error(error.message);

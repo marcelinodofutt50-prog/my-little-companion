@@ -3,11 +3,12 @@ import { computePurgeAfter, isPurgeDue, type RetentionJob } from "./apk-retentio
 type Admin = any;
 
 /** Apaga arquivos do storage sem derrubar o fluxo se algo já não existir. */
-async function removeFiles(admin: Admin, bucket: string, paths: string[]) {
+async function removeFiles(_admin: Admin, bucket: string, paths: string[]) {
   const list = paths.filter(Boolean);
   if (!list.length) return;
   try {
-    await admin.storage.from(bucket).remove(list);
+    const { removeObjects } = await import("./storage-gateway.server");
+    await removeObjects(bucket, list);
   } catch (e) {
     console.error(`[apk-retention] falha ao apagar em ${bucket}:`, e);
   }

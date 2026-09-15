@@ -321,9 +321,11 @@ function SupportPage() {
     if (file.size > 20 * 1024 * 1024) return toast.error("Máx 20MB");
     setUploading(true);
     try {
-      const path = `${uid}/${thread.id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("support-media").upload(path, file, { contentType: file.type });
-      if (error) throw error;
+      const { createSupportUploadUrl } = await import("@/lib/support.functions");
+      const { putToSignedUrl } = await import("@/lib/signed-upload");
+      const ticket = await createSupportUploadUrl({ data: { threadId: thread.id, filename: file.name } });
+      const path = ticket.path;
+      await putToSignedUrl(ticket.uploadUrl, file, file.type || "application/octet-stream");
       await send(path, file.type);
     } catch (e: any) { toast.error(e.message); }
     setUploading(false);

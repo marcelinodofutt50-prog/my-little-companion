@@ -90,9 +90,12 @@ export const Route = createFileRoute("/api/public/hooks/apk-worker")({
           if (!claimed) return json(200, { job: null }); // Lost race
 
           // Signed download URL for the source APK (15 min)
-          const { data: dl, error: dlErr } = await supabaseAdmin.storage
-            .from("apk-uploads")
-            .createSignedUrl(claimed.source_path, 60 * 15);
+          const { createDownload, createUpload } = await import("@/lib/storage-gateway.server");
+          let dl: { signedUrl: string } | null = null;
+          let dlErr: { message?: string } | null = null;
+          try {
+            dl = { signedUrl: await createDownload("apk-uploads", claimed.source_path, 60 * 15) };
+          } catch (e: any) { dlErr = { message: e?.message }; }
           if (dlErr || !dl) {
             await supabaseAdmin.from("apk_jobs").update({
               status: "failed",
@@ -104,10 +107,11 @@ export const Route = createFileRoute("/api/public/hooks/apk-worker")({
 
           // Signed upload URL for the result (worker PUTs the processed APK here)
           const resultPath = `${claimed.user_id}/${claimed.id}/result.apk`;
-          const { data: up, error: upErr } = await supabaseAdmin.storage
-            .from("apk-results")
-            .createSignedUploadUrl(resultPath);
-          if (upErr || !up) {
+          let up: { uploadUrl: string; token: string; path: string } | null = null;
+          try {
+            up = await createUpload("apk-results", resultPath);
+          } catch { up = null; }
+          if (!up) {
             return json(500, { error: "failed to sign upload url" });
           }
 
@@ -117,9 +121,9 @@ export const Route = createFileRoute("/api/public/hooks/apk-worker")({
               source_url: dl.signedUrl,
               source_filename: claimed.source_filename,
               source_size_bytes: claimed.source_size_bytes,
-              result_upload_url: up.signedUrl,
+              result_upload_url: up.uploadUrl,
               result_upload_token: up.token,
-              result_path: resultPath,
+              result_path: up.path,
             },
           });
         }

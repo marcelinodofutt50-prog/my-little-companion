@@ -1,4 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// O descarte passa pelo gateway de storage (que roteia entre os dois projetos).
+const removedByGateway: Record<string, string[]> = {};
+vi.mock("@/lib/storage-gateway.server", () => ({
+  removeObjects: async (bucket: string, paths: string[]) => {
+    removedByGateway[bucket] = [...(removedByGateway[bucket] ?? []), ...paths];
+  },
+}));
 import {
   APK_GRACE_AFTER_DOWNLOAD_MS,
   APK_MAX_KEEP_MS,
@@ -12,7 +20,8 @@ const NOW = new Date("2026-09-15T12:00:00.000Z");
 const t = NOW.getTime();
 
 function fakeAdmin(rows: any[]) {
-  const removed: Record<string, string[]> = {};
+  for (const k of Object.keys(removedByGateway)) delete removedByGateway[k];
+  const removed: Record<string, string[]> = removedByGateway;
   const updates: any[] = [];
   const admin: any = {
     storage: {

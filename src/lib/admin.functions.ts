@@ -492,15 +492,13 @@ export const adminSendMessage = createServerFn({ method: "POST" })
     // as if the client sent them.
     let attachmentUrl: string | null = null;
     if (data.attachmentPath) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: signed, error: sErr } = await supabaseAdmin.storage
-        .from("support-media")
-        .createSignedUrl(data.attachmentPath, 60 * 60 * 24 * 7);
-      if (sErr) {
-        console.error("[support] assinatura do anexo falhou:", sErr.message);
-        throw new Error("Não foi possível anexar o arquivo: " + sErr.message);
+      const { createDownload } = await import("@/lib/storage-gateway.server");
+      try {
+        attachmentUrl = await createDownload("support-media", data.attachmentPath, 60 * 60 * 24 * 7);
+      } catch (e: any) {
+        console.error("[support] assinatura do anexo falhou:", e?.message);
+        throw new Error("Não foi possível anexar o arquivo: " + (e?.message ?? "erro"));
       }
-      attachmentUrl = signed?.signedUrl ?? null;
     }
 
     const payload: any = {

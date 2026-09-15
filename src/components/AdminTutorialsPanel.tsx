@@ -199,13 +199,8 @@ export function AdminTutorialsPanel() {
         data: { filename: file.name, kind: type, size: file.size },
       });
 
-      const { error } = await supabase.storage
-        .from('tutorials')
-        .uploadToSignedUrl(signed.path, signed.token, file, {
-          contentType: file.type || undefined,
-        });
-
-      if (error) throw error;
+      const { putToSignedUrl } = await import("@/lib/signed-upload");
+      await putToSignedUrl((signed as any).uploadUrl, file, file.type || undefined);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
