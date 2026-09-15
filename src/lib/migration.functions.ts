@@ -106,14 +106,9 @@ export const getMigrationProofUrls = createServerFn({ method: "POST" })
     z.object({ paths: z.array(z.string().min(1).max(400)).max(6) }).parse(i),
   )
   .handler(async ({ data, context }) => {
-    const out: { path: string; url: string | null }[] = [];
-    for (const path of data.paths) {
-      const { data: signed } = await context.supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(path, 60 * 60);
-      out.push({ path, url: signed?.signedUrl ?? null });
-    }
-    return out;
+    const { createDownloads } = await import("@/lib/storage-gateway.server");
+    const signed = await createDownloads(BUCKET, data.paths, 60 * 60).catch(() => ({} as Record<string, string>));
+    return data.paths.map((path) => ({ path, url: signed[path] ?? null }));
   });
 
 const MAX_TOTAL_PROOFS = 12;
