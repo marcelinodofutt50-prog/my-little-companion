@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, KeyRound, LifeBuoy, Loader2, RadioTower, RefreshCw, Server, Wrench, X } from "lucide-react";
 import { toast } from "sonner";
 import { isPasswordValid, passwordError, passwordRules } from "@/lib/password-policy";
+import { friendlyPanelError } from "@/lib/panel-errors";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
