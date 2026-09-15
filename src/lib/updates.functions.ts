@@ -79,6 +79,14 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
       if (bestRank < tierRank[row.min_tier as VersionTier]) throw new Error("Seu plano não libera este update");
     }
 
+    // Link externo: o cliente baixa direto da origem (Drive, R2, etc.), sem
+    // passar pelo nosso armazenamento — é o caminho recomendado para arquivos
+    // grandes, porque não consome a cota de tráfego do projeto.
+    const external = ((row as any).external_url as string | null) ?? null;
+    if (external) {
+      return { url: external, urls: [external], filename: row.filename, external: true };
+    }
+
     const paths = ((row as any).part_paths as string[] | null)?.length
       ? ((row as any).part_paths as string[])
       : [row.storage_path];
@@ -91,7 +99,7 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
       if (error || !signed) throw new Error(error?.message || "Falha ao gerar link");
       urls.push(signed.signedUrl);
     }
-    return { url: urls[0]!, urls, filename: row.filename };
+    return { url: urls[0]!, urls, filename: row.filename, external: false };
   });
 
 // ============ ADMIN ============
