@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  APK_DOWNLOAD_LIMIT_MESSAGE,
+  APK_EXPIRED_MESSAGE,
+  APK_MAX_DOWNLOADS,
+  computePurgeAfter,
+} from "@/lib/apk-retention";
 
 const MAX_APK_BYTES = 50 * 1024 * 1024; // 50 MB (limite do storage)
 
