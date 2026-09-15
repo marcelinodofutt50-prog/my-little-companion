@@ -188,7 +188,14 @@ export const adminPublishUpdate = createServerFn({ method: "POST" })
       created_by: context.userId,
       is_active: true,
     } as any);
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (externalUrl && /external_url/i.test(error.message)) {
+        throw new Error(
+          "Este banco ainda não tem o campo de link externo habilitado. Publique por envio de arquivo ou avise o suporte técnico.",
+        );
+      }
+      throw new Error(error.message);
+    }
     return { ok: true };
   });
 
