@@ -699,13 +699,11 @@ export function SupportChat({
     const toastId = toast.loading(`Enviando ${file.name}…`);
     try {
       const safeName = safeMediaFileName(file.name || "arquivo");
-      const path = `${userId}/${threadId}/${Date.now()}-${safeName}`;
-      const { error } = await supabase.storage.from(SUPPORT_MEDIA_BUCKET).upload(path, file, {
-        contentType: file.type || "application/octet-stream",
-        cacheControl: "3600",
-        upsert: false,
-      });
-      if (error) throw error;
+      const { createSupportUploadUrl } = await import("@/lib/support.functions");
+      const { putToSignedUrl } = await import("@/lib/signed-upload");
+      const ticket = await createSupportUploadUrl({ data: { threadId, filename: safeName } });
+      const path = ticket.path;
+      await putToSignedUrl(ticket.uploadUrl, file, file.type || "application/octet-stream");
       toast.dismiss(toastId);
       await handleSend(path, file.type || "application/octet-stream", undefined, {
         name: file.name,

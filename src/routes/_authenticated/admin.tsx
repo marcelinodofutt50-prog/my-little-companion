@@ -3206,15 +3206,18 @@ function AdminChatPanel() {
     setSending(true);
     try {
       const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(-80);
-      const path = `staff/${activeId}/${Date.now()}-${safeName}`;
-      const { error: upErr } = await supabase.storage
-        .from("support-media")
-        .upload(path, file, { contentType: file.type || undefined, upsert: false });
-      if (upErr) {
+      const { createSupportUploadUrl } = await import("@/lib/support.functions");
+      const { putToSignedUrl } = await import("@/lib/signed-upload");
+      let path: string;
+      try {
+        const ticket = await createSupportUploadUrl({ data: { threadId: activeId, filename: safeName, staff: true } });
+        path = ticket.path;
+        await putToSignedUrl(ticket.uploadUrl, file, file.type || undefined);
+      } catch (upErr: any) {
         throw new Error(
-          /row-level security|not authorized/i.test(upErr.message)
+          /row-level security|not authorized/i.test(upErr?.message ?? "")
             ? "Sem permissão para enviar anexos (verifique seu cargo de equipe)."
-            : `Falha no upload do anexo: ${upErr.message}`,
+            : `Falha no upload do anexo: ${upErr?.message ?? "erro"}`,
         );
       }
       const res: any = await sendFn({
