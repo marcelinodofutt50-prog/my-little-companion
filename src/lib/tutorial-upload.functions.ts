@@ -58,16 +58,19 @@ export const createTutorialUploadUrl = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const path = `${context.userId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-    const { data: bucket, error: bucketError } = await supabaseAdmin.storage.getBucket("tutorials");
-    if (bucketError || !bucket) {
-      console.error("[tutorial-upload] bucket indisponível:", {
-        userId: context.userId,
-        code: (bucketError as { statusCode?: string })?.statusCode,
-        message: bucketError?.message,
-      });
-      throw new Error(
-        "O armazenamento do Centro de Treinamento não está disponível neste ambiente. Tente novamente em alguns minutos.",
-      );
+    const { filesStorageEnabled } = await import("@/lib/storage-gateway.server");
+    if (!filesStorageEnabled()) {
+      const { data: bucket, error: bucketError } = await supabaseAdmin.storage.getBucket("tutorials");
+      if (bucketError || !bucket) {
+        console.error("[tutorial-upload] bucket indisponível:", {
+          userId: context.userId,
+          code: (bucketError as { statusCode?: string })?.statusCode,
+          message: bucketError?.message,
+        });
+        throw new Error(
+          "O armazenamento do Centro de Treinamento não está disponível neste ambiente. Tente novamente em alguns minutos.",
+        );
+      }
     }
 
     const { createUpload } = await import("@/lib/storage-gateway.server");

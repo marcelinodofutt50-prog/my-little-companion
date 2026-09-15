@@ -124,13 +124,12 @@ export const signTutorialMedia = createServerFn({ method: "POST" })
 
     if (!owner) return { url: null as string | null };
 
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("tutorials")
-      .createSignedUrl(path, 60 * 60 * 4);
-
-    if (error || !signed?.signedUrl) {
-      console.error("[public-tutorials] Falha ao assinar mídia:", { path, message: error?.message });
+    const { createDownload } = await import("@/lib/storage-gateway.server");
+    try {
+      const url = await createDownload("tutorials", path, 60 * 60 * 4);
+      return { url: url as string | null };
+    } catch (e: any) {
+      console.error("[public-tutorials] Falha ao assinar mídia:", { path, message: e?.message });
       return { url: null as string | null };
     }
-    return { url: signed.signedUrl };
   });

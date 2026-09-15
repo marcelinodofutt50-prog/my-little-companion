@@ -278,14 +278,9 @@ export const listMessages = createServerFn({ method: "GET" })
     );
     if (paths.length > 0) {
       try {
-        const { data: signed } = await context.supabase.storage
-          .from(SUPPORT_MEDIA_BUCKET)
-          .createSignedUrls(paths, SUPPORT_MEDIA_SIGNED_TTL);
-        const byPath = new Map<string, string>();
-        for (const s of signed ?? []) {
-          const key = (s as { path?: string | null }).path;
-          if (key && s.signedUrl) byPath.set(key, s.signedUrl);
-        }
+        const { createDownloads } = await import("@/lib/storage-gateway.server");
+        const signed = await createDownloads(SUPPORT_MEDIA_BUCKET, paths, SUPPORT_MEDIA_SIGNED_TTL);
+        const byPath = new Map<string, string>(Object.entries(signed));
         for (const m of ordered) {
           const p = extractSupportMediaPath(m.attachment_url);
           const fresh = p ? byPath.get(p) : undefined;
@@ -470,11 +465,8 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     let url: string | null = null;
     if (data.attachmentPath) {
-      const { data: signed, error: sErr } = await context.supabase.storage
-        .from("support-media")
-        .createSignedUrl(data.attachmentPath, 60 * 60 * 24 * 7);
-      if (sErr) throw sErr;
-      url = signed?.signedUrl ?? null;
+      const { createDownload } = await import("@/lib/storage-gateway.server");
+      url = await createDownload("support-media", data.attachmentPath, 60 * 60 * 24 * 7);
     }
 
     // Build payload dynamically to avoid schema cache issues with reply_to_id
