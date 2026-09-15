@@ -386,6 +386,7 @@ export const adminCompleteApkJob = createServerFn({ method: "POST" })
     if (!data.resultPath.startsWith(expectedPrefix)) {
       throw new Error("Caminho de resultado inválido");
     }
+    const completedAt = new Date().toISOString();
     const { error } = await supabaseAdmin
       .from("apk_jobs")
       .update({
@@ -393,11 +394,18 @@ export const adminCompleteApkJob = createServerFn({ method: "POST" })
         result_path: data.resultPath,
         result_filename: data.filename,
         result_size_bytes: data.sizeBytes,
-        completed_at: new Date().toISOString(),
+        completed_at: completedAt,
         error_message: null,
+        purge_after: computePurgeAfter({ status: "done", completed_at: completedAt }),
       } as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+    // O APK original não serve para mais nada depois de assinado: sai do
+    // armazenamento na hora, sem esperar a varredura.
+    try {
+      const { dropApkSource } = await import("@/lib/apk-retention.server");
+      await dropApkSource(supabaseAdmin, data.id);
+    } catch (e) { console.error("[apk] falha ao descartar o APK original:", e); }
     return { ok: true };
   });
 
