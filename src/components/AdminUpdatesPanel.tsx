@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Upload, Loader2, RefreshCw, Trash2, Package, Eye, EyeOff, PlusCircle } from "lucide-react";
+import { Upload, Loader2, RefreshCw, Trash2, Package, Eye, EyeOff, PlusCircle, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
