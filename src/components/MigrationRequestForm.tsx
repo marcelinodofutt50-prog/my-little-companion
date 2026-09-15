@@ -9,9 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   addMigrationProofs,
+  createMigrationProofUpload,
   getMyMigrationRequest,
+  removeMigrationProof,
   submitMigrationRequest,
 } from "@/lib/migration.functions";
+import { putToSignedUrl } from "@/lib/signed-upload";
 
 const BUCKET = "migration-proofs";
 const MAX_FILES = 6;
@@ -129,16 +132,14 @@ export function MigrationRequestForm() {
         toast.error(`${file.name}: máximo de 8MB por arquivo`);
         continue;
       }
-      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-60);
-      const path = `${uid}/${Date.now()}-${safe}`;
-      const { error } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (error) {
-        toast.error(`${file.name}: falha no envio (${error.message})`);
+      try {
+        const ticket = await createMigrationProofUpload({ data: { filename: file.name } });
+        await putToSignedUrl(ticket.uploadUrl, file, file.type || undefined);
+        added.push({ path: ticket.path, name: file.name, size: file.size });
+      } catch (error: any) {
+        toast.error(`${file.name}: falha no envio (${error?.message ?? "erro"})`);
         continue;
       }
-      added.push({ path, name: file.name, size: file.size });
     }
     return added;
   }

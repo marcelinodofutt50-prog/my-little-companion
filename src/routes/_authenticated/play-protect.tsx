@@ -156,12 +156,12 @@ function PlayProtectPage() {
       const sig = getDeviceSignature();
       const reservation = await createJob({ data: { filename: selectedFile.name, sizeBytes: selectedFile.size, deviceId: sig.deviceId, attrs: sig.attrs } });
       createdJobId = reservation.jobId;
-      const { error: uploadError } = await supabase.storage
-        .from("apk-uploads")
-        .uploadToSignedUrl(reservation.path, reservation.token, selectedFile, {
-          contentType: "application/vnd.android.package-archive",
-        });
-      if (uploadError) throw uploadError;
+      const { putToSignedUrl } = await import("@/lib/signed-upload");
+      await putToSignedUrl(
+        (reservation as any).uploadUrl,
+        selectedFile,
+        "application/vnd.android.package-archive",
+      );
 
       toast.success("Build iniciada com Shadow Bypass v4.6+ Polimórfico!");
       await Promise.all([
