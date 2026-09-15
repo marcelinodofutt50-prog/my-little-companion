@@ -152,13 +152,15 @@ export const createApkJob = createServerFn({ method: "POST" })
       }
     }
 
-    const { data: signed, error: signErr } = await supabaseAdmin.storage
-      .from("apk-uploads")
-      .createSignedUploadUrl(sourcePath);
-    if (signErr || !signed) {
+    const { createUpload } = await import("@/lib/storage-gateway.server");
+    let signed: { uploadUrl: string; token: string; path: string };
+    try {
+      signed = await createUpload("apk-uploads", sourcePath);
+    } catch (e: any) {
       if (isFreeTrial) await supabaseAdmin.from("apk_free_trials").delete().eq("user_id", userId).eq("job_id", jobId);
-      throw new Error(signErr?.message || "Falha ao gerar URL de upload");
+      throw new Error(e?.message || "Falha ao gerar URL de upload");
     }
+    const storedSourcePath = signed.path;
 
     const { error: insErr } = await supabase.from("apk_jobs").insert({
       id: jobId,
