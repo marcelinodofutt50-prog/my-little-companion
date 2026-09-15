@@ -214,11 +214,15 @@ export type Database = {
           cleared_at: string | null
           completed_at: string | null
           created_at: string
+          download_count: number
+          downloaded_at: string | null
           error_message: string | null
           expires_at: string
           id: string
           is_free_trial: boolean
           order_id: string | null
+          purge_after: string | null
+          purged_at: string | null
           queued_at: string
           result_filename: string | null
           result_path: string | null
@@ -237,11 +241,15 @@ export type Database = {
           cleared_at?: string | null
           completed_at?: string | null
           created_at?: string
+          download_count?: number
+          downloaded_at?: string | null
           error_message?: string | null
           expires_at?: string
           id?: string
           is_free_trial?: boolean
           order_id?: string | null
+          purge_after?: string | null
+          purged_at?: string | null
           queued_at?: string
           result_filename?: string | null
           result_path?: string | null
@@ -260,11 +268,15 @@ export type Database = {
           cleared_at?: string | null
           completed_at?: string | null
           created_at?: string
+          download_count?: number
+          downloaded_at?: string | null
           error_message?: string | null
           expires_at?: string
           id?: string
           is_free_trial?: boolean
           order_id?: string | null
+          purge_after?: string | null
+          purged_at?: string | null
           queued_at?: string
           result_filename?: string | null
           result_path?: string | null
