@@ -435,11 +435,21 @@ export const adminFailApkJob = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const completedAt = new Date().toISOString();
     const { error } = await supabaseAdmin
       .from("apk_jobs")
-      .update({ status: "failed", error_message: data.reason, completed_at: new Date().toISOString() } as any)
+      .update({
+        status: "failed",
+        error_message: data.reason,
+        completed_at: completedAt,
+        purge_after: computePurgeAfter({ status: "failed", completed_at: completedAt }),
+      } as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+    try {
+      const { dropApkSource } = await import("@/lib/apk-retention.server");
+      await dropApkSource(supabaseAdmin, data.id);
+    } catch (e) { console.error("[apk] falha ao descartar o APK original:", e); }
     return { ok: true };
   });
 
