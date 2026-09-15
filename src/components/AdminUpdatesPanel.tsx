@@ -346,9 +346,15 @@ export function AdminUpdatesPanel() {
                         oculto
                       </span>
                     )}
+                    {r.external_url && (
+                      <span className="rounded border border-emerald-400/40 bg-emerald-400/10 px-1.5 py-0.5 font-mono text-[9px] uppercase text-emerald-300">
+                        link externo
+                      </span>
+                    )}
                   </div>
                   <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
                     {r.filename} · {fmtBytes(r.size_bytes)} · {new Date(r.created_at).toLocaleString("pt-BR")}
+                    {r.external_url && ` · ${externalHostLabel(r.external_url) ?? "externo"}`}
                   </div>
                   {r.notes && <div className="mt-1 whitespace-pre-wrap text-[11px] text-muted-foreground">{r.notes}</div>}
                 </div>
