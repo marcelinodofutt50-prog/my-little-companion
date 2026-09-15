@@ -62,14 +62,22 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
       throw new Error("Divergência na senha registrada desta licença — fale com o suporte.");
     }
 
-    // 1) trava a data no painel
-    const yr = await yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel);
+    const { retryPanelCall } = await import("./panel-retry.server");
+
+    // 1) trava a data no painel (repetimos em falha passageira do painel)
+    const yr = await retryPanelCall(
+      () => yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel),
+      { label: "pause:extend" },
+    );
     if (yr.Fail) {
       console.error("[suspendMyLicense] Yaarsa Date Fail:", yr.Fail);
       // Fallback 1: Alguns painéis recusam a data de "ontem" se ela cair num range inválido.
       // Tentamos uma data fixa bem antiga (1970) para forçar o bloqueio por expiração.
-      const yrRetry = await yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel);
-      
+      const yrRetry = await retryPanelCall(
+        () => yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel),
+        { label: "pause:extend-1970" },
+      );
+
       if (yrRetry.Fail) {
         console.error("[suspendMyLicense] Yaarsa Date Retry Fail:", yrRetry.Fail);
         // Fallback Final: Se o painel estiver offline ou com erro de conexão persistente,
@@ -88,7 +96,10 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
     if (sha256Hex(tempPassword) === originalFp) {
       throw new Error("Falha ao gerar senha de pausa segura — tente novamente.");
     }
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username);
+    const pr = await retryPanelCall(
+      () => yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username),
+      { label: "pause:password" },
+    );
     if (pr.Fail) {
       // Se for apenas erro de "não encontrado", tentamos criar a conta (upsert informal)
       if (/1005|não encontrado|not found/i.test(pr.Fail)) {
@@ -188,9 +199,13 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       throw new Error("Bloqueado: a senha guardada é a senha temporária da pausa — fale com o suporte.");
     }
 
+    const { retryPanelCall } = await import("./panel-retry.server");
+
     // 1) devolve os dias
-    let yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
-    
+    let yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
+      label: "resume:extend",
+    });
+
     // Healer agressivo: se falhar a extensão, tentamos ações alternativas
     if (yr.Fail) {
       console.error("[reactivateMyLicense] Yaarsa Extend Fail:", yr.Fail);
@@ -207,11 +222,15 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
           panel
         });
         // Tenta estender novamente após recriar
-        yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+        yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
+          label: "resume:extend-after-create",
+        });
       } else {
         // Tentativa de re-sincronização agressiva em caso de timeout/rede
         await new Promise(r => setTimeout(r, 800));
-        yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+        yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
+          label: "resume:extend-retry",
+        });
       }
       
       if (yr.Fail) {
@@ -220,7 +239,12 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     }
 
     // 2) restaura a senha original (a mesma entregue na compra)
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username);
+    // Crítico: se isso falhar o cliente fica preso com a senha da pausa, então
+    // insistimos algumas vezes antes de desistir.
+    const pr = await retryPanelCall(
+      () => yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username),
+      { label: "resume:password", attempts: 4 },
+    );
     if (pr.Fail) throw new Error(`Painel (senha): ${pr.Fail}`);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -889,21 +913,31 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
     if ((lic as any).suspended_at) throw new Error("Esta licença está pausada — despause para reparar o acesso.");
 
     const { healLicenseLogin } = await import("./license-heal.server");
-    const result = await healLicenseLogin(
-      {
-        id: lic.id,
-        user_id: userId,
-        plan_slug: (lic as any).plan_slug ?? null,
-        yaarsa_username: lic.yaarsa_username,
-        yaarsa_email: lic.yaarsa_email,
-        yaarsa_password_enc: lic.yaarsa_password_enc,
-        panel: (lic as any).panel ?? null,
-        expires_at: (lic as any).expires_at ?? null,
-        is_trial: (lic as any).is_trial ?? null,
-        server_ip: (lic as any).server_ip ?? null,
-      },
-      { reason: "cliente_corrigir_erros" },
-    );
+    const { isTransientPanelFail } = await import("./panel-retry.server");
+    const payload = {
+      id: lic.id,
+      user_id: userId,
+      plan_slug: (lic as any).plan_slug ?? null,
+      yaarsa_username: lic.yaarsa_username,
+      yaarsa_email: lic.yaarsa_email,
+      yaarsa_password_enc: lic.yaarsa_password_enc,
+      panel: (lic as any).panel ?? null,
+      expires_at: (lic as any).expires_at ?? null,
+      is_trial: (lic as any).is_trial ?? null,
+      server_ip: (lic as any).server_ip ?? null,
+    };
+
+    // O painel cai por alguns segundos com frequência. Em falha passageira
+    // tentamos de novo aqui mesmo, para o cliente não precisar clicar duas vezes.
+    let result;
+    try {
+      result = await healLicenseLogin(payload, { reason: "cliente_corrigir_erros" });
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
+      if (!isTransientPanelFail(msg)) throw e;
+      await new Promise((r) => setTimeout(r, 1500));
+      result = await healLicenseLogin(payload, { reason: "cliente_corrigir_erros_retry" });
+    }
 
     return {
       ok: true,
