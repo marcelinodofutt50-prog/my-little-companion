@@ -12,11 +12,12 @@ import {
   adminDeleteUpdate,
 } from "@/lib/updates.functions";
 import { tierLabel, type VersionTier } from "@/lib/plans";
+import { normalizeExternalUrl, externalHostLabel, EXTERNAL_URL_HELP } from "@/lib/update-links";
 
 type UpdateRow = {
   id: string; title: string; version: string; notes: string | null;
   min_tier: VersionTier; filename: string; size_bytes: number | null;
-  is_active: boolean; created_at: string;
+  is_active: boolean; created_at: string; external_url?: string | null;
 };
 
 function fmtBytes(n: number | null) {
@@ -43,6 +44,10 @@ export function AdminUpdatesPanel() {
   const [uploadPct, setUploadPct] = useState(0);
   const [publishing, setPublishing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<"link" | "upload">("link");
+  const [externalUrl, setExternalUrl] = useState("");
+  const [linkFilename, setLinkFilename] = useState("");
+  const [linkSizeMb, setLinkSizeMb] = useState("");
 
   async function refresh() {
     setLoading(true);
@@ -58,10 +63,39 @@ export function AdminUpdatesPanel() {
   function resetForm() {
     setTitle(""); setVersion(""); setNotes(""); setMinTier("monthly_457");
     setFile(null); setUploadPct(0); if (fileRef.current) fileRef.current.value = "";
+    setExternalUrl(""); setLinkFilename(""); setLinkSizeMb("");
   }
 
   async function submit() {
     if (!title.trim() || !version.trim()) { toast.error("Título e versão obrigatórios"); return; }
+
+    if (mode === "link") {
+      let normalized: string;
+      try {
+        normalized = normalizeExternalUrl(externalUrl);
+      } catch (e: any) {
+        toast.error(e?.message || "Link inválido"); return;
+      }
+      const name = linkFilename.trim();
+      if (!name) { toast.error("Informe o nome do arquivo (ex.: BTMOB_v4.6.1.rar)"); return; }
+      setPublishing(true);
+      try {
+        await publishFn({
+          data: {
+            title: title.trim(), version: version.trim(), notes: notes.trim() || null,
+            min_tier: minTier, external_url: normalized, filename: name,
+            size_bytes: linkSizeMb.trim() ? Math.round(Number(linkSizeMb) * 1024 * 1024) : null,
+          },
+        });
+        toast.success("Update publicado com link externo — sem gastar tráfego do sistema.");
+        resetForm(); setShowForm(false);
+        await refresh();
+      } catch (e: any) {
+        toast.error(e?.message || "Falha ao publicar");
+      } finally { setPublishing(false); }
+      return;
+    }
+
     if (!file) { toast.error("Selecione um arquivo"); return; }
     setPublishing(true);
     try {
