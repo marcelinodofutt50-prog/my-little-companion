@@ -605,3 +605,33 @@ export const setThreadCategory = createServerFn({ method: "POST" })
     if (!updated) throw new Error("Conversa não encontrada");
     return updated;
   });
+
+/**
+ * Ticket de envio para anexos do suporte.
+ *
+ * Os arquivos podem viver no projeto secundário de armazenamento, então o
+ * caminho e a URL assinada são gerados aqui no servidor.
+ */
+export const createSupportUploadUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z
+      .object({
+        threadId: z.string().uuid(),
+        filename: z.string().trim().min(1).max(200),
+        staff: z.boolean().optional(),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const safe = data.filename.replace(/[^\w.\-]+/g, "_").slice(-80);
+    let isStaff = false;
+    if (data.staff) {
+      const { data: staffOk } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+      isStaff = !!staffOk;
+    }
+    const prefix = isStaff ? `staff/${data.threadId}` : `${context.userId}/${data.threadId}`;
+    const { createUpload } = await import("@/lib/storage-gateway.server");
+    const up = await createUpload("support-media", `${prefix}/${Date.now()}-${safe}`);
+    return { path: up.path, uploadUrl: up.uploadUrl, token: up.token };
+  });
