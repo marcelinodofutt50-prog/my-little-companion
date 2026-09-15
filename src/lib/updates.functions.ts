@@ -56,11 +56,24 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
   .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
+    // Bancos que ainda não receberam a coluna do link externo continuam
+    // funcionando com o download tradicional.
+    let row: any = null;
+    const full = await supabaseAdmin
       .from("updates")
       .select("id, storage_path, part_paths, external_url, filename, min_tier, is_active")
       .eq("id", data.id)
       .maybeSingle();
+    if (full.error && /external_url/i.test(full.error.message)) {
+      const legacy = await supabaseAdmin
+        .from("updates")
+        .select("id, storage_path, part_paths, filename, min_tier, is_active")
+        .eq("id", data.id)
+        .maybeSingle();
+      row = legacy.data;
+    } else {
+      row = full.data;
+    }
     if (!row || !row.is_active) throw new Error("Update indisponível");
 
 
