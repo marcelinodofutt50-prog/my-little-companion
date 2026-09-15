@@ -221,20 +221,86 @@ export function AdminUpdatesPanel() {
               className="mt-1 w-full rounded-md border border-input bg-background p-2 font-mono text-xs"
             />
           </div>
-          <div>
-            <label className="font-mono text-[10px] uppercase text-muted-foreground">Arquivo (.rar, .zip, .apk)</label>
-            <input
-              ref={fileRef}
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="mt-1 block w-full text-xs file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground"
-            />
-            {file && (
-              <div className="mt-1 font-mono text-[10px] text-muted-foreground">
-                {file.name} · {fmtBytes(file.size)}
-              </div>
-            )}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setMode("link")}
+              className={`rounded-md border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition ${
+                mode === "link" ? "border-neon/60 bg-neon/10 text-neon" : "border-input text-muted-foreground"
+              }`}
+            >
+              <LinkIcon className="mr-1 inline h-3 w-3" /> Link externo (recomendado)
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("upload")}
+              className={`rounded-md border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition ${
+                mode === "upload" ? "border-neon/60 bg-neon/10 text-neon" : "border-input text-muted-foreground"
+              }`}
+            >
+              <Upload className="mr-1 inline h-3 w-3" /> Enviar arquivo
+            </button>
           </div>
+
+          {mode === "link" ? (
+            <div className="space-y-3 rounded-md border border-neon/20 bg-neon/[0.03] p-3">
+              <p className="text-[11px] text-muted-foreground">
+                O cliente baixa direto da origem do arquivo. Isso <strong>não consome o tráfego mensal</strong> do
+                sistema — ideal para os arquivos grandes de 70 MB ou mais. {EXTERNAL_URL_HELP}
+              </p>
+              <div>
+                <label className="font-mono text-[10px] uppercase text-muted-foreground">Link do arquivo</label>
+                <Input
+                  value={externalUrl}
+                  onChange={(e) => setExternalUrl(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/..."
+                  className="mt-1 font-mono text-xs"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div>
+                  <label className="font-mono text-[10px] uppercase text-muted-foreground">Nome do arquivo</label>
+                  <Input
+                    value={linkFilename}
+                    onChange={(e) => setLinkFilename(e.target.value)}
+                    placeholder="BTMOB_v4.6.1.rar"
+                    className="mt-1 font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="font-mono text-[10px] uppercase text-muted-foreground">Tamanho em MB (opcional)</label>
+                  <Input
+                    value={linkSizeMb}
+                    onChange={(e) => setLinkSizeMb(e.target.value.replace(/[^\d.]/g, ""))}
+                    placeholder="76.8"
+                    inputMode="decimal"
+                    className="mt-1 font-mono text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="font-mono text-[10px] uppercase text-muted-foreground">Arquivo (.rar, .zip, .apk)</label>
+              <input
+                ref={fileRef}
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="mt-1 block w-full text-xs file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-primary-foreground"
+              />
+              {file && (
+                <div className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  {file.name} · {fmtBytes(file.size)}
+                </div>
+              )}
+              {file && file.size > 50 * 1024 * 1024 && (
+                <div className="mt-2 rounded border border-amber-400/40 bg-amber-400/10 p-2 text-[11px] text-amber-200">
+                  Arquivo grande: cada download desses consome o tráfego mensal do sistema. Prefira publicar por link
+                  externo.
+                </div>
+              )}
+            </div>
+          )}
           {publishing && uploadPct > 0 && (
             <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-primary transition-[width]" style={{ width: `${uploadPct}%` }} />
