@@ -101,7 +101,7 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
           size="sm"
           className="font-mono text-[10px] uppercase"
           disabled={busy || !resumeGate.ok}
-          onClick={() => void run(() => resume({ data: { licenseId: license.id } }), 'Licença despausada — sua senha original voltou a funcionar')}
+          onClick={() => void run(() => resume({ data: { licenseId: license.id } }), 'Licença despausada — sua senha original voltou a funcionar', 'Despausando e devolvendo seus dias no painel…')}
         >
           {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="mr-1.5 h-3.5 w-3.5" />}
           Despausar login
