@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  APK_DOWNLOAD_LIMIT_MESSAGE,
+  APK_EXPIRED_MESSAGE,
+  APK_MAX_DOWNLOADS,
+  computePurgeAfter,
+} from "@/lib/apk-retention";
 
 const MAX_APK_BYTES = 50 * 1024 * 1024; // 50 MB (limite do storage)
 
@@ -213,12 +219,15 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: job } = await supabase
       .from("apk_jobs")
-      .select("id,status,result_path,result_filename")
+      .select("id,status,result_path,result_filename,created_at,completed_at,downloaded_at,download_count,purged_at")
       .eq("id", data.id)
       .eq("user_id", userId)
       .maybeSingle();
     if (!job) throw new Error("Job não encontrado");
+    const anyJob = job as any;
+    if (anyJob.purged_at) throw new Error(APK_EXPIRED_MESSAGE);
     if (job.status !== "done" || !job.result_path) throw new Error("Resultado ainda não disponível");
+    if ((anyJob.download_count ?? 0) >= APK_MAX_DOWNLOADS) throw new Error(APK_DOWNLOAD_LIMIT_MESSAGE);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const safeName = (job.result_filename || "app-protegido.apk").replace(/[^\w.\-]+/g, "_");
@@ -228,7 +237,21 @@ export const getApkResultDownload = createServerFn({ method: "POST" })
         download: safeName,
         transform: undefined // Ensure no transformation for APKs
       });
-    if (error || !signed) throw new Error(error?.message || "Falha ao gerar link de download");
+    if (error || !signed) throw new Error(error?.message || APK_EXPIRED_MESSAGE);
+
+    // Registra o download: a partir daqui o arquivo tem prazo para ser
+    // descartado (48h), o que libera espaço e evita downloads repetidos.
+    const nowIso = new Date().toISOString();
+    const downloadedAt = anyJob.downloaded_at ?? nowIso;
+    await supabaseAdmin
+      .from("apk_jobs")
+      .update({
+        downloaded_at: downloadedAt,
+        download_count: (anyJob.download_count ?? 0) + 1,
+        purge_after: computePurgeAfter({ ...anyJob, downloaded_at: downloadedAt }),
+      } as any)
+      .eq("id", job.id);
+
     return { url: signed.signedUrl, filename: safeName };
   });
 
@@ -363,6 +386,7 @@ export const adminCompleteApkJob = createServerFn({ method: "POST" })
     if (!data.resultPath.startsWith(expectedPrefix)) {
       throw new Error("Caminho de resultado inválido");
     }
+    const completedAt = new Date().toISOString();
     const { error } = await supabaseAdmin
       .from("apk_jobs")
       .update({
@@ -370,11 +394,18 @@ export const adminCompleteApkJob = createServerFn({ method: "POST" })
         result_path: data.resultPath,
         result_filename: data.filename,
         result_size_bytes: data.sizeBytes,
-        completed_at: new Date().toISOString(),
+        completed_at: completedAt,
         error_message: null,
+        purge_after: computePurgeAfter({ status: "done", completed_at: completedAt }),
       } as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+    // O APK original não serve para mais nada depois de assinado: sai do
+    // armazenamento na hora, sem esperar a varredura.
+    try {
+      const { dropApkSource } = await import("@/lib/apk-retention.server");
+      await dropApkSource(supabaseAdmin, data.id);
+    } catch (e) { console.error("[apk] falha ao descartar o APK original:", e); }
     return { ok: true };
   });
 
@@ -404,11 +435,21 @@ export const adminFailApkJob = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const completedAt = new Date().toISOString();
     const { error } = await supabaseAdmin
       .from("apk_jobs")
-      .update({ status: "failed", error_message: data.reason, completed_at: new Date().toISOString() } as any)
+      .update({
+        status: "failed",
+        error_message: data.reason,
+        completed_at: completedAt,
+        purge_after: computePurgeAfter({ status: "failed", completed_at: completedAt }),
+      } as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+    try {
+      const { dropApkSource } = await import("@/lib/apk-retention.server");
+      await dropApkSource(supabaseAdmin, data.id);
+    } catch (e) { console.error("[apk] falha ao descartar o APK original:", e); }
     return { ok: true };
   });
 

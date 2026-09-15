@@ -20,7 +20,21 @@ export const Route = createFileRoute("/api/public/hooks/cleanup-apk-jobs")({
         if (error) {
           return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
-        return new Response(JSON.stringify({ expired: data ?? 0 }), {
+
+        // Descarte dos arquivos vencidos (APK original e assinado). Falhar aqui
+        // não pode derrubar a liberação dos jobs travados acima.
+        let purged = 0;
+        let purgeError: string | null = null;
+        try {
+          const { purgeExpiredApkJobs } = await import("@/lib/apk-retention.server");
+          const res = await purgeExpiredApkJobs(supabaseAdmin);
+          purged = res.purged;
+        } catch (e: any) {
+          purgeError = e?.message ?? String(e);
+          console.error("[cleanup-apk-jobs] purge falhou:", e);
+        }
+
+        return new Response(JSON.stringify({ expired: data ?? 0, purged, purgeError }), {
           headers: { "Content-Type": "application/json" },
         });
 
