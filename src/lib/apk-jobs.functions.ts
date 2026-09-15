@@ -166,7 +166,7 @@ export const createApkJob = createServerFn({ method: "POST" })
       id: jobId,
       user_id: userId,
       status: "queued",
-      source_path: sourcePath,
+      source_path: storedSourcePath,
       source_filename: cleanName,
       source_size_bytes: data.sizeBytes,
       is_free_trial: isFreeTrial,
@@ -177,7 +177,7 @@ export const createApkJob = createServerFn({ method: "POST" })
     }
 
 
-    return { jobId, uploadUrl: signed.signedUrl, token: signed.token, path: sourcePath };
+    return { jobId, uploadUrl: signed.uploadUrl, token: signed.token, path: storedSourcePath };
   });
 
 
