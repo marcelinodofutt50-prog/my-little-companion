@@ -70,9 +70,14 @@ export const createTutorialUploadUrl = createServerFn({ method: "POST" })
       );
     }
 
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("tutorials")
-      .createSignedUploadUrl(path);
+    const { createUpload } = await import("@/lib/storage-gateway.server");
+    let signed: { uploadUrl: string; token: string; path: string } | null = null;
+    let error: { message?: string } | null = null;
+    try {
+      signed = await createUpload("tutorials", path);
+    } catch (e: any) {
+      error = { message: e?.message };
+    }
 
     if (error || !signed) {
       // Causa registrada no servidor para diagnóstico; usuário recebe texto claro.
@@ -90,8 +95,8 @@ export const createTutorialUploadUrl = createServerFn({ method: "POST" })
       throw new Error(`Falha ao preparar o envio: ${error?.message ?? "sem resposta do storage"}`);
     }
 
-    console.log("[tutorial-upload] token emitido", { userId: context.userId, path });
-    return { path, token: signed.token, mediaPath: path };
+    console.log("[tutorial-upload] token emitido", { userId: context.userId, path: signed.path });
+    return { path: signed.path, token: signed.token, mediaPath: signed.path, uploadUrl: signed.uploadUrl };
   });
 
 /**
@@ -109,13 +114,12 @@ export const createTutorialPreviewUrl = createServerFn({ method: "POST" })
     } catch {
       throw new Error("Acesso negado: apenas admin ou suporte podem visualizar essa mídia.");
     }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("tutorials")
-      .createSignedUrl(data.path, 60 * 60);
-    if (error || !signed?.signedUrl) {
-      console.error("[tutorial-upload] preview falhou:", { path: data.path, message: error?.message });
+    const { createDownload } = await import("@/lib/storage-gateway.server");
+    try {
+      const url = await createDownload("tutorials", data.path, 60 * 60);
+      return { url: url as string | null };
+    } catch (e: any) {
+      console.error("[tutorial-upload] preview falhou:", { path: data.path, message: e?.message });
       return { url: null as string | null };
     }
-    return { url: signed.signedUrl };
   });
