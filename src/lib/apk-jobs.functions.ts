@@ -380,8 +380,9 @@ export const adminCompleteApkJob = createServerFn({ method: "POST" })
     const { data: job } = await supabaseAdmin
       .from("apk_jobs").select("id,user_id").eq("id", data.id).maybeSingle();
     if (!job) throw new Error("Job não encontrado");
+    const { stripSecondaryPrefix } = await import("@/lib/storage-routing");
     const expectedPrefix = `${job.user_id}/${job.id}/`;
-    if (!data.resultPath.startsWith(expectedPrefix)) {
+    if (!stripSecondaryPrefix(data.resultPath).startsWith(expectedPrefix)) {
       throw new Error("Caminho de resultado inválido");
     }
     const completedAt = new Date().toISOString();
