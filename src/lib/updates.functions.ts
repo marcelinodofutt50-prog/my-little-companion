@@ -178,9 +178,16 @@ export const adminDeleteUpdate = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin.from("updates").select("storage_path").eq("id", data.id).maybeSingle();
-    if (row?.storage_path) {
-      await supabaseAdmin.storage.from("updates").remove([row.storage_path]);
+    const { data: row } = await supabaseAdmin
+      .from("updates")
+      .select("storage_path, part_paths")
+      .eq("id", data.id)
+      .maybeSingle();
+    const toRemove = Array.from(
+      new Set([...(((row as any)?.part_paths as string[] | null) ?? []), ...(row?.storage_path ? [row.storage_path] : [])]),
+    );
+    if (toRemove.length) {
+      await supabaseAdmin.storage.from("updates").remove(toRemove);
     }
     const { error } = await supabaseAdmin.from("updates").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
