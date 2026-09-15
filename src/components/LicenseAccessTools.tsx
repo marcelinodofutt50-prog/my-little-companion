@@ -81,13 +81,28 @@ export function LicenseAccessTools({
 
 
   const runRepair = async () => {
+    if (repairing) return;
     setRepairing(true);
+    const t = toast.loading("Reparando seu acesso no painel… pode levar até 1 minuto.");
     try {
       const res: any = await repairAccess({ data: { licenseId } });
-      toast.success(res?.message ?? "Acesso ressincronizado.");
+      const steps: string[] = Array.isArray(res?.steps) ? res.steps : [];
+      toast.success(res?.message ?? "Acesso ressincronizado.", {
+        id: t,
+        description: steps.length ? steps.slice(-3).join(" • ") : undefined,
+        duration: 8000,
+      });
       onDone?.();
     } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao reparar o acesso.");
+      const msg = friendlyPanelError(e, "Falha ao reparar o acesso.");
+      const busy = /andamento/i.test(msg);
+      toast.error(busy ? "Já estamos reparando este login" : "Não deu para reparar agora", {
+        id: t,
+        description: busy
+          ? "Aguarde alguns segundos e teste o login antes de clicar de novo."
+          : `${msg} Se continuar, abra um chamado no suporte.`,
+        duration: 9000,
+      });
     } finally {
       setRepairing(false);
     }
