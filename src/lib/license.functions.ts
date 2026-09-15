@@ -199,9 +199,13 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
       throw new Error("Bloqueado: a senha guardada é a senha temporária da pausa — fale com o suporte.");
     }
 
+    const { retryPanelCall } = await import("./panel-retry.server");
+
     // 1) devolve os dias
-    let yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
-    
+    let yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
+      label: "resume:extend",
+    });
+
     // Healer agressivo: se falhar a extensão, tentamos ações alternativas
     if (yr.Fail) {
       console.error("[reactivateMyLicense] Yaarsa Extend Fail:", yr.Fail);
@@ -218,11 +222,15 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
           panel
         });
         // Tenta estender novamente após recriar
-        yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+        yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
+          label: "resume:extend-after-create",
+        });
       } else {
         // Tentativa de re-sincronização agressiva em caso de timeout/rede
         await new Promise(r => setTimeout(r, 800));
-        yr = await yaarsaExtend(lic.yaarsa_email, ymd, panel);
+        yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
+          label: "resume:extend-retry",
+        });
       }
       
       if (yr.Fail) {
@@ -231,7 +239,12 @@ export const reactivateMyLicense = createServerFn({ method: "POST" })
     }
 
     // 2) restaura a senha original (a mesma entregue na compra)
-    const pr = await yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username);
+    // Crítico: se isso falhar o cliente fica preso com a senha da pausa, então
+    // insistimos algumas vezes antes de desistir.
+    const pr = await retryPanelCall(
+      () => yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username),
+      { label: "resume:password", attempts: 4 },
+    );
     if (pr.Fail) throw new Error(`Painel (senha): ${pr.Fail}`);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
