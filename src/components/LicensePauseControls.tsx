@@ -42,22 +42,39 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
   if (license.disabled_at) return null
   if (license.revoked && !paused) return null
 
-  const run = async (fn: () => Promise<any>, ok: string) => {
+  const run = async (fn: () => Promise<any>, ok: string, loading: string) => {
     if (busy) return;
     setBusy(true);
-    try {
+    const t = toast.loading(loading);
+    // O painel externo cai por alguns segundos com frequência: em falha
+    // passageira tentamos de novo sozinhos antes de avisar que não deu certo.
+    const attempt = async () => {
       const res = await fn();
-      if (res && res.ok) {
-        toast.success(ok);
-        // Refresh component state via parent callback
-        onDone();
-      } else {
-        throw new Error(res?.message || 'O servidor não confirmou a operação');
+      if (!res || !res.ok) throw new Error(res?.message || 'O servidor não confirmou a operação');
+      return res;
+    };
+    try {
+      let res;
+      try {
+        res = await attempt();
+      } catch (first: any) {
+        const msg = String(first?.message ?? first);
+        const retryable = /não está respondendo|timeout|rede|conex|indispon|tente novamente/i.test(msg);
+        if (!retryable) throw first;
+        toast.loading('O servidor demorou a responder — tentando de novo…', { id: t });
+        await new Promise((r) => setTimeout(r, 1500));
+        res = await attempt();
       }
+      toast.success(ok, { id: t });
+      void res;
+      // Refresh component state via parent callback
+      onDone();
     } catch (e: any) {
-      const msg = e?.message ?? 'O servidor não respondeu ao comando';
-      toast.error('Erro na solicitação', {
-        description: msg,
+      const msg = friendlyPanelError(e, 'O servidor não respondeu ao comando');
+      toast.error('Não foi possível concluir agora', {
+        id: t,
+        description: `${msg} Nada foi alterado na sua licença — tente de novo em alguns minutos.`,
+        duration: 9000,
       });
     } finally {
       // Re-enable interactions only after completion
