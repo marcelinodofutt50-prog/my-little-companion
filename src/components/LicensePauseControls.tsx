@@ -134,7 +134,7 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
               variant="destructive"
               className="font-mono text-[10px] uppercase"
               disabled={busy}
-              onClick={() => void run(() => pause({ data: { licenseId: license.id } }), 'Login pausado — nenhum dia será contado')}
+              onClick={() => void run(() => pause({ data: { licenseId: license.id } }), 'Login pausado — nenhum dia será contado', 'Pausando o login no painel…')}
             >
               {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PauseCircle className="mr-1.5 h-3.5 w-3.5" />}
               Confirmar pausa
