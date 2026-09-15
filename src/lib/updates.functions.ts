@@ -58,10 +58,11 @@ export const getUpdateDownloadUrl = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("updates")
-      .select("id, storage_path, part_paths, filename, min_tier, is_active")
+      .select("id, storage_path, part_paths, external_url, filename, min_tier, is_active")
       .eq("id", data.id)
       .maybeSingle();
     if (!row || !row.is_active) throw new Error("Update indisponível");
+
 
     // Verify tier access
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
