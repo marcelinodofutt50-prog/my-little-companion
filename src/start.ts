@@ -3,6 +3,7 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { validateServerEnv } from "./lib/env-validation";
+import { alignServerBackendEnv } from "./lib/backend-env.server";
 
 // Run once at server startup so missing secrets surface in the logs
 // immediately, not on the first failing request.
