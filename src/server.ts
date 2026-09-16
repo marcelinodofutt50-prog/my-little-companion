@@ -3,8 +3,6 @@ import "./lib/error-capture";
 import { alignServerBackendEnv } from "./lib/backend-env.server";
 import { consumeLastCapturedError } from "./lib/error-capture";
 
-alignServerBackendEnv();
-
 import { renderErrorPage } from "./lib/error-page";
 
 type ServerEntry = {
@@ -51,6 +49,9 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      alignServerBackendEnv(
+        env && typeof env === "object" ? (env as Record<string, unknown>) : undefined,
+      );
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

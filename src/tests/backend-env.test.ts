@@ -69,4 +69,35 @@ describe("alignServerBackendEnv", () => {
     expect(process.env["SUPABASE_URL"]).toBe(OLD);
     expect(process.env["SUPABASE_SERVICE_ROLE_KEY"]).toBeUndefined();
   });
+
+  it("tenta novamente quando as credenciais chegam depois da inicialização", async () => {
+    process.env["VITE_SUPABASE_URL"] = NEW;
+    process.env["SUPABASE_URL"] = OLD;
+    const { alignServerBackendEnv } = await load();
+
+    alignServerBackendEnv();
+    expect(process.env["SUPABASE_SERVICE_ROLE_KEY"]).toBeUndefined();
+
+    process.env["FILES_SUPABASE_URL"] = NEW;
+    process.env["FILES_SUPABASE_SERVICE_ROLE_KEY"] = "sb_secret_late";
+    alignServerBackendEnv();
+    expect(process.env["SUPABASE_URL"]).toBe(NEW);
+    expect(process.env["SUPABASE_SERVICE_ROLE_KEY"]).toBe("sb_secret_late");
+  });
+
+  it("usa os bindings recebidos pela hospedagem em cada requisição", async () => {
+    const { alignServerBackendEnv } = await load();
+    alignServerBackendEnv({
+      VITE_SUPABASE_URL: NEW,
+      VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_new",
+      SUPABASE_URL: OLD,
+      FILES_SUPABASE_URL: NEW,
+      FILES_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_new",
+      FILES_SUPABASE_SERVICE_ROLE_KEY: "sb_secret_runtime",
+    });
+
+    expect(process.env["SUPABASE_URL"]).toBe(NEW);
+    expect(process.env["SUPABASE_PUBLISHABLE_KEY"]).toBe("sb_publishable_new");
+    expect(process.env["SUPABASE_SERVICE_ROLE_KEY"]).toBe("sb_secret_runtime");
+  });
 });
