@@ -60,7 +60,10 @@ function ServerStatusPage() {
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 10000); // Frequência real: a cada 10 segundos
+    const id = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      refresh();
+    }, 30000); // Só atualiza com a aba aberta, a cada 30s
     return () => clearInterval(id);
   }, []);
 
