@@ -3,6 +3,7 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { validateServerEnv } from "./lib/env-validation";
+import { alignServerBackendEnv } from "./lib/backend-env.server";
 
 // Run once at server startup so missing secrets surface in the logs
 // immediately, not on the first failing request.
@@ -10,6 +11,7 @@ import { validateServerEnv } from "./lib/env-validation";
 // bundle (Vite shims process.env) and prints the server secret names in the
 // user's console.
 if (import.meta.env.SSR && typeof process !== "undefined" && process.env) {
+  alignServerBackendEnv();
   validateServerEnv();
   
   // Background schema validation to detect and fix missing columns (like reply_to_id)
