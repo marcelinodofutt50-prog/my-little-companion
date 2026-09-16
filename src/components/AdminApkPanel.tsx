@@ -102,7 +102,10 @@ export function AdminApkPanel() {
 
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 20000);
+    const t = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      refresh();
+    }, 20000);
     return () => clearInterval(t);
   }, []);
 
