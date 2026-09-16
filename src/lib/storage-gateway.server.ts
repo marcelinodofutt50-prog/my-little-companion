@@ -6,7 +6,12 @@
  * usa as funções deste módulo e não precisa saber onde o arquivo está.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { isSecondaryPath, splitByProject, withSecondaryPrefix } from "./storage-routing";
+import {
+  isSecondaryPath,
+  splitByProject,
+  stripSecondaryPrefix,
+  withSecondaryPrefix,
+} from "./storage-routing";
 
 let cachedFiles: SupabaseClient | null = null;
 
