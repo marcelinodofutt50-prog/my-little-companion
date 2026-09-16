@@ -71,7 +71,12 @@ export async function uploadBytes(
   return { path };
 }
 
-/** Link temporário de download, buscando no projeto onde o arquivo está. */
+/**
+ * Link temporário de download, buscando no projeto onde o arquivo está.
+ * Se o arquivo antigo não responder no projeto principal (fora do ar ou com
+ * serviço restrito), tentamos o mesmo caminho já migrado para o projeto de
+ * arquivos — assim a migração pode acontecer sem derrubar os links.
+ */
 export async function createDownload(
   bucket: string,
   path: string,
@@ -82,8 +87,15 @@ export async function createDownload(
   const { data, error } = await client.storage
     .from(bucket)
     .createSignedUrl(path, ttlSeconds, opts as any);
-  if (error || !data) throw new Error(error?.message || "Falha ao gerar link do arquivo");
-  return data.signedUrl;
+  if (data?.signedUrl) return data.signedUrl;
+
+  if (!isSecondaryPath(path) && filesStorageEnabled()) {
+    const alt = await filesAdmin()
+      .storage.from(bucket)
+      .createSignedUrl(withSecondaryPrefix(path), ttlSeconds, opts as any);
+    if (alt.data?.signedUrl) return alt.data.signedUrl;
+  }
+  throw new Error(error?.message || "Falha ao gerar link do arquivo");
 }
 
 /** Vários links de uma vez; a ordem de entrada é preservada. */
