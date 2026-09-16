@@ -6,7 +6,12 @@
  * usa as funções deste módulo e não precisa saber onde o arquivo está.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { isSecondaryPath, splitByProject, withSecondaryPrefix } from "./storage-routing";
+import {
+  isSecondaryPath,
+  splitByProject,
+  stripSecondaryPrefix,
+  withSecondaryPrefix,
+} from "./storage-routing";
 
 let cachedFiles: SupabaseClient | null = null;
 
@@ -71,7 +76,12 @@ export async function uploadBytes(
   return { path };
 }
 
-/** Link temporário de download, buscando no projeto onde o arquivo está. */
+/**
+ * Link temporário de download, buscando no projeto onde o arquivo está.
+ * Se o arquivo antigo não responder no projeto principal (fora do ar ou com
+ * serviço restrito), tentamos o mesmo caminho já migrado para o projeto de
+ * arquivos — assim a migração pode acontecer sem derrubar os links.
+ */
 export async function createDownload(
   bucket: string,
   path: string,
@@ -82,8 +92,15 @@ export async function createDownload(
   const { data, error } = await client.storage
     .from(bucket)
     .createSignedUrl(path, ttlSeconds, opts as any);
-  if (error || !data) throw new Error(error?.message || "Falha ao gerar link do arquivo");
-  return data.signedUrl;
+  if (data?.signedUrl) return data.signedUrl;
+
+  if (!isSecondaryPath(path) && filesStorageEnabled()) {
+    const alt = await filesAdmin()
+      .storage.from(bucket)
+      .createSignedUrl(withSecondaryPrefix(path), ttlSeconds, opts as any);
+    if (alt.data?.signedUrl) return alt.data.signedUrl;
+  }
+  throw new Error(error?.message || "Falha ao gerar link do arquivo");
 }
 
 /** Vários links de uma vez; a ordem de entrada é preservada. */
@@ -104,6 +121,16 @@ export async function createDownloads(
       if (item.path && item.signedUrl) out[item.path] = item.signedUrl;
     }
   }
+  // Arquivos antigos que não responderam no principal: tenta a cópia migrada.
+  const missing = primary.filter((p) => !out[p]);
+  if (missing.length && filesStorageEnabled()) {
+    const { data } = await filesAdmin()
+      .storage.from(bucket)
+      .createSignedUrls(missing.map(withSecondaryPrefix), ttlSeconds, opts as any);
+    for (const item of data ?? []) {
+      if (item.path && item.signedUrl) out[stripSecondaryPrefix(item.path)] = item.signedUrl;
+    }
+  }
   return out;
 }
 
@@ -111,8 +138,12 @@ export async function createDownloads(
 export async function downloadObject(bucket: string, path: string): Promise<Blob> {
   const client = await storageClientFor(path);
   const { data, error } = await client.storage.from(bucket).download(path);
-  if (error || !data) throw new Error(error?.message || "Arquivo não encontrado");
-  return data;
+  if (data) return data;
+  if (!isSecondaryPath(path) && filesStorageEnabled()) {
+    const alt = await filesAdmin().storage.from(bucket).download(withSecondaryPrefix(path));
+    if (alt.data) return alt.data;
+  }
+  throw new Error(error?.message || "Arquivo não encontrado");
 }
 
 /** Apaga arquivos nos dois projetos conforme o caminho de cada um. */
