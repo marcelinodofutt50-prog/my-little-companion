@@ -11,6 +11,7 @@ import { alignServerBackendEnv } from "./lib/backend-env.server";
 // bundle (Vite shims process.env) and prints the server secret names in the
 // user's console.
 if (import.meta.env.SSR && typeof process !== "undefined" && process.env) {
+  alignServerBackendEnv();
   validateServerEnv();
   
   // Background schema validation to detect and fix missing columns (like reply_to_id)

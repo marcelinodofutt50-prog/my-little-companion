@@ -1,6 +1,10 @@
 import "./lib/error-capture";
 
+import { alignServerBackendEnv } from "./lib/backend-env.server";
 import { consumeLastCapturedError } from "./lib/error-capture";
+
+alignServerBackendEnv();
+
 import { renderErrorPage } from "./lib/error-page";
 
 type ServerEntry = {
