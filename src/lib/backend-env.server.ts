@@ -22,10 +22,33 @@ function host(value: string | undefined): string | null {
 
 let aligned = false;
 
-export function alignServerBackendEnv(): void {
+type RuntimeEnv = Record<string, unknown> | undefined;
+
+function copyRuntimeValue(env: RuntimeEnv, name: string): void {
+  const value = env?.[name];
+  if (typeof value === "string" && value.length > 0) {
+    process.env[name] = value;
+  }
+}
+
+export function alignServerBackendEnv(runtimeEnv?: RuntimeEnv): void {
   if (aligned) return;
-  aligned = true;
   if (typeof process === "undefined" || !process.env) return;
+
+  // Na hospedagem, alguns bindings só chegam no segundo argumento de fetch.
+  // Copie somente as credenciais conhecidas antes de avaliar o alinhamento.
+  for (const name of [
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "FILES_SUPABASE_URL",
+    "FILES_SUPABASE_PUBLISHABLE_KEY",
+    "FILES_SUPABASE_SERVICE_ROLE_KEY",
+  ]) {
+    copyRuntimeValue(runtimeEnv, name);
+  }
 
   const clientUrl =
     process.env["VITE_SUPABASE_URL"] ||
@@ -36,7 +59,10 @@ export function alignServerBackendEnv(): void {
 
   const serverHost = host(process.env["SUPABASE_URL"]);
   const hasServiceKey = Boolean(process.env["SUPABASE_SERVICE_ROLE_KEY"]);
-  if (serverHost === clientHost && hasServiceKey) return;
+  if (serverHost === clientHost && hasServiceKey) {
+    aligned = true;
+    return;
+  }
 
   const filesUrl = process.env["FILES_SUPABASE_URL"];
   const filesHost = host(filesUrl);
@@ -60,6 +86,7 @@ export function alignServerBackendEnv(): void {
       process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   }
   process.env["SUPABASE_PROJECT_ID"] = filesHost.split(".")[0] ?? "";
+  aligned = true;
 
   console.warn(
     `[backend-env] Servidor realinhado para o projeto do navegador (${clientHost}).`,
