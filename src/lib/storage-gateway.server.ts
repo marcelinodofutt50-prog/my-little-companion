@@ -116,6 +116,16 @@ export async function createDownloads(
       if (item.path && item.signedUrl) out[item.path] = item.signedUrl;
     }
   }
+  // Arquivos antigos que não responderam no principal: tenta a cópia migrada.
+  const missing = primary.filter((p) => !out[p]);
+  if (missing.length && filesStorageEnabled()) {
+    const { data } = await filesAdmin()
+      .storage.from(bucket)
+      .createSignedUrls(missing.map(withSecondaryPrefix), ttlSeconds, opts as any);
+    for (const item of data ?? []) {
+      if (item.path && item.signedUrl) out[stripSecondaryPrefix(item.path)] = item.signedUrl;
+    }
+  }
   return out;
 }
 
@@ -123,8 +133,12 @@ export async function createDownloads(
 export async function downloadObject(bucket: string, path: string): Promise<Blob> {
   const client = await storageClientFor(path);
   const { data, error } = await client.storage.from(bucket).download(path);
-  if (error || !data) throw new Error(error?.message || "Arquivo não encontrado");
-  return data;
+  if (data) return data;
+  if (!isSecondaryPath(path) && filesStorageEnabled()) {
+    const alt = await filesAdmin().storage.from(bucket).download(withSecondaryPrefix(path));
+    if (alt.data) return alt.data;
+  }
+  throw new Error(error?.message || "Arquivo não encontrado");
 }
 
 /** Apaga arquivos nos dois projetos conforme o caminho de cada um. */
