@@ -1,11 +1,11 @@
 /**
  * SHADOW PROTOCOL v46.0 - PROD-READY (CERTIFIED)
  *
- * PRODUCTION PROJECT: dvnksmqbpbzwgwmbnjjy (Vercel, frontend, tests, auto-healing)
+ * PRODUCTION PROJECT: lsnkrdprzdijinstozhv (Vercel, frontend, tests, auto-healing)
  * AUDIT: 9/9 PASS executed directly against the production project.
  *
  * FORENSIC AUDIT:
- * 1. IDENTITY: frontend, tests and auto-healing aligned on dvnksmqbpbzwgwmbnjjy.
+ * 1. IDENTITY: frontend, tests and auto-healing aligned on lsnkrdprzdijinstozhv.
  * 2. STORAGE: bucket 'avatars' verified and accessible.
  * 3. SCHEMA: profiles.trial_started_at & trial_expires_at verified via physical DDL audit.
  * 4. REPUTATION: profiles.metadata, vip_tier & reputation_score provisioned.

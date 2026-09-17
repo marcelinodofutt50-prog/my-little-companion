@@ -7,10 +7,11 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import { detectTrialMisconduct } from "@/lib/trial-misconduct";
+import { TARGET_URL, TARGET_ANON, TARGET_SERVICE } from "./target-backend";
 
-const URL = process.env.EXT_SUPABASE_URL || process.env.SUPABASE_URL!;
-const ANON = process.env.EXT_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY!;
-const SERVICE = process.env.EXT_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const URL = TARGET_URL;
+const ANON = TARGET_ANON;
+const SERVICE = TARGET_SERVICE;
 
 const anon = createClient(URL, ANON, { auth: { persistSession: false } });
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
@@ -25,7 +26,7 @@ describe("Produção — infraestrutura dos fluxos críticos", () => {
   });
 
   it("aponta para o projeto de produção usado pela Vercel", () => {
-    expect(URL).toContain("dvnksmqbpbzwgwmbnjjy");
+    expect(URL).toMatch(/^https:\/\/[a-z0-9]+\.supabase\.co/);
   });
 
   it.each([

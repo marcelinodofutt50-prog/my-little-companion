@@ -12,10 +12,11 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { TARGET_URL, TARGET_ANON, TARGET_SERVICE } from "./target-backend";
 
-const URL = process.env.EXT_SUPABASE_URL || process.env.SUPABASE_URL!;
-const ANON = process.env.EXT_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY!;
-const SERVICE = process.env.EXT_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const URL = TARGET_URL;
+const ANON = TARGET_ANON;
+const SERVICE = TARGET_SERVICE;
 
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
 
