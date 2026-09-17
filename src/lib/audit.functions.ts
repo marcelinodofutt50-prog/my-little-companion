@@ -7,7 +7,7 @@ export const runBusinessAudit = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const results: any = {
-      database: { project: "dvnksmqbpbzwgwmbnjjy", status: "checking" },
+      database: { project: (process.env["SUPABASE_URL"] ?? process.env["VITE_SUPABASE_URL"] ?? "").match(/https:\/\/([a-z0-9]+)\.supabase\.co/i)?.[1] ?? "unknown", status: "checking" },
       missions: [],
       vip: { tiers: [], thresholds: {} },
       security: [],

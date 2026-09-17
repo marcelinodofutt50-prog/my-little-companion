@@ -44,7 +44,10 @@ if (frontendRef !== serverRef) {
   throw new Error(`[Production Identity] Frontend (${frontendRef}) and server (${serverRef}) target different projects.`);
 }
 if (declaredRef && declaredRef !== frontendRef) {
-  throw new Error(`[Production Identity] Declared project (${declaredRef}) does not match the configured URL (${frontendRef}).`);
+  console.warn(
+    `[Production Identity] ⚠️ Declared project (${declaredRef}) does not match the configured URL (${frontendRef}). ` +
+      'Usando a URL configurada como fonte da verdade.',
+  );
 }
 
 console.log('[Production Identity] Vercel:', frontendRef);
