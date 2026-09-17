@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
+import { TARGET_URL, TARGET_ANON, TARGET_SERVICE } from "./target-backend";
 
-const PROD_URL = process.env.EXT_SUPABASE_URL || "https://dvnksmqbpbzwgwmbnjjy.supabase.co";
-const PROD_KEY = process.env.EXT_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const PROD_URL = TARGET_URL;
+const PROD_KEY = TARGET_SERVICE;
 const supabase = createClient(PROD_URL, PROD_KEY);
 
 describe('Shadow Protocol v37.2: FINAL PRODUCTION BANK VALIDATION', () => {
