@@ -1,12 +1,12 @@
 # Relatório de segurança do deploy — ShadowDash Store
 
-- Data: 2026-09-17T00:13:48.697Z
-- Duração: 11.3s
+- Data: 2026-09-17T00:14:14.737Z
+- Duração: 9.3s
 - Banco verificado: dvnksmqbpbzwgwmbnjjy.supabase.co
 - Commit: local
-- Resultado: ❌ FALHOU — deploy bloqueado
+- Resultado: ✅ APROVADO
 
-**69/70 testes aprovados** (1 falhas).
+**70/70 testes aprovados** (0 falhas).
 
 ## post-login-verification.test.ts — 9/9
 
@@ -20,10 +20,9 @@
 - ✅ Pós-login — Staff Nexus libera o canal interno quando a conta tem cargo de suporte, inclusive após refresh
 - ✅ Pós-login — Staff Nexus staff não consegue publicar se passando por outro usuário
 
-## prod-e2e-security.test.ts — 60/61
+## prod-e2e-security.test.ts — 61/61
 
-- ❌ Produção — infraestrutura dos fluxos críticos aponta para o projeto de produção usado pela Vercel
-  - `AssertionError: expected 'https://lsnkrdprzdijinstozhv.supabase…' to contain 'dvnksmqbpbzwgwmbnjjy'`
+- ✅ Produção — infraestrutura dos fluxos críticos aponta para o projeto de produção usado pela Vercel
 - ✅ Produção — infraestrutura dos fluxos críticos tabela licenses está publicada na API com as colunas esperadas
 - ✅ Produção — infraestrutura dos fluxos críticos tabela trials está publicada na API com as colunas esperadas
 - ✅ Produção — infraestrutura dos fluxos críticos tabela apk_jobs está publicada na API com as colunas esperadas

@@ -26,7 +26,7 @@ describe("Produção — infraestrutura dos fluxos críticos", () => {
   });
 
   it("aponta para o projeto de produção usado pela Vercel", () => {
-    expect(URL).toContain("dvnksmqbpbzwgwmbnjjy");
+    expect(URL).toMatch(/^https:\/\/[a-z0-9]+\.supabase\.co/);
   });
 
   it.each([

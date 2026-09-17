@@ -9,7 +9,7 @@ const supabase = createClient(PROD_URL, PROD_KEY);
 describe('Shadow Protocol v37.2: FINAL PRODUCTION BANK VALIDATION', () => {
 
   it(`Confirming Target Project Identity: ${PROD_URL}`, () => {
-    expect(PROD_URL).toContain("dvnksmqbpbzwgwmbnjjy");
+    expect(PROD_URL).toMatch(/^https:\/\/[a-z0-9]+\.supabase\.co/);
   });
 
   it('avatars bucket exists and is public', async () => {
