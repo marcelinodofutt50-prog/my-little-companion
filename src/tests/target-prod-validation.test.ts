@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
-import { TARGET_URL, TARGET_ANON, TARGET_SERVICE } from "./target-backend";
+import { TARGET_URL, TARGET_SERVICE } from "./target-backend";
 
 const PROD_URL = TARGET_URL;
 const PROD_KEY = TARGET_SERVICE;
