@@ -9,6 +9,7 @@ import {
   listMessages,
   sendMessage,
   markThreadReadByCustomer,
+  markSupportMessagesSeen,
 } from "@/lib/support.functions";
 import {
   normalizeSupportMessage,
@@ -34,6 +35,7 @@ import {
   FileText,
   Download,
   CheckCheck,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -363,6 +365,11 @@ export function SupportChat({
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
   const markReadFn = useServerFn(markThreadReadByCustomer);
+  const markSeenFn = useServerFn(markSupportMessagesSeen);
+  const markSeen = () => {
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    markSeenFn({ data: { threadId } }).catch(() => {});
+  };
   const refineFn = useServerFn(refineSupportReply);
 
   const handleRefine = async (tone: RefineTone) => {
@@ -503,6 +510,7 @@ export function SupportChat({
     if (!isAdmin) {
       markReadFn({ data: { threadId } }).catch(() => {});
     }
+    markSeen();
 
     let subscribedOnce = false;
     const ch = supabase
@@ -526,6 +534,7 @@ export function SupportChat({
             void loadMessages();
           }
           if (next.sender_id !== userId) {
+            markSeen();
             playNotifyDing();
             onNewMessage?.();
             if (!atBottomRef.current) setUnseen((u) => u + 1);
@@ -543,6 +552,15 @@ export function SupportChat({
                       : 1,
                 ),
           );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
+        (payload) => {
+          const upd = normalizeSupportMessage(payload.new, threadId);
+          if (!upd.id) return;
+          setMsgs((prev) => prev.map((m) => (m.id === upd.id ? { ...m, read_at: upd.read_at } : m)));
         },
       )
       .subscribe((status) => {
@@ -941,7 +959,18 @@ export function SupportChat({
                       } ${m.body ? "-mt-4" : "mt-1"}`}
                     >
                       <span>{hhmm(m.created_at)}</span>
-                      {g.author === "me" && <CheckCheck className="h-3 w-3" />}
+                      {g.author === "me" &&
+                        (m.read_at ? (
+                          <span title={`Visto às ${hhmm(m.read_at)}`} className="flex items-center gap-0.5 text-sky-400">
+                            <CheckCheck className="h-3.5 w-3.5" />
+                            <span className="text-[9px] font-semibold">Visto</span>
+                          </span>
+                        ) : (
+                          <span title="Enviado — ainda não visto" className="flex items-center gap-0.5">
+                            <Check className="h-3.5 w-3.5" />
+                            <span className="text-[9px]">Não visto</span>
+                          </span>
+                        ))}
                     </div>
 
                   </div>

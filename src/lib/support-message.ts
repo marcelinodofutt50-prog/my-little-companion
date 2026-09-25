@@ -20,6 +20,8 @@ export type SupportMessage = {
   sender_name: string | null;
   sender_role: string | null;
   sender_avatar_url: string | null;
+  /** Quando o outro lado viu a mensagem (null = ainda não visto). */
+  read_at: string | null;
   created_at: string;
 };
 
@@ -37,6 +39,7 @@ export function normalizeSupportMessage(row: any, fallbackThreadId?: string): Su
     sender_name: row?.sender_name ?? null,
     sender_role: row?.sender_role ?? null,
     sender_avatar_url: row?.sender_avatar_url ?? null,
+    read_at: row?.read_at ?? null,
     created_at: row?.created_at ?? new Date().toISOString(),
   };
 }

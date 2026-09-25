@@ -248,9 +248,18 @@ export function AdminSupportPanel() {
                           {cat.emoji} {cat.label}
                         </span>
                       </div>
+                      <div className="flex items-center gap-1.5">
+                      {unread > 0 ? (
+                        <span className="text-[9px] font-mono uppercase text-neon">Não visto pela equipe</span>
+                      ) : Number(t.unread_by_customer || 0) > 0 ? (
+                        <span className="text-[9px] font-mono uppercase text-muted-foreground">Cliente não viu</span>
+                      ) : (
+                        <span className="text-[9px] font-mono uppercase text-sky-400">Visto</span>
+                      )}
                       {t.assigned_to === myId && (
                         <ShieldCheck className="h-3.5 w-3.5 text-primary" />
                       )}
+                      </div>
                     </div>
                   </button>
                 );
