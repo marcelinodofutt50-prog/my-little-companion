@@ -12,7 +12,7 @@ describe('Shadow Protocol v34.0: LIVE PRODUCTION FUNCTIONAL AUDIT', () => {
       const { expireDateFor } = await import('../lib/yaarsa.server');
       const yaarsaDate = expireDateFor('trial');
       const d = new Date();
-      d.setDate(d.getDate() + 2);
+      d.setDate(d.getDate() + 1);
       expect(yaarsaDate).toBe(d.toISOString().slice(0, 10));
     });
 
@@ -26,9 +26,8 @@ describe('Shadow Protocol v34.0: LIVE PRODUCTION FUNCTIONAL AUDIT', () => {
        const content = fs.readFileSync('src/lib/license.server.ts', 'utf8');
        // A duração é parametrizada (default 1 dia = 24h). Aceitamos a forma literal
        // ou a forma calculada, desde que o passo continue sendo em horas de 24.
-       const has24h = content.includes('expiresAt.setHours(expiresAt.getHours() + 24)') ||
-         (content.includes('expiresAt.setHours(expiresAt.getHours() +') && content.includes('durationDays) * 24'));
-       expect(has24h).toBe(true);
+       // Teste reduzido para 3h30 (TRIAL_DURATION_MS em ban-rules).
+       expect(content.includes('Date.now() + TRIAL_DURATION_MS')).toBe(true);
     });
   });
 

@@ -162,8 +162,11 @@ export async function internalGenerateTrial(
   // na tabela 'licenses' (desync), nós prosseguimos para criar a linha no banco, 
   // garantindo que o usuário tenha acesso aos dados que já estão no Yaarsa.
   
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + Math.max(1, durationDays) * 24);
+  // Teste reduzido para 3h30 (abuso de múltiplas contas). `durationDays` fica
+  // apenas por compatibilidade com chamadas antigas.
+  void durationDays;
+  const { TRIAL_DURATION_MS } = await import("./ban-rules");
+  const expiresAt = new Date(Date.now() + TRIAL_DURATION_MS);
   
   const licPayload: any = {
     user_id: userId,

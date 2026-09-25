@@ -122,6 +122,8 @@ export const createApkJob = createServerFn({ method: "POST" })
     // aparelho): duas abas, ou duas contas no mesmo celular, não conseguem
     // consumir dois APKs grátis. Quem já paga passa direto, sem antifraude.
     if (isFreeTrial) {
+      const { requireNotBanned } = await import("@/lib/ban-engine.server");
+      await requireNotBanned(userId, "O APK grátis");
       const { assessAbuse } = await import("@/lib/fraud-engine.server");
       const verdict = await assessAbuse({
         userId,

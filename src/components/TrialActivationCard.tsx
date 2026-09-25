@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { generateTrial } from "@/lib/license.functions";
 import { getDeviceSignature } from "@/lib/device-signature";
+import { TrialConsentDialog } from "@/components/TrialConsentDialog";
 
 type TrialResult = {
   username: string;
@@ -23,14 +24,15 @@ export function TrialActivationCard({ onDone }: { onDone?: () => void }) {
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState<TrialResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [consentOpen, setConsentOpen] = useState(false);
 
-  async function activate() {
+  async function activate(consentId: string) {
     setLoading(true);
     setError(null);
     try {
-      const res = (await run({ data: getDeviceSignature() })) as TrialResult;
+      const res = (await run({ data: { ...getDeviceSignature(), consentId } })) as TrialResult;
       setCreds(res);
-      toast.success("Teste grátis ativado! Você tem 24 horas.");
+      toast.success("Teste grátis ativado! Você tem 3 horas e 30 minutos.");
       onDone?.();
     } catch (e: any) {
       const msg = String(e?.message ?? e ?? "Falha ao gerar o teste").replace(/^Error:\s*/, "");
@@ -43,10 +45,11 @@ export function TrialActivationCard({ onDone }: { onDone?: () => void }) {
 
   return (
     <section className="enterprise-surface overflow-hidden" aria-labelledby="trial-title">
+      <TrialConsentDialog open={consentOpen} onOpenChange={setConsentOpen} onAccepted={(id) => void activate(id)} />
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
         <div>
-          <h2 id="trial-title" className="font-mono text-sm font-bold uppercase">Teste grátis de 24 horas</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Um teste por pessoa · credenciais liberadas na hora</p>
+          <h2 id="trial-title" className="font-mono text-sm font-bold uppercase">Teste grátis de 3h30</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Um teste por pessoa · uso pessoal · credenciais liberadas na hora</p>
         </div>
         <Gift className="h-5 w-5 text-primary" />
       </div>
@@ -54,9 +57,9 @@ export function TrialActivationCard({ onDone }: { onDone?: () => void }) {
         {!creds && (
           <>
             <p className="text-sm text-muted-foreground">
-              Ative agora e receba um login válido por 24 horas exatas. Quando o contador zerar, o acesso é encerrado automaticamente.
+              Ative agora e receba um login válido por 3 horas e 30 minutos. Quando o contador zerar, o acesso é encerrado automaticamente.
             </p>
-            <Button onClick={() => void activate()} disabled={loading} className="font-mono text-[10px] uppercase">
+            <Button onClick={() => setConsentOpen(true)} disabled={loading} className="font-mono text-[10px] uppercase">
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Gift className="mr-2 h-4 w-4" />}
               {loading ? "Gerando seu teste…" : "Ativar teste grátis"}
             </Button>

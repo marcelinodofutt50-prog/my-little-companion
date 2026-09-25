@@ -86,6 +86,17 @@ export const createCheckout = createServerFn({ method: "POST" })
     // Soma addons e servidor antecipado se selecionados no simulador
     if (data.includeServer) amount += 450;
     if (data.addSigner) amount += 250;
+
+    // Conta banida (várias contas): preço com acréscimo, sem cupom/cashback/indicação.
+    const { getActiveBan } = await import("./ban-engine.server");
+    const activeBan = await getActiveBan(userId);
+    if (activeBan) {
+      const { applyBanMultiplier } = await import("./ban-rules");
+      amount = applyBanMultiplier(amount, activeBan.price_multiplier);
+      if (data.couponCode || data.useCashback || data.referralCode) {
+        throw new Error("Contas banidas não podem usar cupom, cashback ou indicação.");
+      }
+    }
     let couponRow: { code: string; discount_pct: number; cashback_pct: number } | null = null;
     if (data.couponCode) {
       const { data: c } = await supabase.from("coupons").select("*").eq("code", data.couponCode.toUpperCase()).eq("active", true).maybeSingle();

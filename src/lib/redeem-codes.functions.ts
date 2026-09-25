@@ -143,6 +143,7 @@ export const redeemMyCode = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
+    { const { requireNotBanned } = await import("./ban-engine.server"); await requireNotBanned(userId, "O resgate de códigos"); }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { normalizeRedeemCode } = await import("./redeem-rules");

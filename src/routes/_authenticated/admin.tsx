@@ -62,6 +62,7 @@ import { AdminAlertsBanner } from "@/components/AdminAlertsBanner";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminRevenuePanel } from "@/components/AdminRevenuePanel";
+import { AdminBansPanel } from "@/components/AdminBansPanel";
 import { type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
@@ -1154,6 +1155,7 @@ function AdminPage() {
                     />
 
                     {isAdminUser && <AdminRevenuePanel />}
+                    {isAdminUser && <AdminBansPanel />}
 
                     {isAdminUser && <AdminDailyReport />}
                     {isAdminUser && (

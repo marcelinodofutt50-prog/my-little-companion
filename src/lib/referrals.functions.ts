@@ -147,6 +147,7 @@ export const activateTrialReward = createServerFn({ method: "POST" })
       throw new Error("Você já resgatou seu benefício de boas-vindas.");
     }
 
+    { const { requireNotBanned } = await import("./ban-engine.server"); await requireNotBanned(userId, "O benefício de indicação"); }
     const guard = await evaluateTrial({ userId });
     if (!guard.allowed) {
       throw new Error(guard.reason ?? "Não foi possível validar este benefício.");

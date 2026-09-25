@@ -58,8 +58,8 @@ export async function evaluateTrial(input: {
     }
 
     const accountAgeMs = Date.now() - new Date(profile.created_at).getTime();
-    if (!Number.isFinite(accountAgeMs) || accountAgeMs > 72 * 60 * 60 * 1000) {
-      const reason = "O teste é exclusivo para contas criadas nas últimas 72 horas.";
+    if (!Number.isFinite(accountAgeMs) || accountAgeMs > 24 * 60 * 60 * 1000) {
+      const reason = "O teste é exclusivo para contas criadas nas últimas 24 horas.";
       await logBlock({ userId: input.userId, ipHash, email: profile.email, reason });
       return { allowed: false, reason, ipHash, userAgent };
     }

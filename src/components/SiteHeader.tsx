@@ -1,3 +1,4 @@
+import { BanNotice } from "@/components/BanNotice";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Menu, ChevronDown } from "lucide-react";
@@ -220,6 +221,7 @@ export function SiteHeader() {
           </Sheet>
         </div>
       </div>
+      <BanNotice />
     </header>
   );
 }

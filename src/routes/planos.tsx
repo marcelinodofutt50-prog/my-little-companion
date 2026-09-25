@@ -277,7 +277,15 @@ function PlansPage() {
       try {
         const { data, error } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
         if (error) throw error;
-        setPlans((data ?? []) as Plan[]);
+        // Conta banida vê (e paga, pois o servidor recalcula) o preço com acréscimo.
+        let mult = 1;
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          const { data: ban } = await (supabase as any)
+            .from("account_bans").select("price_multiplier").eq("user_id", u.user.id).is("revoked_at", null).maybeSingle();
+          if (ban) mult = Number(ban.price_multiplier) || 1;
+        }
+        setPlans(((data ?? []) as Plan[]).map((p) => (mult > 1 ? { ...p, price_brl: Math.round(Number(p.price_brl) * mult * 100) / 100 } : p)));
       } catch (err) {
         console.error("[PlansLoadError] Retrying...", err);
         // Retry once after 2s if it fails

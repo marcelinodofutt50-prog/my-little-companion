@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_bans: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          evidence: Json
+          id: string
+          linked_group_id: string | null
+          price_multiplier: number
+          reason: string
+          revoked_at: string | null
+          revoked_by: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          evidence?: Json
+          id?: string
+          linked_group_id?: string | null
+          price_multiplier?: number
+          reason: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          evidence?: Json
+          id?: string
+          linked_group_id?: string | null
+          price_multiplier?: number
+          reason?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           attachment_name: string | null
@@ -361,6 +403,38 @@ export type Database = {
         }
         Relationships: []
       }
+      ban_fingerprints: {
+        Row: {
+          ban_id: string
+          created_at: string
+          id: string
+          kind: string
+          value: string
+        }
+        Insert: {
+          ban_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          value: string
+        }
+        Update: {
+          ban_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ban_fingerprints_ban_id_fkey"
+            columns: ["ban_id"]
+            isOneToOne: false
+            referencedRelation: "account_bans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cashback_ledger: {
         Row: {
           amount: number
@@ -554,6 +628,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      community_strikes: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       coupons: {
         Row: {
@@ -3344,6 +3442,33 @@ export type Database = {
           ip_hash?: string | null
           reason?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      trial_consents: {
+        Row: {
+          created_at: string
+          device_hash: string | null
+          id: string
+          ip_hash: string | null
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          terms_version?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          terms_version?: string
+          user_id?: string
         }
         Relationships: []
       }

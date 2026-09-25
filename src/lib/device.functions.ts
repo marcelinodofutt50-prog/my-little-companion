@@ -38,7 +38,9 @@ export const registerMyDevice = createServerFn({ method: "POST" })
           await supabaseAdmin.from("profiles").update(patch as any).eq("id", context.userId);
         }
       }
-      return { ok: true };
+      const { linkAccountsAndEnforce } = await import("./ban-engine.server");
+      const { banned } = await linkAccountsAndEnforce(context.userId, sig);
+      return { ok: true, banned };
     } catch (e) {
       console.error("[registerMyDevice] falhou:", e);
       return { ok: false };
