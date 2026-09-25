@@ -3,7 +3,7 @@ import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertCircle, Check, CheckCheck, Clock, Loader2, Paperclip, RotateCw, Send, Server, Sparkles, Wrench } from "lucide-react";
+import { AlertCircle, Check, CheckCheck, Clock, History, Loader2, Paperclip, RotateCw, Send, Server, Sparkles, Wrench } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -355,6 +355,24 @@ function SupportPage() {
           </p>
           <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
         </div>
+
+        <section className="mt-5 overflow-hidden rounded-lg border border-cyan/30 bg-cyan/5 p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-cyan/30 bg-cyan/10 text-cyan">
+                <History className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold">Já tem uma licença antiga e quer renovar ou vincular?</h2>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Informe o e-mail do login, a senha da licença, a versão e o IP. O sistema verifica o painel antes de liberar o pagamento; se não conseguir confirmar, a equipe recebe o diagnóstico.</p>
+              </div>
+            </div>
+            <Button asChild size="sm" className="shrink-0 font-mono text-[10px] uppercase tracking-wider">
+              <Link to="/renovar-servidor">Verificar licença</Link>
+            </Button>
+          </div>
+          <p className="mt-3 border-t border-cyan/20 pt-3 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Nunca pedimos a senha do seu Gmail. Use somente a senha do login BTmob.</p>
+        </section>
 
         {/* Status do atendimento */}
         <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-mono uppercase tracking-wider">

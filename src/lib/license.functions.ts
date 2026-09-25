@@ -504,7 +504,7 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
     return z.object({
       email: z.string().trim().email().max(255),
       password: z.string().min(1).max(64),
-      panel: z.enum(["v457", "v46"]),
+      panel: z.enum(["v455", "v457", "v46"]),
     }).parse(input);
   })
   .handler(async ({ data, context }) => {
@@ -521,7 +521,7 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
     }
     if (!lookup.found) {
       throw new Error(
-        `LEGACY_EMAIL_NOT_IN_PANEL: o email ${email} não existe no painel ${data.panel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7"}`,
+        `LEGACY_EMAIL_NOT_IN_PANEL: o email ${email} não existe no painel ${data.panel === "v46" ? "Shadow 4.6" : data.panel === "v455" ? "Shadow 4.5.5" : "Shadow 4.5.7"}`,
       );
     }
 
@@ -570,9 +570,9 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
 
     // 4) Persiste a licença legada no dashboard do cliente.
     const usernameGuess = email.split("@")[0].slice(0, 16);
-    const versionTier = data.panel === "v46" ? "lifetime_46" : "monthly_457";
+    const versionTier = data.panel === "v46" ? "lifetime_46" : data.panel === "v455" ? "weekly_455" : "monthly_457";
     const serverIp = await (await import("./yaarsa.server")).resolvePanelServerHost(data.panel);
-    const planSlug = data.panel === "v46" ? "login-lifetime" : "login-30d";
+    const planSlug = data.panel === "v46" ? "login-lifetime" : data.panel === "v455" ? "login-7d" : "login-30d";
 
     const { data: lic, error: insErr } = await supabaseAdmin.from("licenses").insert({
       user_id: userId,
@@ -950,6 +950,9 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
     if (!lic) throw new Error("Licença não encontrada.");
     if ((lic as any).disabled_at) throw new Error("Esta licença está desativada.");
     if ((lic as any).suspended_at) throw new Error("Esta licença está pausada — despause para reparar o acesso.");
+    if ((lic as any).revoked || ((lic as any).expires_at && new Date((lic as any).expires_at).getTime() <= Date.now())) {
+      throw new Error("Esta licença está vencida ou revogada. Renove o acesso antes de tentar o reparo.");
+    }
 
     const { healLicenseLogin } = await import("./license-heal.server");
     const { isTransientPanelFail } = await import("./panel-retry.server");

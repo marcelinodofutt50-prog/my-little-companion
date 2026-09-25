@@ -1,7 +1,10 @@
-/** Links oficiais da comunidade. Preencha com os endereços reais. */
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+
+/** Canais oficiais da comunidade. */
 export const SOCIAL_LINKS = {
-  discord: "",
-  telegram: "",
+  discord: "Callionis",
+  telegram: "https://t.me/+P9mnL_5-_Sw0ZTcx",
 };
 
 function DiscordIcon(props: { className?: string }) {
@@ -21,31 +24,27 @@ function TelegramIcon(props: { className?: string }) {
 }
 
 export function SocialLinks({ className = "" }: { className?: string }) {
-  const items = [
-    { key: "discord", label: "Discord", href: SOCIAL_LINKS.discord, Icon: DiscordIcon },
-    { key: "telegram", label: "Telegram", href: SOCIAL_LINKS.telegram, Icon: TelegramIcon },
-  ];
   return (
     <div className={`flex items-center gap-1.5 ${className}`}>
-      {items.map(({ key, label, href, Icon }) =>
-        href ? (
-          <a
-            key={key}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={label}
-            title={label}
-            className="grid h-7 w-7 place-items-center rounded-full border border-sidebar-border text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-primary"
-          >
-            <Icon className="h-3.5 w-3.5" />
-          </a>
-        ) : (
-          <span key={key} aria-label={`${label} (em breve)`} title={`${label} — em breve`} className="grid h-7 w-7 place-items-center rounded-full border border-sidebar-border text-muted-foreground/50">
-            <Icon className="h-3.5 w-3.5" />
-          </span>
-        ),
-      )}
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        aria-label="Copiar usuário do Discord: Callionis"
+        title="Discord: Callionis — copiar usuário"
+        className="h-7 w-7 rounded-full border border-sidebar-border text-muted-foreground hover:-translate-y-0.5 hover:border-primary/50 hover:text-primary"
+        onClick={async () => {
+          await navigator.clipboard.writeText(SOCIAL_LINKS.discord);
+          toast.success("Discord copiado: Callionis");
+        }}
+      >
+        <DiscordIcon className="h-3.5 w-3.5" />
+      </Button>
+      <Button asChild size="icon" variant="ghost" className="h-7 w-7 rounded-full border border-sidebar-border text-muted-foreground hover:-translate-y-0.5 hover:border-primary/50 hover:text-primary">
+        <a href={SOCIAL_LINKS.telegram} target="_blank" rel="noopener noreferrer" aria-label="Abrir Telegram" title="Telegram oficial">
+          <TelegramIcon className="h-3.5 w-3.5" />
+        </a>
+      </Button>
     </div>
   );
 }

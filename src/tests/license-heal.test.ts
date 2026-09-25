@@ -32,6 +32,10 @@ const supabaseAdmin = {
 };
 
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
+vi.mock("../lib/audit-trail.server", () => ({
+  acquireOpLock: vi.fn(async () => true),
+  releaseOpLock: vi.fn(async () => undefined),
+}));
 
 vi.mock("../lib/yaarsa.server", () => ({
   yaarsaCreateAccount: vi.fn(async (input: any) => {
@@ -228,5 +232,13 @@ describe("healLicenseLogin — proteções adicionais", () => {
     const res = await healLicenseLogin(baseLic, { reason: "test" });
     expect(res.action).toBe("recreated");
     expect(state.removed).toEqual(["cliente1@shadow.app"]);
+  });
+
+  it.each(["v455", "v46"] as const)("respeita explicitamente o painel %s", async (panel) => {
+    state.createResponses = [{ Success: true }];
+    state.probeResponses = [{ state: "found", detail: "" }];
+    const res = await healLicenseLogin({ ...baseLic, panel }, { reason: "test" });
+    expect(res.panel).toBe(panel);
+    expect(state.create[0].panel).toBe(panel);
   });
 });

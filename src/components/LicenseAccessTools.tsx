@@ -88,9 +88,10 @@ export function LicenseAccessTools({
     try {
       const res: any = await repairAccess({ data: { licenseId } });
       const steps: string[] = Array.isArray(res?.steps) ? res.steps : [];
-      toast.success(res?.message ?? "Acesso ressincronizado.", {
+       const notify = res?.warning ? toast.warning : toast.success;
+       notify(res?.message ?? "Acesso ressincronizado.", {
         id: t,
-        description: steps.length ? steps.slice(-3).join(" • ") : undefined,
+         description: res?.warning ?? (steps.length ? steps.slice(-3).join(" • ") : undefined),
         duration: 8000,
       });
       onDone?.();

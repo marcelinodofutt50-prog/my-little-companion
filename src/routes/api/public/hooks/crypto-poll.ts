@@ -99,17 +99,13 @@ async function processBatch() {
   return results;
 }
 
-async function verifyCronSecret(request: Request): Promise<boolean> {
-  // Fonte única: aceita Bearer ou x-cron-secret, CRON_SECRET ou CRON_TRIGGER_TOKEN.
-  const { isAuthorizedCron } = await import("@/lib/cron-auth.server");
-  return isAuthorizedCron(request);
-}
-
 export const Route = createFileRoute("/api/public/hooks/crypto-poll")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (!await verifyCronSecret(request)) return new Response("unauthorized", { status: 401 });
+        const { cronUnauthorized } = await import("@/lib/cron-auth.server");
+        const denied = cronUnauthorized(request);
+        if (denied) return denied;
         const results = await processBatch();
         return Response.json({ ok: true, processed: results.length, results });
       },
