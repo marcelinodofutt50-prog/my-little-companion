@@ -61,6 +61,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { AdminAlertsBanner } from "@/components/AdminAlertsBanner";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
+import { AdminRevenuePanel } from "@/components/AdminRevenuePanel";
 import { type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
