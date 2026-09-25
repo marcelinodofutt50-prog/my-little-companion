@@ -48,6 +48,11 @@ function licenseQuery() {
       rows = rows.filter((r) => r[col] === val);
       return api;
     },
+    ilike: (col: string, val: string) => {
+      rows = rows.filter((r) => String(r[col] ?? "").toLowerCase() === val.toLowerCase());
+      return api;
+    },
+    in: () => api,
     limit: () => Promise.resolve({ data: rows, error: null }),
     then: (res: any) => Promise.resolve({ data: rows, error: null }).then(res),
   };
@@ -58,6 +63,7 @@ const supabaseAdmin: any = {
   from(table: string) {
     if (table === "integration_logs") {
       return {
+        select: () => ({ eq: () => ({ in: () => ({ gte: () => ({ limit: async () => ({ data: [], error: null }) }) }) }) }),
         insert: (payload: any) => {
           db.logs.push(...(Array.isArray(payload) ? payload : [payload]));
           return Promise.resolve({ error: null });
@@ -68,10 +74,20 @@ const supabaseAdmin: any = {
       ...licenseQuery(),
       update: (patch: Row) => ({
         eq: (_c: string, id: string) => {
-          db.updates.push({ id, patch });
           const row = db.licenses.find((l) => l.id === id);
-          if (row) Object.assign(row, patch);
-          return Promise.resolve({ error: null });
+          let match = !!row;
+          const apply = () => {
+            if (match && row) { db.updates.push({ id, patch }); Object.assign(row, patch); }
+            return { data: match ? [{ id }] : [], error: null };
+          };
+          const chain: any = {
+            is: (c: string, v: any) => { if (row && (row[c] ?? null) !== v) match = false; return chain; },
+            eq: (c: string, v: any) => { if (row && row[c] !== v) match = false; return chain; },
+            lt: (c: string, v: any) => { if (row && !(row[c] && row[c] < v)) match = false; return chain; },
+            select: async () => apply(),
+            then: (res: any) => Promise.resolve(apply()).then(res),
+          };
+          return chain;
         },
       }),
     };
@@ -81,6 +97,7 @@ const supabaseAdmin: any = {
 
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
 vi.mock("@/lib/cron-auth.server", () => ({ cronUnauthorized: () => null }));
+vi.mock("@/lib/audit-trail.server", () => ({ acquireOpLock: async () => true, releaseOpLock: async () => {} }));
 const yaarsaMock = {
   ALL_PANELS: ["v455", "v457", "v46"],
   hasPanelServer: () => true,
