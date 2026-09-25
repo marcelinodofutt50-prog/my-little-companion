@@ -156,10 +156,15 @@ export const createCheckout = createServerFn({ method: "POST" })
     let legacyMeta: { email: string; password_enc: string; ip: string; panel: "v455" | "v457" | "v46" } | null = null;
     if (data.legacyClaim) {
       if (plan.category !== "server") throw new Error("legacyClaim só se aplica a planos de servidor");
-      const { yaarsaLookupEmail, encrypt } = await import("./yaarsa.server");
+      const { yaarsaLookupEmail, yaarsaVerifyCredentials, encrypt } = await import("./yaarsa.server");
       const email = data.legacyClaim.email.toLowerCase();
       const lookup = await yaarsaLookupEmail(email, data.legacyClaim.panel);
       if (!lookup.found) throw new Error(`Email não encontrado no painel ${data.legacyClaim.panel === "v46" ? "Shadow 4.6" : data.legacyClaim.panel === "v455" ? "Shadow 4.5.5" : "Shadow 4.5.7"}`);
+      const credentialCheck = await yaarsaVerifyCredentials(email, data.legacyClaim.password, data.legacyClaim.panel);
+      if (!credentialCheck.available) {
+        throw new Error("Este painel antigo não permite confirmar a senha automaticamente. Abra uma solicitação no suporte para a equipe revisar antes do pagamento.");
+      }
+      if (!credentialCheck.verified) throw new Error("A senha da licença BTmob não confere com esse login antigo.");
       legacyMeta = { email, password_enc: encrypt(data.legacyClaim.password), ip: data.legacyClaim.ip.trim(), panel: data.legacyClaim.panel };
     }
 
