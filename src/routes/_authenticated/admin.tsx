@@ -1,3 +1,4 @@
+import { SupportStatsPanel } from "@/components/support/SupportStatsPanel";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -1430,7 +1431,7 @@ function AdminPage() {
                 );
               })()}
 
-            {tab === "chat" && <AdminSupportPanel />}
+            {tab === "chat" && <div className="space-y-4"><SupportStatsPanel /><AdminSupportPanel /></div>}
             {tab === "issue" && (
               <IssueLicensePanel
                 onIssued={() =>

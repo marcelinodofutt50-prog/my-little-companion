@@ -7,6 +7,7 @@ import { QuickHelpStrip } from "@/components/QuickHelpStrip";
 import { SiteUpdatesSection } from "@/components/SiteUpdatesSection";
 import { SupportFloatingWidget } from "@/components/SupportFloatingWidget";
 import { PromotionsWidget } from "@/components/PromotionsWidget";
+import { StaffDeskCard } from "@/components/staff/StaffDeskCard";
 import { YoutubeMilestoneDialog } from "@/components/YoutubeMilestoneDialog";
 
 
@@ -323,6 +324,7 @@ function DashboardPage() {
                 <SidebarTrigger className="h-10 w-10 shrink-0 rounded-md border border-primary/30 bg-card/90 shadow-lg backdrop-blur-md [&_svg]:h-5 [&_svg]:w-5" aria-label="Abrir menu" />
                 <span className="rounded-md border border-border/60 bg-card/90 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur-md">Menu</span>
               </div>
+              <StaffDeskCard />
               {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">
                   <TrialActivationCard onDone={() => void refetchLicenses()} />
