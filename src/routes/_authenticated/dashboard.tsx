@@ -7,6 +7,7 @@ import { QuickHelpStrip } from "@/components/QuickHelpStrip";
 import { SiteUpdatesSection } from "@/components/SiteUpdatesSection";
 import { SupportFloatingWidget } from "@/components/SupportFloatingWidget";
 import { PromotionsWidget } from "@/components/PromotionsWidget";
+import { YoutubeMilestoneDialog } from "@/components/YoutubeMilestoneDialog";
 
 
 import { useTheme } from '@/lib/theme'
