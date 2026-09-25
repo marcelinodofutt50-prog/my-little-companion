@@ -154,6 +154,17 @@ describe("cron de vencimento (ponta a ponta)", () => {
     expect(db.logs.some((l) => l.outcome === "removed")).toBe(true);
   });
 
+  it("não apaga o login quando outra licença ativa usa o mesmo e-mail", async () => {
+    db.licenses = [
+      { id: "old", user_id: "u1", plan_slug: "login-30d", yaarsa_email: "same@a.com", panel: "v457", disabled_at: null, revoked: false, expires_at: past },
+      { id: "new", user_id: "u1", plan_slug: "login-30d", yaarsa_email: "same@a.com", panel: "v457", disabled_at: null, revoked: false, expires_at: future },
+    ];
+    await expirePost({ request: req() });
+    expect(panel.removed).toHaveLength(0);
+    expect(db.licenses.find((l) => l.id === "old")!.revoked).toBe(true);
+    expect(db.logs.some((l) => l.outcome === "skipped_shared_login")).toBe(true);
+  });
+
   it("não toca em licença vitalícia nem em licença ainda válida", async () => {
     db.licenses.push(
       { id: "life", user_id: "u1", plan_slug: "login-lifetime", yaarsa_email: "a@a.com", panel: "v457", disabled_at: null, revoked: false, expires_at: past },
