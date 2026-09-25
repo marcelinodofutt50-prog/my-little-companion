@@ -16,7 +16,7 @@ import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useState, useEffect } from 'react'
 import { useServerFn } from '@tanstack/react-start'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/AppSidebar'
 import { SecurityWelcomeDialog } from '@/components/SecurityWelcomeDialog'
 import { TutorialHintDialog } from '@/components/TutorialHintDialog'
@@ -319,6 +319,10 @@ function DashboardPage() {
         <SidebarInset>
           <main className="flex-1 p-4 md:p-8 pt-6 relative client-enterprise">
             <div className="dash-stagger mx-auto max-w-7xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="sticky top-2 z-40 flex items-center gap-2 md:hidden">
+                <SidebarTrigger className="h-10 w-10 shrink-0 rounded-md border border-primary/30 bg-card/90 shadow-lg backdrop-blur-md [&_svg]:h-5 [&_svg]:w-5" aria-label="Abrir menu" />
+                <span className="rounded-md border border-border/60 bg-card/90 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur-md">Menu</span>
+              </div>
               {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">
                   <TrialActivationCard onDone={() => void refetchLicenses()} />
