@@ -809,6 +809,7 @@ function DashboardPage() {
           </main>
         </SidebarInset>
         <SupportFloatingWidget />
+        <YoutubeMilestoneDialog />
       </div>
       
       <SecurityWelcomeDialog />
