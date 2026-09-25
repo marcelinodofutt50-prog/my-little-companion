@@ -1134,6 +1134,17 @@ function AdminPage() {
                     : "—";
                 return (
                   <div className="space-y-4">
+                    {ordersError && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                        <span>Não foi possível carregar os pedidos: {ordersError}</span>
+                        <button
+                          onClick={() => loadOrders()}
+                          className="rounded border border-destructive/40 px-2 py-1 text-xs hover:bg-destructive/10"
+                        >
+                          Tentar de novo
+                        </button>
+                      </div>
+                    )}
                     <AdminKpiCards
                       revenueToday={formatBrl(revenueToday)}
                       pendingOrders={pendingCount}
