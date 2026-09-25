@@ -669,3 +669,33 @@ export const createSupportUploadUrl = createServerFn({ method: "POST" })
     const up = await createUpload("support-media", `${prefix}/${Date.now()}-${safe}`);
     return { path: up.path, uploadUrl: up.uploadUrl, token: up.token };
   });
+
+/** Tempo médio de resposta da equipe nas últimas horas (visível ao cliente). */
+export const getSupportResponseStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const hours = 24;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - hours * 3600_000).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("support_messages")
+      .select("thread_id, is_admin, is_system, created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: true })
+      .limit(3000);
+    if (error) return { hours, avgMinutes: null as number | null, samples: 0 };
+    const waiting = new Map<string, number>();
+    const deltas: number[] = [];
+    for (const m of data ?? []) {
+      if ((m as any).is_system) continue;
+      const t = new Date((m as any).created_at).getTime();
+      const tid = (m as any).thread_id as string;
+      if ((m as any).is_admin) {
+        const start = waiting.get(tid);
+        if (start !== undefined) { deltas.push(t - start); waiting.delete(tid); }
+      } else if (!waiting.has(tid)) waiting.set(tid, t);
+    }
+    if (!deltas.length) return { hours, avgMinutes: null, samples: 0 };
+    const avg = deltas.reduce((a, b) => a + b, 0) / deltas.length / 60000;
+    return { hours, avgMinutes: Math.max(1, Math.round(avg)), samples: deltas.length };
+  });
