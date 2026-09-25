@@ -987,6 +987,7 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
       steps: result.steps,
       credentials: result.credentials,
       message: result.message,
+      warning: result.warning,
     };
   });
 

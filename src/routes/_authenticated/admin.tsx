@@ -240,7 +240,7 @@ const TAB_DESC: Record<Tab, string> = {
   ia: "Diagnóstico automático: a IA aponta erros e o que precisa de atenção.",
   chat: "Conversas ao vivo com os clientes. Assuma o ticket e responda por aqui.",
   issue: "Criar um login manualmente para um cliente, sem passar pelo pagamento.",
-  legacy: "Clientes antigos (v4.5.7) que pagam a mensalidade de servidor de R$ 250.",
+  legacy: "Clientes antigos (v4.5.5, 4.5.7 e 4.6) vinculados ao painel e às renovações.",
   external: "Quem pagou por fora (PIX direto). Aqui você estende o acesso na mão.",
   users: "Todas as contas cadastradas no site, com e-mail e data de criação.",
   licenses: "Todos os logins criados: ativos, vencendo, expirados e revogados.",
@@ -256,7 +256,7 @@ const TAB_DESC: Record<Tab, string> = {
   apk: "Bypass Play Protect (Fila APK): APKs enviados pelos clientes para bypass de Play Protect.",
   updates: "Publicar uma nova versão do app para os clientes baixarem.",
   tutorials: "Shadow Hub: Upload de vídeos, tutoriais e guias para novos usuários.",
-  servers: "Troque a VPS de cada versão (4.5.7 / 4.6) e teste antes de vender.",
+  servers: "Gerencie e teste a VPS de cada versão (4.5.5 / 4.5.7 / 4.6) antes de vender.",
   selftest: "Teste automático de compra PIX de ponta a ponta, para conferir se está tudo ok.",
   quotas: "Controle de cotas da equipe: limites diários/mensais para geração de licenças manuais.",
   nexus: "Staff Nexus: canal de bate-papo interno e privado da equipe (admin, suporte e moderação).",
@@ -4021,7 +4021,7 @@ function IssueLicensePanel({
   const issueFn = useServerFn(adminCreateLicenseForClient);
   const [email, setEmail] = useState(initialEmail ?? "");
   const [plan, setPlan] = useState<"login-7d" | "login-30d" | "login-lifetime">("login-30d");
-  const [panel, setPanel] = useState<"v457" | "v46" | "auto">("auto");
+  const [panel, setPanel] = useState<"v455" | "v457" | "v46" | "auto">("auto");
   const [isLegacy, setIsLegacy] = useState(false);
   const [fee, setFee] = useState<string>("250");
   const [customExpire, setCustomExpire] = useState<string>("");

@@ -74,7 +74,7 @@ export const Route = createFileRoute("/api/public/hooks/verify-external-payers")
             continue;
           }
 
-          const panel = (l.panel === "v46" ? "v46" : "v457") as "v457" | "v46";
+          const panel = (l.panel === "v46" ? "v46" : l.panel === "v455" ? "v455" : "v457") as "v455" | "v457" | "v46";
           try {
             const r = await yaarsaExtend(l.yaarsa_email, l.paid_externally_until, panel);
             if (r.Fail) {
