@@ -78,6 +78,24 @@ export function alignServerBackendEnv(runtimeEnv?: RuntimeEnv): void {
     return;
   }
 
+  aligned = true;
+    return;
+  }
+
+  const filesUrl = process.env["FILES_SUPABASE_URL"];
+  const filesHost = host(filesUrl);
+  const filesKey = process.env["FILES_SUPABASE_SERVICE_ROLE_KEY"];
+  const filesPublishable = process.env["FILES_SUPABASE_PUBLISHABLE_KEY"];
+
+  if (filesHost !== clientHost || !filesUrl || !filesKey) {
+    console.error(
+      "[backend-env] Servidor e navegador apontam para projetos diferentes " +
+        `(servidor=${serverHost ?? "ausente"}, navegador=${clientHost}) e não há ` +
+        "credenciais alternativas compatíveis para corrigir automaticamente.",
+    );
+    return;
+  }
+
   process.env["SUPABASE_URL"] = filesUrl;
   process.env["SUPABASE_SERVICE_ROLE_KEY"] = filesKey;
   if (filesPublishable) process.env["SUPABASE_PUBLISHABLE_KEY"] = filesPublishable;
@@ -91,4 +109,11 @@ export function alignServerBackendEnv(runtimeEnv?: RuntimeEnv): void {
   console.warn(
     `[backend-env] Servidor realinhado para o projeto do navegador (${clientHost}).`,
   );
+}
+
+// Dynamic key so build-time env replacement never turns this into an invalid assignment.
+function setEnv(key: string, value: string | undefined): void {
+  if (value === undefined) return;
+  const env = globalThis.process?.env as Record<string, string | undefined> | undefined;
+  if (env) env[key] = value;
 }
