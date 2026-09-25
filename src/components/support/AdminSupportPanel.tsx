@@ -33,12 +33,15 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { playNotifyDing, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 
 export function AdminSupportPanel() {
   const [threads, setThreads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"open" | "mine" | "closed" | "all">("open");
   const [search, setSearch] = useState("");
+  const [catFilter, setCatFilter] = useState<string>("all");
+  const [prioFilter, setPrioFilter] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
   const [fichaUserId, setFichaUserId] = useState<string | null>(null);
@@ -108,25 +111,41 @@ export function AdminSupportPanel() {
 
   useEffect(() => {
     loadThreads();
+    try { requestNotifyPermission(); } catch {}
     supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
 
     const ch = supabase.channel("admin-chat-updates")
       .on("postgres_changes", { event: "*", schema: "public", table: "support_threads" }, () => loadThreads())
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, () => loadThreads())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, (payload: any) => {
+        loadThreads();
+        const m = payload?.new;
+        if (m && !m.is_admin && !m.is_system) {
+          const preview = String(m.body ?? m.content ?? "Nova mensagem").slice(0, 80);
+          try { playNotifyDing(); } catch {}
+          try { showDesktopNotification("Nova mensagem no suporte", preview); } catch {}
+          toast.info("Nova mensagem de cliente", { description: preview, action: { label: "Abrir", onClick: () => setSelectedId(m.thread_id) } });
+        }
+      })
       .subscribe();
       
     return () => { supabase.removeChannel(ch); };
   }, [filter]);
 
   const filteredThreads = useMemo(() => {
-    if (!search.trim()) return threads;
-    const q = search.toLowerCase();
-    return threads.filter(t => 
-      t.subject?.toLowerCase().includes(q) || 
-      t.profile?.email?.toLowerCase().includes(q) ||
-      t.profile?.display_name?.toLowerCase().includes(q)
-    );
-  }, [threads, search]);
+    const rank: Record<string, number> = { critica: 0, alta: 1, normal: 2 };
+    const q = search.trim().toLowerCase();
+    return threads
+      .filter(t => catFilter === "all" || (t.category || "outro") === catFilter)
+      .filter(t => prioFilter === "all" || (t.priority || "normal") === prioFilter)
+      .filter(t => !q ||
+        t.subject?.toLowerCase().includes(q) ||
+        t.profile?.email?.toLowerCase().includes(q) ||
+        t.profile?.display_name?.toLowerCase().includes(q))
+      .slice()
+      .sort((a, b) =>
+        (Number(b.unread_by_staff || 0) > 0 ? 1 : 0) - (Number(a.unread_by_staff || 0) > 0 ? 1 : 0) ||
+        (rank[a.priority || "normal"] ?? 2) - (rank[b.priority || "normal"] ?? 2));
+  }, [threads, search, catFilter, prioFilter]);
 
   const selectedThread = threads.find(t => t.id === selectedId);
 
@@ -182,6 +201,24 @@ export function AdminSupportPanel() {
               onChange={e => setSearch(e.target.value)}
               className="pl-8 h-9 text-xs bg-background/40"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Select value={catFilter} onValueChange={setCatFilter}>
+              <SelectTrigger className="h-8 text-[10px] font-mono uppercase"><SelectValue placeholder="Categoria" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas categorias</SelectItem>
+                {SUPPORT_CATEGORY_META.map(c => <SelectItem key={c.id} value={c.id}>{c.emoji} {c.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={prioFilter} onValueChange={setPrioFilter}>
+              <SelectTrigger className="h-8 text-[10px] font-mono uppercase"><SelectValue placeholder="Prioridade" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toda prioridade</SelectItem>
+                <SelectItem value="critica">Crítica</SelectItem>
+                <SelectItem value="alta">Alta</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex gap-1 p-1 bg-muted/30 rounded-lg">
             {(["open", "mine", "closed", "all"] as const).map(f => (

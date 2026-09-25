@@ -175,6 +175,20 @@ export function AdminApkPanel() {
   }
 
 
+  function showApkError(title: string, e: any) {
+    const log = [
+      `Quando: ${new Date().toISOString()}`,
+      `Mensagem: ${e?.message || String(e)}`,
+      e?.stack ? `Log:\n${e.stack}` : "",
+    ].filter(Boolean).join("\n");
+    console.error("[apk-admin]", log);
+    toast.error(title, {
+      description: <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-[10px]">{log}</pre>,
+      duration: 30000,
+      action: { label: "Copiar log", onClick: () => navigator.clipboard?.writeText(log) },
+    });
+  }
+
   async function uploadResult(j: Job, file: File) {
     if (!/\.apk$/i.test(file.name)) { toast.error("Envie um .apk processado"); return; }
     setUploadingId(j.id);
@@ -196,7 +210,7 @@ export function AdminApkPanel() {
       toast.success("APK processado entregue ao cliente. Job removido da fila.");
       await refresh();
     } catch (e: any) {
-      toast.error(e?.message || "Falha ao enviar resultado");
+      showApkError("Falha ao entregar o APK", e);
     } finally {
       setUploadingId(null);
       setUploadPct(0);
@@ -211,7 +225,7 @@ export function AdminApkPanel() {
       toast.success("Job marcado como falho.");
       refresh();
     } catch (e: any) {
-      toast.error(e?.message || "Falha");
+      showApkError("Falha ao marcar erro", e);
     }
   }
 

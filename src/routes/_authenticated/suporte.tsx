@@ -17,6 +17,7 @@ import { SUPPORT_CATEGORY_META, categoryMeta, type SupportCategory } from "@/lib
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification, unlockNotifySound } from "@/lib/notify-sound";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
 import { BackToDashboard } from "@/components/BackToDashboard";
+import { ResponseTimeBadge } from "@/components/support/ResponseTimeBadge";
 
 
 export const Route = createFileRoute("/_authenticated/suporte")({
@@ -354,6 +355,7 @@ function SupportPage() {
             {t("contact.lead" as any)}
           </p>
           <div className="osint-ticker pointer-events-none mt-4 h-1 w-full rounded-full opacity-60" />
+          <ResponseTimeBadge />
         </div>
 
         <section className="mt-5 overflow-hidden rounded-lg border border-cyan/30 bg-cyan/5 p-4">

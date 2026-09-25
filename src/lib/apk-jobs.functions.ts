@@ -1,6 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+function apkDbError(stage: string, error: any): Error {
+  const parts = [
+    `[${stage}]`,
+    error?.code ? `código ${error.code}` : null,
+    error?.message || String(error),
+    error?.details ? `detalhes: ${error.details}` : null,
+    error?.hint ? `dica: ${error.hint}` : null,
+  ].filter(Boolean);
+  console.error("[apk]", stage, JSON.stringify(error));
+  return new Error(parts.join(" · "));
+}
 import {
   APK_DOWNLOAD_LIMIT_MESSAGE,
   APK_EXPIRED_MESSAGE,
@@ -400,7 +412,7 @@ export const adminCompleteApkJob = createServerFn({ method: "POST" })
         purge_after: computePurgeAfter({ status: "done", completed_at: completedAt }),
       } as any)
       .eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) throw apkDbError("Entregar APK (apk_jobs)", error);
     // O APK original não serve para mais nada depois de assinado: sai do
     // armazenamento na hora, sem esperar a varredura.
     try {
@@ -446,7 +458,7 @@ export const adminFailApkJob = createServerFn({ method: "POST" })
         purge_after: computePurgeAfter({ status: "failed", completed_at: completedAt }),
       } as any)
       .eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) throw apkDbError("Marcar erro do APK (apk_jobs)", error);
     try {
       const { dropApkSource } = await import("@/lib/apk-retention.server");
       await dropApkSource(supabaseAdmin, data.id);
