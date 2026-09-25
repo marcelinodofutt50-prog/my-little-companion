@@ -54,7 +54,6 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
         status: "paid",
         paid_at: new Date().toISOString(),
         metadata: { crypto: { payment_id: claimed.id, network: claimed.network, tx_hash: claimed.tx_hash } } as any,
-      } as any)
       } as any).select("id").single();
       order = created.data;
       orderErr = created.error;
