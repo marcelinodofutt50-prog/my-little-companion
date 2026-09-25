@@ -572,19 +572,36 @@ export function SupportChat({
       });
 
     // Rede/aba voltando: reconciliar a conversa.
+    // Ao voltar para a aba, recarrega e marca como visto o que chegou enquanto
+    // ela estava escondida (antes ficava "Não visto" para sempre).
     const resync = () => {
-      if (document.visibilityState === "visible") void loadMessages();
+      if (document.visibilityState !== "visible") return;
+      void loadMessages();
+      markSeen();
     };
     document.addEventListener("visibilitychange", resync);
     window.addEventListener("online", resync);
+    window.addEventListener("focus", resync);
 
     return () => {
       document.removeEventListener("visibilitychange", resync);
       window.removeEventListener("online", resync);
+      window.removeEventListener("focus", resync);
       supabase.removeChannel(ch);
     };
   }, [threadId, userId]);
 
+
+  // Rede de segurança do "Visto": se o aviso em tempo real se perder, confere
+  // de novo enquanto houver mensagem minha ainda não vista.
+  const hasMyUnseen = msgs.some((m: any) => m.sender_id === userId && !m.is_system && !m.read_at && !String(m.id).startsWith("tmp"));
+  useEffect(() => {
+    if (!hasMyUnseen) return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") void loadMessages();
+    }, 15000);
+    return () => clearInterval(id);
+  }, [hasMyUnseen, threadId]);
 
   // Fecha o visualizador de imagem com Esc.
   useEffect(() => {
