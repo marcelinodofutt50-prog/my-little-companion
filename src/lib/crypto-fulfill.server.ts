@@ -105,7 +105,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
     try { await yaarsaExtend(creds.email, expiresAt.toISOString().slice(0, 10), targetPanel); } catch { /* best-effort */ }
 
     const serverIp = await (await import("@/lib/yaarsa.server")).resolvePanelServerHost(targetPanel);
-    const { data: lic } = await supabaseAdmin.from("licenses").insert({
+    const { data: lic, error: licenseErr } = await supabaseAdmin.from("licenses").insert({
       user_id: claimed.user_id,
       order_id: order.id,
       plan_slug: claimed.plan_slug,
@@ -120,6 +120,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
       panel: targetPanel,
       server_ip: serverIp,
     } as any).select("id").single();
+    if (licenseErr || !lic) throw new Error(licenseErr?.message || "license insert failed");
 
     await supabaseAdmin.from("integration_logs").insert({
       source: "crypto", action: "fulfill", outcome: "success",

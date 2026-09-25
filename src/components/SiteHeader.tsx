@@ -15,6 +15,7 @@ import { LanguageToggle, useI18n } from "@/lib/i18n";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
+import { SocialLinks } from "@/components/SocialLinks";
 import { KrakenTab } from "@/components/KrakenTab";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
@@ -74,6 +75,7 @@ export function SiteHeader() {
           <img src={shadowMark} alt="" width={32} height={32} decoding="async" className="block h-7 w-7 shrink-0 object-contain sm:h-8 sm:w-8 drop-shadow-[0_0_8px_rgba(201,168,76,0.6)] brightness-110 dark:brightness-125 dark:contrast-125 transition-all duration-300" />
           <span className="font-display text-lg leading-none tracking-tight sm:text-xl">Shadow</span>
         </Link>
+        <SocialLinks className="hidden border-l border-border/50 pl-3 sm:flex" />
 
         {/* Desktop nav */}
         <nav className="ml-6 hidden flex-1 items-center gap-7 lg:flex">

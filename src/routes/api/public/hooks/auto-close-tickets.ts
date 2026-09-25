@@ -68,8 +68,13 @@ export const Route = createFileRoute("/api/public/hooks/auto-close-tickets")({
           });
         }
 
+        await supabaseAdmin.from("integration_logs").insert({
+          source: "support", action: "auto-close-tickets", outcome: "success",
+          context: { checked: threads?.length ?? 0, stale: stale.length, closed },
+        } as never).then(() => undefined, () => undefined);
+
         return new Response(JSON.stringify({ checked: threads?.length ?? 0, closed }), {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
         });
       },
       GET: async () => new Response("ok", { status: 200 }),

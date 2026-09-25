@@ -489,7 +489,7 @@ export const checkLegacyEmail = createServerFn({ method: "POST" })
     return {
       found: r.found,
       panels: foundIn,
-      suggested_tier: foundIn.includes("v46") ? "lifetime_46" : foundIn.includes("v457") ? "monthly_457" : null,
+      suggested_tier: foundIn.includes("v46") ? "lifetime_46" : foundIn.includes("v457") ? "monthly_457" : foundIn.includes("v455") ? "weekly" : null,
     };
   });
 
@@ -535,7 +535,7 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
         ok: true, licenseId: existing.id, already: true,
         panel: data.panel, email,
         server_ip: await (await import("./yaarsa.server")).resolvePanelServerHost(data.panel),
-        next_renewal: null as string | null, version_tier: data.panel === "v46" ? "lifetime_46" : "monthly_457",
+        next_renewal: null as string | null, version_tier: data.panel === "v46" ? "lifetime_46" : data.panel === "v455" ? "weekly" : "monthly_457",
       };
     }
 
@@ -570,7 +570,7 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
 
     // 4) Persiste a licença legada no dashboard do cliente.
     const usernameGuess = email.split("@")[0].slice(0, 16);
-    const versionTier = data.panel === "v46" ? "lifetime_46" : data.panel === "v455" ? "weekly_455" : "monthly_457";
+    const versionTier = data.panel === "v46" ? "lifetime_46" : data.panel === "v455" ? "weekly" : "monthly_457";
     const serverIp = await (await import("./yaarsa.server")).resolvePanelServerHost(data.panel);
     const planSlug = data.panel === "v46" ? "login-lifetime" : data.panel === "v455" ? "login-7d" : "login-30d";
 
