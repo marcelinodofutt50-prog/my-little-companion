@@ -63,6 +63,7 @@ import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminRevenuePanel } from "@/components/AdminRevenuePanel";
 import { AdminBansPanel } from "@/components/AdminBansPanel";
+import { AdminModerationPanel } from "@/components/AdminModerationPanel";
 import { type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
@@ -224,6 +225,8 @@ type Tab =
   | "license_audit"
   | "panel_integrity"
   | "feedback"
+  | "moderation"
+  | "bans"
   | "partners"
 
   | "vip";
@@ -694,6 +697,8 @@ function AdminPage() {
         { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
         { id: "applications", label: "Candidaturas Staff", icon: Briefcase, hint: "pedidos para entrar na equipe" },
         { id: "feedback", label: "Sugestões & Críticas", icon: MessageSquare, hint: "feedback dos clientes" },
+        { id: "moderation", label: "Moderação", icon: ShieldAlert, hint: "mensagens bloqueadas" },
+        { id: "bans", label: "Clientes Bloqueados", icon: ShieldAlert, hint: "banimentos & contas ligadas" },
       ],
     },
     {
@@ -1155,7 +1160,6 @@ function AdminPage() {
                     />
 
                     {isAdminUser && <AdminRevenuePanel />}
-                    {isAdminUser && <AdminBansPanel />}
 
                     {isAdminUser && <AdminDailyReport />}
                     {isAdminUser && (
@@ -2356,6 +2360,8 @@ function AdminPage() {
               {tab === "license_audit" && <AdminLicenseAuditPanel />}
               {tab === "panel_integrity" && <AdminPanelIntegrityPanel />}
               {tab === "feedback" && <AdminFeedbackPanel />}
+              {tab === "moderation" && <AdminModerationPanel />}
+              {tab === "bans" && <AdminBansPanel />}
               {tab === "partners" && <AdminPartnersPanel />}
 
               </motion.div>
