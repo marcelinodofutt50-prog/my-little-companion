@@ -219,6 +219,10 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
     }
     return;
   }
+  if (isVisualNetworkError(userMessage)) {
+    await postSystemMessage(threadId, buildVisualErrorReply());
+    return;
+  }
   if (!pinAsked && isLoginAccessIssue(userMessage)) {
     await postSystemMessage(threadId, buildPinRequest());
     return;
@@ -228,10 +232,6 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   // "network error" visual. São recorrentes e têm resposta fixa — não gastamos quota.
   if (isTrainingQuestion(userMessage)) {
     await postSystemMessage(threadId, buildTrainingReply());
-    return;
-  }
-  if (isVisualNetworkError(userMessage)) {
-    await postSystemMessage(threadId, buildVisualErrorReply());
     return;
   }
 

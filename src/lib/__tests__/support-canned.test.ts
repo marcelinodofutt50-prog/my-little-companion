@@ -51,10 +51,12 @@ describe("mensagens prontas", () => {
     expect(msg).toContain("Treinamento");
   });
 
-  it("resposta de network error explica que é visual", () => {
+  it("resposta de network error explica senha errada, APK e compatibilidade", () => {
     const msg = buildVisualErrorReply();
-    expect(msg).toContain("visual");
-    expect(msg).toMatch(/não interfere/i);
+    expect(msg).toMatch(/dígito errado/i);
+    expect(msg).toMatch(/permiss/i);
+    expect(msg).toMatch(/Reparar acesso/);
+    expect(msg).toMatch(/celulares/i);
   });
 });
 
