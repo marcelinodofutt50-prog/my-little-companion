@@ -93,7 +93,7 @@ export const adminBanUser = createServerFn({ method: "POST" })
     const { data: ban } = await db.from("account_bans").select("id").eq("user_id", prof.id).single();
     const fps = (dev ?? []).map((d: any) => ({ ban_id: ban.id, kind: "device", value: d.device_hash }));
     if (fps.length) await db.from("ban_fingerprints").upsert(fps, { onConflict: "kind,value,ban_id", ignoreDuplicates: true });
-    await db.from("audit_logs").insert({ user_id: context.userId, action: "ban_user", details: { target: prof.id, reason: data.reason } } as any).then(() => {}, () => {});
+    await db.from("audit_logs").insert({ user_id: context.userId, system: "bans", event: "ban_user", metadata: { target: prof.id, reason: data.reason } } as any).then(() => {}, () => {});
     return { ok: true };
   });
 
@@ -112,7 +112,7 @@ export const adminUnbanUser = createServerFn({ method: "POST" })
     } else {
       await db.from("account_bans").update(patch).eq("id", ban.id);
     }
-    await db.from("audit_logs").insert({ user_id: context.userId, action: "unban_user", details: { ban_id: ban.id, include_linked: data.includeLinked } } as any).then(() => {}, () => {});
+    await db.from("audit_logs").insert({ user_id: context.userId, system: "bans", event: "unban_user", metadata: { ban_id: ban.id, include_linked: data.includeLinked } } as any).then(() => {}, () => {});
     return { ok: true };
   });
 
@@ -165,7 +165,7 @@ export const adminResolveBlockedMessage = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
     await db.from("community_strikes").delete().eq("id", row.id);
-    await db.from("audit_logs").insert({ user_id: context.userId, action: `community_${data.action}`, details: { strike_id: row.id, target: row.user_id } } as any).then(() => {}, () => {});
+    await db.from("audit_logs").insert({ user_id: context.userId, system: "bans", event: `community_${data.action}`, metadata: { strike_id: row.id, target: row.user_id } } as any).then(() => {}, () => {});
     return { ok: true };
   });
 
