@@ -378,7 +378,9 @@ export function expireDateFor(planSlug: string): string {
   if (planSlug === "login-7d") d.setDate(d.getDate() + 8);
   else if (planSlug === "login-30d" || planSlug === "kraken-monthly") d.setDate(d.getDate() + 31);
   else if (planSlug === "login-lifetime" || planSlug === "kraken-lifetime") d.setFullYear(d.getFullYear() + 20);
-  else if (planSlug === "trial") d.setDate(d.getDate() + 2);
+  // Trial: 1 dia no painel só como margem da meia-noite; o corte real de 3h30
+  // é feito pelo cron expire-licenses com base no expires_at do banco.
+  else if (planSlug === "trial") d.setDate(d.getDate() + 1);
   else d.setDate(d.getDate() + 31);
   return d.toISOString().slice(0, 10);
 }
