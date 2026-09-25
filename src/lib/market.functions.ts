@@ -174,7 +174,8 @@ export const createMarketCheckout = createServerFn({ method: "POST" })
       .single();
     if (orderErr || !order) throw new Error(orderErr?.message || "Falha ao criar pedido");
 
-    const origin = data.returnOrigin.replace(/\/$/, "");
+    const { safeReturnOrigin } = await import("./safe-origin");
+    const origin = safeReturnOrigin(data.returnOrigin);
     return { orderId: order.id, checkoutUrl: `${origin}/pagamento/checkout?order=${order.id}` };
   });
 

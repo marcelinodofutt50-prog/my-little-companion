@@ -3,6 +3,7 @@ import { LayoutDashboard,
   Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull, Trophy, User, Lightbulb, Crown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { SocialLinks } from "@/components/SocialLinks";
 import {
   Sidebar,
   SidebarContent,
@@ -81,6 +82,7 @@ export function AppSidebar({ isAdmin }: { isAdmin?: boolean }) {
             </div>
           )}
         </Link>
+        {!collapsed && <SocialLinks className="mt-2 px-1 pl-[2.9rem]" />}
       </SidebarHeader>
 
       <SidebarContent>
