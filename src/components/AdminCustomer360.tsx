@@ -157,15 +157,21 @@ function LicenseActions({ license, onDone }: { license: any; onDone: () => void 
           placeholder="dias"
           inputMode="numeric"
           className="h-6 w-14 px-1.5 text-[11px]"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && Number(days) > 0 && busy === null) {
+              e.preventDefault();
+              void extend(Number(days)).then(() => setDays(""));
+            }
+          }}
         />
         <Button
           size="sm"
           variant="secondary"
-          disabled={busy !== null || !Number(days)}
+          disabled={busy !== null || !(Number(days) > 0)}
           className="h-6 px-2 text-[10px]"
           onClick={() => void extend(Number(days)).then(() => setDays(""))}
         >
-          Aplicar
+          {busy === `ext-${Number(days)}` ? <Loader2 className="h-3 w-3 animate-spin" /> : "Aplicar"}
         </Button>
       </div>
       <Button

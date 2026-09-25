@@ -992,6 +992,15 @@ async function yaarsaPost(
       const latency = Date.now() - started;
       try {
         const parsed = JSON.parse(text) as YaarsaResponse & Record<string, unknown>;
+        // Painéis 4.5.5 / 4.6 devolvem confirmações como "Fail" (ex.: "subscription Updated.").
+        if (
+          !parsed.Success &&
+          parsed.Fail &&
+          /^\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|success(ful(ly)?)?)\b/i.test(String(parsed.Fail))
+        ) {
+          parsed.Success = String(parsed.Fail);
+          delete parsed.Fail;
+        }
         if (parsed.Success) {
           await persistLog({
             panel,
