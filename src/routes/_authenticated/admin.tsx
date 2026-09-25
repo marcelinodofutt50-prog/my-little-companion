@@ -288,6 +288,7 @@ function AdminPage() {
   const [userFilter, setUserFilter] = useState("");
 
   const [orders, setOrders] = useState<any[]>([]);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">(
     "todos",
