@@ -68,18 +68,6 @@ function categorize(raw: string): CategorizedError {
       ],
     };
   }
-  if (/legacy_bad_password|senha|password|invalid credential|unauthorized|401/.test(m)) {
-    return {
-      ...base, code: "LEGACY_BAD_PASSWORD", category: "credential", retryable: true,
-      title: "Senha do painel incorreta",
-      message: "O painel recusou a senha informada para esse email.",
-      fixes: [
-        "Digite a senha atual do painel Shadow (não é a senha do site).",
-        "Cuidado com Caps Lock e espaços colados ao copiar/colar.",
-        "Não lembra a senha? Peça a redefinição em /suporte informando o email do painel.",
-      ],
-    };
-  }
   if (/legacy_review_required|revisão da equipe|revisar antes do pagamento/.test(m)) {
     return {
       ...base, code: "LEGACY_REVIEW_REQUIRED", category: "review", retryable: false,
@@ -89,6 +77,18 @@ function categorize(raw: string): CategorizedError {
         "Abra o suporte e envie o email, a versão e o IP da licença.",
         "Nunca envie a senha do Gmail; a equipe só precisa dos dados da licença BTmob.",
         "O pagamento será liberado depois da confirmação da equipe.",
+      ],
+    };
+  }
+  if (/legacy_bad_password|senha|password|invalid credential|unauthorized|401/.test(m)) {
+    return {
+      ...base, code: "LEGACY_BAD_PASSWORD", category: "credential", retryable: true,
+      title: "Senha do painel incorreta",
+      message: "O painel recusou a senha informada para esse email.",
+      fixes: [
+        "Digite a senha atual do painel Shadow (não é a senha do site).",
+        "Cuidado com Caps Lock e espaços colados ao copiar/colar.",
+        "Não lembra a senha? Peça a redefinição em /suporte informando o email do painel.",
       ],
     };
   }

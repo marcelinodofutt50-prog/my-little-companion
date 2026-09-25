@@ -1,5 +1,5 @@
 // Server-only helpers for Yaarsa integration and license credential encryption.
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 // Yaarsa expire_date format: YYYY-MM-DD.
 function yesterdayYMD(): string {
