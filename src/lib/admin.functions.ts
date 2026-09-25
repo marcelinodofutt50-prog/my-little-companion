@@ -122,7 +122,13 @@ export const adminRevokeLicense = createServerFn({ method: "POST" })
 
 export const adminExtendLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((i: unknown) => z.object({ licenseId: z.string().uuid(), newExpireDate: z.string() }).parse(i))
+  .validator((i: unknown) => z.object({
+    licenseId: z.string().uuid(),
+    newExpireDate: z.string().refine((v) => {
+      const t = Date.parse(v);
+      return Number.isFinite(t) && t > Date.now() - 86_400_000 && t < Date.now() + 80 * 365 * 86_400_000;
+    }, "Data de validade inválida (precisa ser futura e dentro de 80 anos)."),
+  }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { yaarsaExtend, hasPanelServer, refreshPanelOverrides } = await import("./yaarsa.server");

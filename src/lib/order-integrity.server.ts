@@ -50,6 +50,16 @@ export async function validateCanonicalOrderAmount(
   if (meta["includeServer"] === true) expectedAmount += 450;
   if (meta["addSigner"] === true) expectedAmount += 250;
 
+  // Conta banida: o acréscimo é calculado e gravado pelo servidor no pedido.
+  const recordedMult = Number(meta["ban_multiplier"]);
+  const banMult = Number.isFinite(recordedMult) && recordedMult > 1 ? recordedMult : 1;
+  if (banMult > 1) {
+    if (order.coupon_code || Number(order.cashback_used ?? 0) > 0) {
+      return { ok: false, expectedAmount: 0, actualAmount, reason: "banned-discount", planName: plan.name };
+    }
+    expectedAmount = Math.round(expectedAmount * banMult * 100) / 100;
+  }
+
   if (order.coupon_code) {
     const { data: coupon } = await client
       .from("coupons")

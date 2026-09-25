@@ -229,6 +229,7 @@ export const createCheckout = createServerFn({ method: "POST" })
       ...(targetLicenseId ? { target_license_id: targetLicenseId } : {}),
       includeServer: !!data.includeServer,
       addSigner: !!data.addSigner,
+      ...(activeBan ? { ban_multiplier: Number(activeBan.price_multiplier) || 1 } : {}),
       price_snapshot: {
         base_brl: Number(plan.price_brl),
         coupon_code: couponRow?.code ?? null,
@@ -262,7 +263,8 @@ export const createCheckout = createServerFn({ method: "POST" })
 
     // O pagamento é finalizado dentro do próprio site (formulário embutido do
     // Stripe) na rota /pagamento/checkout — nada de sair para outro domínio.
-    const origin = data.returnOrigin.replace(/\/$/, "");
+    const { safeReturnOrigin } = await import("./safe-origin");
+    const origin = safeReturnOrigin(data.returnOrigin);
     return {
       orderId: order.id,
       checkoutUrl: `${origin}/pagamento/checkout?order=${order.id}`,

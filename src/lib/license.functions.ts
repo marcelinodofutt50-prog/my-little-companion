@@ -312,19 +312,24 @@ export const listMyLicenses = createServerFn({ method: "GET" })
            
         if (!adminError) {
           await trackSchemaFailure(error, "listMyLicenses", true, { stage: "retry_success" }, context.userId);
-          return (adminData ?? []).map((row) => ({
-            ...row,
-            password: (() => { try { return decrypt(row.yaarsa_password_enc); } catch { return "***"; } })(),
-          }));
+          return (adminData ?? []).map((row) => toClientLicense(row, decrypt));
         }
       }
       throw error;
     }
-    return (data ?? []).map((row) => ({
-      ...row,
-      password: (() => { try { return decrypt(row.yaarsa_password_enc); } catch { return "***"; } })(),
-    }));
+    return (data ?? []).map((row) => toClientLicense(row, decrypt));
   });
+
+/** Nunca envia a senha cifrada ao navegador; licença revogada/desativada não revela senha. */
+function toClientLicense(row: any, decrypt: (v: string) => string) {
+  const { yaarsa_password_enc, ...rest } = row ?? {};
+  const inactive = !!row?.revoked || !!row?.disabled_at;
+  let password = "***";
+  if (!inactive && yaarsa_password_enc) {
+    try { password = decrypt(yaarsa_password_enc); } catch { password = "***"; }
+  }
+  return { ...rest, password };
+}
 
 export const generateTrial = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
