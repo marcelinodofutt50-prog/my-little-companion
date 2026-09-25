@@ -3,6 +3,9 @@ import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket,
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
+import { QuickHelpStrip } from "@/components/QuickHelpStrip";
+import { SiteUpdatesSection } from "@/components/SiteUpdatesSection";
+import { SupportFloatingWidget } from "@/components/SupportFloatingWidget";
 import { PromotionsWidget } from "@/components/PromotionsWidget";
 
 
@@ -314,7 +317,7 @@ function DashboardPage() {
         <AppSidebar />
         <SidebarInset>
           <main className="flex-1 p-4 md:p-8 pt-6 relative client-enterprise">
-            <div className="mx-auto max-w-7xl space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="dash-stagger mx-auto max-w-7xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
               {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">
                   <TrialActivationCard onDone={() => void refetchLicenses()} />
@@ -397,23 +400,7 @@ function DashboardPage() {
               )}
 
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  { label: 'Crédito operacional', value: (profile as any)?.referral_balance ? `R$ ${(profile as any).referral_balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00', detail: 'Resgate disponível em PIX', icon: Activity, tone: 'text-primary' },
-                  { label: 'Terminais ativos', value: String(licenses?.length || 0), detail: 'Nodes em sincronização', icon: Server, tone: 'text-cyan' },
-                  { label: 'Tickets suporte', value: '0', detail: 'Sem alertas pendentes', icon: Ticket, tone: 'text-violet' },
-                  { label: 'Integridade Ops', value: '100%', detail: 'Protocolo AES-256 ativo', icon: ShieldCheck, tone: 'text-amber-500' },
-                ].map((stat) => (
-                  <Card key={stat.label} className="enterprise-surface relative overflow-hidden border-border/60 shadow-none">
-                    <CardContent className="p-5">
-                      <stat.icon className={`absolute right-3 top-3 h-14 w-14 opacity-5 ${stat.tone}`} />
-                      <div className="font-mono text-[9px] uppercase text-muted-foreground">{stat.label}</div>
-                      <div className={`mt-2 font-mono text-3xl font-black ${stat.tone}`}>{stat.value}</div>
-                      <div className="mt-2 font-mono text-[9px] uppercase text-muted-foreground">{stat.detail}</div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <QuickHelpStrip />
 
               {!licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && trialParam !== 'true' && (
                 <TrialActivationCard onDone={() => void refetchLicenses()} />
@@ -471,7 +458,7 @@ function DashboardPage() {
                           title="Sua licença vence em"
                           note={
                             expiry?.kind === 'trial'
-                              ? 'Seu teste dura 24 horas cheias a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
+                              ? 'Seu teste dura 3 horas e 30 minutos a partir da ativação. Quando o contador zerar, o login é encerrado automaticamente.'
                               : 'Contador dos dias que você comprou. Quando zerar, o login é encerrado — renove antes para não perder o acesso.'
                           }
                         />
@@ -794,10 +781,13 @@ function DashboardPage() {
                 </div>
               </div>
 
+              <SiteUpdatesSection />
+
               <AnnouncementsSection />
             </div>
           </main>
         </SidebarInset>
+        <SupportFloatingWidget />
       </div>
       
       <SecurityWelcomeDialog />
