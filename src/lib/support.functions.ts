@@ -332,6 +332,40 @@ export const markThreadReadByCustomer = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Marca como vistas as mensagens do OUTRO lado da conversa (cliente vê as do
+ * suporte; equipe vê as do cliente) e zera o contador de não lidas correspondente.
+ */
+export const markSupportMessagesSeen = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: any) => z.object({ threadId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: thread } = await supabaseAdmin
+      .from("support_threads").select("id,user_id").eq("id", data.threadId).maybeSingle();
+    if (!thread) return { ok: false };
+    const isOwner = thread.user_id === context.userId;
+    let staff = false;
+    if (!isOwner) {
+      const { data: s } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+      staff = s === true;
+      if (!staff) throw new Error("Acesso negado");
+    }
+    const now = new Date().toISOString();
+    const q = (supabaseAdmin.from("support_messages") as any)
+      .update({ read_at: now })
+      .eq("thread_id", data.threadId)
+      .is("read_at", null)
+      .eq("is_system", false);
+    // Dono vê mensagens da equipe; equipe vê mensagens do cliente.
+    const { error } = isOwner ? await q.eq("is_admin", true) : await q.eq("is_admin", false);
+    if (error) console.error("[Support] markSeen:", error.message);
+    await supabaseAdmin.from("support_threads")
+      .update(isOwner ? { unread_by_customer: 0 } : { unread_by_staff: 0 })
+      .eq("id", data.threadId);
+    return { ok: true };
+  });
+
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: any) => {

@@ -15,6 +15,13 @@
       "when": 1790328607408,
       "tag": "0001_restrict_public_security_definer_execution",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790358035128,
+      "tag": "0002_support_messages_read_at",
+      "breakpoints": true
     }
   ]
 }
