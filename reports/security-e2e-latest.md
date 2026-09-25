@@ -1,12 +1,12 @@
 # Relatório de segurança do deploy — ShadowDash Store
 
-- Data: 2026-09-25T07:58:19.812Z
-- Duração: 10.2s
+- Data: 2026-09-25T07:59:50.161Z
+- Duração: 9.3s
 - Banco verificado: dvnksmqbpbzwgwmbnjjy.supabase.co
 - Commit: local
-- Resultado: ❌ FALHOU — deploy bloqueado
+- Resultado: ✅ APROVADO
 
-**67/70 testes aprovados** (3 falhas).
+**70/70 testes aprovados** (0 falhas).
 
 ## post-login-verification.test.ts — 9/9
 
@@ -20,7 +20,7 @@
 - ✅ Pós-login — Staff Nexus libera o canal interno quando a conta tem cargo de suporte, inclusive após refresh
 - ✅ Pós-login — Staff Nexus staff não consegue publicar se passando por outro usuário
 
-## prod-e2e-security.test.ts — 58/61
+## prod-e2e-security.test.ts — 61/61
 
 - ✅ Produção — infraestrutura dos fluxos críticos aponta para o projeto de produção usado pela Vercel
 - ✅ Produção — infraestrutura dos fluxos críticos tabela licenses está publicada na API com as colunas esperadas
@@ -41,12 +41,9 @@
 - ✅ Produção — infraestrutura dos fluxos críticos bucket apk-results existe
 - ✅ Produção — infraestrutura dos fluxos críticos bucket support-media existe
 - ✅ Produção — infraestrutura dos fluxos críticos Centro de Treinamento: upload + link assinado funcionam de ponta a ponta
-- ❌ Produção — infraestrutura dos fluxos críticos índice antifraude trials_one_per_device_idx existe (1 por aparelho)
-  - `AssertionError: expected 'Could not find the function public.ch…' to be null`
-- ❌ Produção — infraestrutura dos fluxos críticos índice antifraude apk_free_trials_one_per_device_idx existe (1 por aparelho)
-  - `AssertionError: expected 'Could not find the function public.ch…' to be null`
-- ❌ Produção — infraestrutura dos fluxos críticos índice antifraude device_identities_user_device_key existe (1 por aparelho)
-  - `AssertionError: expected 'Could not find the function public.ch…' to be null`
+- ✅ Produção — infraestrutura dos fluxos críticos índice antifraude trials_one_per_device_idx existe (1 por aparelho)
+- ✅ Produção — infraestrutura dos fluxos críticos índice antifraude apk_free_trials_one_per_device_idx existe (1 por aparelho)
+- ✅ Produção — infraestrutura dos fluxos críticos índice antifraude device_identities_user_device_key existe (1 por aparelho)
 - ✅ Produção — infraestrutura dos fluxos críticos RLS está habilitado em trials
 - ✅ Produção — infraestrutura dos fluxos críticos RLS está habilitado em licenses
 - ✅ Produção — infraestrutura dos fluxos críticos RLS está habilitado em staff_messages
