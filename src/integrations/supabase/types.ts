@@ -3294,6 +3294,7 @@ export type Database = {
           id: string
           is_admin: boolean
           is_system: boolean
+          read_at: string | null
           reply_to_id: string | null
           sender_avatar_url: string | null
           sender_id: string
@@ -3309,6 +3310,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           is_system?: boolean
+          read_at?: string | null
           reply_to_id?: string | null
           sender_avatar_url?: string | null
           sender_id: string
@@ -3324,6 +3326,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           is_system?: boolean
+          read_at?: string | null
           reply_to_id?: string | null
           sender_avatar_url?: string | null
           sender_id?: string
