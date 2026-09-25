@@ -71,6 +71,40 @@ export const sendCommunityMessage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { requireNotBanned } = await import("./ban-engine.server");
+    await requireNotBanned(userId, "A Comunidade");
+
+    // Mute temporário após 2 infrações nas últimas 24h; 5 infrações = banimento.
+    const db = supabaseAdmin as any;
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: strikes } = await db
+      .from("community_strikes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", dayAgo);
+    if ((strikes ?? 0) >= 2) {
+      throw new Error("Você está silenciado na Comunidade por 24h por violar as regras (venda/contato externo).");
+    }
+
+    const { checkCommunityContent } = await import("./ban-rules");
+    const verdict = checkCommunityContent(data.content);
+    if (!verdict.ok) {
+      await db.from("community_strikes").insert({ user_id: userId, reason: verdict.reason, content: data.content.slice(0, 500) });
+      const { count: total } = await db
+        .from("community_strikes")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+      if ((total ?? 0) >= 5) {
+        await db.from("account_bans").upsert(
+          { user_id: userId, reason: "Reincidência na Comunidade (venda/contato externo)", source: "auto", price_multiplier: 1.5 },
+          { onConflict: "user_id", ignoreDuplicates: true },
+        );
+      }
+      throw new Error(
+        `Mensagem bloqueada (${verdict.reason}). É proibido vender acesso, divulgar preços, contatos externos ou links na Comunidade. Reincidência gera silêncio e banimento.`,
+      );
+    }
+
 
     // Anti-flood simples: máx. 5 mensagens por minuto
     const since = new Date(Date.now() - 60 * 1000).toISOString();

@@ -27,6 +27,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { generateTrial } from '@/lib/license.functions';
+import { TrialConsentDialog } from '@/components/TrialConsentDialog';
 import { getDeviceSignature } from '@/lib/device-signature';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BackToDashboard } from "@/components/BackToDashboard";
@@ -1060,8 +1061,9 @@ function TrialActivationButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<'idle' | 'yaarsa' | 'login' | 'trial' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [consentOpen, setConsentOpen] = useState(false);
 
-  const handleActivate = async () => {
+  const handleActivate = async (consentId: string) => {
     setIsOpen(true);
     setStep('yaarsa');
     setErrorMsg(null);
@@ -1072,10 +1074,11 @@ function TrialActivationButton() {
       setStep('login');
 
       // Step 2: Criando login e registrando trial
-      const result = await generateTrialFn({ data: getDeviceSignature() });
+      const result = await generateTrialFn({ data: { ...getDeviceSignature(), consentId } });
+      void result;
       setStep('trial');
 
-      // Step 3: Contagem de 24h
+      // Step 3: Contagem de 3h30
       await new Promise(r => setTimeout(r, 1000));
       setStep('success');
       
@@ -1091,12 +1094,13 @@ function TrialActivationButton() {
 
   return (
     <>
+      <TrialConsentDialog open={consentOpen} onOpenChange={setConsentOpen} onAccepted={(id) => void handleActivate(id)} />
       <Button 
         size="sm" 
         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-mono text-[10px] uppercase"
-        onClick={handleActivate}
+        onClick={() => setConsentOpen(true)}
       >
-        Resgatar 1 Dia Grátis
+        Resgatar Teste de 3h30
       </Button>
 
       <Dialog open={isOpen} onOpenChange={(open) => !['yaarsa', 'login', 'trial'].includes(step) && setIsOpen(open)}>
