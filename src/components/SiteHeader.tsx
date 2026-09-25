@@ -220,6 +220,7 @@ export function SiteHeader() {
           </Sheet>
         </div>
       </div>
+      <BanNotice />
     </header>
   );
 }
