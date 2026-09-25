@@ -1,9 +1,11 @@
-- [x] Bloquear criação/alteração direta de pedidos
-- [x] Validar preço canônico em checkouts e webhooks
-- [x] Corrigir bypass cripto de valor zero
-- [x] Restaurar Academia no ambiente publicado (migração aplicada no banco da Vercel)
-- [x] Executar testes, E2E e auditoria final (188 testes, typecheck e build OK)
+# Roadmap
 
-- [ ] Garantir acesso administrativo real à Área do Parceiro no ambiente publicado
-- [ ] Tornar geração e resgate de códigos de parceria visíveis na própria área
-- [ ] Validar os fluxos completos com conta administrativa e publicação
+- [ ] Ativar Telegram e Discord copiável no topo
+- [ ] Integrar pagamento por criptomoedas à aba de planos e navegação
+- [ ] Refinar painel do cliente no estilo Terminal refinado
+- [ ] Corrigir e testar Reparar acesso em 4.6, 4.5.7 e 4.5.5
+- [ ] Criar fluxo unificado e seguro para licença antiga no suporte
+- [ ] Expor análise de licenças antigas no painel administrativo
+- [ ] Melhorar visão operacional do painel administrativo
+- [ ] Auditar e reforçar rotinas automáticas e pagamentos
+- [ ] Executar testes, compilação e verificação visual responsiva
