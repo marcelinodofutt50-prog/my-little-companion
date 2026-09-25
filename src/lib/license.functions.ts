@@ -333,6 +333,7 @@ export const generateTrial = createServerFn({ method: "POST" })
       .object({
         deviceId: z.string().trim().max(120).optional(),
         attrs: z.string().trim().max(600).optional(),
+        consentId: z.string().uuid().optional(),
       })
       .partial()
       .parse(input ?? {}),
@@ -341,6 +342,27 @@ export const generateTrial = createServerFn({ method: "POST" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { internalGenerateTrial } = await import("./license.server");
+
+    // Camada 0: banimento + aceite obrigatório do aviso de uso pessoal.
+    const { requireNotBanned, linkAccountsAndEnforce } = await import("./ban-engine.server");
+    await requireNotBanned(userId, "O teste grátis");
+    const { TRIAL_CONSENT_MAX_AGE_MS, TRIAL_TERMS_VERSION } = await import("./ban-rules");
+    if (!data?.consentId) {
+      throw new Error("Leia e aceite o aviso sobre o teste grátis antes de resgatar.");
+    }
+    const { data: consent } = await (supabaseAdmin as any)
+      .from("trial_consents")
+      .select("id, created_at, terms_version")
+      .eq("id", data.consentId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (
+      !consent ||
+      consent.terms_version !== TRIAL_TERMS_VERSION ||
+      Date.now() - new Date(consent.created_at).getTime() > TRIAL_CONSENT_MAX_AGE_MS
+    ) {
+      throw new Error("O aceite do aviso expirou. Leia e aceite novamente para resgatar o teste.");
+    }
 
     // Camada 1: regras clássicas (idade da conta, compra anterior, IP).
     const { evaluateTrial, logBlock } = await import("./trial-guard.server");
@@ -362,6 +384,17 @@ export const generateTrial = createServerFn({ method: "POST" })
         reason: `FRAUD_ENGINE:${verdict.reasons.join(",")}`.slice(0, 200),
       }).catch(() => {});
       throw new Error(verdict.message ?? "Teste indisponível para esta conta.");
+    }
+
+    // Sem identificação do aparelho não sai teste (evita aba anônima/limpeza).
+    if (!verdict.deviceHash) {
+      throw new Error("Não conseguimos identificar seu aparelho. Desative bloqueadores/aba anônima e tente novamente.");
+    }
+
+    // Camada 3: grafo de contas — 4+ contas da mesma pessoa = banimento.
+    const link = await linkAccountsAndEnforce(userId, verdict);
+    if (link.banned) {
+      throw new Error("Detectamos várias contas da mesma pessoa. Sua conta foi banida por violar as regras do site.");
     }
 
     // Provisionamento com resiliência: se falhar o Yaarsa, registramos o bloqueio para auditoria
