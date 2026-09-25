@@ -1670,8 +1670,8 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
       const { resolveRoles } = await import("./roles.server");
       const { isStaff } = await resolveRoles({ supabase: context.supabase, userId: context.userId });
       if (!isStaff) {
-        console.warn(`[admin] Unauthorized schema sync attempt by user ${context.userId}`);
-        throw new Error("Acesso negado");
+        // Clientes comuns também passam por aqui no carregamento — apenas ignora.
+        return { ok: false, skipped: true };
       }
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
