@@ -78,17 +78,23 @@ export function alignServerBackendEnv(runtimeEnv?: RuntimeEnv): void {
     return;
   }
 
-  process.env["SUPABASE_URL"] = filesUrl;
-  process.env["SUPABASE_SERVICE_ROLE_KEY"] = filesKey;
-  if (filesPublishable) process.env["SUPABASE_PUBLISHABLE_KEY"] = filesPublishable;
+  setEnv("SUPABASE_URL", filesUrl);
+  setEnv("SUPABASE_SERVICE_ROLE_KEY", filesKey);
+  if (filesPublishable) setEnv("SUPABASE_PUBLISHABLE_KEY", filesPublishable);
   if (process.env["VITE_SUPABASE_PUBLISHABLE_KEY"]) {
-    process.env["SUPABASE_PUBLISHABLE_KEY"] =
-      process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+    setEnv("SUPABASE_PUBLISHABLE_KEY", process.env["VITE_SUPABASE_PUBLISHABLE_KEY"]);
   }
-  process.env["SUPABASE_PROJECT_ID"] = filesHost.split(".")[0] ?? "";
+  setEnv("SUPABASE_PROJECT_ID", filesHost.split(".")[0] ?? "");
   aligned = true;
 
   console.warn(
     `[backend-env] Servidor realinhado para o projeto do navegador (${clientHost}).`,
   );
+}
+
+// Dynamic key so build-time env replacement never turns this into an invalid assignment.
+function setEnv(key: string, value: string | undefined): void {
+  if (value === undefined) return;
+  const env = globalThis.process?.env as Record<string, string | undefined> | undefined;
+  if (env) env[key] = value;
 }
