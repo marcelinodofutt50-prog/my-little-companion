@@ -61,6 +61,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { AdminAlertsBanner } from "@/components/AdminAlertsBanner";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { AdminKpiCards } from "@/components/AdminKpiCards";
+import { AdminRevenuePanel } from "@/components/AdminRevenuePanel";
 import { type AuditLogEntry } from "@/components/AdminAuditLog";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
@@ -288,6 +289,7 @@ function AdminPage() {
   const [userFilter, setUserFilter] = useState("");
 
   const [orders, setOrders] = useState<any[]>([]);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">(
     "todos",
@@ -393,10 +395,15 @@ function AdminPage() {
     const p = ordersFn()
       .then((r) => {
         setOrders(r);
+        setOrdersError(null);
         loadedRef.current.orders = true;
         return r;
       })
-      .catch(() => {})
+      .catch((e: any) =>
+        setOrdersError(
+          e?.message ?? "Não foi possível carregar os pedidos. Tente atualizar a página.",
+        ),
+      )
       .finally(() => {
         inflightRef.current.orders = undefined;
       });
@@ -1128,12 +1135,25 @@ function AdminPage() {
                     : "—";
                 return (
                   <div className="space-y-4">
+                    {ordersError && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                        <span>Não foi possível carregar os pedidos: {ordersError}</span>
+                        <button
+                          onClick={() => loadOrders()}
+                          className="rounded border border-destructive/40 px-2 py-1 text-xs hover:bg-destructive/10"
+                        >
+                          Tentar de novo
+                        </button>
+                      </div>
+                    )}
                     <AdminKpiCards
                       revenueToday={formatBrl(revenueToday)}
                       pendingOrders={pendingCount}
                       openTickets={openTicketsCount}
                       conversionRate={conversionRate}
                     />
+
+                    {isAdminUser && <AdminRevenuePanel />}
 
                     {isAdminUser && <AdminDailyReport />}
                     {isAdminUser && (

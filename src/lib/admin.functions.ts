@@ -2124,3 +2124,92 @@ export const adminHealUserLogins = createServerFn({ method: "POST" })
       message: `${okCount}/${healed.length} licença(s) verificadas e corrigidas.`,
     };
   });
+
+// ============ Caixa: receita real, saldo e status dos pedidos ============
+export const adminRevenueSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { alignServerBackendEnv } = await import("./backend-env.server");
+    alignServerBackendEnv();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Busca paginada para não perder pedidos antigos quando a base cresce.
+    const orders: Array<{ amount: number | null; status: string | null; created_at: string; paid_at: string | null }> = [];
+    const page = 1000;
+    for (let from = 0; from < 20000; from += page) {
+      const { data, error } = await supabaseAdmin
+        .from("orders")
+        .select("amount,status,created_at,paid_at")
+        .order("created_at", { ascending: false })
+        .range(from, from + page - 1);
+      if (error) throw new Error(error.message);
+      const rows = (data ?? []) as any[];
+      orders.push(...rows);
+      if (rows.length < page) break;
+    }
+
+    const [{ data: refundRows }, { data: payoutRows }] = await Promise.all([
+      (supabaseAdmin.from("refund_requests") as any).select("amount,status,created_at"),
+      (supabaseAdmin.from("payout_requests") as any).select("amount,status,created_at"),
+    ]);
+
+    const now = new Date();
+    const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const at = (o: { paid_at: string | null; created_at: string }) => new Date(o.paid_at ?? o.created_at);
+
+    const paid = orders.filter((o) => o.status === "paid");
+    const sum = (rows: Array<{ amount: number | null }>) =>
+      rows.reduce((s, r) => s + Number(r.amount ?? 0), 0);
+
+    const grossTotal = sum(paid);
+    const grossMonth = sum(paid.filter((o) => at(o) >= startOfMonth));
+    const grossToday = sum(paid.filter((o) => at(o) >= startOfDay));
+
+    const refunds = ((refundRows ?? []) as any[]).filter((r) =>
+      ["approved", "refunded", "paid"].includes(String(r.status)),
+    );
+    const refundsTotal = sum(refunds);
+    const refundsPending = ((refundRows ?? []) as any[]).filter((r) => String(r.status) === "requested").length;
+
+    const payouts = ((payoutRows ?? []) as any[]).filter((r) =>
+      ["paid", "confirmed"].includes(String(r.status)),
+    );
+    const payoutsTotal = sum(payouts);
+    const payoutsPending = ((payoutRows ?? []) as any[]).filter((r) =>
+      ["pending", "requested", "approved"].includes(String(r.status)),
+    ).length;
+
+    const bucket = (status: string | null): "paid" | "pending" | "failed" | "cancelled" => {
+      const s = String(status ?? "");
+      if (s === "paid") return "paid";
+      if (s === "failed") return "failed";
+      if (s === "cancelled" || s === "canceled" || s === "refunded") return "cancelled";
+      return "pending";
+    };
+    const byStatus = { paid: 0, pending: 0, failed: 0, cancelled: 0 };
+    const amountByStatus = { paid: 0, pending: 0, failed: 0, cancelled: 0 };
+    for (const o of orders) {
+      const b = bucket(o.status);
+      byStatus[b] += 1;
+      amountByStatus[b] += Number(o.amount ?? 0);
+    }
+
+    const lastPaid = paid[0] ? at(paid[0]).toISOString() : null;
+    const backendHost = (() => {
+      try { return new URL(process.env["SUPABASE_URL"] ?? "").host; } catch { return "desconhecido"; }
+    })();
+
+    return {
+      grossTotal, grossMonth, grossToday,
+      refundsTotal, refundsPending,
+      payoutsTotal, payoutsPending,
+      balance: grossTotal - refundsTotal - payoutsTotal,
+      ordersTotal: orders.length,
+      byStatus, amountByStatus,
+      lastPaidAt: lastPaid,
+      backendHost,
+      generatedAt: new Date().toISOString(),
+    };
+  });
