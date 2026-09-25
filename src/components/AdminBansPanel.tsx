@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Ban, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminBanDetail } from "@/components/AdminBanDetail";
 import { adminBanUser, adminListBans, adminSetBanMultiplier, adminUnbanUser } from "@/lib/ban.functions";
 
 export function AdminBansPanel() {
@@ -17,6 +18,7 @@ export function AdminBansPanel() {
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin-bans"] });
   const run = async (fn: () => Promise<unknown>, ok: string) => {
@@ -38,7 +40,7 @@ export function AdminBansPanel() {
     <section className="enterprise-surface overflow-hidden">
       <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
         <div>
-          <h2 className="font-mono text-sm font-bold uppercase">Banimentos</h2>
+          <h2 className="font-mono text-sm font-bold uppercase">Clientes Bloqueados</h2>
           <p className="mt-1 text-xs text-muted-foreground">{active.length} contas banidas ativas · 4+ contas ligadas = banimento automático</p>
         </div>
         <Ban className="h-5 w-5 text-destructive" />
@@ -71,8 +73,13 @@ export function AdminBansPanel() {
             </thead>
             <tbody>
               {(data ?? []).map((b: any) => (
+                <Fragment key={b.id}>
                 <tr key={b.id} className={`border-t border-border/40 ${b.revoked_at ? "opacity-50" : ""}`}>
-                  <td className="py-2 pr-3 font-mono">{b.email ?? b.user_id}</td>
+                  <td className="py-2 pr-3 font-mono">
+                    <button type="button" className="underline-offset-2 hover:underline" onClick={() => setOpen(open === b.id ? null : b.id)}>
+                      {open === b.id ? "▾" : "▸"} {b.email ?? b.user_id}
+                    </button>
+                  </td>
                   <td className="py-2 pr-3">
                     {b.reason}
                     {Array.isArray(b.evidence?.linked_accounts) && (
@@ -110,6 +117,12 @@ export function AdminBansPanel() {
                     )}
                   </td>
                 </tr>
+                {open === b.id && (
+                  <tr key={`${b.id}-d`} className="bg-muted/20">
+                    <td colSpan={6} className="p-3"><AdminBanDetail banId={b.id} /></td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
               {!isLoading && (data ?? []).length === 0 && (
                 <tr><td colSpan={6} className="py-4 text-center text-muted-foreground">Nenhum banimento.</td></tr>
