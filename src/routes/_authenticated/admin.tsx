@@ -394,10 +394,15 @@ function AdminPage() {
     const p = ordersFn()
       .then((r) => {
         setOrders(r);
+        setOrdersError(null);
         loadedRef.current.orders = true;
         return r;
       })
-      .catch(() => {})
+      .catch((e: any) =>
+        setOrdersError(
+          e?.message ?? "Não foi possível carregar os pedidos. Tente atualizar a página.",
+        ),
+      )
       .finally(() => {
         inflightRef.current.orders = undefined;
       });
