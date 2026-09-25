@@ -99,6 +99,9 @@ async function runHeal(
 ): Promise<HealResult> {
   const reason = opts?.reason ?? "self_repair";
   const steps: string[] = [];
+  if (lic.panel && !["v455", "v457", "v46"].includes(lic.panel)) {
+    steps.push(`painel-desconhecido:${lic.panel}`);
+  }
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const {

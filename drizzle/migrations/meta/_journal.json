@@ -8,6 +8,13 @@
       "when": 1790324263207,
       "tag": "0000_account_bans_antifraud",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790328607408,
+      "tag": "0001_restrict_public_security_definer_execution",
+      "breakpoints": true
     }
   ]
 }

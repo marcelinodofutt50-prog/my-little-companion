@@ -512,7 +512,7 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
     const email = data.email.toLowerCase();
 
     // 1) A licença precisa realmente existir no painel escolhido.
-    const { yaarsaLookupEmail, yaarsaExtend, encrypt } = await import("./yaarsa.server");
+    const { yaarsaLookupEmail, yaarsaVerifyCredentials, yaarsaExtend, encrypt } = await import("./yaarsa.server");
     let lookup: Awaited<ReturnType<typeof yaarsaLookupEmail>>;
     try {
       lookup = await yaarsaLookupEmail(email, data.panel);
@@ -523,6 +523,13 @@ export const claimLegacyLicense = createServerFn({ method: "POST" })
       throw new Error(
         `LEGACY_EMAIL_NOT_IN_PANEL: o email ${email} não existe no painel ${data.panel === "v46" ? "Shadow 4.6" : data.panel === "v455" ? "Shadow 4.5.5" : "Shadow 4.5.7"}`,
       );
+    }
+    const credentialCheck = await yaarsaVerifyCredentials(email, data.password, data.panel);
+    if (!credentialCheck.available) {
+      throw new Error("LEGACY_REVIEW_REQUIRED: este painel não permite confirmar a senha automaticamente; envie a solicitação para análise da equipe no suporte");
+    }
+    if (!credentialCheck.verified) {
+      throw new Error("LEGACY_BAD_PASSWORD: a senha informada não confere com o login antigo");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -987,6 +994,7 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
       steps: result.steps,
       credentials: result.credentials,
       message: result.message,
+      warning: result.warning,
     };
   });
 

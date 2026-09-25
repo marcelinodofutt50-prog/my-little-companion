@@ -16,7 +16,7 @@ const panelMeta: Record<Panel, { label: string; version: string; tone: string; i
   v455: { label: "Shadow 4.5.5", version: "Semanal · legacy", tone: "text-cyan", ip: "191.96.78.81" },
 };
 
-type ErrCategory = "network" | "credential" | "not_found" | "duplicate" | "server" | "database" | "auth" | "generic";
+type ErrCategory = "network" | "credential" | "review" | "not_found" | "duplicate" | "server" | "database" | "auth" | "generic";
 type CategorizedError = {
   title: string;
   message: string;
@@ -30,6 +30,7 @@ type CategorizedError = {
 const CATEGORY_LABEL: Record<ErrCategory, string> = {
   network: "Conexão",
   credential: "Senha do painel",
+  review: "Revisão da equipe",
   not_found: "Email não encontrado",
   duplicate: "Já vinculado",
   server: "Painel indisponível",
@@ -64,6 +65,18 @@ function categorize(raw: string): CategorizedError {
         "Confira se digitou o email exatamente como no painel (sem espaços e sem maiúsculas).",
         "Tente o outro painel: quem comprou antes costuma estar na 4.5.7, e as compras novas na 4.6.",
         "Nunca comprou antes? Escolha um plano novo em /planos.",
+      ],
+    };
+  }
+  if (/legacy_review_required|revisão da equipe|revisar antes do pagamento/.test(m)) {
+    return {
+      ...base, code: "LEGACY_REVIEW_REQUIRED", category: "review", retryable: false,
+      title: "Precisamos confirmar este login com você",
+      message: "Este painel antigo não permite validar a senha com segurança automaticamente.",
+      fixes: [
+        "Abra o suporte e envie o email, a versão e o IP da licença.",
+        "Nunca envie a senha do Gmail; a equipe só precisa dos dados da licença BTmob.",
+        "O pagamento será liberado depois da confirmação da equipe.",
       ],
     };
   }

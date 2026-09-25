@@ -1,5 +1,5 @@
 // Server-only helpers for Yaarsa integration and license credential encryption.
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 // Yaarsa expire_date format: YYYY-MM-DD.
 function yesterdayYMD(): string {
@@ -589,6 +589,25 @@ export async function yaarsaReadAccount(
   }
   readUnsupported[panel] = true;
   return { known: false, expireDate: null, password: null, raw: null };
+}
+
+/**
+ * Confirma credenciais legadas sem alterar a conta remota.
+ * Alguns painéis antigos não oferecem leitura da senha; nesses casos o fluxo
+ * deve parar e ser encaminhado à equipe, nunca presumir que a senha é válida.
+ */
+export async function yaarsaVerifyCredentials(
+  email: string,
+  password: string,
+  panel: YaarsaPanel = "v457",
+): Promise<{ verified: boolean; available: boolean }> {
+  const account = await yaarsaReadAccount(email, panel);
+  if (!account.known || account.password === null) {
+    return { verified: false, available: false };
+  }
+  const expected = createHash("sha256").update(account.password).digest();
+  const supplied = createHash("sha256").update(password).digest();
+  return { verified: timingSafeEqual(expected, supplied), available: true };
 }
 
 /**

@@ -244,7 +244,7 @@ async function fulfillOrderInner(orderId: string) {
     const { yaarsaExtend } = await import("@/lib/yaarsa.server");
     const ymd = nextDay20.toISOString().slice(0, 10);
     const legacyClaim = (order as any).metadata?.legacy_claim as
-      | { email: string; password_enc: string; ip: string; panel: "v457" | "v46" }
+      | { email: string; password_enc: string; ip: string; panel: "v455" | "v457" | "v46" }
       | undefined;
 
     // ---- Legacy-claim renewal: provision the license row for the old client on first payment ----
@@ -255,8 +255,8 @@ async function fulfillOrderInner(orderId: string) {
 
       let licenseId = existing?.id as string | undefined;
       if (!licenseId) {
-        const versionTier = legacyClaim.panel === "v46" ? "lifetime_46" : "monthly_457";
-        const planSlug = legacyClaim.panel === "v46" ? "login-lifetime" : "login-30d";
+        const versionTier = legacyClaim.panel === "v46" ? "lifetime_46" : legacyClaim.panel === "v455" ? "weekly" : "monthly_457";
+        const planSlug = legacyClaim.panel === "v46" ? "login-lifetime" : legacyClaim.panel === "v455" ? "login-7d" : "login-30d";
         const usernameGuess = emailLower.split("@")[0].slice(0, 16);
         const { data: newLic } = await supabaseAdmin.from("licenses").insert({
           user_id: order.user_id,
