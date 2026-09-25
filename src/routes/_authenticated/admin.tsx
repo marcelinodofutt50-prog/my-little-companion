@@ -268,6 +268,8 @@ const TAB_DESC: Record<Tab, string> = {
   panel_integrity: "Conferência painel x site: encontra logins que sumiram do painel Yaarsa e recria automaticamente com a mesma senha.",
   license_audit: "Histórico detalhado: quando cada licença e login foi alterado (senha, sincronização com o painel ou cupom), por quem e por quê.",
   feedback: "Sugestões e críticas enviadas pelos clientes (inclusive anônimas). Responda, marque em análise ou resolva.",
+  moderation: "Mensagens barradas pelo filtro da Comunidade. Libere ou apague cada uma.",
+  bans: "Clientes banidos por várias contas ou reincidência: motivo, contas ligadas e histórico de infrações.",
 
 };
 
