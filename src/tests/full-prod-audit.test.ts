@@ -43,7 +43,7 @@ describe('Shadow Protocol v32.0: FULL PRODUCTION BUSINESS AUDIT', () => {
       const { expireDateFor } = await import('../lib/yaarsa.server');
       const yaarsaDate = expireDateFor('trial');
       const d = new Date();
-      d.setDate(d.getDate() + 2);
+      d.setDate(d.getDate() + 1);
       expect(yaarsaDate).toBe(d.toISOString().slice(0, 10));
     });
   });

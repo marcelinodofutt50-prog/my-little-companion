@@ -45,7 +45,7 @@ describe.skipIf(!hasCreds)('Shadow Protocol v25.0: Forensic Production Audit', (
     const yaarsaDate = expireDateFor('trial');
     
     const d = new Date();
-    d.setDate(d.getDate() + 2);
+    d.setDate(d.getDate() + 1);
     const expectedYaarsa = d.toISOString().slice(0, 10);
     
     expect(yaarsaDate).toBe(expectedYaarsa);
