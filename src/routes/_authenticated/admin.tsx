@@ -686,22 +686,13 @@ function AdminPage() {
     items: { id: Tab; label: string; icon: any; hint?: string }[];
   }[] = [
     {
-      title: "Operações",
+      title: "Atendimento",
       accent: "neon",
       items: [
         { id: "overview", label: "Visão Geral", icon: BarChart3, hint: "resumo executivo" },
-        { id: "ia", label: "Shadow Ops IA", icon: Sparkles, hint: "diagnóstico automático" },
         { id: "chat", label: "Chat ao Vivo", icon: MessageSquare, hint: "responder clientes" },
-        { id: "announcements", label: "Comunicados", icon: Megaphone, hint: "avisos corporativos" },
         { id: "apk", label: "Fila Play Protect", icon: Download, hint: "APKs pendentes" },
-        { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
-        { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
-        { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
-        { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
-        { id: "applications", label: "Candidaturas Staff", icon: Briefcase, hint: "pedidos para entrar na equipe" },
         { id: "feedback", label: "Sugestões & Críticas", icon: MessageSquare, hint: "feedback dos clientes" },
-        { id: "moderation", label: "Moderação", icon: ShieldAlert, hint: "mensagens bloqueadas" },
-        { id: "bans", label: "Clientes Bloqueados", icon: ShieldAlert, hint: "banimentos & contas ligadas" },
       ],
     },
     {
@@ -713,50 +704,55 @@ function AdminPage() {
         { id: "external", label: "Pagam Por Fora", icon: Wallet, hint: "extensão manual" },
         { id: "users", label: "Usuários", icon: Users },
         { id: "licenses", label: "Licenças", icon: KeyRound },
+        { id: "trial_monitor", label: "Monitor de Trials", icon: Activity, hint: "sucessos & bloqueios" },
         { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "licenças, servidor e parceiros" },
         { id: "license_audit", label: "Histórico de Alterações", icon: ScrollText, hint: "senha, sync e cupons" },
         { id: "panel_integrity", label: "Integridade dos Logins", icon: ShieldCheck, hint: "logins sumidos do painel" },
       ],
-
     },
     {
-      title: "Financeiro",
+      title: "Vendas & Conteúdo",
       accent: "violet",
       items: [
         { id: "orders", label: "Pedidos", icon: DollarSign },
-        { id: "market", label: "Mercado", icon: Store, hint: "produtos & catálogo" },
-        { id: "referrals", label: "Indicações", icon: Gift, hint: "cashback / pix" },
         { id: "refunds", label: "Reembolsos", icon: RotateCcw, hint: "prazo 2 dias" },
         { id: "partners", label: "Parceiros & VPS", icon: Server, hint: "acessos enviados" },
+        { id: "referrals", label: "Indicações", icon: Gift, hint: "cashback / pix" },
+        { id: "market", label: "Mercado", icon: Store, hint: "produtos & catálogo" },
+        { id: "announcements", label: "Comunicados", icon: Megaphone, hint: "avisos corporativos" },
+        { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
+        { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
+        { id: "vip", label: "VIP & Missões", icon: Activity, hint: "tiers, missões e bypass" },
+      ],
+    },
+    {
+      title: "Equipe & Segurança",
+      accent: "violet",
+      items: [
+        { id: "staff", label: "Equipe", icon: ShieldCheck },
+        { id: "applications", label: "Candidaturas Staff", icon: Briefcase, hint: "pedidos para entrar na equipe" },
+        { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
+        { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
+        { id: "moderation", label: "Moderação", icon: ShieldAlert, hint: "mensagens bloqueadas" },
+        { id: "bans", label: "Clientes Bloqueados", icon: Ban, hint: "banimentos & contas ligadas" },
+        { id: "quotas", label: "Cotas da Equipe", icon: Settings2, hint: "limites de emissão" },
       ],
     },
     {
       title: "Sistema",
       accent: "cyan",
       items: [
-        { id: "staff", label: "Equipe", icon: ShieldCheck },
         { id: "health", label: "Monitoramento", icon: Activity, hint: "erros & regressões" },
         { id: "servers", label: "Servidores VPS", icon: Server, hint: "trocar VPS 4.5.7 / 4.6" },
-        { id: "logs", label: "Logs do servidor", icon: ScrollText },
-        { id: "audit", label: "Auditoria", icon: ShieldAlert },
         {
           id: "selftest",
           label: "Autoteste de Compra",
           icon: Activity,
           hint: "fluxo PIX ponta a ponta",
         },
-        {
-          id: "vip",
-          label: "VIP & Missões",
-          icon: Activity,
-          hint: "tiers, missões e bypass",
-        },
-        {
-          id: "trial_monitor",
-          label: "Monitor de Trials",
-          icon: Activity,
-          hint: "sucessos & bloqueios",
-        },
+        { id: "ia", label: "Shadow Ops IA", icon: Sparkles, hint: "diagnóstico automático" },
+        { id: "logs", label: "Logs do servidor", icon: ScrollText },
+        { id: "audit", label: "Auditoria", icon: ShieldAlert },
       ],
     },
   ];
@@ -790,12 +786,12 @@ function AdminPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="enterprise-surface relative overflow-hidden p-5 sm:p-6"
+          className="enterprise-surface relative overflow-hidden p-4 sm:p-5"
         >
           {/* Subtle background glow */}
           <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-[80px]" />
           
-          <div className="relative flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">
                 <Building2 className="h-3.5 w-3.5 text-primary" /> Mirror Executive Console
@@ -806,11 +802,11 @@ function AdminPage() {
                   {ROLE_LABEL[role]}
                 </span>
               </div>
-              <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                Shadow Ops Command
+              <h1 className="mt-2 truncate font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                Painel administrativo
               </h1>
               <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
-                Strategic Assets & Infrastructure Management • v4.6.2-PRO
+                Atendimento, licenças, vendas e operação
               </p>
 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
@@ -834,11 +830,23 @@ function AdminPage() {
                 )}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 sm:col-auto sm:shrink-0">
               <AdminGlobalSearch
                 onSelectUser={(id) => setCustomer360(id)}
                 onOpenThread={() => setTab("chat")}
               />
+              <Button size="sm" onClick={() => setTab("chat")} className="gap-2">
+                <MessageSquare className="h-3.5 w-3.5" />
+                Atendimento
+                {navBadges.chat > 0 && (
+                  <span className="rounded-full bg-primary-foreground/15 px-1.5 font-mono text-[9px]">
+                    {navBadges.chat > 99 ? "99+" : navBadges.chat}
+                  </span>
+                )}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setTab("issue")} className="gap-2">
+                <UserPlus className="h-3.5 w-3.5" /> Emitir licença
+              </Button>
               <AdminTeamGuide onOpenSection={(id) => setTab(id as Tab)} />
               <Link to="/dashboard">
                 <Button
@@ -933,12 +941,13 @@ function AdminPage() {
               {filteredGroups.map((g, gi) => {
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
-                  <div
+                  <details
                     key={g.title}
+                    open={navTerm.length > 0 || groupPending > 0 || g.items.some((item) => item.id === tab)}
                     className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}
                   >
-                    <div
-                      className="flex items-center gap-2 px-2 pb-1.5 text-[10px] font-semibold uppercase text-muted-foreground"
+                    <summary
+                      className="flex cursor-pointer list-none items-center gap-2 px-2 pb-1.5 text-[10px] font-semibold uppercase text-muted-foreground marker:hidden"
                     >
                       <span className="truncate opacity-80">{g.title}</span>
                       {groupPending > 0 && (
@@ -946,7 +955,8 @@ function AdminPage() {
                           {groupPending > 99 ? "99+" : groupPending}
                         </span>
                       )}
-                    </div>
+                      <span className="ml-auto text-[9px] text-muted-foreground/50">abrir</span>
+                    </summary>
                     <div className="space-y-px">
                       {g.items.map((t) => {
                         const active = tab === t.id;
@@ -1009,7 +1019,7 @@ function AdminPage() {
                         );
                       })}
                     </div>
-                  </div>
+                  </details>
                 );
               })}
               <div className="mt-3 border-t border-border/40 pt-2">
@@ -1044,29 +1054,6 @@ function AdminPage() {
             {/* Section title bar */}
             {activeMeta && (
               <div className="sticky top-0 z-20 mb-4 -mx-3 border-b border-border bg-background/95 px-3 pb-3 pt-3 backdrop-blur sm:-mx-1 sm:px-1">
-                {/* Seletor de seções (mobile/tablet) */}
-                <div className="mb-2.5 lg:hidden">
-                  <label className="sr-only" htmlFor="admin-section-select">
-                    Selecionar seção do painel
-                  </label>
-                  <select
-                    id="admin-section-select"
-                    value={tab}
-                    onChange={(e) => setTab(e.target.value as typeof tab)}
-                    className="h-10 w-full max-w-full rounded-md border border-input bg-background px-3 text-xs font-medium outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-                  >
-                    {visibleGroups.map((g) => (
-                      <optgroup key={g.title} label={g.title}>
-                        {g.items.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.label}
-                            {(navBadges[t.id] ?? 0) > 0 ? ` (${navBadges[t.id]})` : ""}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </div>
                 <div className="flex flex-wrap items-center gap-2">
 
                   <span className="text-[10px] font-semibold uppercase text-muted-foreground">
@@ -1155,19 +1142,16 @@ function AdminPage() {
                         </button>
                       </div>
                     )}
+                    {isAdminUser && (
+                      <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />
+                    )}
+
                     <AdminKpiCards
                       revenueToday={formatBrl(revenueToday)}
                       pendingOrders={pendingCount}
                       openTickets={openTicketsCount}
                       conversionRate={conversionRate}
                     />
-
-                    {isAdminUser && <AdminRevenuePanel />}
-
-                    {isAdminUser && <AdminDailyReport />}
-                    {isAdminUser && (
-                      <AdminActiveProblems onNavigate={(tab) => setTab(tab as Tab)} />
-                    )}
 
                     {/* Mini strip: HOJE */}
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -1184,18 +1168,6 @@ function AdminPage() {
                       />
                       <MiniStat label="Trials ativos" value={String(trialsActive)} accent="cyan" />
                     </div>
-
-                    {/* Métricas 30 dias (financeiro: só admin) */}
-                    {isAdminUser && <AdminMetricsPanel />}
-
-                    {/* Saúde de envio de e-mails (rate limits / falhas) */}
-                    {isAdminUser && <AdminEmailMetrics />}
-
-                    {/* Antifraude: cadastros por conexão (hash de IP) */}
-                    {isAdminUser && <AdminAntifraudPanel />}
-
-                    {/* Tendência de receita */}
-                    {isAdminUser && <RevenueSparkline orders={orders} />}
 
                     <div className="grid gap-4 md:grid-cols-3">
                       {/* Pedidos recentes */}
@@ -1427,6 +1399,23 @@ function AdminPage() {
                         )}
                       </div>
                     </div>
+
+                    {isAdminUser && (
+                      <div className="space-y-4 border-t border-border/40 pt-4">
+                        <div>
+                          <h3 className="font-display text-base font-semibold">Relatórios e análise</h3>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Receita, desempenho, e-mails e sinais de segurança.
+                          </p>
+                        </div>
+                        <AdminRevenuePanel />
+                        <AdminDailyReport />
+                        <AdminMetricsPanel />
+                        <AdminEmailMetrics />
+                        <AdminAntifraudPanel />
+                        <RevenueSparkline orders={orders} />
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -2375,7 +2364,7 @@ function AdminPage() {
 
       <AdminMobileNav
         groups={visibleGroups}
-        primary={["overview", "chat", "orders", "licenses"]}
+        primary={["overview", "chat", "apk", "licenses"]}
         tab={tab}
         onChange={(id) => setTab(id as Tab)}
         badges={navBadges}
