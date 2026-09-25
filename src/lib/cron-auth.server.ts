@@ -15,16 +15,21 @@ function providedToken(request: Request): string {
 
 /** true quando a requisição está autorizada a rodar o cron. */
 export function isAuthorizedCron(request: Request): boolean {
-  const expected = (process.env.CRON_SECRET ?? process.env.CRON_TRIGGER_TOKEN ?? "").trim();
-  if (!expected || expected.length < 16) return false;
   const provided = providedToken(request);
-  if (provided.length !== expected.length) return false;
-  // Comparação em tempo constante: evita vazar o segredo por timing.
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) {
-    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+  // Aceita qualquer um dos dois segredos (antes, com CRON_SECRET definido,
+  // o CRON_TRIGGER_TOKEN era ignorado e o pg_cron recebia 401 em silêncio).
+  const candidates = [process.env.CRON_SECRET, process.env.CRON_TRIGGER_TOKEN]
+    .map((v) => (v ?? "").trim())
+    .filter((v) => v.length >= 16);
+  let ok = false;
+  for (const expected of candidates) {
+    if (provided.length !== expected.length) continue;
+    // Comparação em tempo constante: evita vazar o segredo por timing.
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+    if (diff === 0) ok = true;
   }
-  return diff === 0;
+  return ok;
 }
 
 /** Devolve uma Response 401 quando não autorizado, ou null quando pode seguir. */

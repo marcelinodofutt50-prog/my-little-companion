@@ -48,6 +48,11 @@ function licenseQuery() {
       rows = rows.filter((r) => r[col] === val);
       return api;
     },
+    ilike: (col: string, val: string) => {
+      rows = rows.filter((r) => String(r[col] ?? "").toLowerCase() === val.toLowerCase());
+      return api;
+    },
+    in: () => api,
     limit: () => Promise.resolve({ data: rows, error: null }),
     then: (res: any) => Promise.resolve({ data: rows, error: null }).then(res),
   };
@@ -58,6 +63,7 @@ const supabaseAdmin: any = {
   from(table: string) {
     if (table === "integration_logs") {
       return {
+        select: () => ({ eq: () => ({ in: () => ({ gte: () => ({ limit: async () => ({ data: [], error: null }) }) }) }) }),
         insert: (payload: any) => {
           db.logs.push(...(Array.isArray(payload) ? payload : [payload]));
           return Promise.resolve({ error: null });
@@ -68,10 +74,20 @@ const supabaseAdmin: any = {
       ...licenseQuery(),
       update: (patch: Row) => ({
         eq: (_c: string, id: string) => {
-          db.updates.push({ id, patch });
           const row = db.licenses.find((l) => l.id === id);
-          if (row) Object.assign(row, patch);
-          return Promise.resolve({ error: null });
+          let match = !!row;
+          const apply = () => {
+            if (match && row) { db.updates.push({ id, patch }); Object.assign(row, patch); }
+            return { data: match ? [{ id }] : [], error: null };
+          };
+          const chain: any = {
+            is: (c: string, v: any) => { if (row && (row[c] ?? null) !== v) match = false; return chain; },
+            eq: (c: string, v: any) => { if (row && row[c] !== v) match = false; return chain; },
+            lt: (c: string, v: any) => { if (row && !(row[c] && row[c] < v)) match = false; return chain; },
+            select: async () => apply(),
+            then: (res: any) => Promise.resolve(apply()).then(res),
+          };
+          return chain;
         },
       }),
     };
@@ -81,6 +97,7 @@ const supabaseAdmin: any = {
 
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
 vi.mock("@/lib/cron-auth.server", () => ({ cronUnauthorized: () => null }));
+vi.mock("@/lib/audit-trail.server", () => ({ acquireOpLock: async () => true, releaseOpLock: async () => {} }));
 const yaarsaMock = {
   ALL_PANELS: ["v455", "v457", "v46"],
   hasPanelServer: () => true,
@@ -135,6 +152,17 @@ describe("cron de vencimento (ponta a ponta)", () => {
     expect(db.licenses[0]!.revoked).toBe(true);
     expect(db.licenses[0]!.disabled_at).toBeTruthy();
     expect(db.logs.some((l) => l.outcome === "removed")).toBe(true);
+  });
+
+  it("não apaga o login quando outra licença ativa usa o mesmo e-mail", async () => {
+    db.licenses = [
+      { id: "old", user_id: "u1", plan_slug: "login-30d", yaarsa_email: "same@a.com", panel: "v457", disabled_at: null, revoked: false, expires_at: past },
+      { id: "new", user_id: "u1", plan_slug: "login-30d", yaarsa_email: "same@a.com", panel: "v457", disabled_at: null, revoked: false, expires_at: future },
+    ];
+    await expirePost({ request: req() });
+    expect(panel.removed).toHaveLength(0);
+    expect(db.licenses.find((l) => l.id === "old")!.revoked).toBe(true);
+    expect(db.logs.some((l) => l.outcome === "skipped_shared_login")).toBe(true);
   });
 
   it("não toca em licença vitalícia nem em licença ainda válida", async () => {

@@ -20,7 +20,16 @@ export const Route = createFileRoute("/api/public/hooks/expire-licenses")({
         if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { removeAccountAnyPanel } = await import("@/lib/license-cron.server");
+        const { removeAccountAnyPanel, hasOtherActiveLicense, alreadyCleanedIds } = await import("@/lib/license-cron.server");
+        const { acquireOpLock, releaseOpLock } = await import("@/lib/audit-trail.server");
+
+        // Execução única: duas rodadas simultâneas (Vercel + pg_cron) removiam
+        // a mesma conta duas vezes e duplicavam os registros.
+        const LOCK = "cron:expire-licenses";
+        if (!(await acquireOpLock(LOCK, 300, "expire-licenses"))) {
+          return Response.json({ ok: true, skipped: "already_running" });
+        }
+        try {
 
         const nowIso = new Date().toISOString();
         const { data: due, error } = await supabaseAdmin
@@ -56,25 +65,44 @@ export const Route = createFileRoute("/api/public/hooks/expire-licenses")({
           .lt("expires_at", nowIso)
           .limit(50);
 
-        const pendingRows = ((stuck ?? []) as typeof rows).filter(
+        const stuckRows = ((stuck ?? []) as typeof rows).filter(
           (s) => !rows.some((r) => r.id === s.id),
         );
+        // Só reprocessa o que ainda não foi limpo (antes repetia a cada 15 min
+        // por 7 dias, mesmo depois de a conta já ter sido removida).
+        const cleaned = await alreadyCleanedIds(supabaseAdmin, stuckRows.map((r) => r.id), retryCutoff);
+        const pendingRows = stuckRows.filter((r) => !cleaned.has(r.id));
 
         let removed = 0;
         let pendingPanel = 0;
         const logs: any[] = [];
 
         const processRemoval = async (l: (typeof rows)[number], retry: boolean) => {
-          const res = await removeAccountAnyPanel(l.yaarsa_email, l.panel);
-          const ok = res.status === "done" || res.status === "missing";
-
           if (!retry) {
-            // A licença venceu: fecha no banco mesmo que o painel esteja fora do ar.
-            await supabaseAdmin.from("licenses").update({
+            // Fecha no banco ANTES de tocar no painel, e só se a licença ainda
+            // estiver vencida: se o cliente renovou entre a leitura e agora,
+            // o update não casa e a conta dele fica intacta.
+            const { data: claimed } = await supabaseAdmin.from("licenses").update({
               disabled_at: nowIso,
               revoked: true,
-            }).eq("id", l.id);
+            }).eq("id", l.id).is("disabled_at", null).eq("revoked", false)
+              .lt("expires_at", nowIso).select("id");
+            if (!claimed?.length) return;
           }
+
+          // Login compartilhado com outra licença ativa: não remove do painel.
+          if (await hasOtherActiveLicense(supabaseAdmin, l.yaarsa_email, l.id)) {
+            logs.push({
+              source: "auto-expire",
+              action: retry ? "expire_license_retry" : "expire_license",
+              outcome: "skipped_shared_login",
+              context: { license_id: l.id, user_id: l.user_id, yaarsa_email: l.yaarsa_email } as any,
+            });
+            return;
+          }
+
+          const res = await removeAccountAnyPanel(l.yaarsa_email, l.panel);
+          const ok = res.status === "done" || res.status === "missing";
 
           if (ok) removed++;
           else pendingPanel++;
@@ -115,6 +143,9 @@ export const Route = createFileRoute("/api/public/hooks/expire-licenses")({
           removed,
           pending_panel: pendingPanel,
         });
+        } finally {
+          await releaseOpLock(LOCK);
+        }
 
       },
       GET: async () => new Response("ok", { status: 200 }),

@@ -18,7 +18,13 @@ export const Route = createFileRoute("/api/public/hooks/daily-license-check")({
         if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { suspendAccountAnyPanel, yesterdayYmd } = await import("@/lib/license-cron.server");
+        const { suspendAccountAnyPanel, yesterdayYmd, hasOtherActiveLicense } = await import("@/lib/license-cron.server");
+        const { acquireOpLock, releaseOpLock } = await import("@/lib/audit-trail.server");
+        const LOCK = "cron:daily-license-check";
+        if (!(await acquireOpLock(LOCK, 300, "daily-license-check"))) {
+          return Response.json({ ok: true, skipped: "already_running" });
+        }
+        try {
 
         const { data: affected, error } = await supabaseAdmin
           .rpc("revoke_unpaid_server_licenses");
@@ -38,6 +44,14 @@ export const Route = createFileRoute("/api/public/hooks/daily-license-check")({
         for (const l of list) {
           // Procura a conta no painel gravado e, se não estiver lá, nos demais
           // (v455 semanal, v457, v46) antes de dar a suspensão como perdida.
+          // Mesmo login usado por outra licença ativa: não suspende no painel.
+          if (await hasOtherActiveLicense(supabaseAdmin, l.yaarsa_email, l.id)) {
+            perLicenseRows.push({
+              source: "auto-revoke", action: "revoke_license", outcome: "skipped_shared_login",
+              context: { license_id: l.id, user_id: l.user_id, yaarsa_email: l.yaarsa_email } as any,
+            });
+            continue;
+          }
           const res = await suspendAccountAnyPanel(l.yaarsa_email, l.panel, yesterday);
           const suspended = res.status === "done";
           if (suspended) ySuspended++;
@@ -71,6 +85,9 @@ export const Route = createFileRoute("/api/public/hooks/daily-license-check")({
 
 
         return Response.json({ ok: true, revoked: list.length, yaarsa_suspended: ySuspended });
+        } finally {
+          await releaseOpLock(LOCK);
+        }
       },
       GET: async () => new Response("ok", { status: 200 }),
     },

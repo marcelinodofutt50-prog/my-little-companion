@@ -116,3 +116,49 @@ export function yesterdayYmd(): string {
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
 }
+
+/**
+ * Brecha corrigida: o cliente que renova comprando uma licença NOVA costuma
+ * reaproveitar o mesmo login do painel. O cron removia/suspendia a conta por
+ * causa da licença antiga vencida e derrubava a licença nova, que estava paga.
+ * Antes de mexer no painel, confirmamos que nenhuma outra licença ativa usa
+ * o mesmo e-mail.
+ */
+export async function hasOtherActiveLicense(
+  admin: any,
+  email: string | null | undefined,
+  excludeId: string,
+): Promise<boolean> {
+  if (!email) return false;
+  const nowIso = new Date().toISOString();
+  const { data, error } = await admin
+    .from("licenses")
+    .select("id, expires_at")
+    .ilike("yaarsa_email", email.trim())
+    .neq("id", excludeId)
+    .is("disabled_at", null)
+    .eq("revoked", false)
+    .limit(5);
+  // Na dúvida (erro de leitura), NÃO mexe no painel: melhor adiar do que
+  // derrubar um cliente pagante.
+  if (error) return true;
+  return (data ?? []).some((r: any) => !r.expires_at || r.expires_at > nowIso);
+}
+
+/** IDs de licenças cuja remoção no painel já foi concluída (não reprocessar). */
+export async function alreadyCleanedIds(admin: any, ids: string[], sinceIso: string): Promise<Set<string>> {
+  const done = new Set<string>();
+  if (!ids.length) return done;
+  const { data } = await admin
+    .from("integration_logs")
+    .select("context, outcome")
+    .eq("source", "auto-expire")
+    .in("outcome", ["removed", "already_absent", "skipped_shared_login"])
+    .gte("created_at", sinceIso)
+    .limit(1000);
+  for (const r of data ?? []) {
+    const id = r?.context?.license_id;
+    if (id && ids.includes(id)) done.add(id);
+  }
+  return done;
+}
