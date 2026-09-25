@@ -26,7 +26,7 @@ export async function applySubscriptionRenewal(params: {
       .eq("action", "subscription_renewal")
       .contains("context", { reference: params.reference } as any)
       .limit(1);
-    if (prior?.length) return { ok: true, duplicate: true };
+    if (prior?.length) return { ok: true, duplicate: true, reason: "duplicate" };
     return await applyOnce(params, supabaseAdmin, setExpiryAnyPanel);
   } finally {
     await releaseOpLock(lockKey);
