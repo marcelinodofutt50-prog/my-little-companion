@@ -3774,6 +3774,7 @@ export type Database = {
     }
     Functions: {
       calculate_license_status: { Args: { lic_id: string }; Returns: string }
+      check_index_exists: { Args: { target_index: string }; Returns: boolean }
       check_license_consistency: { Args: never; Returns: undefined }
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
       check_rls_enabled: { Args: { target_table: string }; Returns: boolean }

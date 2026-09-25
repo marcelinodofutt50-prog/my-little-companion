@@ -1,6 +1,6 @@
 # Relatório de segurança do deploy — ShadowDash Store
 
-- Data: 2026-09-17T00:14:14.737Z
+- Data: 2026-09-25T07:59:50.161Z
 - Duração: 9.3s
 - Banco verificado: dvnksmqbpbzwgwmbnjjy.supabase.co
 - Commit: local

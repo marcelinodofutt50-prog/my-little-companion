@@ -1,0 +1,3 @@
+CREATE UNIQUE INDEX IF NOT EXISTS trials_one_per_device_idx ON public.trials USING btree (device_hash) WHERE (device_hash IS NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS apk_free_trials_one_per_device_idx ON public.apk_free_trials USING btree (device_hash) WHERE (device_hash IS NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS device_identities_user_device_key ON public.device_identities USING btree (user_id, device_hash);
