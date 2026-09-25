@@ -11,7 +11,33 @@ export async function applySubscriptionRenewal(params: {
   reference: string;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { yaarsaExtend } = await import("@/lib/yaarsa.server");
+  const { setExpiryAnyPanel } = await import("@/lib/license-cron.server");
+  const { acquireOpLock, releaseOpLock } = await import("@/lib/audit-trail.server");
+
+  // Brecha corrigida: a Stripe reenvia o mesmo aviso de cobrança quando não
+  // recebe resposta a tempo. Cada reenvio somava os dias de novo (um mês pago
+  // virava dois). Agora cada cobrança só é aplicada uma vez.
+  const lockKey = `sub-renewal:${params.reference}`;
+  if (!(await acquireOpLock(lockKey, 120, "stripe"))) return { ok: false, reason: "in-progress" };
+  try {
+    const { data: prior } = await supabaseAdmin
+      .from("integration_logs")
+      .select("id")
+      .eq("action", "subscription_renewal")
+      .contains("context", { reference: params.reference } as any)
+      .limit(1);
+    if (prior?.length) return { ok: true, duplicate: true, reason: "duplicate" };
+    return await applyOnce(params, supabaseAdmin, setExpiryAnyPanel);
+  } finally {
+    await releaseOpLock(lockKey);
+  }
+}
+
+async function applyOnce(
+  params: { userId: string; planSlug: string; days: number; reference: string },
+  supabaseAdmin: any,
+  setExpiryAnyPanel: (email: string, panel: string | null, exp: string) => Promise<{ status: string; error: string | null }>,
+) {
 
   const { data: licenses } = await supabaseAdmin
     .from("licenses")
@@ -22,7 +48,11 @@ export async function applySubscriptionRenewal(params: {
     .order("expires_at", { ascending: true });
 
   const rows = (licenses ?? []) as any[];
-  const target = rows.find((l) => l.plan_slug === params.planSlug) ?? rows[0];
+  // Só usa outra licença como alvo quando o cliente tem uma única: antes a
+  // renovação podia cair na licença errada (ex.: vitalícia ou de outro plano).
+  const target =
+    rows.find((l) => l.plan_slug === params.planSlug) ??
+    (rows.length === 1 && rows[0].plan_slug !== "login-lifetime" ? rows[0] : undefined);
 
   if (!target) {
     await supabaseAdmin.from("webhook_logs").insert({
@@ -51,8 +81,10 @@ export async function applySubscriptionRenewal(params: {
   let panelError: string | null = null;
   if (target.yaarsa_email) {
     try {
-      const yr = await yaarsaExtend(target.yaarsa_email, base.toISOString().slice(0, 10), target.panel ?? "v457");
-      if (yr?.Fail) panelError = String(yr.Fail);
+      // Procura a conta em todos os painéis (4.5.5, 4.5.7, 4.6) e grava a
+      // data com a mesma folga de 1 dia usada no resto do sistema.
+      const yr = await setExpiryAnyPanel(target.yaarsa_email, target.panel, base.toISOString());
+      if (yr.status !== "done") panelError = yr.error ?? "conta não encontrada no painel";
     } catch (e: any) {
       panelError = e?.message ?? "erro de conexão com o painel";
     }
