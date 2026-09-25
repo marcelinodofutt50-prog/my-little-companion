@@ -42,11 +42,23 @@ export function buildTrainingReply(): string {
 
 export function buildVisualErrorReply(): string {
   return [
-    "Verifiquei: esse **\"network error\" / erro de internet é apenas visual** — um aviso do app que não interfere em nada no funcionamento. ✅",
+    "Entendi! Um aviso importante sobre o **\"network error\"** 🛡️",
     "",
-    "Pode ignorar e usar normalmente: login, painel e licença seguem 100%.",
+    "No app da BTmob, esse aviso **nem sempre é problema de internet ou do servidor** — ele aparece como mensagem genérica para vários erros. Por exemplo: se você digitou **um dígito errado no usuário ou na senha**, em vez de \"senha incorreta\" o app mostra **network error**. Ele não interfere no funcionamento quando está tudo certo.",
     "",
-    "Apareceu algum outro erro além desse? 🛡️",
+    "**Se for ao entrar com o acesso:**",
+    "1. Confira letra por letra o usuário e a senha (use o botão **Copiar** do painel em vez de digitar).",
+    "2. Ainda não entrou? Use o botão **Reparar acesso** no seu painel — ele confere e recria seu login em segundos.",
+    "",
+    "**Se for na hora de gerar o APK:** confira se não esqueceu nada:",
+    "• todas as **permissões** marcadas (incluindo as caixinhas do lado);",
+    "• a **imagem/ícone** do aplicativo selecionada;",
+    "• a **etiqueta (tag/nome)** do aplicativo preenchida.",
+    "Faltando qualquer um desses, o app mostra network error.",
+    "",
+    "Lembrando: alguns **celulares e algumas conexões** simplesmente não são compatíveis com a BTmob — nesse caso não é falha do nosso servidor. 📱",
+    "",
+    "Conferiu tudo e o erro continua? Me manda um print que eu verifico. ⚡",
   ].join("\n");
 }
 

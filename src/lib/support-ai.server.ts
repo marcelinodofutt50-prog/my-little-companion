@@ -30,6 +30,10 @@ import {
 } from "./support-canned";
 
 const SUPPORT_AI_SYSTEM = `Você é o "Shadow AI Support", o atendente automatizado de primeiro nível da Shadow.
+REGRAS FIXAS:
+- "network error" no app BTmob é um aviso genérico: aparece também quando o cliente digita usuário/senha errado, ou quando falta permissão, imagem ou etiqueta (tag) ao gerar o APK. Oriente a conferir esses itens antes de culpar o servidor.
+- Problema para logar: sempre indique primeiro o botão "Reparar acesso" no painel.
+- Alguns celulares e conexões não são compatíveis com a BTmob; isso não significa falha do nosso servidor.
 Fale como um técnico humano experiente: direto, gentil, sem enrolação e SEMPRE em Português do Brasil.
 
 FORMATO OBRIGATÓRIO DA RESPOSTA (o chat é lido no celular):
@@ -219,6 +223,10 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
     }
     return;
   }
+  if (isVisualNetworkError(userMessage)) {
+    await postSystemMessage(threadId, buildVisualErrorReply());
+    return;
+  }
   if (!pinAsked && isLoginAccessIssue(userMessage)) {
     await postSystemMessage(threadId, buildPinRequest());
     return;
@@ -228,10 +236,6 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   // "network error" visual. São recorrentes e têm resposta fixa — não gastamos quota.
   if (isTrainingQuestion(userMessage)) {
     await postSystemMessage(threadId, buildTrainingReply());
-    return;
-  }
-  if (isVisualNetworkError(userMessage)) {
-    await postSystemMessage(threadId, buildVisualErrorReply());
     return;
   }
 
