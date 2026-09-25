@@ -6,6 +6,6 @@
 - [ ] Corrigir e testar Reparar acesso em 4.6, 4.5.7 e 4.5.5
 - [ ] Criar fluxo unificado e seguro para licença antiga no suporte
 - [ ] Expor análise de licenças antigas no painel administrativo
-- [ ] Melhorar visão operacional do painel administrativo
+- [x] Melhorar visão operacional do painel administrativo
 - [ ] Auditar e reforçar rotinas automáticas e pagamentos
 - [ ] Executar testes, compilação e verificação visual responsiva
