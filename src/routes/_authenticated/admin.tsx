@@ -894,11 +894,11 @@ function AdminPage() {
           />
           <ExecStat
             icon={Activity}
-            label="Servidor"
-            value="ONLINE"
-            sub="uptime 99.9%"
-            accent="neon"
-            pulse
+            label="Pendências"
+            value={String(totalPending)}
+            sub={totalPending ? "aguardando ação" : "operação em dia"}
+            accent={totalPending ? "violet" : "neon"}
+            pulse={totalPending > 0}
             code="OPS-004"
             delay={0.4}
           />

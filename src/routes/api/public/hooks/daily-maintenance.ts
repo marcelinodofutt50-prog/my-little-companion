@@ -40,6 +40,7 @@ async function runDailyMaintenance(request: Request) {
           "Content-Type": "application/json",
           "x-cron-origin": "daily-maintenance",
         },
+        signal: AbortSignal.timeout(20_000),
       });
       const text = await res.text();
       results.push({

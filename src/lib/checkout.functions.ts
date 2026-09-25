@@ -20,7 +20,7 @@ export const createCheckout = createServerFn({ method: "POST" })
         email: z.string().trim().email().max(255),
         password: z.string().min(1).max(64),
         ip: z.string().trim().min(3).max(45),
-        panel: z.enum(["v457", "v46"]),
+        panel: z.enum(["v455", "v457", "v46"]),
       }).optional(),
       gift: z.object({
         email: z.string().trim().email().max(255),
@@ -153,13 +153,13 @@ export const createCheckout = createServerFn({ method: "POST" })
 
 
     // Validate + encrypt legacy claim (server renewal for old client) before persisting.
-    let legacyMeta: { email: string; password_enc: string; ip: string; panel: "v457" | "v46" } | null = null;
+    let legacyMeta: { email: string; password_enc: string; ip: string; panel: "v455" | "v457" | "v46" } | null = null;
     if (data.legacyClaim) {
       if (plan.category !== "server") throw new Error("legacyClaim só se aplica a planos de servidor");
       const { yaarsaLookupEmail, encrypt } = await import("./yaarsa.server");
       const email = data.legacyClaim.email.toLowerCase();
       const lookup = await yaarsaLookupEmail(email, data.legacyClaim.panel);
-      if (!lookup.found) throw new Error(`Email não encontrado no painel ${data.legacyClaim.panel === "v46" ? "Shadow 4.6" : "Shadow 4.5.7"}`);
+      if (!lookup.found) throw new Error(`Email não encontrado no painel ${data.legacyClaim.panel === "v46" ? "Shadow 4.6" : data.legacyClaim.panel === "v455" ? "Shadow 4.5.5" : "Shadow 4.5.7"}`);
       legacyMeta = { email, password_enc: encrypt(data.legacyClaim.password), ip: data.legacyClaim.ip.trim(), panel: data.legacyClaim.panel };
     }
 

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
   HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight, ArrowLeftRight,
-  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield, AlertTriangle,
+  ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield, AlertTriangle, Bitcoin,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { FlashPromoBar } from "@/components/FlashPromoBar";
@@ -630,8 +630,29 @@ function PlansPage() {
       </section>
 
       <main className="relative z-10 mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-
-
+        <motion.section
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.45 }}
+          className="relative -mt-5 mb-8 overflow-hidden rounded-lg border border-cyan/30 bg-card/90 p-4 shadow-[0_18px_60px_-35px_var(--cyan)] backdrop-blur sm:p-5"
+          aria-labelledby="crypto-payment-title"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-cyan/35 bg-cyan/10 text-cyan">
+                <Bitcoin className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-cyan">Pagamento alternativo</p>
+                <h2 id="crypto-payment-title" className="mt-0.5 font-display text-base font-semibold sm:text-lg">Quer pagar sem PIX ou cartão?</h2>
+                <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">Escolha seu acesso e pague com Bitcoin, Ethereum ou USDT. A transação é conferida antes da liberação da licença.</p>
+              </div>
+            </div>
+            <Button asChild variant="outline" className="shrink-0 border-cyan/35 font-mono text-[10px] uppercase tracking-wider text-cyan hover:bg-cyan/10">
+              <Link to="/crypto"><Bitcoin className="mr-2 h-4 w-4" /> Pagar com cripto</Link>
+            </Button>
+          </div>
+        </motion.section>
 
         {/* BENEFITS PANEL ==================================== */}
         {loggedIn && (

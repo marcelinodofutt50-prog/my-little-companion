@@ -34,8 +34,13 @@ export const Route = createFileRoute("/api/public/hooks/cleanup-apk-jobs")({
           console.error("[cleanup-apk-jobs] purge falhou:", e);
         }
 
+        await supabaseAdmin.from("integration_logs").insert({
+          source: "apk-retention", action: "cleanup-apk-jobs", outcome: purgeError ? "partial" : "success",
+          error: purgeError, context: { expired: data ?? 0, purged },
+        } as never).then(() => undefined, () => undefined);
+
         return new Response(JSON.stringify({ expired: data ?? 0, purged, purgeError }), {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
         });
 
       },

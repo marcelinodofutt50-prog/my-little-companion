@@ -29,7 +29,7 @@ export const Route = createFileRoute("/renovar-servidor")({
   component: LegacyRenewalPage,
 });
 
-type Panel = "v457" | "v46";
+type Panel = "v455" | "v457" | "v46";
 
 function LegacyRenewalPage() {
   const navigate = useNavigate();
@@ -125,7 +125,7 @@ function LegacyRenewalPage() {
     );
   }
 
-  const panelLabel = (p: Panel) => (p === "v46" ? "Shadow 4.6 (Vitalício)" : "Shadow 4.5.7 (Mensal)");
+  const panelLabel = (p: Panel) => p === "v46" ? "Shadow 4.6 (Vitalício)" : p === "v455" ? "Shadow 4.5.5" : "Shadow 4.5.7 (Mensal)";
 
   return (
     <div className="relative min-h-screen">
@@ -135,7 +135,7 @@ function LegacyRenewalPage() {
           <div className="font-mono text-xs uppercase tracking-[0.3em] text-cyan">// server renewal · legacy</div>
           <h1 className="mt-2 text-3xl font-bold">Renovar Servidor · Cliente Antigo</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Taxa fixa <span className="font-mono text-cyan">{formatBrl(250)}</span> — vencimento realinhado para o próximo dia 20 após o pagamento.
+            Verificamos automaticamente seu login 4.5.5, 4.5.7 ou 4.6 antes de seguir para o pagamento.
           </p>
         </div>
 
@@ -194,7 +194,7 @@ function LegacyRenewalPage() {
                   disabled={going}
                 />
                 <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <ShieldCheck className="h-3 w-3 text-neon" /> Armazenamos criptografada — usada apenas para restaurar seu acesso.
+                  <ShieldCheck className="h-3 w-3 text-neon" /> Use somente a senha da licença BTmob. Nunca informe a senha do Gmail.
                 </div>
               </section>
 

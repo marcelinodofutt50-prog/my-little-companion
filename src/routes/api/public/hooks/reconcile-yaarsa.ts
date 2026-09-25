@@ -22,12 +22,12 @@ async function run(request: Request) {
       success: true,
       ...report,
       rows: report.rows.filter((r) => r.status !== "ok"),
-    });
+      }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return new Response(JSON.stringify({ ok: false, error: message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   }
 }

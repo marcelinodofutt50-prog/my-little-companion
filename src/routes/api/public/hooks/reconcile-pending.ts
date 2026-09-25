@@ -143,6 +143,6 @@ async function reconcilePendingOrders(request: Request) {
         }
 
         return new Response(JSON.stringify({ processed: results.length, results }), {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
         });
 }

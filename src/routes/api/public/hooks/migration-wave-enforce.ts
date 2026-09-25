@@ -17,8 +17,12 @@ export const Route = createFileRoute("/api/public/hooks/migration-wave-enforce")
         try {
           const { enforceExpiredWaves } = await import("@/lib/migration-wave.server");
           const result = await enforceExpiredWaves();
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin.from("integration_logs").insert({
+            source: "migration", action: "migration-wave-enforce", outcome: "success", context: result,
+          } as never).then(() => undefined, () => undefined);
           return new Response(JSON.stringify(result), {
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
           });
         } catch (e: any) {
           return new Response(JSON.stringify({ error: e?.message ?? "erro" }), {

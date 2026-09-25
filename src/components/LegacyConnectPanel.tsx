@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { checkLegacyEmail, claimLegacyLicense } from "@/lib/license.functions";
 
-type Panel = "v457" | "v46";
+type Panel = "v455" | "v457" | "v46";
 
 const panelMeta: Record<Panel, { label: string; version: string; tone: string; ip: string }> = {
   v46: { label: "Shadow 4.6", version: "Vitalício · prioridade", tone: "text-primary", ip: "200.9.154.103" },
   v457: { label: "Shadow 4.5.7", version: "Mensal · legacy", tone: "text-cyan", ip: "191.96.78.81" },
+  v455: { label: "Shadow 4.5.5", version: "Semanal · legacy", tone: "text-cyan", ip: "191.96.78.81" },
 };
 
 type ErrCategory = "network" | "credential" | "not_found" | "duplicate" | "server" | "database" | "auth" | "generic";
@@ -208,7 +209,7 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
             : "Seu email existe em mais de um painel. Escolha qual deseja vincular.",
         });
       } else {
-        fail(categorize(`LEGACY_EMAIL_NOT_IN_PANEL: não encontramos ${email.trim().toLowerCase()} em nenhum painel (4.5.7 ou 4.6)`));
+        fail(categorize(`LEGACY_EMAIL_NOT_IN_PANEL: não encontramos ${email.trim().toLowerCase()} em nenhum painel (4.5.5, 4.5.7 ou 4.6)`));
       }
     } catch (e: any) { fail(categorize(e?.message)); }
     finally { setBusy(false); }
@@ -217,7 +218,7 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
   async function claim() {
     if (!selectedPanel) {
       fail(validationError("generic", "Escolha o painel", "Nenhum painel foi selecionado.", [
-        "Toque em Shadow 4.6 ou Shadow 4.5.7 antes de continuar.",
+        "Toque na versão correta do seu Shadow antes de continuar.",
       ]));
       return;
     }
@@ -276,7 +277,7 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
               )}
             </div>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Já possui login em <span className="text-foreground/80">Shadow 4.5.7</span> ou <span className="text-foreground/80">4.6</span>? Conecte sua licença existente em 3 passos e mantenha o preço legacy.
+               Já possui login em <span className="text-foreground/80">Shadow 4.5.5, 4.5.7 ou 4.6</span>? Conecte sua licença existente em 3 passos e mantenha o preço legacy.
             </p>
           </div>
         </div>
@@ -348,7 +349,7 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
                       </Button>
                     </div>
                     <p className="text-[11px] text-muted-foreground">
-                      Verificamos automaticamente nos painéis Shadow 4.5.7 e 4.6.
+                       Verificamos automaticamente nos painéis Shadow 4.5.5, 4.5.7 e 4.6.
                     </p>
                   </div>
                 </div>
@@ -400,7 +401,7 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
                       className="font-mono text-sm" autoComplete="off"
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      Guardada criptografada. Sem lembrar? Fale com o suporte em <a href="/suporte" className="text-primary hover:underline">/suporte</a>.
+                       Use somente a senha da licença BTmob — nunca a senha do Gmail. Ela fica criptografada.
                     </p>
                   </div>
 
@@ -438,7 +439,7 @@ export function LegacyConnectPanel({ defaultOpen = false, onLinked }: { defaultO
 
                   <dl className="grid gap-2 rounded-md border border-border/40 bg-background/40 p-3 text-sm md:grid-cols-2">
                     <SuccessRow label="Painel" value={panelMeta[claimed.panel].label} tone={panelMeta[claimed.panel].tone} />
-                    <SuccessRow label="Versão" value={claimed.version_tier === "lifetime_46" ? "Vitalício · 4.6" : "Mensal · 4.5.7"} />
+                     <SuccessRow label="Versão" value={claimed.version_tier === "lifetime_46" ? "Vitalício · 4.6" : claimed.version_tier === "weekly" ? "Semanal · 4.5.5" : "Mensal · 4.5.7"} />
                     <SuccessRow label="Email" value={claimed.email} copyable onCopy={() => copy(claimed.email, "Email")} />
                     <SuccessRow label="Servidor" value={claimed.server_ip} copyable onCopy={() => copy(claimed.server_ip, "IP")} mono />
                     <SuccessRow label="Próxima renovação" value={formatBrDate(claimed.next_renewal)} />

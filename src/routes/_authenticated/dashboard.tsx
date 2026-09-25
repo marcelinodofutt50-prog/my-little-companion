@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, CircleCheck, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -324,8 +324,9 @@ function DashboardPage() {
                 </div>
               )}
 
-              <section className="enterprise-surface relative overflow-hidden p-5 md:p-6">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <section className="enterprise-surface relative overflow-hidden border-primary/20 p-5 shadow-[0_22px_70px_-48px_var(--primary)] md:p-6">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+                <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_220px] lg:items-stretch">
                   <div className="flex items-center gap-5">
                     <div className="rounded-full border border-primary/20 bg-background/70 p-2 shadow-sm">
                       {displayAvatar ? (
@@ -335,8 +336,8 @@ function DashboardPage() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="mb-1 flex items-center gap-2 font-mono text-[9px] uppercase text-muted-foreground">
-                        Nível de acesso <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-primary">Alpha-Ops</span>
+                      <div className="mb-1 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase text-muted-foreground">
+                        Console do cliente <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-primary">Alpha-Ops</span>
                       </div>
                       <h1 className="truncate text-3xl font-bold text-foreground md:text-4xl">{displayName}</h1>
                       <div className="mt-2 flex items-center gap-4 font-mono text-[10px] text-muted-foreground">
@@ -346,22 +347,26 @@ function DashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <div className={`shrink-0 rounded-md border-2 px-5 py-3 text-right font-mono shadow-sm ${statusRing}`}>
-                    <div className={`text-[10px] font-bold uppercase ${statusColor}`}>{lifetimeActive ? 'Acesso' : 'Dias de licença'}</div>
-                    <div className={`mt-1 text-3xl font-black ${statusColor}`}>{lifetimeActive ? 'Vitalício' : daysLeft === null ? '00' : String(daysLeft).padStart(2, '0')}</div>
-
-                    <div className="text-[10px] text-muted-foreground">{licenses?.length || 0} terminais ativos</div>
+                  <div className={`flex min-h-28 shrink-0 flex-col justify-between rounded-md border px-4 py-3 font-mono shadow-sm ${statusRing}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className={`text-[9px] font-bold uppercase tracking-widest ${statusColor}`}>Status operacional</span>
+                      {activeLicense ? <CircleCheck className={`h-4 w-4 ${statusColor}`} /> : <TriangleAlert className={`h-4 w-4 ${statusColor}`} />}
+                    </div>
+                    <div>
+                      <div className={`text-2xl font-black ${statusColor}`}>{lifetimeActive ? 'Vitalício' : daysLeft === null ? 'Sem acesso' : `${String(daysLeft).padStart(2, '0')} dias`}</div>
+                      <div className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">{licenses?.length || 0} licença(s) registrada(s)</div>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-5 grid gap-3 border-t border-border/50 pt-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="space-y-1.5">
+                <div className="mt-5 grid gap-px overflow-hidden rounded-md border border-border/50 bg-border/50 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-2 bg-card/80 p-3">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Minha conta</p>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={copyPrimary} disabled={!primary} className="font-mono text-[10px] uppercase"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar credenciais</Button>
                       <Link to="/planos"><Button size="sm" className="font-mono text-[10px] uppercase"><ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Renovar agora</Button></Link>
                     </div>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2 bg-card/80 p-3">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Ferramentas</p>
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -377,7 +382,7 @@ function DashboardPage() {
                       <Link to="/play-protect"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-amber-500 border-amber-500/30 hover:bg-amber-500/5"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Bypass Play Protect (APK)</Button></Link>
                     </div>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2 bg-card/80 p-3">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Aprendizado e ajuda</p>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={() => setTutorialOpen(true)} className="font-mono text-[10px] uppercase"><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Tutorial</Button>

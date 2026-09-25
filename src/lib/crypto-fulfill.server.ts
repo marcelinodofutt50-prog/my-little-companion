@@ -40,18 +40,24 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
 
   try {
     // Create the order row (mirrors MP flow so licenses point back to an order).
-    const { data: order, error: orderErr } = await supabaseAdmin
-      .from("orders")
-      .insert({
+    let order: { id: string } | null = null;
+    if (claimed.order_id) {
+      const existing = await supabaseAdmin.from("orders").select("id").eq("id", claimed.order_id).maybeSingle();
+      order = existing.data;
+    }
+    let orderErr: { message: string } | null = null;
+    if (!order) {
+      const created = await supabaseAdmin.from("orders").insert({
         user_id: claimed.user_id,
         plan_slug: claimed.plan_slug,
         amount: Number(claimed.amount_brl ?? 0),
         status: "paid",
         paid_at: new Date().toISOString(),
         metadata: { crypto: { payment_id: claimed.id, network: claimed.network, tx_hash: claimed.tx_hash } } as any,
-      } as any)
-      .select("id")
-      .single();
+      } as any).select("id").single();
+      order = created.data;
+      orderErr = created.error;
+    }
     if (orderErr || !order) throw new Error(orderErr?.message || "order insert failed");
 
     await supabaseAdmin.from("crypto_payments").update({ order_id: order.id }).eq("id", claimed.id);
@@ -99,7 +105,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
     try { await yaarsaExtend(creds.email, expiresAt.toISOString().slice(0, 10), targetPanel); } catch { /* best-effort */ }
 
     const serverIp = await (await import("@/lib/yaarsa.server")).resolvePanelServerHost(targetPanel);
-    const { data: lic } = await supabaseAdmin.from("licenses").insert({
+    const { data: lic, error: licenseErr } = await supabaseAdmin.from("licenses").insert({
       user_id: claimed.user_id,
       order_id: order.id,
       plan_slug: claimed.plan_slug,
@@ -114,6 +120,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
       panel: targetPanel,
       server_ip: serverIp,
     } as any).select("id").single();
+    if (licenseErr || !lic) throw new Error(licenseErr?.message || "license insert failed");
 
     await supabaseAdmin.from("integration_logs").insert({
       source: "crypto", action: "fulfill", outcome: "success",

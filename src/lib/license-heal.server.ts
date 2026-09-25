@@ -30,6 +30,7 @@ export type HealResult = {
   credentials: { username: string; email: string; password: string; server_ip?: string | null };
   message: string;
   steps: string[];
+  warning?: string;
 };
 
 export type HealLicense = {
@@ -65,7 +66,8 @@ export async function healLicenseLogin(
   lic: HealLicense,
   opts?: { reason?: string; forceRecreate?: boolean },
 ): Promise<HealResult> {
-  const lockKey = `license-heal:${lic.id}`;
+  const lockIdentity = (lic.yaarsa_email ?? lic.id).trim().toLowerCase();
+  const lockKey = `license-account:${lockIdentity}`;
   let locked = false;
   try {
     const { acquireOpLock } = await import("./audit-trail.server");
@@ -76,9 +78,9 @@ export async function healLicenseLogin(
       );
     }
   } catch (e: any) {
-    // Se a trava em si estiver indisponível, seguimos — mas nunca engolimos o
-    // aviso de "já em andamento".
-    if (String(e?.message ?? "").startsWith("Já existe uma correção")) throw e;
+    // Sem trava distribuída, falhamos de forma segura: duas licenças podem
+    // apontar para o mesmo e-mail remoto e não podem apagar/recriar em paralelo.
+    throw e;
   }
 
   try {
@@ -249,6 +251,7 @@ async function runHeal(
         message:
           "Sua conta não existia no servidor e acabou de ser criada com o mesmo e-mail e senha. Tente entrar de novo no BTmob.",
         steps,
+        warning: steps.includes("validade-nao-ajustada") ? "Login recuperado, mas a validade ainda precisa ser sincronizada." : undefined,
       };
     }
 
@@ -437,6 +440,7 @@ async function runHeal(
       ? "A licença não tinha senha guardada, então emitimos um login novo — use o e-mail e a senha que aparecem agora em Licenças."
       : "O login estava travado no servidor. Apagamos e recriamos a conta com o MESMO e-mail e a MESMA senha. Tente entrar de novo no BTmob.",
     steps,
+    warning: steps.includes("validade-nao-ajustada") ? "Login recuperado, mas a validade ainda precisa ser sincronizada." : undefined,
   };
 }
 
