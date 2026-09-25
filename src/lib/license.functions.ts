@@ -439,6 +439,7 @@ export const validateCoupon = createServerFn({ method: "POST" })
     return z.object({ code: z.string().trim().min(1).max(64), planSlug: z.string().trim().max(64).optional() }).parse(input);
   })
   .handler(async ({ data, context }) => {
+    { const { getActiveBan } = await import("./ban-engine.server"); if (await getActiveBan(context.userId)) return { coupon: null as null }; }
     const { data: coupon } = await context.supabase
       .from("coupons").select("*").eq("code", data.code.toUpperCase()).eq("active", true).maybeSingle();
     const { evaluateCoupon } = await import("./coupon-rules");
