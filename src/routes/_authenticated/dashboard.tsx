@@ -353,23 +353,38 @@ function DashboardPage() {
                     <div className="text-[10px] text-muted-foreground">{licenses?.length || 0} terminais ativos</div>
                   </div>
                 </div>
-                <div className="mt-5 flex flex-wrap gap-2 border-t border-border/50 pt-3">
-                  <Button size="sm" variant="outline" onClick={copyPrimary} disabled={!primary} className="font-mono text-[10px] uppercase"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar credenciais</Button>
-                  <Button size="sm" variant="outline" onClick={() => setTutorialOpen(true)} className="font-mono text-[10px] uppercase"><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Tutorial</Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={handleSync} 
-                    disabled={syncing}
-                    className="font-mono text-[10px] uppercase rgb-button-animated border-none"
-                  >
-                    <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} /> 
-                    {syncing ? "Sincronizando..." : "Corrigir Erros"}
-                  </Button>
-                  <Link to="/play-protect"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-amber-500 border-amber-500/30 hover:bg-amber-500/5"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Bypass Play Protect (APK)</Button></Link>
-                  <Link to="/tutoriais"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-primary border-primary/30 hover:bg-primary/5"><Video className="mr-1.5 h-3.5 w-3.5" /> Hub de Vídeos</Button></Link>
-                  <Link to="/suporte" search={{}}><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase"><LifeBuoy className="mr-1.5 h-3.5 w-3.5" /> Suporte</Button></Link>
-                  <Link to="/planos"><Button size="sm" className="font-mono text-[10px] uppercase"><ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Renovar agora</Button></Link>
+                <div className="mt-5 grid gap-3 border-t border-border/50 pt-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Minha conta</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={copyPrimary} disabled={!primary} className="font-mono text-[10px] uppercase"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar credenciais</Button>
+                      <Link to="/planos"><Button size="sm" className="font-mono text-[10px] uppercase"><ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Renovar agora</Button></Link>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Ferramentas</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleSync}
+                        disabled={syncing}
+                        className="font-mono text-[10px] uppercase rgb-button-animated border-none"
+                      >
+                        <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} />
+                        {syncing ? "Sincronizando..." : "Corrigir Erros"}
+                      </Button>
+                      <Link to="/play-protect"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-amber-500 border-amber-500/30 hover:bg-amber-500/5"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Bypass Play Protect (APK)</Button></Link>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Aprendizado e ajuda</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setTutorialOpen(true)} className="font-mono text-[10px] uppercase"><Sparkles className="mr-1.5 h-3.5 w-3.5" /> Tutorial</Button>
+                      <Link to="/tutoriais"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-primary border-primary/30 hover:bg-primary/5"><Video className="mr-1.5 h-3.5 w-3.5" /> Hub de Vídeos</Button></Link>
+                      <Link to="/suporte" search={{}}><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase"><LifeBuoy className="mr-1.5 h-3.5 w-3.5" /> Suporte</Button></Link>
+                    </div>
+                  </div>
                 </div>
               </section>
 
