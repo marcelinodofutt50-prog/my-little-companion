@@ -156,6 +156,27 @@ export function LicenseAccessTools({
 
   return (
     <>
+      <div data-repair-callout className="mb-3 flex flex-col gap-3 rounded-lg border border-primary/40 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Wrench className="h-4 w-4 shrink-0 text-primary" /> Não consegue logar no BTmob?
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Senha recusada, login sumiu ou apareceu "network error" ao entrar? Clique em <strong className="text-foreground">Reparar acesso</strong> primeiro —
+            ele confere e recria seu login no painel em segundos, sem precisar chamar o suporte.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          disabled={paused || repairing}
+          onClick={runRepair}
+          className="relative h-9 shrink-0 font-mono text-[10px] uppercase tracking-wider shadow-md"
+        >
+          {!repairing && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-ping rounded-full bg-primary" />}
+          {repairing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Wrench className="mr-1.5 h-3.5 w-3.5" />}
+          {repairing ? "Reparando..." : "Reparar acesso"}
+        </Button>
+      </div>
       <div className="flex flex-wrap gap-2">
         <Link to="/renovar-servidor">
           <Button
@@ -176,20 +197,6 @@ export function LicenseAccessTools({
         >
           <KeyRound className="mr-1.5 h-3.5 w-3.5 text-primary" />
           Trocar senha do painel
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={paused || repairing}
-          onClick={runRepair}
-          className="h-8 font-mono text-[9px] uppercase tracking-wider"
-        >
-          {repairing ? (
-            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin text-primary" />
-          ) : (
-            <Wrench className="mr-1.5 h-3.5 w-3.5 text-primary" />
-          )}
-          Reparar acesso
         </Button>
         <Button
           size="sm"
@@ -223,8 +230,7 @@ export function LicenseAccessTools({
 
       <p className="mt-2 flex items-start gap-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
         <LifeBuoy className="mt-0.5 h-3 w-3 shrink-0" />
-        Não consegue entrar no BTmob? Use “Reparar acesso”. Pagou a taxa do servidor e a licença
-        continua inativa? Use “Já paguei o servidor” para aplicar o próximo ciclo (dia 20).
+        Pagou a taxa do servidor e a licença continua inativa? Use “Já paguei o servidor” para aplicar o próximo ciclo (dia 20).
       </p>
 
       <Dialog open={open} onOpenChange={setOpen}>
