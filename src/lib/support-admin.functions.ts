@@ -91,3 +91,41 @@ export const adminMergeDuplicateThreads = createServerFn({ method: "POST" })
     return { ok: true, merged, users };
   });
 
+
+/** Estatísticas do chat nas últimas 24h: mensagens por hora, resposta média e status. */
+export const adminSupportStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - 24 * 3600_000);
+    const { data, error } = await supabaseAdmin
+      .from("support_messages")
+      .select("thread_id, is_admin, is_system, created_at, read_at")
+      .gte("created_at", since.toISOString())
+      .order("created_at", { ascending: true })
+      .limit(5000);
+    if (error) throw new Error(`[support_messages] ${error.code ?? ""} ${error.message}`);
+    const hourly = Array.from({ length: 24 }, (_, i) => {
+      const d = new Date(since.getTime() + (i + 1) * 3600_000);
+      return { hour: `${String(d.getHours()).padStart(2, "0")}h`, clientes: 0, equipe: 0 };
+    });
+    const waiting = new Map<string, number>();
+    const deltas: number[] = [];
+    const status = { lidas: 0, naoLidasPelaEquipe: 0, naoLidasPeloCliente: 0 };
+    for (const m of (data ?? []) as any[]) {
+      if (m.is_system) continue;
+      const t = new Date(m.created_at).getTime();
+      const idx = Math.min(23, Math.floor((t - since.getTime()) / 3600_000));
+      if (m.is_admin) hourly[idx].equipe++; else hourly[idx].clientes++;
+      if (m.read_at) status.lidas++;
+      else if (m.is_admin) status.naoLidasPeloCliente++;
+      else status.naoLidasPelaEquipe++;
+      if (m.is_admin) {
+        const s = waiting.get(m.thread_id);
+        if (s !== undefined) { deltas.push(t - s); waiting.delete(m.thread_id); }
+      } else if (!waiting.has(m.thread_id)) waiting.set(m.thread_id, t);
+    }
+    const avgMinutes = deltas.length ? Math.max(1, Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length / 60000)) : null;
+    return { hourly, avgMinutes, answered: deltas.length, waitingNow: waiting.size, status };
+  });
