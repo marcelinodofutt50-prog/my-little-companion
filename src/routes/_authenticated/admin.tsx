@@ -295,6 +295,7 @@ function AdminPage() {
   // Ficha 360º do cliente (aberta pela busca global Ctrl+K)
   const [customer360, setCustomer360] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
+  const [groupVisibility, setGroupVisibility] = useState<Record<string, boolean>>({});
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(
     null,
   );
@@ -948,13 +949,16 @@ function AdminPage() {
               {filteredGroups.map((g, gi) => {
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
-                  <details
-                    key={`${g.title}-${navTerm ? "search" : tab}`}
-                    open={navTerm.length > 0 || groupPending > 0 || g.items.some((item) => item.id === tab)}
+                  <div
+                    key={g.title}
                     className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}
                   >
-                    <summary
-                      className="flex cursor-pointer list-none items-center gap-2 px-2 pb-1.5 text-[10px] font-semibold uppercase text-muted-foreground marker:hidden"
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      aria-expanded={navTerm.length > 0 || (groupVisibility[g.title] ?? (groupPending > 0 || g.items.some((item) => item.id === tab)))}
+                      onClick={() => setGroupVisibility((prev) => ({ ...prev, [g.title]: !(prev[g.title] ?? (groupPending > 0 || g.items.some((item) => item.id === tab))) }))}
+                      className="mb-1 h-auto w-full justify-start gap-2 rounded-sm px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground"
                     >
                       <span className="truncate opacity-80">{g.title}</span>
                       {groupPending > 0 && (
@@ -963,8 +967,8 @@ function AdminPage() {
                         </span>
                       )}
                       <span className="ml-auto text-[9px] text-muted-foreground/50">▾</span>
-                    </summary>
-                    <div className="space-y-px">
+                    </Button>
+                    {(navTerm.length > 0 || (groupVisibility[g.title] ?? (groupPending > 0 || g.items.some((item) => item.id === tab)))) && <div className="space-y-px">
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
@@ -1025,8 +1029,8 @@ function AdminPage() {
                           </motion.button>
                         );
                       })}
-                    </div>
-                  </details>
+                    </div>}
+                  </div>
                 );
               })}
               <div className="mt-3 border-t border-border/40 pt-2">
