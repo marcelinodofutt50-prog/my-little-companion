@@ -950,7 +950,7 @@ function AdminPage() {
                 return (
                   <details
                     key={`${g.title}-${navTerm ? "search" : tab}`}
-                    defaultOpen={navTerm.length > 0 || groupPending > 0 || g.items.some((item) => item.id === tab)}
+                    open={navTerm.length > 0 || groupPending > 0 || g.items.some((item) => item.id === tab)}
                     className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}
                   >
                     <summary
