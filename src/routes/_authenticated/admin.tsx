@@ -948,6 +948,8 @@ function AdminPage() {
               )}
               {filteredGroups.map((g, gi) => {
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
+                const groupActive = g.items.some((item) => item.id === tab);
+                const groupExpanded = navTerm.length > 0 || groupActive || (groupVisibility[g.title] ?? groupPending > 0);
                 return (
                   <div
                     key={g.title}
@@ -956,8 +958,8 @@ function AdminPage() {
                     <Button
                       type="button"
                       variant="ghost"
-                      aria-expanded={navTerm.length > 0 || (groupVisibility[g.title] ?? (groupPending > 0 || g.items.some((item) => item.id === tab)))}
-                      onClick={() => setGroupVisibility((prev) => ({ ...prev, [g.title]: !(prev[g.title] ?? (groupPending > 0 || g.items.some((item) => item.id === tab))) }))}
+                      aria-expanded={groupExpanded}
+                      onClick={() => setGroupVisibility((prev) => ({ ...prev, [g.title]: !(prev[g.title] ?? (groupPending > 0 || groupActive)) }))}
                       className="mb-1 h-auto w-full justify-start gap-2 rounded-sm px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground"
                     >
                       <span className="truncate opacity-80">{g.title}</span>
@@ -966,9 +968,9 @@ function AdminPage() {
                           {groupPending > 99 ? "99+" : groupPending}
                         </span>
                       )}
-                      <span className="ml-auto text-[9px] text-muted-foreground/50">▾</span>
+                      <span className="ml-auto text-[9px] text-muted-foreground/50" aria-hidden="true">{groupExpanded ? "▾" : "▸"}</span>
                     </Button>
-                    {(navTerm.length > 0 || (groupVisibility[g.title] ?? (groupPending > 0 || g.items.some((item) => item.id === tab)))) && <div className="space-y-px">
+                    {groupExpanded && <div className="space-y-px">
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
