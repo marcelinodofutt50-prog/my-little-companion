@@ -180,7 +180,14 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { SECTION_CAP, can, ROLE_LABEL, type Role } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin — Shadow" }] }),
+  head: () => ({ meta: [
+    { title: "Painel administrativo — Shadow" },
+    { name: "description", content: "Atendimento, clientes, licenças e operação da equipe Shadow." },
+    { property: "og:title", content: "Painel administrativo — Shadow" },
+    { property: "og:description", content: "Atendimento, clientes, licenças e operação da equipe Shadow." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
@@ -942,8 +949,8 @@ function AdminPage() {
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
                 return (
                   <details
-                    key={g.title}
-                    open={navTerm.length > 0 || groupPending > 0 || g.items.some((item) => item.id === tab)}
+                    key={`${g.title}-${navTerm ? "search" : tab}`}
+                    defaultOpen={navTerm.length > 0 || groupPending > 0 || g.items.some((item) => item.id === tab)}
                     className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}
                   >
                     <summary
@@ -955,7 +962,7 @@ function AdminPage() {
                           {groupPending > 99 ? "99+" : groupPending}
                         </span>
                       )}
-                      <span className="ml-auto text-[9px] text-muted-foreground/50">abrir</span>
+                      <span className="ml-auto text-[9px] text-muted-foreground/50">▾</span>
                     </summary>
                     <div className="space-y-px">
                       {g.items.map((t) => {
