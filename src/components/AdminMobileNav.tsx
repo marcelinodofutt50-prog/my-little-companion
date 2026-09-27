@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LayoutGrid, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 export type AdminNavItem = { id: string; label: string; icon: any; hint?: string };
 export type AdminNavGroup = { title: string; accent: "neon" | "cyan" | "violet"; items: AdminNavItem[] };
@@ -63,6 +64,9 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
 
   const inQuick = quick.some((i) => i.id === tab);
   const current = all.find((i) => i.id === tab);
+  const otherPending = all
+    .filter((item) => !quick.some((quickItem) => quickItem.id === item.id))
+    .reduce((total, item) => total + (badges?.[item.id] ?? 0), 0);
 
   return (
     <>
@@ -75,11 +79,14 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
             const active = tab === item.id;
             const badge = badges?.[item.id] ?? 0;
             return (
-              <button
+              <Button
                 key={item.id}
+                type="button"
+                variant="ghost"
                 onClick={() => pick(item.id)}
+                aria-label={item.label}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-all ${
+                className={`relative flex h-auto min-h-[58px] min-w-0 flex-col items-center justify-center gap-1 rounded-none px-1 py-2 transition-all ${
                   active
                     ? "bg-neon/10 text-neon"
                     : "text-muted-foreground active:text-foreground"
@@ -101,13 +108,16 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}
-              </button>
+              </Button>
             );
           })}
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             onClick={() => setOpen(true)}
+            aria-label="Todas as seções"
             aria-current={!inQuick ? "page" : undefined}
-            className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-1 py-2 transition-all ${
+            className={`relative flex h-auto min-h-[58px] min-w-0 flex-col items-center justify-center gap-1 rounded-none px-1 py-2 transition-all ${
               !inQuick ? "bg-neon/10 text-neon" : "text-muted-foreground active:text-foreground"
             }`}
           >
@@ -126,7 +136,12 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
             >
               {!inQuick && current ? current.label : "Tudo"}
             </span>
-          </button>
+            {otherPending > 0 && (
+              <span className="absolute right-2 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 font-mono text-[9px] text-destructive-foreground">
+                {otherPending > 9 ? "9+" : otherPending}
+              </span>
+            )}
+          </Button>
         </div>
       </nav>
 
@@ -136,9 +151,9 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
           <SheetHeader className="sticky top-0 z-10 border-b border-border/40 bg-background/95 px-4 py-3 backdrop-blur">
             <SheetTitle className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.2em] text-neon">
               Seções do painel
-              <button onClick={() => setOpen(false)} aria-label="Fechar" className="text-muted-foreground">
+              <Button type="button" size="icon" variant="ghost" onClick={() => setOpen(false)} aria-label="Fechar" className="h-7 w-7 text-muted-foreground">
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </SheetTitle>
             <input
               value={q}
@@ -162,12 +177,14 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                     const active = tab === item.id;
                     const badge = badges?.[item.id] ?? 0;
                     return (
-                      <button
+                      <Button
                         key={item.id}
+                        type="button"
+                        variant="outline"
                         ref={active ? activeRef : undefined}
                         onClick={() => pick(item.id)}
                         aria-current={active ? "page" : undefined}
-                        className={`relative flex min-h-[62px] flex-col justify-center gap-1 rounded border px-3 py-2 text-left transition-colors ${
+                        className={`relative flex h-auto min-h-[62px] min-w-0 flex-col items-start justify-center gap-1 rounded border px-3 py-2 text-left transition-colors ${
                           active
                             ? "border-neon bg-neon/15 text-neon shadow-[0_0_12px_-4px_var(--neon)]"
                             : "border-border/50 bg-background/40 text-foreground active:border-foreground/40"
@@ -176,7 +193,7 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                         {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-neon" />}
                         <div className="flex items-center gap-1.5">
                           <item.icon className="h-3.5 w-3.5 shrink-0" />
-                          <span className={`truncate font-mono text-[10px] uppercase tracking-wider ${active ? "font-bold" : ""}`}>
+                          <span className={`min-w-0 truncate font-mono text-[10px] uppercase tracking-wider ${active ? "font-bold" : ""}`}>
                             {item.label}
                           </span>
                           {active && (
@@ -194,7 +211,7 @@ export function AdminMobileNav({ groups, primary, tab, onChange, badges }: Props
                             {badge > 9 ? "9+" : badge}
                           </span>
                         )}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>

@@ -180,7 +180,14 @@ import { fetchMyRole, isStaffRole } from "@/lib/roles";
 import { SECTION_CAP, can, ROLE_LABEL, type Role } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin — Shadow" }] }),
+  head: () => ({ meta: [
+    { title: "Painel administrativo — Shadow" },
+    { name: "description", content: "Atendimento, clientes, licenças e operação da equipe Shadow." },
+    { property: "og:title", content: "Painel administrativo — Shadow" },
+    { property: "og:description", content: "Atendimento, clientes, licenças e operação da equipe Shadow." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
@@ -288,6 +295,7 @@ function AdminPage() {
   // Ficha 360º do cliente (aberta pela busca global Ctrl+K)
   const [customer360, setCustomer360] = useState<string | null>(null);
   const [navQuery, setNavQuery] = useState("");
+  const [groupVisibility, setGroupVisibility] = useState<Record<string, boolean>>({});
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(
     null,
   );
@@ -940,14 +948,19 @@ function AdminPage() {
               )}
               {filteredGroups.map((g, gi) => {
                 const groupPending = g.items.reduce((s, t) => s + (navBadges[t.id] ?? 0), 0);
+                const groupActive = g.items.some((item) => item.id === tab);
+                const groupExpanded = navTerm.length > 0 || groupActive || (groupVisibility[g.title] ?? groupPending > 0);
                 return (
-                  <details
+                  <div
                     key={g.title}
-                    open={navTerm.length > 0 || groupPending > 0 || g.items.some((item) => item.id === tab)}
                     className={gi > 0 ? "mt-3 border-t border-border/40 pt-3" : ""}
                   >
-                    <summary
-                      className="flex cursor-pointer list-none items-center gap-2 px-2 pb-1.5 text-[10px] font-semibold uppercase text-muted-foreground marker:hidden"
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      aria-expanded={groupExpanded}
+                      onClick={() => setGroupVisibility((prev) => ({ ...prev, [g.title]: !(prev[g.title] ?? (groupPending > 0 || groupActive)) }))}
+                      className="mb-1 h-auto w-full justify-start gap-2 rounded-sm px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground"
                     >
                       <span className="truncate opacity-80">{g.title}</span>
                       {groupPending > 0 && (
@@ -955,9 +968,9 @@ function AdminPage() {
                           {groupPending > 99 ? "99+" : groupPending}
                         </span>
                       )}
-                      <span className="ml-auto text-[9px] text-muted-foreground/50">abrir</span>
-                    </summary>
-                    <div className="space-y-px">
+                      <span className="ml-auto text-[9px] text-muted-foreground/50" aria-hidden="true">{groupExpanded ? "▾" : "▸"}</span>
+                    </Button>
+                    {groupExpanded && <div className="space-y-px">
                       {g.items.map((t) => {
                         const active = tab === t.id;
                         const isNew = t.id === "external";
@@ -1018,8 +1031,8 @@ function AdminPage() {
                           </motion.button>
                         );
                       })}
-                    </div>
-                  </details>
+                    </div>}
+                  </div>
                 );
               })}
               <div className="mt-3 border-t border-border/40 pt-2">

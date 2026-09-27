@@ -96,6 +96,13 @@ export const SECTION_CAP: Record<string, Capability> = {
   redeem: "redeem.manage",
   feedback: "view.chat",
   partners: "view.orders",
+  announcements: "announcements.create",
+  applications: "view.staff",
+  moderation: "view.staff",
+  bans: "view.staff",
+  quotas: "staff.manage",
+  license_audit: "view.audit",
+  panel_integrity: "view.system",
 };
 
 
