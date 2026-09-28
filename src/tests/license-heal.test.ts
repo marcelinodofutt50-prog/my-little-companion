@@ -58,6 +58,8 @@ vi.mock("../lib/yaarsa.server", () => ({
     (u || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user",
   isPanelHealthy: (panel: string) => !state.unhealthyPanels.has(panel),
   refreshPanelOverrides: async () => {},
+  looksLikePanelSuccess: (value: unknown) =>
+    typeof value === "string" && /^[\s"']*(?:subscription|account|user|client|password)?\s*(?:updated|created|added|changed|renewed|extended|removed|deleted|success)/i.test(value),
   encrypt: (v: string) => `enc:${v}`,
   decrypt: (v: string) => String(v).replace(/^enc:/, ""),
 }));
@@ -113,6 +115,17 @@ describe("healLicenseLogin", () => {
     expect(state.create[1].password).toBe("Antiga#123");
     expect(state.updates[0]?.patch.yaarsa_email).toBe("cliente1@shadow.app");
     expect(state.updates[0]?.patch.revoked).toBe(false);
+  });
+
+  it("aceita confirmação de atualização enviada com aspas dentro de Fail", async () => {
+    state.createResponses = [{ Fail: '"subscription Updated."' }];
+    state.probeResponses = [{ state: "found", detail: "" }];
+
+    const res = await healLicenseLogin(baseLic, { reason: "test" });
+
+    expect(res.action).toBe("created");
+    expect(res.ok).toBe(true);
+    expect(state.removed).toHaveLength(0);
   });
 
   it("falha em vez de dizer que corrigiu quando a conta não aparece no painel", async () => {
