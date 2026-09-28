@@ -56,14 +56,36 @@ type LicenseRow = {
 const DAY = 86400000;
 
 /** Data que a conta deve ter no painel: expiração real + 1 dia de buffer. */
-export function panelExpireDateFor(l: { expires_at: string | null; plan_slug?: string | null }): string {
+/** Próximo dia 20 (ciclo do servidor), em AAAA-MM-DD. Se hoje já é 20+, vai para o mês seguinte. */
+export function nextDay20Ymd(now = new Date()): string {
+  const y = now.getUTCFullYear(), m = now.getUTCMonth();
+  const d = now.getUTCDate() < 20 ? new Date(Date.UTC(y, m, 20)) : new Date(Date.UTC(y, m + 1, 20));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Data que o painel deve mostrar:
+ * - teste grátis: hoje + 2 dias (o corte real de 3h30 é feito pelo site);
+ * - vitalício: dia 20 pago do servidor, ou o próximo dia 20;
+ * - mensal/semanal: validade da licença + 1 dia de folga da meia-noite.
+ */
+export function panelExpireDateFor(l: {
+  expires_at: string | null;
+  plan_slug?: string | null;
+  is_trial?: boolean | null;
+  server_paid_until?: string | null;
+}): string {
   const slug = (l.plan_slug ?? "").toLowerCase();
-  if (!l.expires_at || slug.includes("lifetime") || slug.includes("vitalicio")) {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 20);
-    return d.toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  if (l.is_trial || slug === "trial") {
+    return new Date(Date.now() + 2 * DAY).toISOString().slice(0, 10);
   }
-  return new Date(new Date(l.expires_at).getTime() + DAY).toISOString().slice(0, 10);
+  if (!l.expires_at || slug.includes("lifetime") || slug.includes("vitalicio")) {
+    const paid = l.server_paid_until ? String(l.server_paid_until).slice(0, 10) : null;
+    return paid && paid > today ? paid : nextDay20Ymd();
+  }
+  const t = new Date(new Date(l.expires_at).getTime() + DAY).toISOString().slice(0, 10);
+  return t > today ? t : new Date(Date.now() + DAY).toISOString().slice(0, 10);
 }
 
 function normalizePanel(p: string | null): "v455" | "v457" | "v46" {
