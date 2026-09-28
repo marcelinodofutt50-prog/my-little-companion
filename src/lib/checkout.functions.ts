@@ -83,6 +83,14 @@ export const createCheckout = createServerFn({ method: "POST" })
 
     let amount = Number(plan.price_brl);
 
+    // Oferta de boas-vindas (Vitalício R$ 999,90 nas primeiras 6h30). Não acumula com cupom.
+    const { serverWelcomePrice } = await import("./welcome-offer.server");
+    const welcomePrice = await serverWelcomePrice(userId, plan.slug, amount);
+    if (welcomePrice !== null) {
+      if (data.couponCode) throw new Error("A oferta de boas-vindas do Vitalício já é o menor preço e não acumula com cupom.");
+      amount = welcomePrice;
+    }
+
     // Soma addons e servidor antecipado se selecionados no simulador
     if (data.includeServer) amount += 450;
     if (data.addSigner) amount += 250;
