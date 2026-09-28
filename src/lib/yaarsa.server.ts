@@ -993,7 +993,7 @@ async function yaarsaPost(
       // Confirmação em texto puro ou em campo diferente (ex.: {"message":"subscription Updated."}).
       // Antes caía em "resposta inesperada", tentava outros endereços (demora) e mostrava erro.
       {
-        const OK_RE = /^\s*"?\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|success(ful(ly)?)?)\b/i;
+        const OK_RE = /^\s*"?\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|removed|deleted|success(ful(ly)?)?)\b/i;
         let okMsg: string | null = null;
         try {
           const j = JSON.parse(text);
@@ -1022,7 +1022,7 @@ async function yaarsaPost(
         if (
           !parsed.Success &&
           parsed.Fail &&
-          /^\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|success(ful(ly)?)?)\b/i.test(String(parsed.Fail))
+          /^\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|removed|deleted|success(ful(ly)?)?)\b/i.test(String(parsed.Fail))
         ) {
           parsed.Success = String(parsed.Fail);
           delete parsed.Fail;
