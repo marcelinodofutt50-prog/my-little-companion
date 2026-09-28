@@ -1,8 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const repairStorageBuckets = createServerFn({ method: "POST" })
-  .handler(async () => {
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin } = await import("./admin-helpers.server");
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     // 1. Ensure 'avatars' bucket exists
     const { data: buckets } = await supabaseAdmin.storage.listBuckets();
     const hasAvatars = buckets?.find(b => b.name === 'avatars');
