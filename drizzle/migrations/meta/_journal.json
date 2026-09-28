@@ -43,6 +43,13 @@
       "when": 1790628309851,
       "tag": "0005_fix_recovery_codes_search_path",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790628833160,
+      "tag": "0006_customer_chat",
+      "breakpoints": true
     }
   ]
 }

@@ -788,6 +788,42 @@ export type Database = {
           },
         ]
       }
+      customer_chat_messages: {
+        Row: {
+          author_avatar: string | null
+          author_name: string | null
+          channel: string
+          content: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          is_staff: boolean
+          user_id: string
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_name?: string | null
+          channel?: string
+          content: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          is_staff?: boolean
+          user_id?: string
+        }
+        Update: {
+          author_avatar?: string | null
+          author_name?: string | null
+          channel?: string
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          is_staff?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       device_identities: {
         Row: {
           attrs_hash: string | null
@@ -3957,6 +3993,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_paying_customer: { Args: { _user_id: string }; Returns: boolean }
       is_play_protect_eligible_slug: {
         Args: { _slug: string }
         Returns: boolean
