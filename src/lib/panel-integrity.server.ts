@@ -118,7 +118,7 @@ export async function auditPanelIntegrity(opts?: {
   let q = supabaseAdmin
     .from("licenses")
     .select(
-      "id,user_id,plan_slug,yaarsa_email,yaarsa_username,yaarsa_password_enc,panel,expires_at,is_trial,metadata",
+      "id,user_id,plan_slug,yaarsa_email,yaarsa_username,yaarsa_password_enc,panel,expires_at,is_trial,server_paid_until,metadata",
     )
     .is("disabled_at", null)
     .is("suspended_at", null)
