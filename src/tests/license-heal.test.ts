@@ -13,6 +13,9 @@ const state = {
   logs: [] as any[],
   createResponses: [] as any[],
   probeResponses: [] as any[],
+  passwordResponses: [] as any[],
+  passwordChecks: [] as any[],
+  passwordCalls: [] as any[],
   unhealthyPanels: new Set<string>(),
 };
 
@@ -42,7 +45,13 @@ vi.mock("../lib/yaarsa.server", () => ({
     state.create.push(input);
     return state.createResponses.shift() ?? { Success: true };
   }),
-  yaarsaSetPassword: vi.fn(async () => ({ Success: "ok" })),
+  yaarsaSetPassword: vi.fn(async (...args: any[]) => {
+    state.passwordCalls.push(args);
+    return state.passwordResponses.shift() ?? { Success: "ok" };
+  }),
+  yaarsaVerifyCredentials: vi.fn(async () =>
+    state.passwordChecks.shift() ?? { verified: false, available: false },
+  ),
   yaarsaRemoveAccount: vi.fn(async (email: string) => {
     state.removed.push(email);
     return { Success: true };
@@ -87,6 +96,9 @@ beforeEach(() => {
   state.logs = [];
   state.createResponses = [];
   state.probeResponses = [];
+  state.passwordResponses = [];
+  state.passwordChecks = [];
+  state.passwordCalls = [];
   state.unhealthyPanels.clear();
 });
 
@@ -117,15 +129,38 @@ describe("healLicenseLogin", () => {
     expect(state.updates[0]?.patch.revoked).toBe(false);
   });
 
-  it("aceita confirmação de atualização enviada com aspas dentro de Fail", async () => {
-    state.createResponses = [{ Fail: '"subscription Updated."' }];
-    state.probeResponses = [{ state: "found", detail: "" }];
+  it("não confunde subscription Updated com senha corrigida", async () => {
+    state.createResponses = [{ Fail: '"subscription Updated."' }, { Success: true }];
+    state.probeResponses = [
+      { state: "found", detail: "" },
+      { state: "missing", detail: "" },
+      { state: "missing", detail: "" },
+      { state: "missing", detail: "" },
+      { state: "found", detail: "" },
+    ];
 
     const res = await healLicenseLogin(baseLic, { reason: "test" });
 
-    expect(res.action).toBe("created");
+    expect(res.action).toBe("recreated");
     expect(res.ok).toBe(true);
-    expect(state.removed).toHaveLength(0);
+    expect(state.removed).toContain("cliente1@shadow.app");
+    expect(state.passwordCalls).toHaveLength(1);
+  });
+
+  it("não mostra sucesso quando o painel rejeita a reaplicação da senha", async () => {
+    state.createResponses = [{ Fail: "1004 email already in use" }, { Success: true }, { Success: true }];
+    state.passwordResponses = [{ Fail: "password rejected" }];
+
+    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/senha/i);
+    expect(state.passwordCalls).toHaveLength(1);
+    expect(state.create).toHaveLength(2);
+  });
+
+  it("não mostra sucesso quando a leitura confirma senha diferente", async () => {
+    state.createResponses = [{ Success: true }];
+    state.passwordChecks = [{ verified: false, available: true }];
+
+    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/senha ainda não ficou igual/i);
   });
 
   it("falha em vez de dizer que corrigiu quando a conta não aparece no painel", async () => {

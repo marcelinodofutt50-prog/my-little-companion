@@ -542,12 +542,18 @@ export async function yaarsaSetPassword(
       last = { Fail: String(e?.message ?? "falha de rede com o painel") };
       continue;
     }
-    if (r.Success) return { ...r, action };
-
-    // Se a senha foi alterada com sucesso mas o painel retornou erro de "email em uso" no action 'add', tratamos como sucesso
-    if (action === "add" && /1004|already|use/i.test(r.Fail || "")) {
-       return { Success: "Account verified/updated via add fallback", action };
+    if (r.Success) {
+      // "subscription Updated" confirma apenas dados da assinatura. Em uma
+      // troca de senha, essa mensagem não comprova que a credencial mudou.
+      if (/subscription\s+updated/i.test(String(r.Success).replace(/["']/g, ""))) {
+        last = { Fail: "O painel atualizou a assinatura, mas não confirmou a senha", action };
+        continue;
+      }
+      return { ...r, action };
     }
+
+    // `add` + "já existe" confirma somente a presença da conta; nunca prova
+    // que a senha foi trocada. O chamador deve receber falha, não sucesso falso.
 
     last = r;
     const fail = String(r.Fail ?? "");

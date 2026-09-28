@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- O reparo de acesso só pode concluir após reaplicar a senha exibida na licença; presença da conta ou “subscription Updated” não comprovam credenciais válidas.
