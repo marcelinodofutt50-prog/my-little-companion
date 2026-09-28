@@ -109,6 +109,7 @@ import {
   StaffAcademyPanel,
   StaffNexusChat,
 } from "@/components/admin/lazy-panels";
+import AdminClientStatusPanel from "@/components/admin/AdminClientStatusPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -226,6 +227,7 @@ type Tab =
   | "quotas"
   | "selftest"
   | "trial_monitor"
+  | "client_status"
   | "nexus"
   | "academy"
   | "applications"
@@ -271,6 +273,7 @@ const TAB_DESC: Record<Tab, string> = {
   applications: "Candidaturas para a equipe: quem pediu para virar staff (R$ 350/mês, suporte + assinatura de APKs).",
   academy: "Academia da Equipe: treinamento interno para novos integrantes (só admin, suporte e moderação).",
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
+  client_status: "Versões e pendências de cada cliente: licenças, vencimentos, senha e suporte.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
   redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
   panel_integrity: "Conferência painel x site: encontra logins que sumiram do painel Yaarsa e recria automaticamente com a mesma senha.",
@@ -712,6 +715,7 @@ function AdminPage() {
         { id: "external", label: "Pagam Por Fora", icon: Wallet, hint: "extensão manual" },
         { id: "users", label: "Usuários", icon: Users },
         { id: "licenses", label: "Licenças", icon: KeyRound },
+        { id: "client_status", label: "Pendências por Cliente", icon: Users, hint: "versões e o que falta" },
         { id: "trial_monitor", label: "Monitor de Trials", icon: Activity, hint: "sucessos & bloqueios" },
         { id: "redeem", label: "Códigos de Cortesia", icon: Ticket, hint: "licenças, servidor e parceiros" },
         { id: "license_audit", label: "Histórico de Alterações", icon: ScrollText, hint: "senha, sync e cupons" },
@@ -2357,6 +2361,7 @@ function AdminPage() {
             {tab === "refunds" && <AdminRefundsPanel />}
               {tab === "selftest" && <AdminSelfTestPanel />}
               {tab === "trial_monitor" && <AdminTrialMonitorPanel />}
+              {tab === "client_status" && <AdminClientStatusPanel />}
               {tab === "vip" && <AdminVipPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
