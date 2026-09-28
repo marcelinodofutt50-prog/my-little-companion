@@ -990,6 +990,32 @@ async function yaarsaPost(
       }
 
       const latency = Date.now() - started;
+      // Confirmação em texto puro ou em campo diferente (ex.: {"message":"subscription Updated."}).
+      // Antes caía em "resposta inesperada", tentava outros endereços (demora) e mostrava erro.
+      {
+        const OK_RE = /^\s*"?\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|success(ful(ly)?)?)\b/i;
+        let okMsg: string | null = null;
+        try {
+          const j = JSON.parse(text);
+          if (typeof j === "string" && OK_RE.test(j)) okMsg = j;
+          else if (j && typeof j === "object" && !j.Success && !j.Fail) {
+            const v = Object.values(j).find((x) => typeof x === "string" && OK_RE.test(x as string));
+            if (v) okMsg = String(v);
+          }
+        } catch {
+          const plain = text.replace(/<[^>]*>/g, " ").trim();
+          if (plain.length < 200 && OK_RE.test(plain)) okMsg = plain;
+        }
+        if (okMsg) {
+          await persistLog({
+            panel, action, endpoint_kind: kind, url, attempt: attempt + 1,
+            http_status: status, latency_ms: latency, outcome: "success",
+            payload: debugPayload, response_body: text,
+            context: { routing: routingSummary, response: responseMeta },
+          });
+          return { Success: okMsg };
+        }
+      }
       try {
         const parsed = JSON.parse(text) as YaarsaResponse & Record<string, unknown>;
         // Painéis 4.5.5 / 4.6 devolvem confirmações como "Fail" (ex.: "subscription Updated.").
