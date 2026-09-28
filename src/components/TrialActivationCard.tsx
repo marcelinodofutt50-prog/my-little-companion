@@ -89,7 +89,7 @@ export function TrialActivationCard({ onDone }: { onDone?: () => void }) {
               </div>
             ))}
             <p className="pt-1 text-[10px] normal-case text-muted-foreground">
-              Salve estes dados. Seu teste dura 24 horas a partir de agora.
+              Salve estes dados. Seu teste dura 3 horas e 30 minutos a partir de agora.
             </p>
           </div>
         )}
