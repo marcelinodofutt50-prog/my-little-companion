@@ -153,7 +153,7 @@ describe("healLicenseLogin", () => {
 
     await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/senha/i);
     expect(state.passwordCalls).toHaveLength(1);
-    expect(state.create).toHaveLength(3);
+    expect(state.create).toHaveLength(2);
   });
 
   it("não mostra sucesso quando a leitura confirma senha diferente", async () => {
