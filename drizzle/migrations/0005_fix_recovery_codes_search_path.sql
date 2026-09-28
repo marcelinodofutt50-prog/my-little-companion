@@ -1,0 +1,1 @@
+ALTER FUNCTION public.generate_my_recovery_codes() SET search_path = public, extensions, pg_temp;
