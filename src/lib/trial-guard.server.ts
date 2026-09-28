@@ -48,19 +48,28 @@ export async function evaluateTrial(input: {
 
     // 1) Conta antiga que nunca comprou não pode "descobrir" um trial novo:
     //    o teste é só para contas novas (primeiras 72h de vida).
-    const { data: profile, error: profileError } = await supabaseAdmin
+    // A data de criação oficial vem do login (auth). O perfil pode ainda não
+    // existir ou ter data diferente no banco novo — antes isso bloqueava
+    // contas recém-criadas por engano.
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("created_at, email")
       .eq("id", input.userId)
       .maybeSingle();
-    if (profileError || !profile?.created_at) {
-      throw new Error("Não foi possível validar a criação da conta.");
-    }
+    let createdAt: string | null = null;
+    try {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(input.userId);
+      createdAt = authUser?.user?.created_at ?? null;
+    } catch { /* usa o perfil abaixo */ }
+    createdAt = createdAt ?? profile?.created_at ?? null;
+    const email = profile?.email ?? input.email ?? null;
+    if (!createdAt) throw new Error("Não foi possível validar a criação da conta.");
 
-    const accountAgeMs = Date.now() - new Date(profile.created_at).getTime();
-    if (!Number.isFinite(accountAgeMs) || accountAgeMs > 24 * 60 * 60 * 1000) {
+    const accountAgeMs = Date.now() - new Date(createdAt).getTime();
+    // Folga de 1h para diferença de relógio / cadastro feito perto do limite.
+    if (!Number.isFinite(accountAgeMs) || accountAgeMs > 25 * 60 * 60 * 1000) {
       const reason = "O teste é exclusivo para contas criadas nas últimas 24 horas.";
-      await logBlock({ userId: input.userId, ipHash, email: profile.email, reason });
+      await logBlock({ userId: input.userId, ipHash, email, reason });
       return { allowed: false, reason, ipHash, userAgent };
     }
 
@@ -72,7 +81,7 @@ export async function evaluateTrial(input: {
     if (previousTrialError) throw previousTrialError;
     if (previousTrial) {
       const reason = "Esta conta já utilizou o teste grátis.";
-      await logBlock({ userId: input.userId, ipHash, email: profile.email, reason });
+      await logBlock({ userId: input.userId, ipHash, email, reason });
       return { allowed: false, reason, ipHash, userAgent };
     }
 
@@ -85,7 +94,7 @@ export async function evaluateTrial(input: {
     if (paidOrdersError) throw paidOrdersError;
     if ((paidOrders ?? 0) > 0) {
       const reason = "Conta já possui compras — o teste é apenas para novos usuários.";
-      await logBlock({ userId: input.userId, ipHash, email: profile?.email, reason });
+      await logBlock({ userId: input.userId, ipHash, email, reason });
       return { allowed: false, reason, ipHash, userAgent };
     }
 
