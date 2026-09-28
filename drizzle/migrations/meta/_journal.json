@@ -29,6 +29,13 @@
       "when": 1790626591556,
       "tag": "0003_harden_support_chat_spoofing",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790626884176,
+      "tag": "0004_security_attempts_log",
+      "breakpoints": true
     }
   ]
 }

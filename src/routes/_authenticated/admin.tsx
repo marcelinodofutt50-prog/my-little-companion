@@ -110,6 +110,7 @@ import {
   StaffNexusChat,
 } from "@/components/admin/lazy-panels";
 import AdminClientStatusPanel from "@/components/admin/AdminClientStatusPanel";
+import AdminSecurityAttemptsPanel from "@/components/admin/AdminSecurityAttemptsPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -228,6 +229,7 @@ type Tab =
   | "selftest"
   | "trial_monitor"
   | "client_status"
+  | "security_attempts"
   | "nexus"
   | "academy"
   | "applications"
@@ -273,6 +275,7 @@ const TAB_DESC: Record<Tab, string> = {
   applications: "Candidaturas para a equipe: quem pediu para virar staff (R$ 350/mês, suporte + assinatura de APKs).",
   academy: "Academia da Equipe: treinamento interno para novos integrantes (só admin, suporte e moderação).",
   vip: "Gestão do clube VIP: requisitos de cada tier, missões (padrão e VIP) e concessões de Bypass Play Protect.",
+  security_attempts: "Tentativas de golpe: quem tentou se passar por outra pessoa no chat ou burlar o teste grátis, com IP e data.",
   client_status: "Versões e pendências de cada cliente: licenças, vencimentos, senha e suporte.",
   trial_monitor: "Monitoramento em tempo real de trials: sucessos, bloqueios e falhas de provisionamento.",
   redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
@@ -746,6 +749,7 @@ function AdminPage() {
         { id: "nexus", label: "Staff Nexus", icon: MessageSquare, hint: "chat interno da equipe" },
         { id: "academy", label: "Academia da Equipe", icon: GraduationCap, hint: "treinamento interno" },
         { id: "moderation", label: "Moderação", icon: ShieldAlert, hint: "mensagens bloqueadas" },
+        { id: "security_attempts", label: "Tentativas de Golpe", icon: ShieldCheck, hint: "chat e teste grátis" },
         { id: "bans", label: "Clientes Bloqueados", icon: Ban, hint: "banimentos & contas ligadas" },
         { id: "quotas", label: "Cotas da Equipe", icon: Settings2, hint: "limites de emissão" },
       ],
@@ -2362,6 +2366,7 @@ function AdminPage() {
               {tab === "selftest" && <AdminSelfTestPanel />}
               {tab === "trial_monitor" && <AdminTrialMonitorPanel />}
               {tab === "client_status" && <AdminClientStatusPanel />}
+              {tab === "security_attempts" && <AdminSecurityAttemptsPanel />}
               {tab === "vip" && <AdminVipPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
