@@ -12,6 +12,7 @@ export type HealthFailure = {
 
 export const performHealthCheck = createServerFn({ method: "POST" })
   .handler(async () => {
+
     const { alignServerBackendEnv } = await import("./backend-env.server");
     alignServerBackendEnv();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
