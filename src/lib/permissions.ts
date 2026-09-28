@@ -90,6 +90,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   tutorials: "tutorials.manage",
   selftest: "system.selftest",
   trial_monitor: "view.system",
+  client_status: "view.users",
   vip: "view.users",
   nexus: "view.chat",
   academy: "view.chat",
