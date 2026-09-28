@@ -42,6 +42,7 @@ vi.mock("../lib/yaarsa.server", () => ({
     state.create.push(input);
     return state.createResponses.shift() ?? { Success: true };
   }),
+  yaarsaSetPassword: vi.fn(async () => ({ Success: "ok" })),
   yaarsaRemoveAccount: vi.fn(async (email: string) => {
     state.removed.push(email);
     return { Success: true };
