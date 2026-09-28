@@ -2894,6 +2894,39 @@ export type Database = {
           },
         ]
       }
+      security_attempts: {
+        Row: {
+          created_at: string
+          details: Json
+          email: string | null
+          id: string
+          ip: string | null
+          kind: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          email?: string | null
+          id?: string
+          ip?: string | null
+          kind: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          email?: string | null
+          id?: string
+          ip?: string | null
+          kind?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_pins: {
         Row: {
           created_at: string
