@@ -107,6 +107,7 @@ async function runHeal(
   const {
     yaarsaCreateAccount,
     yaarsaRemoveAccount,
+    yaarsaSetPassword,
     yaarsaProbeAccount,
     yaarsaExtend,
     encrypt,
@@ -358,6 +359,13 @@ async function runHeal(
       fresh = { Fail: String(e?.message ?? e) };
     }
 
+    if (!fresh.Success && EXISTS_RE.test(String(fresh.Fail ?? "")) && stuckIn.includes(candidate)) {
+      // Login antigo não saiu: em vez de fingir que recriou, reaplica a senha nele.
+      try {
+        const sp: any = await yaarsaSetPassword(email, password, candidate, username);
+        steps.push(sp?.Fail ? `senha-reaplicada-falhou-${candidate}` : `senha-reaplicada:${candidate}`);
+      } catch { steps.push(`senha-reaplicada-erro-${candidate}`); }
+    }
     if (fresh.Success || EXISTS_RE.test(String(fresh.Fail ?? ""))) {
       // Confirmação obrigatória: só damos por resolvido se o painel realmente
       // devolver a conta na consulta (era aqui que "corrigia" sem existir).
