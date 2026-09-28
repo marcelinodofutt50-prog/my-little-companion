@@ -56,6 +56,8 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
       "tron:USDT": "TVoSTYfgeTUpccvKJPmr9F9DdsMCDf4u5V",
       "bsc:USDT": "0xb1fD336ec3227048ee2Fb4A293fD43eDAf7190C0",
     };
+    const { serverWelcomePrice } = await import("./welcome-offer.server");
+    const welcomeAmount = await serverWelcomePrice(userId, plan.slug, Number(plan.price_brl));
     const key = `${data.network}:${data.coin}`;
     const expectedAddress = EXPECTED[key];
     if (!expectedAddress) throw new Error(`Combinação inválida ${data.coin} · ${data.network}.`);
@@ -109,7 +111,7 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
         tx_hash: hash,
         expected_address: expectedAddress,
         proof_path: proofPath,
-        amount_brl: Number(plan.price_brl),
+        amount_brl: welcomeAmount ?? Number(plan.price_brl),
         status: "pending",
         required_confirmations: 6,
       })

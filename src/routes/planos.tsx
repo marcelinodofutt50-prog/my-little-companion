@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrl } from "@/lib/plans";
+import { WELCOME_PLAN_SLUG, WELCOME_PRICE_BRL, welcomeRemainingMs } from "@/lib/welcome-offer";
 import { createCheckout } from "@/lib/checkout.functions";
 import { siteUrl } from "@/lib/site-url";
 import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus, listMyLicenses } from "@/lib/license.functions";
@@ -243,6 +244,13 @@ function PlansPage() {
     }
   }, [search?.clear_cache]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [welcomeUntil, setWelcomeUntil] = useState<number | null>(null);
+  const [welcomeNow, setWelcomeNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!welcomeUntil) return;
+    const t = setInterval(() => setWelcomeNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [welcomeUntil]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [isLegacy, setIsLegacy] = useState(false);
 
@@ -285,7 +293,14 @@ function PlansPage() {
             .from("account_bans").select("price_multiplier").eq("user_id", u.user.id).is("revoked_at", null).maybeSingle();
           if (ban) mult = Number(ban.price_multiplier) || 1;
         }
-        setPlans(((data ?? []) as Plan[]).map((p) => (mult > 1 ? { ...p, price_brl: Math.round(Number(p.price_brl) * mult * 100) / 100 } : p)));
+        // Oferta de boas-vindas: Vitalício R$ 999,90 nas primeiras 6h30 (o servidor confere de novo).
+        const welcomeLeft = u.user && mult === 1 ? welcomeRemainingMs(u.user.created_at) : 0;
+        setWelcomeUntil(welcomeLeft > 0 ? Date.now() + welcomeLeft : null);
+        setPlans(((data ?? []) as Plan[]).map((p) => {
+          if (mult > 1) return { ...p, price_brl: Math.round(Number(p.price_brl) * mult * 100) / 100 };
+          if (welcomeLeft > 0 && p.slug === WELCOME_PLAN_SLUG) return { ...p, price_brl: Math.min(Number(p.price_brl), WELCOME_PRICE_BRL) };
+          return p;
+        }));
       } catch (err) {
         console.error("[PlansLoadError] Retrying...", err);
         // Retry once after 2s if it fails
@@ -890,6 +905,21 @@ function PlansPage() {
             <span className="text-sm text-muted-foreground">Provisionamento instantâneo via PIX</span>
           </div>
           
+          {welcomeUntil && welcomeUntil > welcomeNow && (() => {
+            const left = Math.floor((welcomeUntil - welcomeNow) / 1000);
+            const hh = String(Math.floor(left / 3600)).padStart(2, "0");
+            const mm = String(Math.floor((left % 3600) / 60)).padStart(2, "0");
+            const ss = String(left % 60).padStart(2, "0");
+            return (
+              <div className="mb-6 flex flex-col gap-2 rounded-xl border border-primary/50 bg-primary/10 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// boas-vindas · membro novo</div>
+                  <div className="mt-1 font-display text-lg">Vitalício por <span className="text-primary">{formatBrl(WELCOME_PRICE_BRL)}</span> — só nas suas primeiras 6h30</div>
+                </div>
+                <div className="font-mono text-2xl tabular-nums text-primary">{hh}:{mm}:{ss}</div>
+              </div>
+            );
+          })()}
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {licenses.filter(p => (usage === "all" || usageOf(p) === usage))
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
