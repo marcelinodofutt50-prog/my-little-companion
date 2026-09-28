@@ -38,6 +38,14 @@ type Msg = {
 
 const db = supabase as any;
 
+/** Mais antigas em cima, mais novas embaixo (igual Discord). */
+function sortMsgs(list: Msg[]): Msg[] {
+  return [...list].sort((a, b) => {
+    const d = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    return d !== 0 ? d : a.id.localeCompare(b.id);
+  });
+}
+
 function CustomerChatPage() {
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [me, setMe] = useState<{ id: string; staff: boolean } | null>(null);
@@ -46,6 +54,7 @@ function CustomerChatPage() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -72,24 +81,28 @@ function CustomerChatPage() {
         .order("created_at", { ascending: false }).range(0, 99);
       if (!alive) return;
       if (error) toast.error(error.message);
-      setMsgs(((data ?? []) as Msg[]).reverse());
+      setMsgs(sortMsgs((data ?? []) as Msg[]));
     })();
     const sub = supabase
       .channel(`customer-chat-${channel}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "customer_chat_messages", filter: `channel=eq.${channel}` },
         (p: any) => {
           const row = p.new as Msg;
+          if (!row?.id) return;
           setMsgs((cur) => {
             if (row.deleted_at) return cur.filter((m) => m.id !== row.id);
-            if (cur.some((m) => m.id === row.id)) return cur;
-            return [...cur, row].slice(-200);
+            const rest = cur.filter((m) => m.id !== row.id);
+            return sortMsgs([...rest, row]).slice(-200);
           });
         })
       .subscribe();
     return () => { alive = false; supabase.removeChannel(sub); };
   }, [allowed, channel]);
 
-  useEffect(() => { bottom.current?.scrollIntoView({ block: "end" }); }, [msgs.length]);
+  useEffect(() => {
+    const el = scroller.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs]);
 
   async function send() {
     const content = text.trim();
