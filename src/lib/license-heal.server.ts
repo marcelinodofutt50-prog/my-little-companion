@@ -163,6 +163,8 @@ async function runHeal(
   const targetYmd = panelExpireDateFor({
     expires_at: lic.expires_at,
     plan_slug: lic.plan_slug,
+    is_trial: lic.is_trial,
+    server_paid_until: (lic as any).server_paid_until ?? null,
   });
 
   let currentPassword: string | null = null;
