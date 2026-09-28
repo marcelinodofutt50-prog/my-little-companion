@@ -108,6 +108,7 @@ async function runHeal(
     yaarsaCreateAccount,
     yaarsaRemoveAccount,
     yaarsaSetPassword,
+    yaarsaVerifyCredentials,
     yaarsaProbeAccount,
     yaarsaExtend,
     encrypt,
@@ -122,6 +123,8 @@ async function runHeal(
 
   const confirmed = (response: { Success?: unknown; Fail?: unknown }) =>
     Boolean(response.Success) || looksLikePanelSuccess(response.Fail);
+  const subscriptionWasOnlyUpdated = (response: { Success?: unknown; Fail?: unknown }) =>
+    /subscription\s+updated/i.test(String(response.Success ?? response.Fail ?? "").replace(/["']/g, ""));
 
   // Painéis sem VPS/admin key configurada não respondem. Nesse caso caímos no
   // painel que estiver realmente configurado, em vez de falhar para o cliente.
@@ -204,7 +207,10 @@ async function runHeal(
       if (confirmed(attempt) || EXISTS_RE.test(failText)) {
         panel = candidate;
         created = attempt;
-        exists = !confirmed(attempt);
+        // Em `add`, "subscription Updated" prova que o cadastro já existia;
+        // não prova que a senha enviada foi gravada. Ele precisa seguir pelo
+        // reparo completo, em vez de encerrar com um sucesso falso.
+        exists = !confirmed(attempt) || subscriptionWasOnlyUpdated(attempt);
         break;
       }
 
@@ -222,7 +228,7 @@ async function runHeal(
       }
     }
 
-    if (confirmed(created)) {
+    if (confirmed(created) && !exists) {
       steps.push("conta-criada-no-painel");
       const probe = await yaarsaProbeAccount(lic.yaarsa_email as string, panel);
       steps.push(`conferencia:${probe.state}`);
@@ -245,6 +251,24 @@ async function runHeal(
         await updateLicenseTolerant(supabaseAdmin, lic.id, { yaarsa_username: panelUsername });
         steps.push("usuario-ajustado-ao-painel");
       }
+      const passwordResult = await yaarsaSetPassword(
+        lic.yaarsa_email as string,
+        currentPassword as string,
+        panel,
+        panelUsername,
+        lic.expires_at,
+      );
+      if (!confirmed(passwordResult)) {
+        await logHeal(supabaseAdmin, lic, panel, "password_apply_failed", reason, steps);
+        throw new Error(`A conta foi encontrada, mas o painel não confirmou a senha: ${String(passwordResult.Fail ?? "sem resposta").slice(0, 120)}.`);
+      }
+      steps.push("senha-reaplicada");
+      const passwordCheck = await yaarsaVerifyCredentials(lic.yaarsa_email as string, currentPassword as string, panel);
+      if (passwordCheck.available && !passwordCheck.verified) {
+        await logHeal(supabaseAdmin, lic, panel, "password_mismatch", reason, steps);
+        throw new Error("O painel respondeu, mas a senha ainda não ficou igual à mostrada na licença. Não marquei o reparo como concluído.");
+      }
+      steps.push(passwordCheck.available ? "senha-confirmada" : "senha-aplicada-sem-leitura");
       await logHeal(supabaseAdmin, lic, panel, "created", reason, steps);
       return {
         ok: true,
@@ -363,13 +387,6 @@ async function runHeal(
       fresh = { Fail: String(e?.message ?? e) };
     }
 
-    if (!fresh.Success && EXISTS_RE.test(String(fresh.Fail ?? "")) && stuckIn.includes(candidate)) {
-      // Login antigo não saiu: em vez de fingir que recriou, reaplica a senha nele.
-      try {
-        const sp: any = await yaarsaSetPassword(email, password, candidate, username);
-        steps.push(sp?.Fail ? `senha-reaplicada-falhou-${candidate}` : `senha-reaplicada:${candidate}`);
-      } catch { steps.push(`senha-reaplicada-erro-${candidate}`); }
-    }
     if (confirmed(fresh) || EXISTS_RE.test(String(fresh.Fail ?? ""))) {
       // Confirmação obrigatória: só damos por resolvido se o painel realmente
       // devolver a conta na consulta (era aqui que "corrigia" sem existir).
@@ -377,6 +394,28 @@ async function runHeal(
       steps.push(`conferencia-${candidate}:${probe.state}`);
       if (probe.state === "missing") {
         lastFail = `conta não apareceu no painel ${candidate}`;
+        continue;
+      }
+      // Criar/encontrar a conta não garante a senha. Sempre reaplicamos a
+      // senha exibida na licença e recusamos sucesso se o painel a rejeitar.
+      try {
+        const passwordResult = await yaarsaSetPassword(email, password, candidate, username, lic.expires_at);
+        if (!confirmed(passwordResult)) {
+          lastFail = `senha não confirmada no painel ${candidate}: ${String(passwordResult.Fail ?? "sem resposta").slice(0, 90)}`;
+          steps.push(`senha-reaplicada-falhou-${candidate}`);
+          continue;
+        }
+        steps.push(`senha-reaplicada:${candidate}`);
+        const passwordCheck = await yaarsaVerifyCredentials(email, password, candidate);
+        if (passwordCheck.available && !passwordCheck.verified) {
+          lastFail = `senha diferente no painel ${candidate}`;
+          steps.push(`senha-divergente:${candidate}`);
+          continue;
+        }
+        steps.push(passwordCheck.available ? `senha-confirmada:${candidate}` : `senha-aplicada-sem-leitura:${candidate}`);
+      } catch (e: any) {
+        lastFail = `falha ao reaplicar senha no painel ${candidate}: ${String(e?.message ?? e).slice(0, 90)}`;
+        steps.push(`senha-reaplicada-erro-${candidate}`);
         continue;
       }
       usedPanel = candidate;
