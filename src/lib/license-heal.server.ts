@@ -403,20 +403,22 @@ async function runHeal(
         if (!confirmed(passwordResult)) {
           lastFail = `senha não confirmada no painel ${candidate}: ${String(passwordResult.Fail ?? "sem resposta").slice(0, 90)}`;
           steps.push(`senha-reaplicada-falhou-${candidate}`);
-          continue;
+          // A conta foi localizada neste servidor. Não podemos criar uma cópia
+          // em outro e trocar o painel da licença só porque a senha falhou aqui.
+          break;
         }
         steps.push(`senha-reaplicada:${candidate}`);
         const passwordCheck = await yaarsaVerifyCredentials(email, password, candidate);
         if (passwordCheck.available && !passwordCheck.verified) {
           lastFail = `senha diferente no painel ${candidate}`;
           steps.push(`senha-divergente:${candidate}`);
-          continue;
+          break;
         }
         steps.push(passwordCheck.available ? `senha-confirmada:${candidate}` : `senha-aplicada-sem-leitura:${candidate}`);
       } catch (e: any) {
         lastFail = `falha ao reaplicar senha no painel ${candidate}: ${String(e?.message ?? e).slice(0, 90)}`;
         steps.push(`senha-reaplicada-erro-${candidate}`);
-        continue;
+        break;
       }
       usedPanel = candidate;
       issued = true;

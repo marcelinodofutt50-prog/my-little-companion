@@ -152,6 +152,8 @@ describe("healLicenseLogin", () => {
     state.passwordResponses = [{ Fail: "password rejected" }];
 
     await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/senha/i);
+    expect(state.passwordCalls).toHaveLength(1);
+    expect(state.create).toHaveLength(3);
   });
 
   it("não mostra sucesso quando a leitura confirma senha diferente", async () => {
