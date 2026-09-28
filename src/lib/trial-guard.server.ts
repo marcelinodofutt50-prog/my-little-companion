@@ -27,6 +27,15 @@ export async function logBlock(input: {
       email_masked: maskEmail(input.email ?? undefined),
       reason: input.reason,
     });
+    // Registro com IP real para a página "Tentativas de golpe" (só admin lê).
+    await supabaseAdmin.from("security_attempts" as any).insert({
+      kind: "trial_block",
+      user_id: input.userId,
+      email: input.email ?? null,
+      ip: clientIp() ?? null,
+      user_agent: clientUserAgent() ?? null,
+      details: { motivo: input.reason },
+    });
   } catch (e) {
     console.error("[trial-guard] Failed to log block:", e);
   }
