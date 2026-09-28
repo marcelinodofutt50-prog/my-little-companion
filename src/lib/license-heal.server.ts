@@ -295,6 +295,7 @@ async function runHeal(
   // os painéis "no escuro": se a recriação falhasse depois, o cliente ficava
   // sem conta nenhuma. Agora só removemos onde a sondagem confirma a conta.
   const removedFrom: Array<"v455" | "v457" | "v46"> = [];
+  const stuckIn: Array<"v455" | "v457" | "v46"> = [];
   if (!generated) {
     for (const candidate of panelOrder) {
       let present = true;
@@ -306,16 +307,34 @@ async function runHeal(
         present = candidate === panel;
       }
       if (!present) continue;
-      try {
-        const removed = await yaarsaRemoveAccount(email, candidate);
-        if (removed.Fail && !NOT_FOUND_RE.test(String(removed.Fail))) {
-          steps.push(`remocao-${candidate}:${String(removed.Fail).slice(0, 60)}`);
-        } else {
-          removedFrom.push(candidate);
-          steps.push(`conta-removida:${candidate}`);
+      // Remove e CONFERE que sumiu. Antes, se a remoção falhava calada, a
+      // criação recebia "já existe", contava como sucesso e o login bugado ficava.
+      let gone = false;
+      for (let tryN = 0; tryN < 2 && !gone; tryN++) {
+        try {
+          const removed = await yaarsaRemoveAccount(email, candidate);
+          const failTxt = String(removed.Fail ?? "");
+          if (failTxt && !NOT_FOUND_RE.test(failTxt) && !/removed|deleted|apagad|removid/i.test(failTxt)) {
+            steps.push(`remocao-${candidate}:${failTxt.slice(0, 60)}`);
+          }
+        } catch (e: any) {
+          steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
         }
-      } catch (e: any) {
-        steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
+        try {
+          const after = await yaarsaProbeAccount(email, candidate);
+          gone = after.state === "missing";
+          if (after.state === "unknown") gone = true; // painel mudo: segue
+        } catch {
+          gone = true;
+        }
+        if (!gone) await new Promise((r) => setTimeout(r, 800));
+      }
+      if (gone) {
+        removedFrom.push(candidate);
+        steps.push(`conta-removida:${candidate}`);
+      } else {
+        steps.push(`remocao-nao-confirmada:${candidate}`);
+        stuckIn.push(candidate);
       }
     }
   }
