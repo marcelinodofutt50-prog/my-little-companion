@@ -513,8 +513,11 @@ export async function yaarsaSetPassword(
 ): Promise<YaarsaResponse & { action?: string }> {
   await refreshPanelOverrides();
   const fallbackExpire = (() => {
-    const d = expireDate ? new Date(expireDate) : null;
-    if (d && Number.isFinite(d.getTime()) && d.getTime() > Date.now()) return d.toISOString().slice(0, 10);
+    // Aceita "AAAA-MM-DD" já calculado ou um expires_at completo (+1 dia de folga
+    // da meia-noite). Nunca mandamos a data de hoje: o painel cortaria o login.
+    if (expireDate && /^\d{4}-\d{2}-\d{2}$/.test(expireDate) && expireDate > new Date().toISOString().slice(0, 10)) return expireDate;
+    const d = expireDate ? new Date(new Date(expireDate).getTime() + 86400000) : null;
+    if (d && Number.isFinite(d.getTime()) && d.getTime() > Date.now() + 86400000) return d.toISOString().slice(0, 10);
     const n = new Date();
     n.setDate(n.getDate() + 31);
     return n.toISOString().slice(0, 10);
@@ -529,6 +532,8 @@ export async function yaarsaSetPassword(
       adminkey: yaarsaAdminKey(panel),
     };
     if (username) fields.username = username;
+    // Sem expire_date, algumas ações do painel gravam a validade como hoje.
+    fields.expire_date = fallbackExpire;
 
     if (action === "add") {
       fields.subtype = "1 Month";
@@ -546,6 +551,12 @@ export async function yaarsaSetPassword(
       // "subscription Updated" confirma apenas dados da assinatura. Em uma
       // troca de senha, essa mensagem não comprova que a credencial mudou.
       if (/subscription\s+updated/i.test(String(r.Success).replace(/["']/g, ""))) {
+        // Conferimos a senha direto no painel: se já bate, encerramos aqui
+        // em vez de tentar mais 4 ações (era isso que estourava o tempo).
+        try {
+          const check = await yaarsaVerifyCredentials(email, password, panel);
+          if (check.available && check.verified) return { Success: "password verified", action };
+        } catch { /* segue para a próxima ação */ }
         last = { Fail: "O painel atualizou a assinatura, mas não confirmou a senha", action };
         continue;
       }

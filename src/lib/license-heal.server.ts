@@ -238,12 +238,6 @@ async function runHeal(
           `O servidor ${panel} disse que criou a conta, mas ela não aparece no painel. Não mexi em mais nada — verifique o painel antes de tentar de novo.`,
         );
       }
-      try {
-        await yaarsaExtend(lic.yaarsa_email as string, targetYmd, panel);
-        steps.push("validade-ajustada");
-      } catch {
-        steps.push("validade-nao-ajustada");
-      }
       // O painel corta o usuário em 8 caracteres: a licença precisa mostrar
       // exatamente o que existe lá, senão o cliente tenta entrar com outro nome.
       const panelUsername = sanitizePanelUsername(lic.yaarsa_username as string);
@@ -256,7 +250,7 @@ async function runHeal(
         currentPassword as string,
         panel,
         panelUsername,
-        lic.expires_at,
+        targetYmd,
       );
       if (!confirmed(passwordResult)) {
         await logHeal(supabaseAdmin, lic, panel, "password_apply_failed", reason, steps);
@@ -269,6 +263,13 @@ async function runHeal(
         throw new Error("O painel respondeu, mas a senha ainda não ficou igual à mostrada na licença. Não marquei o reparo como concluído.");
       }
       steps.push(passwordCheck.available ? "senha-confirmada" : "senha-aplicada-sem-leitura");
+      // Validade por último: a troca de senha não pode sobrescrever a data.
+      try {
+        const ext: any = await yaarsaExtend(lic.yaarsa_email as string, targetYmd, panel);
+        steps.push(ext?.Fail && !looksLikePanelSuccess(ext.Fail) ? "validade-nao-ajustada" : "validade-ajustada");
+      } catch {
+        steps.push("validade-nao-ajustada");
+      }
       await logHeal(supabaseAdmin, lic, panel, "created", reason, steps);
       return {
         ok: true,
@@ -399,7 +400,7 @@ async function runHeal(
       // Criar/encontrar a conta não garante a senha. Sempre reaplicamos a
       // senha exibida na licença e recusamos sucesso se o painel a rejeitar.
       try {
-        const passwordResult = await yaarsaSetPassword(email, password, candidate, username, lic.expires_at);
+        const passwordResult = await yaarsaSetPassword(email, password, candidate, username, targetYmd);
         if (!confirmed(passwordResult)) {
           lastFail = `senha não confirmada no painel ${candidate}: ${String(passwordResult.Fail ?? "sem resposta").slice(0, 90)}`;
           steps.push(`senha-reaplicada-falhou-${candidate}`);
