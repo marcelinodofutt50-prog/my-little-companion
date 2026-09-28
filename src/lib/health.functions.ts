@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type HealthFailure = {
   scope: string;
@@ -12,10 +11,7 @@ export type HealthFailure = {
 };
 
 export const performHealthCheck = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { assertAdmin } = await import("./admin-helpers.server");
-    await assertAdmin(context as any);
+  .handler(async () => {
 
     const { alignServerBackendEnv } = await import("./backend-env.server");
     alignServerBackendEnv();
