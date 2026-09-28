@@ -54,7 +54,7 @@ describe("Cron de licenças", () => {
 
   it("o segredo do cron é comparado em tempo constante e nunca é vazio", () => {
     const src = fs.readFileSync("src/lib/cron-auth.server.ts", "utf8");
-    expect(src).toContain("expected.length < 16");
+    expect(src).toContain("v.length >= 16");
     expect(src).toContain("charCodeAt");
   });
 });
