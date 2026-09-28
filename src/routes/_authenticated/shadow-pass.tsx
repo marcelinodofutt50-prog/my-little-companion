@@ -32,6 +32,7 @@ import { getDeviceSignature } from '@/lib/device-signature';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BackToDashboard } from "@/components/BackToDashboard";
 import { SecurityPinCard } from "@/components/SecurityPinCard";
+import { AccountSecurityTab } from "@/components/AccountSecurityTab";
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   head: () => ({
@@ -333,6 +334,12 @@ function ShadowPassPage() {
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
           >
             Benefícios VIP
+          </TabsTrigger>
+          <TabsTrigger 
+            value="security" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
+          >
+            Segurança da Conta
           </TabsTrigger>
         </TabsList>
 
@@ -1049,6 +1056,10 @@ function ShadowPassPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="security" className="m-0">
+          <AccountSecurityTab />
         </TabsContent>
       </Tabs>
     </div>
