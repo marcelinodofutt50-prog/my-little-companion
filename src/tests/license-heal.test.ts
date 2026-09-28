@@ -226,6 +226,7 @@ describe("healLicenseLogin — proteções adicionais", () => {
     state.createResponses = [{ Fail: "1004 already in use" }, { Success: true }];
     state.probeResponses = [
       { state: "found", detail: "" },   // remoção no painel preferido
+      { state: "missing", detail: "" }, // conferência: login antigo sumiu
       { state: "missing", detail: "" }, // outros painéis: não remove
       { state: "missing", detail: "" },
       { state: "found", detail: "" },   // conferência da recriação
