@@ -387,6 +387,30 @@ export function expireDateFor(planSlug: string): string {
 
 type YaarsaResponse = { Success?: string; Fail?: string; action?: string; statusCode?: number; attempt?: number; error?: string; code?: string };
 
+const PANEL_SUCCESS_RE = /^(?:subscription|account|user|client|password)?\s*(?:updated|created|added|changed|renewed|extended|removed|deleted|success(?:ful(?:ly)?)?)\b/i;
+
+/**
+ * Alguns painéis devolvem confirmações no campo `Fail` e ainda envolvem a
+ * mensagem em aspas, por exemplo: {"Fail":"\"subscription Updated.\""}.
+ * Centralizamos a leitura para todas as ações tratarem essa resposta como
+ * sucesso, sem repetir chamadas ou mostrar um erro falso ao cliente.
+ */
+export function looksLikePanelSuccess(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  let text = value.trim();
+  for (let i = 0; i < 2; i++) {
+    try {
+      const decoded: unknown = JSON.parse(text);
+      if (typeof decoded !== "string") break;
+      text = decoded.trim();
+    } catch {
+      break;
+    }
+  }
+  text = text.replace(/^[\s"']+|[\s"']+$/g, "").trim();
+  return PANEL_SUCCESS_RE.test(text);
+}
+
 function friendlyYaarsaFail(message: string, statusCode?: number): string {
   const m = message.trim();
   if (/please check admin key|admin key/i.test(m))
@@ -993,18 +1017,17 @@ async function yaarsaPost(
       // Confirmação em texto puro ou em campo diferente (ex.: {"message":"subscription Updated."}).
       // Antes caía em "resposta inesperada", tentava outros endereços (demora) e mostrava erro.
       {
-        const OK_RE = /^\s*"?\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|removed|deleted|success(ful(ly)?)?)\b/i;
         let okMsg: string | null = null;
         try {
           const j = JSON.parse(text);
-          if (typeof j === "string" && OK_RE.test(j)) okMsg = j;
+          if (typeof j === "string" && looksLikePanelSuccess(j)) okMsg = j;
           else if (j && typeof j === "object" && !j.Success && !j.Fail) {
-            const v = Object.values(j).find((x) => typeof x === "string" && OK_RE.test(x as string));
+            const v = Object.values(j).find((x) => looksLikePanelSuccess(x));
             if (v) okMsg = String(v);
           }
         } catch {
           const plain = text.replace(/<[^>]*>/g, " ").trim();
-          if (plain.length < 200 && OK_RE.test(plain)) okMsg = plain;
+          if (plain.length < 200 && looksLikePanelSuccess(plain)) okMsg = plain;
         }
         if (okMsg) {
           await persistLog({
@@ -1022,7 +1045,7 @@ async function yaarsaPost(
         if (
           !parsed.Success &&
           parsed.Fail &&
-          /^\s*(subscription|account|user|client|password)?\s*(updated|created|added|changed|renewed|extended|removed|deleted|success(ful(ly)?)?)\b/i.test(String(parsed.Fail))
+          looksLikePanelSuccess(parsed.Fail)
         ) {
           parsed.Success = String(parsed.Fail);
           delete parsed.Fail;

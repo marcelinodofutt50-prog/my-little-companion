@@ -117,7 +117,11 @@ async function runHeal(
     sanitizePanelUsername,
     isPanelHealthy,
     refreshPanelOverrides,
+    looksLikePanelSuccess,
   } = await import("./yaarsa.server");
+
+  const confirmed = (response: { Success?: unknown; Fail?: unknown }) =>
+    Boolean(response.Success) || looksLikePanelSuccess(response.Fail);
 
   // Painéis sem VPS/admin key configurada não respondem. Nesse caso caímos no
   // painel que estiver realmente configurado, em vez de falhar para o cliente.
@@ -197,10 +201,10 @@ async function runHeal(
       }
 
       const failText = String(attempt.Fail ?? "");
-      if (attempt.Success || EXISTS_RE.test(failText)) {
+      if (confirmed(attempt) || EXISTS_RE.test(failText)) {
         panel = candidate;
         created = attempt;
-        exists = !attempt.Success;
+        exists = !confirmed(attempt);
         break;
       }
 
@@ -218,7 +222,7 @@ async function runHeal(
       }
     }
 
-    if (created.Success) {
+    if (confirmed(created)) {
       steps.push("conta-criada-no-painel");
       const probe = await yaarsaProbeAccount(lic.yaarsa_email as string, panel);
       steps.push(`conferencia:${probe.state}`);
@@ -366,7 +370,7 @@ async function runHeal(
         steps.push(sp?.Fail ? `senha-reaplicada-falhou-${candidate}` : `senha-reaplicada:${candidate}`);
       } catch { steps.push(`senha-reaplicada-erro-${candidate}`); }
     }
-    if (fresh.Success || EXISTS_RE.test(String(fresh.Fail ?? ""))) {
+    if (confirmed(fresh) || EXISTS_RE.test(String(fresh.Fail ?? ""))) {
       // Confirmação obrigatória: só damos por resolvido se o painel realmente
       // devolver a conta na consulta (era aqui que "corrigia" sem existir).
       const probe = await yaarsaProbeAccount(email, candidate);
@@ -401,7 +405,7 @@ async function runHeal(
           additionalInfo: `shadow-heal-restore-${lic.id.slice(0, 8)}`,
           panel: candidate,
         });
-        if (back.Success || EXISTS_RE.test(String(back.Fail ?? ""))) {
+        if (confirmed(back) || EXISTS_RE.test(String(back.Fail ?? ""))) {
           const probe = await yaarsaProbeAccount(email, candidate);
           if (probe.state !== "missing") {
             restored = true;
