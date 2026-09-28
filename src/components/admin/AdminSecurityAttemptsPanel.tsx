@@ -14,13 +14,19 @@ const FLAG_LABEL: Record<string, string> = {
   "fingiu-ser-equipe": "Tentou se marcar como equipe",
   "nome-ou-cargo-falso": "Tentou usar nome/cargo falso",
   "alterou-remetente-de-mensagem": "Tentou trocar o remetente de mensagem antiga",
+  "pagamento-cripto-ja-confirmado": "Tentou criar pagamento cripto já confirmado",
+  "apk-com-campos-de-sistema": "Tentou criar APK pronto/grátis ou apontar para arquivo de outro",
+  "migracao-ja-aprovada": "Tentou criar migração já aprovada",
+  "candidatura-ja-aprovada": "Tentou se aprovar na equipe",
+  "chamado-com-atendente-falso": "Tentou abrir chamado com atendente falso",
+  "perfil-com-pontos-ou-vip": "Tentou criar perfil com pontos/VIP",
 };
 
 export default function AdminSecurityAttemptsPanel() {
   const [rows, setRows] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [kind, setKind] = useState<"all" | "chat_spoof" | "trial_block">("all");
+  const [kind, setKind] = useState<"all" | "chat_spoof" | "trial_block" | "forged_insert">("all");
   const [q, setQ] = useState("");
 
   async function load() {
@@ -42,9 +48,9 @@ export default function AdminSecurityAttemptsPanel() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        {(["all", "chat_spoof", "trial_block"] as const).map((k) => (
+        {(["all", "chat_spoof", "trial_block", "forged_insert"] as const).map((k) => (
           <Button key={k} size="sm" variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}>
-            {k === "all" ? "Tudo" : k === "chat_spoof" ? "Golpe no chat" : "Teste grátis bloqueado"}
+            {k === "all" ? "Tudo" : k === "chat_spoof" ? "Golpe no chat" : k === "trial_block" ? "Teste grátis bloqueado" : "Dados forjados"}
           </Button>
         ))}
         <Input placeholder="Buscar e-mail ou IP…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
@@ -57,12 +63,12 @@ export default function AdminSecurityAttemptsPanel() {
           <div key={r.id} className="rounded-lg border border-border bg-card p-3 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className={r.kind === "chat_spoof" ? "font-semibold text-destructive" : "font-semibold text-primary"}>
-                {r.kind === "chat_spoof" ? "Golpe no chat" : "Teste grátis bloqueado"}
+                {r.kind === "chat_spoof" ? "Golpe no chat" : r.kind === "trial_block" ? "Teste grátis bloqueado" : `Dados forjados (${r.details?.tabela ?? ""})`}
               </span>
               <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("pt-BR")}</span>
             </div>
             <p className="mt-1 text-foreground">{r.email ?? r.user_id ?? "sem conta"} · IP <span className="font-mono">{r.ip ?? "desconhecido"}</span></p>
-            {r.kind === "chat_spoof" ? (
+            {r.kind !== "trial_block" ? (
               <>
                 <ul className="mt-1 list-disc pl-5 text-muted-foreground">
                   {(r.details?.flags ?? []).map((f: string) => <li key={f}>{FLAG_LABEL[f] ?? f}</li>)}
