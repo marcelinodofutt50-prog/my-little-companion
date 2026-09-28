@@ -84,9 +84,14 @@ export function LicenseAccessTools({
   const runRepair = async () => {
     if (repairing) return;
     setRepairing(true);
-    const t = toast.loading("Reparando seu acesso no painel… pode levar até 1 minuto.");
+    const t = toast.loading("Reparando seu acesso no painel… pode levar até 30 segundos.");
     try {
-      const res: any = await repairAccess({ data: { licenseId } });
+      const res: any = await Promise.race([
+        repairAccess({ data: { licenseId } }),
+        new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("O painel não respondeu a tempo. Espere 1 minuto, teste o login e tente de novo se precisar.")), 35000),
+        ),
+      ]);
       const steps: string[] = Array.isArray(res?.steps) ? res.steps : [];
        const notify = res?.warning ? toast.warning : toast.success;
        notify(res?.message ?? "Acesso ressincronizado.", {

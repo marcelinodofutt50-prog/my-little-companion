@@ -978,14 +978,27 @@ export const repairMyLicenseAccess = createServerFn({ method: "POST" })
 
     // O painel cai por alguns segundos com frequência. Em falha passageira
     // tentamos de novo aqui mesmo, para o cliente não precisar clicar duas vezes.
+    // Prazo total: o servidor corta pedidos longos e o botão ficava girando
+    // para sempre. Passado o prazo, devolvemos um erro claro.
+    const deadline = Date.now() + 24000;
+    const withDeadline = <T,>(p: Promise<T>) =>
+      Promise.race([
+        p,
+        new Promise<never>((_, rej) =>
+          setTimeout(
+            () => rej(new Error("O painel demorou demais para responder. Espere 1 minuto, teste o login e, se não entrar, tente reparar de novo.")),
+            Math.max(1000, deadline - Date.now()),
+          ),
+        ),
+      ]);
     let result;
     try {
-      result = await healLicenseLogin(payload, { reason: "cliente_corrigir_erros" });
+      result = await withDeadline(healLicenseLogin(payload, { reason: "cliente_corrigir_erros" }));
     } catch (e: any) {
       const msg = String(e?.message ?? e);
-      if (!isTransientPanelFail(msg)) throw e;
-      await new Promise((r) => setTimeout(r, 1500));
-      result = await healLicenseLogin(payload, { reason: "cliente_corrigir_erros_retry" });
+      if (!isTransientPanelFail(msg) || deadline - Date.now() < 8000 || /demorou demais/.test(msg)) throw e;
+      await new Promise((r) => setTimeout(r, 1000));
+      result = await withDeadline(healLicenseLogin(payload, { reason: "cliente_corrigir_erros_retry" }));
     }
 
     return {
