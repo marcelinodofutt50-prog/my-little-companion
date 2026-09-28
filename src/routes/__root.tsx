@@ -11,6 +11,7 @@ import { useEffect, useState, type ReactNode, Suspense } from "react";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { redirectLocalhostAuthToCanonical } from "@/lib/site-url";
 import { Toaster } from "sonner";
+import { MfaGate } from "@/components/MfaGate";
 import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 
@@ -357,6 +358,7 @@ function InnerRootComponent() {
           </div>
           <Outlet />
           <ThemedToaster />
+          <MfaGate />
           <PaymentSuccessOverlay />
         </I18nProvider>
       </ThemeProvider>
