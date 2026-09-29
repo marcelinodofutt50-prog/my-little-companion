@@ -241,13 +241,21 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 
   const hasTrigger = triggers.some(t => msgLower.includes(t));
 
-  if (!hasTrigger) return;
+  // Aprendizado: casos parecidos que a equipe já resolveu viram referência.
+  const { findKnowledge } = await import("./support-learning.server");
+  const { formatKnowledgeForPrompt } = await import("./support-learning");
+  const knowledge = await findKnowledge(userMessage, 3);
+
+  if (!hasTrigger && knowledge.length === 0) return;
+  const knowledgeBlock = formatKnowledgeForPrompt(knowledge);
 
   try {
     await withGeminiFallback((model) => generateText({
       model,
       system: SUPPORT_AI_SYSTEM,
-      prompt: `Usuário (ID: ${userId}) na conversa ${threadId} disse: "${userMessage}"`,
+      prompt:
+        `Usuário (ID: ${userId}) na conversa ${threadId} disse: "${userMessage}"` +
+        (knowledgeBlock ? `\n\n${knowledgeBlock}` : ""),
       tools: {
         checkCustomerStatus: tool({
           description: "Verifica o status atual das licenças e pedidos do cliente.",

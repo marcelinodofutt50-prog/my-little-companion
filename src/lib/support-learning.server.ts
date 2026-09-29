@@ -51,7 +51,7 @@ export async function findKnowledge(message: string, limit = 3) {
       return [];
     }
     const rows = ((data ?? []) as { id: string; question: string; answer: string; rank: number }[])
-      .filter((r) => r.rank >= 0.05);
+      .filter((r) => r.rank >= 0.1);
     if (rows.length) {
       for (const r of rows) {
         const { data: cur } = await (supabaseAdmin as any).from("support_knowledge").select("uses").eq("id", r.id).maybeSingle();

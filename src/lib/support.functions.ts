@@ -562,6 +562,14 @@ export const sendMessage = createServerFn({ method: "POST" })
       msg = final;
     }
     
+    // Aprendizado: a resposta humana da equipe ensina o robô a resolver casos parecidos.
+    if (isStaff && data.body && msg) {
+      const { learnFromStaffReply } = await import("./support-learning.server");
+      learnFromStaffReply(effectiveThreadId, context.userId, data.body, (msg as any).id).catch((e) =>
+        console.error("[support-learning] background failed:", e),
+      );
+    }
+
     // Inicia análise por IA se não for staff e a mensagem contiver gatilhos de erro de login
     if (!isStaff && data.body) {
       const { triggerSupportAI } = await import("./support-ai.server");
