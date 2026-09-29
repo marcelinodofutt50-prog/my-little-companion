@@ -33,9 +33,10 @@ export function collectCustomerQuestion(history: ThreadMsg[]): string {
   const parts: string[] = [];
   for (let i = history.length - 1; i >= 0; i--) {
     const m = history[i];
-    if (m.is_admin || m.is_system) {
+    if (m.is_system) continue; // falas do robô não separam a pergunta
+    if (m.is_admin) {
       if (parts.length) break;
-      continue; // ignora falas do robô antes da pergunta
+      continue;
     }
     if (m.body?.trim()) parts.unshift(m.body.trim());
     if (parts.length >= 4) break;

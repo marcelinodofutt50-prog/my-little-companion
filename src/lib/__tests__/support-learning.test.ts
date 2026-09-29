@@ -8,7 +8,7 @@ const bot = (body: string) => ({ body, is_admin: true, is_system: true });
 describe("aprendizado do robô", () => {
   it("junta as mensagens do cliente desde a última fala da equipe", () => {
     const q = collectCustomerQuestion([c("antiga"), a("resposta velha"), c("meu apk dá network error"), bot("🤖 ..."), c("ainda não foi")]);
-    expect(q).toBe("meu apk dá network error");
+    expect(q).toBe("meu apk dá network error\nainda não foi");
   });
 
   it("aprende com resposta útil da equipe", () => {
