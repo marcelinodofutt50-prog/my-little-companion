@@ -176,6 +176,71 @@ async function weekendNoticeSentToday(threadId: string): Promise<boolean> {
   return ((data ?? []) as { body: string | null }[]).some((m) => (m.body ?? "").includes(key));
 }
 
+/**
+ * Memória do cliente: situação das licenças + resumo das conversas anteriores dele,
+ * para o robô ligar o problema atual ao que já aconteceu. Nunca derruba o atendimento.
+ */
+async function buildCustomerMemory(
+  userId: string,
+  threadId: string,
+  redact: (s: string) => string,
+): Promise<string> {
+  try {
+    const [licRes, threadRes] = await Promise.all([
+      supabaseAdmin
+        .from("licenses")
+        .select("plan_slug, panel, is_trial, revoked, disabled_at, expires_at, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabaseAdmin
+        .from("support_threads")
+        .select("id, category, status, created_at")
+        .eq("user_id", userId)
+        .neq("id", threadId)
+        .order("created_at", { ascending: false })
+        .limit(3),
+    ]);
+    const now = Date.now();
+    const lics = ((licRes.data ?? []) as any[]).map((l) => {
+      const state = l.disabled_at ? "desativada" : l.revoked ? "revogada"
+        : l.expires_at && new Date(l.expires_at).getTime() < now ? "vencida" : "ativa";
+      const exp = l.expires_at ? String(l.expires_at).slice(0, 10) : "vitalícia";
+      return `- ${l.plan_slug ?? "plano"} (${l.panel ?? "v457"}${l.is_trial ? ", teste grátis" : ""}): ${state}, validade ${exp}`;
+    });
+
+    const threads = (threadRes.data ?? []) as { id: string; category: string | null; status: string | null; created_at: string }[];
+    const past: string[] = [];
+    if (threads.length) {
+      const { data: msgs } = await supabaseAdmin
+        .from("support_messages")
+        .select("thread_id, body, is_admin, is_system, created_at")
+        .in("thread_id", threads.map((t) => t.id))
+        .order("created_at", { ascending: false })
+        .limit(40);
+      for (const t of threads) {
+        const lines = ((msgs ?? []) as any[])
+          .filter((m) => m.thread_id === t.id && (m.body ?? "").trim())
+          .slice(0, 4)
+          .reverse()
+          .map((m) => `  ${m.is_system ? "Robô" : m.is_admin ? "Equipe" : "Cliente"}: ${redact(m.body).slice(0, 180)}`);
+        if (lines.length) {
+          past.push(`- ${t.created_at.slice(0, 10)} [${t.category ?? "geral"}, ${t.status ?? "?"}]\n${lines.join("\n")}`);
+        }
+      }
+    }
+
+    const parts: string[] = [];
+    if (lics.length) parts.push(`LICENÇAS DO CLIENTE:\n${lics.join("\n")}`);
+    else parts.push("LICENÇAS DO CLIENTE: nenhuma registrada.");
+    if (past.length) parts.push(`CONVERSAS ANTERIORES DO CLIENTE (resumo):\n${past.join("\n")}`);
+    return parts.join("\n\n");
+  } catch (e) {
+    console.error("[support-ai] memória do cliente falhou:", e);
+    return "";
+  }
+}
+
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
 
@@ -264,6 +329,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 
   if (!hasTrigger && knowledge.length === 0) return;
   const knowledgeBlock = formatKnowledgeForPrompt(knowledge);
+  const memoryBlock = await buildCustomerMemory(userId, threadId, redactPersonalData);
 
   try {
     await withGeminiFallback((model) => generateText({
@@ -273,8 +339,14 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 USO DOS CASOS JÁ RESOLVIDOS:
 - Se um caso parecido se encaixa no relato, siga a MESMA solução que a equipe deu, com suas palavras.
 - Se nenhum caso se encaixa de verdade e você não tem certeza, não chute: diga que um atendente humano assume.
-- Nunca repita o que o Robô já disse nesta conversa; avance para o próximo passo.`,
+- Nunca repita o que o Robô já disse nesta conversa; avance para o próximo passo.
+
+MEMÓRIA DO CLIENTE:
+- Use o histórico do cliente para ligar os pontos: se o problema já apareceu antes, diga isso e
+  não repita uma solução que já falhou; se a licença venceu ou foi revogada, relacione ao erro relatado.
+- Não cite dados de conversas antigas que não tenham relação com o problema atual.`,
       prompt:
+        (memoryBlock ? `${memoryBlock}\n\n` : "") +
         (historyBlock ? `Conversa recente (mais nova no fim):\n${historyBlock}\n\n` : "") +
         `Usuário (ID: ${userId}) na conversa ${threadId} acabou de dizer: "${userMessage}"` +
         (knowledgeBlock ? `\n\n${knowledgeBlock}` : ""),
