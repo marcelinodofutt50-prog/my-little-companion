@@ -50,6 +50,13 @@
       "when": 1790628833160,
       "tag": "0006_customer_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790680984153,
+      "tag": "0007_support_knowledge",
+      "breakpoints": true
     }
   ]
 }
