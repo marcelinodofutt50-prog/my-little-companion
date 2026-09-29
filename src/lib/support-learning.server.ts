@@ -1,6 +1,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { buildKnowledgeEntry, type ThreadMsg } from "./support-learning";
 
+/** Acima dessa semelhança consideramos o mesmo caso (evita respostas duplicadas). */
+const DUPLICATE_RANK = 0.5;
+
 /** Grava como conhecimento a resposta que a equipe acabou de dar ao cliente. */
 export async function learnFromStaffReply(threadId: string, staffId: string, reply: string, replyId?: string | null) {
   try {
@@ -23,11 +26,22 @@ export async function learnFromStaffReply(threadId: string, staffId: string, rep
       .eq("source_thread_id", threadId)
       .eq("question", entry.question)
       .maybeSingle();
-    if (existing?.id) {
-      await (supabaseAdmin as any).from("support_knowledge")
-        .update({ answer: entry.answer, created_by: staffId, updated_at: new Date().toISOString() })
-        .eq("id", existing.id);
-      return { learned: true, updated: true };
+    let targetId: string | null = existing?.id ?? null;
+
+    // Caso quase idêntico já aprendido em outra conversa: atualiza em vez de duplicar,
+    // assim a memória fica limpa e sempre com a solução mais recente da equipe.
+    if (!targetId) {
+      const { data: similar } = await (supabaseAdmin as any).rpc("match_support_knowledge", { _q: entry.question, _limit: 1 });
+      const top = (similar ?? [])[0] as { id: string; rank: number } | undefined;
+      if (top && top.rank >= DUPLICATE_RANK) targetId = top.id;
+    }
+
+    if (targetId) {
+      const { error: upErr } = await (supabaseAdmin as any).from("support_knowledge")
+        .update({ answer: entry.answer, created_by: staffId, status: "active", updated_at: new Date().toISOString() })
+        .eq("id", targetId);
+      if (upErr) console.error("[support-learning] falha ao atualizar:", upErr.message);
+      return { learned: !upErr, updated: true };
     }
     const { error } = await (supabaseAdmin as any).from("support_knowledge").insert({
       ...entry,
