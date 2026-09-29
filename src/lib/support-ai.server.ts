@@ -241,10 +241,26 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 
   const hasTrigger = triggers.some(t => msgLower.includes(t));
 
-  // Aprendizado: casos parecidos que a equipe já resolveu viram referência.
+  // Contexto: as últimas falas da conversa, para o robô entender do que se trata
+  // (mensagens curtas como "ainda não foi" só fazem sentido com o histórico).
+  const { data: recent } = await supabaseAdmin
+    .from("support_messages")
+    .select("body, is_admin, is_system")
+    .eq("thread_id", threadId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  const recentMsgs = ((recent ?? []) as { body: string | null; is_admin: boolean; is_system: boolean }[]).reverse();
+  const { collectCustomerQuestion, formatKnowledgeForPrompt, redactPersonalData } = await import("./support-learning");
+  const historyBlock = recentMsgs
+    .filter((m) => (m.body ?? "").trim())
+    .map((m) => `${m.is_system ? "Robô" : m.is_admin ? "Equipe" : "Cliente"}: ${redactPersonalData(m.body ?? "").slice(0, 300)}`)
+    .join("\n");
+
+  // Aprendizado: busca pelo relato completo do cliente (não só pela última frase).
   const { findKnowledge } = await import("./support-learning.server");
-  const { formatKnowledgeForPrompt } = await import("./support-learning");
-  const knowledge = await findKnowledge(userMessage, 3);
+  const searchText = collectCustomerQuestion(recentMsgs) || userMessage;
+  let knowledge = await findKnowledge(searchText, 3);
+  if (!knowledge.length && searchText !== userMessage) knowledge = await findKnowledge(userMessage, 3);
 
   if (!hasTrigger && knowledge.length === 0) return;
   const knowledgeBlock = formatKnowledgeForPrompt(knowledge);
@@ -252,9 +268,15 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
   try {
     await withGeminiFallback((model) => generateText({
       model,
-      system: SUPPORT_AI_SYSTEM,
+      system: SUPPORT_AI_SYSTEM + `
+
+USO DOS CASOS JÁ RESOLVIDOS:
+- Se um caso parecido se encaixa no relato, siga a MESMA solução que a equipe deu, com suas palavras.
+- Se nenhum caso se encaixa de verdade e você não tem certeza, não chute: diga que um atendente humano assume.
+- Nunca repita o que o Robô já disse nesta conversa; avance para o próximo passo.`,
       prompt:
-        `Usuário (ID: ${userId}) na conversa ${threadId} disse: "${userMessage}"` +
+        (historyBlock ? `Conversa recente (mais nova no fim):\n${historyBlock}\n\n` : "") +
+        `Usuário (ID: ${userId}) na conversa ${threadId} acabou de dizer: "${userMessage}"` +
         (knowledgeBlock ? `\n\n${knowledgeBlock}` : ""),
       tools: {
         checkCustomerStatus: tool({
