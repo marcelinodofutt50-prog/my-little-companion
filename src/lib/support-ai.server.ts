@@ -264,6 +264,7 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 
   if (!hasTrigger && knowledge.length === 0) return;
   const knowledgeBlock = formatKnowledgeForPrompt(knowledge);
+  const memoryBlock = await buildCustomerMemory(userId, threadId, redactPersonalData);
 
   try {
     await withGeminiFallback((model) => generateText({
@@ -273,8 +274,14 @@ export async function triggerSupportAI(threadId: string, userId: string, userMes
 USO DOS CASOS JÁ RESOLVIDOS:
 - Se um caso parecido se encaixa no relato, siga a MESMA solução que a equipe deu, com suas palavras.
 - Se nenhum caso se encaixa de verdade e você não tem certeza, não chute: diga que um atendente humano assume.
-- Nunca repita o que o Robô já disse nesta conversa; avance para o próximo passo.`,
+- Nunca repita o que o Robô já disse nesta conversa; avance para o próximo passo.
+
+MEMÓRIA DO CLIENTE:
+- Use o histórico do cliente para ligar os pontos: se o problema já apareceu antes, diga isso e
+  não repita uma solução que já falhou; se a licença venceu ou foi revogada, relacione ao erro relatado.
+- Não cite dados de conversas antigas que não tenham relação com o problema atual.`,
       prompt:
+        (memoryBlock ? `${memoryBlock}\n\n` : "") +
         (historyBlock ? `Conversa recente (mais nova no fim):\n${historyBlock}\n\n` : "") +
         `Usuário (ID: ${userId}) na conversa ${threadId} acabou de dizer: "${userMessage}"` +
         (knowledgeBlock ? `\n\n${knowledgeBlock}` : ""),
