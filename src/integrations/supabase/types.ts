@@ -3354,6 +3354,48 @@ export type Database = {
         }
         Relationships: []
       }
+      support_knowledge: {
+        Row: {
+          answer: string
+          created_at: string
+          created_by: string | null
+          id: string
+          last_used_at: string | null
+          question: string
+          search: unknown
+          source_thread_id: string | null
+          status: string
+          updated_at: string
+          uses: number
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_used_at?: string | null
+          question: string
+          search?: unknown
+          source_thread_id?: string | null
+          status?: string
+          updated_at?: string
+          uses?: number
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_used_at?: string | null
+          question?: string
+          search?: unknown
+          source_thread_id?: string | null
+          status?: string
+          updated_at?: string
+          uses?: number
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           attachment_type: string | null
@@ -3999,6 +4041,15 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      match_support_knowledge: {
+        Args: { _limit?: number; _q: string }
+        Returns: {
+          answer: string
+          id: string
+          question: string
+          rank: number
+        }[]
+      }
       notify_pgrst_reload: { Args: never; Returns: undefined }
       reactivate_server_licenses_for_user: {
         Args: { _paid_until: string; _user_id: string }

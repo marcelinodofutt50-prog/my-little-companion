@@ -111,6 +111,7 @@ import {
 } from "@/components/admin/lazy-panels";
 import AdminClientStatusPanel from "@/components/admin/AdminClientStatusPanel";
 import AdminSecurityAttemptsPanel from "@/components/admin/AdminSecurityAttemptsPanel";
+import AdminSupportKnowledgePanel from "@/components/admin/AdminSupportKnowledgePanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -237,6 +238,7 @@ type Tab =
   | "license_audit"
   | "panel_integrity"
   | "feedback"
+  | "ai_learning"
   | "moderation"
   | "bans"
   | "partners"
@@ -281,6 +283,7 @@ const TAB_DESC: Record<Tab, string> = {
   redeem: "Códigos de cortesia: gerar códigos de dias de licença ou renovação de servidor e reconciliar licenças com o painel Yaarsa.",
   panel_integrity: "Conferência painel x site: encontra logins que sumiram do painel Yaarsa e recria automaticamente com a mesma senha.",
   license_audit: "Histórico detalhado: quando cada licença e login foi alterado (senha, sincronização com o painel ou cupom), por quem e por quê.",
+  ai_learning: "O que o robô do suporte aprendeu com as respostas da equipe. Corrija, desative ou apague.",
   feedback: "Sugestões e críticas enviadas pelos clientes (inclusive anônimas). Responda, marque em análise ou resolva.",
   moderation: "Mensagens barradas pelo filtro da Comunidade. Libere ou apague cada uma.",
   bans: "Clientes banidos por várias contas ou reincidência: motivo, contas ligadas e histórico de infrações.",
@@ -707,6 +710,7 @@ function AdminPage() {
         { id: "chat", label: "Chat ao Vivo", icon: MessageSquare, hint: "responder clientes" },
         { id: "apk", label: "Fila Play Protect", icon: Download, hint: "APKs pendentes" },
         { id: "feedback", label: "Sugestões & Críticas", icon: MessageSquare, hint: "feedback dos clientes" },
+        { id: "ai_learning", label: "Aprendizado do Robô", icon: MessageSquare, hint: "respostas aprendidas" },
       ],
     },
     {
@@ -2375,6 +2379,7 @@ function AdminPage() {
               {tab === "license_audit" && <AdminLicenseAuditPanel />}
               {tab === "panel_integrity" && <AdminPanelIntegrityPanel />}
               {tab === "feedback" && <AdminFeedbackPanel />}
+              {tab === "ai_learning" && <AdminSupportKnowledgePanel />}
               {tab === "moderation" && <AdminModerationPanel />}
               {tab === "bans" && <AdminBansPanel />}
               {tab === "partners" && <AdminPartnersPanel />}
