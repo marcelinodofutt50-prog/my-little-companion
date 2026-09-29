@@ -97,6 +97,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   academy: "view.chat",
   redeem: "redeem.manage",
   feedback: "view.chat",
+  ai_learning: "view.chat",
   partners: "view.orders",
   announcements: "announcements.create",
   applications: "view.staff",
