@@ -246,9 +246,34 @@ export function AdminSupportPanel() {
               placeholder="Buscar cliente ou assunto..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleHistorySearch(); }}
               className="pl-8 h-9 text-xs bg-background/40"
             />
           </div>
+          {historyMode ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={exitHistoryMode}
+              className="w-full h-8 text-[10px] font-mono uppercase border-neon/40 text-neon"
+            >
+              ← Voltar para os tickets
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleHistorySearch}
+              disabled={historyLoading || search.trim().length < 2}
+              className="w-full h-8 text-[10px] font-mono uppercase"
+              title="Procura o termo no conteúdo de todas as mensagens, inclusive de tickets encerrados"
+            >
+              {historyLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <History className="h-3 w-3 mr-1" />}
+              Buscar no histórico de mensagens
+            </Button>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <Select value={catFilter} onValueChange={setCatFilter}>
               <SelectTrigger className="h-8 text-[10px] font-mono uppercase"><SelectValue placeholder="Categoria" /></SelectTrigger>
