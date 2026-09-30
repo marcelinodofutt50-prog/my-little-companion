@@ -2,8 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { adminListThreads, adminAssumeThread, adminCloseThread, adminHealUserLogins } from "@/lib/admin.functions";
-import { Loader2 } from "lucide-react";
-import { adminSetThreadPriority, adminUpdateThreadCategory, adminMergeDuplicateThreads } from "@/lib/support-admin.functions";
+import { Loader2, History } from "lucide-react";
+import { adminSetThreadPriority, adminUpdateThreadCategory, adminMergeDuplicateThreads, adminSearchSupportHistory } from "@/lib/support-admin.functions";
 import { SupportChat } from "./SupportChat";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
 import { AdminCustomer360 } from "@/components/admin/lazy-panels";
@@ -47,6 +47,53 @@ export function AdminSupportPanel() {
   const [fichaUserId, setFichaUserId] = useState<string | null>(null);
   const [healing, setHealing] = useState(false);
   const [draft, setDraft] = useState<{ text: string; nonce: number } | null>(null);
+  const [historyMode, setHistoryMode] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyResults, setHistoryResults] = useState<any[] | null>(null);
+
+  const searchHistoryFn = useServerFn(adminSearchSupportHistory);
+
+  /** Busca o termo no conteúdo de TODAS as mensagens antigas (inclusive tickets encerrados). */
+  const handleHistorySearch = async () => {
+    const q = search.trim();
+    if (q.length < 2) {
+      toast.error("Digite pelo menos 2 letras para buscar no histórico.");
+      return;
+    }
+    setHistoryMode(true);
+    setHistoryLoading(true);
+    try {
+      const res: any = await searchHistoryFn({ data: { query: q } });
+      setHistoryResults(res?.results ?? []);
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao buscar no histórico");
+      setHistoryResults([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const exitHistoryMode = () => {
+    setHistoryMode(false);
+    setHistoryResults(null);
+  };
+
+  /** Abre uma conversa encontrada no histórico, mesmo que não esteja na lista atual. */
+  const openHistoryThread = async (threadId: string) => {
+    if (!threads.some((t) => t.id === threadId)) {
+      try {
+        const all: any = await listFn({ data: { filter: "all" } });
+        setThreads((prev) => {
+          const merged = [...prev];
+          for (const t of all ?? []) {
+            if (!merged.some((x) => x.id === t.id)) merged.push(t);
+          }
+          return merged;
+        });
+      } catch {}
+    }
+    setSelectedId(threadId);
+  };
 
   const listFn = useServerFn(adminListThreads);
   const assumeFn = useServerFn(adminAssumeThread);
