@@ -50,11 +50,17 @@ export function AdminSupportPanel() {
   const [historyMode, setHistoryMode] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyResults, setHistoryResults] = useState<any[] | null>(null);
+  const [historyQuery, setHistoryQuery] = useState("");
+  const [histStatus, setHistStatus] = useState<"all" | "open" | "closed">("all");
+  const [histDays, setHistDays] = useState(0);
+  const [histWho, setHistWho] = useState<"all" | "customer" | "staff">("all");
 
   const searchHistoryFn = useServerFn(adminSearchSupportHistory);
 
   /** Busca o termo no conteúdo de TODAS as mensagens antigas (inclusive tickets encerrados). */
-  const handleHistorySearch = async () => {
+  const handleHistorySearch = async (
+    over: { status?: "all" | "open" | "closed"; days?: number; who?: "all" | "customer" | "staff" } = {},
+  ) => {
     const q = search.trim();
     if (q.length < 2) {
       toast.error("Digite pelo menos 2 letras para buscar no histórico.");
@@ -62,8 +68,14 @@ export function AdminSupportPanel() {
     }
     setHistoryMode(true);
     setHistoryLoading(true);
+    setHistoryQuery(q);
     try {
-      const res: any = await searchHistoryFn({ data: { query: q } });
+      const res: any = await searchHistoryFn({ data: {
+        query: q,
+        status: over.status ?? histStatus,
+        days: over.days ?? histDays,
+        who: over.who ?? histWho,
+      } });
       setHistoryResults(res?.results ?? []);
     } catch (e: any) {
       toast.error(e?.message || "Falha ao buscar no histórico");
@@ -251,6 +263,7 @@ export function AdminSupportPanel() {
             />
           </div>
           {historyMode ? (
+            <div className="space-y-2">
             <Button
               type="button"
               size="sm"
@@ -260,6 +273,39 @@ export function AdminSupportPanel() {
             >
               ← Voltar para os tickets
             </Button>
+            <div className="grid grid-cols-3 gap-2">
+              <Select value={histStatus} onValueChange={(v) => { setHistStatus(v as any); handleHistorySearch({ status: v as any }); }}>
+                <SelectTrigger className="h-8 text-[10px] font-mono uppercase"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="open">Abertos</SelectItem>
+                  <SelectItem value="closed">Encerrados</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={String(histDays)} onValueChange={(v) => { setHistDays(Number(v)); handleHistorySearch({ days: Number(v) }); }}>
+                <SelectTrigger className="h-8 text-[10px] font-mono uppercase"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                  <SelectItem value="90">90 dias</SelectItem>
+                  <SelectItem value="0">Sempre</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={histWho} onValueChange={(v) => { setHistWho(v as any); handleHistorySearch({ who: v as any }); }}>
+                <SelectTrigger className="h-8 text-[10px] font-mono uppercase"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="customer">Cliente</SelectItem>
+                  <SelectItem value="staff">Equipe</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {!historyLoading && historyResults && (
+              <div className="text-[10px] font-mono text-muted-foreground uppercase">
+                {historyResults.length} conversa(s) encontrada(s)
+              </div>
+            )}
+            </div>
           ) : (
             <Button
               type="button"
@@ -344,7 +390,7 @@ export function AdminSupportPanel() {
                           <span className={`font-mono text-[9px] uppercase mr-1 ${s.is_admin ? "text-primary" : "text-neon"}`}>
                             {s.is_admin ? "Equipe" : "Cliente"}:
                           </span>
-                          {s.snippet}
+                          {highlight(s.snippet, historyQuery)}
                         </div>
                       ))}
                     </div>
