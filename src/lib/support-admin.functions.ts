@@ -101,29 +101,38 @@ export const adminSearchSupportHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({
     query: z.string().trim().min(2).max(120),
-    limit: z.number().int().min(1).max(50).default(20),
+    limit: z.number().int().min(1).max(50).default(30),
+    status: z.enum(["all", "open", "closed"]).default("all"),
+    days: z.number().int().min(0).max(3650).default(0),
+    who: z.enum(["all", "customer", "staff"]).default("all"),
   }).parse(i))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
+    const since = data.days > 0 ? new Date(Date.now() - data.days * 86400000).toISOString() : null;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const q = data.query.replace(/[%_,()"]/g, " ").trim();
     const pattern = `%${q}%`;
 
     // 1) Mensagens que contêm o termo
-    const { data: msgs, error: msgErr } = await supabaseAdmin
+    let mq = supabaseAdmin
       .from("support_messages")
       .select("id, thread_id, body, is_admin, is_system, created_at")
       .ilike("body", pattern)
+      .eq("is_system", false);
+    if (since) mq = mq.gte("created_at", since);
+    if (data.who === "staff") mq = mq.eq("is_admin", true);
+    if (data.who === "customer") mq = mq.eq("is_admin", false);
+    const { data: msgs, error: msgErr } = await mq
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(300);
     if (msgErr) throw msgErr;
 
     // 2) Tickets cujo assunto contém o termo
-    const { data: subjThreads, error: subjErr } = await supabaseAdmin
-      .from("support_threads")
-      .select("id")
-      .ilike("subject", pattern)
-      .limit(50);
+    let sq = supabaseAdmin.from("support_threads").select("id").ilike("subject", pattern);
+    if (since) sq = sq.gte("updated_at", since);
+    const { data: subjThreads, error: subjErr } = data.who === "all"
+      ? await sq.limit(50)
+      : { data: [], error: null };
     if (subjErr) throw subjErr;
 
     const threadIds = Array.from(new Set([
@@ -132,10 +141,13 @@ export const adminSearchSupportHistory = createServerFn({ method: "GET" })
     ]));
     if (threadIds.length === 0) return { results: [] };
 
-    const { data: threads, error: thErr } = await supabaseAdmin
+    let tq = supabaseAdmin
       .from("support_threads")
       .select("id, subject, status, category, priority, created_at, updated_at, user_id")
-      .in("id", threadIds);
+      .in("id", threadIds.slice(0, 200));
+    if (data.status === "closed") tq = tq.eq("status", "closed");
+    if (data.status === "open") tq = tq.neq("status", "closed");
+    const { data: threads, error: thErr } = await tq;
     if (thErr) throw thErr;
 
     const userIds = Array.from(new Set((threads ?? []).map((t: any) => t.user_id)));
