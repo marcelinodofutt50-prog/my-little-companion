@@ -92,6 +92,92 @@ export const adminMergeDuplicateThreads = createServerFn({ method: "POST" })
   });
 
 
+/**
+ * Busca em TODO o histórico de conversas do suporte (inclusive tickets
+ * encerrados): procura o termo no assunto do ticket e no corpo das mensagens.
+ * Retorna os trechos encontrados para a equipe localizar casos antigos.
+ */
+export const adminSearchSupportHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) => z.object({
+    query: z.string().trim().min(2).max(120),
+    limit: z.number().int().min(1).max(50).default(20),
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const q = data.query.replace(/[%_,()"]/g, " ").trim();
+    const pattern = `%${q}%`;
+
+    // 1) Mensagens que contêm o termo
+    const { data: msgs, error: msgErr } = await supabaseAdmin
+      .from("support_messages")
+      .select("id, thread_id, body, is_admin, is_system, created_at")
+      .ilike("body", pattern)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (msgErr) throw msgErr;
+
+    // 2) Tickets cujo assunto contém o termo
+    const { data: subjThreads, error: subjErr } = await supabaseAdmin
+      .from("support_threads")
+      .select("id")
+      .ilike("subject", pattern)
+      .limit(50);
+    if (subjErr) throw subjErr;
+
+    const threadIds = Array.from(new Set([
+      ...(msgs ?? []).map((m: any) => m.thread_id),
+      ...(subjThreads ?? []).map((t: any) => t.id),
+    ]));
+    if (threadIds.length === 0) return { results: [] };
+
+    const { data: threads, error: thErr } = await supabaseAdmin
+      .from("support_threads")
+      .select("id, subject, status, category, priority, created_at, updated_at, user_id")
+      .in("id", threadIds);
+    if (thErr) throw thErr;
+
+    const userIds = Array.from(new Set((threads ?? []).map((t: any) => t.user_id)));
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, email, display_name")
+      .in("id", userIds);
+    const profileById = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+
+    // Agrupa os trechos por ticket (máx. 3 trechos por ticket)
+    const snippetsByThread = new Map<string, any[]>();
+    for (const m of (msgs ?? []) as any[]) {
+      if (m.is_system) continue;
+      const list = snippetsByThread.get(m.thread_id) ?? [];
+      if (list.length < 3) {
+        const body = String(m.body ?? "");
+        const idx = body.toLowerCase().indexOf(q.toLowerCase());
+        const start = Math.max(0, idx - 60);
+        const snippet = (start > 0 ? "…" : "") + body.slice(start, start + 160) + (start + 160 < body.length ? "…" : "");
+        list.push({ id: m.id, snippet, is_admin: m.is_admin === true, created_at: m.created_at });
+      }
+      snippetsByThread.set(m.thread_id, list);
+    }
+
+    const results = (threads ?? [])
+      .map((t: any) => ({
+        thread_id: t.id,
+        subject: t.subject,
+        status: t.status,
+        category: t.category,
+        priority: t.priority,
+        updated_at: t.updated_at,
+        email: (profileById.get(t.user_id) as any)?.email ?? null,
+        display_name: (profileById.get(t.user_id) as any)?.display_name ?? null,
+        snippets: snippetsByThread.get(t.id) ?? [],
+      }))
+      .sort((a: any, b: any) => String(b.updated_at).localeCompare(String(a.updated_at)))
+      .slice(0, data.limit);
+
+    return { results };
+  });
+
 /** Estatísticas do chat nas últimas 24h: mensagens por hora, resposta média e status. */
 export const adminSupportStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
