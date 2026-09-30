@@ -308,7 +308,51 @@ export function AdminSupportPanel() {
         </div>
 
         <div className="flex-1 overflow-y-auto border-t border-border/40">
-          {loading && threads.length === 0 ? (
+          {historyMode ? (
+            historyLoading ? (
+              <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                <span className="text-[10px] font-mono uppercase">Buscando no histórico...</span>
+              </div>
+            ) : !historyResults || historyResults.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground italic text-xs">
+                Nenhuma conversa antiga encontrada com esse termo
+              </div>
+            ) : (
+              <div className="divide-y divide-border/20">
+                {historyResults.map((r) => (
+                  <button
+                    key={r.thread_id}
+                    onClick={() => openHistoryThread(r.thread_id)}
+                    className="w-full text-left p-4 transition-all hover:bg-muted/30"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] font-mono text-muted-foreground uppercase">
+                        #{r.thread_id.slice(0, 8)} • {new Date(r.updated_at).toLocaleDateString("pt-BR")}
+                      </span>
+                      <Badge variant="outline" className="text-[9px] uppercase">
+                        {r.status === "closed" ? "Encerrado" : r.status}
+                      </Badge>
+                    </div>
+                    <div className="font-semibold text-sm truncate mb-0.5">{r.subject}</div>
+                    <div className="text-xs text-muted-foreground truncate mb-2">
+                      {r.email || r.display_name || "Usuário anônimo"}
+                    </div>
+                    <div className="space-y-1">
+                      {r.snippets.map((s: any) => (
+                        <div key={s.id} className="text-[11px] leading-snug text-muted-foreground bg-muted/30 border border-border/30 rounded px-2 py-1">
+                          <span className={`font-mono text-[9px] uppercase mr-1 ${s.is_admin ? "text-primary" : "text-neon"}`}>
+                            {s.is_admin ? "Equipe" : "Cliente"}:
+                          </span>
+                          {s.snippet}
+                        </div>
+                      ))}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )
+          ) : loading && threads.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin mb-2" />
               <span className="text-[10px] font-mono uppercase">Sincronizando...</span>
