@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode, Suspense } from "react";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -45,7 +46,8 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error: rawError, reset }: ErrorComponentProps) {
+  const error = rawError as Error;
   console.error("Root Error Boundary caught:", error);
   const router = useRouter();
   

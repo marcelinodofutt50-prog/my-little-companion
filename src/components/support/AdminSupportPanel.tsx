@@ -258,7 +258,7 @@ export function AdminSupportPanel() {
               placeholder="Buscar cliente ou assunto..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") handleHistorySearch(); }}
+              onKeyDown={e => { if (e.key === "Enter") void handleHistorySearch(); }}
               className="pl-8 h-9 text-xs bg-background/40"
             />
           </div>
@@ -311,7 +311,7 @@ export function AdminSupportPanel() {
               type="button"
               size="sm"
               variant="outline"
-              onClick={handleHistorySearch}
+              onClick={() => handleHistorySearch()}
               disabled={historyLoading || search.trim().length < 2}
               className="w-full h-8 text-[10px] font-mono uppercase"
               title="Procura o termo no conteúdo de todas as mensagens, inclusive de tickets encerrados"
@@ -609,5 +609,17 @@ export function AdminSupportPanel() {
       />
       )}
     </div>
+  );
+}
+
+/** Destaca o termo buscado dentro do trecho (sem diferenciar maiúsculas). */
+function highlight(text: string, term: string) {
+  if (!term) return text;
+  const esc = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = String(text).split(new RegExp(`(${esc})`, "ig"));
+  return parts.map((p, i) =>
+    p.toLowerCase() === term.toLowerCase()
+      ? <mark key={i} className="bg-primary/30 text-foreground rounded px-0.5">{p}</mark>
+      : <span key={i}>{p}</span>,
   );
 }
