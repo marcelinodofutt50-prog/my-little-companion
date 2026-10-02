@@ -468,6 +468,8 @@ export async function yaarsaCreateAccount(input: {
   totalPaid: number;
   additionalInfo?: string;
   panel?: YaarsaPanel;
+  /** Data real da licença (YYYY-MM-DD). Sem ela caímos na data padrão do plano. */
+  expireDate?: string;
 }): Promise<YaarsaResponse> {
   const panel = input.panel ?? "v457";
   await refreshPanelOverrides();
@@ -480,7 +482,7 @@ export async function yaarsaCreateAccount(input: {
     subtype: planToSubtype(input.planSlug),
     total_paid: String(input.totalPaid),
     additional_info: input.additionalInfo || `shadow-${input.planSlug}`,
-    expire_date: expireDateFor(input.planSlug),
+    expire_date: input.expireDate || expireDateFor(input.planSlug),
   };
   const first = await yaarsaPost(fields, panel);
   // Alguns painéis só aceitam "1 Month" na coluna subtype e recusam "7 Days"/
