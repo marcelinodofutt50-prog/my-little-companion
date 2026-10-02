@@ -9,132 +9,71 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TutorialRouteImport } from './routes/tutorial'
-import { Route as TermosRouteImport } from './routes/termos'
-import { Route as ShadowHubRouteImport } from './routes/shadow-hub'
-import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
-import { Route as RecuperarRouteImport } from './routes/recuperar'
-import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
-import { Route as PresentesRouteImport } from './routes/presentes'
-import { Route as PlanosRouteImport } from './routes/planos'
-import { Route as MigracaoRouteImport } from './routes/migracao'
-import { Route as MercadoRouteImport } from './routes/mercado'
-import { Route as IndicacoesRouteImport } from './routes/indicacoes'
-import { Route as CryptoRouteImport } from './routes/crypto'
-import { Route as ContatoRouteImport } from './routes/contato'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TutorialIdRouteImport } from './routes/tutorial.$id'
-import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso'
-import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
-import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
-import { Route as PagamentoCheckoutRouteImport } from './routes/pagamento.checkout'
-import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
-import { Route as AuthenticatedTrabalheConoscoRouteImport } from './routes/_authenticated/trabalhe-conosco'
-import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
-import { Route as AuthenticatedSugestoesRouteImport } from './routes/_authenticated/sugestoes'
-import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authenticated/staff-chat'
-import { Route as AuthenticatedStaffAcademyRouteImport } from './routes/_authenticated/staff-academy'
-import { Route as AuthenticatedShadowPassRouteImport } from './routes/_authenticated/shadow-pass'
-import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
-import { Route as AuthenticatedParceiroRouteImport } from './routes/_authenticated/parceiro'
-import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authenticated/fidelidade'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedClientesChatRouteImport } from './routes/_authenticated/clientes-chat'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as CryptoRouteImport } from './routes/crypto'
+import { Route as IndicacoesRouteImport } from './routes/indicacoes'
+import { Route as MercadoRouteImport } from './routes/mercado'
+import { Route as MigracaoRouteImport } from './routes/migracao'
+import { Route as PlanosRouteImport } from './routes/planos'
+import { Route as PresentesRouteImport } from './routes/presentes'
+import { Route as PrimeirosPassosRouteImport } from './routes/primeiros-passos'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as RecuperarRouteImport } from './routes/recuperar'
+import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
+import { Route as ShadowHubRouteImport } from './routes/shadow-hub'
+import { Route as TermosRouteImport } from './routes/termos'
+import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder/index'
-import { Route as ApiPublicTutorialsRouteImport } from './routes/api/public/tutorials'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
-import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
-import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authenticated/servidor/status'
-import { Route as AuthenticatedServidorKrakenRouteImport } from './routes/_authenticated/servidor/kraken'
+import { Route as AuthenticatedClientesChatRouteImport } from './routes/_authenticated/clientes-chat'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authenticated/fidelidade'
+import { Route as AuthenticatedParceiroRouteImport } from './routes/_authenticated/parceiro'
+import { Route as AuthenticatedPlayProtectRouteImport } from './routes/_authenticated/play-protect'
+import { Route as AuthenticatedShadowPassRouteImport } from './routes/_authenticated/shadow-pass'
+import { Route as AuthenticatedStaffAcademyRouteImport } from './routes/_authenticated/staff-academy'
+import { Route as AuthenticatedStaffChatRouteImport } from './routes/_authenticated/staff-chat'
+import { Route as AuthenticatedSugestoesRouteImport } from './routes/_authenticated/sugestoes'
+import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
+import { Route as AuthenticatedTrabalheConoscoRouteImport } from './routes/_authenticated/trabalhe-conosco'
+import { Route as AuthenticatedTutoriaisRouteImport } from './routes/_authenticated/tutoriais'
+import { Route as PagamentoCheckoutRouteImport } from './routes/pagamento.checkout'
+import { Route as PagamentoErroRouteImport } from './routes/pagamento.erro'
+import { Route as PagamentoPendenteRouteImport } from './routes/pagamento.pendente'
+import { Route as PagamentoSucessoRouteImport } from './routes/pagamento.sucesso'
+import { Route as TutorialIdRouteImport } from './routes/tutorial.$id'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicPaymentsMercadopagoRouteImport } from './routes/api/public/payments/mercadopago'
-import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
-import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
-import { Route as ApiPublicHooksReconcileYaarsaRouteImport } from './routes/api/public/hooks/reconcile-yaarsa'
-import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
-import { Route as ApiPublicHooksMigrationWaveEnforceRouteImport } from './routes/api/public/hooks/migration-wave-enforce'
-import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
-import { Route as ApiPublicHooksDailyMaintenanceRouteImport } from './routes/api/public/hooks/daily-maintenance'
-import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
-import { Route as ApiPublicHooksCryptoPollRouteImport } from './routes/api/public/hooks/crypto-poll'
-import { Route as ApiPublicHooksCleanupApkJobsRouteImport } from './routes/api/public/hooks/cleanup-apk-jobs'
-import { Route as ApiPublicHooksAutoCloseTicketsRouteImport } from './routes/api/public/hooks/auto-close-tickets'
+import { Route as AuthenticatedServidorKrakenRouteImport } from './routes/_authenticated/servidor/kraken'
+import { Route as AuthenticatedServidorStatusRouteImport } from './routes/_authenticated/servidor/status'
+import { Route as ApiApkBuilderIndexRouteImport } from './routes/api/apk-builder/index'
+import { Route as ApiChatLicenseAiRouteImport } from './routes/api/chat/license-ai'
+import { Route as ApiPublicBackendHealthRouteImport } from './routes/api/public/backend-health'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicTutorialsRouteImport } from './routes/api/public/tutorials'
 import { Route as ApiPublicHooksApkWorkerRouteImport } from './routes/api/public/hooks/apk-worker'
+import { Route as ApiPublicHooksAutoCloseTicketsRouteImport } from './routes/api/public/hooks/auto-close-tickets'
+import { Route as ApiPublicHooksCleanupApkJobsRouteImport } from './routes/api/public/hooks/cleanup-apk-jobs'
+import { Route as ApiPublicHooksCryptoPollRouteImport } from './routes/api/public/hooks/crypto-poll'
+import { Route as ApiPublicHooksDailyLicenseCheckRouteImport } from './routes/api/public/hooks/daily-license-check'
+import { Route as ApiPublicHooksDailyMaintenanceRouteImport } from './routes/api/public/hooks/daily-maintenance'
+import { Route as ApiPublicHooksExpireLicensesRouteImport } from './routes/api/public/hooks/expire-licenses'
+import { Route as ApiPublicHooksMigrationWaveEnforceRouteImport } from './routes/api/public/hooks/migration-wave-enforce'
+import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
+import { Route as ApiPublicHooksReconcileYaarsaRouteImport } from './routes/api/public/hooks/reconcile-yaarsa'
+import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
+import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
+import { Route as ApiPublicPaymentsMercadopagoRouteImport } from './routes/api/public/payments/mercadopago'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
-const TutorialRoute = TutorialRouteImport.update({
-  id: '/tutorial',
-  path: '/tutorial',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermosRoute = TermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShadowHubRoute = ShadowHubRouteImport.update({
-  id: '/shadow-hub',
-  path: '/shadow-hub',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RenovarServidorRoute = RenovarServidorRouteImport.update({
-  id: '/renovar-servidor',
-  path: '/renovar-servidor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecuperarRoute = RecuperarRouteImport.update({
-  id: '/recuperar',
-  path: '/recuperar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacidadeRoute = PrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrimeirosPassosRoute = PrimeirosPassosRouteImport.update({
-  id: '/primeiros-passos',
-  path: '/primeiros-passos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PresentesRoute = PresentesRouteImport.update({
-  id: '/presentes',
-  path: '/presentes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlanosRoute = PlanosRouteImport.update({
-  id: '/planos',
-  path: '/planos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MigracaoRoute = MigracaoRouteImport.update({
-  id: '/migracao',
-  path: '/migracao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MercadoRoute = MercadoRouteImport.update({
-  id: '/mercado',
-  path: '/mercado',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndicacoesRoute = IndicacoesRouteImport.update({
-  id: '/indicacoes',
-  path: '/indicacoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CryptoRoute = CryptoRouteImport.update({
-  id: '/crypto',
-  path: '/crypto',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContatoRoute = ContatoRouteImport.update({
-  id: '/contato',
-  path: '/contato',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -142,96 +81,79 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CryptoRoute = CryptoRouteImport.update({
+  id: '/crypto',
+  path: '/crypto',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TutorialIdRoute = TutorialIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => TutorialRoute,
-} as any)
-const PagamentoSucessoRoute = PagamentoSucessoRouteImport.update({
-  id: '/pagamento/sucesso',
-  path: '/pagamento/sucesso',
+const IndicacoesRoute = IndicacoesRouteImport.update({
+  id: '/indicacoes',
+  path: '/indicacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PagamentoPendenteRoute = PagamentoPendenteRouteImport.update({
-  id: '/pagamento/pendente',
-  path: '/pagamento/pendente',
+const MercadoRoute = MercadoRouteImport.update({
+  id: '/mercado',
+  path: '/mercado',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PagamentoErroRoute = PagamentoErroRouteImport.update({
-  id: '/pagamento/erro',
-  path: '/pagamento/erro',
+const MigracaoRoute = MigracaoRouteImport.update({
+  id: '/migracao',
+  path: '/migracao',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PagamentoCheckoutRoute = PagamentoCheckoutRouteImport.update({
-  id: '/pagamento/checkout',
-  path: '/pagamento/checkout',
+const PlanosRoute = PlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
-  id: '/tutoriais',
-  path: '/tutoriais',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PresentesRoute = PresentesRouteImport.update({
+  id: '/presentes',
+  path: '/presentes',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedTrabalheConoscoRoute =
-  AuthenticatedTrabalheConoscoRouteImport.update({
-    id: '/trabalhe-conosco',
-    path: '/trabalhe-conosco',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
-  id: '/suporte',
-  path: '/suporte',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PrimeirosPassosRoute = PrimeirosPassosRouteImport.update({
+  id: '/primeiros-passos',
+  path: '/primeiros-passos',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSugestoesRoute = AuthenticatedSugestoesRouteImport.update({
-  id: '/sugestoes',
-  path: '/sugestoes',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedStaffChatRoute = AuthenticatedStaffChatRouteImport.update({
-  id: '/staff-chat',
-  path: '/staff-chat',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const RecuperarRoute = RecuperarRouteImport.update({
+  id: '/recuperar',
+  path: '/recuperar',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedStaffAcademyRoute =
-  AuthenticatedStaffAcademyRouteImport.update({
-    id: '/staff-academy',
-    path: '/staff-academy',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedShadowPassRoute = AuthenticatedShadowPassRouteImport.update({
-  id: '/shadow-pass',
-  path: '/shadow-pass',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const RenovarServidorRoute = RenovarServidorRouteImport.update({
+  id: '/renovar-servidor',
+  path: '/renovar-servidor',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedPlayProtectRoute =
-  AuthenticatedPlayProtectRouteImport.update({
-    id: '/play-protect',
-    path: '/play-protect',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedParceiroRoute = AuthenticatedParceiroRouteImport.update({
-  id: '/parceiro',
-  path: '/parceiro',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const ShadowHubRoute = ShadowHubRouteImport.update({
+  id: '/shadow-hub',
+  path: '/shadow-hub',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedFidelidadeRoute = AuthenticatedFidelidadeRouteImport.update({
-  id: '/fidelidade',
-  path: '/fidelidade',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const TutorialRoute = TutorialRouteImport.update({
+  id: '/tutorial',
+  path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedClientesChatRoute =
@@ -240,29 +162,109 @@ const AuthenticatedClientesChatRoute =
     path: '/clientes-chat',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFidelidadeRoute = AuthenticatedFidelidadeRouteImport.update({
+  id: '/fidelidade',
+  path: '/fidelidade',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedParceiroRoute = AuthenticatedParceiroRouteImport.update({
+  id: '/parceiro',
+  path: '/parceiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPlayProtectRoute =
+  AuthenticatedPlayProtectRouteImport.update({
+    id: '/play-protect',
+    path: '/play-protect',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedShadowPassRoute = AuthenticatedShadowPassRouteImport.update({
+  id: '/shadow-pass',
+  path: '/shadow-pass',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStaffAcademyRoute =
+  AuthenticatedStaffAcademyRouteImport.update({
+    id: '/staff-academy',
+    path: '/staff-academy',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStaffChatRoute = AuthenticatedStaffChatRouteImport.update({
+  id: '/staff-chat',
+  path: '/staff-chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSugestoesRoute = AuthenticatedSugestoesRouteImport.update({
+  id: '/sugestoes',
+  path: '/sugestoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTrabalheConoscoRoute =
+  AuthenticatedTrabalheConoscoRouteImport.update({
+    id: '/trabalhe-conosco',
+    path: '/trabalhe-conosco',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutoriaisRoute = AuthenticatedTutoriaisRouteImport.update({
+  id: '/tutoriais',
+  path: '/tutoriais',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const PagamentoCheckoutRoute = PagamentoCheckoutRouteImport.update({
+  id: '/pagamento/checkout',
+  path: '/pagamento/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoErroRoute = PagamentoErroRouteImport.update({
+  id: '/pagamento/erro',
+  path: '/pagamento/erro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoPendenteRoute = PagamentoPendenteRouteImport.update({
+  id: '/pagamento/pendente',
+  path: '/pagamento/pendente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoSucessoRoute = PagamentoSucessoRouteImport.update({
+  id: '/pagamento/sucesso',
+  path: '/pagamento/sucesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorialIdRoute = TutorialIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TutorialRoute,
+} as any)
+const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedServidorKrakenRoute =
+  AuthenticatedServidorKrakenRouteImport.update({
+    id: '/servidor/kraken',
+    path: '/servidor/kraken',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedServidorStatusRoute =
+  AuthenticatedServidorStatusRouteImport.update({
+    id: '/servidor/status',
+    path: '/servidor/status',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiApkBuilderIndexRoute = ApiApkBuilderIndexRouteImport.update({
   id: '/api/apk-builder/',
   path: '/api/apk-builder/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicTutorialsRoute = ApiPublicTutorialsRouteImport.update({
-  id: '/api/public/tutorials',
-  path: '/api/public/tutorials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicBackendHealthRoute = ApiPublicBackendHealthRouteImport.update({
-  id: '/api/public/backend-health',
-  path: '/api/public/backend-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatLicenseAiRoute = ApiChatLicenseAiRouteImport.update({
@@ -270,87 +272,30 @@ const ApiChatLicenseAiRoute = ApiChatLicenseAiRouteImport.update({
   path: '/api/chat/license-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedServidorStatusRoute =
-  AuthenticatedServidorStatusRouteImport.update({
-    id: '/servidor/status',
-    path: '/servidor/status',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedServidorKrakenRoute =
-  AuthenticatedServidorKrakenRouteImport.update({
-    id: '/servidor/kraken',
-    path: '/servidor/kraken',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => AuthenticatedAdminRoute,
+const ApiPublicBackendHealthRoute = ApiPublicBackendHealthRouteImport.update({
+  id: '/api/public/backend-health',
+  path: '/api/public/backend-health',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPaymentsMercadopagoRoute =
-  ApiPublicPaymentsMercadopagoRouteImport.update({
-    id: '/api/public/payments/mercadopago',
-    path: '/api/public/payments/mercadopago',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksVerifyExternalPayersRoute =
-  ApiPublicHooksVerifyExternalPayersRouteImport.update({
-    id: '/api/public/hooks/verify-external-payers',
-    path: '/api/public/hooks/verify-external-payers',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksResendConfirmationsRoute =
-  ApiPublicHooksResendConfirmationsRouteImport.update({
-    id: '/api/public/hooks/resend-confirmations',
-    path: '/api/public/hooks/resend-confirmations',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksReconcileYaarsaRoute =
-  ApiPublicHooksReconcileYaarsaRouteImport.update({
-    id: '/api/public/hooks/reconcile-yaarsa',
-    path: '/api/public/hooks/reconcile-yaarsa',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksReconcilePendingRoute =
-  ApiPublicHooksReconcilePendingRouteImport.update({
-    id: '/api/public/hooks/reconcile-pending',
-    path: '/api/public/hooks/reconcile-pending',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksMigrationWaveEnforceRoute =
-  ApiPublicHooksMigrationWaveEnforceRouteImport.update({
-    id: '/api/public/hooks/migration-wave-enforce',
-    path: '/api/public/hooks/migration-wave-enforce',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksExpireLicensesRoute =
-  ApiPublicHooksExpireLicensesRouteImport.update({
-    id: '/api/public/hooks/expire-licenses',
-    path: '/api/public/hooks/expire-licenses',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDailyMaintenanceRoute =
-  ApiPublicHooksDailyMaintenanceRouteImport.update({
-    id: '/api/public/hooks/daily-maintenance',
-    path: '/api/public/hooks/daily-maintenance',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDailyLicenseCheckRoute =
-  ApiPublicHooksDailyLicenseCheckRouteImport.update({
-    id: '/api/public/hooks/daily-license-check',
-    path: '/api/public/hooks/daily-license-check',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksCryptoPollRoute =
-  ApiPublicHooksCryptoPollRouteImport.update({
-    id: '/api/public/hooks/crypto-poll',
-    path: '/api/public/hooks/crypto-poll',
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTutorialsRoute = ApiPublicTutorialsRouteImport.update({
+  id: '/api/public/tutorials',
+  path: '/api/public/tutorials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksApkWorkerRoute = ApiPublicHooksApkWorkerRouteImport.update({
+  id: '/api/public/hooks/apk-worker',
+  path: '/api/public/hooks/apk-worker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksAutoCloseTicketsRoute =
+  ApiPublicHooksAutoCloseTicketsRouteImport.update({
+    id: '/api/public/hooks/auto-close-tickets',
+    path: '/api/public/hooks/auto-close-tickets',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksCleanupApkJobsRoute =
@@ -359,17 +304,72 @@ const ApiPublicHooksCleanupApkJobsRoute =
     path: '/api/public/hooks/cleanup-apk-jobs',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksAutoCloseTicketsRoute =
-  ApiPublicHooksAutoCloseTicketsRouteImport.update({
-    id: '/api/public/hooks/auto-close-tickets',
-    path: '/api/public/hooks/auto-close-tickets',
+const ApiPublicHooksCryptoPollRoute =
+  ApiPublicHooksCryptoPollRouteImport.update({
+    id: '/api/public/hooks/crypto-poll',
+    path: '/api/public/hooks/crypto-poll',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksApkWorkerRoute = ApiPublicHooksApkWorkerRouteImport.update({
-  id: '/api/public/hooks/apk-worker',
-  path: '/api/public/hooks/apk-worker',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ApiPublicHooksDailyLicenseCheckRoute =
+  ApiPublicHooksDailyLicenseCheckRouteImport.update({
+    id: '/api/public/hooks/daily-license-check',
+    path: '/api/public/hooks/daily-license-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDailyMaintenanceRoute =
+  ApiPublicHooksDailyMaintenanceRouteImport.update({
+    id: '/api/public/hooks/daily-maintenance',
+    path: '/api/public/hooks/daily-maintenance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksExpireLicensesRoute =
+  ApiPublicHooksExpireLicensesRouteImport.update({
+    id: '/api/public/hooks/expire-licenses',
+    path: '/api/public/hooks/expire-licenses',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksMigrationWaveEnforceRoute =
+  ApiPublicHooksMigrationWaveEnforceRouteImport.update({
+    id: '/api/public/hooks/migration-wave-enforce',
+    path: '/api/public/hooks/migration-wave-enforce',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReconcilePendingRoute =
+  ApiPublicHooksReconcilePendingRouteImport.update({
+    id: '/api/public/hooks/reconcile-pending',
+    path: '/api/public/hooks/reconcile-pending',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReconcileYaarsaRoute =
+  ApiPublicHooksReconcileYaarsaRouteImport.update({
+    id: '/api/public/hooks/reconcile-yaarsa',
+    path: '/api/public/hooks/reconcile-yaarsa',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksResendConfirmationsRoute =
+  ApiPublicHooksResendConfirmationsRouteImport.update({
+    id: '/api/public/hooks/resend-confirmations',
+    path: '/api/public/hooks/resend-confirmations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksVerifyExternalPayersRoute =
+  ApiPublicHooksVerifyExternalPayersRouteImport.update({
+    id: '/api/public/hooks/verify-external-payers',
+    path: '/api/public/hooks/verify-external-payers',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsMercadopagoRoute =
+  ApiPublicPaymentsMercadopagoRouteImport.update({
+    id: '/api/public/payments/mercadopago',
+    path: '/api/public/payments/mercadopago',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -770,109 +770,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tutorial': {
-      id: '/tutorial'
-      path: '/tutorial'
-      fullPath: '/tutorial'
-      preLoaderRoute: typeof TutorialRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/termos': {
-      id: '/termos'
-      path: '/termos'
-      fullPath: '/termos'
-      preLoaderRoute: typeof TermosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shadow-hub': {
-      id: '/shadow-hub'
-      path: '/shadow-hub'
-      fullPath: '/shadow-hub'
-      preLoaderRoute: typeof ShadowHubRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/renovar-servidor': {
-      id: '/renovar-servidor'
-      path: '/renovar-servidor'
-      fullPath: '/renovar-servidor'
-      preLoaderRoute: typeof RenovarServidorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recuperar': {
-      id: '/recuperar'
-      path: '/recuperar'
-      fullPath: '/recuperar'
-      preLoaderRoute: typeof RecuperarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/primeiros-passos': {
-      id: '/primeiros-passos'
-      path: '/primeiros-passos'
-      fullPath: '/primeiros-passos'
-      preLoaderRoute: typeof PrimeirosPassosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/presentes': {
-      id: '/presentes'
-      path: '/presentes'
-      fullPath: '/presentes'
-      preLoaderRoute: typeof PresentesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/planos': {
-      id: '/planos'
-      path: '/planos'
-      fullPath: '/planos'
-      preLoaderRoute: typeof PlanosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/migracao': {
-      id: '/migracao'
-      path: '/migracao'
-      fullPath: '/migracao'
-      preLoaderRoute: typeof MigracaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mercado': {
-      id: '/mercado'
-      path: '/mercado'
-      fullPath: '/mercado'
-      preLoaderRoute: typeof MercadoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/indicacoes': {
-      id: '/indicacoes'
-      path: '/indicacoes'
-      fullPath: '/indicacoes'
-      preLoaderRoute: typeof IndicacoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crypto': {
-      id: '/crypto'
-      path: '/crypto'
-      fullPath: '/crypto'
-      preLoaderRoute: typeof CryptoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contato': {
-      id: '/contato'
-      path: '/contato'
-      fullPath: '/contato'
-      preLoaderRoute: typeof ContatoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -882,123 +784,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tutorial/$id': {
-      id: '/tutorial/$id'
-      path: '/$id'
-      fullPath: '/tutorial/$id'
-      preLoaderRoute: typeof TutorialIdRouteImport
-      parentRoute: typeof TutorialRoute
-    }
-    '/pagamento/sucesso': {
-      id: '/pagamento/sucesso'
-      path: '/pagamento/sucesso'
-      fullPath: '/pagamento/sucesso'
-      preLoaderRoute: typeof PagamentoSucessoRouteImport
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pagamento/pendente': {
-      id: '/pagamento/pendente'
-      path: '/pagamento/pendente'
-      fullPath: '/pagamento/pendente'
-      preLoaderRoute: typeof PagamentoPendenteRouteImport
+    '/crypto': {
+      id: '/crypto'
+      path: '/crypto'
+      fullPath: '/crypto'
+      preLoaderRoute: typeof CryptoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pagamento/erro': {
-      id: '/pagamento/erro'
-      path: '/pagamento/erro'
-      fullPath: '/pagamento/erro'
-      preLoaderRoute: typeof PagamentoErroRouteImport
+    '/indicacoes': {
+      id: '/indicacoes'
+      path: '/indicacoes'
+      fullPath: '/indicacoes'
+      preLoaderRoute: typeof IndicacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pagamento/checkout': {
-      id: '/pagamento/checkout'
-      path: '/pagamento/checkout'
-      fullPath: '/pagamento/checkout'
-      preLoaderRoute: typeof PagamentoCheckoutRouteImport
+    '/mercado': {
+      id: '/mercado'
+      path: '/mercado'
+      fullPath: '/mercado'
+      preLoaderRoute: typeof MercadoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/tutoriais': {
-      id: '/_authenticated/tutoriais'
-      path: '/tutoriais'
-      fullPath: '/tutoriais'
-      preLoaderRoute: typeof AuthenticatedTutoriaisRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/migracao': {
+      id: '/migracao'
+      path: '/migracao'
+      fullPath: '/migracao'
+      preLoaderRoute: typeof MigracaoRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/trabalhe-conosco': {
-      id: '/_authenticated/trabalhe-conosco'
-      path: '/trabalhe-conosco'
-      fullPath: '/trabalhe-conosco'
-      preLoaderRoute: typeof AuthenticatedTrabalheConoscoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/planos': {
+      id: '/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof PlanosRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/suporte': {
-      id: '/_authenticated/suporte'
-      path: '/suporte'
-      fullPath: '/suporte'
-      preLoaderRoute: typeof AuthenticatedSuporteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/presentes': {
+      id: '/presentes'
+      path: '/presentes'
+      fullPath: '/presentes'
+      preLoaderRoute: typeof PresentesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/sugestoes': {
-      id: '/_authenticated/sugestoes'
-      path: '/sugestoes'
-      fullPath: '/sugestoes'
-      preLoaderRoute: typeof AuthenticatedSugestoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/primeiros-passos': {
+      id: '/primeiros-passos'
+      path: '/primeiros-passos'
+      fullPath: '/primeiros-passos'
+      preLoaderRoute: typeof PrimeirosPassosRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/staff-chat': {
-      id: '/_authenticated/staff-chat'
-      path: '/staff-chat'
-      fullPath: '/staff-chat'
-      preLoaderRoute: typeof AuthenticatedStaffChatRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/staff-academy': {
-      id: '/_authenticated/staff-academy'
-      path: '/staff-academy'
-      fullPath: '/staff-academy'
-      preLoaderRoute: typeof AuthenticatedStaffAcademyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/recuperar': {
+      id: '/recuperar'
+      path: '/recuperar'
+      fullPath: '/recuperar'
+      preLoaderRoute: typeof RecuperarRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/shadow-pass': {
-      id: '/_authenticated/shadow-pass'
-      path: '/shadow-pass'
-      fullPath: '/shadow-pass'
-      preLoaderRoute: typeof AuthenticatedShadowPassRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/renovar-servidor': {
+      id: '/renovar-servidor'
+      path: '/renovar-servidor'
+      fullPath: '/renovar-servidor'
+      preLoaderRoute: typeof RenovarServidorRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/play-protect': {
-      id: '/_authenticated/play-protect'
-      path: '/play-protect'
-      fullPath: '/play-protect'
-      preLoaderRoute: typeof AuthenticatedPlayProtectRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/shadow-hub': {
+      id: '/shadow-hub'
+      path: '/shadow-hub'
+      fullPath: '/shadow-hub'
+      preLoaderRoute: typeof ShadowHubRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/parceiro': {
-      id: '/_authenticated/parceiro'
-      path: '/parceiro'
-      fullPath: '/parceiro'
-      preLoaderRoute: typeof AuthenticatedParceiroRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/fidelidade': {
-      id: '/_authenticated/fidelidade'
-      path: '/fidelidade'
-      fullPath: '/fidelidade'
-      preLoaderRoute: typeof AuthenticatedFidelidadeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/tutorial': {
+      id: '/tutorial'
+      path: '/tutorial'
+      fullPath: '/tutorial'
+      preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/clientes-chat': {
@@ -1008,11 +903,137 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fidelidade': {
+      id: '/_authenticated/fidelidade'
+      path: '/fidelidade'
+      fullPath: '/fidelidade'
+      preLoaderRoute: typeof AuthenticatedFidelidadeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/parceiro': {
+      id: '/_authenticated/parceiro'
+      path: '/parceiro'
+      fullPath: '/parceiro'
+      preLoaderRoute: typeof AuthenticatedParceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/play-protect': {
+      id: '/_authenticated/play-protect'
+      path: '/play-protect'
+      fullPath: '/play-protect'
+      preLoaderRoute: typeof AuthenticatedPlayProtectRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/shadow-pass': {
+      id: '/_authenticated/shadow-pass'
+      path: '/shadow-pass'
+      fullPath: '/shadow-pass'
+      preLoaderRoute: typeof AuthenticatedShadowPassRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/staff-academy': {
+      id: '/_authenticated/staff-academy'
+      path: '/staff-academy'
+      fullPath: '/staff-academy'
+      preLoaderRoute: typeof AuthenticatedStaffAcademyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/staff-chat': {
+      id: '/_authenticated/staff-chat'
+      path: '/staff-chat'
+      fullPath: '/staff-chat'
+      preLoaderRoute: typeof AuthenticatedStaffChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sugestoes': {
+      id: '/_authenticated/sugestoes'
+      path: '/sugestoes'
+      fullPath: '/sugestoes'
+      preLoaderRoute: typeof AuthenticatedSugestoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/suporte': {
+      id: '/_authenticated/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof AuthenticatedSuporteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trabalhe-conosco': {
+      id: '/_authenticated/trabalhe-conosco'
+      path: '/trabalhe-conosco'
+      fullPath: '/trabalhe-conosco'
+      preLoaderRoute: typeof AuthenticatedTrabalheConoscoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutoriais': {
+      id: '/_authenticated/tutoriais'
+      path: '/tutoriais'
+      fullPath: '/tutoriais'
+      preLoaderRoute: typeof AuthenticatedTutoriaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/pagamento/checkout': {
+      id: '/pagamento/checkout'
+      path: '/pagamento/checkout'
+      fullPath: '/pagamento/checkout'
+      preLoaderRoute: typeof PagamentoCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/erro': {
+      id: '/pagamento/erro'
+      path: '/pagamento/erro'
+      fullPath: '/pagamento/erro'
+      preLoaderRoute: typeof PagamentoErroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/pendente': {
+      id: '/pagamento/pendente'
+      path: '/pagamento/pendente'
+      fullPath: '/pagamento/pendente'
+      preLoaderRoute: typeof PagamentoPendenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/sucesso': {
+      id: '/pagamento/sucesso'
+      path: '/pagamento/sucesso'
+      fullPath: '/pagamento/sucesso'
+      preLoaderRoute: typeof PagamentoSucessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutorial/$id': {
+      id: '/tutorial/$id'
+      path: '/$id'
+      fullPath: '/tutorial/$id'
+      preLoaderRoute: typeof TutorialIdRouteImport
+      parentRoute: typeof TutorialRoute
+    }
+    '/_authenticated/admin/staff': {
+      id: '/_authenticated/admin/staff'
+      path: '/staff'
+      fullPath: '/admin/staff'
+      preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/servidor/kraken': {
+      id: '/_authenticated/servidor/kraken'
+      path: '/servidor/kraken'
+      fullPath: '/servidor/kraken'
+      preLoaderRoute: typeof AuthenticatedServidorKrakenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/servidor/status': {
+      id: '/_authenticated/servidor/status'
+      path: '/servidor/status'
+      fullPath: '/servidor/status'
+      preLoaderRoute: typeof AuthenticatedServidorStatusRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/apk-builder/': {
@@ -1022,18 +1043,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiApkBuilderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/tutorials': {
-      id: '/api/public/tutorials'
-      path: '/api/public/tutorials'
-      fullPath: '/api/public/tutorials'
-      preLoaderRoute: typeof ApiPublicTutorialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
+    '/api/chat/license-ai': {
+      id: '/api/chat/license-ai'
+      path: '/api/chat/license-ai'
+      fullPath: '/api/chat/license-ai'
+      preLoaderRoute: typeof ApiChatLicenseAiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/backend-health': {
@@ -1043,116 +1057,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBackendHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat/license-ai': {
-      id: '/api/chat/license-ai'
-      path: '/api/chat/license-ai'
-      fullPath: '/api/chat/license-ai'
-      preLoaderRoute: typeof ApiChatLicenseAiRouteImport
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/servidor/status': {
-      id: '/_authenticated/servidor/status'
-      path: '/servidor/status'
-      fullPath: '/servidor/status'
-      preLoaderRoute: typeof AuthenticatedServidorStatusRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/servidor/kraken': {
-      id: '/_authenticated/servidor/kraken'
-      path: '/servidor/kraken'
-      fullPath: '/servidor/kraken'
-      preLoaderRoute: typeof AuthenticatedServidorKrakenRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/staff': {
-      id: '/_authenticated/admin/staff'
-      path: '/staff'
-      fullPath: '/admin/staff'
-      preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+    '/api/public/tutorials': {
+      id: '/api/public/tutorials'
+      path: '/api/public/tutorials'
+      fullPath: '/api/public/tutorials'
+      preLoaderRoute: typeof ApiPublicTutorialsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/mercadopago': {
-      id: '/api/public/payments/mercadopago'
-      path: '/api/public/payments/mercadopago'
-      fullPath: '/api/public/payments/mercadopago'
-      preLoaderRoute: typeof ApiPublicPaymentsMercadopagoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/verify-external-payers': {
-      id: '/api/public/hooks/verify-external-payers'
-      path: '/api/public/hooks/verify-external-payers'
-      fullPath: '/api/public/hooks/verify-external-payers'
-      preLoaderRoute: typeof ApiPublicHooksVerifyExternalPayersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/resend-confirmations': {
-      id: '/api/public/hooks/resend-confirmations'
-      path: '/api/public/hooks/resend-confirmations'
-      fullPath: '/api/public/hooks/resend-confirmations'
-      preLoaderRoute: typeof ApiPublicHooksResendConfirmationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/reconcile-yaarsa': {
-      id: '/api/public/hooks/reconcile-yaarsa'
-      path: '/api/public/hooks/reconcile-yaarsa'
-      fullPath: '/api/public/hooks/reconcile-yaarsa'
-      preLoaderRoute: typeof ApiPublicHooksReconcileYaarsaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/reconcile-pending': {
-      id: '/api/public/hooks/reconcile-pending'
-      path: '/api/public/hooks/reconcile-pending'
-      fullPath: '/api/public/hooks/reconcile-pending'
-      preLoaderRoute: typeof ApiPublicHooksReconcilePendingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/migration-wave-enforce': {
-      id: '/api/public/hooks/migration-wave-enforce'
-      path: '/api/public/hooks/migration-wave-enforce'
-      fullPath: '/api/public/hooks/migration-wave-enforce'
-      preLoaderRoute: typeof ApiPublicHooksMigrationWaveEnforceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/expire-licenses': {
-      id: '/api/public/hooks/expire-licenses'
-      path: '/api/public/hooks/expire-licenses'
-      fullPath: '/api/public/hooks/expire-licenses'
-      preLoaderRoute: typeof ApiPublicHooksExpireLicensesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/daily-maintenance': {
-      id: '/api/public/hooks/daily-maintenance'
-      path: '/api/public/hooks/daily-maintenance'
-      fullPath: '/api/public/hooks/daily-maintenance'
-      preLoaderRoute: typeof ApiPublicHooksDailyMaintenanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/daily-license-check': {
-      id: '/api/public/hooks/daily-license-check'
-      path: '/api/public/hooks/daily-license-check'
-      fullPath: '/api/public/hooks/daily-license-check'
-      preLoaderRoute: typeof ApiPublicHooksDailyLicenseCheckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/crypto-poll': {
-      id: '/api/public/hooks/crypto-poll'
-      path: '/api/public/hooks/crypto-poll'
-      fullPath: '/api/public/hooks/crypto-poll'
-      preLoaderRoute: typeof ApiPublicHooksCryptoPollRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/cleanup-apk-jobs': {
-      id: '/api/public/hooks/cleanup-apk-jobs'
-      path: '/api/public/hooks/cleanup-apk-jobs'
-      fullPath: '/api/public/hooks/cleanup-apk-jobs'
-      preLoaderRoute: typeof ApiPublicHooksCleanupApkJobsRouteImport
+    '/api/public/hooks/apk-worker': {
+      id: '/api/public/hooks/apk-worker'
+      path: '/api/public/hooks/apk-worker'
+      fullPath: '/api/public/hooks/apk-worker'
+      preLoaderRoute: typeof ApiPublicHooksApkWorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/auto-close-tickets': {
@@ -1162,11 +1085,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutoCloseTicketsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/apk-worker': {
-      id: '/api/public/hooks/apk-worker'
-      path: '/api/public/hooks/apk-worker'
-      fullPath: '/api/public/hooks/apk-worker'
-      preLoaderRoute: typeof ApiPublicHooksApkWorkerRouteImport
+    '/api/public/hooks/cleanup-apk-jobs': {
+      id: '/api/public/hooks/cleanup-apk-jobs'
+      path: '/api/public/hooks/cleanup-apk-jobs'
+      fullPath: '/api/public/hooks/cleanup-apk-jobs'
+      preLoaderRoute: typeof ApiPublicHooksCleanupApkJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/crypto-poll': {
+      id: '/api/public/hooks/crypto-poll'
+      path: '/api/public/hooks/crypto-poll'
+      fullPath: '/api/public/hooks/crypto-poll'
+      preLoaderRoute: typeof ApiPublicHooksCryptoPollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/daily-license-check': {
+      id: '/api/public/hooks/daily-license-check'
+      path: '/api/public/hooks/daily-license-check'
+      fullPath: '/api/public/hooks/daily-license-check'
+      preLoaderRoute: typeof ApiPublicHooksDailyLicenseCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/daily-maintenance': {
+      id: '/api/public/hooks/daily-maintenance'
+      path: '/api/public/hooks/daily-maintenance'
+      fullPath: '/api/public/hooks/daily-maintenance'
+      preLoaderRoute: typeof ApiPublicHooksDailyMaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/expire-licenses': {
+      id: '/api/public/hooks/expire-licenses'
+      path: '/api/public/hooks/expire-licenses'
+      fullPath: '/api/public/hooks/expire-licenses'
+      preLoaderRoute: typeof ApiPublicHooksExpireLicensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/migration-wave-enforce': {
+      id: '/api/public/hooks/migration-wave-enforce'
+      path: '/api/public/hooks/migration-wave-enforce'
+      fullPath: '/api/public/hooks/migration-wave-enforce'
+      preLoaderRoute: typeof ApiPublicHooksMigrationWaveEnforceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reconcile-pending': {
+      id: '/api/public/hooks/reconcile-pending'
+      path: '/api/public/hooks/reconcile-pending'
+      fullPath: '/api/public/hooks/reconcile-pending'
+      preLoaderRoute: typeof ApiPublicHooksReconcilePendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reconcile-yaarsa': {
+      id: '/api/public/hooks/reconcile-yaarsa'
+      path: '/api/public/hooks/reconcile-yaarsa'
+      fullPath: '/api/public/hooks/reconcile-yaarsa'
+      preLoaderRoute: typeof ApiPublicHooksReconcileYaarsaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/resend-confirmations': {
+      id: '/api/public/hooks/resend-confirmations'
+      path: '/api/public/hooks/resend-confirmations'
+      fullPath: '/api/public/hooks/resend-confirmations'
+      preLoaderRoute: typeof ApiPublicHooksResendConfirmationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/verify-external-payers': {
+      id: '/api/public/hooks/verify-external-payers'
+      path: '/api/public/hooks/verify-external-payers'
+      fullPath: '/api/public/hooks/verify-external-payers'
+      preLoaderRoute: typeof ApiPublicHooksVerifyExternalPayersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/mercadopago': {
+      id: '/api/public/payments/mercadopago'
+      path: '/api/public/payments/mercadopago'
+      fullPath: '/api/public/payments/mercadopago'
+      preLoaderRoute: typeof ApiPublicPaymentsMercadopagoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

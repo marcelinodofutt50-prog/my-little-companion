@@ -236,8 +236,19 @@ export function yaarsaEndpointsFor(rawBase: string): string[] {
   });
 }
 
+// Lembra qual caminho respondeu por último em cada painel e tenta ele
+// primeiro. Antes, 151.x e 190.x davam 404 no proxy.php em TODA chamada
+// antes de cair no caminho certo, dobrando o tempo do reparo.
+const preferredEndpoint: Partial<Record<YaarsaPanel, string>> = {};
+export function rememberWorkingEndpoint(panel: YaarsaPanel, url: string) {
+  preferredEndpoint[panel] = url;
+}
+
 function yaarsaEndpoints(panel: YaarsaPanel): string[] {
-  return yaarsaEndpointsFor(panelBaseUrl(panel));
+  const list = yaarsaEndpointsFor(panelBaseUrl(panel));
+  const pref = preferredEndpoint[panel];
+  if (pref && list.includes(pref)) return [pref, ...list.filter((u) => u !== pref)];
+  return list;
 }
 
 export function sanitizeAdminKey(raw: string, label = "admin key"): string {
@@ -460,20 +471,29 @@ export async function yaarsaCreateAccount(input: {
 }): Promise<YaarsaResponse> {
   const panel = input.panel ?? "v457";
   await refreshPanelOverrides();
-  return yaarsaPost(
-    {
-      action: "add",
-      username: sanitizePanelUsername(input.username),
-      email: input.email,
-      password: input.password,
-      adminkey: yaarsaAdminKey(panel),
-      subtype: planToSubtype(input.planSlug),
-      total_paid: String(input.totalPaid),
-      additional_info: input.additionalInfo || `shadow-${input.planSlug}`,
-      expire_date: expireDateFor(input.planSlug),
-    },
-    panel,
-  );
+  const fields = {
+    action: "add",
+    username: sanitizePanelUsername(input.username),
+    email: input.email,
+    password: input.password,
+    adminkey: yaarsaAdminKey(panel),
+    subtype: planToSubtype(input.planSlug),
+    total_paid: String(input.totalPaid),
+    additional_info: input.additionalInfo || `shadow-${input.planSlug}`,
+    expire_date: expireDateFor(input.planSlug),
+  };
+  const first = await yaarsaPost(fields, panel);
+  // Alguns painéis só aceitam "1 Month" na coluna subtype e recusam "7 Days"/
+  // "12 Month" com "Data truncated for column 'subtype'". A validade real vem
+  // de expire_date, então repetimos com o tipo aceito em todos os painéis.
+  if (fields.subtype !== "1 Month" && isSubtypeRejected(first.Fail)) {
+    return yaarsaPost({ ...fields, subtype: "1 Month" }, panel);
+  }
+  return first;
+}
+
+export function isSubtypeRejected(fail?: string | null): boolean {
+  return /truncated for column\s*'?subtype/i.test(String(fail ?? ""));
 }
 
 export async function yaarsaRemoveAccount(
@@ -842,7 +862,11 @@ async function persistLog(entry: {
   panel?: YaarsaPanel;
 }) {
   if (entry.panel) {
-    if (entry.outcome === "success") markPanelHealthy(entry.panel);
+    if (entry.outcome === "success" || entry.outcome === "yaarsa_fail" || entry.outcome === "lookup_miss") {
+      if (entry.outcome === "success") markPanelHealthy(entry.panel);
+      // O caminho respondeu como painel (sucesso ou recusa com JSON): é o certo.
+      if (entry.url && (entry.http_status ?? 200) < 400) rememberWorkingEndpoint(entry.panel, entry.url);
+    }
     else if (
       entry.outcome === "network_error" ||
       // 404 = caminho inexistente na sondagem de endpoints, não servidor fora.
