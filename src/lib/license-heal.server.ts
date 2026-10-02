@@ -200,6 +200,7 @@ async function runHeal(
           totalPaid: 0,
           additionalInfo: `shadow-heal-${lic.id.slice(0, 8)}`,
           panel: candidate,
+          expireDate: targetYmd,
         });
       } catch (e: any) {
         attempt = { Fail: String(e?.message ?? e) };
@@ -385,6 +386,7 @@ async function runHeal(
         totalPaid: 0,
         additionalInfo: `shadow-heal-new-${lic.id.slice(0, 8)}`,
         panel: candidate,
+        expireDate: targetYmd,
       });
     } catch (e: any) {
       fresh = { Fail: String(e?.message ?? e) };
@@ -448,6 +450,7 @@ async function runHeal(
           totalPaid: 0,
           additionalInfo: `shadow-heal-restore-${lic.id.slice(0, 8)}`,
           panel: candidate,
+          expireDate: targetYmd,
         });
         if (confirmed(back) || EXISTS_RE.test(String(back.Fail ?? ""))) {
           const probe = await yaarsaProbeAccount(email, candidate);
