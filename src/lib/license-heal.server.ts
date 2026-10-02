@@ -119,10 +119,34 @@ async function runHeal(
     isPanelHealthy,
     refreshPanelOverrides,
     looksLikePanelSuccess,
+    yaarsaReadAccount,
   } = await import("./yaarsa.server");
 
   const confirmed = (response: { Success?: unknown; Fail?: unknown }) =>
     Boolean(response.Success) || looksLikePanelSuccess(response.Fail);
+  // Ajusta a validade e só considera feito com confirmação do painel; se o
+  // painel permitir leitura, confere também que a data gravada é a pedida.
+  const applyExpireConfirmed = async (em: string, ymd: string, p: "v455" | "v457" | "v46") => {
+    for (let i = 0; i < 2; i++) {
+      try {
+        const ext: any = await yaarsaExtend(em, ymd, p);
+        const txt = String(ext?.Success ?? ext?.Fail ?? "").replace(/["']/g, "");
+        steps.push(`validade-resposta-${p}:${ymd}:${txt.slice(0, 50) || "vazia"}`);
+        if (!confirmed(ext)) continue;
+        try {
+          const read = await yaarsaReadAccount(em, p);
+          if (read.known && read.expireDate && read.expireDate !== ymd) {
+            steps.push(`validade-divergente:${read.expireDate}`);
+            continue;
+          }
+        } catch { /* sem leitura: vale a confirmação do painel */ }
+        return true;
+      } catch (e: any) {
+        steps.push(`validade-erro-${p}:${String(e?.message ?? e).slice(0, 50)}`);
+      }
+    }
+    return false;
+  };
   const subscriptionWasOnlyUpdated = (response: { Success?: unknown; Fail?: unknown }) =>
     /subscription\s+updated/i.test(String(response.Success ?? response.Fail ?? "").replace(/["']/g, ""));
 
@@ -267,12 +291,7 @@ async function runHeal(
       }
       steps.push(passwordCheck.available ? "senha-confirmada" : "senha-aplicada-sem-leitura");
       // Validade por último: a troca de senha não pode sobrescrever a data.
-      try {
-        const ext: any = await yaarsaExtend(lic.yaarsa_email as string, targetYmd, panel);
-        steps.push(ext?.Fail && !looksLikePanelSuccess(ext.Fail) ? "validade-nao-ajustada" : "validade-ajustada");
-      } catch {
-        steps.push("validade-nao-ajustada");
-      }
+      steps.push(await applyExpireConfirmed(lic.yaarsa_email as string, targetYmd, panel) ? "validade-ajustada" : "validade-nao-ajustada");
       await logHeal(supabaseAdmin, lic, panel, "created", reason, steps);
       return {
         ok: true,
@@ -287,7 +306,7 @@ async function runHeal(
         message:
           "Sua conta não existia no servidor e acabou de ser criada com o mesmo e-mail e senha. Tente entrar de novo no BTmob.",
         steps,
-        warning: steps.includes("validade-nao-ajustada") ? "Login recuperado, mas a validade ainda precisa ser sincronizada." : undefined,
+        warning: steps.includes("validade-nao-ajustada") ? `Login recuperado, mas o painel não confirmou a validade ${targetYmd}. Use "Sincronizar com painel" em seguida.` : undefined,
       };
     }
 
@@ -409,13 +428,20 @@ async function runHeal(
       fresh = { Fail: String(e?.message ?? e) };
     }
 
-    if (confirmed(fresh) || EXISTS_RE.test(String(fresh.Fail ?? ""))) {
-      // Confirmação obrigatória: só damos por resolvido se o painel realmente
-      // devolver a conta na consulta (era aqui que "corrigia" sem existir).
+    steps.push(`criacao-resposta-${candidate}:${String(fresh.Success ?? fresh.Fail ?? "vazia").replace(/["']/g, "").slice(0, 60)}`);
+    const saysExists = EXISTS_RE.test(String(fresh.Fail ?? ""));
+    if (saysExists && removedFrom.includes(candidate)) {
+      // Acabamos de confirmar que sumiu: "já existe" aqui é resposta inconsistente.
+      lastFail = `painel ${candidate} disse que o login ainda existe logo após confirmar a remoção`;
+      continue;
+    }
+    if (confirmed(fresh) || saysExists) {
+      // Confirmação obrigatória: a consulta precisa ENCONTRAR a conta.
+      await new Promise((r) => setTimeout(r, 600));
       const probe = await yaarsaProbeAccount(email, candidate);
       steps.push(`conferencia-${candidate}:${probe.state}`);
-      if (probe.state === "missing") {
-        lastFail = `conta não apareceu no painel ${candidate}`;
+      if (probe.state !== "found") {
+        lastFail = `login não confirmado no painel ${candidate} após criar (${probe.state})`;
         continue;
       }
       // Criar/encontrar a conta não garante a senha. Sempre reaplicamos a
@@ -505,12 +531,7 @@ async function runHeal(
   }
   steps.push(generated ? "login-novo-emitido" : "login-recriado-mesmas-credenciais");
 
-  try {
-    await yaarsaExtend(email, targetYmd, usedPanel);
-    steps.push("validade-ajustada");
-  } catch {
-    steps.push("validade-nao-ajustada");
-  }
+  steps.push(await applyExpireConfirmed(email, targetYmd, usedPanel) ? "validade-ajustada" : "validade-nao-ajustada");
 
   await updateLicenseTolerant(supabaseAdmin, lic.id, {
     yaarsa_username: username,
@@ -538,7 +559,7 @@ async function runHeal(
       ? "A licença não tinha senha guardada, então emitimos um login novo — use o e-mail e a senha que aparecem agora em Licenças."
       : "O login estava travado no servidor. Apagamos e recriamos a conta com o MESMO e-mail e a MESMA senha. Tente entrar de novo no BTmob.",
     steps,
-    warning: steps.includes("validade-nao-ajustada") ? "Login recuperado, mas a validade ainda precisa ser sincronizada." : undefined,
+    warning: steps.includes("validade-nao-ajustada") ? `Login recuperado, mas o painel não confirmou a validade ${targetYmd}. Use "Sincronizar com painel" em seguida.` : undefined,
   };
 }
 
