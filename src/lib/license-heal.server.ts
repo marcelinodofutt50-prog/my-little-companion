@@ -340,31 +340,37 @@ async function runHeal(
         present = candidate === panel;
       }
       if (!present) continue;
-      // Remove e CONFERE que sumiu. Antes, se a remoção falhava calada, a
-      // criação recebia "já existe", contava como sucesso e o login bugado ficava.
+      // Remove e só segue com CONFIRMAÇÃO DUPLA: o painel tem que responder que
+      // removeu (ex.: "client removed") E a consulta seguinte tem que dizer que
+      // o e-mail não existe mais. Painel mudo NÃO conta como removido.
       let gone = false;
-      for (let tryN = 0; tryN < 2 && !gone; tryN++) {
+      for (let tryN = 0; tryN < 3 && !gone; tryN++) {
+        let saidRemoved = false;
         try {
           const removed = await yaarsaRemoveAccount(email, candidate);
-          const failTxt = String(removed.Fail ?? "");
-          if (failTxt && !NOT_FOUND_RE.test(failTxt) && !/removed|deleted|apagad|removid/i.test(failTxt)) {
-            steps.push(`remocao-${candidate}:${failTxt.slice(0, 60)}`);
-          }
+          const txt = String(removed.Success ?? removed.Fail ?? "");
+          saidRemoved =
+            /remov|delet|apagad/i.test(txt) || NOT_FOUND_RE.test(txt) || looksLikePanelSuccess(txt);
+          steps.push(`remocao-resposta-${candidate}:${txt.replace(/["']/g, "").slice(0, 60) || "vazia"}`);
         } catch (e: any) {
           steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
         }
+        await new Promise((r) => setTimeout(r, 600));
+        let state: "found" | "missing" | "unknown" = "unknown";
         try {
-          const after = await yaarsaProbeAccount(email, candidate);
-          gone = after.state === "missing";
-          if (after.state === "unknown") gone = true; // painel mudo: segue
+          state = (await yaarsaProbeAccount(email, candidate)).state;
         } catch {
-          gone = true;
+          state = "unknown";
         }
-        if (!gone) await new Promise((r) => setTimeout(r, 800));
+        steps.push(`remocao-conferida-${candidate}:${state}`);
+        gone = state === "missing" && saidRemoved;
+        // Sem a palavra "removed", mas a consulta confirma que sumiu: aceita.
+        if (state === "missing") gone = true;
+        if (!gone) await new Promise((r) => setTimeout(r, 900));
       }
       if (gone) {
         removedFrom.push(candidate);
-        steps.push(`conta-removida:${candidate}`);
+        steps.push(`conta-removida-confirmada:${candidate}`);
       } else {
         steps.push(`remocao-nao-confirmada:${candidate}`);
         stuckIn.push(candidate);
@@ -372,10 +378,21 @@ async function runHeal(
     }
   }
 
+  // Sem confirmação de que o login antigo saiu, NÃO criamos nada: criar agora
+  // geraria login duplicado ou "já existe" fingindo sucesso.
+  if (stuckIn.length) {
+    await logHeal(supabaseAdmin, lic, panel, "remove_not_confirmed", reason, steps);
+    throw new Error(
+      `O painel ${stuckIn.join(", ")} não confirmou que apagou o login antigo, então não recriei nada para não duplicar. Tente de novo em alguns minutos.`,
+    );
+  }
+
   let usedPanel: "v455" | "v457" | "v46" = panel;
   let lastFail = "";
   let issued = false;
-  for (const candidate of panelOrder) {
+  // Recria primeiro exatamente onde o login foi apagado.
+  const createOrder = [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))];
+  for (const candidate of createOrder) {
     let fresh: { Success?: unknown; Fail?: unknown };
     try {
       fresh = await yaarsaCreateAccount({
