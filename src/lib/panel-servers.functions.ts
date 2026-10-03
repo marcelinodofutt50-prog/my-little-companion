@@ -247,16 +247,17 @@ export const adminGetTrialPanel = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { getTrialPanelChoice } = await import("@/lib/app-settings.server");
-    const { hasPanelServer, refreshPanelOverrides, resolveTrialPanel } = await import("@/lib/yaarsa.server");
+    const { hasPanelServer, isPanelUsable, refreshPanelOverrides, resolveTrialPanel } = await import("@/lib/yaarsa.server");
+    const ok = (p: "v455" | "v457" | "v46") => hasPanelServer(p) || isPanelUsable(p);
     await refreshPanelOverrides(true);
     const choice = await getTrialPanelChoice(true);
     return {
       choice,
       effective: await resolveTrialPanel(),
       available: {
-        v455: hasPanelServer("v455"),
-        v457: hasPanelServer("v457"),
-        v46: hasPanelServer("v46"),
+        v455: ok("v455"),
+        v457: ok("v457"),
+        v46: ok("v46"),
       },
     };
   });
@@ -270,13 +271,20 @@ export const adminSetTrialPanel = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { setSetting, TRIAL_PANEL_KEY } = await import("@/lib/app-settings.server");
-    const { hasPanelServer, refreshPanelOverrides, resolveTrialPanel, panelBaseUrl } =
+    const { hasPanelServer, isPanelUsable, refreshPanelOverrides, resolveTrialPanel, panelBaseUrl } =
       await import("@/lib/yaarsa.server");
     await refreshPanelOverrides(true);
-    if (data.panel !== "auto" && !hasPanelServer(data.panel)) {
+    if (data.panel !== "auto" && !hasPanelServer(data.panel) && !isPanelUsable(data.panel)) {
       return { ok: false, message: "Esse servidor ainda não tem endereço configurado." };
     }
     await setSetting(TRIAL_PANEL_KEY, data.panel, context.userId);
+    // Confirma lendo de volta do banco, sem cache.
+    const { getTrialPanelChoice, invalidateSetting } = await import("@/lib/app-settings.server");
+    invalidateSetting(TRIAL_PANEL_KEY);
+    const saved = await getTrialPanelChoice(true);
+    if (saved !== data.panel) {
+      return { ok: false, message: "A escolha não ficou gravada. Tente de novo." };
+    }
     const effective = await resolveTrialPanel();
     const { logPanelEvent } = await import("@/lib/panel-servers.server");
     await logPanelEvent({

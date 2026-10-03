@@ -30,7 +30,7 @@ export async function resolveTrialPanel(): Promise<YaarsaPanel> {
   try {
     const { getTrialPanelChoice } = await import("@/lib/app-settings.server");
     const choice = await getTrialPanelChoice();
-    if (choice !== "auto" && hasPanelServer(choice)) return choice;
+    if (choice !== "auto" && (hasPanelServer(choice) || isPanelUsable(choice))) return choice;
   } catch {
     // sem configuração: segue a regra padrão
   }
