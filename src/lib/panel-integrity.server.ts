@@ -58,13 +58,18 @@ const DAY = 86400000;
 /** Data que a conta deve ter no painel: expiração real + 1 dia de buffer. */
 /** Próximo dia 20 (ciclo do servidor), em AAAA-MM-DD. Se hoje já é 20+, vai para o mês seguinte. */
 export function nextDay20Ymd(now = new Date()): string {
-  const y = now.getUTCFullYear(), m = now.getUTCMonth();
-  const d = now.getUTCDate() < 20 ? new Date(Date.UTC(y, m, 20)) : new Date(Date.UTC(y, m + 1, 20));
-  return d.toISOString().slice(0, 10);
+  const [y, m, d] = spYmdLocal(0, now).split("-").map(Number) as [number, number, number];
+  const t = d < 20 ? new Date(Date.UTC(y, m - 1, 20)) : new Date(Date.UTC(y, m, 20));
+  return t.toISOString().slice(0, 10);
+}
+
+function spYmdLocal(days = 0, from = new Date()): string {
+  const d = new Date(from.getTime() + days * DAY);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 }
 
 /**
- * Data que o painel deve mostrar:
+ * Data que o painel deve mostrar (sempre no fuso de São Paulo):
  * - teste grátis: hoje + 2 dias (o corte real de 3h30 é feito pelo site);
  * - vitalício: dia 20 pago do servidor, ou o próximo dia 20;
  * - mensal/semanal: validade da licença + 1 dia de folga da meia-noite.
@@ -76,16 +81,14 @@ export function panelExpireDateFor(l: {
   server_paid_until?: string | null;
 }): string {
   const slug = (l.plan_slug ?? "").toLowerCase();
-  const today = new Date().toISOString().slice(0, 10);
-  if (l.is_trial || slug === "trial") {
-    return new Date(Date.now() + 2 * DAY).toISOString().slice(0, 10);
-  }
+  const today = spYmdLocal(0);
+  if (l.is_trial || slug === "trial") return spYmdLocal(2);
   if (!l.expires_at || slug.includes("lifetime") || slug.includes("vitalicio")) {
     const paid = l.server_paid_until ? String(l.server_paid_until).slice(0, 10) : null;
     return paid && paid > today ? paid : nextDay20Ymd();
   }
-  const t = new Date(new Date(l.expires_at).getTime() + DAY).toISOString().slice(0, 10);
-  return t > today ? t : new Date(Date.now() + DAY).toISOString().slice(0, 10);
+  const t = spYmdLocal(1, new Date(l.expires_at));
+  return t > today ? t : spYmdLocal(1);
 }
 
 function normalizePanel(p: string | null): "v455" | "v457" | "v46" {
