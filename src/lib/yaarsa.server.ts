@@ -30,7 +30,7 @@ export async function resolveTrialPanel(): Promise<YaarsaPanel> {
   try {
     const { getTrialPanelChoice } = await import("@/lib/app-settings.server");
     const choice = await getTrialPanelChoice();
-    if (choice !== "auto" && hasPanelServer(choice)) return choice;
+    if (choice !== "auto" && (hasPanelServer(choice) || isPanelUsable(choice))) return choice;
   } catch {
     // sem configuração: segue a regra padrão
   }
@@ -381,7 +381,29 @@ export function planToSubtype(planSlug: string): string {
   return "1 Month";
 }
 
+/** Data (YYYY-MM-DD) no fuso de São Paulo, deslocada em `days`. */
+export function spYmd(days = 0, from = new Date()): string {
+  const d = new Date(from.getTime() + days * 86_400_000);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+/** Próximo dia 20 (estritamente depois de hoje, no fuso de São Paulo). */
+export function nextDay20Sp(from = new Date()): string {
+  const [y, m, d] = spYmd(0, from).split("-").map(Number) as [number, number, number];
+  const t = d < 20 ? new Date(Date.UTC(y, m - 1, 20)) : new Date(Date.UTC(y, m, 20));
+  return t.toISOString().slice(0, 10);
+}
+
 export function expireDateFor(planSlug: string): string {
+  // Mesma regra do reparo/sincronização (panelExpireDateFor), no fuso de São Paulo.
+  if (planSlug === "trial") return spYmd(2);
+  if (planSlug === "login-7d") return spYmd(8);
+  if (planSlug === "login-30d" || planSlug === "kraken-monthly") return spYmd(31);
+  if (planSlug === "login-lifetime" || planSlug === "kraken-lifetime") return nextDay20Sp();
+  return spYmd(31);
+}
+
+export function expireDateForLegacy(planSlug: string): string {
   // BMob invalida logins na virada da meia-noite, então damos 1 dia de buffer
   // no Yaarsa. O corte real acontece pelo cron /api/public/hooks/expire-licenses,
   // que remove a conta assim que o expires_at persistido no banco é atingido.
@@ -717,8 +739,49 @@ export async function yaarsaLookupEmail(email: string, panel: YaarsaPanel): Prom
   if (r.Success) return { found: true, panel, raw: r };
   const fail = String(r.Fail || "");
   if (NOT_FOUND_RE.test(fail)) return { found: false, panel, raw: r };
-  if (EXISTS_RE.test(fail)) return { found: true, panel, raw: r };
+  if (EXISTS_RE.test(fail)) {
+    // Alguns painéis (ex.: 4.5.5) conferem a DATA antes do e-mail e respondem
+    // "Date not accepted" até para e-mail que não existe. Nesse painel a
+    // consulta não prova nada: devolvemos "desconhecido" em vez de "existe".
+    if (await panelChecksDateFirst(panel)) {
+      throw new Error(`lookup_unknown[${panel}]: painel confere a data antes do e-mail`);
+    }
+    return { found: true, panel, raw: r };
+  }
   throw new Error(`lookup_unknown[${panel}]: ${fail || "sem resposta"}`);
+}
+
+// Calibração (1x por painel por instância): consulta um e-mail que com certeza
+// não existe. Se o painel disser "Date not accepted", a consulta é inútil ali.
+const dateFirstCache: Partial<Record<YaarsaPanel, boolean>> = {};
+async function panelChecksDateFirst(panel: YaarsaPanel): Promise<boolean> {
+  if (dateFirstCache[panel] !== undefined) return dateFirstCache[panel]!;
+  try {
+    const fake = `naoexiste-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@shadow-probe.invalid`;
+    const r = await yaarsaPost(
+      { action: "cexpire", email: fake, expire_date: "invalid-probe", adminkey: yaarsaAdminKey(panel) },
+      panel,
+    );
+    const txt = String(r.Fail ?? r.Success ?? "");
+    if (NOT_FOUND_RE.test(txt)) dateFirstCache[panel] = false;
+    else if (EXISTS_RE.test(txt) || r.Success) dateFirstCache[panel] = true;
+    else return true; // resposta estranha: não confia, mas tenta calibrar de novo depois
+  } catch {
+    return true;
+  }
+  return dateFirstCache[panel]!;
+}
+
+/** Resposta do painel que confirma explicitamente a remoção ("Client removed successfully!"). */
+export function looksLikeRemoveConfirmed(value: unknown): boolean {
+  const t = String(value ?? "").replace(/["']/g, "");
+  return /client\s+removed\s+successfully|removed\s+successfully|deleted\s+successfully/i.test(t);
+}
+
+/** Resposta do painel que confirma que uma conta NOVA foi criada ("Account created successfully!"). */
+export function looksLikeAccountCreated(value: unknown): boolean {
+  const t = String(value ?? "").replace(/["']/g, "");
+  return /account\s+created\s+successfully|created\s+successfully/i.test(t);
 }
 
 // Search across all panels — returns the first panel that reports found.

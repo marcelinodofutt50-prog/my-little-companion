@@ -120,6 +120,8 @@ async function runHeal(
     refreshPanelOverrides,
     looksLikePanelSuccess,
     yaarsaReadAccount,
+    looksLikeRemoveConfirmed,
+    looksLikeAccountCreated,
   } = await import("./yaarsa.server");
 
   const confirmed = (response: { Success?: unknown; Fail?: unknown }) =>
@@ -368,8 +370,7 @@ async function runHeal(
         try {
           const removed = await yaarsaRemoveAccount(email, candidate);
           const txt = String(removed.Success ?? removed.Fail ?? "");
-          saidRemoved =
-            /remov|delet|apagad/i.test(txt) || NOT_FOUND_RE.test(txt) || looksLikePanelSuccess(txt);
+          saidRemoved = looksLikeRemoveConfirmed(txt) || NOT_FOUND_RE.test(txt);
           steps.push(`remocao-resposta-${candidate}:${txt.replace(/["']/g, "").slice(0, 60) || "vazia"}`);
         } catch (e: any) {
           steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
@@ -382,9 +383,10 @@ async function runHeal(
           state = "unknown";
         }
         steps.push(`remocao-conferida-${candidate}:${state}`);
-        gone = state === "missing" && saidRemoved;
-        // Sem a palavra "removed", mas a consulta confirma que sumiu: aceita.
-        if (state === "missing") gone = true;
+        // Confirmado quando a consulta diz que sumiu, ou quando o painel não tem
+        // consulta confiável (4.5.5) e respondeu "Client removed successfully!".
+        // A prova final vem na recriação: só "Account created successfully!" vale.
+        gone = state === "missing" || (state === "unknown" && saidRemoved);
         if (!gone) await new Promise((r) => setTimeout(r, 900));
       }
       if (gone) {
@@ -430,17 +432,22 @@ async function runHeal(
 
     steps.push(`criacao-resposta-${candidate}:${String(fresh.Success ?? fresh.Fail ?? "vazia").replace(/["']/g, "").slice(0, 60)}`);
     const saysExists = EXISTS_RE.test(String(fresh.Fail ?? ""));
-    if (saysExists && removedFrom.includes(candidate)) {
-      // Acabamos de confirmar que sumiu: "já existe" aqui é resposta inconsistente.
-      lastFail = `painel ${candidate} disse que o login ainda existe logo após confirmar a remoção`;
+    const wasRemovedHere = removedFrom.includes(candidate);
+    const createdNew = looksLikeAccountCreated(fresh.Success ?? fresh.Fail);
+    if (wasRemovedHere && !createdNew) {
+      // Apagamos aqui: só aceitamos "Account created successfully!". "Já existe"
+      // ou "subscription Updated" provam que o login antigo NÃO saiu.
+      lastFail = `painel ${candidate} não confirmou a criação do login novo (respondeu: ${String(fresh.Success ?? fresh.Fail ?? "nada").replace(/["']/g, "").slice(0, 80)})`;
+      steps.push(`criacao-nao-confirmada:${candidate}`);
       continue;
     }
-    if (confirmed(fresh) || saysExists) {
-      // Confirmação obrigatória: a consulta precisa ENCONTRAR a conta.
+    if (createdNew || confirmed(fresh) || saysExists) {
       await new Promise((r) => setTimeout(r, 600));
       const probe = await yaarsaProbeAccount(email, candidate);
       steps.push(`conferencia-${candidate}:${probe.state}`);
-      if (probe.state !== "found") {
+      // Consulta conclusiva dizendo que não existe derruba; painel sem consulta
+      // confiável vale a confirmação explícita "Account created successfully!".
+      if (probe.state === "missing" || (probe.state === "unknown" && !createdNew)) {
         lastFail = `login não confirmado no painel ${candidate} após criar (${probe.state})`;
         continue;
       }
