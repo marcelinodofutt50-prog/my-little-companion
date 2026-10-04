@@ -50,6 +50,11 @@ const EXISTS_RE = /1004|already|in use|em uso|exist/i;
 const QUOTA_RE = /maximum allowed accounts|quota|limit reached|limite/i;
 const NOT_FOUND_RE = /1005|not\s*found|cant.?find|não\s*encontrad/i;
 
+/** Espera entre consultas ao painel (desligada nos testes automáticos). */
+function pause(ms: number) {
+  return process.env.VITEST ? Promise.resolve() : new Promise((r) => setTimeout(r, ms));
+}
+
 function normalizePanel(p: string | null | undefined): "v455" | "v457" | "v46" {
   return p === "v46" ? "v46" : p === "v455" ? "v455" : "v457";
 }
@@ -375,7 +380,7 @@ async function runHeal(
         } catch (e: any) {
           steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
         }
-        await new Promise((r) => setTimeout(r, 600));
+        await pause(600);
         let state: "found" | "missing" | "unknown" = "unknown";
         try {
           state = (await yaarsaProbeAccount(email, candidate)).state;
@@ -387,7 +392,7 @@ async function runHeal(
         // consulta confiável (4.5.5) e respondeu "Client removed successfully!".
         // A prova final vem na recriação: só "Account created successfully!" vale.
         gone = state === "missing" || (state === "unknown" && saidRemoved);
-        if (!gone) await new Promise((r) => setTimeout(r, 900));
+        if (!gone) await pause(900);
       }
       if (gone) {
         removedFrom.push(candidate);
@@ -442,7 +447,7 @@ async function runHeal(
       continue;
     }
     if (createdNew || confirmed(fresh) || saysExists) {
-      await new Promise((r) => setTimeout(r, 600));
+      await pause(600);
       const probe = await yaarsaProbeAccount(email, candidate);
       steps.push(`conferencia-${candidate}:${probe.state}`);
       // Consulta conclusiva dizendo que não existe derruba; painel sem consulta
