@@ -43,7 +43,7 @@ vi.mock("../lib/audit-trail.server", () => ({
 vi.mock("../lib/yaarsa.server", () => ({
   yaarsaCreateAccount: vi.fn(async (input: any) => {
     state.create.push(input);
-    return state.createResponses.shift() ?? { Success: true };
+    return state.createResponses.shift() ?? { Success: "Account created successfully!" };
   }),
   yaarsaSetPassword: vi.fn(async (...args: any[]) => {
     state.passwordCalls.push(args);
@@ -54,7 +54,7 @@ vi.mock("../lib/yaarsa.server", () => ({
   ),
   yaarsaRemoveAccount: vi.fn(async (email: string) => {
     state.removed.push(email);
-    return { Success: true };
+    return { Success: "Client removed successfully!" };
   }),
   yaarsaExtend: vi.fn(async (email: string, ymd: string) => {
     state.extended.push({ email, ymd });
@@ -69,6 +69,9 @@ vi.mock("../lib/yaarsa.server", () => ({
   refreshPanelOverrides: async () => {},
   looksLikePanelSuccess: (value: unknown) =>
     typeof value === "string" && /^[\s"']*(?:subscription|account|user|client|password)?\s*(?:updated|created|added|changed|renewed|extended|removed|deleted|success)/i.test(value),
+  yaarsaReadAccount: vi.fn(async () => ({ known: false, expireDate: null, password: null, raw: null })),
+  looksLikeRemoveConfirmed: (v: unknown) => /removed\s+successfully/i.test(String(v ?? "")),
+  looksLikeAccountCreated: (v: unknown) => /created\s+successfully/i.test(String(v ?? "")),
   encrypt: (v: string) => `enc:${v}`,
   decrypt: (v: string) => String(v).replace(/^enc:/, ""),
 }));
