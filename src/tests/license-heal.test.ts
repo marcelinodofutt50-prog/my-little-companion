@@ -100,6 +100,7 @@ const baseLic = {
 };
 
 beforeEach(() => {
+  gone.clear();
   state.create = [];
   state.removed = [];
   state.extended = [];
