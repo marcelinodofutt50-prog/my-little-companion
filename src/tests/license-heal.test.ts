@@ -160,7 +160,7 @@ describe("healLicenseLogin", () => {
   });
 
   it("não mostra sucesso quando o painel rejeita a reaplicação da senha", async () => {
-    state.createResponses = [{ Fail: "1004 email already in use" }, { Success: true }, { Success: true }];
+    state.createResponses = [{ Fail: "1004 email already in use" }, { Success: "Account created successfully!" }, { Success: "Account created successfully!" }];
     state.passwordResponses = [{ Fail: "password rejected" }];
 
     await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/senha/i);
@@ -212,7 +212,7 @@ describe("healLicenseLogin", () => {
   });
 
   it("força a recriação quando pedido explicitamente", async () => {
-    state.createResponses = [{ Success: true }];
+    state.createResponses = [{ Success: "Account created successfully!" }];
     const res = await healLicenseLogin(baseLic, { reason: "test", forceRecreate: true });
 
     expect(res.action).toBe("recreated");
@@ -302,5 +302,25 @@ describe("healLicenseLogin — proteções adicionais", () => {
     const res = await healLicenseLogin({ ...baseLic, panel }, { reason: "test" });
     expect(res.panel).toBe(panel);
     expect(state.create[0].panel).toBe(panel);
+  });
+});
+
+describe("confirmações do painel", () => {
+  it("não recria quando o painel responde 'subscription Updated' depois de apagar (login antigo não saiu)", async () => {
+    state.createResponses = [
+      { Fail: '"subscription Updated."' },
+      { Fail: '"subscription Updated."' },
+      { Fail: '"subscription Updated."' },
+      { Fail: '"subscription Updated."' },
+    ];
+    await expect(healLicenseLogin(baseLic, { reason: "test", forceRecreate: true })).rejects.toThrow();
+    expect(state.updates).toHaveLength(0);
+  });
+
+  it("envia ao painel a data certa da licença ao recriar", async () => {
+    state.createResponses = [{ Success: "Account created successfully!" }];
+    await healLicenseLogin({ ...baseLic, plan_slug: "trial", is_trial: true }, { reason: "test", forceRecreate: true });
+    expect(state.create[0].expireDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(state.extended.at(-1)?.ymd).toBe(state.create[0].expireDate);
   });
 });
