@@ -417,6 +417,7 @@ async function runHeal(
   let lastFail = "";
   let issued = false;
   // Recria primeiro exatamente onde o login foi apagado.
+  const createdConfirmedIn: Array<"v455" | "v457" | "v46"> = [];
   const createOrder = [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))];
   for (const candidate of createOrder) {
     let fresh: { Success?: unknown; Fail?: unknown };
@@ -456,6 +457,7 @@ async function runHeal(
         lastFail = `login não confirmado no painel ${candidate} após criar (${probe.state})`;
         continue;
       }
+      createdConfirmedIn.push(candidate);
       // Criar/encontrar a conta não garante a senha. Sempre reaplicamos a
       // senha exibida na licença e recusamos sucesso se o painel a rejeitar.
       try {
@@ -494,8 +496,10 @@ async function runHeal(
     // Última linha de defesa: se apagamos a conta e nenhuma recriação passou,
     // tentamos devolver a conta ao painel de origem para o cliente não ficar
     // sem acesso nenhum por causa da tentativa de correção.
-    let restored = false;
-    for (const candidate of removedFrom) {
+    // Se a conta nova já foi confirmada em algum painel, o cliente não ficou sem
+    // login (só a senha falhou): não há o que devolver.
+    let restored = createdConfirmedIn.length > 0;
+    for (const candidate of restored ? [] : removedFrom) {
       try {
         const back = await yaarsaCreateAccount({
           username,
