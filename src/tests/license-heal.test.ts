@@ -19,6 +19,9 @@ const state = {
   unhealthyPanels: new Set<string>(),
 };
 
+// Contas apagadas no painel simulado (painel:email) — somem da consulta até serem recriadas.
+const gone = new Set<string>();
+
 const supabaseAdmin = {
   from: (table: string) => ({
     insert: (row: any) => {
@@ -43,7 +46,9 @@ vi.mock("../lib/audit-trail.server", () => ({
 vi.mock("../lib/yaarsa.server", () => ({
   yaarsaCreateAccount: vi.fn(async (input: any) => {
     state.create.push(input);
-    return state.createResponses.shift() ?? { Success: "Account created successfully!" };
+    const res = state.createResponses.shift() ?? { Success: "Account created successfully!" };
+    if (/created/i.test(String(res.Success ?? res.Fail ?? ""))) gone.delete(`${input.panel}:${input.email}`);
+    return res;
   }),
   yaarsaSetPassword: vi.fn(async (...args: any[]) => {
     state.passwordCalls.push(args);
@@ -52,15 +57,18 @@ vi.mock("../lib/yaarsa.server", () => ({
   yaarsaVerifyCredentials: vi.fn(async () =>
     state.passwordChecks.shift() ?? { verified: false, available: false },
   ),
-  yaarsaRemoveAccount: vi.fn(async (email: string) => {
+  yaarsaRemoveAccount: vi.fn(async (email: string, panel?: string) => {
     state.removed.push(email);
+    gone.add(`${panel}:${email}`);
     return { Success: "Client removed successfully!" };
   }),
   yaarsaExtend: vi.fn(async (email: string, ymd: string) => {
     state.extended.push({ email, ymd });
     return { Success: true };
   }),
-  yaarsaProbeAccount: vi.fn(async () => state.probeResponses.shift() ?? { state: "found", detail: "" }),
+  yaarsaProbeAccount: vi.fn(async (email: string, panel?: string) =>
+    state.probeResponses.shift() ?? { state: gone.has(`${panel}:${email}`) ? "missing" : "found", detail: "" },
+  ),
   hasPanelServer: () => true,
   isPanelUsable: () => true,
   sanitizePanelUsername: (u: string) =>
