@@ -4,12 +4,12 @@ import { welcomePriceFor } from "./welcome-offer";
  * Preço de boas-vindas conferido no servidor pela data de cadastro do próprio
  * login (não confia no navegador). Contas banidas não recebem a oferta.
  */
-export async function serverWelcomePrice(userId: string, planSlug: string, basePrice: number): Promise<number | null> {
+export async function serverWelcomePrice(userId: string, planSlug: string, basePrice: number, now = Date.now()): Promise<number | null> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
     const createdAt = data?.user?.created_at ?? null;
-    const price = welcomePriceFor(planSlug, basePrice, createdAt);
+    const price = welcomePriceFor(planSlug, basePrice, createdAt, now);
     if (price === null) return null;
     const { getActiveBan } = await import("./ban-engine.server");
     if (await getActiveBan(userId)) return null;

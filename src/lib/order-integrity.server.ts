@@ -46,6 +46,15 @@ export async function validateCanonicalOrderAmount(
     return { ok: false, expectedAmount: 0, actualAmount, reason: "invalid-plan-price", planName: plan.name };
   }
 
+  // Oferta de boas-vindas: confere no servidor se a conta tinha direito no
+  // momento em que o pedido foi criado (não confia no valor do pedido).
+  if (!order.coupon_code) {
+    const { serverWelcomePrice } = await import("./welcome-offer.server");
+    const placed = order.created_at ? new Date(order.created_at).getTime() : Date.now();
+    const welcome = await serverWelcomePrice(order.user_id, order.plan_slug, expectedAmount, Number.isFinite(placed) ? placed : Date.now());
+    if (welcome !== null) expectedAmount = welcome;
+  }
+
   const meta = (order.metadata ?? {}) as Record<string, unknown>;
   if (meta["includeServer"] === true) expectedAmount += 450;
   if (meta["addSigner"] === true) expectedAmount += 250;
