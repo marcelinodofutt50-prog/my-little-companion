@@ -369,31 +369,52 @@ async function runHeal(
       // Remove e só segue com CONFIRMAÇÃO DUPLA: o painel tem que responder que
       // removeu (ex.: "client removed") E a consulta seguinte tem que dizer que
       // o e-mail não existe mais. Painel mudo NÃO conta como removido.
+      //
+      // Visto no painel real: o mesmo e-mail pode estar cadastrado VÁRIAS vezes
+      // (cópias criadas por reparos antigos). Cada "remove" apaga UMA cópia e
+      // responde "Client removed successfully!", mas a consulta continua
+      // achando o e-mail por causa das outras. Por isso seguimos apagando
+      // enquanto o painel confirmar remoções, até ele dizer que o e-mail sumiu.
+      const MAX_REMOVES = 10;
       let gone = false;
-      for (let tryN = 0; tryN < 3 && !gone; tryN++) {
+      let removedCount = 0;
+      let silentTries = 0;
+      for (let tryN = 0; tryN < MAX_REMOVES && !gone && silentTries < 3; tryN++) {
         let saidRemoved = false;
+        let saidNotFound = false;
         try {
           const removed = await yaarsaRemoveAccount(email, candidate);
           const txt = String(removed.Success ?? removed.Fail ?? "");
-          saidRemoved = looksLikeRemoveConfirmed(txt) || NOT_FOUND_RE.test(txt);
-          steps.push(`remocao-resposta-${candidate}:${txt.replace(/["']/g, "").slice(0, 60) || "vazia"}`);
+          saidRemoved = looksLikeRemoveConfirmed(txt);
+          saidNotFound = NOT_FOUND_RE.test(txt);
+          if (tryN < 2 || !saidRemoved) {
+            steps.push(`remocao-resposta-${candidate}:${txt.replace(/["']/g, "").slice(0, 60) || "vazia"}`);
+          }
         } catch (e: any) {
           steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
         }
-        await pause(600);
+        if (saidRemoved) removedCount++;
+        else silentTries++;
+        // "Não encontrei esse e-mail" ao apagar = não sobrou nenhuma cópia.
+        if (saidNotFound) {
+          gone = true;
+          break;
+        }
+        await pause(300);
         let state: "found" | "missing" | "unknown" = "unknown";
         try {
           state = (await yaarsaProbeAccount(email, candidate)).state;
         } catch {
           state = "unknown";
         }
-        steps.push(`remocao-conferida-${candidate}:${state}`);
+        if (tryN < 2 || state !== "found") steps.push(`remocao-conferida-${candidate}:${state}`);
         // Confirmado quando a consulta diz que sumiu, ou quando o painel não tem
         // consulta confiável (4.5.5) e respondeu "Client removed successfully!".
         // A prova final vem na recriação: só "Account created successfully!" vale.
         gone = state === "missing" || (state === "unknown" && saidRemoved);
-        if (!gone) await pause(900);
+        if (!gone && !saidRemoved) await pause(700);
       }
+      steps.push(`remocoes-confirmadas-${candidate}:${removedCount}`);
       if (gone) {
         removedFrom.push(candidate);
         steps.push(`conta-removida-confirmada:${candidate}`);
