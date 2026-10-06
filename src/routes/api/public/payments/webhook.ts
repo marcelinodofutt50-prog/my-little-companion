@@ -22,7 +22,7 @@ async function fulfillFromSession(session: any) {
 
   const { data: order } = await supabaseAdmin
     .from("orders")
-    .select("id,user_id,plan_slug,amount,status,coupon_code,cashback_used,metadata")
+    .select("id,user_id,plan_slug,amount,status,coupon_code,cashback_used,metadata,created_at")
     .eq("id", orderId)
     .maybeSingle();
   if (!order) {
