@@ -23,7 +23,7 @@ export const createOrderPaymentSession = createServerFn({ method: "POST" })
 
     const { data: order } = await supabase
       .from("orders")
-      .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata")
+      .select("id, user_id, plan_slug, amount, status, coupon_code, cashback_used, metadata, created_at")
       .eq("id", data.orderId)
       .eq("user_id", userId)
       .maybeSingle();
