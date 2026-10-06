@@ -11,11 +11,15 @@ export const Route = createFileRoute('/api/public/health')({
           
           const status = health.database.status === 'healthy' ? 200 : 503;
           
+          const { ORDER_INTEGRITY_VERSION } = await import('@/lib/order-integrity.server');
           return new Response(JSON.stringify({
             status: health.database.status,
             timestamp: health.timestamp,
             details: health.database.message,
-            tables: health.tables
+            tables: health.tables,
+            // Versão publicada (para confirmar que a última correção está no ar).
+            commit: (process.env['VERCEL_GIT_COMMIT_SHA'] ?? '').slice(0, 7) || null,
+            checkout_version: ORDER_INTEGRITY_VERSION
           }), {
             status,
             headers: {
