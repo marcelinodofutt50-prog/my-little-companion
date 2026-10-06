@@ -109,9 +109,30 @@ export async function validateCanonicalOrderAmount(
   return { ok: true, expectedAmount, actualAmount, planName: plan.name };
 }
 
+export const ORDER_INTEGRITY_VERSION = "welcome-offer-v2";
+
 export async function assertCanonicalOrderAmount(client: DbClient, order: CanonicalOrder) {
   const result = await validateCanonicalOrderAmount(client, order);
   if (!result.ok) {
+    // Registro no banco para diagnosticar bloqueios reais (valor esperado x pedido).
+    try {
+      await client.from("integration_logs").insert({
+        source: "checkout",
+        action: "order_price_blocked",
+        outcome: result.reason ?? "invalid",
+        user_id: order.user_id ?? null,
+        context: {
+          order_id: order.id,
+          plan_slug: order.plan_slug,
+          expected: result.expectedAmount,
+          actual: result.actualAmount,
+          order_created_at: order.created_at ?? null,
+          version: ORDER_INTEGRITY_VERSION,
+        },
+      } as never);
+    } catch {
+      /* telemetria nunca bloqueia */
+    }
     throw new Error(`Pedido bloqueado por divergência de preço (${result.reason ?? "invalid"}).`);
   }
   return result;
