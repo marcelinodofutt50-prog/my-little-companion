@@ -102,94 +102,26 @@ async function runHeal(
   lic: HealLicense,
   opts?: { reason?: string; forceRecreate?: boolean },
 ): Promise<HealResult> {
+  /*
+   * Reparo baseado no código real do painel (createacc.php):
+   *   - `update`  troca a senha → "Password updated successfully!" (prova que a
+   *     conta existe E que a senha da licença foi gravada).
+   *   - `add`     em conta vencida/"removida" → "subscription Updated." (reativa
+   *     subtype + data); em conta ativa → "already in use and active";
+   *     em conta inexistente → cria ("Account created successfully!").
+   *   - `cexpire` só troca a data.
+   *   - `remove`  NÃO apaga (só vence a conta) — por isso o reparo nunca usa.
+   * Tudo acontece SOMENTE no servidor da própria licença.
+   */
   const reason = opts?.reason ?? "self_repair";
   const steps: string[] = [];
-  if (lic.panel && !["v455", "v457", "v46"].includes(lic.panel)) {
-    steps.push(`painel-desconhecido:${lic.panel}`);
-  }
-
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const {
-    yaarsaCreateAccount,
-    yaarsaRemoveAccount,
-    yaarsaSetPassword,
-    yaarsaVerifyCredentials,
-    yaarsaProbeAccount,
-    yaarsaExtend,
-    encrypt,
-    decrypt,
-    hasPanelServer,
-    isPanelUsable,
-    sanitizePanelUsername,
-    isPanelHealthy,
-    refreshPanelOverrides,
-    looksLikePanelSuccess,
-    yaarsaReadAccount,
-    looksLikeRemoveConfirmed,
-    looksLikeAccountCreated,
-  } = await import("./yaarsa.server");
+  const y = await import("./yaarsa.server");
+  try { await y.refreshPanelOverrides(); } catch { /* segue com o ambiente */ }
 
-  const confirmed = (response: { Success?: unknown; Fail?: unknown }) =>
-    Boolean(response.Success) || looksLikePanelSuccess(response.Fail);
-  // Ajusta a validade e só considera feito com confirmação do painel; se o
-  // painel permitir leitura, confere também que a data gravada é a pedida.
-  const applyExpireConfirmed = async (em: string, ymd: string, p: "v455" | "v457" | "v46") => {
-    for (let i = 0; i < 2; i++) {
-      try {
-        const ext: any = await yaarsaExtend(em, ymd, p);
-        const txt = String(ext?.Success ?? ext?.Fail ?? "").replace(/["']/g, "");
-        steps.push(`validade-resposta-${p}:${ymd}:${txt.slice(0, 50) || "vazia"}`);
-        if (!confirmed(ext)) continue;
-        try {
-          const read = await yaarsaReadAccount(em, p);
-          if (read.known && read.expireDate && read.expireDate !== ymd) {
-            steps.push(`validade-divergente:${read.expireDate}`);
-            continue;
-          }
-        } catch { /* sem leitura: vale a confirmação do painel */ }
-        return true;
-      } catch (e: any) {
-        steps.push(`validade-erro-${p}:${String(e?.message ?? e).slice(0, 50)}`);
-      }
-    }
-    return false;
-  };
-  const subscriptionWasOnlyUpdated = (response: { Success?: unknown; Fail?: unknown }) =>
-    /subscription\s+updated/i.test(String(response.Success ?? response.Fail ?? "").replace(/["']/g, ""));
-
-  // Painéis sem VPS/admin key configurada não respondem. Nesse caso caímos no
-  // painel que estiver realmente configurado, em vez de falhar para o cliente.
-  try {
-    await refreshPanelOverrides?.();
-  } catch {
-    /* segue com o ambiente */
-  }
-  // Correção manual nunca deve excluir um servidor apenas porque o disjuntor o
-  // marcou como indisponível numa chamada anterior. Priorizamos os saudáveis,
-  // mas ainda tentamos todos os servidores configurados antes de desistir.
-  // Um painel serve se der para operar nele (endereço + admin key), mesmo que
-  // ele não tenha VPS própria — a 4.5.5 usa a mesma máquina da 4.5.7.
-  const hasServer = (p: "v455" | "v457" | "v46") =>
-    typeof isPanelUsable === "function"
-      ? isPanelUsable(p)
-      : typeof hasPanelServer === "function"
-        ? hasPanelServer(p)
-        : true;
-  const healthy = (p: "v455" | "v457" | "v46") =>
-    typeof isPanelHealthy === "function" ? isPanelHealthy(p) : true;
-  const preferred = normalizePanel(lic.panel);
-  let panel = hasServer(preferred) && healthy(preferred)
-    ? preferred
-    : ((["v457", "v46", "v455"] as const).find((p) => hasServer(p) && healthy(p)) ?? preferred);
-  if (panel !== preferred) steps.push(`painel-alternativo:${preferred}->${panel}`);
-
-  const panelCandidates = () => {
-    const all = [panel, preferred, "v457", "v46", "v455"] as const;
-    const unique = all.filter((p, index) => all.indexOf(p) === index && hasServer(p));
-    return [...unique.filter(healthy), ...unique.filter((p) => !healthy(p))];
-  };
-
-
+  const panel = normalizePanel(lic.panel);
+  if (lic.panel && lic.panel !== panel) steps.push(`painel-desconhecido:${lic.panel}`);
+  const txt = (r: any) => String(r?.Success ?? r?.Fail ?? "").replace(/["']/g, "").trim();
 
   const targetYmd = panelExpireDateFor({
     expires_at: lic.expires_at,
@@ -198,431 +130,119 @@ async function runHeal(
     server_paid_until: (lic as any).server_paid_until ?? null,
   });
 
-  let currentPassword: string | null = null;
+  let password: string | null = null;
   if (lic.yaarsa_password_enc) {
-    try {
-      currentPassword = decrypt(lic.yaarsa_password_enc);
-    } catch {
-      currentPassword = null;
-    }
+    try { password = y.decrypt(lic.yaarsa_password_enc); } catch { password = null; }
   }
-
-  const canProbeExisting =
-    !opts?.forceRecreate && !!lic.yaarsa_email && !!currentPassword && !!lic.yaarsa_username;
-
-  // 1) A conta existe no painel? Descobrimos tentando criá-la com as mesmas
-  //    credenciais que o cliente vê no site. Se o painel preferido devolver
-  //    erro interno (PHP), consultamos a conta e tentamos os outros servidores
-  //    antes de desistir — antes disso o cliente via só "não respondeu".
-  if (canProbeExisting) {
-    const tryPanels = panelCandidates();
-    let created: { Success?: unknown; Fail?: unknown } = { Fail: "" };
-    let exists = false;
-    let lastCreateFail = "";
-
-    for (const candidate of tryPanels) {
-      let attempt: { Success?: unknown; Fail?: unknown };
-      try {
-        attempt = await yaarsaCreateAccount({
-          username: sanitizePanelUsername(lic.yaarsa_username as string),
-          email: lic.yaarsa_email as string,
-          password: currentPassword as string,
-          planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
-          totalPaid: 0,
-          additionalInfo: `shadow-heal-${lic.id.slice(0, 8)}`,
-          panel: candidate,
-          expireDate: targetYmd,
-        });
-      } catch (e: any) {
-        attempt = { Fail: String(e?.message ?? e) };
-      }
-
-      const failText = String(attempt.Fail ?? "");
-      if (confirmed(attempt) || EXISTS_RE.test(failText)) {
-        panel = candidate;
-        created = attempt;
-        // Em `add`, "subscription Updated" prova que o cadastro já existia;
-        // não prova que a senha enviada foi gravada. Ele precisa seguir pelo
-        // reparo completo, em vez de encerrar com um sucesso falso.
-        exists = !confirmed(attempt) || subscriptionWasOnlyUpdated(attempt);
-        break;
-      }
-
-      lastCreateFail = failText;
-      steps.push(`criacao-falhou-${candidate}:${failText.slice(0, 60)}`);
-
-      // Erro interno do painel não significa que a conta não existe: conferimos.
-      const probe = await yaarsaProbeAccount(lic.yaarsa_email as string, candidate);
-      steps.push(`sondagem-${candidate}:${probe.state}`);
-      if (probe.state === "found") {
-        panel = candidate;
-        created = { Fail: "1004 already in use (confirmado por sondagem)" };
-        exists = true;
-        break;
-      }
-    }
-
-    if (confirmed(created) && !exists) {
-      steps.push("conta-criada-no-painel");
-      const probe = await yaarsaProbeAccount(lic.yaarsa_email as string, panel);
-      steps.push(`conferencia:${probe.state}`);
-      if (probe.state === "missing") {
-        await logHeal(supabaseAdmin, lic, panel, "ghost_create", reason, steps);
-        throw new Error(
-          `O servidor ${panel} disse que criou a conta, mas ela não aparece no painel. Não mexi em mais nada — verifique o painel antes de tentar de novo.`,
-        );
-      }
-      // O painel corta o usuário em 8 caracteres: a licença precisa mostrar
-      // exatamente o que existe lá, senão o cliente tenta entrar com outro nome.
-      const panelUsername = sanitizePanelUsername(lic.yaarsa_username as string);
-      if (panelUsername !== lic.yaarsa_username) {
-        await updateLicenseTolerant(supabaseAdmin, lic.id, { yaarsa_username: panelUsername });
-        steps.push("usuario-ajustado-ao-painel");
-      }
-      const passwordResult = await yaarsaSetPassword(
-        lic.yaarsa_email as string,
-        currentPassword as string,
-        panel,
-        panelUsername,
-        targetYmd,
-      );
-      if (!confirmed(passwordResult)) {
-        await logHeal(supabaseAdmin, lic, panel, "password_apply_failed", reason, steps);
-        throw new Error(`A conta foi encontrada, mas o painel não confirmou a senha: ${String(passwordResult.Fail ?? "sem resposta").slice(0, 120)}.`);
-      }
-      steps.push("senha-reaplicada");
-      const passwordCheck = await yaarsaVerifyCredentials(lic.yaarsa_email as string, currentPassword as string, panel);
-      if (passwordCheck.available && !passwordCheck.verified) {
-        await logHeal(supabaseAdmin, lic, panel, "password_mismatch", reason, steps);
-        throw new Error("O painel respondeu, mas a senha ainda não ficou igual à mostrada na licença. Não marquei o reparo como concluído.");
-      }
-      steps.push(passwordCheck.available ? "senha-confirmada" : "senha-aplicada-sem-leitura");
-      // Validade por último: a troca de senha não pode sobrescrever a data.
-      steps.push(await applyExpireConfirmed(lic.yaarsa_email as string, targetYmd, panel) ? "validade-ajustada" : "validade-nao-ajustada");
-      await logHeal(supabaseAdmin, lic, panel, "created", reason, steps);
-      return {
-        ok: true,
-        action: "created",
-        panel,
-        credentials: {
-          username: sanitizePanelUsername(lic.yaarsa_username as string),
-          email: lic.yaarsa_email as string,
-          password: currentPassword as string,
-          server_ip: lic.server_ip ?? null,
-        },
-        message:
-          "Sua conta não existia no servidor e acabou de ser criada com o mesmo e-mail e senha. Tente entrar de novo no BTmob.",
-        steps,
-        warning: steps.includes("validade-nao-ajustada") ? `Login recuperado, mas o painel não confirmou a validade ${targetYmd}. Use "Sincronizar com painel" em seguida.` : undefined,
-      };
-    }
-
-    if (!exists) {
-      // Nenhum servidor respondeu de forma útil: não mexemos em nada.
-      const fail = lastCreateFail;
-      await logHeal(supabaseAdmin, lic, panel, "unreachable", reason, [...steps, fail.slice(0, 200)]);
-      throw new Error(
-        `O servidor de licenças não respondeu agora (tentei todos os servidores disponíveis)${fail ? `: ${fail.slice(0, 160)}` : ""}. Tente novamente em alguns minutos ou fale com o suporte.`,
-      );
-    }
-    steps.push("conta-ja-existia");
-
-  } else {
-    steps.push(opts?.forceRecreate ? "recriacao-forcada" : "sem-credenciais-guardadas");
-  }
-
-  // 2) A conta existe no painel mas está inconsistente. Regra do time: NÃO
-  //    inventamos login novo — apagamos e recriamos com as MESMAS credenciais
-  //    que já estão na licença, para o cliente não precisar trocar nada.
-  // Uma correção nunca pode trocar silenciosamente o login exibido ao cliente.
-  // Se os dados antigos não puderem ser recuperados, paramos para intervenção
-  // do suporte em vez de criar uma conta diferente.
-  if (!currentPassword || !lic.yaarsa_email || !lic.yaarsa_username) {
+  if (!password || !lic.yaarsa_email || !lic.yaarsa_username) {
     await logHeal(supabaseAdmin, lic, panel, "missing_credentials", reason, steps);
     throw new Error(
       "Esta licença não tem todas as credenciais originais salvas. Nenhum login novo foi criado; atualize a senha na ficha do cliente e tente novamente.",
     );
   }
-  const generated = false;
-  const username = sanitizePanelUsername(lic.yaarsa_username);
   const email = lic.yaarsa_email;
-  const password = currentPassword;
+  const username = y.sanitizePanelUsername(lic.yaarsa_username);
 
-  const panelOrder = panelCandidates();
-
-  // Apaga a conta bugada onde ela realmente existe. Antes apagávamos em todos
-  // os painéis "no escuro": se a recriação falhasse depois, o cliente ficava
-  // sem conta nenhuma. Agora só removemos onde a sondagem confirma a conta.
-  const removedFrom: Array<"v455" | "v457" | "v46"> = [];
-  const stuckIn: Array<"v455" | "v457" | "v46"> = [];
-  const softRemoved = new Set<"v455" | "v457" | "v46">();
-  if (!generated) {
-    for (const candidate of panelOrder) {
-      let present = true;
-      try {
-        const probe = await yaarsaProbeAccount(email, candidate);
-        present = probe.state === "found";
-        if (probe.state === "unknown") present = candidate === panel; // painel mudo: só o preferido
-      } catch {
-        present = candidate === panel;
-      }
-      if (!present) continue;
-      // Só mexemos no servidor da própria licença. Cópia em outro servidor
-      // pode ser de outra compra do cliente: apenas registramos.
-      if (candidate !== panel) {
-        steps.push(`copia-em-outro-servidor-mantida:${candidate}`);
-        continue;
-      }
-      // Remove e só segue com CONFIRMAÇÃO DUPLA: o painel tem que responder que
-      // removeu (ex.: "client removed") E a consulta seguinte tem que dizer que
-      // o e-mail não existe mais. Painel mudo NÃO conta como removido.
-      //
-      // Visto no painel real: o mesmo e-mail pode estar cadastrado VÁRIAS vezes
-      // (cópias criadas por reparos antigos). Cada "remove" apaga UMA cópia e
-      // responde "Client removed successfully!", mas a consulta continua
-      // achando o e-mail por causa das outras. Por isso seguimos apagando
-      // enquanto o painel confirmar remoções, até ele dizer que o e-mail sumiu.
-      const MAX_REMOVES = 10;
-      let gone = false;
-      let removedCount = 0;
-      let silentTries = 0;
-      for (let tryN = 0; tryN < MAX_REMOVES && !gone && silentTries < 3; tryN++) {
-        let saidRemoved = false;
-        let saidNotFound = false;
-        try {
-          const removed = await yaarsaRemoveAccount(email, candidate);
-          const txt = String(removed.Success ?? removed.Fail ?? "");
-          saidRemoved = looksLikeRemoveConfirmed(txt);
-          saidNotFound = NOT_FOUND_RE.test(txt);
-          if (tryN < 2 || !saidRemoved) {
-            steps.push(`remocao-resposta-${candidate}:${txt.replace(/["']/g, "").slice(0, 60) || "vazia"}`);
-          }
-        } catch (e: any) {
-          steps.push(`remocao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
-        }
-        if (saidRemoved) removedCount++;
-        else silentTries++;
-        // "Não encontrei esse e-mail" ao apagar = não sobrou nenhuma cópia.
-        if (saidNotFound) {
-          gone = true;
-          break;
-        }
-        await pause(300);
-        let state: "found" | "missing" | "unknown" = "unknown";
-        try {
-          state = (await yaarsaProbeAccount(email, candidate)).state;
-        } catch {
-          state = "unknown";
-        }
-        if (tryN < 2 || state !== "found") steps.push(`remocao-conferida-${candidate}:${state}`);
-        // Confirmado quando a consulta diz que sumiu, ou quando o painel não tem
-        // consulta confiável (4.5.5) e respondeu "Client removed successfully!".
-        // A prova final vem na recriação: só "Account created successfully!" vale.
-        gone = state === "missing" || (state === "unknown" && saidRemoved);
-        // Visto no 4.5.5 real: "remove" responde "Client removed successfully!"
-        // mas só DESATIVA o cadastro (o "add" seguinte responde "subscription
-        // Updated." e reativa o mesmo registro). Repetir não adianta: após 2
-        // remoções confirmadas seguimos como "desativado" e a recriação reativa.
-        if (!gone && removedCount >= 2) {
-          softRemoved.add(candidate);
-          gone = true;
-        }
-        if (!gone && !saidRemoved) await pause(700);
-      }
-      steps.push(`remocoes-confirmadas-${candidate}:${removedCount}`);
-      if (gone) {
-        removedFrom.push(candidate);
-        steps.push(softRemoved.has(candidate) ? `conta-desativada-confirmada:${candidate}` : `conta-removida-confirmada:${candidate}`);
-      } else {
-        steps.push(`remocao-nao-confirmada:${candidate}`);
-        stuckIn.push(candidate);
-      }
-    }
+  // Senha fora da regra do painel nunca seria aceita: emitimos uma nova (que
+  // passa a ser a senha exibida na licença).
+  let passwordChanged = false;
+  if (!y.isPanelPasswordValid(password)) {
+    password = y.generateCredentials().password;
+    passwordChanged = true;
+    steps.push("senha-fora-da-regra-do-painel:nova-emitida");
   }
 
-  // Sem confirmação de que o login antigo saiu, NÃO criamos nada: criar agora
-  // geraria login duplicado ou "já existe" fingindo sucesso.
-  if (stuckIn.length) {
-    await logHeal(supabaseAdmin, lic, panel, "remove_not_confirmed", reason, steps);
+  const call = async <T,>(label: string, fn: () => Promise<T>): Promise<T | { Fail: string }> => {
+    try { return await fn(); } catch (e: any) {
+      steps.push(`${label}-erro:${String(e?.message ?? e).slice(0, 60)}`);
+      return { Fail: String(e?.message ?? e) };
+    }
+  };
+
+  // 1) Reaplica a senha da licença. Também descobre se a conta existe.
+  let upd: any = await call("senha", () => y.yaarsaUpdatePassword(email, password!, panel));
+  steps.push(`senha-resposta:${txt(upd).slice(0, 60) || "vazia"}`);
+  let exists: boolean;
+  if (/password updated/i.test(txt(upd))) exists = true;
+  else if (NOT_FOUND_RE.test(txt(upd))) exists = false;
+  else {
+    await logHeal(supabaseAdmin, lic, panel, "unreachable", reason, steps);
     throw new Error(
-      `O painel ${stuckIn.join(", ")} não confirmou que apagou o login antigo, então não recriei nada para não duplicar. Tente de novo em alguns minutos.`,
+      `O servidor ${panel} não respondeu como esperado agora (${txt(upd).slice(0, 100) || "sem resposta"}). Nada foi alterado — tente de novo em alguns minutos.`,
     );
   }
 
-  let usedPanel: "v455" | "v457" | "v46" = panel;
-  let lastFail = "";
-  let issued = false;
-  // Recria primeiro exatamente onde o login foi apagado.
-  const createdConfirmedIn: Array<"v455" | "v457" | "v46"> = [];
-  // Se apagamos no servidor da licença, recriamos SÓ nele (exceto cota cheia,
-  // quando outro servidor vazio é a única saída).
-  const createOrder = removedFrom.length
-    ? [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))]
-    : panelOrder;
-  for (const candidate of createOrder) {
-    // Outro servidor só entra quando o da licença recusou por cota cheia.
-    if (removedFrom.length && !removedFrom.includes(candidate) && !QUOTA_RE.test(lastFail)) break;
-    let fresh: { Success?: unknown; Fail?: unknown };
-    try {
-      fresh = await yaarsaCreateAccount({
-        username,
-        email,
-        password,
+  let action: HealAction = "already_ok";
+  if (!exists) {
+    // 2a) Conta não existe neste servidor: cria com as credenciais da licença.
+    const created: any = await call("criacao", () =>
+      y.yaarsaCreateAccount({
+        username, email, password: password!,
         planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
         totalPaid: 0,
-        additionalInfo: `shadow-heal-new-${lic.id.slice(0, 8)}`,
-        panel: candidate,
+        additionalInfo: `shadow-heal-${lic.id.slice(0, 8)}`,
+        panel,
         expireDate: targetYmd,
-      });
-    } catch (e: any) {
-      fresh = { Fail: String(e?.message ?? e) };
-    }
-
-    steps.push(`criacao-resposta-${candidate}:${String(fresh.Success ?? fresh.Fail ?? "vazia").replace(/["']/g, "").slice(0, 60)}`);
-    const saysExists = EXISTS_RE.test(String(fresh.Fail ?? ""));
-    const wasRemovedHere = removedFrom.includes(candidate);
-    // No painel que só desativa ao remover, "subscription Updated" = cadastro
-    // reativado. A senha ainda é reaplicada e conferida logo abaixo.
-    const reactivated =
-      softRemoved.has(candidate) && /subscription\s*updated/i.test(String(fresh.Success ?? fresh.Fail ?? ""));
-    if (reactivated) steps.push(`conta-reativada:${candidate}`);
-    const createdNew = looksLikeAccountCreated(fresh.Success ?? fresh.Fail) || reactivated;
-    if (wasRemovedHere && !createdNew) {
-      // Apagamos aqui: só aceitamos "Account created successfully!". "Já existe"
-      // ou "subscription Updated" provam que o login antigo NÃO saiu.
-      lastFail = `painel ${candidate} não confirmou a criação do login novo (respondeu: ${String(fresh.Success ?? fresh.Fail ?? "nada").replace(/["']/g, "").slice(0, 80)})`;
-      steps.push(`criacao-nao-confirmada:${candidate}`);
-      continue;
-    }
-    if (createdNew || confirmed(fresh) || saysExists) {
-      await pause(600);
-      const probe = await yaarsaProbeAccount(email, candidate);
-      steps.push(`conferencia-${candidate}:${probe.state}`);
-      // Consulta conclusiva dizendo que não existe derruba; painel sem consulta
-      // confiável vale a confirmação explícita "Account created successfully!".
-      if (probe.state === "missing" || (probe.state === "unknown" && !createdNew)) {
-        lastFail = `login não confirmado no painel ${candidate} após criar (${probe.state})`;
-        continue;
-      }
-      createdConfirmedIn.push(candidate);
-      // Criar/encontrar a conta não garante a senha. Sempre reaplicamos a
-      // senha exibida na licença e recusamos sucesso se o painel a rejeitar.
-      try {
-        const passwordResult = await yaarsaSetPassword(email, password, candidate, username, targetYmd);
-        if (!confirmed(passwordResult)) {
-          lastFail = `senha não confirmada no painel ${candidate}: ${String(passwordResult.Fail ?? "sem resposta").slice(0, 90)}`;
-          steps.push(`senha-reaplicada-falhou-${candidate}`);
-          // A conta foi localizada neste servidor. Não podemos criar uma cópia
-          // em outro e trocar o painel da licença só porque a senha falhou aqui.
-          break;
-        }
-        steps.push(`senha-reaplicada:${candidate}`);
-        const passwordCheck = await yaarsaVerifyCredentials(email, password, candidate);
-        if (passwordCheck.available && !passwordCheck.verified) {
-          lastFail = `senha diferente no painel ${candidate}`;
-          steps.push(`senha-divergente:${candidate}`);
-          break;
-        }
-        steps.push(passwordCheck.available ? `senha-confirmada:${candidate}` : `senha-aplicada-sem-leitura:${candidate}`);
-      } catch (e: any) {
-        lastFail = `falha ao reaplicar senha no painel ${candidate}: ${String(e?.message ?? e).slice(0, 90)}`;
-        steps.push(`senha-reaplicada-erro-${candidate}`);
-        break;
-      }
-      usedPanel = candidate;
-      issued = true;
-      if (candidate !== panel) steps.push(`login-recriado-em:${candidate}`);
-      break;
-    }
-
-    lastFail = String(fresh.Fail ?? "");
-    steps.push(`falha-${candidate}:${lastFail.slice(0, 60)}`);
-  }
-
-  if (!issued) {
-    // Última linha de defesa: se apagamos a conta e nenhuma recriação passou,
-    // tentamos devolver a conta ao painel de origem para o cliente não ficar
-    // sem acesso nenhum por causa da tentativa de correção.
-    // Se a conta nova já foi confirmada em algum painel, o cliente não ficou sem
-    // login (só a senha falhou): não há o que devolver.
-    let restored = createdConfirmedIn.length > 0;
-    for (const candidate of restored ? [] : removedFrom) {
-      try {
-        const back = await yaarsaCreateAccount({
-          username,
-          email,
-          password,
-          planSlug: lic.plan_slug || (lic.is_trial ? "trial" : "login-30d"),
-          totalPaid: 0,
-          additionalInfo: `shadow-heal-restore-${lic.id.slice(0, 8)}`,
-          panel: candidate,
-          expireDate: targetYmd,
-        });
-        if (confirmed(back) || EXISTS_RE.test(String(back.Fail ?? ""))) {
-          const probe = await yaarsaProbeAccount(email, candidate);
-          if (probe.state !== "missing") {
-            restored = true;
-            steps.push(`conta-restaurada:${candidate}`);
-            try { await yaarsaExtend(email, targetYmd, candidate); } catch { /* best-effort */ }
-            break;
-          }
-        }
-      } catch (e: any) {
-        steps.push(`restauracao-erro-${candidate}:${String(e?.message ?? e).slice(0, 60)}`);
-      }
-    }
-    if (removedFrom.length && !restored) steps.push("ATENCAO:conta-removida-sem-restauracao");
-
-    await logHeal(
-      supabaseAdmin,
-      lic,
-      panel,
-      removedFrom.length && !restored ? "failed_account_lost" : "failed",
-      reason,
-      [...steps, lastFail.slice(0, 200)],
+      }),
     );
-    if (removedFrom.length && !restored) {
+    steps.push(`criacao-resposta:${txt(created).slice(0, 60) || "vazia"}`);
+    if (!/account created/i.test(txt(created))) {
+      await logHeal(supabaseAdmin, lic, panel, "failed", reason, steps);
       throw new Error(
-        "Os servidores recusaram a recriação e não consegui devolver a conta ao painel. As credenciais continuam as mesmas — acione o suporte para recriar manualmente antes de tentar de novo.",
+        QUOTA_RE.test(txt(created))
+          ? `O servidor ${panel} está com a cota de contas cheia. Libere espaço no painel e tente de novo.`
+          : `O servidor ${panel} não criou o login: ${txt(created).slice(0, 120) || "sem resposta"}.`,
       );
     }
-    throw new Error(
-      QUOTA_RE.test(lastFail)
-        ? "Os servidores estão com a cota de contas cheia agora. Libere espaço no painel e tente de novo — as credenciais do cliente não foram alteradas."
-        : `Não consegui recriar o login no painel${lastFail ? `: ${lastFail.slice(0, 140)}` : ""}. As credenciais do cliente continuam as mesmas.`,
-    );
+    action = "created";
+  } else {
+    // 2b) Conta existe: reativa (se vencida/"removida") e acerta a data.
+    const ext: any = await call("validade", () => y.yaarsaExtend(email, targetYmd, panel));
+    steps.push(`validade-resposta:${targetYmd}:${txt(ext).slice(0, 60) || "vazia"}`);
+    if (!/updated successfully|subscription updated/i.test(txt(ext))) {
+      await logHeal(supabaseAdmin, lic, panel, "expire_failed", reason, steps);
+      throw new Error(
+        `A senha foi reaplicada, mas o servidor ${panel} não confirmou a validade ${targetYmd} (${txt(ext).slice(0, 80) || "sem resposta"}). Tente de novo em alguns minutos.`,
+      );
+    }
+    if (/reativada/i.test(txt(ext))) { steps.push("conta-reativada"); action = "recreated"; }
+    // 3) Reaplica a senha depois da reativação — nada pode sobrescrevê-la.
+    upd = await call("senha-final", () => y.yaarsaUpdatePassword(email, password!, panel));
+    if (!/password updated/i.test(txt(upd))) {
+      await logHeal(supabaseAdmin, lic, panel, "password_apply_failed", reason, steps);
+      throw new Error("O servidor não confirmou a senha da licença. Não marquei o reparo como concluído.");
+    }
+    steps.push("senha-confirmada");
   }
-  steps.push(generated ? "login-novo-emitido" : "login-recriado-mesmas-credenciais");
 
-  steps.push(await applyExpireConfirmed(email, targetYmd, usedPanel) ? "validade-ajustada" : "validade-nao-ajustada");
+  // 4) Equipe: libera o aparelho preso (erro de "outro dispositivo").
+  if (reason !== "self_repair") {
+    const rd: any = await call("aparelho", () => y.yaarsaResetDevice(email, panel));
+    steps.push(`aparelho-liberado:${/reset successfully/i.test(txt(rd)) ? "sim" : "nao"}`);
+  }
 
   await updateLicenseTolerant(supabaseAdmin, lic.id, {
     yaarsa_username: username,
-    yaarsa_email: email,
-    yaarsa_password_enc: encrypt(password),
-    panel: usedPanel,
+    ...(passwordChanged ? { yaarsa_password_enc: y.encrypt(password) } : {}),
+    panel,
     revoked: false,
-    suspended_at: null,
   });
   steps.push("licenca-atualizada");
+  await logHeal(supabaseAdmin, lic, panel, action, reason, steps);
 
-  await logHeal(supabaseAdmin, lic, usedPanel, "recreated", reason, steps);
-
+  const base =
+    action === "created"
+      ? "Sua conta não existia no servidor e foi criada agora."
+      : action === "recreated"
+        ? "Sua conta estava desativada no servidor e foi reativada."
+        : "Sua conta foi conferida no servidor.";
   return {
     ok: true,
-    action: "recreated",
-    panel: usedPanel,
-    credentials: {
-      username,
-      email,
-      password,
-      server_ip: lic.server_ip ?? null,
-    },
-    message: generated
-      ? "A licença não tinha senha guardada, então emitimos um login novo — use o e-mail e a senha que aparecem agora em Licenças."
-      : "O login estava travado no servidor. Apagamos e recriamos a conta com o MESMO e-mail e a MESMA senha. Tente entrar de novo no BTmob.",
+    action,
+    panel,
+    credentials: { username, email, password, server_ip: lic.server_ip ?? null },
+    message: `${base} Senha confirmada e validade ajustada para ${targetYmd.split("-").reverse().join("/")}.${passwordChanged ? " ATENÇÃO: a senha mudou — use a que aparece agora em Licenças." : " Use o mesmo e-mail e senha no BTmob."}`,
     steps,
-    warning: steps.includes("validade-nao-ajustada") ? `Login recuperado, mas o painel não confirmou a validade ${targetYmd}. Use "Sincronizar com painel" em seguida.` : undefined,
   };
 }
 

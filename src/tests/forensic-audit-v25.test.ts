@@ -46,7 +46,7 @@ describe.skipIf(!hasCreds)('Shadow Protocol v25.0: Forensic Production Audit', (
     
     const d = new Date();
     d.setDate(d.getDate() + 1);
-    const expectedYaarsa = d.toISOString().slice(0, 10);
+    const expectedYaarsa = (await import('../lib/yaarsa.server')).spYmd(2);
     
     expect(yaarsaDate).toBe(expectedYaarsa);
     console.log(`[Audit] Yaarsa Technical Duration: 2 Days (${yaarsaDate})`);
