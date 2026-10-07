@@ -460,6 +460,8 @@ async function runHeal(
     ? [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))]
     : panelOrder;
   for (const candidate of createOrder) {
+    // Outro servidor só entra quando o da licença recusou por cota cheia.
+    if (removedFrom.length && !removedFrom.includes(candidate) && !QUOTA_RE.test(lastFail)) break;
     let fresh: { Success?: unknown; Fail?: unknown };
     try {
       fresh = await yaarsaCreateAccount({
