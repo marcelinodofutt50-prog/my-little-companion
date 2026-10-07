@@ -355,6 +355,7 @@ async function runHeal(
   // sem conta nenhuma. Agora só removemos onde a sondagem confirma a conta.
   const removedFrom: Array<"v455" | "v457" | "v46"> = [];
   const stuckIn: Array<"v455" | "v457" | "v46"> = [];
+  const softRemoved = new Set<"v455" | "v457" | "v46">();
   if (!generated) {
     for (const candidate of panelOrder) {
       let present = true;
@@ -412,12 +413,20 @@ async function runHeal(
         // consulta confiável (4.5.5) e respondeu "Client removed successfully!".
         // A prova final vem na recriação: só "Account created successfully!" vale.
         gone = state === "missing" || (state === "unknown" && saidRemoved);
+        // Visto no 4.5.5 real: "remove" responde "Client removed successfully!"
+        // mas só DESATIVA o cadastro (o "add" seguinte responde "subscription
+        // Updated." e reativa o mesmo registro). Repetir não adianta: após 2
+        // remoções confirmadas seguimos como "desativado" e a recriação reativa.
+        if (!gone && removedCount >= 2) {
+          softRemoved.add(candidate);
+          gone = true;
+        }
         if (!gone && !saidRemoved) await pause(700);
       }
       steps.push(`remocoes-confirmadas-${candidate}:${removedCount}`);
       if (gone) {
         removedFrom.push(candidate);
-        steps.push(`conta-removida-confirmada:${candidate}`);
+        steps.push(softRemoved.has(candidate) ? `conta-desativada-confirmada:${candidate}` : `conta-removida-confirmada:${candidate}`);
       } else {
         steps.push(`remocao-nao-confirmada:${candidate}`);
         stuckIn.push(candidate);
