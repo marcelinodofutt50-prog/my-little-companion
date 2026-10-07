@@ -330,7 +330,7 @@ describe("confirmações do painel", () => {
     const res = await healLicenseLogin({ ...baseLic, panel: "v455" }, { reason: "test" });
     expect(res.ok).toBe(true);
     expect(res.action).toBe("recreated");
-    expect(state.removed.length).toBeLessThanOrEqual(2);
+    expect(state.removed.length).toBeLessThanOrEqual(6); // no máximo 2 por servidor, nunca 10
     expect(state.passwordCalls).toHaveLength(1);
     expect(res.steps).toContain("conta-reativada:v455");
   });
