@@ -145,7 +145,7 @@ function SuccessPage() {
                   Ir para o painel
                 </Button>
               </div>
-            </>
+            </motion.div>
           ) : (
             <>
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-neon" />
