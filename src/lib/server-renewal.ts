@@ -40,6 +40,18 @@ export function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Dia (AAAA-MM-DD) no fuso de São Paulo. */
+export function spDay(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+/** Próximo dia 20 às 23:59:59 de Brasília (se hoje já é 20 ou depois, mês seguinte). */
+export function nextServerCutoff(now = new Date()): Date {
+  const [y, m, d] = spDay(now).split("-").map(Number) as [number, number, number];
+  const t = d < 20 ? new Date(Date.UTC(y, m - 1, 20)) : new Date(Date.UTC(y, m, 20));
+  return new Date(`${t.toISOString().slice(0, 10)}T23:59:59-03:00`);
+}
+
 /**
  * Calcula o efeito do pagamento da taxa de servidor sobre uma licença.
  *
@@ -69,9 +81,14 @@ export function planServerRenewal(license: RenewableLicense, paidUntil: Date): R
   const panelDate = new Date(
     Math.min(new Date(expiresAt).getTime(), paidUntil.getTime()),
   );
+  // Regra do painel (fuso de Brasília): vitalício fica no dia 20; mensal e
+  // semanal ganham +1 dia de folga, porque o BTmob corta à meia-noite.
+  const slug = String(license.plan_slug ?? "").toLowerCase();
+  const lifetime = license.expires_at === null || slug.includes("lifetime") || slug.includes("vitalicio");
+  const panelYmd = lifetime ? spDay(panelDate) : spDay(new Date(panelDate.getTime() + 86400000));
 
   return {
-    panelExpireDate: ymd(panelDate),
+    panelExpireDate: panelYmd,
     patch,
     keepsLongerExpiry,
   };
