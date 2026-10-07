@@ -454,7 +454,11 @@ async function runHeal(
   let issued = false;
   // Recria primeiro exatamente onde o login foi apagado.
   const createdConfirmedIn: Array<"v455" | "v457" | "v46"> = [];
-  const createOrder = [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))];
+  // Se apagamos no servidor da licença, recriamos SÓ nele (exceto cota cheia,
+  // quando outro servidor vazio é a única saída).
+  const createOrder = removedFrom.length
+    ? [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))]
+    : panelOrder;
   for (const candidate of createOrder) {
     let fresh: { Success?: unknown; Fail?: unknown };
     try {
