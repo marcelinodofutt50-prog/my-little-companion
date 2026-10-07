@@ -45,6 +45,8 @@ function SuccessPage() {
   const [showPw, setShowPw] = useState(false);
   const [showIp, setShowIp] = useState(false);
   const [exhausted, setExhausted] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
+  const celebrated = useRef(false);
   const stateFn = useServerFn(getOrderState);
   const timerRef = useRef<number | null>(null);
   const stopped = useRef(false);
