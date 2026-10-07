@@ -47,6 +47,12 @@ import { LicenseAccessTools } from '@/components/LicenseAccessTools'
 import { RedeemCodeCard } from '@/components/RedeemCodeCard'
 
 import { planLabel } from '@/lib/license-display'
+import { setMyLicenseHidden, isDeadLicense } from '@/lib/license-archive.functions'
+import { SOCIAL_LINKS } from '@/components/SocialLinks'
+
+// +1 hora pelo Telegram: só liga quando o robô do grupo estiver conectado e
+// conferindo a participação. Até lá, nada de prometer tempo extra.
+const TELEGRAM_BONUS_LIVE = false
 import { reconcileMyRecentOrders } from '@/lib/checkout.functions'
 import { registerMyDevice } from '@/lib/device.functions'
 import { getDeviceSignature } from '@/lib/device-signature'
@@ -271,6 +277,36 @@ function DashboardPage() {
   const pausedLicense = licenses?.find((l: any) => licenseExpiryState(l, serverNow).paused)
   const currentLicense = activeLicense || pausedLicense
   const expiry = currentLicense ? licenseExpiryState(currentLicense, serverNow) : null
+
+  // Abas por licença: uma licença por vez, ativas primeiro. Logins mortos
+  // removidos pelo cliente ficam escondidos (nada é apagado do banco).
+  const hideFn = useServerFn(setMyLicenseHidden)
+  const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null)
+  const [showHidden, setShowHidden] = useState(false)
+  const [hidingId, setHidingId] = useState<string | null>(null)
+  const allLicenses = ((licenses ?? []) as any[])
+  const hiddenCount = allLicenses.filter((l) => l.hidden_by_user_at).length
+  const licenseRank = (l: any) => {
+    const s = licenseExpiryState(l, serverNow)
+    return s.active ? 0 : s.paused ? 1 : 2
+  }
+  const tabLicenses = allLicenses
+    .filter((l) => showHidden || !l.hidden_by_user_at)
+    .sort((a, b) => licenseRank(a) - licenseRank(b))
+  const currentTabId = tabLicenses.some((l) => l.id === selectedLicenseId) ? selectedLicenseId : tabLicenses[0]?.id ?? null
+  const toggleHidden = async (license: any, hidden: boolean) => {
+    setHidingId(license.id)
+    try {
+      const res: any = await hideFn({ data: { licenseId: license.id, hidden } })
+      if (!res?.ok) throw new Error(res?.error ?? 'Não foi possível atualizar.')
+      toast.success(hidden ? 'Login removido do painel.' : 'Login voltou para o painel.')
+      void refetchLicenses()
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Não foi possível atualizar.')
+    } finally {
+      setHidingId(null)
+    }
+  }
   
   // Sempre resolve um tier válido: version_tier -> plan_slug -> mensal (padrão),
   // garantindo que os downloads apareçam em todo recarregamento.
@@ -567,12 +603,49 @@ function DashboardPage() {
                         secondary={{ label: 'Abrir suporte', to: '/suporte' }}
                       />
                     </div>
-                  ) : (licenses ?? []).map((license: any) => {
+                  ) : (<>
+                  <div className="lg:col-span-2 flex flex-wrap items-center gap-2" role="tablist" aria-label="Suas licenças">
+                    {tabLicenses.map((l: any) => {
+                      const s = licenseExpiryState(l, serverNow)
+                      const on = l.id === currentTabId
+                      return (
+                        <button
+                          key={l.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={on}
+                          onClick={() => setSelectedLicenseId(l.id)}
+                          className={cn(
+                            "flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-medium transition-colors",
+                            on ? "border-primary/60 bg-primary/10 text-foreground" : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                          )}
+                        >
+                          <span className={cn("h-2 w-2 rounded-full", s.active ? "bg-primary" : s.paused ? "bg-amber-500" : "bg-destructive")} />
+                          {planLabel(l.plan_slug, l.is_trial)}
+                          {l.hidden_by_user_at && <span className="text-[10px] text-muted-foreground">(removido)</span>}
+                        </button>
+                      )
+                    })}
+                    {hiddenCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowHidden((v) => !v)}
+                        className="ml-auto text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                      >
+                        {showHidden ? 'Esconder logins removidos' : `Mostrar ${hiddenCount} login${hiddenCount > 1 ? 's' : ''} removido${hiddenCount > 1 ? 's' : ''}`}
+                      </button>
+                    )}
+                  </div>
+                  {tabLicenses.length === 0 && (
+                    <p className="lg:col-span-2 text-sm text-muted-foreground">Você removeu todos os logins antigos do painel. Nenhuma licença ativa no momento.</p>
+                  )}
+                  {tabLicenses.filter((l: any) => l.id === currentTabId).map((license: any) => {
                     const active = isLicenseActive(license)
                     const licenseDownloads = active ? downloadsForLicense(license) : []
                     const state = licenseExpiryState(license, serverNow)
+                    const dead = isDeadLicense(license)
                     return (
-                      <Card key={license.id} className="border-border/60 bg-background/40 shadow-none transition-all hover:border-primary/40 hover:bg-background/50">
+                      <Card key={license.id} className="lg:col-span-2 border-border/60 bg-background/40 shadow-none transition-all hover:border-primary/40 hover:bg-background/50">
                         <CardContent className="space-y-4 p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -593,6 +666,44 @@ function DashboardPage() {
                               )}
                             </div>
                           </div>
+                          {license.is_trial && active && state.countdownAt && (
+                            <div className="rounded-md border border-primary/30 bg-primary/5 p-4">
+                              <LicenseCountdown
+                                target={state.countdownAt}
+                                serverNow={serverNow}
+                                title="Seu teste grátis termina em"
+                                note="Quando zerar, o login para de funcionar no BTmob. Gostou? Garanta seu acesso antes de acabar."
+                              />
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <Button size="sm" asChild><Link to="/planos">Ver planos</Link></Button>
+                              </div>
+                              {TELEGRAM_BONUS_LIVE && new Date(state.countdownAt).getTime() - serverNow < 60 * 60 * 1000 && (
+                                <div className="mt-3 rounded-md border border-border/60 bg-background/60 p-3 text-xs">
+                                  <div className="font-semibold text-foreground">Quer receber mais tempo?</div>
+                                  <p className="mt-1 text-muted-foreground">Entre no nosso canal do Telegram e ganhe 1 hora de graça!</p>
+                                  <Button size="sm" variant="outline" className="mt-2" asChild>
+                                    <a href={SOCIAL_LINKS.telegram} target="_blank" rel="noreferrer">Entrar no canal</a>
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {dead && (
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs">
+                              <p className="text-muted-foreground">
+                                <span className="font-semibold text-foreground">Este login não pode mais ser usado.</span>{' '}
+                                Ele foi desativado (cancelado, vencido ou por atraso na mensalidade do servidor). Você pode tirá-lo do painel — nada é apagado e o suporte continua vendo o histórico.
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={hidingId === license.id}
+                                onClick={() => void toggleHidden(license, !license.hidden_by_user_at)}
+                              >
+                                {license.hidden_by_user_at ? 'Voltar para o painel' : hidingId === license.id ? 'Removendo…' : 'Remover do painel'}
+                              </Button>
+                            </div>
+                          )}
                           {(() => {
                             const fmt = (iso?: string | null) =>
                               iso
@@ -723,6 +834,7 @@ function DashboardPage() {
                       </Card>
                     )
                   })}
+                  </>)}
                   </div>
               </section>
 
