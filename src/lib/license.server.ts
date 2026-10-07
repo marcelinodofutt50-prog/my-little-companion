@@ -168,6 +168,14 @@ export async function internalGenerateTrial(
   const { TRIAL_DURATION_MS } = await import("./ban-rules");
   const expiresAt = new Date(Date.now() + TRIAL_DURATION_MS);
   
+  // O IP mostrado ao cliente TEM que ser o do servidor onde a conta foi criada.
+  // Antes ficava o padrão do banco (servidor 4.5.7) enquanto a conta nascia na
+  // 4.5.5 — o BTmob dizia que a licença não existia.
+  const finalPanel = (usedPanel || trialPanel || "v455") as any;
+  const { resolvePanelServerHost } = await import("./yaarsa.server");
+  let trialServerIp: string | null = null;
+  try { trialServerIp = await resolvePanelServerHost(finalPanel); } catch { trialServerIp = null; }
+
   const licPayload: any = {
     user_id: userId,
     plan_slug: "trial",
@@ -178,7 +186,8 @@ export async function internalGenerateTrial(
     is_trial: true,
     status: 'trial',
     origin_type: 'trial',
-    panel: usedPanel || trialPanel || "v455",
+    panel: finalPanel,
+    ...(trialServerIp ? { server_ip: trialServerIp } : {}),
   };
 
   const { data: lic, error: licErr } = await supabaseAdmin.from("licenses").insert(licPayload).select("*").maybeSingle();
