@@ -317,6 +317,24 @@ describe("confirmações do painel", () => {
     expect(state.updates).toHaveLength(0);
   });
 
+  it("4.5.5 real: remove some o login mas a consulta continua achando — reativa e conclui", async () => {
+    // Igual ao painel real: "add" diz que já existe, "remove" confirma, a
+    // consulta segue dizendo "existe", e o "add" seguinte responde
+    // "subscription Updated." (reativa o mesmo cadastro).
+    state.createResponses = [
+      { Fail: "this email is already in use and active." },
+      { Fail: '"subscription Updated."' },
+    ];
+    state.probeResponses = Array.from({ length: 20 }, () => ({ state: "found", detail: "" }));
+    state.passwordChecks = [{ verified: true, available: true }];
+    const res = await healLicenseLogin({ ...baseLic, panel: "v455" }, { reason: "test" });
+    expect(res.ok).toBe(true);
+    expect(res.action).toBe("recreated");
+    expect(state.removed.length).toBeLessThanOrEqual(6); // no máximo 2 por servidor, nunca 10
+    expect(state.passwordCalls).toHaveLength(1);
+    expect(res.steps).toContain("conta-reativada:v455");
+  });
+
   it("envia ao painel a data certa da licença ao recriar", async () => {
     state.createResponses = [{ Success: "Account created successfully!" }];
     await healLicenseLogin({ ...baseLic, plan_slug: "trial", is_trial: true }, { reason: "test", forceRecreate: true });
