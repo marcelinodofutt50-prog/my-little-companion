@@ -367,6 +367,12 @@ async function runHeal(
         present = candidate === panel;
       }
       if (!present) continue;
+      // Só mexemos no servidor da própria licença. Cópia em outro servidor
+      // pode ser de outra compra do cliente: apenas registramos.
+      if (candidate !== panel) {
+        steps.push(`copia-em-outro-servidor-mantida:${candidate}`);
+        continue;
+      }
       // Remove e só segue com CONFIRMAÇÃO DUPLA: o painel tem que responder que
       // removeu (ex.: "client removed") E a consulta seguinte tem que dizer que
       // o e-mail não existe mais. Painel mudo NÃO conta como removido.
@@ -448,8 +454,14 @@ async function runHeal(
   let issued = false;
   // Recria primeiro exatamente onde o login foi apagado.
   const createdConfirmedIn: Array<"v455" | "v457" | "v46"> = [];
-  const createOrder = [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))];
+  // Se apagamos no servidor da licença, recriamos SÓ nele (exceto cota cheia,
+  // quando outro servidor vazio é a única saída).
+  const createOrder = removedFrom.length
+    ? [...removedFrom, ...panelOrder.filter((p) => !removedFrom.includes(p))]
+    : panelOrder;
   for (const candidate of createOrder) {
+    // Outro servidor só entra quando o da licença recusou por cota cheia.
+    if (removedFrom.length && !removedFrom.includes(candidate) && !QUOTA_RE.test(lastFail)) break;
     let fresh: { Success?: unknown; Fail?: unknown };
     try {
       fresh = await yaarsaCreateAccount({

@@ -20,7 +20,7 @@ export const Route = createFileRoute('/api/public/health')({
             // Versão publicada (para confirmar que a última correção está no ar).
             commit: (process.env['VERCEL_GIT_COMMIT_SHA'] ?? '').slice(0, 7) || null,
             checkout_version: ORDER_INTEGRITY_VERSION,
-            repair_version: "reparo-v455-reativa",
+            repair_version: "reparo-v3-mesmo-servidor",
           }), {
             status,
             headers: {

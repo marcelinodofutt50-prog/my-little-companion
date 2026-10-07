@@ -51,6 +51,13 @@ export const saveCheckoutProfile = createServerFn({ method: "POST" })
     };
 
     const { error } = await supabaseAdmin.from("orders").update({ metadata } as any).eq("id", data.orderId);
+    try {
+      await supabaseAdmin.from("integration_logs").insert({
+        source: "checkout", action: error ? "survey_failed" : "survey_saved",
+        outcome: error ? "error" : "success", error: error?.message ?? null, user_id: userId,
+        context: { order_id: data.orderId },
+      } as never);
+    } catch { /* telemetria */ }
     if (error) return { ok: false, error: error.message };
 
     // Guarda o nome no perfil quando ainda estiver vazio (não sobrescreve escolha do cliente).

@@ -207,68 +207,39 @@ export const adminFixLoginBug = createServerFn({ method: "POST" })
   .validator((i: unknown) => z.object({ licenseId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
     const { data: lic } = await context.supabase.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
     if (!lic) throw new Error("Licença não encontrada");
     if (lic.disabled_at) throw new Error("Esta licença está desativada — reative antes de corrigir.");
     if (!lic.yaarsa_email) throw new Error("Licença sem e-mail no painel");
 
-    const panel = ((lic as any).panel ?? "v457") as "v457" | "v46";
-    const ymd = (d: Date) => d.toISOString().slice(0, 10);
-    const original = lic.expires_at ? new Date(lic.expires_at) : null;
-    const bumped = original ? new Date(original.getTime() + 24 * 60 * 60 * 1000) : null;
-    const steps: { step: string; ok: boolean; message?: string }[] = [];
-    let dateBumped = false;
-
-    // 1) empurra a validade 1 dia (ex.: 20 → 21). Licença sem data (vitalícia)
-    //    pula essa etapa para não inventar vencimento no painel.
-    if (original && bumped) {
-      const up = await yaarsaExtend(lic.yaarsa_email, ymd(bumped), panel);
-      steps.push({ step: `validade → ${ymd(bumped)}`, ok: !up.Fail, message: up.Fail ?? up.Success });
-      if (up.Fail) throw new Error(`Falha ao empurrar a data no painel: ${up.Fail}`);
-      dateBumped = true;
-    } else {
-      steps.push({ step: "validade inalterada (licença sem vencimento)", ok: true });
-    }
-
-    // 2) reaplica exatamente a MESMA senha já entregue ao cliente
-    let passOk = false;
-    let passMsg = "";
-    try {
-      const plain = decrypt(lic.yaarsa_password_enc);
-      const pw = await yaarsaSetPassword(lic.yaarsa_email, plain, panel, lic.yaarsa_username ?? undefined);
-      passOk = !pw.Fail;
-      passMsg = String(pw.Fail ?? pw.Success ?? "");
-      steps.push({ step: "senha reaplicada", ok: passOk, message: passMsg });
-    } catch (e) {
-      passMsg = String((e as Error)?.message || e);
-      steps.push({ step: "senha reaplicada", ok: false, message: passMsg });
-    }
-
-    // 3) volta para a data original (sempre tenta, mesmo se a senha falhar)
-    if (dateBumped && original) {
-      const back = await yaarsaExtend(lic.yaarsa_email, ymd(original), panel);
-      steps.push({ step: `validade → ${ymd(original)}`, ok: !back.Fail, message: back.Fail ?? back.Success });
-      if (back.Fail) {
-        throw new Error(`Atenção: a validade ficou em ${ymd(bumped!)} e não voltou para ${ymd(original)} — ${back.Fail}. Use "Estender manualmente" para corrigir a data.`);
-      }
-    }
-
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin.from("integration_logs").insert({
-        source: `yaarsa-${panel}`, action: "admin_fix_login_bug",
-        outcome: passOk ? "success" : "partial",
-        error: passOk ? null : passMsg || null,
-        context: { license_id: lic.id, user_id: lic.user_id, actor: context.userId, steps } as any,
-      });
-    } catch { /* best-effort */ }
-
+    // Antes: empurrava +1 dia e "voltava" para expires_at em UTC — num teste
+    // grátis era o PRÓPRIO dia (o painel cortava o login) e depois das 21h de
+    // Brasília já virava o dia seguinte. Agora usa o motor do "Reparar acesso":
+    // data em Brasília pela regra do plano, senha reaplicada, sucesso só com
+    // confirmação do painel.
+    const { healLicenseLogin } = await import("./license-heal.server");
+    const { panelExpireDateFor } = await import("./panel-integrity.server");
+    const result: any = await healLicenseLogin(
+      {
+        id: (lic as any).id,
+        user_id: (lic as any).user_id,
+        plan_slug: (lic as any).plan_slug ?? null,
+        yaarsa_username: (lic as any).yaarsa_username,
+        yaarsa_email: (lic as any).yaarsa_email,
+        yaarsa_password_enc: (lic as any).yaarsa_password_enc,
+        panel: (lic as any).panel ?? null,
+        expires_at: (lic as any).expires_at ?? null,
+        is_trial: (lic as any).is_trial ?? null,
+        server_ip: (lic as any).server_ip ?? null,
+      },
+      { reason: "admin_corrigir_problemas" },
+    );
     return {
       ok: true,
-      passwordReapplied: passOk,
-      expiresAt: original ? ymd(original) : null,
-      steps,
+      passwordReapplied: true,
+      expiresAt: panelExpireDateFor(lic as any),
+      steps: result?.steps ?? [],
+      warning: result?.warning,
     };
   });
 
