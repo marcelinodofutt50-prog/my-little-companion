@@ -367,6 +367,12 @@ async function runHeal(
         present = candidate === panel;
       }
       if (!present) continue;
+      // Só mexemos no servidor da própria licença. Cópia em outro servidor
+      // pode ser de outra compra do cliente: apenas registramos.
+      if (candidate !== panel) {
+        steps.push(`copia-em-outro-servidor-mantida:${candidate}`);
+        continue;
+      }
       // Remove e só segue com CONFIRMAÇÃO DUPLA: o painel tem que responder que
       // removeu (ex.: "client removed") E a consulta seguinte tem que dizer que
       // o e-mail não existe mais. Painel mudo NÃO conta como removido.
