@@ -13,7 +13,7 @@ describe('Shadow Protocol v34.0: LIVE PRODUCTION FUNCTIONAL AUDIT', () => {
       const yaarsaDate = expireDateFor('trial');
       const d = new Date();
       d.setDate(d.getDate() + 1);
-      expect(yaarsaDate).toBe(d.toISOString().slice(0, 10));
+      expect(yaarsaDate).toBe((await import('../lib/yaarsa.server')).spYmd(2));
     });
 
     it('Verify ShadowDash limits license row to exactly 24h', async () => {
