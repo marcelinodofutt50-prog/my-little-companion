@@ -126,7 +126,8 @@ async function runHeal(
   // vitalícias marcadas como 4.5.5 mostrando o IP da 4.6). Trials sempre foram
   // criados no servidor da licença, então para eles só corrigimos o IP.
   if (!lic.is_trial && lic.server_ip) {
-    const ipPanel = typeof y.panelForHost === "function" ? y.panelForHost(lic.server_ip) : null;
+    let ipPanel: ReturnType<typeof y.panelForHost> = null;
+    try { ipPanel = y.panelForHost(lic.server_ip); } catch { ipPanel = null; }
     if (ipPanel && ipPanel !== panel) {
       steps.push(`servidor-pelo-ip:${panel}->${ipPanel}`);
       panel = ipPanel;

@@ -32,6 +32,8 @@ vi.mock("../lib/license-password.server", () => ({
 
 vi.mock("../lib/yaarsa.server", () => ({
   refreshPanelOverrides: async () => {},
+  panelForHost: (h: string) => ({ "151.243.218.213": "v455", "191.96.78.81": "v457", "190.102.43.19": "v46" } as any)[h] ?? null,
+  panelServerHost: (p: string) => ({ v455: "151.243.218.213", v457: "191.96.78.81", v46: "190.102.43.19" } as any)[p],
   sanitizePanelUsername: (u: string) => (u || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user",
   isPanelPasswordValid: validPw,
   generateCredentials: () => ({ username: "novo", email: "x@y.z", password: "Nova#Senha9" }),
@@ -150,5 +152,24 @@ describe("reparo de acesso (regras reais do painel)", () => {
     await healLicenseLogin(lic({ is_trial: true, plan_slug: "trial", expires_at: new Date(Date.now() + 3600e3).toISOString() }));
     const exp = db("v455").get("cliente1@shadow.app")!.expire;
     expect(exp > today()).toBe(true);
+  });
+
+  it("vitalício marcado 4.5.5 com IP da 4.6: repara na 4.6 (onde o cliente entra) e não mexe na 4.5.5", async () => {
+    db("v46").set("cliente1@shadow.app", { password: "x", expire: today(), subtype: "new" });
+    db("v455").set("cliente1@shadow.app", { password: "y", expire: "2099-01-01", subtype: "12 Month" });
+    const r = await healLicenseLogin(lic({ plan_slug: "login-lifetime", expires_at: null, server_ip: "190.102.43.19" }));
+    expect(r.panel).toBe("v46");
+    expect(db("v46").get("cliente1@shadow.app")!.subtype).not.toBe("new");
+    expect(db("v46").get("cliente1@shadow.app")!.password).toBe("Antiga#123");
+    expect(db("v455").get("cliente1@shadow.app")!.password).toBe("y");
+    expect(updates.some((u) => u.patch.panel === "v46" && u.patch.server_ip === "190.102.43.19")).toBe(true);
+  });
+
+  it("trial com IP errado (padrão 4.5.7): continua na 4.5.5 e corrige o IP mostrado", async () => {
+    db("v455").set("cliente1@shadow.app", { password: "x", expire: "2099-01-01", subtype: "12 Month" });
+    const r = await healLicenseLogin(lic({ is_trial: true, plan_slug: "trial", server_ip: "191.96.78.81" }));
+    expect(r.panel).toBe("v455");
+    expect(r.credentials.server_ip).toBe("151.243.218.213");
+    expect(r.message).toMatch(/151\.243\.218\.213/);
   });
 });
