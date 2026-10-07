@@ -528,16 +528,79 @@ export async function yaarsaRemoveAccount(
   return yaarsaPost({ action: "remove", email, adminkey: yaarsaAdminKey(panel) }, panel);
 }
 
+/**
+ * Ajusta a validade no painel — e REATIVA a conta se ela estiver vencida ou
+ * "removida".
+ *
+ * Regras do painel (createacc.php real):
+ * - `remove` não apaga: marca subtype='new' e Expire=hoje (conta vencida).
+ * - `cexpire` só troca a data; NÃO tira o subtype 'new' — a conta continua
+ *   escondida/desativada mesmo com data nova.
+ * - `add` num e-mail existente e VENCIDO grava Expire + subtype e responde
+ *   "subscription Updated." (não mexe na senha). Num e-mail ATIVO responde
+ *   "already in use and active". Num e-mail inexistente sem senha válida
+ *   recusa pela regra de senha — nunca cria conta aqui.
+ * Por isso: datas futuras passam primeiro por `add` (reativa) e, se a conta
+ * estiver ativa, caem no `cexpire` normal.
+ */
 export async function yaarsaExtend(
   email: string,
   newExpireDate: string,
   panel: YaarsaPanel = "v457",
 ): Promise<YaarsaResponse> {
   await refreshPanelOverrides();
-  return yaarsaPost(
-    { action: "cexpire", email, expire_date: newExpireDate, adminkey: yaarsaAdminKey(panel) },
-    panel,
-  );
+  const adminkey = yaarsaAdminKey(panel);
+  const cexpire = () =>
+    yaarsaPost({ action: "cexpire", email, expire_date: newExpireDate, adminkey }, panel);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(newExpireDate) || newExpireDate <= spYmd(0)) return cexpire();
+  try {
+    const revive = await yaarsaPost(
+      {
+        action: "add",
+        email,
+        username: "",
+        password: "",
+        adminkey,
+        subtype: "1 Month",
+        total_paid: "0",
+        additional_info: "shadow-renew",
+        expire_date: newExpireDate,
+      },
+      panel,
+    );
+    const txt = String(revive.Success ?? revive.Fail ?? "").replace(/["']/g, "");
+    if (/subscription\s*updated/i.test(txt)) {
+      return { Success: "Expire Date updated successfully! (assinatura reativada)" } as YaarsaResponse;
+    }
+    if (/account created/i.test(txt)) {
+      // Não deveria acontecer (senha vazia), mas registramos para a equipe.
+      console.warn("[yaarsaExtend] add criou conta inesperadamente", { panel });
+    }
+  } catch {
+    /* segue para o cexpire */
+  }
+  return cexpire();
+}
+
+/** Troca a senha (ação `update`). Sucesso real: "Password updated successfully!". */
+export async function yaarsaUpdatePassword(
+  email: string,
+  password: string,
+  panel: YaarsaPanel = "v457",
+): Promise<YaarsaResponse> {
+  await refreshPanelOverrides();
+  return yaarsaPost({ action: "update", email, password, adminkey: yaarsaAdminKey(panel) }, panel);
+}
+
+/** Libera o aparelho preso na conta (ação `resetid`, zera o hwid). */
+export async function yaarsaResetDevice(email: string, panel: YaarsaPanel = "v457"): Promise<YaarsaResponse> {
+  await refreshPanelOverrides();
+  return yaarsaPost({ action: "resetid", email, adminkey: yaarsaAdminKey(panel) }, panel);
+}
+
+/** Regra de senha do painel: 8–16 caracteres, 1 maiúscula e 1 caractere especial. */
+export function isPanelPasswordValid(pw: string): boolean {
+  return pw.length >= 8 && pw.length <= 16 && /[A-Z]/.test(pw) && /[^a-zA-Z0-9]/.test(pw);
 }
 
 // Reaplica/troca a senha da conta no painel.
