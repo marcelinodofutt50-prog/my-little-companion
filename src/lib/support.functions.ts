@@ -247,6 +247,11 @@ export const listMessages = createServerFn({ method: "GET" })
     if (error && (error.code === 'PGRST108' || error.message?.includes('schema cache'))) {
       await trackSchemaFailure(error, "listMessages", false, { stage: "initial_fetch" }, context.userId);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      // Plano B com acesso total: só para o dono do ticket ou a equipe.
+      const { data: th } = await supabaseAdmin
+        .from("support_threads").select("user_id").eq("id", data.threadId).maybeSingle();
+      const { data: staff } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+      if (!th || (th.user_id !== context.userId && !staff)) throw new Error("Conversa não encontrada.");
       const adminResult = await fetchMessages(supabaseAdmin);
       rows = adminResult.data;
       error = adminResult.error;
