@@ -842,7 +842,8 @@ export const changeMyLicensePassword = createServerFn({ method: "POST" })
     if ((lic as any).expires_at) {
       try {
         const { yaarsaExtend } = await import("./yaarsa.server");
-        await yaarsaExtend(lic.yaarsa_email, String((lic as any).expires_at).slice(0, 10), usedPanel);
+        const { panelExpireDateFor } = await import("./panel-integrity.server");
+        await yaarsaExtend(lic.yaarsa_email, panelExpireDateFor(lic as any), usedPanel);
       } catch { /* best-effort */ }
     }
 
