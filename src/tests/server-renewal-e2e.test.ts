@@ -134,9 +134,9 @@ describe("E2E — pagamento da mensalidade do servidor", () => {
     expect(after.daysLeft).not.toBeNull();
     expect(after.daysLeft!).toBeGreaterThan(0);
     expect(after.countdownAt).toBe(lic.expires_at);
-    // 4. Yaarsa recebeu exatamente a mesma data
-    expect(panel.expiryOf(lic.yaarsa_email)).toBe(ymd(paidUntil));
-    expect(panel.expiryOf(lic.yaarsa_email)).toBe(String(lic.expires_at).slice(0, 10));
+    // 4. Painel recebe o dia 20 + 1 dia de folga (mensal), em Brasília
+    expect(panel.expiryOf(lic.yaarsa_email)).toBe(ymd(new Date(paidUntil.getTime() + 86400000)));
+
   });
 
   it("VITALÍCIO: pagamento renova só o servidor e preserva a data longa", async () => {
