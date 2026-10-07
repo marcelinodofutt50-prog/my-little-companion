@@ -65,7 +65,7 @@ const btmob2 = btmobUpdatesAsset;
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
     { title: "Shadow — OSINT & Digital Asset Manager" },
-    { name: "description", content: "O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, Bypass Play Protect e infraestrutura VPS dedicada." },
+    { name: "description", content: "O ecossistema definitivo para quem opera nas sombras. Bypass Play Protect, painel OSINT e infraestrutura VPS dedicada." },
     { property: "og:title", content: "Shadow — OSINT & Digital Asset Manager" },
     { property: "og:description", content: "Acesse a elite do gerenciamento de ativos digitais. Ativação instantânea após o pagamento." },
     { property: "og:type", content: "website" },
@@ -95,7 +95,11 @@ function Index() {
       
       {/* Hero Section */}
       <section className="relative pt-10 pb-10 sm:pt-16 sm:pb-12 md:pt-24 md:pb-20">
-
+        {/* Ambient tactical background */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 hero-grid-bg" />
+          <div className="absolute left-1/2 top-0 h-[420px] w-[720px] max-w-full -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]" />
+        </div>
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
@@ -126,7 +130,7 @@ function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-6 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-7xl lg:text-9xl text-foreground"
+            className="mt-6 font-display text-5xl font-bold leading-[0.9] tracking-tighter md:text-7xl lg:text-9xl bg-gradient-to-b from-foreground via-foreground to-foreground/50 bg-clip-text text-transparent drop-shadow-[0_0_35px_oklch(0.82_0.19_148/0.15)]"
           >
             SHADOW
           </motion.h1>
@@ -182,12 +186,13 @@ function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-10 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-center sm:gap-8 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground"
+            className="mt-10 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground"
           >
-            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> 99.9% Uptime</div>
-            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> AES-256-GCM</div>
-            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> 2.400+ Operadores</div>
-            <div className="flex items-center justify-center sm:justify-start gap-2 tracking-tighter"><span className="text-primary">✦</span> Suporte: OK</div>
+            {["99.9% Uptime", "AES-256-GCM", "2.400+ Operadores", "Suporte: OK"].map((stat) => (
+              <div key={stat} className="flex items-center justify-center gap-2 rounded-full border border-border/40 bg-card/40 px-3.5 py-1.5 tracking-tighter backdrop-blur-sm transition-colors hover:border-primary/40 hover:text-foreground">
+                <span className="text-primary">✦</span> {stat}
+              </div>
+            ))}
           </motion.div>
 
         </div>
@@ -202,21 +207,25 @@ function Index() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
-            <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
-              <Shield className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">Bypass Play Protect</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Assinatura V2/V3 com ofuscação polimórfica que engana as heurísticas do Play Protect em tempo real.</p>
-            </div>
-            <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
-              <Zap className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">Fast Injection</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Provisionamento de infraestrutura VPS dedicada em menos de 60 segundos após o pagamento.</p>
-            </div>
-            <div className="p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/30 transition-all group">
-              <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">AES-256 Ops</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">Todas as suas credenciais e logs de operação são blindados com criptografia de nível militar ponta-a-ponta.</p>
-            </div>
+            {[
+              { icon: Shield, title: "Bypass Play Protect", desc: "Assinatura V2/V3 com ofuscação polimórfica que engana as heurísticas do Play Protect em tempo real." },
+              { icon: Zap, title: "Fast Injection", desc: "Provisionamento de infraestrutura VPS dedicada em menos de 60 segundos após o pagamento." },
+              { icon: Lock, title: "AES-256 Ops", desc: "Todas as suas credenciais e logs de operação são blindados com criptografia de nível militar ponta-a-ponta." },
+            ].map((card, i) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, margin: "-60px" }}
+                className="group relative p-6 sm:p-8 rounded-2xl border border-primary/10 bg-primary/5 hover:border-primary/40 hover:bg-primary/[0.08] hover:shadow-[0_20px_50px_-25px_oklch(0.82_0.19_148/0.45)] transition-all duration-500 overflow-hidden"
+              >
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <card.icon className="h-8 w-8 sm:h-10 sm:w-10 text-primary mb-4 sm:mb-6 group-hover:scale-110 group-hover:drop-shadow-[0_0_12px_oklch(0.82_0.19_148/0.6)] transition-all duration-300" />
+                <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 font-mono uppercase tracking-tight">{card.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{card.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -507,6 +516,10 @@ function Index() {
       <section className="py-14 sm:py-20 relative overflow-hidden">
 
         <div className="absolute inset-0 bg-primary/5 -z-10" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute left-1/2 top-1/2 h-[300px] w-[600px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[110px]" />
+          <div className="absolute inset-0 hero-grid-bg opacity-50" />
+        </div>
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold mb-4 sm:mb-6 text-foreground uppercase tracking-tight">
             {t('home.cta.ready')}
