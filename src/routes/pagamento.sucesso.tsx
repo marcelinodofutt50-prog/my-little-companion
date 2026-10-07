@@ -5,8 +5,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { CheckCircle2, Copy, Eye, EyeOff, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { PaymentCelebration } from "@/components/PaymentCelebration";
 import { Button } from "@/components/ui/button";
 import { getOrderState } from "@/lib/checkout.functions";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/pagamento/sucesso")({
   validateSearch: (s: Record<string, unknown>) => ({ order: String(s.order ?? "") }),
