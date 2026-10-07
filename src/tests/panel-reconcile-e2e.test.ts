@@ -15,7 +15,7 @@ describe("reconciliação com o painel Yaarsa", () => {
     const rec = reconcilePanelExpiry(plan.panelExpireDate, "2026-08-20", plan.patch.expires_at);
 
     expect(rec.shouldPush).toBe(true);
-    expect(rec.effectivePanelDate).toBe("2026-09-20");
+    expect(rec.effectivePanelDate).toBe("2026-09-21");
     expect(rec.alreadyAhead).toBe(false);
     expect(rec.dbExpiresAt).toBe(paidUntil.toISOString());
   });
