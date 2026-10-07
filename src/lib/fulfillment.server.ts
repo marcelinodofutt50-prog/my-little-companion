@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { planServerRenewal } from "@/lib/server-renewal";
+import { planServerRenewal, nextServerCutoff } from "@/lib/server-renewal";
 
 // Backoff exponencial das tentativas de entrega automática.
 // 1ª falha → 1 min, depois 2, 4, 8, 16, 32 e teto de 60 min.
@@ -140,12 +140,9 @@ async function fulfillOrderInner(orderId: string) {
   const { data: planRow } = await supabaseAdmin.from("plans").select("category, slug").eq("slug", order.plan_slug).maybeSingle();
 
   // Server renewal cycle: every plan aligns to the next 20th of the month.
-  const nextDay20 = (() => {
-    const d = new Date();
-    const target = new Date(d.getFullYear(), d.getMonth(), 20, 23, 59, 59);
-    if (d.getDate() >= 20) target.setMonth(target.getMonth() + 1);
-    return target;
-  })();
+  // Sempre no fuso de Brasília (o servidor roda em UTC e antes pulava um mês
+  // inteiro para quem pagava no dia 19 depois das 21h).
+  const nextDay20 = nextServerCutoff();
 
   // ============ Upgrade v4.5.7 → v4.6 path ============
   // O slug manda: no banco esse plano está cadastrado como "license", então
@@ -264,8 +261,8 @@ async function fulfillOrderInner(orderId: string) {
           yaarsa_username: usernameGuess,
           yaarsa_email: emailLower,
           yaarsa_password_enc: legacyClaim.password_enc,
-          server_ip: legacyClaim.ip,
-          expires_at: nextDay20.toISOString(),
+          server_ip: await (await import("@/lib/yaarsa.server")).resolvePanelServerHost(legacyClaim.panel),
+          expires_at: legacyClaim.panel === "v46" ? null : nextDay20.toISOString(),
           server_paid_until: nextDay20.toISOString(),
           is_trial: false,
           is_legacy: true,
@@ -281,19 +278,35 @@ async function fulfillOrderInner(orderId: string) {
         });
       }
 
-      try { await yaarsaExtend(emailLower, ymd, legacyClaim.panel); } catch { /* best-effort */ }
+      // Mesma regra da renovação normal: nunca encurta a validade, data do
+      // painel em Brasília (+1 dia de folga no mensal/semanal), IP = host do
+      // painel onde a conta vive, senha da licença reaplicada e conferida.
+      const { data: licRow } = licenseId
+        ? await supabaseAdmin.from("licenses").select("*").eq("id", licenseId).maybeSingle()
+        : { data: null as any };
+      const { resolvePanelServerHost, yaarsaSetPassword, decrypt } = await import("@/lib/yaarsa.server");
+      const panelHost = await resolvePanelServerHost(legacyClaim.panel);
+      const plan = planServerRenewal((licRow ?? { id: licenseId, expires_at: null, plan_slug: legacyClaim.panel === "v46" ? "login-lifetime" : "login-30d" }) as any, nextDay20);
+      const issues: string[] = [];
+      try {
+        const yr = await yaarsaExtend(emailLower, plan.panelExpireDate, legacyClaim.panel);
+        if (yr?.Fail) issues.push(`painel: ${yr.Fail}`);
+      } catch (e: any) { issues.push(`painel: ${e?.message ?? "sem resposta"}`); }
+      try {
+        const pw = decrypt(legacyClaim.password_enc);
+        const pr: any = await yaarsaSetPassword(emailLower, pw, legacyClaim.panel);
+        if (pr?.Fail) issues.push(`senha: ${pr.Fail}`);
+      } catch (e: any) { issues.push(`senha: ${e?.message ?? "sem resposta"}`); }
       if (licenseId) {
-        await supabaseAdmin.from("licenses").update({
-          server_paid_until: nextDay20.toISOString(),
-          expires_at: nextDay20.toISOString(),
-          revoked: false,
-          server_overdue_at: null,
-          server_ip: legacyClaim.ip,
-        }).eq("id", licenseId);
+        await supabaseAdmin.from("licenses").update({ ...plan.patch, server_ip: panelHost } as any).eq("id", licenseId);
       }
-      await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
+      await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString(), ...(issues.length ? { last_fulfillment_error: issues.join(" | ") } : {}) } as any).eq("id", orderId);
+      await supabaseAdmin.from("integration_logs").insert({
+        source: `yaarsa-${legacyClaim.panel}`, action: "legacy_server_renewal", outcome: issues.length ? "partial" : "success",
+        context: { order_id: orderId, license_id: licenseId, panel_date: plan.panelExpireDate, server_ip: panelHost, issues } as any,
+      } as any);
       await supabaseAdmin.from("webhook_logs").insert({
-        source: "mercadopago", note: `legacy server renewal ${orderId} — provisioned ${!existing}`, processed: true,
+        source: "mercadopago", note: `legacy server renewal ${orderId} — provisioned ${!existing}${issues.length ? ` — ${issues.join(" | ")}` : ""}`, processed: issues.length === 0,
       });
       return { ok: true, reason: `legacy-renewal:${licenseId ?? "unknown"}` };
     }

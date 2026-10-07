@@ -218,7 +218,7 @@ function LegacyRenewalPage() {
               )}
 
               <div className="rounded border border-cyan/20 bg-cyan/5 p-3 font-mono text-[11px] text-cyan/80">
-                Após o pagamento confirmado, a IA revisa a licença, estende o vencimento no painel e libera o servidor até o próximo dia 20.
+                Após o pagamento confirmado, a IA revisa a licença, estende o vencimento no painel e libera o servidor até o próximo dia 20 (horário de Brasília). Sua senha e o IP do servidor certo são conferidos no painel automaticamente.
               </div>
 
               <Button
