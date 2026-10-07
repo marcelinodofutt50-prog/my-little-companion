@@ -5,8 +5,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { CheckCircle2, Copy, Eye, EyeOff, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { PaymentCelebration } from "@/components/PaymentCelebration";
 import { Button } from "@/components/ui/button";
 import { getOrderState } from "@/lib/checkout.functions";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/pagamento/sucesso")({
   validateSearch: (s: Record<string, unknown>) => ({ order: String(s.order ?? "") }),
@@ -43,6 +45,8 @@ function SuccessPage() {
   const [showPw, setShowPw] = useState(false);
   const [showIp, setShowIp] = useState(false);
   const [exhausted, setExhausted] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
+  const celebrated = useRef(false);
   const stateFn = useServerFn(getOrderState);
   const timerRef = useRef<number | null>(null);
   const stopped = useRef(false);
@@ -60,6 +64,10 @@ function SuccessPage() {
         if (r.order) setStatus(r.order.status);
         if (r.license) {
           setLicense(r.license as License);
+          if (!celebrated.current) {
+            celebrated.current = true;
+            setCelebrating(true);
+          }
           return; // stop polling
         }
       } catch { /* transient network */ }
@@ -90,9 +98,14 @@ function SuccessPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-lg px-4 py-14">
+        {celebrating && <PaymentCelebration onDone={() => setCelebrating(false)} />}
         <div className="terminal-card rgb-border scanlines relative p-8">
           {license ? (
-            <>
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", damping: 18, stiffness: 160, delay: celebrating ? 1.4 : 0 }}
+            >
               <CheckCircle2 className="mx-auto h-14 w-14 text-neon" />
               <h1 className="mt-3 text-center font-mono text-2xl font-bold text-neon">Licença gerada!</h1>
               <p className="mt-1 text-center text-sm text-muted-foreground">Guarde estes dados. Eles também ficam no seu painel.</p>
@@ -132,7 +145,7 @@ function SuccessPage() {
                   Ir para o painel
                 </Button>
               </div>
-            </>
+            </motion.div>
           ) : (
             <>
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-neon" />
