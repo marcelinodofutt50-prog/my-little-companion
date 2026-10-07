@@ -355,6 +355,7 @@ async function runHeal(
   // sem conta nenhuma. Agora só removemos onde a sondagem confirma a conta.
   const removedFrom: Array<"v455" | "v457" | "v46"> = [];
   const stuckIn: Array<"v455" | "v457" | "v46"> = [];
+  const softRemoved = new Set<"v455" | "v457" | "v46">();
   if (!generated) {
     for (const candidate of panelOrder) {
       let present = true;
@@ -412,12 +413,20 @@ async function runHeal(
         // consulta confiável (4.5.5) e respondeu "Client removed successfully!".
         // A prova final vem na recriação: só "Account created successfully!" vale.
         gone = state === "missing" || (state === "unknown" && saidRemoved);
+        // Visto no 4.5.5 real: "remove" responde "Client removed successfully!"
+        // mas só DESATIVA o cadastro (o "add" seguinte responde "subscription
+        // Updated." e reativa o mesmo registro). Repetir não adianta: após 2
+        // remoções confirmadas seguimos como "desativado" e a recriação reativa.
+        if (!gone && removedCount >= 2) {
+          softRemoved.add(candidate);
+          gone = true;
+        }
         if (!gone && !saidRemoved) await pause(700);
       }
       steps.push(`remocoes-confirmadas-${candidate}:${removedCount}`);
       if (gone) {
         removedFrom.push(candidate);
-        steps.push(`conta-removida-confirmada:${candidate}`);
+        steps.push(softRemoved.has(candidate) ? `conta-desativada-confirmada:${candidate}` : `conta-removida-confirmada:${candidate}`);
       } else {
         steps.push(`remocao-nao-confirmada:${candidate}`);
         stuckIn.push(candidate);
@@ -460,7 +469,12 @@ async function runHeal(
     steps.push(`criacao-resposta-${candidate}:${String(fresh.Success ?? fresh.Fail ?? "vazia").replace(/["']/g, "").slice(0, 60)}`);
     const saysExists = EXISTS_RE.test(String(fresh.Fail ?? ""));
     const wasRemovedHere = removedFrom.includes(candidate);
-    const createdNew = looksLikeAccountCreated(fresh.Success ?? fresh.Fail);
+    // No painel que só desativa ao remover, "subscription Updated" = cadastro
+    // reativado. A senha ainda é reaplicada e conferida logo abaixo.
+    const reactivated =
+      softRemoved.has(candidate) && /subscription\s*updated/i.test(String(fresh.Success ?? fresh.Fail ?? ""));
+    if (reactivated) steps.push(`conta-reativada:${candidate}`);
+    const createdNew = looksLikeAccountCreated(fresh.Success ?? fresh.Fail) || reactivated;
     if (wasRemovedHere && !createdNew) {
       // Apagamos aqui: só aceitamos "Account created successfully!". "Já existe"
       // ou "subscription Updated" provam que o login antigo NÃO saiu.
