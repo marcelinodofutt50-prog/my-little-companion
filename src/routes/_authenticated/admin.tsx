@@ -1,4 +1,5 @@
 import { SupportStatsPanel } from "@/components/support/SupportStatsPanel";
+import { AdminDailySummary } from "@/components/AdminDailySummary";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -1177,6 +1178,8 @@ function AdminPage() {
                       openTickets={openTicketsCount}
                       conversionRate={conversionRate}
                     />
+                    <AdminDailySummary />
+
 
                     {/* Mini strip: HOJE */}
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

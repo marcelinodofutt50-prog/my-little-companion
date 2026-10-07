@@ -971,6 +971,12 @@ function PlansPage() {
                       isLoading={loadingPlan === p.slug}
                       onBuy={buy}
                       featured={p.slug === "login-lifetime"}
+                      upsell={(() => {
+                        if (isLifetime || !(is7d || isMonthly) || s.includes("trial")) return undefined;
+                        const lt = licenses.find((x) => x.slug === "login-lifetime");
+                        if (!lt || Number(lt.price_brl) <= Number(p.price_brl)) return undefined;
+                        return { slug: lt.slug, price: Number(lt.price_brl), welcome: !!welcomeUntil && welcomeUntil > welcomeNow };
+                      })()}
                     />
 
                     {extension && (
@@ -1451,7 +1457,8 @@ function FaqSection() {
 }
 
 // ============ Plan Card ============
-const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoading, onBuy, featured }: {
+const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoading, onBuy, featured, upsell }: {
+  upsell?: { slug: string; price: number; welcome: boolean };
   plan: Plan;
   coupon: Coupon | null;
   cashback: number;
@@ -1474,13 +1481,16 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   const meta = useMemo(() => metaFor(plan, t), [plan, t]);
   const Icon = meta.icon;
   
+  const [showUpsell, setShowUpsell] = useState(false);
   const handleClick = useCallback(() => {
     if (plan.category === "upgrade") {
       setShowUpgradeConfirm(plan.slug);
+    } else if (upsell) {
+      setShowUpsell(true);
     } else {
       onBuy(plan.slug);
     }
-  }, [onBuy, plan.slug, plan.category]);
+  }, [onBuy, plan.slug, plan.category, upsell]);
 
   const isLifetime = plan.slug.toLowerCase().includes("lifetime");
   const badgeLabel = meta.badge ?? (featured ? "Popular" : undefined);
@@ -1519,6 +1529,30 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
           </div>
         </div>
       )}
+
+      {showUpsell && upsell && (() => {
+        const months = Math.max(1, Math.ceil(upsell.price / Math.max(1, price)));
+        const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        return (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+            <h3 className="mb-2 font-display text-lg uppercase tracking-wider">Antes de pagar…</h3>
+            <p className="mb-2 text-[11px] text-muted-foreground leading-relaxed">
+              O <b className="text-foreground">Vitalício</b> sai por <b className="text-primary">{fmt(upsell.price)}</b> uma vez só — o mesmo que {months} renovações deste plano.
+            </p>
+            {upsell.welcome && (
+              <p className="mb-4 text-[10px] font-mono uppercase tracking-wider text-primary">Preço de boas-vindas ainda valendo para sua conta</p>
+            )}
+            <div className="mt-2 flex w-full flex-col gap-2">
+              <Button className="w-full font-mono text-[9px] uppercase tracking-widest" onClick={() => { setShowUpsell(false); onBuy(upsell.slug); }}>
+                Quero o Vitalício
+              </Button>
+              <Button variant="ghost" className="w-full font-mono text-[9px] uppercase tracking-widest text-muted-foreground" onClick={() => { setShowUpsell(false); onBuy(plan.slug); }}>
+                Continuar com este plano
+              </Button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Glow Effect */}
       <div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
