@@ -128,7 +128,7 @@ describe("healLicenseLogin", () => {
   });
 
   it("apaga e recria com AS MESMAS credenciais quando o e-mail já existe", async () => {
-    state.createResponses = [{ Fail: "1004 email already in use" }, { Success: true }];
+    state.createResponses = [{ Fail: "1004 email already in use" }, { Success: "Account created successfully!" }];
     const res = await healLicenseLogin(baseLic, { reason: "test" });
 
     expect(res.action).toBe("recreated");
@@ -142,7 +142,7 @@ describe("healLicenseLogin", () => {
   });
 
   it("não confunde subscription Updated com senha corrigida", async () => {
-    state.createResponses = [{ Fail: '"subscription Updated."' }, { Success: true }];
+    state.createResponses = [{ Fail: '"subscription Updated."' }, { Success: "Account created successfully!" }];
     state.probeResponses = [
       { state: "found", detail: "" },
       { state: "missing", detail: "" },
@@ -283,7 +283,7 @@ describe("healLicenseLogin — proteções adicionais", () => {
   });
 
   it("não apaga a conta em painéis onde ela não existe", async () => {
-    state.createResponses = [{ Fail: "1004 already in use" }, { Success: true }];
+    state.createResponses = [{ Fail: "1004 already in use" }, { Success: "Account created successfully!" }];
     state.probeResponses = [
       { state: "found", detail: "" },   // remoção no painel preferido
       { state: "missing", detail: "" }, // conferência: login antigo sumiu
