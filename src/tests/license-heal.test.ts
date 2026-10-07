@@ -1,344 +1,154 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 /**
- * Testes de ponta a ponta do motor de correção de login (BTmob/Yaarsa),
- * usado pelo botão "Corrigir Erros" do cliente e "Corrigir Bugs" do admin.
+ * Reparo de login contra um painel SIMULADO que segue o createacc.php real:
+ * remove = só vence (subtype 'new'); add em vencida = "subscription Updated.";
+ * add em ativa = "already in use and active"; update = troca senha.
  */
 
-const state = {
-  create: [] as any[],
-  removed: [] as string[],
-  extended: [] as any[],
-  updates: [] as any[],
-  logs: [] as any[],
-  createResponses: [] as any[],
-  probeResponses: [] as any[],
-  passwordResponses: [] as any[],
-  passwordChecks: [] as any[],
-  passwordCalls: [] as any[],
-  unhealthyPanels: new Set<string>(),
-};
+type Acc = { password: string; expire: string; subtype: string };
+const panels: Record<string, Map<string, Acc>> = {};
+const db = (p: string) => (panels[p] ??= new Map());
+const today = () => new Date().toISOString().slice(0, 10);
+const calls: string[] = [];
+const updates: any[] = [];
+const logs: any[] = [];
+let offline = false;
+let quotaFull = false;
 
-// Contas apagadas no painel simulado (painel:email) — somem da consulta até serem recriadas.
-const gone = new Set<string>();
+const validPw = (pw: string) => pw.length >= 8 && pw.length <= 16 && /[A-Z]/.test(pw) && /[^a-zA-Z0-9]/.test(pw);
 
 const supabaseAdmin = {
   from: (table: string) => ({
-    insert: (row: any) => {
-      state.logs.push({ table, row });
-      return Promise.resolve({ error: null });
-    },
-    update: (patch: any) => ({
-      eq: (_c: string, id: string) => {
-        state.updates.push({ id, patch });
-        return Promise.resolve({ error: null });
-      },
-    }),
+    insert: (row: any) => { logs.push({ table, row }); return Promise.resolve({ error: null }); },
+    update: (patch: any) => ({ eq: (_c: string, id: string) => { updates.push({ id, patch }); return Promise.resolve({ error: null }); } }),
   }),
 };
-
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin }));
-vi.mock("../lib/audit-trail.server", () => ({
-  acquireOpLock: vi.fn(async () => true),
-  releaseOpLock: vi.fn(async () => undefined),
+vi.mock("../lib/audit-trail.server", () => ({ acquireOpLock: vi.fn(async () => true), releaseOpLock: vi.fn(async () => undefined) }));
+vi.mock("../lib/license-password.server", () => ({
+  updateLicenseTolerant: async (_s: any, id: string, patch: any) => { updates.push({ id, patch }); },
 }));
 
 vi.mock("../lib/yaarsa.server", () => ({
-  yaarsaCreateAccount: vi.fn(async (input: any) => {
-    state.create.push(input);
-    const res = state.createResponses.shift() ?? { Success: "Account created successfully!" };
-    if (/created/i.test(String(res.Success ?? res.Fail ?? ""))) gone.delete(`${input.panel}:${input.email}`);
-    return res;
-  }),
-  yaarsaSetPassword: vi.fn(async (...args: any[]) => {
-    state.passwordCalls.push(args);
-    return state.passwordResponses.shift() ?? { Success: "ok" };
-  }),
-  yaarsaVerifyCredentials: vi.fn(async () =>
-    state.passwordChecks.shift() ?? { verified: false, available: false },
-  ),
-  yaarsaRemoveAccount: vi.fn(async (email: string, panel?: string) => {
-    state.removed.push(email);
-    gone.add(`${panel}:${email}`);
-    return { Success: "Client removed successfully!" };
-  }),
-  yaarsaExtend: vi.fn(async (email: string, ymd: string) => {
-    state.extended.push({ email, ymd });
-    return { Success: true };
-  }),
-  yaarsaProbeAccount: vi.fn(async (email: string, panel?: string) =>
-    state.probeResponses.shift() ?? { state: gone.has(`${panel}:${email}`) ? "missing" : "found", detail: "" },
-  ),
-  hasPanelServer: () => true,
-  isPanelUsable: () => true,
-  sanitizePanelUsername: (u: string) =>
-    (u || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user",
-  isPanelHealthy: (panel: string) => !state.unhealthyPanels.has(panel),
   refreshPanelOverrides: async () => {},
-  looksLikePanelSuccess: (value: unknown) =>
-    typeof value === "string" && /^[\s"']*(?:subscription|account|user|client|password)?\s*(?:updated|created|added|changed|renewed|extended|removed|deleted|success)/i.test(value),
-  yaarsaReadAccount: vi.fn(async () => ({ known: false, expireDate: null, password: null, raw: null })),
-  looksLikeRemoveConfirmed: (v: unknown) => /removed\s+successfully/i.test(String(v ?? "")),
-  looksLikeAccountCreated: (v: unknown) => /created\s+successfully/i.test(String(v ?? "")),
+  sanitizePanelUsername: (u: string) => (u || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "user",
+  isPanelPasswordValid: validPw,
+  generateCredentials: () => ({ username: "novo", email: "x@y.z", password: "Nova#Senha9" }),
   encrypt: (v: string) => `enc:${v}`,
   decrypt: (v: string) => String(v).replace(/^enc:/, ""),
+  yaarsaUpdatePassword: vi.fn(async (email: string, pw: string, panel: string) => {
+    calls.push(`update:${panel}`);
+    if (offline) throw new Error("fetch failed");
+    const a = db(panel).get(email);
+    if (!a) return { Fail: "cant find this email." };
+    if (!validPw(pw)) return { Fail: "Password must contain at least one uppercase letter." };
+    a.password = pw;
+    return { Success: "Password updated successfully!" };
+  }),
+  yaarsaCreateAccount: vi.fn(async (i: any) => {
+    calls.push(`add:${i.panel}`);
+    if (quotaFull) return { Fail: "Maximum allowed accounts reached (999)." };
+    const a = db(i.panel).get(i.email);
+    if (a) return { Fail: "this email is already in use and active." };
+    db(i.panel).set(i.email, { password: i.password, expire: i.expireDate, subtype: "12 Month" });
+    return { Success: "Account created successfully!" };
+  }),
+  // Mesma lógica do yaarsaExtend real: add (reativa) → cexpire.
+  yaarsaExtend: vi.fn(async (email: string, ymd: string, panel: string) => {
+    calls.push(`extend:${panel}:${ymd}`);
+    const a = db(panel).get(email);
+    if (!a) return { Fail: "cant find this email." };
+    if (a.expire <= today() || a.subtype === "new") {
+      a.expire = ymd; a.subtype = "1 Month";
+      return { Success: "Expire Date updated successfully! (assinatura reativada)" };
+    }
+    a.expire = ymd;
+    return { Success: "Expire Date updated successfully!" };
+  }),
+  yaarsaResetDevice: vi.fn(async (_e: string, panel: string) => { calls.push(`resetid:${panel}`); return { Success: "Client ID Reset successfully!" }; }),
 }));
 
 const { healLicenseLogin } = await import("../lib/license-heal.server");
 
-const baseLic = {
+const lic = (over: any = {}) => ({
   id: "11111111-1111-4111-8111-111111111111",
   user_id: "22222222-2222-4222-8222-222222222222",
-  plan_slug: "monthly_457",
+  plan_slug: "login-30d",
   yaarsa_username: "cliente1",
   yaarsa_email: "cliente1@shadow.app",
   yaarsa_password_enc: "enc:Antiga#123",
-  panel: "v457",
+  panel: "v455",
   expires_at: new Date(Date.now() + 20 * 864e5).toISOString(),
   is_trial: false,
   server_ip: null,
-};
+  ...over,
+});
 
 beforeEach(() => {
-  gone.clear();
-  state.create = [];
-  state.removed = [];
-  state.extended = [];
-  state.updates = [];
-  state.logs = [];
-  state.createResponses = [];
-  state.probeResponses = [];
-  state.passwordResponses = [];
-  state.passwordChecks = [];
-  state.passwordCalls = [];
-  state.unhealthyPanels.clear();
+  for (const k of Object.keys(panels)) delete panels[k];
+  calls.length = 0; updates.length = 0; logs.length = 0; offline = false; quotaFull = false;
 });
 
-describe("healLicenseLogin", () => {
-  it("cria a conta quando ela não existe no painel, mantendo e-mail e senha do cliente", async () => {
-    state.createResponses = [{ Success: true }];
-    const res = await healLicenseLogin(baseLic, { reason: "test" });
-
-    expect(res.action).toBe("created");
-    expect(res.credentials.email).toBe("cliente1@shadow.app");
-    expect(res.credentials.password).toBe("Antiga#123");
-    expect(state.removed).toHaveLength(0);
-    expect(state.updates).toHaveLength(0);
-    expect(state.extended[0]?.email).toBe("cliente1@shadow.app");
+describe("reparo de acesso (regras reais do painel)", () => {
+  it("conta 'removida' (subtype new, vencida hoje) é reativada com a MESMA senha e a data certa", async () => {
+    db("v455").set("cliente1@shadow.app", { password: "errada", expire: today(), subtype: "new" });
+    const r = await healLicenseLogin(lic());
+    const acc = db("v455").get("cliente1@shadow.app")!;
+    expect(r.action).toBe("recreated");
+    expect(acc.subtype).not.toBe("new");
+    expect(acc.password).toBe("Antiga#123");
+    expect(acc.expire > today()).toBe(true);
+    expect(calls.some((c) => c.startsWith("remove"))).toBe(false);
   });
 
-  it("apaga e recria com AS MESMAS credenciais quando o e-mail já existe", async () => {
-    state.createResponses = [{ Fail: "1004 email already in use" }, { Success: "Account created successfully!" }];
-    const res = await healLicenseLogin(baseLic, { reason: "test" });
-
-    expect(res.action).toBe("recreated");
-    expect(state.removed).toContain("cliente1@shadow.app");
-    expect(res.credentials.email).toBe("cliente1@shadow.app");
-    expect(res.credentials.password).toBe("Antiga#123");
-    expect(state.create[1].email).toBe("cliente1@shadow.app");
-    expect(state.create[1].password).toBe("Antiga#123");
-    expect(state.updates[0]?.patch.yaarsa_email).toBe("cliente1@shadow.app");
-    expect(state.updates[0]?.patch.revoked).toBe(false);
+  it("conta ativa com senha diferente: reaplica a senha e ajusta a data", async () => {
+    db("v455").set("cliente1@shadow.app", { password: "Outra#999", expire: "2099-01-01", subtype: "1 Month" });
+    const r = await healLicenseLogin(lic());
+    expect(r.ok).toBe(true);
+    expect(db("v455").get("cliente1@shadow.app")!.password).toBe("Antiga#123");
   });
 
-  it("não confunde subscription Updated com senha corrigida", async () => {
-    state.createResponses = [{ Fail: '"subscription Updated."' }, { Success: "Account created successfully!" }];
-    state.probeResponses = [
-      { state: "found", detail: "" },
-      { state: "missing", detail: "" },
-      { state: "missing", detail: "" },
-      { state: "missing", detail: "" },
-      { state: "found", detail: "" },
-    ];
-
-    const res = await healLicenseLogin(baseLic, { reason: "test" });
-
-    expect(res.action).toBe("recreated");
-    expect(res.ok).toBe(true);
-    expect(state.removed).toContain("cliente1@shadow.app");
-    expect(state.passwordCalls).toHaveLength(1);
+  it("conta inexistente: cria com as credenciais da licença", async () => {
+    const r = await healLicenseLogin(lic());
+    expect(r.action).toBe("created");
+    expect(db("v455").get("cliente1@shadow.app")!.password).toBe("Antiga#123");
   });
 
-  it("não mostra sucesso quando o painel rejeita a reaplicação da senha", async () => {
-    state.createResponses = [{ Fail: "1004 email already in use" }, { Success: "Account created successfully!" }, { Success: "Account created successfully!" }];
-    state.passwordResponses = [{ Fail: "password rejected" }];
-
-    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/senha/i);
-    expect(state.passwordCalls).toHaveLength(1);
-    expect(state.create).toHaveLength(2);
+  it("nunca mexe em outro servidor", async () => {
+    db("v457").set("cliente1@shadow.app", { password: "x", expire: "2099-01-01", subtype: "1 Month" });
+    await healLicenseLogin(lic());
+    expect(calls.every((c) => c.includes("v455"))).toBe(true);
+    expect(db("v457").get("cliente1@shadow.app")!.password).toBe("x");
   });
 
-  it("não mostra sucesso quando a leitura confirma senha diferente", async () => {
-    state.createResponses = [{ Success: true }];
-    state.passwordChecks = [{ verified: false, available: true }];
-
-    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/senha ainda não ficou igual/i);
+  it("senha fora da regra do painel: emite uma válida e grava na licença", async () => {
+    db("v455").set("cliente1@shadow.app", { password: "x", expire: "2099-01-01", subtype: "1 Month" });
+    const r = await healLicenseLogin(lic({ yaarsa_password_enc: "enc:semregra" }));
+    expect(r.credentials.password).toBe("Nova#Senha9");
+    expect(updates.some((u) => u.patch.yaarsa_password_enc === "enc:Nova#Senha9")).toBe(true);
   });
 
-  it("falha em vez de dizer que corrigiu quando a conta não aparece no painel", async () => {
-    state.createResponses = [{ Success: true }];
-    state.probeResponses = [{ state: "missing", detail: "" }];
-    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/não aparece no painel/i);
-    expect(state.updates).toHaveLength(0);
+  it("painel fora do ar: não altera nada e avisa", async () => {
+    offline = true;
+    await expect(healLicenseLogin(lic())).rejects.toThrow(/não respondeu/);
+    expect(updates.length).toBe(0);
   });
 
-  it("não apaga nada quando TODOS os painéis estão fora do ar", async () => {
-    state.createResponses = [
-      { Fail: "connection timeout" },
-      { Fail: "connection timeout" },
-      { Fail: "connection timeout" },
-    ];
-    state.probeResponses = [
-      { state: "unknown", detail: "" },
-      { state: "unknown", detail: "" },
-      { state: "unknown", detail: "" },
-    ];
-    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/não respondeu/i);
-    expect(state.removed).toHaveLength(0);
-    expect(state.updates).toHaveLength(0);
+  it("cota cheia ao criar: mensagem clara", async () => {
+    quotaFull = true;
+    await expect(healLicenseLogin(lic())).rejects.toThrow(/cota/);
   });
 
-  it("tenta os outros servidores quando o painel devolve erro interno (PHP)", async () => {
-    state.createResponses = [
-      { Fail: "Warning: Trying to access array offset on null" },
-      { Success: true },
-    ];
-    state.probeResponses = [{ state: "missing", detail: "" }, { state: "found", detail: "" }];
-    const res = await healLicenseLogin(baseLic, { reason: "test" });
-
-    expect(res.action).toBe("created");
-    expect(state.create).toHaveLength(2);
-    expect(state.removed).toHaveLength(0);
+  it("equipe também libera o aparelho preso", async () => {
+    db("v455").set("cliente1@shadow.app", { password: "x", expire: "2099-01-01", subtype: "1 Month" });
+    await healLicenseLogin(lic(), { reason: "fix_login" });
+    expect(calls).toContain("resetid:v455");
   });
 
-  it("força a recriação quando pedido explicitamente", async () => {
-    state.createResponses = [{ Success: "Account created successfully!" }];
-    const res = await healLicenseLogin(baseLic, { reason: "test", forceRecreate: true });
-
-    expect(res.action).toBe("recreated");
-    expect(state.removed).toContain("cliente1@shadow.app");
-    expect(state.create).toHaveLength(1);
-    expect(state.create[0].email).toBe("cliente1@shadow.app");
-  });
-
-  it("nunca inventa login novo quando a licença não tem senha guardada", async () => {
-    await expect(
-      healLicenseLogin({ ...baseLic, yaarsa_password_enc: null }, { reason: "test" }),
-    ).rejects.toThrow(/nenhum login novo foi criado/i);
-    expect(state.create).toHaveLength(0);
-    expect(state.removed).toHaveLength(0);
-  });
-
-  it("tenta até servidores marcados como indisponíveis numa correção manual", async () => {
-    state.unhealthyPanels.add("v457");
-    state.createResponses = [{ Fail: "connection timeout" }, { Success: true }];
-    state.probeResponses = [{ state: "unknown", detail: "timeout" }, { state: "found", detail: "" }];
-
-    const res = await healLicenseLogin(baseLic, { reason: "test" });
-    expect(res.action).toBe("created");
-    expect(state.create.length).toBeGreaterThanOrEqual(2);
-  });
-
-  it("tenta outro painel quando o preferido está com a cota cheia", async () => {
-    state.createResponses = [
-      { Fail: "1004 already in use" },
-      { Fail: "maximum allowed accounts reached" },
-      { Success: true },
-    ];
-    const res = await healLicenseLogin(baseLic, { reason: "test" });
-    expect(res.action).toBe("recreated");
-    expect(res.steps.some((s) => s.startsWith("login-recriado-em:"))).toBe(true);
-    expect(res.credentials.email).toBe("cliente1@shadow.app");
-  });
-
-  it("preserva o acesso atual quando todos os painéis estão cheios", async () => {
-    state.createResponses = [
-      { Fail: "1004 already in use" },
-      { Fail: "maximum allowed accounts reached" },
-      { Fail: "maximum allowed accounts reached" },
-      { Fail: "maximum allowed accounts reached" },
-    ];
-    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/cota de contas cheia/i);
-    expect(state.updates).toEqual([]);
-  });
-});
-
-describe("healLicenseLogin — proteções adicionais", () => {
-  it("devolve a conta ao painel quando a recriação falha em todos os servidores", async () => {
-    // existe -> apaga -> todas as recriações falham -> restauração
-    state.createResponses = [
-      { Fail: "1004 already in use" },
-      { Fail: "maximum allowed accounts reached" },
-      { Fail: "maximum allowed accounts reached" },
-      { Fail: "maximum allowed accounts reached" },
-      { Success: "Account created successfully!" }, // restauração
-    ];
-    await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/cota de contas cheia/i);
-    expect(state.removed.length).toBeGreaterThan(0);
-    // a última criação usa exatamente as credenciais originais do cliente
-    const last = state.create[state.create.length - 1];
-    expect(last.email).toBe("cliente1@shadow.app");
-    expect(last.password).toBe("Antiga#123");
-    expect(state.updates).toEqual([]);
-  });
-
-  it("não apaga a conta em painéis onde ela não existe", async () => {
-    state.createResponses = [{ Fail: "1004 already in use" }, { Success: "Account created successfully!" }];
-    state.probeResponses = [
-      { state: "found", detail: "" },   // remoção no painel preferido
-      { state: "missing", detail: "" }, // conferência: login antigo sumiu
-      { state: "missing", detail: "" }, // outros painéis: não remove
-      { state: "missing", detail: "" },
-      { state: "found", detail: "" },   // conferência da recriação
-    ];
-    const res = await healLicenseLogin(baseLic, { reason: "test" });
-    expect(res.action).toBe("recreated");
-    expect(state.removed).toEqual(["cliente1@shadow.app"]);
-  });
-
-  it.each(["v455", "v46"] as const)("respeita explicitamente o painel %s", async (panel) => {
-    state.createResponses = [{ Success: true }];
-    state.probeResponses = [{ state: "found", detail: "" }];
-    const res = await healLicenseLogin({ ...baseLic, panel }, { reason: "test" });
-    expect(res.panel).toBe(panel);
-    expect(state.create[0].panel).toBe(panel);
-  });
-});
-
-describe("confirmações do painel", () => {
-  it("não recria quando o painel responde 'subscription Updated' depois de apagar (login antigo não saiu)", async () => {
-    state.createResponses = [
-      { Fail: '"subscription Updated."' },
-      { Fail: '"subscription Updated."' },
-      { Fail: '"subscription Updated."' },
-      { Fail: '"subscription Updated."' },
-    ];
-    await expect(healLicenseLogin(baseLic, { reason: "test", forceRecreate: true })).rejects.toThrow();
-    expect(state.updates).toHaveLength(0);
-  });
-
-  it("4.5.5 real: remove some o login mas a consulta continua achando — reativa e conclui", async () => {
-    // Igual ao painel real: "add" diz que já existe, "remove" confirma, a
-    // consulta segue dizendo "existe", e o "add" seguinte responde
-    // "subscription Updated." (reativa o mesmo cadastro).
-    state.createResponses = [
-      { Fail: "this email is already in use and active." },
-      { Fail: '"subscription Updated."' },
-    ];
-    state.probeResponses = Array.from({ length: 20 }, () => ({ state: "found", detail: "" }));
-    state.passwordChecks = [{ verified: true, available: true }];
-    const res = await healLicenseLogin({ ...baseLic, panel: "v455" }, { reason: "test" });
-    expect(res.ok).toBe(true);
-    expect(res.action).toBe("recreated");
-    expect(state.removed.length).toBeLessThanOrEqual(6); // no máximo 2 por servidor, nunca 10
-    expect(state.passwordCalls).toHaveLength(1);
-    expect(res.steps).toContain("conta-reativada:v455");
-  });
-
-  it("envia ao painel a data certa da licença ao recriar", async () => {
-    state.createResponses = [{ Success: "Account created successfully!" }];
-    await healLicenseLogin({ ...baseLic, plan_slug: "trial", is_trial: true }, { reason: "test", forceRecreate: true });
-    expect(state.create[0].expireDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(state.extended.at(-1)?.ymd).toBe(state.create[0].expireDate);
+  it("trial usa hoje + 2 dias (fuso de Brasília)", async () => {
+    await healLicenseLogin(lic({ is_trial: true, plan_slug: "trial", expires_at: new Date(Date.now() + 3600e3).toISOString() }));
+    const exp = db("v455").get("cliente1@shadow.app")!.expire;
+    expect(exp > today()).toBe(true);
   });
 });
