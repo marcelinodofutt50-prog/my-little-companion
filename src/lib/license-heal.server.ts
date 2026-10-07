@@ -469,7 +469,12 @@ async function runHeal(
     steps.push(`criacao-resposta-${candidate}:${String(fresh.Success ?? fresh.Fail ?? "vazia").replace(/["']/g, "").slice(0, 60)}`);
     const saysExists = EXISTS_RE.test(String(fresh.Fail ?? ""));
     const wasRemovedHere = removedFrom.includes(candidate);
-    const createdNew = looksLikeAccountCreated(fresh.Success ?? fresh.Fail);
+    // No painel que só desativa ao remover, "subscription Updated" = cadastro
+    // reativado. A senha ainda é reaplicada e conferida logo abaixo.
+    const reactivated =
+      softRemoved.has(candidate) && /subscription\s*updated/i.test(String(fresh.Success ?? fresh.Fail ?? ""));
+    if (reactivated) steps.push(`conta-reativada:${candidate}`);
+    const createdNew = looksLikeAccountCreated(fresh.Success ?? fresh.Fail) || reactivated;
     if (wasRemovedHere && !createdNew) {
       // Apagamos aqui: só aceitamos "Account created successfully!". "Já existe"
       // ou "subscription Updated" provam que o login antigo NÃO saiu.
