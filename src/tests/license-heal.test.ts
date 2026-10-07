@@ -271,7 +271,7 @@ describe("healLicenseLogin — proteções adicionais", () => {
       { Fail: "maximum allowed accounts reached" },
       { Fail: "maximum allowed accounts reached" },
       { Fail: "maximum allowed accounts reached" },
-      { Success: true }, // restauração
+      { Success: "Account created successfully!" }, // restauração
     ];
     await expect(healLicenseLogin(baseLic, { reason: "test" })).rejects.toThrow(/cota de contas cheia/i);
     expect(state.removed.length).toBeGreaterThan(0);
