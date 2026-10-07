@@ -535,13 +535,17 @@ export async function yaarsaRemoveAccount(
  * Regras do painel (createacc.php real):
  * - `remove` não apaga: marca subtype='new' e Expire=hoje (conta vencida).
  * - `cexpire` só troca a data; NÃO tira o subtype 'new' — a conta continua
- *   escondida/desativada mesmo com data nova.
+ *   escondida no painel e o BTmob responde "Your subscription has expired"
+ *   mesmo com data futura.
  * - `add` num e-mail existente e VENCIDO grava Expire + subtype e responde
- *   "subscription Updated." (não mexe na senha). Num e-mail ATIVO responde
- *   "already in use and active". Num e-mail inexistente sem senha válida
- *   recusa pela regra de senha — nunca cria conta aqui.
- * Por isso: datas futuras passam primeiro por `add` (reativa) e, se a conta
- * estiver ativa, caem no `cexpire` normal.
+ *   "subscription Updated." (não mexe na senha). Num e-mail com data FUTURA
+ *   responde "already in use and active" — mesmo que o subtype seja 'new'.
+ *
+ * Por isso, quando o painel diz "already in use and active" não dá para saber
+ * se a conta está ativa de verdade ou presa como 'new' com data futura (era o
+ * que acontecia depois de um "remove" seguido de "cexpire"). A única forma
+ * garantida é renovar o status: `remove` (vence hoje) e, na sequência, `add`
+ * (reativa com subtype válido + data certa). A senha não é tocada.
  */
 export async function yaarsaExtend(
   email: string,
@@ -550,36 +554,85 @@ export async function yaarsaExtend(
 ): Promise<YaarsaResponse> {
   await refreshPanelOverrides();
   const adminkey = yaarsaAdminKey(panel);
-  const cexpire = () =>
-    yaarsaPost({ action: "cexpire", email, expire_date: newExpireDate, adminkey }, panel);
+  return extendWithPost((f) => yaarsaPost(f, panel), email, newExpireDate, adminkey);
+}
+
+const panelText = (r: any) => String(r?.Success ?? r?.Fail ?? "").replace(/["']/g, "").trim();
+
+/** Núcleo do `yaarsaExtend`, separado para ser testado contra um painel simulado. */
+export async function extendWithPost(
+  post: (fields: Record<string, string>) => Promise<YaarsaResponse>,
+  email: string,
+  newExpireDate: string,
+  adminkey: string,
+  opts?: { sleep?: (ms: number) => Promise<void> },
+): Promise<YaarsaResponse> {
+  const sleep = opts?.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const cexpire = () => post({ action: "cexpire", email, expire_date: newExpireDate, adminkey });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(newExpireDate) || newExpireDate <= spYmd(0)) return cexpire();
+
+  // Mesmo subtype das contas criadas pelo painel ("12 Month"); alguns painéis
+  // só aceitam "1 Month" nessa coluna.
+  const revive = async (): Promise<YaarsaResponse> => {
+    const base = { action: "add", email, username: "", password: "", adminkey, total_paid: "0", additional_info: "shadow-renew", expire_date: newExpireDate };
+    const r = await post({ ...base, subtype: "12 Month" });
+    return isSubtypeRejected(r.Fail) ? post({ ...base, subtype: "1 Month" }) : r;
+  };
+
+  let first: YaarsaResponse;
   try {
-    const revive = await yaarsaPost(
-      {
-        action: "add",
-        email,
-        username: "",
-        password: "",
-        adminkey,
-        subtype: "1 Month",
-        total_paid: "0",
-        additional_info: "shadow-renew",
-        expire_date: newExpireDate,
-      },
-      panel,
-    );
-    const txt = String(revive.Success ?? revive.Fail ?? "").replace(/["']/g, "");
-    if (/subscription\s*updated/i.test(txt)) {
-      return { Success: "Expire Date updated successfully! (assinatura reativada)" } as YaarsaResponse;
-    }
-    if (/account created/i.test(txt)) {
-      // Não deveria acontecer (senha vazia), mas registramos para a equipe.
-      console.warn("[yaarsaExtend] add criou conta inesperadamente", { panel });
-    }
+    first = await revive();
   } catch {
-    /* segue para o cexpire */
+    return cexpire();
   }
-  return cexpire();
+  if (/subscription\s*updated/i.test(panelText(first))) {
+    return { Success: "Expire Date updated successfully! (assinatura reativada)" } as YaarsaResponse;
+  }
+  if (/account created/i.test(panelText(first))) {
+    console.warn("[yaarsaExtend] add criou conta inesperadamente");
+    return cexpire();
+  }
+  if (!/already in use and active/i.test(panelText(first))) return cexpire();
+
+  // Conta com data futura: renova o status (remove → add) para garantir que
+  // não está presa como 'new'.
+  let rm: YaarsaResponse;
+  try {
+    rm = await post({ action: "remove", email, adminkey });
+  } catch {
+    return cexpire();
+  }
+  if (!looksLikeRemoveConfirmed(panelText(rm))) return cexpire();
+
+  let last: YaarsaResponse = { Fail: "sem resposta" };
+  for (let i = 0; i < 4; i++) {
+    try {
+      last = await revive();
+      if (/subscription\s*updated/i.test(panelText(last))) {
+        return { Success: "Expire Date updated successfully! (status renovado)" } as YaarsaResponse;
+      }
+    } catch (e: any) {
+      last = { Fail: String(e?.message ?? e) };
+    }
+    await sleep(600 * (i + 1));
+  }
+  return {
+    Fail: `O painel venceu a conta para renovar o status, mas não reativou (${panelText(last).slice(0, 80)}). Clique em Reparar acesso de novo.`,
+  } as YaarsaResponse;
+}
+
+/** Painel cujo endereço atual é este IP/host (o que o cliente digita no BTmob). */
+export function panelForHost(host: string | null | undefined): YaarsaPanel | null {
+  const h = String(host ?? "").trim().toLowerCase();
+  if (!h) return null;
+  // Painéis com VPS própria primeiro: a 4.5.5 sem VPS cai no mesmo host da 4.5.7.
+  const ordered = [...ALL_PANELS].sort((a, b) => Number(hasPanelServer(b)) - Number(hasPanelServer(a)));
+  for (const p of ordered) {
+    try {
+      if (isPanelUsable(p) && panelServerHost(p).toLowerCase() === h) return p;
+    } catch { /* painel sem configuração */ }
+  }
+  return null;
 }
 
 /** Troca a senha (ação `update`). Sucesso real: "Password updated successfully!". */

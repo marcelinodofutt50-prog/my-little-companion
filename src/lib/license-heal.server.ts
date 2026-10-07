@@ -119,8 +119,29 @@ async function runHeal(
   const y = await import("./yaarsa.server");
   try { await y.refreshPanelOverrides(); } catch { /* segue com o ambiente */ }
 
-  const panel = normalizePanel(lic.panel);
+  let panel = normalizePanel(lic.panel);
   if (lic.panel && lic.panel !== panel) steps.push(`painel-desconhecido:${lic.panel}`);
+  // O cliente entra no BTmob pelo IP que aparece na licença. Se esse IP é de
+  // outro servidor, é LÁ que o login precisa funcionar (havia licenças
+  // vitalícias marcadas como 4.5.5 mostrando o IP da 4.6). Trials sempre foram
+  // criados no servidor da licença, então para eles só corrigimos o IP.
+  if (!lic.is_trial && lic.server_ip) {
+    let ipPanel: ReturnType<typeof y.panelForHost> = null;
+    try { ipPanel = y.panelForHost(lic.server_ip); } catch { ipPanel = null; }
+    if (ipPanel && ipPanel !== panel) {
+      steps.push(`servidor-pelo-ip:${panel}->${ipPanel}`);
+      panel = ipPanel;
+    }
+  }
+  let serverIp: string | null = lic.server_ip ?? null;
+  try {
+    const host = typeof y.panelServerHost === "function" ? y.panelServerHost(panel) : null;
+    if (host && host !== serverIp) {
+      steps.push(`ip-corrigido:${serverIp ?? "vazio"}->${host}`);
+      serverIp = host;
+    }
+  } catch { /* mantém o IP gravado */ }
+  const ipChanged = serverIp !== (lic.server_ip ?? null) && !!lic.server_ip;
   const txt = (r: any) => String(r?.Success ?? r?.Fail ?? "").replace(/["']/g, "").trim();
 
   const targetYmd = panelExpireDateFor({
@@ -205,7 +226,7 @@ async function runHeal(
         `A senha foi reaplicada, mas o servidor ${panel} não confirmou a validade ${targetYmd} (${txt(ext).slice(0, 80) || "sem resposta"}). Tente de novo em alguns minutos.`,
       );
     }
-    if (/reativada/i.test(txt(ext))) { steps.push("conta-reativada"); action = "recreated"; }
+    if (/reativada|status renovado/i.test(txt(ext))) { steps.push("conta-reativada"); action = "recreated"; }
     // 3) Reaplica a senha depois da reativação — nada pode sobrescrevê-la.
     upd = await call("senha-final", () => y.yaarsaUpdatePassword(email, password!, panel));
     if (!/password updated/i.test(txt(upd))) {
@@ -225,6 +246,7 @@ async function runHeal(
     yaarsa_username: username,
     ...(passwordChanged ? { yaarsa_password_enc: y.encrypt(password) } : {}),
     panel,
+    ...(serverIp ? { server_ip: serverIp } : {}),
     revoked: false,
   });
   steps.push("licenca-atualizada");
@@ -240,8 +262,8 @@ async function runHeal(
     ok: true,
     action,
     panel,
-    credentials: { username, email, password, server_ip: lic.server_ip ?? null },
-    message: `${base} Senha confirmada e validade ajustada para ${targetYmd.split("-").reverse().join("/")}.${passwordChanged ? " ATENÇÃO: a senha mudou — use a que aparece agora em Licenças." : " Use o mesmo e-mail e senha no BTmob."}`,
+    credentials: { username, email, password, server_ip: serverIp },
+    message: `${base} Senha confirmada e validade ajustada para ${targetYmd.split("-").reverse().join("/")}.${passwordChanged ? " ATENÇÃO: a senha mudou — use a que aparece agora em Licenças." : " Use o mesmo e-mail e senha no BTmob."}${ipChanged ? ` ATENÇÃO: o servidor certo é ${serverIp} — use esse IP no BTmob.` : ""}`,
     steps,
   };
 }
