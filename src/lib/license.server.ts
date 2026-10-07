@@ -172,9 +172,11 @@ export async function internalGenerateTrial(
   // Antes ficava o padrão do banco (servidor 4.5.7) enquanto a conta nascia na
   // 4.5.5 — o BTmob dizia que a licença não existia.
   const finalPanel = (usedPanel || trialPanel || "v455") as any;
-  const { resolvePanelServerHost } = await import("./yaarsa.server");
   let trialServerIp: string | null = null;
-  try { trialServerIp = await resolvePanelServerHost(finalPanel); } catch { trialServerIp = null; }
+  try {
+    const { resolvePanelServerHost } = await import("./yaarsa.server");
+    trialServerIp = await resolvePanelServerHost(finalPanel);
+  } catch { trialServerIp = null; }
 
   const licPayload: any = {
     user_id: userId,
