@@ -98,9 +98,14 @@ function SuccessPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-lg px-4 py-14">
+        {celebrating && <PaymentCelebration onDone={() => setCelebrating(false)} />}
         <div className="terminal-card rgb-border scanlines relative p-8">
           {license ? (
-            <>
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", damping: 18, stiffness: 160, delay: celebrating ? 1.4 : 0 }}
+            >
               <CheckCircle2 className="mx-auto h-14 w-14 text-neon" />
               <h1 className="mt-3 text-center font-mono text-2xl font-bold text-neon">Licença gerada!</h1>
               <p className="mt-1 text-center text-sm text-muted-foreground">Guarde estes dados. Eles também ficam no seu painel.</p>
