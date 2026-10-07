@@ -542,7 +542,7 @@ function Index() {
       {/* Footer / Info Section */}
       <footer className="py-12 border-t border-border/20 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
             <div className="space-y-4">
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Ecossistema</h4>
               <ul className="space-y-2 text-xs font-mono">
@@ -554,22 +554,25 @@ function Index() {
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Ecossistema</h4>
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Plataforma</h4>
               <ul className="space-y-2 text-xs font-mono">
+                <li><Link to="/planos" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.plans')}</Link></li>
+                <li><Link to="/tutorial" className="text-muted-foreground hover:text-primary transition-colors">Tutorial</Link></li>
+                <li><Link to="/shadow-hub" search={{ page: 1, category: 'Tudo', search: '' }} className="text-muted-foreground hover:text-primary transition-colors">Shadow Hub</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Suporte</h4>
               <ul className="space-y-2 text-xs font-mono">
                 <li><Link to="/suporte" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.support')}</Link></li>
-                <li><Link to="/shadow-hub" search={{ page: 1, category: 'Tudo', search: '' }} className="text-muted-foreground hover:text-primary transition-colors">Shadow Hub</Link></li>
+                <li><Link to="/contato" className="text-muted-foreground hover:text-primary transition-colors">Contato</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Legal</h4>
               <ul className="space-y-2 text-xs font-mono">
-                <li><Link to="/termos" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.home')}</Link></li>
-                <li><Link to="/privacidade" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.home')}</Link></li>
+                <li><Link to="/termos" className="text-muted-foreground hover:text-primary transition-colors">Termos de Uso</Link></li>
+                <li><Link to="/privacidade" className="text-muted-foreground hover:text-primary transition-colors">Privacidade</Link></li>
               </ul>
             </div>
             <div className="space-y-4 text-right">
