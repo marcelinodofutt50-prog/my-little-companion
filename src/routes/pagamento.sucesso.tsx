@@ -64,6 +64,10 @@ function SuccessPage() {
         if (r.order) setStatus(r.order.status);
         if (r.license) {
           setLicense(r.license as License);
+          if (!celebrated.current) {
+            celebrated.current = true;
+            setCelebrating(true);
+          }
           return; // stop polling
         }
       } catch { /* transient network */ }
