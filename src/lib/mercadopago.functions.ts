@@ -55,8 +55,27 @@ export const createMercadoPagoCheckout = createServerFn({ method: "POST" })
         .update({ mp_preference_id: pref.preferenceId } as any)
         .eq("id", order.id);
 
+      await logCheckoutStep(order, "mp_link_created", "success", null);
       return { url: pref.initPoint };
     } catch (error) {
-      return { error: (error as Error)?.message ?? "Não foi possível abrir o Mercado Pago." };
+      const msg = (error as Error)?.message ?? "Não foi possível abrir o Mercado Pago.";
+      await logCheckoutStep(order, "mp_link_failed", "error", msg);
+      return { error: msg };
     }
   });
+
+async function logCheckoutStep(order: any, action: string, outcome: string, error: string | null) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("integration_logs").insert({
+      source: "checkout",
+      action,
+      outcome,
+      error,
+      user_id: order?.user_id ?? null,
+      context: { order_id: order?.id, plan_slug: order?.plan_slug, amount: order?.amount },
+    } as never);
+  } catch {
+    /* telemetria nunca bloqueia o pagamento */
+  }
+}
