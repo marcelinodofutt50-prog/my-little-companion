@@ -113,14 +113,20 @@ export const signTutorialMedia = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const path = data.path.replace(/^\/+/, "");
+    // Só caminhos simples (sem "..", vírgulas ou parênteses que alterariam o filtro).
+    if (!/^[A-Za-z0-9._\-\/]+$/.test(path) || path.includes("..")) {
+      return { url: null as string | null };
+    }
 
-    const { data: owner } = await supabaseAdmin
+    const { data: rows } = await supabaseAdmin
       .from("tutorials")
-      .select("id")
+      .select("video_url, image_url")
       .eq("is_active", true)
-      .or(`video_url.ilike.%${path}%,image_url.ilike.%${path}%`)
-      .limit(1)
-      .maybeSingle();
+      .limit(500);
+    // O arquivo precisa ser EXATAMENTE a mídia de um tutorial ativo.
+    const matches = (u: string | null) =>
+      !!u && (u === path || u.endsWith("/" + path) || u.split("?")[0].endsWith("/" + path));
+    const owner = (rows ?? []).find((r: any) => matches(r.video_url) || matches(r.image_url));
 
     if (!owner) return { url: null as string | null };
 
