@@ -609,25 +609,40 @@ function DashboardPage() {
                       />
                     </div>
                   ) : (<>
-                  <div className="lg:col-span-2 flex flex-wrap items-center gap-2" role="tablist" aria-label="Suas licenças">
-                    {tabLicenses.map((l: any) => {
+                  <div className="lg:col-span-2 space-y-2" aria-label="Suas licenças">
+                    {visibleLicenses.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Você removeu todos os logins antigos do painel. Nenhuma licença ativa no momento.</p>
+                    )}
+                    {visibleLicenses.map((l: any) => {
                       const s = licenseExpiryState(l, serverNow)
-                      const on = l.id === currentTabId
+                      const open = isLicenseOpen(l.id)
+                      const summary = s.paused
+                        ? 'Pausada'
+                        : s.active
+                          ? (s.daysLeft !== null ? `${Math.max(0, s.daysLeft)} dia${s.daysLeft === 1 ? '' : 's'} restantes` : 'Vitalícia')
+                          : 'Inativa'
                       return (
                         <button
                           key={l.id}
                           type="button"
-                          role="tab"
-                          aria-selected={on}
-                          onClick={() => setSelectedLicenseId(l.id)}
+                          aria-expanded={open}
+                          onClick={() => toggleLicenseOpen(l.id)}
                           className={cn(
-                            "flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-medium transition-colors",
-                            on ? "border-primary/60 bg-primary/10 text-foreground" : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                            "flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2.5 text-left text-xs transition-colors",
+                            open ? "border-primary/60 bg-primary/10" : "border-border/60 bg-background/40 hover:border-primary/40",
                           )}
                         >
-                          <span className={cn("h-2 w-2 rounded-full", s.active ? "bg-primary" : s.paused ? "bg-amber-500" : "bg-destructive")} />
-                          {planLabel(l.plan_slug, l.is_trial)}
+                          <span className={cn("h-2 w-2 shrink-0 rounded-full", s.active ? "bg-primary" : s.paused ? "bg-amber-500" : "bg-destructive")} />
+                          <span className="font-semibold text-foreground">{planLabel(l.plan_slug, l.is_trial)}</span>
+                          <span className="truncate font-mono text-[11px] text-muted-foreground">{l.yaarsa_email}</span>
+                          <span className={cn(
+                            "ml-auto font-mono text-[10px] uppercase tracking-wider",
+                            s.paused ? "text-amber-500" : s.active ? "text-primary" : "text-destructive",
+                          )}>
+                            {summary}
+                          </span>
                           {l.hidden_by_user_at && <span className="text-[10px] text-muted-foreground">(removido)</span>}
+                          <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
                         </button>
                       )
                     })}
@@ -635,16 +650,13 @@ function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => setShowHidden((v) => !v)}
-                        className="ml-auto text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                        className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                       >
                         {showHidden ? 'Esconder logins removidos' : `Mostrar ${hiddenCount} login${hiddenCount > 1 ? 's' : ''} removido${hiddenCount > 1 ? 's' : ''}`}
                       </button>
                     )}
                   </div>
-                  {tabLicenses.length === 0 && (
-                    <p className="lg:col-span-2 text-sm text-muted-foreground">Você removeu todos os logins antigos do painel. Nenhuma licença ativa no momento.</p>
-                  )}
-                  {tabLicenses.filter((l: any) => l.id === currentTabId).map((license: any) => {
+                  {visibleLicenses.filter((l: any) => isLicenseOpen(l.id)).map((license: any) => {
                     const active = isLicenseActive(license)
                     const licenseDownloads = active ? downloadsForLicense(license) : []
                     const state = licenseExpiryState(license, serverNow)
