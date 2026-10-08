@@ -156,15 +156,15 @@ export function AdminSupportPanel() {
     }
   };
 
-  const loadThreads = async () => {
-    setLoading(true);
+  const loadThreads = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const data: any = await listFn({ data: { filter } });
       setThreads(data);
     } catch (e: any) {
-      toast.error("Erro ao listar tickets");
+      if (!silent) toast.error("Erro ao listar tickets");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -173,10 +173,18 @@ export function AdminSupportPanel() {
     try { requestNotifyPermission(); } catch {}
     supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
 
+    // Vários eventos em sequência (mensagem + atualização do ticket) viram UMA
+    // recarga silenciosa — antes cada evento refazia a lista inteira e piscava.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleReload = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => { timer = null; void loadThreads(true); }, 900);
+    };
+
     const ch = supabase.channel("admin-chat-updates")
-      .on("postgres_changes", { event: "*", schema: "public", table: "support_threads" }, () => loadThreads())
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_threads" }, () => scheduleReload())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, (payload: any) => {
-        loadThreads();
+        scheduleReload();
         const m = payload?.new;
         if (m && !m.is_admin && !m.is_system) {
           const preview = String(m.body ?? m.content ?? "Nova mensagem").slice(0, 80);
@@ -186,9 +194,18 @@ export function AdminSupportPanel() {
         }
       })
       .subscribe();
-      
-    return () => { supabase.removeChannel(ch); };
+
+    return () => { if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
   }, [filter]);
+
+  // Contador de não lidas no título da aba do navegador.
+  const unreadTotal = threads.reduce((n, t) => n + (Number(t.unread_by_staff || 0) > 0 ? 1 : 0), 0);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const base = document.title.replace(/^\(\d+\)\s*/, "");
+    document.title = unreadTotal > 0 ? `(${unreadTotal}) ${base}` : base;
+    return () => { document.title = document.title.replace(/^\(\d+\)\s*/, ""); };
+  }, [unreadTotal]);
 
   const filteredThreads = useMemo(() => {
     const rank: Record<string, number> = { critica: 0, alta: 1, normal: 2 };
