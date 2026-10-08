@@ -278,10 +278,11 @@ function DashboardPage() {
   const currentLicense = activeLicense || pausedLicense
   const expiry = currentLicense ? licenseExpiryState(currentLicense, serverNow) : null
 
-  // Abas por licença: uma licença por vez, ativas primeiro. Logins mortos
-  // removidos pelo cliente ficam escondidos (nada é apagado do banco).
+  // Resumo de licenças em tela única: todas as licenças aparecem em lista
+  // (ativas primeiro) e cada linha expande os detalhes embaixo dela.
+  // Logins mortos removidos pelo cliente ficam escondidos (nada é apagado).
   const hideFn = useServerFn(setMyLicenseHidden)
-  const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null)
+  const [openLicenseIds, setOpenLicenseIds] = useState<Record<string, boolean>>({})
   const [showHidden, setShowHidden] = useState(false)
   const [hidingId, setHidingId] = useState<string | null>(null)
   const allLicenses = ((licenses ?? []) as any[])
@@ -290,10 +291,14 @@ function DashboardPage() {
     const s = licenseExpiryState(l, serverNow)
     return s.active ? 0 : s.paused ? 1 : 2
   }
-  const tabLicenses = allLicenses
+  const visibleLicenses = allLicenses
     .filter((l) => showHidden || !l.hidden_by_user_at)
     .sort((a, b) => licenseRank(a) - licenseRank(b))
-  const currentTabId = tabLicenses.some((l) => l.id === selectedLicenseId) ? selectedLicenseId : tabLicenses[0]?.id ?? null
+  // Uma única licença visível já abre expandida; com várias, tudo começa
+  // recolhido para o resumo caber numa tela só.
+  const isLicenseOpen = (id: string) => openLicenseIds[id] ?? visibleLicenses.length === 1
+  const toggleLicenseOpen = (id: string) =>
+    setOpenLicenseIds((prev) => ({ ...prev, [id]: !(prev[id] ?? visibleLicenses.length === 1) }))
   const toggleHidden = async (license: any, hidden: boolean) => {
     setHidingId(license.id)
     try {
