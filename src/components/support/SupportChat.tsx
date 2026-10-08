@@ -417,6 +417,20 @@ export function SupportChat({
   const [dragActive, setDragActive] = useState(false);
   const [connection, setConnection] = useState<"live" | "reconnecting">("live");
   const [senders, setSenders] = useState<Record<string, SenderInfo>>({});
+  // "Digitando…" em tempo real (broadcast, sem gravar nada no banco).
+  const [peerTyping, setPeerTyping] = useState<string | null>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentRef = useRef(0);
+  const lastResyncRef = useRef(0);
+  const notifyTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 2500) return;
+    lastTypingSentRef.current = now;
+    void channelRef.current
+      ?.send({ type: "broadcast", event: "typing", payload: { uid: userId, admin: isAdmin } })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     atBottomRef.current = atBottom;
@@ -534,6 +548,7 @@ export function SupportChat({
             void loadMessages();
           }
           if (next.sender_id !== userId) {
+            setPeerTyping(null);
             markSeen();
             playNotifyDing();
             onNewMessage?.();
@@ -563,6 +578,13 @@ export function SupportChat({
           setMsgs((prev) => prev.map((m) => (m.id === upd.id ? { ...m, read_at: upd.read_at } : m)));
         },
       )
+      .on("broadcast", { event: "typing" }, ({ payload }: any) => {
+        // Só mostra o "digitando" do outro lado (cliente vê equipe, equipe vê cliente).
+        if (!payload || payload.uid === userId || !!payload.admin === isAdmin) return;
+        setPeerTyping(payload.admin ? "Atendente" : (customerName || "Cliente"));
+        if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => setPeerTyping(null), 4000);
+      })
       .subscribe((status) => {
         setConnection(status === "SUBSCRIBED" ? "live" : "reconnecting");
         if (status !== "SUBSCRIBED") return;
@@ -570,12 +592,18 @@ export function SupportChat({
         if (subscribedOnce) void loadMessages();
         subscribedOnce = true;
       });
+    channelRef.current = ch;
+    setPeerTyping(null);
 
     // Rede/aba voltando: reconciliar a conversa.
     // Ao voltar para a aba, recarrega e marca como visto o que chegou enquanto
     // ela estava escondida (antes ficava "Não visto" para sempre).
     const resync = () => {
       if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      // focus + visibilitychange disparam juntos: evita consultas repetidas.
+      if (now - lastResyncRef.current < 3000) return;
+      lastResyncRef.current = now;
       void loadMessages();
       markSeen();
     };
@@ -587,6 +615,8 @@ export function SupportChat({
       document.removeEventListener("visibilitychange", resync);
       window.removeEventListener("online", resync);
       window.removeEventListener("focus", resync);
+      channelRef.current = null;
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       supabase.removeChannel(ch);
     };
   }, [threadId, userId]);
@@ -1048,6 +1078,16 @@ export function SupportChat({
             )}
           </div>
         ))}
+        {peerTyping && (
+          <div className="flex items-center gap-2 px-1 py-1 animate-in fade-in duration-200" aria-live="polite">
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border/50 bg-muted/40 px-3 py-2">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+            </div>
+            <span className="text-[11px] text-muted-foreground">{peerTyping} está digitando…</span>
+          </div>
+        )}
       </div>
 
       {(!atBottom || unseen > 0) && (
@@ -1157,7 +1197,7 @@ export function SupportChat({
             ref={textRef}
             value={body}
             maxLength={MAX_BODY}
-            onChange={(e) => setBody(e.target.value.slice(0, MAX_BODY))}
+            onChange={(e) => { setBody(e.target.value.slice(0, MAX_BODY)); notifyTyping(); }}
             onPaste={(e) => {
               const file = Array.from(e.clipboardData?.files ?? [])[0];
               if (file) {
