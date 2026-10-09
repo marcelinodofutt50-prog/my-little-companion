@@ -50,6 +50,7 @@ export function SiteHeader() {
 
   const primary = [
     { to: "/planos", label: t("nav.plans") },
+    { to: "/vps", label: "VPS" },
     { to: "/tutoriais", label: t("nav.tutorial") },
     { to: "/mercado", label: t("nav.market") },
     
