@@ -175,6 +175,30 @@ function ReferralsPage() {
                   <TabsContent value="overview" className="space-y-6 mt-6">
                     <Card className="bg-card border-l-4 border-l-primary shadow-lg">
                       <CardHeader>
+                        <CardTitle className="text-sm font-mono uppercase tracking-widest">Recompensas por compra</CardTitle>
+                        <CardDescription>3 dias para você e 1 dia de boas-vindas para quem compra pelo seu código, após confirmação e ativação.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {!data?.purchaseRewards?.length ? (
+                          <p className="text-sm text-muted-foreground">Suas recompensas por compra aparecerão aqui.</p>
+                        ) : data.purchaseRewards.map((reward: any) => (
+                          <div key={reward.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+                            <div>
+                              <p className="font-semibold">{reward.role === "referrer" ? "Recompensa do indicador" : "Bônus de boas-vindas"}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(reward.createdAt).toLocaleDateString("pt-BR")} · Pedido {String(reward.orderId).slice(0, 8)}</p>
+                              {reward.note && <p className="text-xs text-muted-foreground">{reward.note === "panel-sync-pending" ? "Sincronização do acesso pendente" : "Aguardando validação"}</p>}
+                            </div>
+                            <div className="text-right">
+                              <Badge variant={reward.status === "granted" ? "default" : "outline"}>{reward.status === "granted" ? "Liberado" : reward.status === "skipped" ? "Não aplicável" : "Pendente"}</Badge>
+                              <p className="mt-1 font-bold text-primary">+{reward.days} {reward.days === 1 ? "dia" : "dias"}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-card border-l-4 border-l-primary shadow-lg">
+                      <CardHeader>
                         <CardTitle className="text-sm font-mono uppercase tracking-widest">{t('ref.code_label')}</CardTitle>
                         <CardDescription>Compartilhe seu código para ganhar pontos e subir de nível.</CardDescription>
                       </CardHeader>
