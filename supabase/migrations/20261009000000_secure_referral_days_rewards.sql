@@ -58,6 +58,15 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'not-first-paid-order');
   end if;
 
+  -- Signup-time attribution is authoritative. Never grant if an old or
+  -- inconsistent referral row points to a different person.
+  if exists (
+    select 1 from public.referrals r
+    where r.referred_id = v_order.user_id and r.referrer_id <> v_order.referrer_id
+  ) then
+    return jsonb_build_object('ok', false, 'reason', 'attribution-mismatch');
+  end if;
+
   select * into v_grant from public.referral_reward_grants where order_id = p_order_id for update;
   if not found then
     insert into public.referral_reward_grants(order_id, referrer_id, referred_id, reward_days, status)
