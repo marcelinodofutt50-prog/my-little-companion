@@ -840,6 +840,16 @@ function DashboardPage() {
                         </div>
                     )
                   })}
+                    {hiddenCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowHidden((v) => !v)}
+                        className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                      >
+                        {showHidden ? 'Esconder logins removidos' : `Mostrar ${hiddenCount} login${hiddenCount > 1 ? 's' : ''} removido${hiddenCount > 1 ? 's' : ''}`}
+                      </button>
+                    )}
+                  </div>
                   </>)}
                   </div>
               </section>
