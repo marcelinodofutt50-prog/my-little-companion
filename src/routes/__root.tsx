@@ -355,13 +355,14 @@ function InnerRootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
-          <div className="sticky top-0 z-[60] w-full">
-            <AnnouncementsBanner />
-          </div>
-          <Outlet />
+          <MfaGate>
+            <div className="sticky top-0 z-[60] w-full">
+              <AnnouncementsBanner />
+            </div>
+            <Outlet />
+            <PaymentSuccessOverlay />
+          </MfaGate>
           <ThemedToaster />
-          <MfaGate />
-          <PaymentSuccessOverlay />
         </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>

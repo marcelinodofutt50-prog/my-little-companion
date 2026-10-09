@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { ShieldCheck } from "lucide-react";
  * Quando a conta tem verificação em duas etapas ligada e a sessão ainda não
  * passou pelo código, bloqueia a tela até o cliente digitar o código do app.
  */
-export function MfaGate() {
+export function MfaGate({ children }: { children?: ReactNode }) {
   const [need, setNeed] = useState(false);
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -42,7 +42,9 @@ export function MfaGate() {
     setCode(""); setNeed(false);
   }
 
-  if (!need) return null;
+  // Com 2FA pendente o conteúdo do site nem é montado; o banco também recusa
+  // qualquer leitura/gravação até o código ser confirmado.
+  if (!need) return <>{children}</>;
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 p-4 backdrop-blur">
       <div className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-card p-6 text-center">
