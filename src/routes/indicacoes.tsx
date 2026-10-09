@@ -82,6 +82,18 @@ function ReferralsPage() {
               </p>
             </div>
             
+            <Card className="mb-8 border-primary/30 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Gift className="h-5 w-5 text-primary" /> Indique e ganhe dias grátis
+                </CardTitle>
+                <CardDescription>
+                  Seu amigo recebe 1 dia extra de acesso ao concluir uma compra válida. Você ganha 3 dias extras após o pagamento ser confirmado e a licença ser ativada.
+                  As recompensas são processadas uma única vez por pedido e podem ficar pendentes se a licença precisar de sincronização.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
             <div className="mb-8">
               <Link to="/fidelidade">
                 <Button variant="outline" className="w-full border-primary/20 bg-primary/5 hover:bg-primary/10 group h-auto py-4">
@@ -182,14 +194,14 @@ function ReferralsPage() {
                               <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-tighter">Seu link de indicação único:</span>
                               <div className="flex items-center gap-2">
                                 <code className="flex-1 text-[10px] truncate bg-muted p-2 rounded border text-primary">
-                                  https://www.shadowdashstore.com/auth?ref={data.code}
+                                  https://www.shadowdashstore.com/planos?ref={data.code}
                                 </code>
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
                                   className="h-8 px-2"
                                   onClick={() => {
-                                    navigator.clipboard.writeText(`https://www.shadowdashstore.com/auth?ref=${data.code}`);
+                                    navigator.clipboard.writeText(`https://www.shadowdashstore.com/planos?ref=${data.code}`);
                                     toast.success("Link copiado!");
                                   }}
                                 >
