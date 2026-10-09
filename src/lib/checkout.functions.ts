@@ -135,14 +135,26 @@ export const createCheckout = createServerFn({ method: "POST" })
 
 
 
-    // Resolve referral code -> referrer_id (via admin client, needs cross-user lookup)
+    // The signup-time attribution is authoritative and cannot be replaced by
+    // a different code submitted later from the browser. A checkout code is only
+    // a fallback for legacy accounts that have never been attributed.
     let referrerId: string | null = null;
-    if (data.referralCode) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: buyerProfile } = await supabaseAdmin
+      .from("profiles").select("referred_by").eq("id", userId).maybeSingle();
+    if (buyerProfile?.referred_by && buyerProfile.referred_by !== userId) {
+      referrerId = buyerProfile.referred_by;
+    } else if (data.referralCode) {
       const code = data.referralCode.toUpperCase();
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: ref } = await supabaseAdmin
-        .from("profiles").select("id").eq("referral_code", code).maybeSingle();
-      if (ref && ref.id !== userId) referrerId = ref.id;
+      const { data: existingReferral } = await supabaseAdmin
+        .from("referrals").select("referrer_id").eq("referred_id", userId).maybeSingle();
+      if (existingReferral?.referrer_id && existingReferral.referrer_id !== userId) {
+        referrerId = existingReferral.referrer_id;
+      } else {
+        const { data: ref } = await supabaseAdmin
+          .from("profiles").select("id").eq("referral_code", code).maybeSingle();
+        if (ref && ref.id !== userId) referrerId = ref.id;
+      }
     }
 
     let cashbackUsed = 0;
