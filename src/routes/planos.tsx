@@ -3,7 +3,6 @@ import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
@@ -274,11 +273,11 @@ function PlansPage() {
   const autoCouponTried = useRef(false);
   const navigate = useNavigate();
 
-  const checkoutFn = useServerFn(createCheckout);
-  const validateFn = useServerFn(validateCoupon);
-  const cashbackFn = useServerFn(getMyCashbackBalance);
-  const legacyFn = useServerFn(getMyLegacyStatus);
-  const validateRefFn = useServerFn(validateReferralCode);
+  const checkoutFn = createCheckout;
+  const validateFn = validateCoupon;
+  const cashbackFn = getMyCashbackBalance;
+  const legacyFn = getMyLegacyStatus;
+  const validateRefFn = validateReferralCode;
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -424,7 +423,7 @@ function PlansPage() {
   const [showMore, setShowMore] = useState(false);
   const [checkingEligibility, setCheckingEligibility] = useState(false);
   const [myLicenses, setMyLicenses] = useState<any[]>([]);
-  const fetchMyLicenses = useServerFn(listMyLicenses);
+  const fetchMyLicenses = listMyLicenses;
 
   useEffect(() => {
     if (loggedIn) {
