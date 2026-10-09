@@ -601,64 +601,28 @@ Guarde essas informações. Você também pode consultá-las a qualquer momento 
 
 
   // ============ Referral reward ============
-  // Grant reward to the referrer if this is the referred user's FIRST paid order.
+  // Reward processing is idempotent and only runs after this order is marked paid.
+  // The database ledger prevents duplicate grants; panel expiry is synchronized
+  // to a stored absolute target date so webhook retries cannot add days twice.
   if (order.referrer_id && order.referrer_id !== order.user_id) {
     try {
-      const { count: paidBefore } = await supabaseAdmin.from("orders")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", order.user_id).eq("status", "paid").neq("id", order.id);
-      const { data: existingRef } = await supabaseAdmin
-        .from("referrals").select("id").eq("referred_id", order.user_id).maybeSingle();
-
-      if ((paidBefore ?? 0) === 0 && !existingRef) {
-        const { data: refProfile } = await supabaseAdmin
-          .from("profiles").select("referral_reward_pref, pix_key").eq("id", order.referrer_id).maybeSingle();
-        const pref = (refProfile?.referral_reward_pref as "cashback" | "free_month" | "pix") || "cashback";
-        const REWARD_AMOUNT = 150;
-        let status: "granted" | "pending" = "pending";
-        let notes: string | null = null;
-
-        if (pref === "cashback") {
-          await supabaseAdmin.from("cashback_ledger").insert({
-            user_id: order.referrer_id,
-            order_id: order.id,
-            amount: REWARD_AMOUNT,
-            reason: `Indicação — usuário ${order.user_id.slice(0, 8)}`,
-          });
-          status = "granted";
-        } else if (pref === "free_month") {
-          // Extend all active licenses by 30 days
-          const { data: licenses } = await supabaseAdmin
-            .from("licenses").select("id, expires_at")
-            .eq("user_id", order.referrer_id).eq("revoked", false);
-          for (const l of licenses ?? []) {
-            const base = l.expires_at ? new Date(l.expires_at) : new Date();
-            base.setDate(base.getDate() + 30);
-            await supabaseAdmin.from("licenses").update({ expires_at: base.toISOString() }).eq("id", l.id);
-          }
-          status = "granted";
-          notes = `Estendidas ${licenses?.length ?? 0} licença(s) em 30 dias`;
-        } else {
-          // pix — admin needs to pay manually
-          status = "pending";
-          notes = "Aguardando pagamento manual do PIX";
-        }
-
-        await supabaseAdmin.from("referrals").insert({
-          referrer_id: order.referrer_id,
-          referred_id: order.user_id,
-          order_id: order.id,
-          reward_type: pref,
-          reward_amount: REWARD_AMOUNT,
-          reward_status: status,
-          pix_key: pref === "pix" ? refProfile?.pix_key ?? null : null,
-          notes,
-        } as any);
-      }
-    } catch (e: any) {
+      const { grantReferralPurchaseReward } = await import("@/lib/referral-rewards.server");
+      const reward = await grantReferralPurchaseReward(supabaseAdmin, order.id);
       await supabaseAdmin.from("integration_logs").insert({
-        source: "referral", action: "grant_reward", outcome: "error",
-        error: e?.message ?? "unknown", context: { order_id: order.id, referrer_id: order.referrer_id } as any,
+        source: "referral",
+        action: "grant_reward",
+        outcome: reward.reason === "referral-reward-processed" ? "success" : "warning",
+        context: { order_id: order.id, referrer_id: order.referrer_id, reason: reward.reason } as any,
+      } as any);
+    } catch (e: any) {
+      // Payment stays fulfilled; the idempotent grant remains retryable on a
+      // duplicate webhook and the error is visible to operators.
+      await supabaseAdmin.from("integration_logs").insert({
+        source: "referral",
+        action: "grant_reward",
+        outcome: "error",
+        error: String(e?.message ?? "unknown").slice(0, 300),
+        context: { order_id: order.id, referrer_id: order.referrer_id } as any,
       } as any);
     }
   }
