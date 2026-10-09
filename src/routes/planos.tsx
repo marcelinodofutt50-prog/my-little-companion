@@ -1019,6 +1019,26 @@ function PlansPage() {
 
 
 
+        <section aria-labelledby="checkout-help-title" className="mb-12 mt-8 rounded-2xl border border-border/60 bg-card/50 p-5 md:p-7">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary">Compra sem surpresa</p>
+              <h2 id="checkout-help-title" className="mt-1 text-xl font-bold md:text-2xl">Como funciona o pagamento?</h2>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Confira o status do pedido e encontre ajuda caso o pagamento demore para confirmar.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/pagamento/pendente" className="rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-primary/50">Pagamento pendente</Link>
+              <Link to="/pagamento/sucesso" className="rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-primary/50">Pagamento aprovado</Link>
+              <Link to="/pagamento/erro" className="rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-primary/50">Problemas no pagamento</Link>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-border/50 p-4"><CreditCard className="mb-2 h-5 w-5 text-primary" /><h3 className="font-semibold">1. Finalize o checkout</h3><p className="mt-1 text-sm text-muted-foreground">Confira o plano, o valor final e as condições antes de confirmar.</p></div>
+            <div className="rounded-xl border border-border/50 p-4"><Clock className="mb-2 h-5 w-5 text-primary" /><h3 className="font-semibold">2. Aguarde a confirmação</h3><p className="mt-1 text-sm text-muted-foreground">Se aparecer como pendente, evite pagar novamente enquanto verifica o status.</p></div>
+            <div className="rounded-xl border border-border/50 p-4"><HeadphonesIcon className="mb-2 h-5 w-5 text-primary" /><h3 className="font-semibold">3. Precisa de ajuda?</h3><p className="mt-1 text-sm text-muted-foreground">Fale com o suporte e informe o identificador do pedido. Nunca envie sua senha.</p><Link to="/contato" className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline">Abrir central de suporte →</Link></div>
+          </div>
+        </section>
+
         {plans.length === 0 ? (
           <div className="mb-12 flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/30 bg-primary/5 p-12 text-center">
             <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary/40" />
