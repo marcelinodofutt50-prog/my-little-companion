@@ -141,15 +141,21 @@ async function grantOne(
     .eq("id", ledger.id).eq("status", "pending");
   if (finishError) return { ok: false, reason: "ledger-finalize-failed" };
 
-  await admin.from("referrals")
-    .update({ status: "converted", reward_status: "granted", reward_amount: reward.days } as any)
+  const { data: referralRow } = await admin.from("referrals")
+    .select("id")
     .eq("referrer_id", order.referrer_id)
-    .eq("referred_id", order.user_id);
-  await admin.from("referral_events").insert({
-    referral_id: (await admin.from("referrals").select("id").eq("referrer_id", order.referrer_id).eq("referred_id", order.user_id).maybeSingle()).data?.id ?? null,
-    event_type: "purchase_reward_granted",
-    metadata: { order_id: order.id, beneficiary_role: reward.role, days: reward.days },
-  } as any);
+    .eq("referred_id", order.user_id)
+    .maybeSingle();
+  if (referralRow?.id) {
+    await admin.from("referrals")
+      .update({ status: "converted", reward_status: "granted" } as any)
+      .eq("id", referralRow.id);
+    await admin.from("referral_events").insert({
+      referral_id: referralRow.id,
+      event_type: "purchase_reward_granted",
+      metadata: { order_id: order.id, beneficiary_role: reward.role, days: reward.days },
+    } as any);
+  }
   return { ok: true, days: reward.days, expiresAt: targetExpiry };
 }
 
