@@ -83,6 +83,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   staff: "view.staff",
   health: "view.system",
   servers: "system.selftest",
+  vps: "system.selftest",
   logs: "view.system",
   audit: "view.audit",
   apk: "view.apk",
