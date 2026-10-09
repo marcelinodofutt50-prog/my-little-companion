@@ -24,6 +24,7 @@ export const Route = createFileRoute("/auth")({
     error?: string;
     trial?: string;
     mode?: string;
+    ref?: string;
   } => ({
     next: typeof s.next === "string" ? s.next : undefined,
     code: typeof s.code === "string" ? s.code : undefined,
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/auth")({
     error: typeof s.error === "string" ? s.error : undefined,
     trial: typeof s.trial === "string" ? s.trial : undefined,
     mode: typeof s.mode === "string" ? s.mode : undefined,
+    ref: typeof s.ref === "string" && /^[A-Za-z0-9_-]{2,16}$/.test(s.ref) ? s.ref.toUpperCase() : undefined,
   }),
 
   head: () => ({
@@ -123,7 +125,7 @@ function formatTime(ts: number): string {
 
 function AuthPage() {
   const shadowMark = "/assets/shadow-mark-v8.png?v=v8-400";
-  const { next, code, type, trial } = Route.useSearch();
+  const { next, code, type, trial, ref } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
@@ -221,7 +223,7 @@ function AuthPage() {
       }
       if (data.user) {
         toast.success("E-mail confirmado! Redirecionando...");
-        navigate({ to: (next as any) || "/dashboard", search: {} as any });
+        navigate({ to: (next as any) || "/dashboard", search: { ref } as any });
       }
     }
     exchange();
@@ -400,7 +402,7 @@ function AuthPage() {
           const { error: fbSignIn } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
           if (fbSignIn) throw fbSignIn;
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
+          navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined, ref } as any });
 
 
 
