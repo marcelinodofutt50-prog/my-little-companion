@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, CircleCheck, TriangleAlert } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, CircleCheck, TriangleAlert, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -836,6 +836,8 @@ function DashboardPage() {
                           )}
                         </CardContent>
                       </Card>
+                        )}
+                        </div>
                     )
                   })}
                   </>)}
