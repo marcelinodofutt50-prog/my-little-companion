@@ -385,7 +385,7 @@ function PlansPage() {
   function clearReferral() { setReferral(""); setReferralValid(null); setReferralError(null); }
 
   const buy = useCallback(async (slug: string, couponOverride?: string, options?: { includeServer?: boolean, addSigner?: boolean }) => {
-    if (!loggedIn) { navigate({ to: "/auth", search: { next: "/planos" } as any }); return; }
+    if (!loggedIn) { navigate({ to: "/auth", search: { next: "/planos", ref: referral || undefined } as any }); return; }
     setLoadingPlan(slug);
     try {
       const r = await checkoutFn({ data: {
