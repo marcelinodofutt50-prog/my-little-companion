@@ -147,8 +147,13 @@ export const Route = createFileRoute("/api/public/payments/mercadopago")({
           await handlePayment(paymentId);
           return Response.json({ received: true });
         } catch (e: any) {
-          console.error("[MercadoPagoWebhook]", e);
-          await log(`erro: ${e?.message ?? String(e)}`, false);
+          // Do not persist provider/exception messages: they may expose internal details.
+          console.error("[MercadoPagoWebhook] Request failed");
+          try {
+            await log("webhook request failed (details redacted)", false);
+          } catch {
+            // Logging failure must not replace the generic webhook response.
+          }
           return new Response("Webhook error", { status: 400 });
         }
       },
