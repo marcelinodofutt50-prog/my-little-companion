@@ -27,6 +27,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { SupportDiagnosticButton } from '@/components/SupportDiagnosticButton'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 import { TrialActivationCard } from '@/components/TrialActivationCard'
+import { ExpiredTrialReferralOffer } from '@/components/ExpiredTrialReferralOffer'
 import { WelcomeProfileDialog } from '@/components/WelcomeProfileDialog'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
@@ -366,6 +367,13 @@ function DashboardPage() {
                 <span className="rounded-md border border-border/60 bg-card/90 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur-md">Menu</span>
               </div>
               <StaffDeskCard />
+              {!licensesLoading && !!user?.id && !currentLicense && allLicenses.some((license: any) => {
+                if (!license.is_trial || !license.expires_at) return false;
+                const state = licenseExpiryState(license, serverNow);
+                return !state.active && !state.paused && new Date(license.expires_at).getTime() <= serverNow;
+              }) && (
+                <ExpiredTrialReferralOffer userId={user.id} referralCode={(profile as any)?.referral_code} />
+              )}
               {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">
                   <TrialActivationCard onDone={() => void refetchLicenses()} />
