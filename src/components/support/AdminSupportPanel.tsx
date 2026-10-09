@@ -11,6 +11,7 @@ import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { categoryMeta, SUPPORT_CATEGORY_META, SupportCategory } from "@/lib/support-categories";
 import { 
   Search, 
+  RefreshCw,
   MessageSquare, 
   CheckCircle2, 
   Clock, 
@@ -255,6 +256,18 @@ export function AdminSupportPanel() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono uppercase tracking-widest text-neon">// Tickets</h2>
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => void loadThreads()}
+                disabled={loading}
+                className="h-7 w-7"
+                title="Atualizar lista de conversas"
+                aria-label="Atualizar lista de conversas"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              </Button>
               <Button
                 type="button"
                 size="sm"
