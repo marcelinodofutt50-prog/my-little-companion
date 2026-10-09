@@ -5,7 +5,6 @@ import { createClient } from '@supabase/supabase-js'
 import type { Database } from './types'
 
 
-
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
 }
@@ -32,7 +31,6 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
-    
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 
@@ -45,52 +43,42 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       console.error(`[SupabaseAuth] ${message}`);
       throw new Error(message);
     }
-    
+
     const request = getRequest();
 
     if (!request?.headers) {
-      console.error('[SupabaseAuth] Unauthorized: No request headers available');
-      throw new Error('Unauthorized: No request headers available');
+      console.warn('[SupabaseAuth] Unauthorized: request headers unavailable');
+      throw new Error('Unauthorized');
     }
 
     const authHeader = request.headers.get('authorization');
-    const allHeaders = Object.fromEntries(request.headers.entries());
-
     if (!authHeader) {
-      console.error('[SupabaseAuth] Unauthorized: No authorization header provided', { 
-        headers: allHeaders,
-        url: request.url,
-        method: request.method
+      // Never log request headers here: they may contain cookies or credentials.
+      console.warn('[SupabaseAuth] Unauthorized: authorization header missing', {
+        path: request.url ? new URL(request.url).pathname : undefined,
+        method: request.method,
       });
-      throw new Error('Unauthorized: No authorization header provided');
+      throw new Error('Unauthorized');
     }
 
-    if (!authHeader.startsWith('Bearer ')) {
-      console.error('[SupabaseAuth] Unauthorized: Only Bearer tokens are supported', { authHeader: authHeader.substring(0, 15) + '...' });
-      throw new Error('Unauthorized: Only Bearer tokens are supported');
+    const bearerMatch = /^Bearer\s+(.+)$/i.exec(authHeader);
+    if (!bearerMatch) {
+      console.warn('[SupabaseAuth] Unauthorized: unsupported authorization scheme');
+      throw new Error('Unauthorized');
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    if (!token) {
-      console.error('[SupabaseAuth] Unauthorized: No token provided');
-      throw new Error('Unauthorized: No token provided');
-    }
-
-    const tokenParts = token.split('.');
-    if (tokenParts.length !== 3) {
-      console.error('[SupabaseAuth] Unauthorized: Invalid token (not a JWT)', { 
-        partsCount: tokenParts.length,
-        tokenStart: token.substring(0, 10) + '...'
-      });
-      throw new Error('Unauthorized: Invalid token');
+    const token = bearerMatch[1].trim();
+    if (!token || token.split('.').length !== 3) {
+      console.warn('[SupabaseAuth] Unauthorized: malformed bearer token');
+      throw new Error('Unauthorized');
     }
 
     const supabase = createClient<Database>(
-      SUPABASE_URL!,
-      SUPABASE_PUBLISHABLE_KEY!,
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY,
       {
         global: {
-          fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY!),
+          fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -105,16 +93,14 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
 
     const { data, error } = await supabase.auth.getClaims(token);
     if (error || !data?.claims) {
-      console.error('[SupabaseAuth] Unauthorized: Invalid token or claims failure', { 
-        error: error?.message,
-        claimsPresent: !!data?.claims 
-      });
-      throw new Error('Unauthorized: Invalid token');
+      // Avoid logging provider error details or any token-derived material.
+      console.warn('[SupabaseAuth] Unauthorized: token validation failed');
+      throw new Error('Unauthorized');
     }
 
     if (!data.claims.sub) {
-      console.error('[SupabaseAuth] Unauthorized: No user ID found in token claims');
-      throw new Error('Unauthorized: No user ID found in token claims');
+      console.warn('[SupabaseAuth] Unauthorized: token subject missing');
+      throw new Error('Unauthorized');
     }
 
     return next({
