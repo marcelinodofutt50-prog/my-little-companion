@@ -29,6 +29,6 @@ export function isReferralRewardEligible(order: {
   if (order.status !== "paid" || !order.user_id || !order.referrer_id || order.user_id === order.referrer_id) return false;
   if (String(order.plan_slug ?? "").toLowerCase().startsWith("server-")) return false;
   const metadata = order.metadata && typeof order.metadata === "object" ? order.metadata as Record<string, unknown> : {};
-  if (metadata.gift) return false;
+  if (metadata.referral_rewards_version !== 1 || metadata.gift) return false;
   return true;
 }
