@@ -1,3 +1,4 @@
+import { safeSearch } from "@/lib/safe-search";
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/api/public/tutorials')({
@@ -27,7 +28,8 @@ export const Route = createFileRoute('/api/public/tutorials')({
         const limit = parseInt(url.searchParams.get('limit') || '12')
         const category = url.searchParams.get('category')
         const search = url.searchParams.get('search')
-        const orderBy = url.searchParams.get('orderBy') || 'created_at'
+        const rawOrder = url.searchParams.get('orderBy') || 'created_at'
+        const orderBy = ['created_at', 'title', 'category', 'order_index'].includes(rawOrder) ? rawOrder : 'created_at'
         const orderDir = url.searchParams.get('orderDir') || 'desc'
 
         let query = supabaseAdmin
@@ -36,7 +38,8 @@ export const Route = createFileRoute('/api/public/tutorials')({
           .eq('is_active', true)
 
         if (category && category !== 'Tudo') query = query.eq('category', category)
-        if (search) query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+        const s = safeSearch(search)
+        if (s) query = query.or(`title.ilike.%${s}%,description.ilike.%${s}%`)
 
         const from = (page - 1) * limit
         const to = from + limit - 1

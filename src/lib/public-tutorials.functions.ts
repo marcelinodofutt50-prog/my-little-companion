@@ -1,3 +1,4 @@
+import { safeSearch } from "@/lib/safe-search";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -32,7 +33,7 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
     }
     
     if (data.search) {
-      query = query.or(`title.ilike.%${data.search}%,description.ilike.%${data.search}%`);
+      { const s = safeSearch(data.search); if (s) query = query.or(`title.ilike.%${s}%,description.ilike.%${s}%`); }
     }
 
     const from = (data.page - 1) * data.limit;

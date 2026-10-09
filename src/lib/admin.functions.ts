@@ -1,3 +1,4 @@
+import { safeSearch } from "@/lib/safe-search";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText } from "ai";
@@ -750,7 +751,7 @@ export const adminFindUsers = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const q = data.query.trim();
-    const like = `%${q}%`;
+    const like = `%${safeSearch(q)}%`;
 
     const { data: profs, error: profErr } = await supabaseAdmin
       .from("profiles")
@@ -1447,7 +1448,7 @@ export const adminGlobalSearch = createServerFn({ method: "POST" })
     await assertStaff(context);
     const q = data.q.trim();
     if (q.length < 2) return { users: [], orders: [], licenses: [], threads: [] };
-    const like = `%${q}%`;
+    const like = `%${safeSearch(q)}%`;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

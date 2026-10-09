@@ -1,3 +1,4 @@
+import { safeSearch } from "@/lib/safe-search";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, tool, type UIMessage } from "ai";
 import { z } from "zod";
@@ -63,7 +64,7 @@ export const Route = createFileRoute("/api/chat/license-ai")({
               let q = supabaseAdmin.from("licenses").select("id,user_id,yaarsa_email,plan_slug,version_tier,is_legacy,is_trial,revoked,disabled_at,expires_at,server_paid_until,server_overdue_at,created_at").order("created_at", { ascending: false }).limit(limit ?? 50);
               if (typeof revoked === "boolean") q = q.eq("revoked", revoked);
               if (user_email) {
-                const { data: p } = await supabaseAdmin.from("profiles").select("id").ilike("email", `%${user_email}%`).maybeSingle();
+                const { data: p } = await supabaseAdmin.from("profiles").select("id").ilike("email", `%${safeSearch(user_email)}%`).maybeSingle();
                 if (p) q = q.eq("user_id", p.id);
                 else return { count: 0, items: [], note: "Nenhum profile com esse email." };
               }

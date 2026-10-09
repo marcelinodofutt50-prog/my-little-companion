@@ -1,3 +1,4 @@
+import { safeSearch } from "@/lib/safe-search";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -26,7 +27,7 @@ export const staffListLicenseAudit = createServerFn({ method: "POST" })
 
     if (data.licenseId) q = q.eq("license_id", data.licenseId);
     if (data.eventType && data.eventType !== "all") q = q.eq("event_type", data.eventType);
-    if (data.search) q = q.ilike("yaarsa_email", `%${data.search}%`);
+    if (data.search) q = q.ilike("yaarsa_email", `%${safeSearch(data.search)}%`);
 
     const { data: rows, error } = await q;
     if (error) return { ok: false as const, events: [], message: error.message };
