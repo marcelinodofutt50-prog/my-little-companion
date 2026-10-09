@@ -18,6 +18,20 @@ export async function fulfillOrder(orderId: string) {
   try {
     const result = await fulfillOrderInner(orderId);
     if (result.ok) {
+      // Recompensas de indicação só são consideradas depois da entrega confirmada.
+      // Falhas de recompensa ficam no ledger para auditoria/retry e nunca desfazem a compra.
+      try {
+        const { grantReferralPurchaseRewards } = await import("@/lib/referral-rewards.server");
+        await grantReferralPurchaseRewards(orderId);
+      } catch (error) {
+        await supabaseAdmin.from("integration_logs").insert({
+          source: "referrals",
+          action: "purchase_reward",
+          outcome: "partial",
+          error: "grant-failed",
+          context: { order_id: orderId } as any,
+        });
+      }
       // Sucesso: zera o contador de tentativas.
       await supabaseAdmin
         .from("orders")

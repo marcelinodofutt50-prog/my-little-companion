@@ -50,7 +50,16 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
     const currentLevel = (levels ?? []).find(l => l.level === (profile?.current_level || 'novato')) || (levels ?? [])[0];
     const nextLevel = (levels ?? []).find(l => l.min_conversions > (profile?.conversions_count || 0));
 
-    // 4. Recompensas e Missões
+    // 4. Recompensas de compra (ledger interno; consultado no servidor por usuário).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: purchaseRewards } = await supabaseAdmin
+      .from("referral_purchase_rewards")
+      .select("id,order_id,beneficiary_role,days,status,note,created_at,granted_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    // 5. Recompensas e Missões
     const { data: userRewards } = await supabase
       .from("user_rewards")
       .select("*")
@@ -80,6 +89,16 @@ export const getMyReferralInfo = createServerFn({ method: "GET" })
       pixKey: (profile?.pix_key as string) ?? null,
       referrals: rows.map((r) => ({ ...r, referred_label: labelMap[r.referred_id] ?? "Membro Shadow" })),
       rewards: userRewards || [],
+      purchaseRewards: (purchaseRewards ?? []).map((reward: any) => ({
+        id: reward.id,
+        orderId: reward.order_id,
+        role: reward.beneficiary_role,
+        days: reward.days,
+        status: reward.status,
+        note: reward.note,
+        createdAt: reward.created_at,
+        grantedAt: reward.granted_at,
+      })),
       stats: { 
         total: rows.length, 
         granted: profile?.referrals_valid_count || 0, 

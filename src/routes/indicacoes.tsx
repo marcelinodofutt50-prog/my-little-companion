@@ -82,6 +82,18 @@ function ReferralsPage() {
               </p>
             </div>
             
+            <Card className="mb-8 border-primary/30 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Gift className="h-5 w-5 text-primary" /> Indique e ganhe dias grátis
+                </CardTitle>
+                <CardDescription>
+                  Seu amigo recebe 1 dia extra de acesso e você ganha 3 dias extras após o pagamento ser confirmado e a licença ser ativada.
+                  Vale para compras novas com código de indicação em licenças com vencimento; planos vitalícios, presentes e renovações de servidor não entram. As recompensas são processadas uma única vez por pedido e podem ficar pendentes se a licença precisar de sincronização.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
             <div className="mb-8">
               <Link to="/fidelidade">
                 <Button variant="outline" className="w-full border-primary/20 bg-primary/5 hover:bg-primary/10 group h-auto py-4">
@@ -163,6 +175,30 @@ function ReferralsPage() {
                   <TabsContent value="overview" className="space-y-6 mt-6">
                     <Card className="bg-card border-l-4 border-l-primary shadow-lg">
                       <CardHeader>
+                        <CardTitle className="text-sm font-mono uppercase tracking-widest">Recompensas por compra</CardTitle>
+                        <CardDescription>3 dias para você e 1 dia de boas-vindas para quem compra pelo seu código, após confirmação e ativação de uma licença com vencimento.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {!data?.purchaseRewards?.length ? (
+                          <p className="text-sm text-muted-foreground">Suas recompensas por compra aparecerão aqui.</p>
+                        ) : data.purchaseRewards.map((reward: any) => (
+                          <div key={reward.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+                            <div>
+                              <p className="font-semibold">{reward.role === "referrer" ? "Recompensa do indicador" : "Bônus de boas-vindas"}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(reward.createdAt).toLocaleDateString("pt-BR")} · Pedido {String(reward.orderId).slice(0, 8)}</p>
+                              {reward.note && <p className="text-xs text-muted-foreground">{reward.note === "panel-sync-pending" ? "Sincronização do acesso pendente" : "Aguardando validação"}</p>}
+                            </div>
+                            <div className="text-right">
+                              <Badge variant={reward.status === "granted" ? "default" : "outline"}>{reward.status === "granted" ? "Liberado" : reward.status === "skipped" ? "Não aplicável" : "Pendente"}</Badge>
+                              <p className="mt-1 font-bold text-primary">+{reward.days} {reward.days === 1 ? "dia" : "dias"}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-card border-l-4 border-l-primary shadow-lg">
+                      <CardHeader>
                         <CardTitle className="text-sm font-mono uppercase tracking-widest">{t('ref.code_label')}</CardTitle>
                         <CardDescription>Compartilhe seu código para ganhar pontos e subir de nível.</CardDescription>
                       </CardHeader>
@@ -182,14 +218,14 @@ function ReferralsPage() {
                               <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-tighter">Seu link de indicação único:</span>
                               <div className="flex items-center gap-2">
                                 <code className="flex-1 text-[10px] truncate bg-muted p-2 rounded border text-primary">
-                                  https://www.shadowdashstore.com/auth?ref={data.code}
+                                  https://www.shadowdashstore.com/planos?ref={data.code}
                                 </code>
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
                                   className="h-8 px-2"
                                   onClick={() => {
-                                    navigator.clipboard.writeText(`https://www.shadowdashstore.com/auth?ref=${data.code}`);
+                                    navigator.clipboard.writeText(`https://www.shadowdashstore.com/planos?ref=${data.code}`);
                                     toast.success("Link copiado!");
                                   }}
                                 >

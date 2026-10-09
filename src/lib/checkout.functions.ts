@@ -240,6 +240,7 @@ export const createCheckout = createServerFn({ method: "POST" })
       ...(upgradeMeta ? { upgrade: upgradeMeta } : {}),
       ...(giftMeta ? { gift: giftMeta } : {}),
       ...(targetLicenseId ? { target_license_id: targetLicenseId } : {}),
+      ...(referrerId ? { referral_rewards_version: 1 } : {}),
       includeServer: !!data.includeServer,
       addSigner: !!data.addSigner,
       ...(activeBan ? { ban_multiplier: Number(activeBan.price_multiplier) || 1 } : {}),
