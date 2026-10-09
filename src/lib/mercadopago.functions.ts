@@ -40,7 +40,10 @@ export const createMercadoPagoCheckout = createServerFn({ method: "POST" })
         return { error: "O Mercado Pago ainda não está configurado nesta versão do site." };
       }
 
-      const origin = data.returnOrigin.replace(/\/$/, "");
+      // returnOrigin vem do navegador: nunca o use diretamente em back_urls
+      // ou notification_url, pois isso permitiria redirecionamento e desvio do webhook.
+      const { safeReturnOrigin } = await import("./safe-origin");
+      const origin = safeReturnOrigin(data.returnOrigin);
       const pref = await createOrderPreference({
         order: order as any,
         planName: integrity.planName ?? order.plan_slug,
