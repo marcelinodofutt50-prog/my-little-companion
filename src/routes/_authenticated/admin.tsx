@@ -73,6 +73,7 @@ import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 import { AdminTagline } from "@/components/AdminTagline";
+import { AdminVpsDeliveryPanel } from "@/components/admin/AdminVpsDeliveryPanel";
 
 import {
   AdminAnnouncementsPanel,
@@ -244,13 +245,15 @@ type Tab =
   | "bans"
   | "partners"
 
-  | "vip";
+  | "vip"
+  | "vps";
 
 
 
 // Explicação em linguagem simples de cada seção do painel.
 const TAB_DESC: Record<Tab, string> = {
   partners: "Parceiros: dados da VPS enviados pelo cliente para a equipe instalar e cuidar.",
+  vps: "Gerenciamento de VPS: compras confirmadas e entrega manual dos dados de acesso.",
   overview: "Resumo do dia: quanto entrou, o que está pendente e atalhos rápidos.",
   ia: "Diagnóstico automático: a IA aponta erros e o que precisa de atenção.",
   chat: "Conversas ao vivo com os clientes. Assuma o ticket e responda por aqui.",
@@ -735,6 +738,7 @@ function AdminPage() {
       accent: "violet",
       items: [
         { id: "orders", label: "Pedidos", icon: DollarSign },
+        { id: "vps", label: "Gerenciamento de VPS", icon: Server, hint: "compras e entrega de acessos" },
         { id: "refunds", label: "Reembolsos", icon: RotateCcw, hint: "prazo 2 dias" },
         { id: "partners", label: "Parceiros & VPS", icon: Server, hint: "acessos enviados" },
         { id: "referrals", label: "Indicações", icon: Gift, hint: "cashback / pix" },
@@ -2339,6 +2343,7 @@ function AdminPage() {
             )}
 
             {tab === "referrals" && <ReferralsAdminPanel />}
+            {tab === "vps" && role === "admin" && <AdminVpsDeliveryPanel />}
             {tab === "health" && (
               <div className="space-y-6">
                 <AdminHealthPanel onOpenLogs={() => setTab("logs")} />
