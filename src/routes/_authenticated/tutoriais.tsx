@@ -241,10 +241,10 @@ function TutorialsPage() {
                   <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                     Shadow Knowledge Base
                   </div>
-                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl rgb-text animate-rgb-text uppercase italic">
+                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-slate-100 md:text-5xl rgb-text animate-rgb-text uppercase italic">
                     Centro de Treinamento
                   </h1>
-                  <p className="mt-4 max-w-2xl text-muted-foreground">
+                  <p className="mt-4 max-w-2xl text-slate-400">
                     Domine o ecossistema Shadow. De configurações básicas a técnicas avançadas de bypass e gestão de ativos.
                   </p>
                 </div>
@@ -279,8 +279,8 @@ function TutorialsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">Aguardando Sincronização</h3>
-                  <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
+                  <h3 className="text-xl font-bold text-slate-100 font-mono uppercase tracking-widest">Aguardando Sincronização</h3>
+                  <p className="text-slate-400 max-w-sm mx-auto text-sm leading-relaxed">
                     O sistema está pronto, mas o cache do banco de dados ainda não reconheceu a tabela. Clique abaixo para forçar a sincronização tática do Centro de Treinamento.
                   </p>
                 </div>
@@ -306,7 +306,7 @@ function TutorialsPage() {
                     variant="outline" 
                     size="sm" 
                     onClick={() => window.location.reload()}
-                    className="font-mono text-[10px] uppercase border-primary/20 opacity-60 hover:opacity-100"
+                    className="font-mono text-[10px] uppercase border-slate-700 bg-slate-950 text-slate-200 opacity-90 hover:bg-slate-800 hover:text-white hover:opacity-100"
                   >
                     Recarregar Página
                   </Button>
@@ -315,16 +315,16 @@ function TutorialsPage() {
             )}
 
             {!loading && tutorials.length === 0 && !loadError && (
-              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-4 mb-10">
+              <div className="enterprise-surface p-12 rounded-2xl border border-slate-800 bg-slate-950/90 text-center space-y-4 mb-10">
                 <div className="flex justify-center">
                   <div className="p-4 rounded-full bg-primary/5 border border-primary/10">
                     <BookOpen className="h-12 w-12 text-primary/30" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-foreground font-mono uppercase tracking-widest">
+                <h3 className="text-xl font-bold text-slate-100 font-mono uppercase tracking-widest">
                   Nenhum módulo publicado
                 </h3>
-                <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
+                <p className="text-slate-400 max-w-sm mx-auto text-sm leading-relaxed">
                   A conexão com o Centro de Treinamento está saudável. Assim que a equipe publicar os
                   primeiros tutoriais, eles aparecerão aqui automaticamente.
                 </p>
@@ -332,7 +332,7 @@ function TutorialsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => loadData()}
-                  className="font-mono text-[10px] uppercase border-primary/20"
+                  className="font-mono text-[10px] uppercase border-slate-700 bg-slate-950 text-slate-200 hover:bg-slate-800 hover:text-white"
                 >
                   <RefreshCw className="h-3 w-3 mr-2" /> Atualizar
                 </Button>
@@ -384,8 +384,8 @@ function TutorialsPage() {
                       <div className="flex items-center gap-3">
                         <Zap className="h-5 w-5 text-orange-500" />
                         <div>
-                          <h3 className="text-sm font-bold text-foreground font-mono uppercase tracking-widest">Diagnóstico Tático do Banco</h3>
-                          <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tighter">Validação de integridade Shadow Core</p>
+                          <h3 className="text-sm font-bold text-slate-100 font-mono uppercase tracking-widest">Diagnóstico Tático do Banco</h3>
+                          <p className="text-[10px] text-slate-400 uppercase font-mono tracking-tighter">Validação de integridade Shadow Core</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ function TutorialsPage() {
                     
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
-                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Status da Conexão</div>
+                        <div className="text-[10px] font-mono text-slate-400 uppercase mb-1">Status da Conexão</div>
                         <div className="flex items-center gap-2">
                           <div className={`h-2 w-2 rounded-full ${diagResult ? (diagResult.success ? 'bg-green-500 animate-pulse' : 'bg-red-500') : 'bg-gray-500'}`} />
                           <span className="text-xs font-bold uppercase font-mono tracking-wider">
@@ -449,21 +449,21 @@ function TutorialsPage() {
                       </div>
 
                       <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
-                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Latência Shadow</div>
+                        <div className="text-[10px] font-mono text-slate-400 uppercase mb-1">Latência Shadow</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider">
                           {diagResult?.latency ? `${diagResult.latency}ms` : '---'}
                         </div>
                       </div>
 
                       <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
-                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Última Tentativa</div>
+                        <div className="text-[10px] font-mono text-slate-400 uppercase mb-1">Última Tentativa</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider">
                           {syncHistory[0]?.time || 'Aguardando'}
                         </div>
                       </div>
 
                       <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
-                        <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Integridade de Schema</div>
+                        <div className="text-[10px] font-mono text-slate-400 uppercase mb-1">Integridade de Schema</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-2 text-green-500">
                           <Shield className="h-3 w-3" /> ATIVO
                         </div>
@@ -502,8 +502,8 @@ function TutorialsPage() {
                             <Server className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <div className="text-[10px] font-mono uppercase text-muted-foreground">Sistema</div>
-                            <div className="text-xs font-bold text-foreground">PostgREST Cache Bridge</div>
+                            <div className="text-[10px] font-mono uppercase text-slate-400">Sistema</div>
+                            <div className="text-xs font-bold text-slate-100">PostgREST Cache Bridge</div>
                           </div>
                         </div>
                       </Card>
@@ -514,7 +514,7 @@ function TutorialsPage() {
                             <ShieldCheck className="h-4 w-4 text-green-500" />
                           </div>
                           <div>
-                            <div className="text-[10px] font-mono uppercase text-muted-foreground">Status Atual</div>
+                            <div className="text-[10px] font-mono uppercase text-slate-400">Status Atual</div>
                             <div className="text-xs font-bold text-green-500">{loading ? 'Validando Schema...' : 'Sincronizado'}</div>
                           </div>
                         </div>
@@ -526,8 +526,8 @@ function TutorialsPage() {
                             <Clock className="h-4 w-4 text-orange-500" />
                           </div>
                           <div>
-                            <div className="text-[10px] font-mono uppercase text-muted-foreground">Última Verificação</div>
-                            <div className="text-xs font-bold text-foreground">{syncHistory[0]?.time || 'Agora'}</div>
+                            <div className="text-[10px] font-mono uppercase text-slate-400">Última Verificação</div>
+                            <div className="text-xs font-bold text-slate-100">{syncHistory[0]?.time || 'Agora'}</div>
                           </div>
                         </div>
                       </Card>
@@ -548,7 +548,7 @@ function TutorialsPage() {
                       </div>
                       <div className="p-0">
                         {syncHistory.length === 0 ? (
-                          <div className="p-8 text-center text-xs text-muted-foreground font-mono uppercase tracking-widest opacity-50">
+                          <div className="p-8 text-center text-xs text-slate-400 font-mono uppercase tracking-widest opacity-50">
                             Nenhuma atividade registrada no ciclo atual.
                           </div>
                         ) : (
@@ -564,10 +564,10 @@ function TutorialsPage() {
                                         {log.type.toUpperCase()}
                                       </span>
                                     </div>
-                                    <div className="text-[9px] text-muted-foreground font-mono mt-0.5">{log.message || 'Ciclo de validação de rotina.'}</div>
+                                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">{log.message || 'Ciclo de validação de rotina.'}</div>
                                   </div>
                                 </div>
-                                <div className="text-[10px] font-mono text-muted-foreground/60">{log.time}</div>
+                                <div className="text-[10px] font-mono text-slate-400/60">{log.time}</div>
                               </div>
                             ))}
                           </div>
@@ -579,11 +579,11 @@ function TutorialsPage() {
                           </h4>
                           <div className="grid grid-cols-2 gap-2">
                             <div className="enterprise-surface p-3 rounded-xl border-primary/5">
-                              <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-[0.2em] mb-1">Último Código</div>
+                              <div className="text-[8px] text-slate-400 font-mono uppercase tracking-[0.2em] mb-1">Último Código</div>
                               <div className="text-xs font-bold font-mono">{syncHistory[0]?.status === 'error' ? 'PGRST108' : '200 OK'}</div>
                             </div>
                             <div className="enterprise-surface p-3 rounded-xl border-primary/5">
-                              <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-[0.2em] mb-1">Tunnel Status</div>
+                              <div className="text-[8px] text-slate-400 font-mono uppercase tracking-[0.2em] mb-1">Tunnel Status</div>
                               <div className={`text-xs font-bold font-mono ${tutorials.length > 0 ? 'text-emerald-500' : 'text-orange-500 animate-pulse'}`}>
                                 {tutorials.length > 0 ? 'ESTÁVEL' : 'SINCRONIZANDO'}
                               </div>
@@ -638,7 +638,7 @@ function TutorialsPage() {
                 ))}
               </div>
               <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400/50" />
                 <Input
                   value={search}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
@@ -672,7 +672,7 @@ function TutorialsPage() {
                             Seu navegador não suporta a reprodução de vídeos.
                           </video>
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                          <div className="flex h-full w-full items-center justify-center text-slate-400">
                             <RefreshCw className="h-6 w-6 animate-spin text-primary/60" />
                           </div>
                         )
@@ -687,7 +687,7 @@ function TutorialsPage() {
                           allowFullScreen
                         />
                       ) : (
-                        <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-muted-foreground bg-primary/5">
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-slate-400 bg-primary/5">
                           <Video className="h-16 w-16 opacity-10 animate-pulse" />
                           <p className="font-mono text-[10px] uppercase tracking-[0.3em]">Sinal de Mídia Ausente</p>
                         </div>
@@ -697,8 +697,8 @@ function TutorialsPage() {
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-2 flex-1">
                           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">{selected.category}</div>
-                          <h2 className="text-2xl font-bold text-foreground md:text-3xl">{selected.title}</h2>
-                          <p className="text-muted-foreground leading-relaxed">{selected.description}</p>
+                          <h2 className="text-2xl font-bold text-slate-100 md:text-3xl">{selected.title}</h2>
+                          <p className="text-slate-400 leading-relaxed">{selected.description}</p>
                         </div>
                         <div className="flex gap-2">
                            <Button 
@@ -790,10 +790,10 @@ function TutorialsPage() {
                       </div>
                     </div>
                     <CardContent className="p-5">
-                      <h3 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight h-10">{t.title}</h3>
-                      <p className="mt-2 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity h-8">{t.description || "Nenhuma descrição disponível para este módulo."}</p>
+                      <h3 className="font-bold text-slate-100 text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight h-10">{t.title}</h3>
+                      <p className="mt-2 text-[11px] text-slate-400 line-clamp-2 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity h-8">{t.description || "Nenhuma descrição disponível para este módulo."}</p>
                       <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4">
-                        <div className="flex items-center gap-2 text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[9px] font-mono text-slate-400 uppercase tracking-widest">
                            <BookOpen className="h-3 w-3 text-primary/50" /> Módulo {idx + 1}
                         </div>
                         <ChevronRight className="h-3.5 w-3.5 text-primary transition-transform group-hover:translate-x-1" />
@@ -816,7 +816,7 @@ function TutorialsPage() {
 
             {!loading && filteredTutorials.length === 0 && tutorials.length > 0 && (
               <div className="py-20 text-center">
-                <p className="text-muted-foreground font-mono uppercase tracking-widest text-xs">Nenhum resultado para "{search}"</p>
+                <p className="text-slate-400 font-mono uppercase tracking-widest text-xs">Nenhum resultado para "{search}"</p>
               </div>
             )}
           </div>
@@ -870,19 +870,19 @@ function HealthWidget() {
     <div className="bg-black/40 border-b border-white/5 py-2 px-4 flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
       <div className="flex items-center gap-2">
         <Database className={`h-3 w-3 ${isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}`} />
-        <span className="text-muted-foreground">DB STATUS:</span>
+        <span className="text-slate-400">DB STATUS:</span>
         <span className={isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}>{health.status}</span>
       </div>
       <div className="h-3 w-[1px] bg-white/10" />
       <div className="flex items-center gap-2">
         <Activity className={`h-3 w-3 ${tutorialProgressStatus ? 'text-primary' : 'text-red-500 animate-pulse'}`} />
-        <span className="text-muted-foreground">SYNC:</span>
+        <span className="text-slate-400">SYNC:</span>
         <span className={tutorialProgressStatus ? 'text-primary' : 'text-red-500'}>{tutorialProgressStatus ? 'OPERATIONAL' : 'REPAIRING'}</span>
       </div>
       <div className="h-3 w-[1px] bg-white/10" />
       <div className="flex items-center gap-2">
         <Clock className="h-3 w-3 text-yellow-500" />
-        <span className="text-muted-foreground">TRIAL:</span>
+        <span className="text-slate-400">TRIAL:</span>
         <span className="text-yellow-500">24H DURATION</span>
       </div>
     </div>
