@@ -28,7 +28,8 @@ export const Route = createFileRoute('/api/public/tutorials')({
         const limit = parseInt(url.searchParams.get('limit') || '12')
         const category = url.searchParams.get('category')
         const search = url.searchParams.get('search')
-        const orderBy = url.searchParams.get('orderBy') || 'created_at'
+        const rawOrder = url.searchParams.get('orderBy') || 'created_at'
+        const orderBy = ['created_at', 'title', 'category', 'order_index'].includes(rawOrder) ? rawOrder : 'created_at'
         const orderDir = url.searchParams.get('orderDir') || 'desc'
 
         let query = supabaseAdmin
