@@ -29,21 +29,27 @@ describe("purchase referral rewards", () => {
     expect(() => calculateRewardExpiry(null, 31, new Date())).toThrow();
   });
 
-  it("only rewards paid orders with a distinct referrer and non-server plan", () => {
+  it("does not retroactively reward old orders without the new marker", () => {
     expect(isReferralRewardEligible({
       status: "paid", user_id: "buyer", referrer_id: "referrer", plan_slug: "login-30d",
+    })).toBe(false);
+  });
+
+  it("only rewards paid orders with a distinct referrer and non-server plan", () => {
+    expect(isReferralRewardEligible({
+      status: "paid", user_id: "buyer", referrer_id: "referrer", plan_slug: "login-30d", metadata: { referral_rewards_version: 1 },
     })).toBe(true);
     expect(isReferralRewardEligible({
-      status: "pending", user_id: "buyer", referrer_id: "referrer", plan_slug: "login-30d",
+      status: "pending", user_id: "buyer", referrer_id: "referrer", plan_slug: "login-30d", metadata: { referral_rewards_version: 1 },
     })).toBe(false);
     expect(isReferralRewardEligible({
-      status: "paid", user_id: "same", referrer_id: "same", plan_slug: "login-30d",
+      status: "paid", user_id: "same", referrer_id: "same", plan_slug: "login-30d", metadata: { referral_rewards_version: 1 },
     })).toBe(false);
     expect(isReferralRewardEligible({
-      status: "paid", user_id: "buyer", referrer_id: "referrer", plan_slug: "server-monthly",
+      status: "paid", user_id: "buyer", referrer_id: "referrer", plan_slug: "server-monthly", metadata: { referral_rewards_version: 1 },
     })).toBe(false);
     expect(isReferralRewardEligible({
-      status: "paid", user_id: "buyer", referrer_id: "referrer", plan_slug: "login-30d", metadata: { gift: {} },
+      status: "paid", user_id: "buyer", referrer_id: "referrer", plan_slug: "login-30d", metadata: { referral_rewards_version: 1, gift: {} },
     })).toBe(false);
   });
 });
