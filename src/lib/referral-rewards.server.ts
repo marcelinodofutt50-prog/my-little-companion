@@ -9,10 +9,7 @@ export async function grantReferralPurchaseReward(
   supabaseAdmin: SupabaseClient,
   orderId: string,
 ): Promise<{ ok: boolean; reason: string }> {
-  const { data, error } = await supabaseAdmin.rpc(
-    "prepare_referral_purchase_reward" as never,
-    { p_order_id: orderId } as never,
-  );
+  const { data, error } = await (supabaseAdmin as any).rpc("prepare_referral_purchase_reward", { p_order_id: orderId });
   if (error) throw new Error("Não foi possível preparar a recompensa de indicação.");
 
   const result = data as unknown as {
@@ -50,10 +47,7 @@ export async function grantReferralPurchaseReward(
     const response = await yaarsaExtend(target.yaarsa_email, panelDate, target.panel);
     if (response?.Fail) throw new Error("O painel recusou a extensão da licença indicada.");
 
-    const { data: marked, error: markError } = await supabaseAdmin.rpc(
-      "mark_referral_reward_license_synced" as never,
-      { p_target_id: target.id } as never,
-    );
+    const { data: marked, error: markError } = await (supabaseAdmin as any).rpc("mark_referral_reward_license_synced", { p_target_id: target.id });
     if (markError || marked !== true) {
       // The next webhook retry will re-apply the same absolute panel expiry.
       throw new Error("Não foi possível confirmar a sincronização da recompensa.");
