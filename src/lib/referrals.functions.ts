@@ -115,9 +115,9 @@ export const updateReferralPref = createServerFn({ method: "POST" })
     const updates: Record<string, unknown> = {
       referral_reward_pref: data.pref,
     };
-    // Não apague uma chave Pix por acidente quando o cliente só muda de preferência.
+    // Preserve a chave cadastrada quando a pessoa muda temporariamente para outra recompensa.
+    // A chave só é atualizada quando Pix é a preferência selecionada.
     if (data.pref === "pix") updates.pix_key = data.pixKey!.trim();
-    else updates.pix_key = null;
 
     const { error } = await supabase
       .from("profiles")
