@@ -88,8 +88,8 @@ function ReferralsPage() {
                   <Gift className="h-5 w-5 text-primary" /> Indique e ganhe dias grátis
                 </CardTitle>
                 <CardDescription>
-                  Seu amigo recebe 1 dia extra de acesso ao concluir uma compra válida. Você ganha 3 dias extras após o pagamento ser confirmado e a licença ser ativada.
-                  As recompensas são processadas uma única vez por pedido e podem ficar pendentes se a licença precisar de sincronização.
+                  Seu amigo recebe 1 dia extra de acesso e você ganha 3 dias extras após o pagamento ser confirmado e a licença ser ativada.
+                  Vale para compras novas com código de indicação em licenças com vencimento; planos vitalícios, presentes e renovações de servidor não entram. As recompensas são processadas uma única vez por pedido e podem ficar pendentes se a licença precisar de sincronização.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -176,7 +176,7 @@ function ReferralsPage() {
                     <Card className="bg-card border-l-4 border-l-primary shadow-lg">
                       <CardHeader>
                         <CardTitle className="text-sm font-mono uppercase tracking-widest">Recompensas por compra</CardTitle>
-                        <CardDescription>3 dias para você e 1 dia de boas-vindas para quem compra pelo seu código, após confirmação e ativação.</CardDescription>
+                        <CardDescription>3 dias para você e 1 dia de boas-vindas para quem compra pelo seu código, após confirmação e ativação de uma licença com vencimento.</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {!data?.purchaseRewards?.length ? (
