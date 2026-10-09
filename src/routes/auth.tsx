@@ -14,12 +14,14 @@ import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
 import { checkEmailAvailability, confirmFreshSignupEmail, createAccountWhenEmailBlocked } from "@/lib/signup.functions";
 import { checkAuthSecurity, reportAuthOutcome } from "@/lib/security.functions";
+import { applyReferralCode } from "@/lib/referrals.functions";
 
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): {
     next?: string;
     code?: string;
+    ref?: string;
     type?: string;
     error?: string;
     trial?: string;
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/auth")({
   } => ({
     next: typeof s.next === "string" ? s.next : undefined,
     code: typeof s.code === "string" ? s.code : undefined,
+    ref: typeof s.ref === "string" ? s.ref.trim().slice(0, 16) : undefined,
     type: typeof s.type === "string" ? s.type : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
     trial: typeof s.trial === "string" ? s.trial : undefined,
@@ -123,7 +126,8 @@ function formatTime(ts: number): string {
 
 function AuthPage() {
   const shadowMark = "/assets/shadow-mark-v8.png?v=v8-400";
-  const { next, code, type, trial } = Route.useSearch();
+  const { next, code, ref, type, trial } = Route.useSearch();
+  const applyReferralFn = useServerFn(applyReferralCode);
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
@@ -322,6 +326,18 @@ function AuthPage() {
     }
   }
 
+  async function attachReferral() {
+    if (!ref) return;
+    try {
+      const result = await applyReferralFn({ data: { code: ref } });
+      if (result.applied) toast.success("Indicação vinculada à sua conta!");
+      else if (result.reason === "already_linked") toast.info("Sua conta já possui uma indicação vinculada.");
+    } catch (error) {
+      console.error("Falha ao vincular indicação", error);
+      toast.error("Sua conta foi criada, mas não conseguimos vincular a indicação. Fale com o suporte.");
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
@@ -399,6 +415,7 @@ function AuthPage() {
           track("signup", "sent");
           const { error: fbSignIn } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
           if (fbSignIn) throw fbSignIn;
+          await attachReferral();
           toast.success("Conta criada! Bem-vindo.");
           navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
 
@@ -457,6 +474,7 @@ function AuthPage() {
           }
         }
 
+        await attachReferral();
         toast.success("Conta criada! Redirecionando...");
         navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
 
