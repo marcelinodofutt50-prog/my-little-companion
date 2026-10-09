@@ -69,12 +69,13 @@ export type PinCheck =
 export async function verifyAndConsumePin(admin: any, userId: string, provided: string): Promise<PinCheck> {
   if (!admin) return { ok: false, reason: "unavailable" };
 
-  const { data } = await admin
+  const { data, error: readError } = await admin
     .from("security_pins")
     .select("pin, uses_count")
     .eq("user_id", userId)
     .maybeSingle();
 
+  if (readError) return { ok: false, reason: "unavailable" };
   if (!data?.pin) return { ok: false, reason: "no_pin" };
 
   const a = normalizePin(provided);
@@ -86,7 +87,9 @@ export async function verifyAndConsumePin(admin: any, userId: string, provided: 
   if (diff !== 0) return { ok: false, reason: "wrong_pin" };
 
   const newPin = generatePin();
-  await admin
+  // Compare-and-swap: consume only if the stored PIN is still the one verified.
+  // Concurrent requests cannot both successfully consume the same PIN.
+  const { data: consumed, error: consumeError } = await admin
     .from("security_pins")
     .update({
       pin: newPin,
@@ -94,7 +97,13 @@ export async function verifyAndConsumePin(admin: any, userId: string, provided: 
       last_used_at: new Date().toISOString(),
       uses_count: (data.uses_count ?? 0) + 1,
     })
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("pin", data.pin)
+    .select("user_id")
+    .maybeSingle();
+
+  if (consumeError) return { ok: false, reason: "unavailable" };
+  if (!consumed) return { ok: false, reason: "wrong_pin" };
 
   return { ok: true, newPin };
 }
