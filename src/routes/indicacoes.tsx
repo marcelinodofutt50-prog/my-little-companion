@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { getMyReferralInfo, updateReferralPref } from "@/lib/referrals.functions";
+import { getMyReferralInfo } from "@/lib/referrals.functions";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { formatBrl } from "@/lib/plans";
@@ -32,11 +32,9 @@ function ReferralsPage() {
   const { t } = useI18n();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const getInfoFn = useServerFn(getMyReferralInfo);
-  const updatePrefFn = useServerFn(updateReferralPref);
 
   useEffect(() => {
     getInfoFn().then(setData).catch(console.error).finally(() => setLoading(false));
@@ -48,19 +46,6 @@ function ReferralsPage() {
     setCopied(true);
     toast.success("Código copiado!");
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handlePrefChange = async (pref: "cashback" | "pix" | "free_month") => {
-    setUpdating(true);
-    try {
-      await updatePrefFn({ data: { pref } });
-      setData((prev: any) => ({ ...prev, pref }));
-      toast.success("Preferência atualizada!");
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao atualizar");
-    } finally {
-      setUpdating(false);
-    }
   };
 
   return (
@@ -204,27 +189,19 @@ function ReferralsPage() {
 
                     <Card className="bg-card border shadow-md">
                       <CardHeader>
-                        <CardTitle className="text-sm font-mono uppercase tracking-widest">{t('ref.pref_title')}</CardTitle>
-                        <CardDescription>Como você deseja receber suas recompensas de indicação.</CardDescription>
+                        <CardTitle className="text-sm font-mono uppercase tracking-widest">Ganhe e compartilhe benefícios</CardTitle>
+                        <CardDescription>O programa libera recompensas depois que uma compra indicada é confirmada.</CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          {[
-                            { id: "cashback", label: "Crédito Shadow", icon: DollarSign },
-                            { id: "pix", label: "Saldo PIX", icon: TrendingUp },
-                            { id: "free_month", label: "Mês Grátis", icon: Clock },
-                          ].map((p) => (
-                            <Button
-                              key={p.id}
-                              variant={data?.pref === p.id ? "default" : "outline"}
-                              disabled={updating || loading}
-                              onClick={() => handlePrefChange(p.id as any)}
-                              className="h-auto py-4 flex flex-col gap-2"
-                            >
-                              <p.icon className="h-5 w-5" />
-                              <span className="text-[10px] font-mono uppercase">{p.label}</span>
-                            </Button>
-                          ))}
+                      <CardContent className="grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-lg border p-4">
+                          <Gift className="mb-2 h-5 w-5 text-primary" />
+                          <p className="font-semibold">Quem você indicar</p>
+                          <p className="mt-1 text-sm text-muted-foreground">Recebe um benefício de boas-vindas: teste grátis de 3 dias, sujeito às validações de segurança da conta.</p>
+                        </div>
+                        <div className="rounded-lg border p-4">
+                          <Clock className="mb-2 h-5 w-5 text-primary" />
+                          <p className="font-semibold">Você</p>
+                          <p className="mt-1 text-sm text-muted-foreground">Recebe 3 dias extras de acesso quando a primeira compra válida da pessoa indicada for confirmada.</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -288,7 +265,7 @@ function ReferralsPage() {
                               <Badge variant="outline" className="text-[9px] h-5">
                                 {r.status === 'converted' ? 'Convertido' : 'Inscrito'}
                               </Badge>
-                              <span className="text-primary font-bold">{formatBrl(r.reward_amount || 0)}</span>
+                              <span className="text-primary font-bold">{r.reward_type === "free_month" ? `${r.reward_amount || 3} dias` : formatBrl(r.reward_amount || 0)}</span>
                             </div>
                           ))}
                         </div>
