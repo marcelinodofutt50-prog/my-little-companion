@@ -66,7 +66,7 @@ function ReferralsPage() {
     setUpdating(true);
     try {
       await updatePrefFn({ data: { pref, pixKey: pref === "pix" ? pixKeyDraft.trim() : null } });
-      setData((prev: any) => ({ ...prev, pref, pixKey: pref === "pix" ? pixKeyDraft.trim() : null }));
+      setData((prev: any) => ({ ...prev, pref, pixKey: pref === "pix" ? pixKeyDraft.trim() : prev?.pixKey ?? pixKeyDraft.trim() }));
       toast.success("Preferência atualizada!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao atualizar");
