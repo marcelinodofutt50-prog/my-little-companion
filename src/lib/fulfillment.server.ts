@@ -23,6 +23,37 @@ export async function fulfillOrder(orderId: string) {
         .from("orders")
         .update({ fulfillment_attempts: 0, next_retry_at: null, last_fulfillment_error: null } as any)
         .eq("id", orderId);
+
+      // Centralized here so referrals work for every successful paid product
+      // category (licenses, server renewals, partner products and manual-delivery
+      // products), including safe retries of already-fulfilled orders.
+      try {
+        const { data: paidOrder } = await supabaseAdmin
+          .from("orders")
+          .select("id, user_id, referrer_id, status")
+          .eq("id", orderId)
+          .maybeSingle();
+        if (paidOrder?.status === "paid" && paidOrder.referrer_id && paidOrder.referrer_id !== paidOrder.user_id) {
+          const { grantReferralPurchaseReward } = await import("@/lib/referral-rewards.server");
+          const reward = await grantReferralPurchaseReward(supabaseAdmin, orderId);
+          await supabaseAdmin.from("integration_logs").insert({
+            source: "referral",
+            action: "grant_reward",
+            outcome: reward.reason === "referral-reward-processed" ? "success" : "warning",
+            context: { order_id: orderId, referrer_id: paidOrder.referrer_id, reason: reward.reason } as any,
+          } as any);
+        }
+      } catch (e: any) {
+        // Payment remains fulfilled; the idempotent reward can be retried by
+        // a webhook/reconciliation attempt without duplicating days.
+        await supabaseAdmin.from("integration_logs").insert({
+          source: "referral",
+          action: "grant_reward",
+          outcome: "error",
+          error: String(e?.message ?? "unknown").slice(0, 300),
+          context: { order_id: orderId } as any,
+        } as any);
+      }
     } else if (!["in-progress", "already-fulfilled", "already-renewed"].includes((result as any).reason ?? "")) {
       await scheduleFulfillmentRetry(orderId, (result as any).reason ?? "unknown");
     }
@@ -599,33 +630,6 @@ Guarde essas informações. Você também pode consultá-las a qualquer momento 
     }
   }
 
-
-  // ============ Referral reward ============
-  // Reward processing is idempotent and only runs after this order is marked paid.
-  // The database ledger prevents duplicate grants; panel expiry is synchronized
-  // to a stored absolute target date so webhook retries cannot add days twice.
-  if (order.referrer_id && order.referrer_id !== order.user_id) {
-    try {
-      const { grantReferralPurchaseReward } = await import("@/lib/referral-rewards.server");
-      const reward = await grantReferralPurchaseReward(supabaseAdmin, order.id);
-      await supabaseAdmin.from("integration_logs").insert({
-        source: "referral",
-        action: "grant_reward",
-        outcome: reward.reason === "referral-reward-processed" ? "success" : "warning",
-        context: { order_id: order.id, referrer_id: order.referrer_id, reason: reward.reason } as any,
-      } as any);
-    } catch (e: any) {
-      // Payment stays fulfilled; the idempotent grant remains retryable on a
-      // duplicate webhook and the error is visible to operators.
-      await supabaseAdmin.from("integration_logs").insert({
-        source: "referral",
-        action: "grant_reward",
-        outcome: "error",
-        error: String(e?.message ?? "unknown").slice(0, 300),
-        context: { order_id: order.id, referrer_id: order.referrer_id } as any,
-      } as any);
-    }
-  }
 
   return { ok: true };
 }
