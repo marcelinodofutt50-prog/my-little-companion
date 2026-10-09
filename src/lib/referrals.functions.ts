@@ -212,3 +212,56 @@ export const validateReferralCode = createServerFn({ method: "POST" })
     if (!prof || prof.id === context.userId) return { valid: false };
     return { valid: true, referrerName: (prof as any).display_name || "Membro Shadow" };
   });
+
+
+/** Vincula uma indicação ao novo usuário, uma única vez e sem permitir autoindicação. */
+export const applyReferralCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => z.object({ code: z.string().trim().min(4).max(16) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const code = data.code.toUpperCase();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: referrer, error: referrerError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, referral_code")
+      .eq("referral_code", code)
+      .maybeSingle();
+    if (referrerError) throw new Error("Não foi possível validar o código de indicação.");
+    if (!referrer || referrer.id === context.userId) {
+      return { applied: false, reason: "invalid_code" as const };
+    }
+
+    const { data: currentProfile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("referred_by")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (profileError) throw new Error("Não foi possível consultar a indicação da conta.");
+    if (currentProfile?.referred_by) return { applied: false, reason: "already_linked" as const };
+
+    // A condição IS NULL impede que uma segunda requisição troque o indicador já definido.
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from("profiles")
+      .update({ referred_by: referrer.id } as any)
+      .eq("id", context.userId)
+      .is("referred_by", null)
+      .select("id")
+      .maybeSingle();
+    if (updateError) throw new Error("Não foi possível vincular a indicação.");
+    if (!updated) return { applied: false, reason: "already_linked" as const };
+
+    const { error: referralError } = await supabaseAdmin.from("referrals").insert({
+      referrer_id: referrer.id,
+      referred_id: context.userId,
+      status: "pending",
+    } as any);
+    if (referralError) {
+      // Evita deixar o perfil parcialmente vinculado caso o registro de indicação falhe.
+      await supabaseAdmin.from("profiles").update({ referred_by: null } as any)
+        .eq("id", context.userId).eq("referred_by", referrer.id);
+      throw new Error("Não foi possível registrar a indicação. Tente novamente ou fale com o suporte.");
+    }
+
+    return { applied: true as const, reason: "linked" as const };
+  });
