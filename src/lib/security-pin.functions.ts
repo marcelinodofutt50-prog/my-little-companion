@@ -69,6 +69,26 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
     const admin = await getSupabaseAdminSafe();
     if (!admin) throw new Error("Serviço de segurança indisponível agora. Tente de novo em instantes.");
 
+    // Segunda barreira baseada no histórico do banco, não só no IP. Isso
+    // continua contando tentativas quando não há IP confiável disponível.
+    const pinWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: recentPinAttempts, error: pinAttemptsError } = await admin
+      .from("pin_reveal_logs")
+      .select("id")
+      .eq("user_id", data.userId)
+      .eq("scope", "license_access")
+      .gte("created_at", pinWindowStart)
+      .limit(5);
+    if (pinAttemptsError) {
+      throw new Error("Não foi possível validar o limite de tentativas de PIN com segurança.");
+    }
+    if ((recentPinAttempts ?? []).length >= 5) {
+      return {
+        ok: false as const,
+        message: "Muitas tentativas de PIN para este cliente. Aguarde 15 minutos antes de tentar novamente.",
+      };
+    }
+
     const { verifyAndConsumePin, logPinReveal, hasActiveChatGrant } = await import("./security-pin.server");
     const staffEmail = (context.claims?.["email"] as string | undefined) ?? null;
 
