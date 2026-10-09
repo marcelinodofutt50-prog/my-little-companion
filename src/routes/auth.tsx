@@ -438,6 +438,7 @@ function AuthPage() {
         track("signup", "sent");
         // Entra direto no painel: a confirmação de e-mail é feita depois, pelo banner do dashboard.
         if (signUpData.session) {
+          await attachReferral();
           toast.success("Conta criada! Bem-vindo.");
           navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
 
@@ -448,6 +449,7 @@ function AuthPage() {
         }
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (!signInError) {
+          await attachReferral();
           toast.success("Conta criada! Bem-vindo.");
           navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
 
@@ -463,6 +465,7 @@ function AuthPage() {
           if (freed?.ok) {
             const retry = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
             if (!retry.error) {
+              await attachReferral();
               toast.success("Conta criada e liberada! Bem-vindo.");
               navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
 
