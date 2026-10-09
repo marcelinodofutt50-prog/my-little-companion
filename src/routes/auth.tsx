@@ -231,7 +231,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: (next as any) || "/dashboard" });
+      if (data.user) navigate({ to: (next as any) || "/dashboard", search: { ref } as any });
     });
   }, [navigate, next]);
 
@@ -424,7 +424,7 @@ function AuthPage() {
         // Entra direto no painel: a confirmação de e-mail é feita depois, pelo banner do dashboard.
         if (signUpData.session) {
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
+          navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined, ref } as any });
 
 
 
