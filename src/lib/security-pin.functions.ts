@@ -49,6 +49,22 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertStaff(context);
 
+    // Limite por cliente-alvo: impede tentativas ilimitadas de adivinhar o PIN
+    // sem bloquear a equipe inteira por atender vários clientes diferentes.
+    const { checkRateLimit, recordAttempt } = await import("./rate-limit.server");
+    const pinLimitKey = `staff-pin-reveal:${data.userId}`;
+    const pinLimit = await checkRateLimit({
+      key: pinLimitKey,
+      maxAttempts: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!pinLimit.allowed) {
+      return {
+        ok: false as const,
+        message: `Muitas tentativas de PIN para este cliente. Aguarde ${Math.ceil(pinLimit.retryAfter / 60)} minuto(s) antes de tentar novamente.`,
+      };
+    }
+
     const { getSupabaseAdminSafe } = await import("./supabase-admin.server");
     const admin = await getSupabaseAdminSafe();
     if (!admin) throw new Error("Serviço de segurança indisponível agora. Tente de novo em instantes.");
@@ -69,6 +85,7 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
 
     const check = granted ? ({ ok: true } as const) : await verifyAndConsumePin(admin, data.userId, provided);
     if (!check.ok) {
+      await recordAttempt(pinLimitKey, "failure");
       await logPinReveal(admin, {
         userId: data.userId,
         staffId: context.userId,
@@ -110,6 +127,7 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
       };
     });
 
+    await recordAttempt(pinLimitKey, "success");
     await logPinReveal(admin, {
       userId: data.userId,
       staffId: context.userId,
