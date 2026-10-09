@@ -110,12 +110,14 @@ async function grantOne(
       .eq("id", ledger.id).eq("status", "pending");
   }
 
-  const { error: updateError } = await admin.from("licenses")
+  // Compare-and-swap prevents a concurrent renewal from being overwritten by an older expiry.
+  const { data: updatedLicense, error: updateError } = await admin.from("licenses")
     .update({ expires_at: targetExpiry, revoked: false, status: "active" } as any)
-    .eq("id", license.id).eq("user_id", reward.userId);
-  if (updateError) {
-    await logRewardError(admin, order.id, reward.role, "license-update-failed");
-    return { ok: false, reason: "license-update-failed" };
+    .eq("id", license.id).eq("user_id", reward.userId).eq("expires_at", license.expires_at)
+    .select("id").maybeSingle();
+  if (updateError || !updatedLicense) {
+    await logRewardError(admin, order.id, reward.role, updateError ? "license-update-failed" : "license-expiry-conflict");
+    return { ok: false, reason: updateError ? "license-update-failed" : "license-expiry-conflict" };
   }
 
   if (license.yaarsa_email) {
