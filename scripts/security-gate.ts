@@ -35,9 +35,15 @@ function writeReport(body: string) {
 }
 
 if (!hasCreds) {
-  const body = `# Relatório de segurança do deploy\n\n- Data: ${startedAt.toISOString()}\n- Status: **NÃO EXECUTADO** (credenciais do banco de produção ausentes no ambiente de build)\n\nConfigure \`SUPABASE_URL\`/\`SUPABASE_SERVICE_ROLE_KEY\` (ou os equivalentes \`EXT_*\`) nas variáveis do projeto para que a suíte rode em todo deploy.\n`;
+  const isProductionDeploy = process.env.VERCEL_ENV === "production";
+  const status = isProductionDeploy ? "FALHA — deploy bloqueado" : "NÃO EXECUTADO";
+  const body = `# Relatório de segurança do deploy\n\n- Data: ${startedAt.toISOString()}\n- Status: **${status}** (credenciais do banco de produção ausentes no ambiente de build)\n\nConfigure SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY (ou os equivalentes EXT_*) nas variáveis do projeto para executar a suíte.\n`;
   writeReport(body);
-  console.warn("[security-gate] credenciais ausentes — suíte pulada, deploy liberado.");
+  if (isProductionDeploy) {
+    console.error("[security-gate] credenciais ausentes em produção — bloqueando o deploy.");
+    process.exit(1);
+  }
+  console.warn("[security-gate] credenciais ausentes fora de produção — testes não executados.");
   process.exit(0);
 }
 
@@ -68,7 +74,7 @@ try {
 }
 
 const durationMs = Date.now() - startedAt.getTime();
-const failed = run.status !== 0;
+const failed = run.status !== 0 || !parsed || parsed.numTotalTests === 0 || parsed.numFailedTests > 0;
 
 const lines: string[] = [];
 lines.push("# Relatório de segurança do deploy — ShadowDash Store");
