@@ -75,8 +75,7 @@ begin
       and coalesce(l.revoked, false) = false
       and l.disabled_at is null
       and coalesce(l.is_trial, false) = false
-      and l.expires_at is not null
-      and l.expires_at > now();
+      and l.expires_at is not null;
 
     update public.licenses l
        set expires_at = t.target_expires_at
