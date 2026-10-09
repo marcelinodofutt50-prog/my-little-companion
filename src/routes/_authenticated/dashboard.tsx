@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, CircleCheck, TriangleAlert } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, CircleCheck, TriangleAlert, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -613,56 +613,43 @@ function DashboardPage() {
                     {visibleLicenses.length === 0 && (
                       <p className="text-sm text-muted-foreground">Você removeu todos os logins antigos do painel. Nenhuma licença ativa no momento.</p>
                     )}
-                    {visibleLicenses.map((l: any) => {
-                      const s = licenseExpiryState(l, serverNow)
-                      const open = isLicenseOpen(l.id)
+                    {visibleLicenses.map((license: any) => {
+                      const s = licenseExpiryState(license, serverNow)
+                      const open = isLicenseOpen(license.id)
                       const summary = s.paused
                         ? 'Pausada'
                         : s.active
                           ? (s.daysLeft !== null ? `${Math.max(0, s.daysLeft)} dia${s.daysLeft === 1 ? '' : 's'} restantes` : 'Vitalícia')
                           : 'Inativa'
+                      const active = isLicenseActive(license)
+                      const licenseDownloads = active ? downloadsForLicense(license) : []
+                      const state = s
+                      const dead = isDeadLicense(license)
                       return (
+                        <div key={license.id} className="space-y-2">
                         <button
-                          key={l.id}
                           type="button"
                           aria-expanded={open}
-                          onClick={() => toggleLicenseOpen(l.id)}
+                          onClick={() => toggleLicenseOpen(license.id)}
                           className={cn(
                             "flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2.5 text-left text-xs transition-colors",
                             open ? "border-primary/60 bg-primary/10" : "border-border/60 bg-background/40 hover:border-primary/40",
                           )}
                         >
                           <span className={cn("h-2 w-2 shrink-0 rounded-full", s.active ? "bg-primary" : s.paused ? "bg-amber-500" : "bg-destructive")} />
-                          <span className="font-semibold text-foreground">{planLabel(l.plan_slug, l.is_trial)}</span>
-                          <span className="truncate font-mono text-[11px] text-muted-foreground">{l.yaarsa_email}</span>
+                          <span className="font-semibold text-foreground">{planLabel(license.plan_slug, license.is_trial)}</span>
+                          <span className="truncate font-mono text-[11px] text-muted-foreground">{license.yaarsa_email}</span>
                           <span className={cn(
                             "ml-auto font-mono text-[10px] uppercase tracking-wider",
                             s.paused ? "text-amber-500" : s.active ? "text-primary" : "text-destructive",
                           )}>
                             {summary}
                           </span>
-                          {l.hidden_by_user_at && <span className="text-[10px] text-muted-foreground">(removido)</span>}
+                          {license.hidden_by_user_at && <span className="text-[10px] text-muted-foreground">(removido)</span>}
                           <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
                         </button>
-                      )
-                    })}
-                    {hiddenCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowHidden((v) => !v)}
-                        className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                      >
-                        {showHidden ? 'Esconder logins removidos' : `Mostrar ${hiddenCount} login${hiddenCount > 1 ? 's' : ''} removido${hiddenCount > 1 ? 's' : ''}`}
-                      </button>
-                    )}
-                  </div>
-                  {visibleLicenses.filter((l: any) => isLicenseOpen(l.id)).map((license: any) => {
-                    const active = isLicenseActive(license)
-                    const licenseDownloads = active ? downloadsForLicense(license) : []
-                    const state = licenseExpiryState(license, serverNow)
-                    const dead = isDeadLicense(license)
-                    return (
-                      <Card key={license.id} className="lg:col-span-2 border-border/60 bg-background/40 shadow-none transition-all hover:border-primary/40 hover:bg-background/50">
+                        {open && (
+                      <Card className="border-border/60 bg-background/40 shadow-none transition-all hover:border-primary/40 hover:bg-background/50">
                         <CardContent className="space-y-4 p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -849,8 +836,20 @@ function DashboardPage() {
                           )}
                         </CardContent>
                       </Card>
+                        )}
+                        </div>
                     )
                   })}
+                    {hiddenCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowHidden((v) => !v)}
+                        className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                      >
+                        {showHidden ? 'Esconder logins removidos' : `Mostrar ${hiddenCount} login${hiddenCount > 1 ? 's' : ''} removido${hiddenCount > 1 ? 's' : ''}`}
+                      </button>
+                    )}
+                  </div>
                   </>)}
                   </div>
               </section>
