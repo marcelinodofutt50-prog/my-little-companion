@@ -271,7 +271,7 @@ function TutorialsPage() {
             </div>
 
             {!loading && tutorials.length === 0 && loadError && (
-              <div className="enterprise-surface !bg-[#080b12]/95 text-foreground p-12 rounded-2xl border border-primary/20 text-center space-y-6 mb-10 shadow-2xl shadow-black/30">
+              <div className="!bg-[#080b12] !text-white border-[#1e293b] training-empty-state p-12 rounded-2xl border border-primary/20 text-center space-y-6 mb-10 shadow-2xl shadow-black/30">
                 <div className="flex justify-center">
                   <div className="p-4 rounded-full bg-primary/5 border border-primary/10 relative">
                     <BookOpen className="h-12 w-12 text-primary/20" />
@@ -315,7 +315,7 @@ function TutorialsPage() {
             )}
 
             {!loading && tutorials.length === 0 && !loadError && (
-              <div className="enterprise-surface !bg-[#080b12]/95 text-foreground p-12 rounded-2xl border border-primary/20 text-center space-y-4 mb-10 shadow-2xl shadow-black/30">
+              <div className="!bg-[#080b12] !text-white border-[#1e293b] training-empty-state p-12 rounded-2xl border border-primary/20 text-center space-y-4 mb-10 shadow-2xl shadow-black/30">
                 <div className="flex justify-center">
                   <div className="p-4 rounded-full bg-primary/5 border border-primary/10">
                     <BookOpen className="h-12 w-12 text-primary/30" />
