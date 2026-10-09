@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Link } from "@tanstack/react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,12 +35,19 @@ function ReferralsPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pixKeyDraft, setPixKeyDraft] = useState("");
 
   const getInfoFn = useServerFn(getMyReferralInfo);
   const updatePrefFn = useServerFn(updateReferralPref);
 
   useEffect(() => {
-    getInfoFn().then(setData).catch(console.error).finally(() => setLoading(false));
+    getInfoFn().then((result) => {
+      setData(result);
+      setPixKeyDraft(result?.pixKey ?? "");
+    }).catch((error) => {
+      console.error(error);
+      toast.error("Não foi possível carregar suas indicações. Tente novamente.");
+    }).finally(() => setLoading(false));
   }, [getInfoFn]);
 
   const copyCode = () => {
@@ -51,10 +59,14 @@ function ReferralsPage() {
   };
 
   const handlePrefChange = async (pref: "cashback" | "pix" | "free_month") => {
+    if (pref === "pix" && !pixKeyDraft.trim()) {
+      toast.error("Informe sua chave Pix antes de selecionar essa recompensa.");
+      return;
+    }
     setUpdating(true);
     try {
-      await updatePrefFn({ data: { pref } });
-      setData((prev: any) => ({ ...prev, pref }));
+      await updatePrefFn({ data: { pref, pixKey: pref === "pix" ? pixKeyDraft.trim() : null } });
+      setData((prev: any) => ({ ...prev, pref, pixKey: pref === "pix" ? pixKeyDraft.trim() : prev?.pixKey ?? pixKeyDraft.trim() }));
       toast.success("Preferência atualizada!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao atualizar");
@@ -225,6 +237,21 @@ function ReferralsPage() {
                               <span className="text-[10px] font-mono uppercase">{p.label}</span>
                             </Button>
                           ))}
+                        </div>
+                        <div className="space-y-2 rounded-lg border bg-muted/20 p-4">
+                          <label htmlFor="referral-pix-key" className="text-xs font-mono uppercase tracking-wide text-muted-foreground">
+                            Chave Pix para receber recompensas
+                          </label>
+                          <Input
+                            id="referral-pix-key"
+                            value={pixKeyDraft}
+                            onChange={(event) => setPixKeyDraft(event.target.value.slice(0, 120))}
+                            maxLength={120}
+                            placeholder="CPF, e-mail, telefone ou chave aleatória"
+                            autoComplete="off"
+                            disabled={updating || loading}
+                          />
+                          <p className="text-xs text-muted-foreground">A chave é opcional para Crédito Shadow e Mês Grátis. Ao escolher Pix, ela será salva no seu perfil.</p>
                         </div>
                       </CardContent>
                     </Card>

@@ -108,12 +108,20 @@ export const updateReferralPref = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (data.pref === "pix" && !data.pixKey?.trim()) {
+      throw new Error("Informe sua chave Pix antes de selecionar essa forma de recompensa.");
+    }
+
+    const updates: Record<string, unknown> = {
+      referral_reward_pref: data.pref,
+    };
+    // Preserve a chave cadastrada quando a pessoa muda temporariamente para outra recompensa.
+    // A chave só é atualizada quando Pix é a preferência selecionada.
+    if (data.pref === "pix") updates.pix_key = data.pixKey!.trim();
+
     const { error } = await supabase
       .from("profiles")
-      .update({
-        referral_reward_pref: data.pref,
-        pix_key: data.pref === "pix" ? (data.pixKey || null) : null,
-      } as any)
+      .update(updates as any)
       .eq("id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };

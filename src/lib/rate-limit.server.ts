@@ -1,17 +1,13 @@
 /**
  * Generic Rate Limiter (Server-side only).
- * Prevents brute-force on sensitive endpoints by tracking attempts in the database.
+ * Tracks attempts in the database for sensitive endpoints.
  */
 import { clientIp, hashIp } from "./antifraud.server";
 
 export type RateLimitOptions = {
-  /** Unique identifier for the bucket (e.g. 'login', 'signup', 'recovery') */
   key: string;
-  /** Maximum attempts allowed in the window */
   maxAttempts: number;
-  /** Window duration in milliseconds */
   windowMs: number;
-  /** Whether to hash the IP (privacy) */
   hashIp?: boolean;
 };
 
@@ -22,26 +18,25 @@ export type RateLimitResult = {
 };
 
 /**
- * Checks if the current request is within rate limits.
- * Uses `signup_attempts` table as a general-purpose attempt log for now,
- * but tags it with the specific key.
+ * Fail closed when the IP or persistence layer is unavailable. A missing IP
+ * must not silently disable brute-force protection; deployment proxy headers
+ * must be configured and trusted for this limiter to work.
  */
 export async function checkRateLimit(options: RateLimitOptions): Promise<RateLimitResult> {
+  const retryAfterFallback = Math.max(1, Math.ceil(options.windowMs / 1000));
   const ip = clientIp();
-  if (!ip) return { allowed: true, retryAfter: 0, remaining: options.maxAttempts };
+
+  if (!ip) {
+    console.error("[checkRateLimit] No client IP available; denying request", { key: options.key });
+    return { allowed: false, retryAfter: retryAfterFallback, remaining: 0 };
+  }
 
   const identifier = options.hashIp !== false ? await hashIp(ip) : ip;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  
   const since = new Date(Date.now() - options.windowMs).toISOString();
   const bucketKey = `rl:${options.key}`;
 
-  // Use audit_logs or a dedicated table. signup_attempts is already used for signup.
-  // We'll use signup_attempts but prefix the outcome or use context if available.
-  // Actually, let's create a more generic record in audit_logs for sensitive failures
-  // and check against them.
-  
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("signup_attempts")
     .select("created_at")
     .eq("ip_hash", identifier)
@@ -49,10 +44,18 @@ export async function checkRateLimit(options: RateLimitOptions): Promise<RateLim
     .gte("created_at", since)
     .order("created_at", { ascending: true });
 
+  if (error) {
+    console.error("[checkRateLimit] Attempt-store query failed; denying request", {
+      key: options.key,
+      code: error.code,
+    });
+    return { allowed: false, retryAfter: retryAfterFallback, remaining: 0 };
+  }
+
   const attempts = data ?? [];
   const allowed = attempts.length < options.maxAttempts;
-  
   let retryAfter = 0;
+
   if (!allowed && attempts[0]) {
     const oldest = new Date(attempts[0].created_at).getTime();
     retryAfter = Math.max(1, Math.ceil((oldest + options.windowMs - Date.now()) / 1000));
@@ -65,37 +68,42 @@ export async function checkRateLimit(options: RateLimitOptions): Promise<RateLim
   };
 }
 
-/**
- * Records an attempt (successful or failed) for rate limiting.
- */
-export async function recordAttempt(key: string, outcome: "success" | "failure" | "blocked", emailMasked?: string | null) {
+/** Records an attempt (successful or failed) for rate limiting. */
+export async function recordAttempt(
+  key: string,
+  outcome: "success" | "failure" | "blocked",
+  emailMasked?: string | null,
+) {
   try {
     const ip = clientIp();
-    if (!ip) return;
+    if (!ip) {
+      console.error("[recordAttempt] No client IP available; attempt was not recorded", { key });
+      return;
+    }
+
     const ipHash = await hashIp(ip);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    
-    // Log to signup_attempts for rate limiting logic
-    // Explicitly use the fields expected by the database schema to avoid TS errors
-    const payload = {
+    const { error: attemptError } = await (supabaseAdmin.from("signup_attempts") as any).insert({
       ip_hash: ipHash,
       email_masked: emailMasked || null,
-      outcome: `rl:${key}`, // Used as the bucket key
-    };
-    await (supabaseAdmin.from("signup_attempts") as any).insert(payload);
+      outcome: `rl:${key}`,
+    });
 
-    // Log to audit_logs for admin visibility
-    // Cast to any to bypass strict type check for metadata vs context
-    await (supabaseAdmin.from("audit_logs") as any).insert({
+    if (attemptError) {
+      console.error("[recordAttempt] Failed to persist rate-limit attempt", { key, code: attemptError.code });
+    }
+
+    const { error: auditError } = await (supabaseAdmin.from("audit_logs") as any).insert({
       event: `AUTH_${key.toUpperCase()}`,
       decision: outcome.toUpperCase(),
       reason: outcome === "blocked" ? "Rate limit exceeded" : outcome,
       system: "Shadow Security Guard",
-      metadata: {
-        ip_hash: ipHash,
-        email_masked: emailMasked || null
-      }
+      metadata: { ip_hash: ipHash, email_masked: emailMasked || null },
     });
+
+    if (auditError) {
+      console.error("[recordAttempt] Failed to persist audit event", { key, code: auditError.code });
+    }
   } catch (e) {
     console.error("[recordAttempt] Failed to log security event:", e);
   }

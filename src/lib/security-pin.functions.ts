@@ -49,9 +49,45 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertStaff(context);
 
+    // Limite por cliente-alvo: impede tentativas ilimitadas de adivinhar o PIN
+    // sem bloquear a equipe inteira por atender vários clientes diferentes.
+    const { checkRateLimit, recordAttempt } = await import("./rate-limit.server");
+    const pinLimitKey = `staff-pin-reveal:${data.userId}`;
+    const pinLimit = await checkRateLimit({
+      key: pinLimitKey,
+      maxAttempts: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!pinLimit.allowed) {
+      return {
+        ok: false as const,
+        message: `Muitas tentativas de PIN para este cliente. Aguarde ${Math.ceil(pinLimit.retryAfter / 60)} minuto(s) antes de tentar novamente.`,
+      };
+    }
+
     const { getSupabaseAdminSafe } = await import("./supabase-admin.server");
     const admin = await getSupabaseAdminSafe();
     if (!admin) throw new Error("Serviço de segurança indisponível agora. Tente de novo em instantes.");
+
+    // Segunda barreira baseada no histórico do banco, não só no IP. Isso
+    // continua contando tentativas quando não há IP confiável disponível.
+    const pinWindowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: recentPinAttempts, error: pinAttemptsError } = await admin
+      .from("pin_reveal_logs")
+      .select("id")
+      .eq("user_id", data.userId)
+      .eq("scope", "license_access")
+      .gte("created_at", pinWindowStart)
+      .limit(5);
+    if (pinAttemptsError) {
+      throw new Error("Não foi possível validar o limite de tentativas de PIN com segurança.");
+    }
+    if ((recentPinAttempts ?? []).length >= 5) {
+      return {
+        ok: false as const,
+        message: "Muitas tentativas de PIN para este cliente. Aguarde 15 minutos antes de tentar novamente.",
+      };
+    }
 
     const { verifyAndConsumePin, logPinReveal, hasActiveChatGrant } = await import("./security-pin.server");
     const staffEmail = (context.claims?.["email"] as string | undefined) ?? null;
@@ -69,6 +105,7 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
 
     const check = granted ? ({ ok: true } as const) : await verifyAndConsumePin(admin, data.userId, provided);
     if (!check.ok) {
+      await recordAttempt(pinLimitKey, "failure");
       await logPinReveal(admin, {
         userId: data.userId,
         staffId: context.userId,
@@ -110,6 +147,7 @@ export const staffRevealLicenseAccess = createServerFn({ method: "POST" })
       };
     });
 
+    await recordAttempt(pinLimitKey, "success");
     await logPinReveal(admin, {
       userId: data.userId,
       staffId: context.userId,
