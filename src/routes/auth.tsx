@@ -434,7 +434,7 @@ function AuthPage() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (!signInError) {
           toast.success("Conta criada! Bem-vindo.");
-          navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
+          navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined, ref } as any });
 
 
 
@@ -449,7 +449,7 @@ function AuthPage() {
             const retry = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
             if (!retry.error) {
               toast.success("Conta criada e liberada! Bem-vindo.");
-              navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
+              navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined, ref } as any });
 
 
 
@@ -460,7 +460,7 @@ function AuthPage() {
         }
 
         toast.success("Conta criada! Redirecionando...");
-        navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined } as any });
+        navigate({ to: (next as any) || "/dashboard", search: { trial: trial === 'true' ? 'true' : undefined, ref } as any });
 
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
@@ -470,7 +470,7 @@ function AuthPage() {
         }
         void reportAuthOutcome({ data: { email: cleanEmail, action: "login", success: true } });
         clearLocalLimits();
-        navigate({ to: (next as any) || "/dashboard" });
+        navigate({ to: (next as any) || "/dashboard", search: { ref } as any });
       }
     } catch (err: any) {
 
