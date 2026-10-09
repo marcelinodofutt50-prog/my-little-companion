@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const yaarsaExtend = vi.fn();
+const { yaarsaExtend } = vi.hoisted(() => ({ yaarsaExtend: vi.fn() }));
 vi.mock("@/lib/yaarsa.server", () => ({ yaarsaExtend }));
 
 describe("grantReferralPurchaseReward", () => {
