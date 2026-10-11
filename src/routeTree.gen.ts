@@ -26,6 +26,7 @@ import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
 import { Route as ShadowHubRouteImport } from './routes/shadow-hub'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as TutorialRouteImport } from './routes/tutorial'
+import { Route as VpsRouteImport } from './routes/vps'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedClientesChatRouteImport } from './routes/_authenticated/clientes-chat'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -149,6 +150,11 @@ const TermosRoute = TermosRouteImport.update({
 const TutorialRoute = TutorialRouteImport.update({
   id: '/tutorial',
   path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VpsRoute = VpsRouteImport.update({
+  id: '/vps',
+  path: '/vps',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -388,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
+  '/vps': typeof VpsRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes-chat': typeof AuthenticatedClientesChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -446,6 +453,7 @@ export interface FileRoutesByTo {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
+  '/vps': typeof VpsRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes-chat': typeof AuthenticatedClientesChatRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -506,6 +514,7 @@ export interface FileRoutesById {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
+  '/vps': typeof VpsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/clientes-chat': typeof AuthenticatedClientesChatRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -566,6 +575,7 @@ export interface FileRouteTypes {
     | '/shadow-hub'
     | '/termos'
     | '/tutorial'
+    | '/vps'
     | '/admin'
     | '/clientes-chat'
     | '/dashboard'
@@ -624,6 +634,7 @@ export interface FileRouteTypes {
     | '/shadow-hub'
     | '/termos'
     | '/tutorial'
+    | '/vps'
     | '/admin'
     | '/clientes-chat'
     | '/dashboard'
@@ -683,6 +694,7 @@ export interface FileRouteTypes {
     | '/shadow-hub'
     | '/termos'
     | '/tutorial'
+    | '/vps'
     | '/_authenticated/admin'
     | '/_authenticated/clientes-chat'
     | '/_authenticated/dashboard'
@@ -743,6 +755,7 @@ export interface RootRouteChildren {
   ShadowHubRoute: typeof ShadowHubRoute
   TermosRoute: typeof TermosRoute
   TutorialRoute: typeof TutorialRouteWithChildren
+  VpsRoute: typeof VpsRoute
   PagamentoCheckoutRoute: typeof PagamentoCheckoutRoute
   PagamentoErroRoute: typeof PagamentoErroRoute
   PagamentoPendenteRoute: typeof PagamentoPendenteRoute
@@ -887,6 +900,13 @@ declare module '@tanstack/react-router' {
       path: '/tutorial'
       fullPath: '/tutorial'
       preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vps': {
+      id: '/vps'
+      path: '/vps'
+      fullPath: '/vps'
+      preLoaderRoute: typeof VpsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -1252,6 +1272,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShadowHubRoute: ShadowHubRoute,
   TermosRoute: TermosRoute,
   TutorialRoute: TutorialRouteWithChildren,
+  VpsRoute: VpsRoute,
   PagamentoCheckoutRoute: PagamentoCheckoutRoute,
   PagamentoErroRoute: PagamentoErroRoute,
   PagamentoPendenteRoute: PagamentoPendenteRoute,
