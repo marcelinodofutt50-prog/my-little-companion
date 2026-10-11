@@ -3,6 +3,16 @@ import { ArrowRight, Cpu, HardDrive, ShieldCheck, Server, Zap, Layers3 } from "l
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/vps")({
+  head: () => ({
+    meta: [
+      { title: "VPS Shadow — Servidores dedicados em preparação" },
+      { name: "description", content: "Conheça as categorias de VPS da ShadowDash: Starter, Performance e Pro. Infraestrutura em preparação, com vendas liberadas em breve." },
+      { property: "og:title", content: "VPS Shadow — Servidores dedicados em preparação" },
+      { property: "og:description", content: "Categorias de VPS da ShadowDash: Starter, Performance e Pro. Vendas em breve." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: VpsStorefrontPage,
 });
 
