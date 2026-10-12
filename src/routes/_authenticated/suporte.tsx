@@ -21,8 +21,9 @@ import { ResponseTimeBadge } from "@/components/support/ResponseTimeBadge";
 
 
 export const Route = createFileRoute("/_authenticated/suporte")({
-  head: () => ({ meta: [{ title: "Suporte — Shadow" }] }),
-  validateSearch: (s: Record<string, unknown>): { reabrir?: boolean; erro?: boolean; lic?: string } => ({
+  head: () => ({ meta: [{ title: "Suporte — Shadow" }, { name: "description", content: "Acompanhe seus chamados e a entrega da sua VPS com a equipe Shadow." }, { property: "og:title", content: "Suporte — Shadow" }, { property: "og:description", content: "Atendimento e acompanhamento de chamados Shadow." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  validateSearch: (s: Record<string, unknown>): { reabrir?: boolean; erro?: boolean; lic?: string; thread?: string } => ({
+    thread: typeof s.thread === "string" && /^[0-9a-f-]{36}$/i.test(s.thread) ? s.thread : undefined,
     reabrir: s.reabrir === "1" || s.reabrir === 1 || s.reabrir === true ? true : false,
     erro: s.erro === "1" || s.erro === 1 || s.erro === true ? true : false,
     lic: typeof s.lic === "string" && s.lic ? s.lic.slice(0, 60) : "",
@@ -47,7 +48,7 @@ const PAGE_SIZE = 30;
 
 function SupportPage() {
   const { t } = useI18n();
-  const { reabrir, erro, lic } = Route.useSearch();
+  const { reabrir, erro, lic, thread: requestedThread } = Route.useSearch();
   const search = useSearch({ from: "/_authenticated/suporte" }) as any;
 
   useThemeSearchParam(search?.theme);
@@ -95,6 +96,13 @@ function SupportPage() {
       let lastError: any;
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
+          if (requestedThread) {
+            const { data: auth } = await supabase.auth.getUser();
+            if (!auth.user) throw new Error("Entre na sua conta para abrir este chamado.");
+            const { data: owned, error } = await supabase.from("support_threads").select("id,category,status,assigned_name").eq("id", requestedThread).eq("user_id", auth.user.id).maybeSingle();
+            if (error || !owned) throw new Error("Chamado indisponível para esta conta.");
+            return owned;
+          }
           return await openFn();
         } catch (error) {
           lastError = error;
@@ -114,7 +122,7 @@ function SupportPage() {
       })
       .finally(() => { if (!cancelled) setOpening(false); });
     return () => { cancelled = true; };
-  }, [openFn]);
+  }, [openFn, requestedThread]);
 
   // Reabertura vinda da notificação de encerramento por inatividade.
   const reopenNotifiedRef = useRef(false);

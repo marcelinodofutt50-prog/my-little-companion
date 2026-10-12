@@ -1269,7 +1269,7 @@ export function SupportChat({
             aria-label="Visualização ampliada do anexo"
             onClick={() => setZoomUrl(null)}
           >
-            <div className="relative flex max-h-[82dvh] w-full max-w-[min(92vw,1200px)] items-center justify-center">
+            <div data-sensitive className="relative flex max-h-[82dvh] w-full max-w-[min(92vw,1200px)] items-center justify-center">
               <img
                 src={zoomUrl}
                 alt="anexo ampliado"
