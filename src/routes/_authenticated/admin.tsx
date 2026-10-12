@@ -1,5 +1,6 @@
 import { SupportStatsPanel } from "@/components/support/SupportStatsPanel";
 import { AdminDailySummary } from "@/components/AdminDailySummary";
+import { AdminSupportersPanel } from "@/components/admin/AdminSupportersPanel";
 import { AdminGiveawaysPanel } from "@/components/admin/AdminGiveawaysPanel";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
@@ -2379,7 +2380,7 @@ function AdminPage() {
               {tab === "client_status" && <AdminClientStatusPanel />}
               {tab === "security_attempts" && <AdminSecurityAttemptsPanel />}
               {tab === "vip" && <AdminVipPanel />}
-              {tab === "giveaways" && <AdminGiveawaysPanel />}
+              {tab === "giveaways" && <div className="space-y-6"><AdminGiveawaysPanel /><AdminSupportersPanel /></div>}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
               {tab === "applications" && <AdminStaffApplicationsPanel />}
