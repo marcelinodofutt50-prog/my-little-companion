@@ -252,6 +252,7 @@ type Tab =
 
 // Explicação em linguagem simples de cada seção do painel.
 const TAB_DESC: Record<Tab, string> = {
+  giveaways: "Sorteios: anunciar, conferir quem participa e sortear ao vivo com confete.",
   partners: "Parceiros: dados da VPS enviados pelo cliente para a equipe instalar e cuidar.",
   overview: "Resumo do dia: quanto entrou, o que está pendente e atalhos rápidos.",
   ia: "Diagnóstico automático: a IA aponta erros e o que precisa de atenção.",
