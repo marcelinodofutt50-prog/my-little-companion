@@ -1063,11 +1063,13 @@ export function SupportChat({
             >
               {p.body && <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>}
               {p.previewUrl && (
+                <div data-sensitive>
                 <img
                   src={p.previewUrl}
                   alt="pré-visualização do anexo"
                   className="mt-2 max-h-48 rounded-lg object-contain opacity-80"
                 />
+                </div>
               )}
               {!p.previewUrl && p.attachmentName && (
                 <div className="mt-1 flex items-center gap-2 text-xs opacity-90">
