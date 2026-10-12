@@ -819,7 +819,7 @@ function DashboardPage() {
                                       className="group flex items-center gap-2 truncate font-medium text-foreground transition-colors hover:text-primary"
                                       onClick={() => { navigator.clipboard.writeText(String(row.value ?? '').trim()); toast.success('Copiado!') }}
                                     >
-                                      <span className="truncate">{row.value}</span>
+                                      <span data-sensitive className="truncate">{row.value}</span>
                                       <Copy className="h-3 w-3 shrink-0 opacity-40 transition-opacity group-hover:opacity-100" />
                                     </button>
                                   </div>
