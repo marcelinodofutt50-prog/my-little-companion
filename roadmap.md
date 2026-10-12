@@ -1,5 +1,12 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 12/10 — suporte, sorteios, gravações e VPS
+- [ ] VPS: imagens ilustrativas, indicação de uso de cada plano e atendimento automático após pagamento confirmado.
+- [ ] Suporte/chat: conexão clara, recuperação e rascunhos por conversa.
+- [ ] Sorteios: aleatoriedade uniforme, erros tratados e apresentação acessível para gravação.
+- [ ] Streamer: proteção de dados dinâmicos, imagens/anexos e campos sensíveis.
+- [ ] Testes controlados e revisão visual, sem executar sorteios ou pagamentos reais.
+
 - [x] P0 Segurança: banco real, funções públicas, IDOR (mensagens do suporte corrigido), registros sem senha
 - [~] P1 Bugs: reparo reescrito com as regras reais do painel + renovação reativa conta vencida (feito). Falta: confirmar no site real após Redeploy; pedidos parando antes do Mercado Pago (ver registros após Redeploy); pausar via data passada não funciona no painel (cexpire recusa)
 - [ ] P2 Confiabilidade: logs/auditoria, alertas agrupados, Central de Diagnóstico (sem segredos)
