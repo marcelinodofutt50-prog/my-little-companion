@@ -31,7 +31,7 @@ const plans = [
     slug: "vps-starter",
     name: "VPS Starter",
     label: "Para começar",
-    image: gamerExample.url,
+    image: gamerExampleUrl,
     description: "Seu ambiente de trabalho remoto, sem manter a BTmob no desktop pessoal. Separe sua operação do computador do dia a dia.",
     price: 180,
     icon: Server,
