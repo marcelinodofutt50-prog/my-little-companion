@@ -9,7 +9,7 @@ RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE uid uuid := auth.uid(); cur record; l text := btrim(coalesce(_links,'')); p text := btrim(coalesce(_plan,''));
 BEGIN
   IF uid IS NULL OR NOT public.mfa_satisfied() THEN RAISE EXCEPTION 'not_allowed'; END IF;
-  IF EXISTS (SELECT 1 FROM account_bans b WHERE b.user_id = uid AND (b.expires_at IS NULL OR b.expires_at > now())) THEN RAISE EXCEPTION 'banned'; END IF;
+  IF EXISTS (SELECT 1 FROM account_bans b WHERE b.user_id = uid AND b.revoked_at IS NULL) THEN RAISE EXCEPTION 'banned'; END IF;
   IF char_length(l) < 10 OR char_length(l) > 600 OR l !~* 'https?://' THEN RAISE EXCEPTION 'invalid_links'; END IF;
   IF char_length(p) > 600 THEN RAISE EXCEPTION 'invalid_plan'; END IF;
   SELECT * INTO cur FROM supporter_applications WHERE user_id = uid FOR UPDATE;
