@@ -1,5 +1,6 @@
 import { SupportStatsPanel } from "@/components/support/SupportStatsPanel";
 import { AdminDailySummary } from "@/components/AdminDailySummary";
+import { AdminGiveawaysPanel } from "@/components/admin/AdminGiveawaysPanel";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -244,12 +245,14 @@ type Tab =
   | "bans"
   | "partners"
 
-  | "vip";
+  | "vip"
+  | "giveaways";
 
 
 
 // Explicação em linguagem simples de cada seção do painel.
 const TAB_DESC: Record<Tab, string> = {
+  giveaways: "Sorteios: anunciar, conferir quem participa e sortear ao vivo com confete.",
   partners: "Parceiros: dados da VPS enviados pelo cliente para a equipe instalar e cuidar.",
   overview: "Resumo do dia: quanto entrou, o que está pendente e atalhos rápidos.",
   ia: "Diagnóstico automático: a IA aponta erros e o que precisa de atenção.",
@@ -742,6 +745,7 @@ function AdminPage() {
         { id: "announcements", label: "Comunicados", icon: Megaphone, hint: "avisos corporativos" },
         { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
         { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
+        { id: "giveaways", label: "Sorteios", icon: Gift, hint: "anunciar & sortear ao vivo" },
         { id: "vip", label: "VIP & Missões", icon: Activity, hint: "tiers, missões e bypass" },
       ],
     },
@@ -2375,6 +2379,7 @@ function AdminPage() {
               {tab === "client_status" && <AdminClientStatusPanel />}
               {tab === "security_attempts" && <AdminSecurityAttemptsPanel />}
               {tab === "vip" && <AdminVipPanel />}
+              {tab === "giveaways" && <AdminGiveawaysPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
               {tab === "applications" && <AdminStaffApplicationsPanel />}

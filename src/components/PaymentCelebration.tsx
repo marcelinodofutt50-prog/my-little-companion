@@ -33,7 +33,7 @@ function makeParticles(count: number): Particle[] {
   }));
 }
 
-export function PaymentCelebration({ onDone }: { onDone?: () => void }) {
+export function PaymentCelebration({ onDone, title = "Pagamento confirmado", subtitle = "Acesso liberado // bem-vindo à Shadow", durationMs = 2600 }: { onDone?: () => void; title?: string; subtitle?: string; durationMs?: number }) {
   const particles = useMemo(() => makeParticles(56), []);
   const [visible, setVisible] = useState(true);
 
@@ -41,9 +41,9 @@ export function PaymentCelebration({ onDone }: { onDone?: () => void }) {
     const t = window.setTimeout(() => {
       setVisible(false);
       onDone?.();
-    }, 2600);
+    }, durationMs);
     return () => window.clearTimeout(t);
-  }, [onDone]);
+  }, [onDone, durationMs]);
 
   return (
     <AnimatePresence>
@@ -133,7 +133,7 @@ export function PaymentCelebration({ onDone }: { onDone?: () => void }) {
             transition={{ delay: 0.45, duration: 0.4 }}
           >
             <div className="font-mono text-2xl font-black uppercase tracking-[0.25em] text-neon drop-shadow-[0_0_18px_oklch(0.85_0.25_145/0.6)]">
-              Pagamento confirmado
+              {title}
             </div>
             <motion.div
               className="mt-2 font-mono text-[11px] uppercase tracking-[0.3em] text-cyan"
@@ -141,7 +141,7 @@ export function PaymentCelebration({ onDone }: { onDone?: () => void }) {
               animate={{ opacity: [0, 1, 0.4, 1] }}
               transition={{ delay: 0.7, duration: 0.6 }}
             >
-              Acesso liberado // bem-vindo à Shadow
+              {subtitle}
             </motion.div>
           </motion.div>
         </motion.div>
