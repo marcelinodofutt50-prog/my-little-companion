@@ -8,8 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { createMarketCheckout } from "@/lib/market.functions";
 import { Button } from "@/components/ui/button";
 import gamerExample from "@/assets/vps-gamer-example.png.asset.json";
-import performanceImage from "@/assets/vps-performance.jpg";
-import enterpriseImage from "@/assets/vps-enterprise.jpg";
+import performanceAsset from "@/assets/vps-performance.jpg.asset.json";
+import enterpriseAsset from "@/assets/vps-enterprise.jpg.asset.json";
+const performanceImage = performanceAsset.url;
+const enterpriseImage = enterpriseAsset.url;
 
 export const Route = createFileRoute("/vps")({
   head: () => ({
