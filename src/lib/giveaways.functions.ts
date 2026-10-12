@@ -1,18 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { publicGiveawayLabel as publicLabel, randomIndex, shuffledSample } from "./giveaway-random";
 
 async function adminDb(context: any) {
   const { assertAdmin } = await import("@/lib/admin-helpers.server");
   await assertAdmin(context);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin as any;
-}
-
-/** Apelido público curto (nunca e-mail). */
-function publicLabel(label: string | null) {
-  const s = (label ?? "").trim();
-  return s ? s.slice(0, 24) : "Membro Shadow";
 }
 
 export const adminListGiveaways = createServerFn({ method: "GET" })
@@ -29,7 +24,8 @@ export const adminListGiveaways = createServerFn({ method: "GET" })
     const withCounts = await Promise.all(
       rows.map(async (g) => {
         if (g.status !== "open") return g;
-        const { data: el } = await db.rpc("giveaway_eligible_users", { _id: g.id });
+        const { data: el, error: countError } = await db.rpc("giveaway_eligible_users", { _id: g.id });
+        if (countError) throw new Error("Não foi possível conferir os participantes. Atualize e tente novamente.");
         return { ...g, eligible_count: (el ?? []).length };
       }),
     );
@@ -62,12 +58,13 @@ export const adminCreateGiveaway = createServerFn({ method: "POST" })
         "E-mail confirmado e conta sem bloqueios",
       ].filter(Boolean);
       const body = `${data.description ? data.description + "\n\n" : ""}Prêmio: ${data.prize}\n\nRegras para participar:\n• ${rules.join("\n• ")}\n\nTodos que cumprirem as regras já estão participando automaticamente.`;
-      const { data: ann } = await db
+       const { data: ann, error: announcementError } = await db
         .from("announcements")
         .insert({ title: `🎁 Sorteio: ${data.title}`, body, severity: "info", status: "published", is_active: true, created_by: context.userId, tags: ["sorteio"] })
         .select("id")
         .single();
       announcement_id = ann?.id ?? null;
+       if (announcementError || !announcement_id) throw new Error("Não foi possível publicar o anúncio; o sorteio não foi criado.");
     }
     const { announce: _a, ...rest } = data;
     const { data: row, error } = await db
