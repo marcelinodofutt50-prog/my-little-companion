@@ -29,6 +29,7 @@ import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 import { TrialActivationCard } from '@/components/TrialActivationCard'
 import { WelcomeProfileDialog } from '@/components/WelcomeProfileDialog'
 import { useQuery } from '@tanstack/react-query'
+import { TrialEndedReferralOffer } from '@/components/TrialEndedReferralOffer'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/lib/i18n'
@@ -366,6 +367,12 @@ function DashboardPage() {
                 <span className="rounded-md border border-border/60 bg-card/90 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur-md">Menu</span>
               </div>
               <StaffDeskCard />
+              {!licensesLoading && !activeLicense && (() => {
+                const endedTrial = (licenses ?? []).find((l: any) => l.is_trial)
+                return endedTrial ? (
+                  <TrialEndedReferralOffer trialId={endedTrial.id} referralCode={(profile as any)?.referral_code ?? null} />
+                ) : null
+              })()}
               {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">
                   <TrialActivationCard onDone={() => void refetchLicenses()} />
