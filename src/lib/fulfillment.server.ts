@@ -116,7 +116,7 @@ async function fulfillOrderInner(orderId: string) {
     const { data: order } = await supabaseAdmin.from("orders").select("status,plan_slug").eq("id", orderId).maybeSingle();
     if (!order) return { ok: false, reason: "order-not-found" };
     const { data: plan } = await supabaseAdmin.from("plans").select("category").eq("slug", order.plan_slug).maybeSingle();
-    if (plan?.category === "server") {
+    if (plan?.category === "server" || plan?.category === "market" || plan?.category === "source") {
       if (order.status === "paid") return { ok: true, reason: "already-renewed" };
       if (order.status === "processing") return { ok: true, reason: "in-progress" };
       return { ok: false, reason: `not-claimable: ${order.status}` };
@@ -377,7 +377,9 @@ async function fulfillOrderInner(orderId: string) {
   // ============ Market / código-fonte (entrega manual pelo admin) ============
 
   if (planRow?.category === "market" || planRow?.category === "source") {
-    await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
+    // The database atomically opens one VPS delivery ticket per paid order.
+    const { error: paidError } = await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
+    if (paidError) throw new Error(`Não foi possível registrar a entrega: ${paidError.message}`);
     await supabaseAdmin.from("webhook_logs").insert({
       source: "stripe", note: `${planRow.category} purchase ${orderId} paid (${planRow.slug}) — aguardando entrega admin`, processed: true,
     });

@@ -3483,6 +3483,7 @@ export type Database = {
           last_customer_message_at: string | null
           last_staff_message_at: string | null
           priority: string
+          source_order_id: string | null
           status: string
           subject: string
           unread_by_customer: number
@@ -3503,6 +3504,7 @@ export type Database = {
           last_customer_message_at?: string | null
           last_staff_message_at?: string | null
           priority?: string
+          source_order_id?: string | null
           status?: string
           subject?: string
           unread_by_customer?: number
@@ -3523,6 +3525,7 @@ export type Database = {
           last_customer_message_at?: string | null
           last_staff_message_at?: string | null
           priority?: string
+          source_order_id?: string | null
           status?: string
           subject?: string
           unread_by_customer?: number
@@ -3530,7 +3533,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_threads_source_order_id_fkey"
+            columns: ["source_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_threads_source_order_id_fkey"
+            columns: ["source_order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trial_blocks: {
         Row: {
