@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { StreamerMode } from "@/components/StreamerMode";
 import {
   Outlet,
   Link,
@@ -361,6 +362,7 @@ function InnerRootComponent() {
             </div>
             <Outlet />
             <PaymentSuccessOverlay />
+            <StreamerMode />
           </MfaGate>
           <ThemedToaster />
         </I18nProvider>
