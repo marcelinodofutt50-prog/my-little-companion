@@ -749,10 +749,22 @@ html.rgb-mode body { animation: hue-cycle 18s linear infinite; }
 /* Modo Streamer: dados sensíveis borrados */
 .streamer-mode .streamer-blur,
 .streamer-mode [data-sensitive] {
-  filter: blur(7px);
+  filter: blur(12px);
   user-select: none;
+  -webkit-user-select: none;
 }
 .streamer-mode .streamer-blur:hover,
 .streamer-mode [data-sensitive]:hover {
-  filter: blur(7px);
+  filter: blur(12px);
+}
+
+.streamer-mode [data-sensitive] img,
+.streamer-mode [data-sensitive] video,
+.streamer-mode [data-sensitive] canvas {
+  visibility: hidden;
+}
+
+.giveaway-winner {
+  box-shadow: 0 0 70px color-mix(in oklab, var(--primary) 25%, transparent);
+  overflow-wrap: anywhere;
 }
