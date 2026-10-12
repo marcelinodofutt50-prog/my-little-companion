@@ -14,13 +14,25 @@ export function MfaGate({ children }: { children?: ReactNode }) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [trust, setTrust] = useState(false);
 
   async function check() {
     const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     if (data && data.currentLevel === "aal1" && data.nextLevel === "aal2") {
       const { data: f } = await supabase.auth.mfa.listFactors();
       const totp = f?.totp?.find((x) => x.status === "verified");
-      if (totp) { setFactorId(totp.id); setNeed(true); return; }
+      if (totp) {
+        // Aparelho confiável: o banco confere o token (guardado só como hash) e libera esta sessão.
+        const { data: u } = await supabase.auth.getUser();
+        const key = u.user ? `shadow:mfa-trust:${u.user.id}` : null;
+        const tok = key ? localStorage.getItem(key) : null;
+        if (tok) {
+          const { data: ok } = await supabase.rpc("redeem_trusted_device" as any, { _token: tok } as any);
+          if (ok === true) { setNeed(false); return; }
+          localStorage.removeItem(key!);
+        }
+        setFactorId(totp.id); setNeed(true); return;
+      }
     }
     setNeed(false);
   }
@@ -39,6 +51,12 @@ export function MfaGate({ children }: { children?: ReactNode }) {
     const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code: code.trim() });
     setBusy(false);
     if (error) { setErr("Código incorreto ou vencido. Confira o app e tente de novo."); return; }
+    if (trust) {
+      const { data: u } = await supabase.auth.getUser();
+      const label = `${navigator.platform || "Dispositivo"} · ${(navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg|OPR)\/[\d]+/) || ["navegador"])[0]}`;
+      const { data: tok } = await supabase.rpc("trust_this_device" as any, { _label: label } as any);
+      if (u.user && typeof tok === "string") localStorage.setItem(`shadow:mfa-trust:${u.user.id}`, tok);
+    }
     setCode(""); setNeed(false);
   }
 
@@ -55,6 +73,11 @@ export function MfaGate({ children }: { children?: ReactNode }) {
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           onKeyDown={(e) => e.key === "Enter" && code.length === 6 && verify()}
           className="text-center font-mono text-xl tracking-[0.5em]" />
+        <label className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <input type="checkbox" checked={trust} onChange={(e) => setTrust(e.target.checked)} className="h-4 w-4 accent-primary" />
+          Confiar neste dispositivo por 30 dias
+        </label>
+        <p className="text-[11px] text-muted-foreground">Não marque em computador público ou de outra pessoa.</p>
         {err && <p className="text-sm text-destructive">{err}</p>}
         <Button className="w-full" disabled={busy || code.length !== 6} onClick={verify}>{busy ? "Conferindo…" : "Confirmar"}</Button>
         <button className="text-xs text-muted-foreground underline" onClick={() => supabase.auth.signOut()}>Sair da conta</button>
