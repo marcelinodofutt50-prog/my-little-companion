@@ -40,6 +40,7 @@ function SuccessPage() {
   const { order } = Route.useSearch();
   const navigate = useNavigate();
   const [license, setLicense] = useState<License | null>(null);
+  const [deliveryTicket, setDeliveryTicket] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("pending");
   const [tries, setTries] = useState(0);
   const [showPw, setShowPw] = useState(false);
@@ -62,6 +63,12 @@ function SuccessPage() {
       try {
         const r = await stateFn({ data: { orderId: order } });
         if (r.order) setStatus(r.order.status);
+        const metadata = r.order?.metadata as Record<string, unknown> | null | undefined;
+        if (r.order?.status === "paid" && typeof metadata?.vps_auto_thread_id === "string") {
+          setDeliveryTicket(metadata.vps_auto_thread_id);
+          if (!celebrated.current) { celebrated.current = true; setCelebrating(true); }
+          return;
+        }
         if (r.license) {
           setLicense(r.license as License);
           if (!celebrated.current) {
@@ -98,9 +105,17 @@ function SuccessPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto max-w-lg px-4 py-14">
-        {celebrating && <PaymentCelebration onDone={() => setCelebrating(false)} />}
+        {celebrating && <PaymentCelebration subtitle={deliveryTicket ? "Seu atendimento de entrega está aberto" : "Acesso liberado"} onDone={() => setCelebrating(false)} />}
         <div className="terminal-card rgb-border scanlines relative p-8">
-          {license ? (
+          {deliveryTicket ? (
+            <div className="space-y-5 text-center">
+              <CheckCircle2 className="mx-auto h-14 w-14 text-primary" />
+              <h1 className="text-2xl font-bold">VPS: pagamento confirmado</h1>
+              <p className="text-sm leading-6 text-muted-foreground">Seu chamado de entrega já está aberto. A equipe vai preparar o acesso e conversar com você pelo suporte.</p>
+              <Button asChild className="w-full"><Link to="/suporte" search={{ thread: deliveryTicket }}>Acompanhar entrega no suporte</Link></Button>
+              <Button asChild variant="outline" className="w-full"><Link to="/dashboard">Ir para o painel</Link></Button>
+            </div>
+          ) : license ? (
             <motion.div
               initial={{ opacity: 0, y: 24, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -209,7 +224,7 @@ function Field({
     <div className="flex items-center justify-between gap-2 rounded-md border border-primary/15 bg-background/50 px-3 py-2">
       <div className="min-w-0 flex-1">
         <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-        <div className="truncate font-mono text-sm">{value || "—"}</div>
+        <div data-sensitive className="truncate font-mono text-sm">{value || "—"}</div>
       </div>
       <div className="flex items-center gap-2">
         {action}

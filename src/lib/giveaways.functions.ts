@@ -1,18 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { publicGiveawayLabel as publicLabel, randomIndex, shuffledSample } from "./giveaway-random";
 
 async function adminDb(context: any) {
   const { assertAdmin } = await import("@/lib/admin-helpers.server");
   await assertAdmin(context);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin as any;
-}
-
-/** Apelido público curto (nunca e-mail). */
-function publicLabel(label: string | null) {
-  const s = (label ?? "").trim();
-  return s ? s.slice(0, 24) : "Membro Shadow";
 }
 
 export const adminListGiveaways = createServerFn({ method: "GET" })
@@ -29,7 +24,8 @@ export const adminListGiveaways = createServerFn({ method: "GET" })
     const withCounts = await Promise.all(
       rows.map(async (g) => {
         if (g.status !== "open") return g;
-        const { data: el } = await db.rpc("giveaway_eligible_users", { _id: g.id });
+        const { data: el, error: countError } = await db.rpc("giveaway_eligible_users", { _id: g.id });
+        if (countError) throw new Error("Não foi possível conferir os participantes. Atualize e tente novamente.");
         return { ...g, eligible_count: (el ?? []).length };
       }),
     );
@@ -60,14 +56,17 @@ export const adminCreateGiveaway = createServerFn({ method: "POST" })
         data.require_avatar ? "Foto de perfil" : null,
         data.require_paid ? "Ter um plano pago" : null,
         "E-mail confirmado e conta sem bloqueios",
+        "Membros da equipe não participam",
+        "Não ter vencido outro sorteio nos últimos 30 dias",
       ].filter(Boolean);
       const body = `${data.description ? data.description + "\n\n" : ""}Prêmio: ${data.prize}\n\nRegras para participar:\n• ${rules.join("\n• ")}\n\nTodos que cumprirem as regras já estão participando automaticamente.`;
-      const { data: ann } = await db
+       const { data: ann, error: announcementError } = await db
         .from("announcements")
         .insert({ title: `🎁 Sorteio: ${data.title}`, body, severity: "info", status: "published", is_active: true, created_by: context.userId, tags: ["sorteio"] })
         .select("id")
         .single();
       announcement_id = ann?.id ?? null;
+       if (announcementError || !announcement_id) throw new Error("Não foi possível publicar o anúncio; o sorteio não foi criado.");
     }
     const { announce: _a, ...rest } = data;
     const { data: row, error } = await db
@@ -75,7 +74,10 @@ export const adminCreateGiveaway = createServerFn({ method: "POST" })
       .insert({ ...rest, announcement_id, created_by: context.userId })
       .select("id")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (announcement_id) await db.from("announcements").update({ is_active: false, status: "draft" }).eq("id", announcement_id);
+      throw new Error(error.message);
+    }
     return { id: row.id };
   });
 
@@ -92,9 +94,7 @@ export const adminDrawGiveaway = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const list = (el ?? []) as { user_id: string; label: string | null }[];
     if (!list.length) throw new Error("Ninguém cumpre as regras ainda.");
-    const buf = new Uint32Array(1);
-    crypto.getRandomValues(buf);
-    const winner = list[buf[0] % list.length];
+    const winner = list[randomIndex(list.length)];
     const label = publicLabel(winner.label);
     const { data: upd, error: uerr } = await db
       .from("site_giveaways")
@@ -104,7 +104,7 @@ export const adminDrawGiveaway = createServerFn({ method: "POST" })
       .select("id");
     if (uerr) throw new Error(uerr.message);
     if (!upd?.length) throw new Error("Este sorteio já foi realizado.");
-    const pool = list.slice().sort(() => Math.random() - 0.5).slice(0, 40).map((u) => publicLabel(u.label));
+    const pool = shuffledSample(list).map((u) => publicLabel(u.label));
     return { winner: label, eligible: list.length, pool, prize: g.prize };
   });
 
@@ -113,6 +113,8 @@ export const adminCancelGiveaway = createServerFn({ method: "POST" })
   .validator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const db = await adminDb(context);
-    await db.from("site_giveaways").update({ status: "cancelled" }).eq("id", data.id).eq("status", "open");
+    const { data: rows, error } = await db.from("site_giveaways").update({ status: "cancelled" }).eq("id", data.id).eq("status", "open").select("id");
+    if (error) throw new Error(error.message);
+    if (!rows?.length) throw new Error("Este sorteio não está mais aberto. Atualize a lista.");
     return { ok: true };
   });

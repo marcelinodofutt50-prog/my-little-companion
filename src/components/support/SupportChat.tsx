@@ -339,17 +339,25 @@ export function SupportChat({
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [body, setBody] = useState("");
   // Rascunho por conversa: evita perder o texto ao trocar de ticket ou recarregar.
-  const draftKey = `shadow:draft:${threadId}`;
+  const draftKey = `shadow:draft:${userId}:${threadId}`;
+  const restoredDraftKey = useRef<string | null>(null);
+  const persistedDraftKey = useRef<string | null>(null);
+  const activeThreadRef = useRef(threadId);
+  activeThreadRef.current = threadId;
   useEffect(() => {
     try {
       const saved = typeof window !== "undefined" ? window.localStorage.getItem(draftKey) : null;
       setBody(saved ?? "");
+      restoredDraftKey.current = draftKey;
     } catch { /* storage indisponível */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threadId]);
+   }, [threadId, userId]);
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
+      if (restoredDraftKey.current !== draftKey) return;
+      // Switching tickets must not write the previous ticket's text here.
+      if (draftKey !== persistedDraftKey.current) { persistedDraftKey.current = draftKey; return; }
       if (body.trim()) window.localStorage.setItem(draftKey, body);
       else window.localStorage.removeItem(draftKey);
     } catch { /* storage indisponível */ }
@@ -415,7 +423,8 @@ export function SupportChat({
   const pendingRef = useRef<PendingMsg[]>([]);
   const msgIdsRef = useRef<Set<string>>(new Set());
   const [dragActive, setDragActive] = useState(false);
-  const [connection, setConnection] = useState<"live" | "reconnecting">("live");
+  const [connection, setConnection] = useState<"live" | "reconnecting" | "offline">("reconnecting");
+  const [loadError, setLoadError] = useState(false);
   const [senders, setSenders] = useState<Record<string, SenderInfo>>({});
   // "Digitando…" em tempo real (broadcast, sem gravar nada no banco).
   const [peerTyping, setPeerTyping] = useState<string | null>(null);
@@ -483,6 +492,8 @@ export function SupportChat({
   const loadMessages = async (before?: string) => {
     try {
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
+      if (activeThreadRef.current !== threadId) return;
+      setLoadError(false);
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
       if (r.senders) setSenders((prev) => ({ ...prev, ...r.senders }));
       // Sempre mesclamos: recarregar (reconexão, aba voltando) não pode apagar
@@ -496,12 +507,16 @@ export function SupportChat({
       });
       setHasMore(!!r.hasMore);
     } catch (e: any) {
+      if (activeThreadRef.current !== threadId) return;
+      setLoadError(true);
       // eslint-disable-next-line no-console
       console.error("[SupportChat] listMessages error:", e);
       toast.error("Erro ao carregar mensagens");
     } finally {
-      setLoading(false);
-      setLoadingOlder(false);
+      if (activeThreadRef.current === threadId) {
+        setLoading(false);
+        setLoadingOlder(false);
+      }
     }
   };
 
@@ -511,6 +526,8 @@ export function SupportChat({
     setMsgs([]);
     setUnseen(0);
     setHasMore(false);
+    setLoadError(false);
+    setConnection(navigator.onLine ? "reconnecting" : "offline");
     // Ao trocar de conversa, nada da anterior pode vazar para esta.
     setReplyTo(null);
     setPreRefine(null);
@@ -586,7 +603,7 @@ export function SupportChat({
         typingTimerRef.current = setTimeout(() => setPeerTyping(null), 4000);
       })
       .subscribe((status) => {
-        setConnection(status === "SUBSCRIBED" ? "live" : "reconnecting");
+        setConnection(!navigator.onLine ? "offline" : status === "SUBSCRIBED" ? "live" : "reconnecting");
         if (status !== "SUBSCRIBED") return;
         // Só recarrega em RE-conexão (a carga inicial já aconteceu acima).
         if (subscribedOnce) void loadMessages();
@@ -600,6 +617,7 @@ export function SupportChat({
     // ela estava escondida (antes ficava "Não visto" para sempre).
     const resync = () => {
       if (document.visibilityState !== "visible") return;
+      if (!navigator.onLine) { setConnection("offline"); return; }
       const now = Date.now();
       // focus + visibilitychange disparam juntos: evita consultas repetidas.
       if (now - lastResyncRef.current < 3000) return;
@@ -610,11 +628,14 @@ export function SupportChat({
     document.addEventListener("visibilitychange", resync);
     window.addEventListener("online", resync);
     window.addEventListener("focus", resync);
+    const offline = () => setConnection("offline");
+    window.addEventListener("offline", offline);
 
     return () => {
       document.removeEventListener("visibilitychange", resync);
       window.removeEventListener("online", resync);
       window.removeEventListener("focus", resync);
+      window.removeEventListener("offline", offline);
       channelRef.current = null;
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       supabase.removeChannel(ch);
@@ -688,7 +709,7 @@ export function SupportChat({
       toast.error("Você está sem internet. A mensagem será enviada assim que a conexão voltar.");
     }
 
-    const clientId = retryOf ?? `local-${Date.now()}`;
+    const clientId = retryOf ?? `local-${crypto.randomUUID()}`;
     const newPending: PendingMsg = {
       clientId,
       body: text || null,
@@ -815,11 +836,13 @@ export function SupportChat({
           Solte o arquivo para anexar
         </div>
       )}
-      {connection === "reconnecting" && (
-        <div className="flex items-center justify-center gap-2 bg-amber-500/10 py-1 text-[10px] font-mono uppercase tracking-widest text-amber-400">
-          <Loader2 className="h-3 w-3 animate-spin" /> Reconectando ao chat
-        </div>
-      )}
+      <div role="status" className="flex min-h-8 items-center justify-between gap-2 border-b border-border px-3 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-2">
+          {connection === "live" ? <span className="h-1.5 w-1.5 rounded-full bg-primary" /> : connection === "offline" ? <AlertCircle className="h-3 w-3 text-destructive" /> : <Loader2 className="h-3 w-3 animate-spin" />}
+          {connection === "live" ? "Chat conectado" : connection === "offline" ? "Sem internet" : "Reconectando ao chat…"}
+        </span>
+        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Atualizar conversa" aria-label="Atualizar conversa" onClick={() => void loadMessages()}><RotateCw className="h-3 w-3" /></Button>
+      </div>
       {currentAgent && (
         <div className="flex items-center gap-2 border-b border-border/40 bg-card/40 px-3 py-2">
           <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
@@ -869,7 +892,8 @@ export function SupportChat({
           </div>
         )}
 
-        {!loading && msgs.length === 0 && pending.length === 0 && (
+        {loadError && <div role="alert" className="flex items-center justify-between gap-2 rounded-md border border-destructive/40 p-3 text-xs text-destructive">Não foi possível atualizar a conversa.<Button variant="outline" size="sm" onClick={() => void loadMessages()}>Tentar novamente</Button></div>}
+        {!loading && !loadError && msgs.length === 0 && pending.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-muted-foreground">
             <Bot className="h-6 w-6 opacity-60" />
             <p className="text-sm">Nenhuma mensagem ainda.</p>
@@ -998,7 +1022,7 @@ export function SupportChat({
                       </p>
                     )}
                     {m.attachment_url && (
-                      <Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} />
+                      <div data-sensitive><Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} /></div>
                     )}
                     <div
                       className={`flex items-center gap-1 text-[10px] tabular-nums opacity-70 ${
@@ -1039,11 +1063,13 @@ export function SupportChat({
             >
               {p.body && <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>}
               {p.previewUrl && (
+                <div data-sensitive>
                 <img
                   src={p.previewUrl}
                   alt="pré-visualização do anexo"
                   className="mt-2 max-h-48 rounded-lg object-contain opacity-80"
                 />
+                </div>
               )}
               {!p.previewUrl && p.attachmentName && (
                 <div className="mt-1 flex items-center gap-2 text-xs opacity-90">
@@ -1195,6 +1221,7 @@ export function SupportChat({
           <div className="flex-1 relative">
           <Textarea
             ref={textRef}
+            aria-label="Mensagem para o suporte"
             value={body}
             maxLength={MAX_BODY}
             onChange={(e) => { setBody(e.target.value.slice(0, MAX_BODY)); notifyTyping(); }}
@@ -1214,7 +1241,7 @@ export function SupportChat({
 
             }}
             rows={2}
-            placeholder="Escreva sua mensagem…  (Enter envia, Shift+Enter quebra linha)"
+            placeholder="Escreva sua mensagem…"
             className="w-full min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
           />
           {body.length > MAX_BODY - 500 && (
@@ -1244,7 +1271,7 @@ export function SupportChat({
             aria-label="Visualização ampliada do anexo"
             onClick={() => setZoomUrl(null)}
           >
-            <div className="relative flex max-h-[82dvh] w-full max-w-[min(92vw,1200px)] items-center justify-center">
+            <div data-sensitive className="relative flex max-h-[82dvh] w-full max-w-[min(92vw,1200px)] items-center justify-center">
               <img
                 src={zoomUrl}
                 alt="anexo ampliado"
