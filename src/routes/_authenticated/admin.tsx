@@ -245,7 +245,8 @@ type Tab =
   | "bans"
   | "partners"
 
-  | "vip";
+  | "vip"
+  | "giveaways";
 
 
 
