@@ -194,6 +194,43 @@ export function AccountSecurityTab() {
           <p className="text-xs text-muted-foreground">Gerar novos apaga os antigos.</p>
         </CardContent>
       </Card>
+      <TrustedDevicesCard />
     </div>
+  );
+}
+
+
+function TrustedDevicesCard() {
+  const [rows, setRows] = useState<{ id: string; label: string; expires_at: string; last_used_at: string | null }[]>([]);
+  const load = async () => {
+    const { data } = await (supabase.rpc as any)("list_my_trusted_devices");
+    setRows((data as any) ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const forget = async () => {
+    if (!confirm("Todos os aparelhos vão pedir o código de novo no próximo login. Continuar?")) return;
+    const { error } = await (supabase.rpc as any)("forget_my_trusted_devices");
+    if (error) return toast.error("Não deu para remover agora.");
+    Object.keys(localStorage).filter((k) => k.startsWith("shadow:mfa-trust:")).forEach((k) => localStorage.removeItem(k));
+    toast.success("Aparelhos confiáveis removidos.");
+    load();
+  };
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-4 w-4 text-primary" /> Aparelhos confiáveis</CardTitle>
+        <CardDescription>Aparelhos que não pedem o código do 2FA por 30 dias. Se não reconhecer algum, remova todos e troque a senha.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {rows.length === 0 && <p className="text-sm text-muted-foreground">Nenhum aparelho confiável.</p>}
+        {rows.map((r) => (
+          <div key={r.id} className="flex justify-between gap-2 rounded-md border border-border p-2 text-xs">
+            <span className="truncate">{r.label || "Dispositivo"}</span>
+            <span className="shrink-0 text-muted-foreground">até {new Date(r.expires_at).toLocaleDateString("pt-BR")}</span>
+          </div>
+        ))}
+        {rows.length > 0 && <Button variant="outline" size="sm" onClick={forget}>Remover todos os aparelhos</Button>}
+      </CardContent>
+    </Card>
   );
 }
