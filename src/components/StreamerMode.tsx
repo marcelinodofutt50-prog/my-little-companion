@@ -11,14 +11,20 @@ import { containsPrivateData } from "@/lib/privacy-patterns";
 const KEY = "shadow:streamer-mode";
 const CLS = "streamer-blur";
 
+// No admin também esconde valores em dinheiro, números de faturamento e contadores de vendas.
+const MONEY = /(R\$|US\$|\$|€)\s?-?\d|\d+[.,]\d{2}\s?(reais|BRL)\b/i;
+
 function scan(root: ParentNode) {
+  const isAdmin = window.location.pathname.startsWith("/admin");
   const walker = document.createTreeWalker(root as Node, NodeFilter.SHOW_TEXT);
   let n: Node | null;
   while ((n = walker.nextNode())) {
     const el = n.parentElement;
     if (!el || el.closest("script, style, [data-streamer-safe]")) continue;
-    if (n.nodeValue && containsPrivateData(n.nodeValue)) el.classList.add(CLS);
+    const t = n.nodeValue || "";
+    if (containsPrivateData(t) || (isAdmin && MONEY.test(t))) el.classList.add(CLS);
   }
+  if (isAdmin) (root as Element).querySelectorAll?.("[data-streamer-money]").forEach((e) => e.classList.add(CLS));
   (root as Element).querySelectorAll?.("input, textarea").forEach((i) => {
     const el = i as HTMLInputElement;
     const flag = el.type === "password" || el.type === "email" || el.hasAttribute("data-sensitive") || /password|senha|token|pin|secret|cpf/i.test(`${el.name} ${el.id} ${el.autocomplete}`) || containsPrivateData(el.value || "");
