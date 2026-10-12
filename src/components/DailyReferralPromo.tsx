@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 export function DailyReferralPromo({ referralCode, enabled }: { referralCode: string | null; enabled: boolean }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || window.location.pathname.startsWith("/admin")) return;
+    if (document.documentElement.classList.contains("streamer-mode")) return;
     const day = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
     const key = "shadow:daily-referral-promo";
     try {

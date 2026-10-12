@@ -34,13 +34,16 @@ export function SupporterCard({ userId }: { userId: string | null }) {
   }
 
   const submit = async () => {
-    if (links.trim().length < 5) return toast.error("Coloque o link do seu canal ou grupo.");
+    const l = links.trim();
+    if (l.length < 10 || !/https?:\/\//i.test(l)) return toast.error("Coloque pelo menos um link começando com https://");
     setSending(true);
-    const { error } = await supabase.from("supporter_applications" as any)
-      .upsert({ user_id: userId, channel_links: links.trim().slice(0, 600), plan: plan.trim().slice(0, 600), status: "pending" } as any, { onConflict: "user_id" });
+    const { data, error } = await supabase.rpc("submit_supporter_application" as any, { _links: l.slice(0, 600), _plan: plan.trim().slice(0, 600) } as any);
     setSending(false);
-    if (error) return toast.error("Não deu para enviar agora. Tente de novo.");
-    setApp({ status: "pending", staff_note: null });
+    if (error) {
+      const m = error.message || "";
+      return toast.error(m.includes("wait_24h") ? "Aguarde 24h depois da recusa para pedir de novo." : m.includes("banned") ? "Sua conta não pode pedir o cargo." : m.includes("invalid_links") ? "Link inválido." : "Não deu para enviar agora. Tente de novo.");
+    }
+    setApp({ status: (data as any) === "approved" ? "approved" : "pending", staff_note: null });
     toast.success("Pedido enviado! A equipe vai analisar.");
   };
 
