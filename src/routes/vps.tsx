@@ -7,11 +7,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { createMarketCheckout } from "@/lib/market.functions";
 import { Button } from "@/components/ui/button";
-import gamerExample from "@/assets/vps-gamer-example.png.asset.json";
-import performanceAsset from "@/assets/vps-performance.jpg.asset.json";
-import enterpriseAsset from "@/assets/vps-enterprise.jpg.asset.json";
-const performanceImage = performanceAsset.url;
-const enterpriseImage = enterpriseAsset.url;
+// Imagens servidas de public/assets para funcionar tanto no preview quanto no site publicado (Vercel).
+const gamerExampleUrl = "/assets/vps-gamer-example.png";
+const performanceImage = "/assets/vps-performance.jpg";
+const enterpriseImage = "/assets/vps-enterprise.jpg";
 
 export const Route = createFileRoute("/vps")({
   head: () => ({
