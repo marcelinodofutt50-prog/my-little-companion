@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { createMarketCheckout } from "@/lib/market.functions";
+import { Button } from "@/components/ui/button";
+import gamerExample from "@/assets/vps-gamer-example.png.asset.json";
+import performanceImage from "@/assets/vps-performance.jpg";
+import enterpriseImage from "@/assets/vps-enterprise.jpg";
 
 export const Route = createFileRoute("/vps")({
   head: () => ({
@@ -26,6 +30,8 @@ const plans = [
     slug: "vps-starter",
     name: "VPS Starter",
     label: "Para começar",
+    image: gamerExample.url,
+    description: "Seu ambiente de trabalho remoto, sem manter a BTmob no desktop pessoal. Separe sua operação do computador do dia a dia.",
     price: 180,
     icon: Server,
     specs: [
@@ -37,7 +43,9 @@ const plans = [
   {
     slug: "vps-performance",
     name: "VPS Performance",
-    label: "Mais vendido",
+    label: "Seu próprio servidor",
+    image: performanceImage,
+    description: "Para colocar seu próprio servidor no ar: hospede a BTmob ou outros serviços em um ambiente dedicado à sua operação.",
     price: 325,
     icon: Zap,
     featured: true,
@@ -51,6 +59,8 @@ const plans = [
     slug: "vps-pro",
     name: "VPS Pro GPU",
     label: "Máxima potência",
+    image: enterpriseImage,
+    description: "Para operações empresariais com infraestrutura própria e vários clientes. Mais memória, armazenamento e processamento gráfico.",
     price: 512,
     icon: Layers3,
     specs: [
@@ -92,25 +102,26 @@ function VpsStorefrontPage() {
       <SiteHeader />
       <main>
         <section className="relative overflow-hidden border-b border-border/60">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.12),transparent_55%)]" />
-          <div className="relative mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
+          <img src={enterpriseImage} alt="Estação de trabalho de alto desempenho ilustrativa" width={1024} height={768} className="absolute inset-0 h-full w-full object-cover object-center" />
+          <div className="absolute inset-0 bg-background/80" />
+          <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-primary">
               <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
               Vendas abertas
             </div>
             <h1 className="max-w-4xl text-4xl font-black tracking-tight sm:text-6xl">
-              Sua própria <span className="text-primary">VPS</span>, pronta para rodar.
+              VPS <span className="text-primary">Shadow</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Servidores dedicados com pagamento mensal por Pix ou cartão no Mercado Pago. A equipe Shadow entrega o acesso e acompanha pelo suporte.
+              Do seu trabalho remoto à sua própria infraestrutura. Escolha a configuração e pague mensalmente por Pix ou cartão no Mercado Pago.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#planos" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground transition hover:opacity-90">
+              <Button asChild size="lg"><a href="#planos">
                 Ver planos <ArrowRight className="h-4 w-4" />
-              </a>
-              <Link to="/planos" className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-3 font-semibold transition hover:bg-muted">
+              </a></Button>
+              <Button asChild size="lg" variant="outline"><Link to="/planos">
                 Licenças Shadow
-              </Link>
+              </Link></Button>
             </div>
           </div>
         </section>
@@ -125,13 +136,15 @@ function VpsStorefrontPage() {
             {plans.map((p) => {
               const Icon = p.icon;
               return (
-                <article key={p.slug} className={`relative flex h-full flex-col rounded-2xl border p-6 transition hover:-translate-y-1 sm:p-7 ${p.featured ? "border-primary/60 bg-primary/[0.06] shadow-lg shadow-primary/10" : "border-border bg-card hover:border-primary/40"}`}>
-                  {p.featured && <span className="absolute right-5 top-5 rounded-full bg-primary/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-primary">Mais vendido</span>}
+                <article key={p.slug} className={`relative flex h-full flex-col overflow-hidden rounded-lg border transition motion-safe:hover:-translate-y-1 ${p.featured ? "border-primary/60 bg-primary/[0.06] shadow-lg shadow-primary/10" : "border-border bg-card hover:border-primary/40"}`}>
+                  <img src={p.image} alt={`Computador ilustrativo do ${p.name}`} loading="lazy" width={1024} height={768} className="aspect-[4/3] w-full border-b border-border object-contain bg-muted" />
+                  <div className="flex flex-1 flex-col p-6 sm:p-7">
                   <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
                     <Icon className="h-6 w-6" />
                   </div>
                   <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{p.label}</p>
                   <h3 className="mt-2 text-2xl font-bold">{p.name}</h3>
+                  <p className="mt-3 min-h-24 text-sm leading-6 text-muted-foreground">{p.description}</p>
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-4xl font-black">{brl(p.price)}</span>
                     <span className="text-sm text-muted-foreground">/mês</span>
@@ -146,24 +159,27 @@ function VpsStorefrontPage() {
                     ))}
                   </ul>
                   <div className="mt-auto pt-7">
-                    <button
+                    <Button
                       onClick={() => buy(p.slug)}
                       disabled={buying !== null}
-                      className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 font-semibold transition disabled:opacity-60 ${p.featured ? "bg-primary text-primary-foreground hover:opacity-90" : "border border-primary/50 text-primary hover:bg-primary/10"}`}
+                      variant={p.featured ? "default" : "outline"}
+                      className="h-12 w-full"
                     >
                       {buying === p.slug ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                       Contratar · {brl(p.price)}
-                    </button>
+                    </Button>
+                  </div>
                   </div>
                 </article>
               );
             })}
           </div>
+          <p className="mt-4 text-xs text-muted-foreground">Imagens ilustrativas. A configuração contratada é a descrita em cada plano; o gabinete e a aparência podem variar.</p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             {[
               { icon: ShieldCheck, t: "Pagamento seguro", d: "Pix ou cartão pelo Mercado Pago." },
-              { icon: Clock, t: "Entrega rápida", d: "A equipe libera o acesso após a confirmação." },
+              { icon: Clock, t: "Atendimento após o pagamento", d: "Pagamento confirmado: um chamado é aberto para a equipe preparar seu acesso." },
               { icon: Headphones, t: "Suporte Shadow", d: "Acompanhamento direto pelo chat do suporte." },
             ].map((b) => (
               <div key={b.t} className="flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 p-5">
