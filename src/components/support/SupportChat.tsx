@@ -339,17 +339,22 @@ export function SupportChat({
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [body, setBody] = useState("");
   // Rascunho por conversa: evita perder o texto ao trocar de ticket ou recarregar.
-  const draftKey = `shadow:draft:${threadId}`;
+  const draftKey = `shadow:draft:${userId}:${threadId}`;
+  const restoredDraftKey = useRef<string | null>(null);
   useEffect(() => {
     try {
       const saved = typeof window !== "undefined" ? window.localStorage.getItem(draftKey) : null;
       setBody(saved ?? "");
+      restoredDraftKey.current = draftKey;
     } catch { /* storage indisponível */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threadId]);
+   }, [threadId, userId]);
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
+      if (restoredDraftKey.current !== draftKey) return;
+      // Switching tickets must not write the previous ticket's text here.
+      if (draftKey !== persistedDraftKey.current) { persistedDraftKey.current = draftKey; return; }
       if (body.trim()) window.localStorage.setItem(draftKey, body);
       else window.localStorage.removeItem(draftKey);
     } catch { /* storage indisponível */ }
