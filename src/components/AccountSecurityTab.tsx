@@ -66,6 +66,8 @@ export function AccountSecurityTab() {
     const { error } = await supabase.auth.updateUser({ password: newPass, current_password: curPass } as any);
     setBusy(null);
     if (error) return toast.error(error.message);
+    // Senha nova: todos os aparelhos confiáveis voltam a pedir o código.
+    await (supabase.rpc as any)("forget_my_trusted_devices");
     toast.success("Senha do site trocada. (A senha do painel da licença não muda.)");
     setCurPass(""); setNewPass(""); setNewPass2("");
   }
@@ -98,6 +100,7 @@ export function AccountSecurityTab() {
     const { error } = await supabase.auth.mfa.unenroll({ factorId: verifiedTotp.id });
     setBusy(null);
     if (error) return toast.error(error.message);
+    await (supabase.rpc as any)("forget_my_trusted_devices");
     toast.success("Verificação em duas etapas desligada.");
     load();
   }
