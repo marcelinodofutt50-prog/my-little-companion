@@ -1,5 +1,6 @@
 import { SupportStatsPanel } from "@/components/support/SupportStatsPanel";
 import { AdminDailySummary } from "@/components/AdminDailySummary";
+import { AdminGiveawaysPanel } from "@/components/admin/AdminGiveawaysPanel";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -742,6 +743,7 @@ function AdminPage() {
         { id: "announcements", label: "Comunicados", icon: Megaphone, hint: "avisos corporativos" },
         { id: "updates", label: "Publicar Update", icon: Package, hint: "novos arquivos" },
         { id: "tutorials", label: "Shadow Hub", icon: Video, hint: "tutoriais & vídeos" },
+        { id: "giveaways", label: "Sorteios", icon: Gift, hint: "anunciar & sortear ao vivo" },
         { id: "vip", label: "VIP & Missões", icon: Activity, hint: "tiers, missões e bypass" },
       ],
     },
@@ -2375,6 +2377,7 @@ function AdminPage() {
               {tab === "client_status" && <AdminClientStatusPanel />}
               {tab === "security_attempts" && <AdminSecurityAttemptsPanel />}
               {tab === "vip" && <AdminVipPanel />}
+              {tab === "giveaways" && <AdminGiveawaysPanel />}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
               {tab === "applications" && <AdminStaffApplicationsPanel />}

@@ -100,6 +100,7 @@ export const SECTION_CAP: Record<string, Capability> = {
   ai_learning: "view.chat",
   partners: "view.orders",
   announcements: "announcements.create",
+  giveaways: "announcements.publish",
   applications: "view.staff",
   moderation: "view.staff",
   bans: "view.staff",

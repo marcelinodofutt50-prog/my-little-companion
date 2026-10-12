@@ -3,8 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function adminDb(context: any) {
-  const { assertStaff } = await import("@/lib/admin-helpers.server");
-  await assertStaff(context);
+  const { assertAdmin } = await import("@/lib/admin-helpers.server");
+  await assertAdmin(context);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin as any;
 }
