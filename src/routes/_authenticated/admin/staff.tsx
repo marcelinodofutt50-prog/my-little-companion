@@ -188,6 +188,7 @@ function AdminStaffPage() {
                   {pending.length > 0 && <Badge className="ml-1 h-5 px-1.5 text-[10px]">{pending.length}</Badge>}
                 </TabsTrigger>
                 <TabsTrigger value="members" className="gap-2"><Users className="h-4 w-4" /> Membros</TabsTrigger>
+                <TabsTrigger value="roles" className="gap-2"><ShieldPlus className="h-4 w-4" /> Cargos</TabsTrigger>
                 <TabsTrigger value="audit" className="gap-2"><History className="h-4 w-4" /> Auditoria</TabsTrigger>
               </TabsList>
 
@@ -276,6 +277,20 @@ function AdminStaffPage() {
                       )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="roles">
+                {members.isLoading ? <StateBox>Carregando cargos...</StateBox>
+                  : members.isError ? <StateBox>Erro: {(members.error as any)?.message}</StateBox>
+                  : (
+                    <RolesManager
+                      members={(members.data ?? []) as any[]}
+                      onChanged={() => {
+                        qc.invalidateQueries({ queryKey: ["staff-members"] });
+                        qc.invalidateQueries({ queryKey: ["staff-audit"] });
+                      }}
+                    />
+                  )}
               </TabsContent>
 
               <TabsContent value="audit">
