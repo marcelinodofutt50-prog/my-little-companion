@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, History, ClipboardList, CheckCircle2, XCircle, RefreshCw, Loader2 } from "lucide-react";
+import { Users, History, ClipboardList, CheckCircle2, XCircle, RefreshCw, Loader2, ShieldPlus, Trash2 } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { staffListApplications, staffUpdateApplication, staffListMembers, staffListAudit } from "@/lib/staff-admin.functions";
+import { staffListApplications, staffUpdateApplication, staffListMembers, staffListAudit, staffAssignRole, staffRevokeRole } from "@/lib/staff-admin.functions";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -34,6 +36,111 @@ const nameOf = (p: any, fallback?: string) => p?.display_name || p?.full_name ||
 
 function StateBox({ children }: { children: React.ReactNode }) {
   return <div className="py-12 text-center font-mono text-[10px] uppercase text-muted-foreground">{children}</div>;
+}
+
+const ROLE_OPTIONS = [
+  { value: "admin", label: "Admin", desc: "Acesso total: financeiro, licenças, equipe e sistema." },
+  { value: "moderator", label: "Suporte", desc: "Atendimento: chat, tickets, fila de APK e pedidos." },
+  { value: "support", label: "Moderador", desc: "Mesmas telas de atendimento do Suporte." },
+] as const;
+
+const roleLabel = (r: string) => (r === "moderator" ? "Suporte" : r === "support" ? "Moderador" : r === "admin" ? "Admin" : r);
+
+function RolesManager({ members, onChanged }: { members: any[]; onChanged: () => void }) {
+  const assignRole = useServerFn(staffAssignRole);
+  const revokeRole = useServerFn(staffRevokeRole);
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<string>("moderator");
+
+  const assign = useMutation({
+    mutationFn: () => assignRole({ data: { email: email.trim(), role: role as any } }),
+    onSuccess: () => {
+      toast.success("Cargo adicionado com sucesso");
+      setEmail("");
+      onChanged();
+    },
+    onError: (e: any) => toast.error(e?.message || "Falha ao adicionar cargo"),
+  });
+
+  const revoke = useMutation({
+    mutationFn: (v: { userId: string; role: string }) => revokeRole({ data: v as any }),
+    onSuccess: () => {
+      toast.success("Cargo removido");
+      onChanged();
+    },
+    onError: (e: any) => toast.error(e?.message || "Falha ao remover cargo"),
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-primary/10 bg-card/60">
+        <CardHeader><CardTitle className="flex items-center gap-2"><ShieldPlus className="h-4 w-4 text-neon" /> Adicionar cargo</CardTitle></CardHeader>
+        <CardContent>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Digite o e-mail da conta e escolha o cargo. A pessoa passa a ver o painel de equipe no próximo acesso. Toda mudança fica registrada na Auditoria.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Input
+              type="email"
+              placeholder="email@exemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex-1"
+            />
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger className="sm:w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button disabled={!email.trim() || assign.isPending} onClick={() => assign.mutate()}>
+              {assign.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <ShieldPlus className="mr-1.5 h-4 w-4" />}
+              Adicionar
+            </Button>
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            {ROLE_OPTIONS.find((r) => r.value === role)?.desc}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="border-primary/10 bg-card/60">
+        <CardHeader><CardTitle>Cargos atuais</CardTitle></CardHeader>
+        <CardContent>
+          {!members.length ? <StateBox>Nenhum cargo atribuído.</StateBox> : (
+            <div className="space-y-2">
+              {members.map((m: any) => (
+                <div key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold">{nameOf(m.profile)}</div>
+                    <div className="truncate font-mono text-[10px] text-muted-foreground">{m.profile?.email ?? m.user_id}</div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {m.roles.map((r: string) => (
+                      <span key={r} className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background/50 px-2 py-1 text-[10px] font-semibold uppercase">
+                        {roleLabel(r)}
+                        <button
+                          type="button"
+                          aria-label={`Remover cargo ${roleLabel(r)}`}
+                          className="text-muted-foreground transition-colors hover:text-destructive"
+                          disabled={revoke.isPending}
+                          onClick={() => revoke.mutate({ userId: m.user_id, role: r })}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function AdminStaffPage() {
@@ -81,6 +188,7 @@ function AdminStaffPage() {
                   {pending.length > 0 && <Badge className="ml-1 h-5 px-1.5 text-[10px]">{pending.length}</Badge>}
                 </TabsTrigger>
                 <TabsTrigger value="members" className="gap-2"><Users className="h-4 w-4" /> Membros</TabsTrigger>
+                <TabsTrigger value="roles" className="gap-2"><ShieldPlus className="h-4 w-4" /> Cargos</TabsTrigger>
                 <TabsTrigger value="audit" className="gap-2"><History className="h-4 w-4" /> Auditoria</TabsTrigger>
               </TabsList>
 
@@ -169,6 +277,20 @@ function AdminStaffPage() {
                       )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="roles">
+                {members.isLoading ? <StateBox>Carregando cargos...</StateBox>
+                  : members.isError ? <StateBox>Erro: {(members.error as any)?.message}</StateBox>
+                  : (
+                    <RolesManager
+                      members={(members.data ?? []) as any[]}
+                      onChanged={() => {
+                        qc.invalidateQueries({ queryKey: ["staff-members"] });
+                        qc.invalidateQueries({ queryKey: ["staff-audit"] });
+                      }}
+                    />
+                  )}
               </TabsContent>
 
               <TabsContent value="audit">

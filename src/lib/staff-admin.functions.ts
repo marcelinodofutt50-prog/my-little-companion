@@ -141,6 +141,70 @@ export const adminSavePromotion = createServerFn({ method: "POST" })
   });
 
 // ===========================================================================
+// GESTÃO DE CARGOS (somente admin)
+// ===========================================================================
+
+const ASSIGNABLE_ROLES = ["admin", "moderator", "support"] as const;
+
+export const staffAssignRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z.object({
+      email: z.string().trim().email().max(200),
+      role: z.enum(ASSIGNABLE_ROLES),
+    }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/admin-helpers.server");
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const email = data.email.toLowerCase();
+    const { data: profile } = await supabaseAdmin
+      .from("profiles").select("id, email").ilike("email", email).maybeSingle();
+    if (!profile) throw new Error("Nenhuma conta encontrada com esse e-mail.");
+    const { data: existing } = await supabaseAdmin
+      .from("user_roles").select("id").eq("user_id", profile.id).eq("role", data.role).maybeSingle();
+    if (existing) throw new Error("Essa conta já tem esse cargo.");
+    const { error } = await supabaseAdmin
+      .from("user_roles").insert({ user_id: profile.id, role: data.role } as any);
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("staff_audit_logs").insert({
+      executor_id: context.userId,
+      action: `role_granted_${data.role}`,
+      target_id: profile.id,
+      details: { email, role: data.role },
+    } as any);
+    return { userId: profile.id, role: data.role };
+  });
+
+export const staffRevokeRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) =>
+    z.object({
+      userId: z.string().uuid(),
+      role: z.enum(ASSIGNABLE_ROLES),
+    }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("@/lib/admin-helpers.server");
+    await assertAdmin(context);
+    if (data.userId === context.userId && data.role === "admin") {
+      throw new Error("Você não pode remover o seu próprio cargo de Admin.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("user_roles").delete().eq("user_id", data.userId).eq("role", data.role);
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("staff_audit_logs").insert({
+      executor_id: context.userId,
+      action: `role_revoked_${data.role}`,
+      target_id: data.userId,
+      details: { role: data.role },
+    } as any);
+    return { ok: true };
+  });
+
+// ===========================================================================
 // AUDITORIA DE LICENÇAS
 // ===========================================================================
 
