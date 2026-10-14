@@ -9,7 +9,7 @@ type Row = { id: string; user_id: string; channel_links: string; plan: string; s
 export function AdminSupportersPanel() {
   const [rows, setRows] = useState<Row[]>([]);
   const load = async () => {
-    const { data } = await supabase.from("supporter_applications" as any).select("id, user_id, channel_links, plan, status, created_at").order("created_at", { ascending: false }).range(0, 199);
+    const { data } = await supabase.from("supporter_applications").select("id, user_id, channel_links, plan, status, created_at").order("created_at", { ascending: false }).range(0, 199);
     const list = ((data as any) ?? []) as Row[];
     const ids = list.map((r) => r.user_id);
     if (ids.length) {
@@ -24,16 +24,16 @@ export function AdminSupportersPanel() {
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const review = async (id: string, status: "approved" | "rejected" | "pending") => {
-    const { error } = await supabase.from("supporter_applications" as any).update({ status, staff_note: (notes[id] || "").slice(0, 300) || null } as any).eq("id", id);
+    const { error } = await supabase.from("supporter_applications").update({ status, staff_note: (notes[id] || "").slice(0, 300) || null } as any).eq("id", id);
     if (error) return toast.error("Não foi possível salvar.");
-    toast.success(status === "approved" ? "Cargo de Apoiador liberado." : status === "rejected" ? "Pedido recusado." : "Cargo removido, pedido voltou para análise.");
+    toast.success(status === "approved" ? "Cargo de Creator liberado — o cliente verá a mensagem de parabéns." : status === "rejected" ? "Pedido recusado." : "Cargo removido, pedido voltou para análise.");
     load();
   };
 
   return (
     <Card><CardContent className="space-y-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-bold">Pedidos de Apoiador <span className="text-xs text-muted-foreground">({rows.filter((r) => r.status === "pending").length} pendentes · {rows.filter((r) => r.status === "approved").length} apoiadores)</span></p>
+        <p className="font-bold">Pedidos de Creator <span className="text-xs text-muted-foreground">({rows.filter((r) => r.status === "pending").length} pendentes · {rows.filter((r) => r.status === "approved").length} creators)</span></p>
         <div className="flex gap-1">
           {(["pending", "approved", "rejected", "all"] as const).map((f) => (
             <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)}>{f === "pending" ? "Pendentes" : f === "approved" ? "Aprovados" : f === "rejected" ? "Recusados" : "Todos"}</Button>
@@ -56,7 +56,7 @@ export function AdminSupportersPanel() {
               <Button size="sm" variant="outline" onClick={() => review(r.id, "rejected")}>Recusar</Button>
             </div>
           )}
-          {r.status === "approved" && <Button size="sm" variant="outline" onClick={() => { if (confirm("Remover o cargo de Apoiador?")) review(r.id, "pending"); }}>Remover cargo</Button>}
+          {r.status === "approved" && <Button size="sm" variant="outline" onClick={() => { if (confirm("Remover o cargo de Creator?")) review(r.id, "pending"); }}>Remover cargo</Button>}
         </div>
       ))}
     </CardContent></Card>
