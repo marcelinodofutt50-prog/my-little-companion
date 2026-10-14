@@ -698,6 +698,75 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_license_claims: {
+        Row: {
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          staff_note: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_note?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_note?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creator_videos: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          staff_note: string | null
+          status: string
+          title: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_note?: string | null
+          status?: string
+          title?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_note?: string | null
+          status?: string
+          title?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crypto_payments: {
         Row: {
           admin_note: string | null
@@ -1371,6 +1440,65 @@ export type Database = {
           tier?: Database["public"]["Enums"]["loyalty_tier"]
         }
         Relationships: []
+      }
+      mfa_trusted_devices: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          label: string
+          last_used_at: string | null
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mfa_trusted_sessions: {
+        Row: {
+          device_id: string
+          expires_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          device_id: string
+          expires_at: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          device_id?: string
+          expires_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_trusted_sessions_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "mfa_trusted_devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       migration_requests: {
         Row: {
@@ -3550,6 +3678,48 @@ export type Database = {
           },
         ]
       }
+      supporter_applications: {
+        Row: {
+          channel_links: string
+          created_at: string
+          id: string
+          plan: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          staff_note: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          welcome_seen_at: string | null
+        }
+        Insert: {
+          channel_links: string
+          created_at?: string
+          id?: string
+          plan?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          welcome_seen_at?: string | null
+        }
+        Update: {
+          channel_links?: string
+          created_at?: string
+          id?: string
+          plan?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          welcome_seen_at?: string | null
+        }
+        Relationships: []
+      }
       trial_blocks: {
         Row: {
           created_at: string
@@ -4035,9 +4205,11 @@ export type Database = {
       check_license_consistency: { Args: never; Returns: undefined }
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
       check_rls_enabled: { Args: { target_table: string }; Returns: boolean }
+      claim_creator_license: { Args: never; Returns: string }
       complete_loyalty_mission: { Args: { _mission_id: string }; Returns: Json }
       expire_stale_apk_jobs: { Args: never; Returns: number }
       force_refresh_schema_permissions: { Args: never; Returns: undefined }
+      forget_my_trusted_devices: { Args: never; Returns: number }
       gen_referral_code: { Args: never; Returns: string }
       generate_my_recovery_codes: {
         Args: never
@@ -4053,12 +4225,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_account_banned: { Args: { _uid: string }; Returns: boolean }
+      is_approved_creator: { Args: { _uid: string }; Returns: boolean }
       is_paying_customer: { Args: { _user_id: string }; Returns: boolean }
       is_play_protect_eligible_slug: {
         Args: { _slug: string }
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      list_my_trusted_devices: {
+        Args: never
+        Returns: {
+          created_at: string
+          expires_at: string
+          id: string
+          label: string
+          last_used_at: string
+        }[]
+      }
+      mark_creator_welcome_seen: { Args: never; Returns: undefined }
       match_support_knowledge: {
         Args: { _limit?: number; _q: string }
         Returns: {
@@ -4068,6 +4253,7 @@ export type Database = {
           rank: number
         }[]
       }
+      mfa_satisfied: { Args: never; Returns: boolean }
       notify_pgrst_reload: { Args: never; Returns: undefined }
       reactivate_server_licenses_for_user: {
         Args: { _paid_until: string; _user_id: string }
@@ -4120,6 +4306,7 @@ export type Database = {
         }
       }
       recalc_vip_tier: { Args: { _user_id: string }; Returns: string }
+      redeem_trusted_device: { Args: { _token: string }; Returns: boolean }
       release_op_lock: { Args: { _key: string }; Returns: undefined }
       release_redeem_code_claim: {
         Args: { _claim_id: string; _user_id: string }
@@ -4136,6 +4323,10 @@ export type Database = {
           plan_slug: string
         }[]
       }
+      review_creator_item: {
+        Args: { _id: string; _kind: string; _note: string; _status: string }
+        Returns: undefined
+      }
       revoke_unpaid_server_licenses: {
         Args: never
         Returns: {
@@ -4146,6 +4337,15 @@ export type Database = {
         }[]
       }
       run_community_giveaway: { Args: { _milestone?: number }; Returns: Json }
+      submit_creator_video: {
+        Args: { _title: string; _url: string }
+        Returns: string
+      }
+      submit_supporter_application: {
+        Args: { _links: string; _plan: string }
+        Returns: string
+      }
+      trust_this_device: { Args: { _label: string }; Returns: string }
       try_acquire_op_lock: {
         Args: { _holder?: string; _key: string; _ttl_seconds?: number }
         Returns: boolean

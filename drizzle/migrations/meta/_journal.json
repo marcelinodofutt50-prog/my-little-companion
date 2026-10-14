@@ -64,6 +64,13 @@
       "when": 1791779573913,
       "tag": "0008_vps_paid_order_support",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791946131586,
+      "tag": "0009_creator_program_full",
+      "breakpoints": true
     }
   ]
 }
