@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   BadgeCheck, CheckCircle2, Clapperboard, Clock, ExternalLink, Gift, KeyRound, Link2, Loader2,
-  Megaphone, Send, Sparkles, Wrench, XCircle,
+  Megaphone, Send, Sparkles, Wrench, XCircle, Copy, Trash2, Trophy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,13 @@ const SCRIPT = [
   { icon: Megaphone, t: "Chame para ação", d: "Peça para a pessoa entrar pelo seu link de indicação e deixe o link na descrição." },
 ];
 
+const LEVELS = [
+  { name: "Iniciante", min: 0, perk: "Envie seu primeiro vídeo para subir de nível." },
+  { name: "Bronze", min: 1, perk: "Creator ativo: prioridade no suporte e destaque nos sorteios." },
+  { name: "Prata", min: 5, perk: "A equipe avalia recompensas extras (dias de licença e bônus)." },
+  { name: "Ouro", min: 15, perk: "Creator parceiro: a equipe entra em contato para recompensas maiores." },
+];
+
 const VIDEO_LABEL: Record<string, string> = { pending: "Em análise", approved: "Aprovado", rejected: "Recusado" };
 
 function CreatorPage() {
@@ -58,17 +65,20 @@ function CreatorPage() {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [sending, setSending] = useState(false);
+  const [refCode, setRefCode] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data: s } = await supabase.auth.getSession();
     const id = s.session?.user?.id ?? null;
     setUid(id);
     if (!id) return setLoaded(true);
-    const [a, c, v] = await Promise.all([
+    const [a, c, v, pr] = await Promise.all([
       supabase.from("supporter_applications").select("status, staff_note").eq("user_id", id).maybeSingle(),
       supabase.from("creator_license_claims").select("status, staff_note, created_at").eq("user_id", id).maybeSingle(),
       supabase.from("creator_videos").select("id, url, title, platform, status, staff_note, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(50),
+      supabase.from("profiles").select("referral_code").eq("id", id).maybeSingle(),
     ]);
+    setRefCode(((pr.data as any)?.referral_code as string) ?? null);
     setApp((a.data as any) ?? null);
     setClaim((c.data as any) ?? null);
     setVideos((v.data as any) ?? []);
@@ -98,6 +108,14 @@ function CreatorPage() {
     load();
   };
 
+  const removeVideo = async (id: string) => {
+    if (!confirm("Remover este vídeo da análise?")) return;
+    const { data, error } = await supabase.rpc("delete_my_creator_video", { _id: id });
+    if (error || !data) return toast.error("Só dá para remover vídeos ainda em análise.");
+    toast.success("Vídeo removido.");
+    load();
+  };
+
   if (!loaded) return <div className="flex justify-center p-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
   if (!uid || app?.status !== "approved") {
@@ -118,6 +136,9 @@ function CreatorPage() {
   }
 
   const approvedCount = videos.filter((v) => v.status === "approved").length;
+  const level = LEVELS.slice().reverse().find((l) => approvedCount >= l.min) ?? LEVELS[0];
+  const next = LEVELS.find((l) => l.min > approvedCount);
+  const refLink = refCode ? `${window.location.origin}/auth?ref=${refCode}` : "";
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6">
@@ -131,6 +152,25 @@ function CreatorPage() {
           <Stat label="Aprovados" value={approvedCount} />
         </div>
       </div>
+
+      <Card><CardContent className="space-y-2 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="flex items-center gap-2 font-bold"><Trophy className="h-4 w-4 text-primary" /> Nível {level.name}</p>
+          <p className="font-mono text-[10px] uppercase text-muted-foreground">{next ? `${next.min - approvedCount} vídeo(s) aprovado(s) para ${next.name}` : "Nível máximo"}</p>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-muted">
+          <div className="h-full bg-primary transition-all" style={{ width: `${next ? Math.min(100, (approvedCount / next.min) * 100) : 100}%` }} />
+        </div>
+        <p className="text-xs text-muted-foreground">{level.perk}</p>
+      </CardContent></Card>
+
+      {refLink && (
+        <Card><CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center">
+          <p className="shrink-0 text-sm font-semibold">Seu link para a descrição:</p>
+          <Input readOnly value={refLink} className="font-mono text-xs" data-sensitive />
+          <Button variant="outline" className="shrink-0" onClick={() => navigator.clipboard.writeText(refLink).then(() => toast.success("Link copiado!"))}><Copy className="mr-1.5 h-4 w-4" /> Copiar</Button>
+        </CardContent></Card>
+      )}
 
       {/* Passo 1 — licença */}
       <Card className="border-primary/40 bg-gradient-to-br from-primary/15 via-card to-card"><CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -187,10 +227,13 @@ function CreatorPage() {
                 <a href={v.url} target="_blank" rel="noopener noreferrer nofollow" className="flex items-center gap-1 truncate font-mono text-[11px] text-primary underline"><Link2 className="h-3 w-3 shrink-0" />{v.url}</a>
                 {v.staff_note && <p className="mt-1 text-xs text-muted-foreground">Equipe: {v.staff_note}</p>}
               </div>
+              <div className="flex shrink-0 items-center gap-2">
+              {v.status === "pending" && <button onClick={() => removeVideo(v.id)} aria-label="Remover vídeo" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}
               <span className={`flex shrink-0 items-center gap-1 font-mono text-[10px] uppercase ${v.status === "approved" ? "text-primary" : v.status === "rejected" ? "text-destructive" : "text-muted-foreground"}`}>
                 {v.status === "approved" ? <CheckCircle2 className="h-3.5 w-3.5" /> : v.status === "rejected" ? <XCircle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
                 {VIDEO_LABEL[v.status] ?? v.status}
               </span>
+              </div>
             </div>
           ))}
         </div>

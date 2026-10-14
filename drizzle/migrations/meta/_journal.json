@@ -71,6 +71,13 @@
       "when": 1791946131586,
       "tag": "0009_creator_program_full",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791946375076,
+      "tag": "0010_creator_delete_video",
+      "breakpoints": true
     }
   ]
 }
