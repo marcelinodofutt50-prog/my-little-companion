@@ -543,7 +543,7 @@ export const adminSetRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({
     userId: z.string().uuid(),
-    role: z.enum(["admin", "moderator", "user"]),
+    role: z.enum(["admin", "moderator", "support", "user"]),
   }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -568,7 +568,7 @@ export const adminSetRoleByEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({
     email: z.string().trim().email().max(200),
-    role: z.enum(["admin", "moderator", "user"]),
+    role: z.enum(["admin", "moderator", "support", "user"]),
   }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);

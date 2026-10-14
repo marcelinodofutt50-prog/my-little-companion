@@ -664,7 +664,7 @@ function AdminPage() {
       setFixingLic(null);
     }
   }
-  async function setRole(userId: string, role: "admin" | "moderator" | "user") {
+  async function setRole(userId: string, role: "admin" | "moderator" | "support" | "user") {
     const label = role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente";
     try {
       await setRoleFn({ data: { userId, role } });
@@ -681,7 +681,7 @@ function AdminPage() {
     }
   }
 
-  async function setRoleByEmail(role: "admin" | "moderator" | "user") {
+  async function setRoleByEmail(role: "admin" | "moderator" | "support" | "user") {
     const email = staffEmail.trim();
     if (!email || staffBusy) return;
     setStaffBusy(true);
@@ -2268,6 +2268,14 @@ function AdminPage() {
                       </Button>
                       <Button
                         size="sm"
+                        variant="outline"
+                        disabled={staffBusy || !staffEmail.trim()}
+                        onClick={() => setRoleByEmail("support")}
+                      >
+                        Tornar Moderador
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="ghost"
                         disabled={staffBusy || !staffEmail.trim()}
                         onClick={() => setRoleByEmail("admin")}
@@ -2324,6 +2332,14 @@ function AdminPage() {
                                   onClick={() => setRole(u.id, "moderator")}
                                 >
                                   Suporte
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={current === "support"}
+                                  onClick={() => setRole(u.id, "support")}
+                                >
+                                  Moderador
                                 </Button>
                                 <Button
                                   size="sm"
