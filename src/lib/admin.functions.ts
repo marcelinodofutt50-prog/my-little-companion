@@ -539,6 +539,73 @@ export const adminStats = createServerFn({ method: "GET" })
   });
 
 // ---- Staff management ----
+/**
+ * Dá ou tira os cargos de Creator e Apoiador direto pelo admin.
+ * Esses cargos vivem em supporter_applications (status approved), não em
+ * user_roles — por isso têm função própria. Tudo fica na auditoria.
+ */
+export const adminSetSupporterBadge = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((i: unknown) => z.object({
+    userId: z.string().uuid(),
+    kind: z.enum(["creator", "apoiador"]),
+    action: z.enum(["grant", "revoke"]),
+  }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const label = data.kind === "creator" ? "Creator Shadow" : "Apoiador Shadow";
+    const { data: existing } = await supabaseAdmin
+      .from("supporter_applications").select("id, status")
+      .eq("user_id", data.userId).maybeSingle();
+
+    if (data.action === "grant") {
+      const payload = {
+        status: "approved",
+        plan: `Cargo ${label} (concedido pela equipe)`,
+        staff_note: null,
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+      } as any;
+      const res = existing
+        ? await supabaseAdmin.from("supporter_applications").update(payload).eq("id", existing.id)
+        : await supabaseAdmin.from("supporter_applications").insert({
+            user_id: data.userId, channel_links: "concedido pela equipe", ...payload,
+          } as any);
+      if (res.error) throw new Error(res.error.message);
+    } else {
+      if (!existing || existing.status !== "approved") throw new Error("Essa conta não tem esse cargo ativo.");
+      const { error } = await supabaseAdmin.from("supporter_applications").update({
+        status: "rejected",
+        staff_note: `Cargo ${label} removido pela equipe`,
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+      } as any).eq("id", existing.id);
+      if (error) throw new Error(error.message);
+    }
+
+    await supabaseAdmin.from("staff_audit_logs").insert({
+      executor_id: context.userId,
+      action: `badge_${data.action}_${data.kind}`,
+      target_id: data.userId,
+      details: { kind: data.kind, action: data.action },
+    } as any);
+    return { ok: true };
+  });
+
+/** Lista quem tem cargo de Creator/Apoiador aprovado (para o painel de equipe). */
+export const adminListSupporterBadges = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("supporter_applications").select("user_id, plan, status")
+      .eq("status", "approved");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
 export const adminSetRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({
