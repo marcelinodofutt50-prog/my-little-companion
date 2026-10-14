@@ -4207,6 +4207,7 @@ export type Database = {
       check_rls_enabled: { Args: { target_table: string }; Returns: boolean }
       claim_creator_license: { Args: never; Returns: string }
       complete_loyalty_mission: { Args: { _mission_id: string }; Returns: Json }
+      delete_my_creator_video: { Args: { _id: string }; Returns: boolean }
       expire_stale_apk_jobs: { Args: never; Returns: number }
       force_refresh_schema_permissions: { Args: never; Returns: undefined }
       forget_my_trusted_devices: { Args: never; Returns: number }
