@@ -2245,7 +2245,7 @@ function AdminPage() {
                 <div className="terminal-card scanlines relative overflow-hidden">
                   <div className="border-b border-border/40 p-3 font-mono text-xs uppercase text-muted-foreground">
                     <ShieldCheck className="mr-1 inline h-3 w-3 text-neon" /> Promova usuários para
-                    admin ou suporte (moderator).
+                    admin, suporte (moderator) ou moderador (support).
                   </div>
                   <div className="border-b border-border/40 bg-background/30 p-3">
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-cyan">
@@ -2312,7 +2312,7 @@ function AdminPage() {
                             <tr key={u.id} className="border-b border-border/20">
                               <td className="p-3 break-all">{u.email}</td>
                               <td
-                                className={`p-3 font-mono text-xs uppercase whitespace-nowrap ${current === "admin" ? "text-neon" : current === "moderator" ? "text-cyan" : "text-muted-foreground"}`}
+                                className={`p-3 font-mono text-xs uppercase whitespace-nowrap ${current === "admin" ? "text-neon" : current === "moderator" || current === "support" ? "text-cyan" : "text-muted-foreground"}`}
                               >
                                 {current}
                               </td>
