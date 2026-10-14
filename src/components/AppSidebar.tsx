@@ -1,4 +1,4 @@
-import { Clapperboard, Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Clapperboard, LayoutDashboard,
   Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull, Trophy, User, Lightbulb, Crown, Bitcoin, MessagesSquare } from "lucide-react";
 
