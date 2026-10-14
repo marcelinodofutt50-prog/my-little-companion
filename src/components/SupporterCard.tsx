@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Megaphone, Youtube, Send, BadgeCheck, Clock } from "lucide-react";
+import { Megaphone, Youtube, Send, BadgeCheck, Clock, PartyPopper, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-type App = { status: "pending" | "approved" | "rejected"; staff_note: string | null };
+type App = { status: "pending" | "approved" | "rejected"; staff_note: string | null; welcome_seen_at?: string | null };
 
 /** Chamada "Seja nosso apoiador" + pedido do cargo. A equipe aprova no admin (aba Sorteios). */
 export function SupporterCard({ userId }: { userId: string | null }) {
@@ -18,17 +19,34 @@ export function SupporterCard({ userId }: { userId: string | null }) {
 
   useEffect(() => {
     if (!userId) return;
-    supabase.from("supporter_applications" as any).select("status, staff_note").eq("user_id", userId).maybeSingle()
+    supabase.from("supporter_applications").select("status, staff_note, welcome_seen_at").eq("user_id", userId).maybeSingle()
       .then(({ data }) => { setApp((data as any) ?? null); setLoaded(true); });
   }, [userId]);
 
   if (!userId || !loaded) return null;
 
   if (app?.status === "approved") {
+    if (!app.welcome_seen_at) {
+      return (
+        <Card className="overflow-hidden border-primary bg-gradient-to-br from-primary/25 via-card to-card shadow-lg"><CardContent className="space-y-3 p-5">
+          <div className="flex items-start gap-3">
+            <PartyPopper className="h-8 w-8 shrink-0 text-primary" />
+            <div>
+              <p className="text-xl font-black uppercase tracking-tight">Parabéns, a equipe aceitou o seu pedido!!!</p>
+              <p className="text-sm text-muted-foreground">Agora você é <b className="text-primary">Creator Shadow</b>. O que fazer agora? Na aba Creator você resgata sua licença, vê o roteiro do vídeo e envia os links para a equipe.</p>
+            </div>
+          </div>
+          <Link to="/creator"><Button size="lg" className="w-full sm:w-auto">Clique aqui para ir para a aba Creator <ArrowRight className="ml-1.5 h-4 w-4" /></Button></Link>
+        </CardContent></Card>
+      );
+    }
     return (
-      <Card className="border-primary/50 bg-primary/10"><CardContent className="flex items-center gap-3 p-4">
-        <BadgeCheck className="h-6 w-6 text-primary" />
-        <div><p className="font-bold text-primary">Você é Apoiador Shadow</p><p className="text-xs text-muted-foreground">Continue divulgando — a equipe libera licenças grátis e recompensas para apoiadores ativos.</p></div>
+      <Card className="border-primary/50 bg-primary/10"><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+        <div className="flex items-center gap-3">
+          <BadgeCheck className="h-6 w-6 text-primary" />
+          <div><p className="font-bold text-primary">Você é Creator Shadow</p><p className="text-xs text-muted-foreground">Envie cada vídeo novo na aba Creator para a equipe acompanhar.</p></div>
+        </div>
+        <Link to="/creator"><Button size="sm" variant="outline">Abrir aba Creator</Button></Link>
       </CardContent></Card>
     );
   }
@@ -53,8 +71,8 @@ export function SupporterCard({ userId }: { userId: string | null }) {
         <div className="flex items-start gap-3">
           <Megaphone className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
           <div>
-            <p className="text-lg font-black uppercase tracking-tight">Seja nosso apoiador!</p>
-            <p className="text-sm text-muted-foreground">Ganhe o cargo de <b className="text-primary">Apoiador</b> agora mesmo e receba licenças da BTmob de graça. Com o tempo, dá até para ganhar dinheiro com isso.</p>
+            <p className="text-lg font-black uppercase tracking-tight">Seja um Creator Shadow!</p>
+            <p className="text-sm text-muted-foreground">Ganhe o cargo de <b className="text-primary">Creator</b> agora mesmo e receba licenças da BTmob de graça. Com o tempo, dá até para ganhar dinheiro com isso.</p>
           </div>
         </div>
         {app?.status === "pending" ? (
@@ -62,7 +80,7 @@ export function SupporterCard({ userId }: { userId: string | null }) {
         ) : (
           <>
             {app?.status === "rejected" && <p className="text-xs text-destructive">Pedido anterior recusado{app.staff_note ? `: ${app.staff_note}` : ""}. Você pode tentar de novo.</p>}
-            <Button variant={howOpen ? "outline" : "default"} onClick={() => setHowOpen((v) => !v)}>{howOpen ? "Fechar" : "Como faço para virar apoiador?"}</Button>
+            <Button variant={howOpen ? "outline" : "default"} onClick={() => setHowOpen((v) => !v)}>{howOpen ? "Fechar" : "Como faço para virar Creator?"}</Button>
             {howOpen && (
               <div className="space-y-3 rounded-lg border border-border bg-background/60 p-4 text-sm">
                 <ul className="space-y-1.5">
@@ -72,7 +90,7 @@ export function SupporterCard({ userId }: { userId: string | null }) {
                 </ul>
                 <textarea value={links} onChange={(e) => setLinks(e.target.value)} maxLength={600} rows={2} placeholder="Link do seu canal do YouTube, grupo, TikTok…" className="w-full rounded-md border border-border bg-background p-2 text-sm" />
                 <textarea value={plan} onChange={(e) => setPlan(e.target.value)} maxLength={600} rows={2} placeholder="Como você vai divulgar? (opcional)" className="w-full rounded-md border border-border bg-background p-2 text-sm" />
-                <Button onClick={submit} disabled={sending}>{sending ? "Enviando…" : "Quero ser apoiador"}</Button>
+                <Button onClick={submit} disabled={sending}>{sending ? "Enviando…" : "Quero ser Creator"}</Button>
               </div>
             )}
           </>

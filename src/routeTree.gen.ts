@@ -29,6 +29,7 @@ import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as VpsRouteImport } from './routes/vps'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedClientesChatRouteImport } from './routes/_authenticated/clientes-chat'
+import { Route as AuthenticatedCreatorRouteImport } from './routes/_authenticated/creator'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authenticated/fidelidade'
 import { Route as AuthenticatedParceiroRouteImport } from './routes/_authenticated/parceiro'
@@ -168,6 +169,11 @@ const AuthenticatedClientesChatRoute =
     path: '/clientes-chat',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCreatorRoute = AuthenticatedCreatorRouteImport.update({
+  id: '/creator',
+  path: '/creator',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -397,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/vps': typeof VpsRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes-chat': typeof AuthenticatedClientesChatRoute
+  '/creator': typeof AuthenticatedCreatorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/parceiro': typeof AuthenticatedParceiroRoute
@@ -456,6 +463,7 @@ export interface FileRoutesByTo {
   '/vps': typeof VpsRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes-chat': typeof AuthenticatedClientesChatRoute
+  '/creator': typeof AuthenticatedCreatorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/parceiro': typeof AuthenticatedParceiroRoute
@@ -517,6 +525,7 @@ export interface FileRoutesById {
   '/vps': typeof VpsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/clientes-chat': typeof AuthenticatedClientesChatRoute
+  '/_authenticated/creator': typeof AuthenticatedCreatorRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fidelidade': typeof AuthenticatedFidelidadeRoute
   '/_authenticated/parceiro': typeof AuthenticatedParceiroRoute
@@ -578,6 +587,7 @@ export interface FileRouteTypes {
     | '/vps'
     | '/admin'
     | '/clientes-chat'
+    | '/creator'
     | '/dashboard'
     | '/fidelidade'
     | '/parceiro'
@@ -637,6 +647,7 @@ export interface FileRouteTypes {
     | '/vps'
     | '/admin'
     | '/clientes-chat'
+    | '/creator'
     | '/dashboard'
     | '/fidelidade'
     | '/parceiro'
@@ -697,6 +708,7 @@ export interface FileRouteTypes {
     | '/vps'
     | '/_authenticated/admin'
     | '/_authenticated/clientes-chat'
+    | '/_authenticated/creator'
     | '/_authenticated/dashboard'
     | '/_authenticated/fidelidade'
     | '/_authenticated/parceiro'
@@ -921,6 +933,13 @@ declare module '@tanstack/react-router' {
       path: '/clientes-chat'
       fullPath: '/clientes-chat'
       preLoaderRoute: typeof AuthenticatedClientesChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/creator': {
+      id: '/_authenticated/creator'
+      path: '/creator'
+      fullPath: '/creator'
+      preLoaderRoute: typeof AuthenticatedCreatorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -1206,6 +1225,7 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedClientesChatRoute: typeof AuthenticatedClientesChatRoute
+  AuthenticatedCreatorRoute: typeof AuthenticatedCreatorRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFidelidadeRoute: typeof AuthenticatedFidelidadeRoute
   AuthenticatedParceiroRoute: typeof AuthenticatedParceiroRoute
@@ -1224,6 +1244,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedClientesChatRoute: AuthenticatedClientesChatRoute,
+  AuthenticatedCreatorRoute: AuthenticatedCreatorRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFidelidadeRoute: AuthenticatedFidelidadeRoute,
   AuthenticatedParceiroRoute: AuthenticatedParceiroRoute,

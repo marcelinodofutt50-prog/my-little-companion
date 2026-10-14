@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard,
+import { Clapperboard, LayoutDashboard,
   Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull, Trophy, User, Lightbulb, Crown, Bitcoin, MessagesSquare } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -43,6 +43,7 @@ const primary: Item[] = [
   { title: "Gift Center", url: "/presentes", icon: Gift, tKey: "nav.gifts" as const },
   { title: "Área do Parceiro", url: "/parceiro", icon: Crown },
   { title: "Sugestões", url: "/sugestoes", icon: Lightbulb, tKey: "nav.feedback" as const },
+  { title: "Creator", url: "/creator", icon: Clapperboard },
 ];
 
 
