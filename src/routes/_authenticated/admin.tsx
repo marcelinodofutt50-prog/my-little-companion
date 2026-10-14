@@ -148,6 +148,8 @@ import {
   adminSetRole,
   adminSetRoleByEmail,
   adminListRoles,
+  adminListSupporterBadges,
+  adminSetSupporterBadge,
   adminRenewClientServer,
   adminRecreateLicense,
   adminListThreads,
@@ -339,6 +341,7 @@ function AdminPage() {
   const totalPending = navBadges.chat + navBadges.orders + navBadges.refunds + navBadges.apk;
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
+  const [badges, setBadges] = useState<{ user_id: string; plan: string }[]>([]);
   const [email, setEmail] = useState("");
   const [licKind, setLicKind] = useState<"all" | "trial" | "paid">("all");
   const [licStatus, setLicStatus] = useState<"all" | "active" | "expiring" | "expired" | "revoked">(
@@ -359,6 +362,8 @@ function AdminPage() {
   const extendFn = useServerFn(adminExtendLicense);
   const rolesFn = useServerFn(adminListRoles);
   const setRoleEmailFn = useServerFn(adminSetRoleByEmail);
+  const badgesFn = useServerFn(adminListSupporterBadges);
+  const setBadgeFn = useServerFn(adminSetSupporterBadge);
   const [staffEmail, setStaffEmail] = useState("");
   const [staffBusy, setStaffBusy] = useState(false);
   const setRoleFn = useServerFn(adminSetRole);
