@@ -2328,6 +2328,22 @@ function AdminPage() {
                       >
                         Rebaixar
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={staffBusy || !staffEmail.trim()}
+                        onClick={() => setBadgeByEmail("creator")}
+                      >
+                        Tornar Creator
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={staffBusy || !staffEmail.trim()}
+                        onClick={() => setBadgeByEmail("apoiador")}
+                      >
+                        Tornar Apoiador
+                      </Button>
                     </div>
                     <p className="mt-2 font-mono text-[10px] text-muted-foreground">
                       // hoje nenhum atendente está como Suporte — por isso o time não enxerga o
@@ -2387,6 +2403,21 @@ function AdminPage() {
                                 >
                                   Usuário
                                 </Button>
+                                {(["creator", "apoiador"] as const).map((kind) => {
+                                  const label = kind === "creator" ? "Creator" : "Apoiador";
+                                  const has = badges.some((b) => b.user_id === u.id && b.plan?.toLowerCase().includes(kind));
+                                  return (
+                                    <Button
+                                      key={kind}
+                                      size="sm"
+                                      variant={has ? "secondary" : "ghost"}
+                                      className={has ? "text-neon" : undefined}
+                                      onClick={() => setBadge(u.id, kind, has ? "revoke" : "grant")}
+                                    >
+                                      {label}
+                                    </Button>
+                                  );
+                                })}
                               </td>
                             </tr>
                           );
