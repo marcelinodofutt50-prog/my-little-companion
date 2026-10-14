@@ -575,7 +575,10 @@ function AdminPage() {
   useEffect(() => {
     if (tab === "users" || tab === "staff" || tab === "audit") {
       loadUsers();
-      if (tab === "staff") loadRoles();
+      if (tab === "staff") {
+        loadRoles();
+        badgesFn().then((b) => setBadges(b as any)).catch(() => {});
+      }
     }
     if (tab === "orders") loadOrders();
     if (tab === "licenses" || tab === "legacy" || tab === "audit" || tab === "issue")
@@ -669,6 +672,36 @@ function AdminPage() {
       setFixingLic(null);
     }
   }
+  async function setBadge(userId: string, kind: "creator" | "apoiador", action: "grant" | "revoke") {
+    const label = kind === "creator" ? "Creator" : "Apoiador";
+    try {
+      await setBadgeFn({ data: { userId, kind, action } });
+      setBadges((await badgesFn()) as any);
+      toast.success(action === "grant" ? `Cargo ${label} concedido` : `Cargo ${label} removido`, {
+        description: action === "grant" ? "Peça para a pessoa dar F5 para ver a aba Creator." : undefined,
+        duration: 8000,
+      });
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível atualizar o cargo");
+    }
+  }
+
+  async function setBadgeByEmail(kind: "creator" | "apoiador") {
+    const email = staffEmail.trim();
+    if (!email || staffBusy) return;
+    setStaffBusy(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("id").ilike("email", email.toLowerCase()).maybeSingle();
+      if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
+      await setBadge(prof.id, kind, "grant");
+      setStaffEmail("");
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível atualizar o cargo");
+    } finally {
+      setStaffBusy(false);
+    }
+  }
+
   async function setRole(userId: string, role: "admin" | "moderator" | "support" | "user") {
     const label = role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente";
     try {
