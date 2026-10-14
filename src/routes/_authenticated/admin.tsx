@@ -148,6 +148,8 @@ import {
   adminSetRole,
   adminSetRoleByEmail,
   adminListRoles,
+  adminListSupporterBadges,
+  adminSetSupporterBadge,
   adminRenewClientServer,
   adminRecreateLicense,
   adminListThreads,
@@ -339,6 +341,7 @@ function AdminPage() {
   const totalPending = navBadges.chat + navBadges.orders + navBadges.refunds + navBadges.apk;
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
+  const [badges, setBadges] = useState<{ user_id: string; plan: string }[]>([]);
   const [email, setEmail] = useState("");
   const [licKind, setLicKind] = useState<"all" | "trial" | "paid">("all");
   const [licStatus, setLicStatus] = useState<"all" | "active" | "expiring" | "expired" | "revoked">(
@@ -359,6 +362,8 @@ function AdminPage() {
   const extendFn = useServerFn(adminExtendLicense);
   const rolesFn = useServerFn(adminListRoles);
   const setRoleEmailFn = useServerFn(adminSetRoleByEmail);
+  const badgesFn = useServerFn(adminListSupporterBadges);
+  const setBadgeFn = useServerFn(adminSetSupporterBadge);
   const [staffEmail, setStaffEmail] = useState("");
   const [staffBusy, setStaffBusy] = useState(false);
   const setRoleFn = useServerFn(adminSetRole);
@@ -570,7 +575,10 @@ function AdminPage() {
   useEffect(() => {
     if (tab === "users" || tab === "staff" || tab === "audit") {
       loadUsers();
-      if (tab === "staff") loadRoles();
+      if (tab === "staff") {
+        loadRoles();
+        badgesFn().then((b) => setBadges(b as any)).catch(() => {});
+      }
     }
     if (tab === "orders") loadOrders();
     if (tab === "licenses" || tab === "legacy" || tab === "audit" || tab === "issue")
@@ -664,6 +672,36 @@ function AdminPage() {
       setFixingLic(null);
     }
   }
+  async function setBadge(userId: string, kind: "creator" | "apoiador", action: "grant" | "revoke") {
+    const label = kind === "creator" ? "Creator" : "Apoiador";
+    try {
+      await setBadgeFn({ data: { userId, kind, action } });
+      setBadges((await badgesFn()) as any);
+      toast.success(action === "grant" ? `Cargo ${label} concedido` : `Cargo ${label} removido`, {
+        description: action === "grant" ? "Peça para a pessoa dar F5 para ver a aba Creator." : undefined,
+        duration: 8000,
+      });
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível atualizar o cargo");
+    }
+  }
+
+  async function setBadgeByEmail(kind: "creator" | "apoiador") {
+    const email = staffEmail.trim();
+    if (!email || staffBusy) return;
+    setStaffBusy(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("id").ilike("email", email.toLowerCase()).maybeSingle();
+      if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
+      await setBadge(prof.id, kind, "grant");
+      setStaffEmail("");
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível atualizar o cargo");
+    } finally {
+      setStaffBusy(false);
+    }
+  }
+
   async function setRole(userId: string, role: "admin" | "moderator" | "support" | "user") {
     const label = role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente";
     try {
@@ -2290,6 +2328,22 @@ function AdminPage() {
                       >
                         Rebaixar
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={staffBusy || !staffEmail.trim()}
+                        onClick={() => setBadgeByEmail("creator")}
+                      >
+                        Tornar Creator
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={staffBusy || !staffEmail.trim()}
+                        onClick={() => setBadgeByEmail("apoiador")}
+                      >
+                        Tornar Apoiador
+                      </Button>
                     </div>
                     <p className="mt-2 font-mono text-[10px] text-muted-foreground">
                       // hoje nenhum atendente está como Suporte — por isso o time não enxerga o
@@ -2349,6 +2403,21 @@ function AdminPage() {
                                 >
                                   Usuário
                                 </Button>
+                                {(["creator", "apoiador"] as const).map((kind) => {
+                                  const label = kind === "creator" ? "Creator" : "Apoiador";
+                                  const has = badges.some((b) => b.user_id === u.id && b.plan?.toLowerCase().includes(kind));
+                                  return (
+                                    <Button
+                                      key={kind}
+                                      size="sm"
+                                      variant={has ? "secondary" : "ghost"}
+                                      className={has ? "text-neon" : undefined}
+                                      onClick={() => setBadge(u.id, kind, has ? "revoke" : "grant")}
+                                    >
+                                      {label}
+                                    </Button>
+                                  );
+                                })}
                               </td>
                             </tr>
                           );
