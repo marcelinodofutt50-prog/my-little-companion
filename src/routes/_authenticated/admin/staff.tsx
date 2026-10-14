@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, History, ClipboardList, CheckCircle2, XCircle, RefreshCw, Loader2 } from "lucide-react";
+import { Users, History, ClipboardList, CheckCircle2, XCircle, RefreshCw, Loader2, ShieldPlus, Trash2 } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { staffListApplications, staffUpdateApplication, staffListMembers, staffListAudit } from "@/lib/staff-admin.functions";
+import { staffListApplications, staffUpdateApplication, staffListMembers, staffListAudit, staffAssignRole, staffRevokeRole } from "@/lib/staff-admin.functions";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
