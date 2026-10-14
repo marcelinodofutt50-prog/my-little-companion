@@ -664,7 +664,7 @@ function AdminPage() {
       setFixingLic(null);
     }
   }
-  async function setRole(userId: string, role: "admin" | "moderator" | "user") {
+  async function setRole(userId: string, role: "admin" | "moderator" | "support" | "user") {
     const label = role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente";
     try {
       await setRoleFn({ data: { userId, role } });
@@ -681,7 +681,7 @@ function AdminPage() {
     }
   }
 
-  async function setRoleByEmail(role: "admin" | "moderator" | "user") {
+  async function setRoleByEmail(role: "admin" | "moderator" | "support" | "user") {
     const email = staffEmail.trim();
     if (!email || staffBusy) return;
     setStaffBusy(true);
@@ -2245,7 +2245,7 @@ function AdminPage() {
                 <div className="terminal-card scanlines relative overflow-hidden">
                   <div className="border-b border-border/40 p-3 font-mono text-xs uppercase text-muted-foreground">
                     <ShieldCheck className="mr-1 inline h-3 w-3 text-neon" /> Promova usuários para
-                    admin ou suporte (moderator).
+                    admin, suporte (moderator) ou moderador (support).
                   </div>
                   <div className="border-b border-border/40 bg-background/30 p-3">
                     <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-cyan">
@@ -2265,6 +2265,14 @@ function AdminPage() {
                         onClick={() => setRoleByEmail("moderator")}
                       >
                         Tornar Suporte
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={staffBusy || !staffEmail.trim()}
+                        onClick={() => setRoleByEmail("support")}
+                      >
+                        Tornar Moderador
                       </Button>
                       <Button
                         size="sm"
@@ -2304,7 +2312,7 @@ function AdminPage() {
                             <tr key={u.id} className="border-b border-border/20">
                               <td className="p-3 break-all">{u.email}</td>
                               <td
-                                className={`p-3 font-mono text-xs uppercase whitespace-nowrap ${current === "admin" ? "text-neon" : current === "moderator" ? "text-cyan" : "text-muted-foreground"}`}
+                                className={`p-3 font-mono text-xs uppercase whitespace-nowrap ${current === "admin" ? "text-neon" : current === "moderator" || current === "support" ? "text-cyan" : "text-muted-foreground"}`}
                               >
                                 {current}
                               </td>
@@ -2324,6 +2332,14 @@ function AdminPage() {
                                   onClick={() => setRole(u.id, "moderator")}
                                 >
                                   Suporte
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={current === "support"}
+                                  onClick={() => setRole(u.id, "support")}
+                                >
+                                  Moderador
                                 </Button>
                                 <Button
                                   size="sm"
