@@ -547,13 +547,22 @@ export const adminStats = createServerFn({ method: "GET" })
 export const adminSetSupporterBadge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({
-    userId: z.string().uuid(),
+    userId: z.string().uuid().optional(),
+    email: z.string().trim().email().max(200).optional(),
     kind: z.enum(["creator", "apoiador"]),
     action: z.enum(["grant", "revoke"]),
   }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let userId = data.userId;
+    if (!userId) {
+      if (!data.email) throw new Error("Informe o e-mail da conta.");
+      const { data: prof } = await supabaseAdmin
+        .from("profiles").select("id").ilike("email", data.email.toLowerCase()).maybeSingle();
+      if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
+      userId = prof.id;
+    }
     const label = data.kind === "creator" ? "Creator Shadow" : "Apoiador Shadow";
     const { data: existing } = await supabaseAdmin
       .from("supporter_applications").select("id, status")
