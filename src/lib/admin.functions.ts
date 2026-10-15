@@ -566,7 +566,7 @@ export const adminSetSupporterBadge = createServerFn({ method: "POST" })
     const label = data.kind === "creator" ? "Creator Shadow" : "Apoiador Shadow";
     const { data: existing } = await supabaseAdmin
       .from("supporter_applications").select("id, status")
-      .eq("user_id", data.userId).maybeSingle();
+      .eq("user_id", userId).maybeSingle();
 
     if (data.action === "grant") {
       const payload = {
@@ -579,7 +579,7 @@ export const adminSetSupporterBadge = createServerFn({ method: "POST" })
       const res = existing
         ? await supabaseAdmin.from("supporter_applications").update(payload).eq("id", existing.id)
         : await supabaseAdmin.from("supporter_applications").insert({
-            user_id: data.userId, channel_links: "concedido pela equipe", ...payload,
+            user_id: userId, channel_links: "concedido pela equipe", ...payload,
           } as any);
       if (res.error) throw new Error(res.error.message);
     } else {
@@ -596,7 +596,7 @@ export const adminSetSupporterBadge = createServerFn({ method: "POST" })
     await supabaseAdmin.from("staff_audit_logs").insert({
       executor_id: context.userId,
       action: `badge_${data.action}_${data.kind}`,
-      target_id: data.userId,
+      target_id: userId,
       details: { kind: data.kind, action: data.action },
     } as any);
     return { ok: true };
