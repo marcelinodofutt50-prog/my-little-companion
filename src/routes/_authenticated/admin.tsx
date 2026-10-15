@@ -691,10 +691,13 @@ function AdminPage() {
     if (!email || staffBusy) return;
     setStaffBusy(true);
     try {
-      const { data: prof } = await supabase.from("profiles").select("id").ilike("email", email.toLowerCase()).maybeSingle();
-      if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
-      await setBadge(prof.id, kind, "grant");
+      await setBadgeFn({ data: { email, kind, action: "grant" } });
+      setBadges((await badgesFn()) as any);
       setStaffEmail("");
+      toast.success(`Cargo ${kind === "creator" ? "Creator" : "Apoiador"} concedido para ${email}`, {
+        description: "Peça para a pessoa dar F5 para ver a aba Creator.",
+        duration: 8000,
+      });
     } catch (e: any) {
       toast.error(e.message ?? "Não foi possível atualizar o cargo");
     } finally {
