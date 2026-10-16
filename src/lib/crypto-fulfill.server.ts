@@ -1,3 +1,4 @@
+import { firstLifetimeServerCutoff } from "@/lib/server-renewal";
 /**
  * Provision a license from a confirmed crypto payment.
  * Mirrors the "new license" branch of the Mercado Pago webhook, scoped to
@@ -113,7 +114,7 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
       yaarsa_email: creds.email,
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: expiresAt.toISOString(),
-      server_paid_until: nextDay20.toISOString(),
+      server_paid_until: (String(claimed.plan_slug).includes("lifetime") ? firstLifetimeServerCutoff() : nextDay20).toISOString(),
       is_trial: false,
       version_tier: tierFromPlanSlug(claimed.plan_slug),
       is_legacy: false,

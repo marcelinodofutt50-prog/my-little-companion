@@ -53,6 +53,17 @@ export function nextServerCutoff(now = new Date()): Date {
 }
 
 /**
+ * Primeiro vencimento do servidor para uma compra NOVA de Vitalício:
+ * o mês da compra é grátis, a primeira taxa é no dia 20 do mês seguinte
+ * (fuso de Brasília). Renovações continuam usando nextServerCutoff.
+ */
+export function firstLifetimeServerCutoff(now = new Date()): Date {
+  const [y, m] = spDay(now).split("-").map(Number) as [number, number, number];
+  const t = new Date(Date.UTC(y, m, 20));
+  return new Date(`${t.toISOString().slice(0, 10)}T23:59:59-03:00`);
+}
+
+/**
  * Calcula o efeito do pagamento da taxa de servidor sobre uma licença.
  *
  * - Mensal/semanal: a licença passa a valer até o próximo dia 20.
