@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { planServerRenewal, nextServerCutoff } from "@/lib/server-renewal";
+import { planServerRenewal, nextServerCutoff, firstLifetimeServerCutoff } from "@/lib/server-renewal";
 
 // Backoff exponencial das tentativas de entrega automática.
 // 1ª falha → 1 min, depois 2, 4, 8, 16, 32 e teto de 60 min.
