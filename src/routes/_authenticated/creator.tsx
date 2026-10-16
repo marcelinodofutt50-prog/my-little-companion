@@ -36,7 +36,13 @@ const ERR: Record<string, string> = {
   rate_limited: "Limite de 5 vídeos por dia. Envie o resto amanhã.",
   duplicate: "Esse vídeo já foi enviado.",
 };
-const errMsg = (m?: string) => Object.entries(ERR).find(([k]) => m?.includes(k))?.[1] ?? "Não deu agora. Tente de novo em instantes.";
+const errMsg = (m?: string, code?: string) => {
+  const known = Object.entries(ERR).find(([k]) => m?.includes(k))?.[1];
+  if (known) return known;
+  if (code === "PGRST202" || /could not find the function/i.test(m ?? "")) return "O sistema está atualizando. Recarregue a página (F5) e tente de novo.";
+  if (/jwt|session|401/i.test(m ?? "")) return "Sua sessão expirou. Saia e entre de novo na conta.";
+  return `Não deu agora. Tente de novo em instantes.${code ? ` (código ${code})` : ""}`;
+};
 
 const SCRIPT = [
   { icon: Sparkles, t: "Apresente o site", d: "Mostre a página inicial, explique o que é a Shadow e para quem é." },
@@ -91,7 +97,7 @@ function CreatorPage() {
     setClaiming(true);
     const { error } = await supabase.rpc("claim_creator_license");
     setClaiming(false);
-    if (error) return toast.error(errMsg(error.message));
+    if (error) { console.error("[creator]", error); return toast.error(errMsg(error.message, (error as any).code)); }
     toast.success("Pedido de licença enviado! A equipe libera em breve.");
     load();
   };
@@ -102,7 +108,7 @@ function CreatorPage() {
     setSending(true);
     const { error } = await supabase.rpc("submit_creator_video", { _url: u.slice(0, 300), _title: title.trim().slice(0, 120) });
     setSending(false);
-    if (error) return toast.error(errMsg(error.message));
+    if (error) { console.error("[creator]", error); return toast.error(errMsg(error.message, (error as any).code)); }
     toast.success("Vídeo enviado para a equipe!");
     setUrl(""); setTitle("");
     load();
