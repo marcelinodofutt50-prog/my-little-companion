@@ -200,7 +200,7 @@ async function fulfillOrderInner(orderId: string) {
       yaarsa_email: creds.email,
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: lifetimeExpiry.toISOString(),
-      server_paid_until: nextDay20.toISOString(),
+      server_paid_until: firstLifetimeServerCutoff().toISOString(),
       is_trial: false,
       version_tier: "lifetime_46",
       is_legacy: true,
@@ -474,7 +474,8 @@ async function fulfillOrderInner(orderId: string) {
     yaarsa_email: creds.email,
     yaarsa_password_enc: encrypt(creds.password),
     expires_at: expiresAt.toISOString(),
-    server_paid_until: nextDay20.toISOString(),
+    // Vitalício novo: mês da compra sem taxa de servidor; 1ª taxa no dia 20 do mês seguinte.
+    server_paid_until: (order.plan_slug.includes("lifetime") ? firstLifetimeServerCutoff() : nextDay20).toISOString(),
     is_trial: false,
     version_tier: versionTier,
     is_legacy: false,
