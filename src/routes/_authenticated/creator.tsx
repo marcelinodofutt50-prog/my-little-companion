@@ -97,7 +97,7 @@ function CreatorPage() {
     setClaiming(true);
     const { error } = await supabase.rpc("claim_creator_license");
     setClaiming(false);
-    if (error) return toast.error(errMsg(error.message));
+    if (error) { console.error("[creator]", error); return toast.error(errMsg(error.message, (error as any).code)); }
     toast.success("Pedido de licença enviado! A equipe libera em breve.");
     load();
   };
@@ -108,7 +108,7 @@ function CreatorPage() {
     setSending(true);
     const { error } = await supabase.rpc("submit_creator_video", { _url: u.slice(0, 300), _title: title.trim().slice(0, 120) });
     setSending(false);
-    if (error) return toast.error(errMsg(error.message));
+    if (error) { console.error("[creator]", error); return toast.error(errMsg(error.message, (error as any).code)); }
     toast.success("Vídeo enviado para a equipe!");
     setUrl(""); setTitle("");
     load();
