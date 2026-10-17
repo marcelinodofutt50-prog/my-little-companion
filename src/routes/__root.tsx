@@ -22,6 +22,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { I18nProvider } from "@/lib/i18n";
+import { CurrencyProvider } from "@/lib/currency";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 
 
@@ -356,6 +357,7 @@ function InnerRootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
+        <CurrencyProvider>
           <MfaGate>
             <div className="sticky top-0 z-[60] w-full">
               <AnnouncementsBanner />
@@ -365,6 +367,7 @@ function InnerRootComponent() {
             <StreamerMode />
           </MfaGate>
           <ThemedToaster />
+        </CurrencyProvider>
         </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>
