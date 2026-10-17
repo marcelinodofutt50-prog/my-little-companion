@@ -12,6 +12,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle, useI18n } from "@/lib/i18n";
+import { CurrencyToggle } from "@/lib/currency";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InAppNotifications } from "@/components/InAppNotifications";
 import { SystemHealthIndicator } from "@/components/SystemHealthIndicator";
@@ -107,6 +108,7 @@ export function SiteHeader() {
 
           <ThemeToggle />
           <span className="hidden sm:inline-flex"><LanguageToggle /></span>
+          <span className="hidden lg:inline-flex"><CurrencyToggle /></span>
 
           {user ? (
             <div className="flex items-center gap-2">
@@ -209,6 +211,7 @@ export function SiteHeader() {
                 <div className="mt-auto space-y-3 px-4 pb-6">
                   <div className="flex items-center gap-2">
                     <LanguageToggle />
+                    <CurrencyToggle />
                     <ThemeToggle />
                   </div>
                   {!user && (

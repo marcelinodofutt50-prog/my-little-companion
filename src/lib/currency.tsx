@@ -144,7 +144,7 @@ export function UsdNotice({ className = "" }: { className?: string }) {
   if (currency !== "USD") return null;
   return (
     <p className={`text-[11px] text-muted-foreground ${className}`}>
-      Prices in US$ are approximate ({fmt(100)} ≈ R$ 100,00). You are charged in Brazilian reais (BRL) — pay by PIX, card or crypto.
+      Prices in US$ are approximate ({fmt(100)} ≈ R$ 100,00). Payment is charged in Brazilian reais (BRL); the exact amount appears at checkout. International buyers can also pay with crypto.
     </p>
   );
 }
