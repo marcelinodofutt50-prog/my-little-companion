@@ -83,6 +83,56 @@ function computeBreakdown(price: number, coupon: Coupon | null, cashbackBalance:
   return { discount, cashbackApplied: +cashbackApplied.toFixed(2), final, cashbackEarn };
 }
 
+
+const META_EN: Record<string, string> = {
+  "Acesso perpétuo à linha 4.6+ com atualizações inclusas.": "Permanent access to the 4.6+ line with updates included.",
+  "Mais econômico": "Best value",
+  "pagamento único": "one-time payment",
+  "Shadow 4.6+ com todos os módulos": "Shadow 4.6+ with every module",
+  "Bypass Play Protect da própria BTmob (assinatura ~1 dia)": "BTmob's own Play Protect bypass (signature lasts ~1 day)",
+  "Atualizações grátis para sempre": "Free updates forever",
+  "Suporte prioritário 24/7": "24/7 priority support",
+  "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)": "Priority queue on our Play Protect Cloak (signature lasts 2–3 weeks)",
+  "Acesso ao Bypass Play Protect (Cloak & Dropper)": "Access to the Play Protect Bypass (Cloak & Dropper)",
+  "Operação mensal na versão estável 4.5.7.": "Monthly access on the stable 4.5.7 version.",
+  "Mais popular": "Most popular",
+  "renovação em 30 dias": "renews every 30 days",
+  "Shadow 4.5.7, Bypass Play Protect, suporte via chat": "Shadow 4.5.7, Play Protect bypass, chat support",
+  "Shadow 4.5.7 completa": "Full Shadow 4.5.7",
+  "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)": "BTmob's own Play Protect bypass (APK signature lasts ~1 day)",
+  "Suporte via chat no painel": "Chat support in the dashboard",
+  "Acesso ao Bypass Play Protect (Automático & Dropper)": "Access to the Play Protect Bypass (Automatic & Dropper)",
+  "Ideal para validar a ferramenta em um ciclo curto.": "Great for trying the tool over a short cycle.",
+  "7 dias de acesso": "7 days of access",
+  "Shadow 4.5.5 (build básico)": "Shadow 4.5.5 (basic build)",
+  "Fluxo essencial da ferramenta": "Core tool workflow",
+  "Suporte por chat": "Chat support",
+  "Servidor de sinal com renovação todo dia 20.": "Signal server, renewed every 20th.",
+  "mensal · vence dia 20": "monthly · due on the 20th",
+  "Infra dedicada monitorada": "Dedicated, monitored infrastructure",
+  "Uptime 99,9% no ciclo": "99.9% uptime per cycle",
+  "IP fixo para sua licença": "Fixed IP for your license",
+  "Realinhamento automático da mensalidade": "Automatic billing realignment",
+  "Migração assistida de v4.5.7 para vitalício v4.6.": "Assisted upgrade from v4.5.7 to lifetime v4.6.",
+  "Migração automática do login": "Automatic login migration",
+  "Vira Vitalício v4.6 imediatamente": "Becomes Lifetime v4.6 right away",
+  "Mantém seu histórico e servidor": "Keeps your history and server",
+  "Prioridade no suporte após upgrade": "Priority support after upgrading",
+  "Libera Shadow Play Protect Builder": "Unlocks the Shadow Play Protect Builder",
+  "Acesso ao servidor exclusivo de vitalícios": "Access to the lifetime-only server",
+  "O bypass de longa duração mais estável do mercado.": "The most stable long-lasting bypass on the market.",
+  "Assinatura V2/V3 com bypass Play Protect": "V2/V3 signature with Play Protect bypass",
+  "APK Cloaking (Shadow Bypass Dropper inclusa)": "APK Cloaking (Shadow Bypass Dropper included)",
+  "Proteção anti-decompile": "Anti-decompile protection",
+  "Garantia de bypass ativo no ciclo": "Bypass guaranteed active during the cycle",
+  "Fila dedicada no builder": "Dedicated builder queue",
+  "Código-fonte auditável, entrega assistida por engenheiro.": "Auditable source code, delivered with an engineer.",
+  "licença perpétua": "perpetual license",
+  "Fontes completas e documentadas": "Complete, documented sources",
+  "Sessão de handoff com engenheiro": "Handoff session with an engineer",
+  "Chave de build inclusa": "Build key included",
+};
+
 // ============ Plan meta: features + icons per slug family ============
 type PlanMeta = {
   tagline: string;
@@ -94,7 +144,14 @@ type PlanMeta = {
 
 };
 
-function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
+function metaFor(plan: Plan, t: (k: any) => string, fmt: (v: number) => string = (v) => `R$ ${v}`, en = false): PlanMeta {
+  const m = metaForPt(plan, t, fmt);
+  if (!en) return m;
+  const tr = (x?: string) => (x ? META_EN[x] ?? x.replace(/^cobrança única \((.*)\)$/, "one-time charge ($1)").replace(/^Economia real: não precisa pagar (.*) no valor cheio$/, "Real savings: no need to pay the full $1") : x);
+  return { ...m, tagline: tr(m.tagline)!, badge: tr(m.badge), cadence: tr(m.cadence), features: m.features.map((f) => tr(f)!) };
+}
+
+function metaForPt(plan: Plan, t: (k: any) => string, fmt: (v: number) => string): PlanMeta {
   const s = plan.slug.toLowerCase();
   if (s.includes("lifetime")) return {
     tagline: "Acesso perpétuo à linha 4.6+ com atualizações inclusas.",
@@ -148,14 +205,14 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
   if (s.includes("upgrade") || s.includes("migracao")) return {
     tagline: "Migração assistida de v4.5.7 para vitalício v4.6.",
     icon: ArrowUpRight,
-    cadence: "cobrança única (R$ 600)",
+    cadence: `cobrança única (${fmt(600)})`,
     features: [
       "Migração automática do login",
       "Vira Vitalício v4.6 imediatamente",
       "Mantém seu histórico e servidor",
       "Prioridade no suporte após upgrade",
       "Libera Shadow Play Protect Builder",
-      "Economia real: não precisa pagar R$ 1.700 no valor cheio",
+      `Economia real: não precisa pagar ${fmt(1700)} no valor cheio`,
       "Acesso ao servidor exclusivo de vitalícios",
     ],
   };
@@ -1486,7 +1543,10 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
     [price, appliedCoupon, cashback, useCash]
   );
   const hasBenefit = b.discount > 0 || b.cashbackApplied > 0 || b.cashbackEarn > 0;
-  const meta = useMemo(() => metaFor(plan, t), [plan, t]);
+  const { lang: cardLang } = useI18n();
+  const en = cardLang === "en";
+  const tr = (pt: string, enText: string) => (en ? enText : pt);
+  const meta = useMemo(() => metaFor(plan, t, formatBrl, en), [plan, t, formatBrl, en]);
   const Icon = meta.icon;
   
   const [showUpsell, setShowUpsell] = useState(false);
@@ -1516,23 +1576,23 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
           <div className="mb-4 rounded-full bg-primary/10 p-3">
             <Rocket className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="mb-2 font-display text-lg uppercase tracking-wider">Confirmar Upgrade?</h3>
+          <h3 className="mb-2 font-display text-lg uppercase tracking-wider">{tr("Confirmar Upgrade?", "Confirm upgrade?")}</h3>
           <p className="mb-6 text-[10px] text-muted-foreground leading-relaxed">
-            Você está prestes a elevar sua licença para a <b>versão vitalícia 4.6</b>. O processo é imediato e preserva todos os seus dados.
+            {en ? <>You are about to upgrade your license to the <b>lifetime 4.6 version</b>. It is instant and keeps all your data.</> : <>Você está prestes a elevar sua licença para a <b>versão vitalícia 4.6</b>. O processo é imediato e preserva todos os seus dados.</>}
           </p>
           <div className="flex w-full flex-col gap-2">
             <Button 
               className="w-full font-mono text-[9px] uppercase tracking-widest shadow-[0_0_15px_rgba(var(--primary),0.3)]"
               onClick={() => { onBuy(plan.slug); setShowUpgradeConfirm(null); }}
             >
-              Confirmar & Pagar
+              {tr("Confirmar & Pagar", "Confirm & pay")}
             </Button>
             <Button 
               variant="ghost" 
               className="w-full font-mono text-[9px] uppercase tracking-widest text-muted-foreground"
               onClick={() => setShowUpgradeConfirm(null)}
             >
-              Voltar
+              {tr("Voltar", "Back")}
             </Button>
           </div>
         </div>
@@ -1543,19 +1603,19 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         const fmt = formatBrl;
         return (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
-            <h3 className="mb-2 font-display text-lg uppercase tracking-wider">Antes de pagar…</h3>
+            <h3 className="mb-2 font-display text-lg uppercase tracking-wider">{tr("Antes de pagar…", "Before you pay…")}</h3>
             <p className="mb-2 text-[11px] text-muted-foreground leading-relaxed">
-              O <b className="text-foreground">Vitalício</b> sai por <b className="text-primary">{fmt(upsell.price)}</b> uma vez só — o mesmo que {months} renovações deste plano.
+              {en ? <>The <b className="text-foreground">Lifetime</b> plan costs <b className="text-primary">{fmt(upsell.price)}</b> once — the same as {months} renewals of this plan.</> : <>O <b className="text-foreground">Vitalício</b> sai por <b className="text-primary">{fmt(upsell.price)}</b> uma vez só — o mesmo que {months} renovações deste plano.</>}
             </p>
             {upsell.welcome && (
-              <p className="mb-4 text-[10px] font-mono uppercase tracking-wider text-primary">Preço de boas-vindas ainda valendo para sua conta</p>
+              <p className="mb-4 text-[10px] font-mono uppercase tracking-wider text-primary">{tr("Preço de boas-vindas ainda valendo para sua conta", "Welcome price still active for your account")}</p>
             )}
             <div className="mt-2 flex w-full flex-col gap-2">
               <Button className="w-full font-mono text-[9px] uppercase tracking-widest" onClick={() => { setShowUpsell(false); onBuy(upsell.slug); }}>
-                Quero o Vitalício
+                {tr("Quero o Vitalício", "I want Lifetime")}
               </Button>
               <Button variant="ghost" className="w-full font-mono text-[9px] uppercase tracking-widest text-muted-foreground" onClick={() => { setShowUpsell(false); onBuy(plan.slug); }}>
-                Continuar com este plano
+                {tr("Continuar com este plano", "Continue with this plan")}
               </Button>
             </div>
           </div>
@@ -1649,7 +1709,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       {meta.note && (
         <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-inner">
           <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-amber-500">
-            <AlertTriangle className="h-3 w-3" /> Atenção Operador
+            <AlertTriangle className="h-3 w-3" /> {tr("Atenção Operador", "Heads up")}
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground/90 italic">
             {meta.note}
@@ -1661,24 +1721,24 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       {hasBenefit && (
         <div className="mt-5 space-y-2.5 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm backdrop-blur-[2px]">
           <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-primary/70">
-            <Tag className="h-3 w-3" /> Resumo de Benefícios
+            <Tag className="h-3 w-3" /> {tr("Resumo de Benefícios", "Benefits summary")}
           </div>
           <ul className="space-y-1.5 font-mono text-[10px]">
             {b.discount > 0 && (
               <li className="flex justify-between items-center text-primary">
-                <span className="opacity-80">Cupom Aplicado</span>
+                <span className="opacity-80">{tr("Cupom Aplicado", "Coupon applied")}</span>
                 <span className="font-bold">-{formatBrl(b.discount)}</span>
               </li>
             )}
             {b.cashbackApplied > 0 && (
               <li className="flex justify-between items-center text-primary">
-                <span className="opacity-80">Saldo Cashback</span>
+                <span className="opacity-80">{tr("Saldo Cashback", "Cashback balance")}</span>
                 <span className="font-bold">-{formatBrl(b.cashbackApplied)}</span>
               </li>
             )}
             {b.cashbackEarn > 0 && (
               <li className="flex justify-between items-center text-primary/60">
-                <span className="opacity-70">Cashback Retorno</span>
+                <span className="opacity-70">{tr("Cashback Retorno", "Cashback earned")}</span>
                 <span>+{formatBrl(b.cashbackEarn)}</span>
               </li>
             )}
