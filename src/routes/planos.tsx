@@ -233,6 +233,8 @@ function ShadowLupinBanner() {
 
 function PlansPage() {
   const { fmt: formatBrl, parts: moneyParts } = useMoney();
+  const { lang } = useI18n();
+  const en = lang === "en";
   const search = useSearch({ from: "/planos" }) as any;
 
   useThemeSearchParam(search?.theme);
@@ -903,8 +905,9 @@ function PlansPage() {
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// licenças shadow</div>
               <h2 className="mt-1 font-display text-2xl md:text-3xl">Escolha seu Acesso</h2>
             </div>
-            <span className="text-sm text-muted-foreground">Provisionamento instantâneo via PIX</span>
+            <span className="text-sm text-muted-foreground">{en ? "Instant delivery after payment" : "Provisionamento instantâneo via PIX"}</span>
           </div>
+          <UsdNotice className="mb-4" />
           
           {welcomeUntil && welcomeUntil > welcomeNow && (() => {
             const left = Math.floor((welcomeUntil - welcomeNow) / 1000);
@@ -914,8 +917,8 @@ function PlansPage() {
             return (
               <div className="mb-6 flex flex-col gap-2 rounded-xl border border-primary/50 bg-primary/10 p-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// boas-vindas · membro novo</div>
-                  <div className="mt-1 font-display text-lg">Vitalício por <span className="text-primary">{formatBrl(WELCOME_PRICE_BRL)}</span> — só nas suas primeiras 6h30</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// {en ? "welcome · new member" : "boas-vindas · membro novo"}</div>
+                  <div className="mt-1 font-display text-lg">{en ? "Lifetime for " : "Vitalício por "}<span className="text-primary">{formatBrl(WELCOME_PRICE_BRL)}</span>{en ? " — only in your first 6h30" : " — só nas suas primeiras 6h30"}</div>
                 </div>
                 <div className="font-mono text-2xl tabular-nums text-primary">{hh}:{mm}:{ss}</div>
               </div>
