@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
-import { formatBrl } from "@/lib/plans";
+import { useMoney, UsdNotice } from "@/lib/currency";
 import { WELCOME_PLAN_SLUG, WELCOME_PRICE_BRL, welcomeRemainingMs } from "@/lib/welcome-offer";
 import { createCheckout } from "@/lib/checkout.functions";
 import { siteUrl } from "@/lib/site-url";
@@ -232,6 +232,7 @@ function ShadowLupinBanner() {
 
 
 function PlansPage() {
+  const { fmt: formatBrl, parts: moneyParts } = useMoney();
   const search = useSearch({ from: "/planos" }) as any;
 
   useThemeSearchParam(search?.theme);
@@ -1112,6 +1113,7 @@ function Metric({ value, label }: { value: string; label: string }) {
 }
 
 function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string, options?: { includeServer: boolean, addSigner: boolean }) => void }) {
+  const { fmt: formatBrl, parts: moneyParts } = useMoney();
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>("none");
   const [isOldMember, setIsOldMember] = useState(false);
   const [addSigner, setAddSigner] = useState(false);
@@ -1405,6 +1407,7 @@ function highlightMatch(text: string, term: string) {
 }
 
 function FaqSection() {
+  const { fmt: formatBrl, parts: moneyParts } = useMoney();
   const faq = [
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
     { q: "E se algo falhar na criação?", a: "Se houver qualquer erro na provisão, você vê um botão 'Tentar novamente' no dashboard e o suporte é acionado automaticamente. Nenhum pagamento fica sem licença — garantia de reembolso integral em caso de falha." },
@@ -1468,6 +1471,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   featured?: boolean;
 }) {
   const { t } = useI18n();
+  const { fmt: formatBrl, parts: moneyParts } = useMoney();
   const [showUpgradeConfirm, setShowUpgradeConfirm] = useState<string | null>(null);
   
   const price = Number(plan.price_brl);
@@ -1532,7 +1536,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       {showUpsell && upsell && (() => {
         const months = Math.max(1, Math.ceil(upsell.price / Math.max(1, price)));
-        const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const fmt = formatBrl;
         return (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
             <h3 className="mb-2 font-display text-lg uppercase tracking-wider">Antes de pagar…</h3>
@@ -1611,14 +1615,14 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
               </span>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-5xl font-bold tracking-tighter text-primary">{formatBrl(b.final).split(',')[0]}</span>
-              <span className="font-display text-2xl font-bold text-primary">,{formatBrl(b.final).split(',')[1]}</span>
+              <span className="font-display text-5xl font-bold tracking-tighter text-primary">{moneyParts(b.final).main}</span>
+              <span className="font-display text-2xl font-bold text-primary">{moneyParts(b.final).cents}</span>
             </div>
           </>
         ) : (
           <div className="flex items-baseline gap-1">
-            <span className="font-display text-5xl font-bold tracking-tighter">{formatBrl(price).split(',')[0]}</span>
-            <span className="font-display text-2xl font-bold">,{formatBrl(price).split(',')[1]}</span>
+            <span className="font-display text-5xl font-bold tracking-tighter">{moneyParts(price).main}</span>
+            <span className="font-display text-2xl font-bold">{moneyParts(price).cents}</span>
           </div>
         )}
       </div>
