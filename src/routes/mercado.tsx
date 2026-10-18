@@ -8,7 +8,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n";
-import { formatBrl } from "@/lib/plans";
+import { useMoney, UsdNotice } from "@/lib/currency";
 import { createCheckout } from "@/lib/checkout.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,7 +23,9 @@ export const Route = createFileRoute("/mercado")({
 });
 
 function MarketPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const { fmt: formatBrl } = useMoney();
+  const tr = (pt: string, e: string) => (lang === "en" ? e : pt);
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [buyingSlug, setBuyingSlug] = useState<string | null>(null);
@@ -115,7 +117,7 @@ function MarketPage() {
                 {t('nav.market')}
               </h1>
               <p className="mt-4 max-w-2xl text-muted-foreground">
-                Expanda suas capacidades táticas com módulos avançados de bypass, upgrades de conta e ferramentas exclusivas para operadores Shadow.
+                {tr("Expanda suas capacidades táticas com módulos avançados de bypass, upgrades de conta e ferramentas exclusivas para operadores Shadow.", "Expand your toolkit with advanced bypass modules, account upgrades and tools made for Shadow operators.")}
               </p>
             </div>
 
@@ -154,11 +156,11 @@ function MarketPage() {
                         <div className="grid grid-cols-2 gap-2 pt-4 border-t border-white/5">
                            <div className="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5">
                              <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                             <span className="text-[9px] font-mono text-muted-foreground uppercase leading-none">Entrega Instantânea</span>
+                             <span className="text-[9px] font-mono text-muted-foreground uppercase leading-none">{tr("Entrega Instantânea", "Instant delivery")}</span>
                            </div>
                            <div className="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/5">
                              <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                             <span className="text-[9px] font-mono text-muted-foreground uppercase leading-none">Suporte 24/7</span>
+                             <span className="text-[9px] font-mono text-muted-foreground uppercase leading-none">{tr("Suporte 24/7", "24/7 support")}</span>
                            </div>
                         </div>
 
@@ -167,7 +169,7 @@ function MarketPage() {
                           disabled={buyingSlug === p.slug}
                           onClick={() => handleBuy(p.slug)}
                         >
-                          {buyingSlug === p.slug ? "Provisionando..." : p.category === 'market' ? "Adquirir Produto" : "Adquirir Módulo"}
+                          {buyingSlug === p.slug ? tr("Provisionando...", "Processing...") : p.category === 'market' ? tr("Adquirir Produto", "Buy product") : tr("Adquirir Módulo", "Buy module")}
                           <ArrowRight className="h-3 w-3 ml-2" />
                         </Button>
                       </CardContent>
@@ -180,12 +182,12 @@ function MarketPage() {
             <div className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-8 backdrop-blur-sm border-l-4 border-l-primary">
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="flex-1 space-y-4 text-center md:text-left">
-                  <h2 className="text-2xl font-bold font-display uppercase tracking-tighter">Não encontrou o que precisava?</h2>
+                  <h2 className="text-2xl font-bold font-display uppercase tracking-tighter">{tr("Não encontrou o que precisava?", "Didn't find what you need?")}</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                    Nossa equipe de engenharia pode desenvolver módulos customizados para sua operação. Se você precisa de um bypass específico ou integração complexa, abra um ticket tático.
+                    {tr("Nossa equipe de engenharia pode desenvolver módulos customizados para sua operação. Se você precisa de um bypass específico ou integração complexa, abra um ticket tático.", "Our engineering team can build custom modules for your operation. If you need a specific bypass or a complex integration, open a support ticket.")}
                   </p>
                   <Button variant="outline" asChild className="font-mono text-[10px] uppercase">
-                    <Link to="/suporte">Solicitar Módulo Customizado</Link>
+                    <Link to="/suporte">{tr("Solicitar Módulo Customizado", "Request a custom module")}</Link>
                   </Button>
                 </div>
                 <div className="hidden lg:block relative">
