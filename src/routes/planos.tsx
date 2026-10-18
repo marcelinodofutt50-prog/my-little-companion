@@ -943,7 +943,7 @@ function PlansPage() {
                   extension = {
                     icon: ShieldCheck,
                     label: "PLAY PROTECT (BYPASS PLAY PROTECT)",
-                    desc: "R$ 450 — APK dura 30 dias (vs 1 dia do BTmob nativo). Otimizado e não é detectado como vírus pelo Play Protect.",
+                    desc: `${formatBrl(450)} — APK dura 30 dias (vs 1 dia do BTmob nativo). Otimizado e não é detectado como vírus pelo Play Protect.`,
                     slug: addons[0].slug,
                   };
                 } else if (isMonthly && upgrades.length > 0) {
@@ -1193,7 +1193,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
               <div className="text-xs font-bold">Sou Membro Antigo</div>
-              <div className="text-[10px] text-muted-foreground">Manutenção unificada a R$ 250</div>
+              <div className="text-[10px] text-muted-foreground">Manutenção unificada a {formatBrl(250)}</div>
             </div>
             <button
               onClick={() => setIsOldMember(!isOldMember)}
@@ -1206,7 +1206,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
           <div className={`flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3 transition-opacity ${isSignerPlan ? "opacity-50 cursor-not-allowed" : ""}`}>
             <div>
               <div className="text-xs font-bold">Bypass Play Protect</div>
-              <div className="text-[10px] text-muted-foreground">+ R$ 250 (Incluso no Vitalício)</div>
+              <div className="text-[10px] text-muted-foreground">+ {formatBrl(250)} (Incluso no Vitalício)</div>
             </div>
             <button
               disabled={isSignerPlan}
@@ -1293,10 +1293,10 @@ function TierComparison() {
   const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; serverOld: React.ReactNode; lifetime: React.ReactNode }[] = [
     { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", serverOld: "Infra v4.6", lifetime: "Shadow 4.6+" },
     { label: "Bypass Play Protect (BTmob nativo)", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
-    { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "R$ 450", serverOld: "R$ 450", lifetime: "R$ 450" },
+    { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: `${formatBrl(450)}`, serverOld: `${formatBrl(450)}`, lifetime: `${formatBrl(450)}` },
     { label: "Duração", weekly: "7 dias", monthly: "30 dias", serverOld: "Até dia 20", lifetime: "Vitalícia" },
     { label: "Opção Anual (-20%)", weekly: "N/A", monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: "N/A", lifetime: "Pagam. Único" },
-    { label: "Upgrade v4.6", weekly: "Não", monthly: "R$ 600", serverOld: "Incluso", lifetime: "Nativo" },
+    { label: "Upgrade v4.6", weekly: "Não", monthly: `${formatBrl(600)}`, serverOld: "Incluso", lifetime: "Nativo" },
   ];
 
 
@@ -1411,8 +1411,8 @@ function FaqSection() {
   const faq = [
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
     { q: "E se algo falhar na criação?", a: "Se houver qualquer erro na provisão, você vê um botão 'Tentar novamente' no dashboard e o suporte é acionado automaticamente. Nenhum pagamento fica sem licença — garantia de reembolso integral em caso de falha." },
-    { q: "Como funciona a taxa do dia 20?", a: "Todo dia 20 há renovação da infraestrutura VPS. Se não for paga, o acesso é suspenso automaticamente até a nova renovação. O custo fixo de manutenção é de R$ 450 para todos os planos." },
-    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: "Os preços oficiais são: Shadow 4.5.5 (Trial) por R$ 450, Plano Mensal (4.5.7) por R$ 750, Plano Vitalício (4.6) por R$ 1.700, Shadow Bypass (Signer) por R$ 450 e a taxa de manutenção do servidor por R$ 450." },
+    { q: "Como funciona a taxa do dia 20?", a: `Todo dia 20 há renovação da infraestrutura VPS. Se não for paga, o acesso é suspenso automaticamente até a nova renovação. O custo fixo de manutenção é de ${formatBrl(450)} para todos os planos.` },
+    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: `Os preços oficiais são: Shadow 4.5.5 (Trial) por ${formatBrl(450)}, Plano Mensal (4.5.7) por ${formatBrl(750)}, Plano Vitalício (4.6) por ${formatBrl(1700)}, Shadow Bypass (Signer) por ${formatBrl(450)} e a taxa de manutenção do servidor por ${formatBrl(450)}` },
     { q: "Posso trocar de plano depois?", a: "Sim. Cliente v4.5.7 pode fazer upgrade para v4.6 vitalício — o processo é automático e mantém seu histórico de ativações." },
     { q: "O cupom BTMOB40 é seguro?", a: "Sim. Ele dá 40% de cashback no primeiro depósito, que fica no seu saldo e pode ser usado em compras futuras (limitado a 50% do valor de cada compra)." },
     { q: "Vocês emitem nota?", a: "Sim, o comprovante oficial do pagamento é emitido no ato do pagamento e enviado por email pela própria operadora." },
@@ -2030,7 +2030,7 @@ function LegacyLookup() {
               </button>
 
               <div className="text-[9px] text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-2">
-                O acesso será vinculado instantaneamente. A taxa do servidor será fixada em R$ 250 (preço legacy) e o vencimento realinhado para o próximo dia 20.
+                O acesso será vinculado instantaneamente. A taxa do servidor será fixada em {formatBrl(250)} (preço legacy) e o vencimento realinhado para o próximo dia 20.
               </div>
             </div>
           )}
