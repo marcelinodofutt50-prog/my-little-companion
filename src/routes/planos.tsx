@@ -1468,8 +1468,19 @@ function highlightMatch(text: string, term: string) {
 }
 
 function FaqSection() {
-  const { fmt: formatBrl, parts: moneyParts } = useMoney();
-  const faq = [
+  const { fmt: formatBrl } = useMoney();
+  const { lang } = useI18n();
+  const en = lang === "en";
+  const faq = en ? [
+    { q: "How do I receive my license?", a: "Once payment is approved, the system automatically creates your panel login and shows the details (username, password, server IP) in your dashboard in under 1 minute." },
+    { q: "What if something fails during setup?", a: "If anything goes wrong, you'll see a 'Try again' button in your dashboard and support is alerted automatically. No payment is left without a license — full refund if delivery fails." },
+    { q: "How does the 20th-of-the-month fee work?", a: `Every 20th the VPS infrastructure is renewed. If it isn't paid, access is suspended automatically until renewal. The fixed maintenance cost is ${formatBrl(450)} for every plan.` },
+    { q: "Shadow 4.5.5, 30 days and Play Protect", a: `Official prices: Shadow 4.5.5 (Trial) ${formatBrl(450)}, Monthly plan (4.5.7) ${formatBrl(750)}, Lifetime plan (4.6) ${formatBrl(1700)}, Shadow Bypass (Signer) ${formatBrl(450)} and server maintenance ${formatBrl(450)}.` },
+    { q: "Can I change plans later?", a: "Yes. v4.5.7 customers can upgrade to lifetime v4.6 — it's automatic and keeps your activation history." },
+    { q: "Is the BTMOB40 coupon safe?", a: "Yes. It gives 40% cashback on your first deposit, kept as balance for future purchases (up to 50% of each purchase)." },
+    { q: "Do you issue receipts?", a: "Yes, the official payment receipt is issued at payment time and emailed by the payment provider." },
+    { q: "I'm outside Brazil. How do I pay?", a: "Prices are shown in US$ as an estimate. Payment is charged in Brazilian reais (BRL); you can also pay with crypto (BTC, ETH, USDT) on the Crypto page." },
+  ] : [
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
     { q: "E se algo falhar na criação?", a: "Se houver qualquer erro na provisão, você vê um botão 'Tentar novamente' no dashboard e o suporte é acionado automaticamente. Nenhum pagamento fica sem licença — garantia de reembolso integral em caso de falha." },
     { q: "Como funciona a taxa do dia 20?", a: `Todo dia 20 há renovação da infraestrutura VPS. Se não for paga, o acesso é suspenso automaticamente até a nova renovação. O custo fixo de manutenção é de ${formatBrl(450)} para todos os planos.` },
@@ -1487,8 +1498,8 @@ function FaqSection() {
   return (
     <section className="mt-16">
       <div className="mb-6 text-center">
-        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">// perguntas frequentes</div>
-        <h2 className="mt-2 font-display text-2xl md:text-3xl">Tire suas dúvidas em segundos</h2>
+        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{en ? "// frequently asked questions" : "// perguntas frequentes"}</div>
+        <h2 className="mt-2 font-display text-2xl md:text-3xl">{en ? "Get answers in seconds" : "Tire suas dúvidas em segundos"}</h2>
       </div>
       <div className="mx-auto mb-6 max-w-md">
         <div className="relative">
@@ -1496,13 +1507,13 @@ function FaqSection() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar nas perguntas frequentes..."
+            placeholder={en ? "Search the FAQ..." : "Buscar nas perguntas frequentes..."}
             className="pl-9"
           />
         </div>
       </div>
       {filtered.length === 0 ? (
-        <div className="text-center text-sm text-muted-foreground">Nenhuma pergunta encontrada para "{search}".</div>
+        <div className="text-center text-sm text-muted-foreground">{en ? `No questions found for "${search}".` : `Nenhuma pergunta encontrada para "${search}".`}</div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {filtered.map((it) => (
