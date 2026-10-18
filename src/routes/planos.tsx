@@ -1283,6 +1283,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
 
 
 function TierComparison() {
+  const { fmt: formatBrl } = useMoney();
   const plans = [
     { id: "weekly", name: "4.5.5", accent: "muted" },
     { id: "monthly", name: "30 dias", accent: "primary" },
@@ -1752,6 +1753,7 @@ const PlanGroup = memo(function PlanGroup({ title, eyebrow, items, onBuy, loadin
 
 // ============ Legacy lookup para clientes antigos ============
 function LegacyLookup() {
+  const { fmt: formatBrl } = useMoney();
   const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [busy, setBusy] = React.useState(false);
