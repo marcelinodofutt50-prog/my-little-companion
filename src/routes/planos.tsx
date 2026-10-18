@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
-import { formatBrl } from "@/lib/plans";
+import { useMoney, UsdNotice } from "@/lib/currency";
 import { WELCOME_PLAN_SLUG, WELCOME_PRICE_BRL, welcomeRemainingMs } from "@/lib/welcome-offer";
 import { createCheckout } from "@/lib/checkout.functions";
 import { siteUrl } from "@/lib/site-url";
@@ -83,6 +83,56 @@ function computeBreakdown(price: number, coupon: Coupon | null, cashbackBalance:
   return { discount, cashbackApplied: +cashbackApplied.toFixed(2), final, cashbackEarn };
 }
 
+
+const META_EN: Record<string, string> = {
+  "Acesso perpétuo à linha 4.6+ com atualizações inclusas.": "Permanent access to the 4.6+ line with updates included.",
+  "Mais econômico": "Best value",
+  "pagamento único": "one-time payment",
+  "Shadow 4.6+ com todos os módulos": "Shadow 4.6+ with every module",
+  "Bypass Play Protect da própria BTmob (assinatura ~1 dia)": "BTmob's own Play Protect bypass (signature lasts ~1 day)",
+  "Atualizações grátis para sempre": "Free updates forever",
+  "Suporte prioritário 24/7": "24/7 priority support",
+  "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)": "Priority queue on our Play Protect Cloak (signature lasts 2–3 weeks)",
+  "Acesso ao Bypass Play Protect (Cloak & Dropper)": "Access to the Play Protect Bypass (Cloak & Dropper)",
+  "Operação mensal na versão estável 4.5.7.": "Monthly access on the stable 4.5.7 version.",
+  "Mais popular": "Most popular",
+  "renovação em 30 dias": "renews every 30 days",
+  "Shadow 4.5.7, Bypass Play Protect, suporte via chat": "Shadow 4.5.7, Play Protect bypass, chat support",
+  "Shadow 4.5.7 completa": "Full Shadow 4.5.7",
+  "Bypass Play Protect da própria BTmob (assinatura do APK dura ~1 dia)": "BTmob's own Play Protect bypass (APK signature lasts ~1 day)",
+  "Suporte via chat no painel": "Chat support in the dashboard",
+  "Acesso ao Bypass Play Protect (Automático & Dropper)": "Access to the Play Protect Bypass (Automatic & Dropper)",
+  "Ideal para validar a ferramenta em um ciclo curto.": "Great for trying the tool over a short cycle.",
+  "7 dias de acesso": "7 days of access",
+  "Shadow 4.5.5 (build básico)": "Shadow 4.5.5 (basic build)",
+  "Fluxo essencial da ferramenta": "Core tool workflow",
+  "Suporte por chat": "Chat support",
+  "Servidor de sinal com renovação todo dia 20.": "Signal server, renewed every 20th.",
+  "mensal · vence dia 20": "monthly · due on the 20th",
+  "Infra dedicada monitorada": "Dedicated, monitored infrastructure",
+  "Uptime 99,9% no ciclo": "99.9% uptime per cycle",
+  "IP fixo para sua licença": "Fixed IP for your license",
+  "Realinhamento automático da mensalidade": "Automatic billing realignment",
+  "Migração assistida de v4.5.7 para vitalício v4.6.": "Assisted upgrade from v4.5.7 to lifetime v4.6.",
+  "Migração automática do login": "Automatic login migration",
+  "Vira Vitalício v4.6 imediatamente": "Becomes Lifetime v4.6 right away",
+  "Mantém seu histórico e servidor": "Keeps your history and server",
+  "Prioridade no suporte após upgrade": "Priority support after upgrading",
+  "Libera Shadow Play Protect Builder": "Unlocks the Shadow Play Protect Builder",
+  "Acesso ao servidor exclusivo de vitalícios": "Access to the lifetime-only server",
+  "O bypass de longa duração mais estável do mercado.": "The most stable long-lasting bypass on the market.",
+  "Assinatura V2/V3 com bypass Play Protect": "V2/V3 signature with Play Protect bypass",
+  "APK Cloaking (Shadow Bypass Dropper inclusa)": "APK Cloaking (Shadow Bypass Dropper included)",
+  "Proteção anti-decompile": "Anti-decompile protection",
+  "Garantia de bypass ativo no ciclo": "Bypass guaranteed active during the cycle",
+  "Fila dedicada no builder": "Dedicated builder queue",
+  "Código-fonte auditável, entrega assistida por engenheiro.": "Auditable source code, delivered with an engineer.",
+  "licença perpétua": "perpetual license",
+  "Fontes completas e documentadas": "Complete, documented sources",
+  "Sessão de handoff com engenheiro": "Handoff session with an engineer",
+  "Chave de build inclusa": "Build key included",
+};
+
 // ============ Plan meta: features + icons per slug family ============
 type PlanMeta = {
   tagline: string;
@@ -94,7 +144,14 @@ type PlanMeta = {
 
 };
 
-function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
+function metaFor(plan: Plan, t: (k: any) => string, fmt: (v: number) => string = (v) => `R$ ${v}`, en = false): PlanMeta {
+  const m = metaForPt(plan, t, fmt);
+  if (!en) return m;
+  const tr = (x?: string) => (x ? META_EN[x] ?? x.replace(/^cobrança única \((.*)\)$/, "one-time charge ($1)").replace(/^Economia real: não precisa pagar (.*) no valor cheio$/, "Real savings: no need to pay the full $1") : x);
+  return { ...m, tagline: tr(m.tagline)!, badge: tr(m.badge), cadence: tr(m.cadence), features: m.features.map((f) => tr(f)!) };
+}
+
+function metaForPt(plan: Plan, t: (k: any) => string, fmt: (v: number) => string): PlanMeta {
   const s = plan.slug.toLowerCase();
   if (s.includes("lifetime")) return {
     tagline: "Acesso perpétuo à linha 4.6+ com atualizações inclusas.",
@@ -148,14 +205,14 @@ function metaFor(plan: Plan, t: (k: any) => string): PlanMeta {
   if (s.includes("upgrade") || s.includes("migracao")) return {
     tagline: "Migração assistida de v4.5.7 para vitalício v4.6.",
     icon: ArrowUpRight,
-    cadence: "cobrança única (R$ 600)",
+    cadence: `cobrança única (${fmt(600)})`,
     features: [
       "Migração automática do login",
       "Vira Vitalício v4.6 imediatamente",
       "Mantém seu histórico e servidor",
       "Prioridade no suporte após upgrade",
       "Libera Shadow Play Protect Builder",
-      "Economia real: não precisa pagar R$ 1.700 no valor cheio",
+      `Economia real: não precisa pagar ${fmt(1700)} no valor cheio`,
       "Acesso ao servidor exclusivo de vitalícios",
     ],
   };
@@ -232,6 +289,9 @@ function ShadowLupinBanner() {
 
 
 function PlansPage() {
+  const { fmt: formatBrl, parts: moneyParts } = useMoney();
+  const { lang } = useI18n();
+  const en = lang === "en";
   const search = useSearch({ from: "/planos" }) as any;
 
   useThemeSearchParam(search?.theme);
@@ -902,8 +962,9 @@ function PlansPage() {
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// licenças shadow</div>
               <h2 className="mt-1 font-display text-2xl md:text-3xl">Escolha seu Acesso</h2>
             </div>
-            <span className="text-sm text-muted-foreground">Provisionamento instantâneo via PIX</span>
+            <span className="text-sm text-muted-foreground">{en ? "Instant delivery after payment" : "Provisionamento instantâneo via PIX"}</span>
           </div>
+          <UsdNotice className="mb-4" />
           
           {welcomeUntil && welcomeUntil > welcomeNow && (() => {
             const left = Math.floor((welcomeUntil - welcomeNow) / 1000);
@@ -913,8 +974,8 @@ function PlansPage() {
             return (
               <div className="mb-6 flex flex-col gap-2 rounded-xl border border-primary/50 bg-primary/10 p-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// boas-vindas · membro novo</div>
-                  <div className="mt-1 font-display text-lg">Vitalício por <span className="text-primary">{formatBrl(WELCOME_PRICE_BRL)}</span> — só nas suas primeiras 6h30</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// {en ? "welcome · new member" : "boas-vindas · membro novo"}</div>
+                  <div className="mt-1 font-display text-lg">{en ? "Lifetime for " : "Vitalício por "}<span className="text-primary">{formatBrl(WELCOME_PRICE_BRL)}</span>{en ? " — only in your first 6h30" : " — só nas suas primeiras 6h30"}</div>
                 </div>
                 <div className="font-mono text-2xl tabular-nums text-primary">{hh}:{mm}:{ss}</div>
               </div>
@@ -942,7 +1003,7 @@ function PlansPage() {
                   extension = {
                     icon: ShieldCheck,
                     label: "PLAY PROTECT (BYPASS PLAY PROTECT)",
-                    desc: "R$ 450 — APK dura 30 dias (vs 1 dia do BTmob nativo). Otimizado e não é detectado como vírus pelo Play Protect.",
+                    desc: `${formatBrl(450)} — APK dura 30 dias (vs 1 dia do BTmob nativo). Otimizado e não é detectado como vírus pelo Play Protect.`,
                     slug: addons[0].slug,
                   };
                 } else if (isMonthly && upgrades.length > 0) {
@@ -1112,6 +1173,7 @@ function Metric({ value, label }: { value: string; label: string }) {
 }
 
 function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string, options?: { includeServer: boolean, addSigner: boolean }) => void }) {
+  const { fmt: formatBrl, parts: moneyParts } = useMoney();
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>("none");
   const [isOldMember, setIsOldMember] = useState(false);
   const [addSigner, setAddSigner] = useState(false);
@@ -1191,7 +1253,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
           <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3">
             <div>
               <div className="text-xs font-bold">Sou Membro Antigo</div>
-              <div className="text-[10px] text-muted-foreground">Manutenção unificada a R$ 250</div>
+              <div className="text-[10px] text-muted-foreground">Manutenção unificada a {formatBrl(250)}</div>
             </div>
             <button
               onClick={() => setIsOldMember(!isOldMember)}
@@ -1204,7 +1266,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
           <div className={`flex items-center justify-between rounded-lg border border-border/50 bg-background/30 p-3 transition-opacity ${isSignerPlan ? "opacity-50 cursor-not-allowed" : ""}`}>
             <div>
               <div className="text-xs font-bold">Bypass Play Protect</div>
-              <div className="text-[10px] text-muted-foreground">+ R$ 250 (Incluso no Vitalício)</div>
+              <div className="text-[10px] text-muted-foreground">+ {formatBrl(250)} (Incluso no Vitalício)</div>
             </div>
             <button
               disabled={isSignerPlan}
@@ -1281,6 +1343,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
 
 
 function TierComparison() {
+  const { fmt: formatBrl } = useMoney();
   const plans = [
     { id: "weekly", name: "4.5.5", accent: "muted" },
     { id: "monthly", name: "30 dias", accent: "primary" },
@@ -1291,10 +1354,10 @@ function TierComparison() {
   const rows: { label: string; weekly: React.ReactNode; monthly: React.ReactNode; serverOld: React.ReactNode; lifetime: React.ReactNode }[] = [
     { label: "Versão da ferramenta", weekly: "Shadow 4.5.5", monthly: "Shadow 4.5.7", serverOld: "Infra v4.6", lifetime: "Shadow 4.6+" },
     { label: "Bypass Play Protect (BTmob nativo)", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: <Check className="mx-auto h-4 w-4 text-primary" />, lifetime: <Check className="mx-auto h-4 w-4 text-primary" /> },
-    { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: "R$ 450", serverOld: "R$ 450", lifetime: "R$ 450" },
+    { label: "Manutenção Mensal", weekly: <Minus className="mx-auto h-3.5 w-3.5 text-muted-foreground" />, monthly: `${formatBrl(450)}`, serverOld: `${formatBrl(450)}`, lifetime: `${formatBrl(450)}` },
     { label: "Duração", weekly: "7 dias", monthly: "30 dias", serverOld: "Até dia 20", lifetime: "Vitalícia" },
     { label: "Opção Anual (-20%)", weekly: "N/A", monthly: <Check className="mx-auto h-4 w-4 text-primary" />, serverOld: "N/A", lifetime: "Pagam. Único" },
-    { label: "Upgrade v4.6", weekly: "Não", monthly: "R$ 600", serverOld: "Incluso", lifetime: "Nativo" },
+    { label: "Upgrade v4.6", weekly: "Não", monthly: `${formatBrl(600)}`, serverOld: "Incluso", lifetime: "Nativo" },
   ];
 
 
@@ -1405,11 +1468,23 @@ function highlightMatch(text: string, term: string) {
 }
 
 function FaqSection() {
-  const faq = [
+  const { fmt: formatBrl } = useMoney();
+  const { lang } = useI18n();
+  const en = lang === "en";
+  const faq = en ? [
+    { q: "How do I receive my license?", a: "Once payment is approved, the system automatically creates your panel login and shows the details (username, password, server IP) in your dashboard in under 1 minute." },
+    { q: "What if something fails during setup?", a: "If anything goes wrong, you'll see a 'Try again' button in your dashboard and support is alerted automatically. No payment is left without a license — full refund if delivery fails." },
+    { q: "How does the 20th-of-the-month fee work?", a: `Every 20th the VPS infrastructure is renewed. If it isn't paid, access is suspended automatically until renewal. The fixed maintenance cost is ${formatBrl(450)} for every plan.` },
+    { q: "Shadow 4.5.5, 30 days and Play Protect", a: `Official prices: Shadow 4.5.5 (Trial) ${formatBrl(450)}, Monthly plan (4.5.7) ${formatBrl(750)}, Lifetime plan (4.6) ${formatBrl(1700)}, Shadow Bypass (Signer) ${formatBrl(450)} and server maintenance ${formatBrl(450)}.` },
+    { q: "Can I change plans later?", a: "Yes. v4.5.7 customers can upgrade to lifetime v4.6 — it's automatic and keeps your activation history." },
+    { q: "Is the BTMOB40 coupon safe?", a: "Yes. It gives 40% cashback on your first deposit, kept as balance for future purchases (up to 50% of each purchase)." },
+    { q: "Do you issue receipts?", a: "Yes, the official payment receipt is issued at payment time and emailed by the payment provider." },
+    { q: "I'm outside Brazil. How do I pay?", a: "Prices are shown in US$ as an estimate. Payment is charged in Brazilian reais (BRL); you can also pay with crypto (BTC, ETH, USDT) on the Crypto page." },
+  ] : [
     { q: "Como recebo minha licença?", a: "Após o pagamento aprovado, o sistema cria automaticamente o login no painel e libera os dados (usuário, senha, IP do servidor) no seu dashboard em menos de 1 minuto." },
     { q: "E se algo falhar na criação?", a: "Se houver qualquer erro na provisão, você vê um botão 'Tentar novamente' no dashboard e o suporte é acionado automaticamente. Nenhum pagamento fica sem licença — garantia de reembolso integral em caso de falha." },
-    { q: "Como funciona a taxa do dia 20?", a: "Todo dia 20 há renovação da infraestrutura VPS. Se não for paga, o acesso é suspenso automaticamente até a nova renovação. O custo fixo de manutenção é de R$ 450 para todos os planos." },
-    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: "Os preços oficiais são: Shadow 4.5.5 (Trial) por R$ 450, Plano Mensal (4.5.7) por R$ 750, Plano Vitalício (4.6) por R$ 1.700, Shadow Bypass (Signer) por R$ 450 e a taxa de manutenção do servidor por R$ 450." },
+    { q: "Como funciona a taxa do dia 20?", a: `Todo dia 20 há renovação da infraestrutura VPS. Se não for paga, o acesso é suspenso automaticamente até a nova renovação. O custo fixo de manutenção é de ${formatBrl(450)} para todos os planos.` },
+    { q: "Shadow 4.5.5, 30 dias e Play Protect", a: `Os preços oficiais são: Shadow 4.5.5 (Trial) por ${formatBrl(450)}, Plano Mensal (4.5.7) por ${formatBrl(750)}, Plano Vitalício (4.6) por ${formatBrl(1700)}, Shadow Bypass (Signer) por ${formatBrl(450)} e a taxa de manutenção do servidor por ${formatBrl(450)}` },
     { q: "Posso trocar de plano depois?", a: "Sim. Cliente v4.5.7 pode fazer upgrade para v4.6 vitalício — o processo é automático e mantém seu histórico de ativações." },
     { q: "O cupom BTMOB40 é seguro?", a: "Sim. Ele dá 40% de cashback no primeiro depósito, que fica no seu saldo e pode ser usado em compras futuras (limitado a 50% do valor de cada compra)." },
     { q: "Vocês emitem nota?", a: "Sim, o comprovante oficial do pagamento é emitido no ato do pagamento e enviado por email pela própria operadora." },
@@ -1423,8 +1498,8 @@ function FaqSection() {
   return (
     <section className="mt-16">
       <div className="mb-6 text-center">
-        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">// perguntas frequentes</div>
-        <h2 className="mt-2 font-display text-2xl md:text-3xl">Tire suas dúvidas em segundos</h2>
+        <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{en ? "// frequently asked questions" : "// perguntas frequentes"}</div>
+        <h2 className="mt-2 font-display text-2xl md:text-3xl">{en ? "Get answers in seconds" : "Tire suas dúvidas em segundos"}</h2>
       </div>
       <div className="mx-auto mb-6 max-w-md">
         <div className="relative">
@@ -1432,13 +1507,13 @@ function FaqSection() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar nas perguntas frequentes..."
+            placeholder={en ? "Search the FAQ..." : "Buscar nas perguntas frequentes..."}
             className="pl-9"
           />
         </div>
       </div>
       {filtered.length === 0 ? (
-        <div className="text-center text-sm text-muted-foreground">Nenhuma pergunta encontrada para "{search}".</div>
+        <div className="text-center text-sm text-muted-foreground">{en ? `No questions found for "${search}".` : `Nenhuma pergunta encontrada para "${search}".`}</div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {filtered.map((it) => (
@@ -1468,6 +1543,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   featured?: boolean;
 }) {
   const { t } = useI18n();
+  const { fmt: formatBrl, parts: moneyParts } = useMoney();
   const [showUpgradeConfirm, setShowUpgradeConfirm] = useState<string | null>(null);
   
   const price = Number(plan.price_brl);
@@ -1478,7 +1554,10 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
     [price, appliedCoupon, cashback, useCash]
   );
   const hasBenefit = b.discount > 0 || b.cashbackApplied > 0 || b.cashbackEarn > 0;
-  const meta = useMemo(() => metaFor(plan, t), [plan, t]);
+  const { lang: cardLang } = useI18n();
+  const en = cardLang === "en";
+  const tr = (pt: string, enText: string) => (en ? enText : pt);
+  const meta = useMemo(() => metaFor(plan, t, formatBrl, en), [plan, t, formatBrl, en]);
   const Icon = meta.icon;
   
   const [showUpsell, setShowUpsell] = useState(false);
@@ -1508,23 +1587,23 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
           <div className="mb-4 rounded-full bg-primary/10 p-3">
             <Rocket className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="mb-2 font-display text-lg uppercase tracking-wider">Confirmar Upgrade?</h3>
+          <h3 className="mb-2 font-display text-lg uppercase tracking-wider">{tr("Confirmar Upgrade?", "Confirm upgrade?")}</h3>
           <p className="mb-6 text-[10px] text-muted-foreground leading-relaxed">
-            Você está prestes a elevar sua licença para a <b>versão vitalícia 4.6</b>. O processo é imediato e preserva todos os seus dados.
+            {en ? <>You are about to upgrade your license to the <b>lifetime 4.6 version</b>. It is instant and keeps all your data.</> : <>Você está prestes a elevar sua licença para a <b>versão vitalícia 4.6</b>. O processo é imediato e preserva todos os seus dados.</>}
           </p>
           <div className="flex w-full flex-col gap-2">
             <Button 
               className="w-full font-mono text-[9px] uppercase tracking-widest shadow-[0_0_15px_rgba(var(--primary),0.3)]"
               onClick={() => { onBuy(plan.slug); setShowUpgradeConfirm(null); }}
             >
-              Confirmar & Pagar
+              {tr("Confirmar & Pagar", "Confirm & pay")}
             </Button>
             <Button 
               variant="ghost" 
               className="w-full font-mono text-[9px] uppercase tracking-widest text-muted-foreground"
               onClick={() => setShowUpgradeConfirm(null)}
             >
-              Voltar
+              {tr("Voltar", "Back")}
             </Button>
           </div>
         </div>
@@ -1532,22 +1611,22 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       {showUpsell && upsell && (() => {
         const months = Math.max(1, Math.ceil(upsell.price / Math.max(1, price)));
-        const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const fmt = formatBrl;
         return (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
-            <h3 className="mb-2 font-display text-lg uppercase tracking-wider">Antes de pagar…</h3>
+            <h3 className="mb-2 font-display text-lg uppercase tracking-wider">{tr("Antes de pagar…", "Before you pay…")}</h3>
             <p className="mb-2 text-[11px] text-muted-foreground leading-relaxed">
-              O <b className="text-foreground">Vitalício</b> sai por <b className="text-primary">{fmt(upsell.price)}</b> uma vez só — o mesmo que {months} renovações deste plano.
+              {en ? <>The <b className="text-foreground">Lifetime</b> plan costs <b className="text-primary">{fmt(upsell.price)}</b> once — the same as {months} renewals of this plan.</> : <>O <b className="text-foreground">Vitalício</b> sai por <b className="text-primary">{fmt(upsell.price)}</b> uma vez só — o mesmo que {months} renovações deste plano.</>}
             </p>
             {upsell.welcome && (
-              <p className="mb-4 text-[10px] font-mono uppercase tracking-wider text-primary">Preço de boas-vindas ainda valendo para sua conta</p>
+              <p className="mb-4 text-[10px] font-mono uppercase tracking-wider text-primary">{tr("Preço de boas-vindas ainda valendo para sua conta", "Welcome price still active for your account")}</p>
             )}
             <div className="mt-2 flex w-full flex-col gap-2">
               <Button className="w-full font-mono text-[9px] uppercase tracking-widest" onClick={() => { setShowUpsell(false); onBuy(upsell.slug); }}>
-                Quero o Vitalício
+                {tr("Quero o Vitalício", "I want Lifetime")}
               </Button>
               <Button variant="ghost" className="w-full font-mono text-[9px] uppercase tracking-widest text-muted-foreground" onClick={() => { setShowUpsell(false); onBuy(plan.slug); }}>
-                Continuar com este plano
+                {tr("Continuar com este plano", "Continue with this plan")}
               </Button>
             </div>
           </div>
@@ -1611,14 +1690,14 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
               </span>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-5xl font-bold tracking-tighter text-primary">{formatBrl(b.final).split(',')[0]}</span>
-              <span className="font-display text-2xl font-bold text-primary">,{formatBrl(b.final).split(',')[1]}</span>
+              <span className="font-display text-5xl font-bold tracking-tighter text-primary">{moneyParts(b.final).main}</span>
+              <span className="font-display text-2xl font-bold text-primary">{moneyParts(b.final).cents}</span>
             </div>
           </>
         ) : (
           <div className="flex items-baseline gap-1">
-            <span className="font-display text-5xl font-bold tracking-tighter">{formatBrl(price).split(',')[0]}</span>
-            <span className="font-display text-2xl font-bold">,{formatBrl(price).split(',')[1]}</span>
+            <span className="font-display text-5xl font-bold tracking-tighter">{moneyParts(price).main}</span>
+            <span className="font-display text-2xl font-bold">{moneyParts(price).cents}</span>
           </div>
         )}
       </div>
@@ -1641,7 +1720,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       {meta.note && (
         <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 shadow-inner">
           <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-amber-500">
-            <AlertTriangle className="h-3 w-3" /> Atenção Operador
+            <AlertTriangle className="h-3 w-3" /> {tr("Atenção Operador", "Heads up")}
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground/90 italic">
             {meta.note}
@@ -1653,24 +1732,24 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       {hasBenefit && (
         <div className="mt-5 space-y-2.5 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm backdrop-blur-[2px]">
           <div className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-primary/70">
-            <Tag className="h-3 w-3" /> Resumo de Benefícios
+            <Tag className="h-3 w-3" /> {tr("Resumo de Benefícios", "Benefits summary")}
           </div>
           <ul className="space-y-1.5 font-mono text-[10px]">
             {b.discount > 0 && (
               <li className="flex justify-between items-center text-primary">
-                <span className="opacity-80">Cupom Aplicado</span>
+                <span className="opacity-80">{tr("Cupom Aplicado", "Coupon applied")}</span>
                 <span className="font-bold">-{formatBrl(b.discount)}</span>
               </li>
             )}
             {b.cashbackApplied > 0 && (
               <li className="flex justify-between items-center text-primary">
-                <span className="opacity-80">Saldo Cashback</span>
+                <span className="opacity-80">{tr("Saldo Cashback", "Cashback balance")}</span>
                 <span className="font-bold">-{formatBrl(b.cashbackApplied)}</span>
               </li>
             )}
             {b.cashbackEarn > 0 && (
               <li className="flex justify-between items-center text-primary/60">
-                <span className="opacity-70">Cashback Retorno</span>
+                <span className="opacity-70">{tr("Cashback Retorno", "Cashback earned")}</span>
                 <span>+{formatBrl(b.cashbackEarn)}</span>
               </li>
             )}
@@ -1748,6 +1827,7 @@ const PlanGroup = memo(function PlanGroup({ title, eyebrow, items, onBuy, loadin
 
 // ============ Legacy lookup para clientes antigos ============
 function LegacyLookup() {
+  const { fmt: formatBrl } = useMoney();
   const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -2026,7 +2106,7 @@ function LegacyLookup() {
               </button>
 
               <div className="text-[9px] text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-2">
-                O acesso será vinculado instantaneamente. A taxa do servidor será fixada em R$ 250 (preço legacy) e o vencimento realinhado para o próximo dia 20.
+                O acesso será vinculado instantaneamente. A taxa do servidor será fixada em {formatBrl(250)} (preço legacy) e o vencimento realinhado para o próximo dia 20.
               </div>
             </div>
           )}
