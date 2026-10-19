@@ -33,7 +33,7 @@ export function SiteHeader() {
   const search = location.search as any;
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const identityFn = useServerFn(getMyIdentity);
   const { data: identity } = useQuery({
@@ -89,7 +89,7 @@ export function SiteHeader() {
           <KrakenTab />
           <DropdownMenu>
             <DropdownMenuTrigger className={`${linkCls(more.some((l) => l.to === path))} inline-flex items-center gap-1 outline-none`}>
-              Mais <ChevronDown className="h-3 w-3" />
+              {lang === "en" ? "More" : "Mais"} <ChevronDown className="h-3 w-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="rounded-none font-mono text-[11px] uppercase tracking-[0.2em]">
               {more.map((l) => (

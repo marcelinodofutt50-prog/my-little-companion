@@ -119,6 +119,7 @@ function MarketPage() {
               <p className="mt-4 max-w-2xl text-muted-foreground">
                 {tr("Expanda suas capacidades táticas com módulos avançados de bypass, upgrades de conta e ferramentas exclusivas para operadores Shadow.", "Expand your toolkit with advanced bypass modules, account upgrades and tools made for Shadow operators.")}
               </p>
+              <UsdNotice className="mt-3" />
             </div>
 
             {loading ? (
