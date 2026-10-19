@@ -33,7 +33,7 @@ export function SiteHeader() {
   const search = location.search as any;
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const identityFn = useServerFn(getMyIdentity);
   const { data: identity } = useQuery({
