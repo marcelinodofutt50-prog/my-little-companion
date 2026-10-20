@@ -10,6 +10,7 @@ import { createFileRoute } from "@tanstack/react-router";
  */
 const TASKS = [
   "reconcile-pending",
+  "resume-paused-licenses",
   "verify-external-payers",
   "expire-licenses",
   "daily-license-check",
