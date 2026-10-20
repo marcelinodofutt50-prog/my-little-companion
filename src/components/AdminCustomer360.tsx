@@ -466,6 +466,11 @@ export function AdminCustomer360({
                               </div>
                             )}
                             <LicenseActions license={l} onDone={async () => { if (userId) await fetchData(userId); }} />
+                            {!l.is_trial && (
+                              <div className="mt-2 border-t border-border/40 pt-2">
+                                <LicensePauseControls staff license={l} onDone={() => { if (userId) void fetchData(userId); }} />
+                              </div>
+                            )}
                           </div>
 
                         );

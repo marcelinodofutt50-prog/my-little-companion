@@ -65,6 +65,7 @@ import { Route as ApiPublicHooksMigrationWaveEnforceRouteImport } from './routes
 import { Route as ApiPublicHooksReconcilePendingRouteImport } from './routes/api/public/hooks/reconcile-pending'
 import { Route as ApiPublicHooksReconcileYaarsaRouteImport } from './routes/api/public/hooks/reconcile-yaarsa'
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
+import { Route as ApiPublicHooksResumePausedLicensesRouteImport } from './routes/api/public/hooks/resume-paused-licenses'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
 import { Route as ApiPublicPaymentsMercadopagoRouteImport } from './routes/api/public/payments/mercadopago'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -364,6 +365,12 @@ const ApiPublicHooksResendConfirmationsRoute =
     path: '/api/public/hooks/resend-confirmations',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksResumePausedLicensesRoute =
+  ApiPublicHooksResumePausedLicensesRouteImport.update({
+    id: '/api/public/hooks/resume-paused-licenses',
+    path: '/api/public/hooks/resume-paused-licenses',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksVerifyExternalPayersRoute =
   ApiPublicHooksVerifyExternalPayersRouteImport.update({
     id: '/api/public/hooks/verify-external-payers',
@@ -439,6 +446,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/reconcile-yaarsa': typeof ApiPublicHooksReconcileYaarsaRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
+  '/api/public/hooks/resume-paused-licenses': typeof ApiPublicHooksResumePausedLicensesRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -499,6 +507,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/reconcile-yaarsa': typeof ApiPublicHooksReconcileYaarsaRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
+  '/api/public/hooks/resume-paused-licenses': typeof ApiPublicHooksResumePausedLicensesRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -561,6 +570,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reconcile-pending': typeof ApiPublicHooksReconcilePendingRoute
   '/api/public/hooks/reconcile-yaarsa': typeof ApiPublicHooksReconcileYaarsaRoute
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
+  '/api/public/hooks/resume-paused-licenses': typeof ApiPublicHooksResumePausedLicensesRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -623,6 +633,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/reconcile-yaarsa'
     | '/api/public/hooks/resend-confirmations'
+    | '/api/public/hooks/resume-paused-licenses'
     | '/api/public/hooks/verify-external-payers'
     | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
@@ -683,6 +694,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/reconcile-yaarsa'
     | '/api/public/hooks/resend-confirmations'
+    | '/api/public/hooks/resume-paused-licenses'
     | '/api/public/hooks/verify-external-payers'
     | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
@@ -744,6 +756,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-pending'
     | '/api/public/hooks/reconcile-yaarsa'
     | '/api/public/hooks/resend-confirmations'
+    | '/api/public/hooks/resume-paused-licenses'
     | '/api/public/hooks/verify-external-payers'
     | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
@@ -788,6 +801,7 @@ export interface RootRouteChildren {
   ApiPublicHooksReconcilePendingRoute: typeof ApiPublicHooksReconcilePendingRoute
   ApiPublicHooksReconcileYaarsaRoute: typeof ApiPublicHooksReconcileYaarsaRoute
   ApiPublicHooksResendConfirmationsRoute: typeof ApiPublicHooksResendConfirmationsRoute
+  ApiPublicHooksResumePausedLicensesRoute: typeof ApiPublicHooksResumePausedLicensesRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
   ApiPublicPaymentsMercadopagoRoute: typeof ApiPublicPaymentsMercadopagoRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1187,6 +1201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksResendConfirmationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/resume-paused-licenses': {
+      id: '/api/public/hooks/resume-paused-licenses'
+      path: '/api/public/hooks/resume-paused-licenses'
+      fullPath: '/api/public/hooks/resume-paused-licenses'
+      preLoaderRoute: typeof ApiPublicHooksResumePausedLicensesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/verify-external-payers': {
       id: '/api/public/hooks/verify-external-payers'
       path: '/api/public/hooks/verify-external-payers'
@@ -1316,6 +1337,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksReconcileYaarsaRoute: ApiPublicHooksReconcileYaarsaRoute,
   ApiPublicHooksResendConfirmationsRoute:
     ApiPublicHooksResendConfirmationsRoute,
+  ApiPublicHooksResumePausedLicensesRoute:
+    ApiPublicHooksResumePausedLicensesRoute,
   ApiPublicHooksVerifyExternalPayersRoute:
     ApiPublicHooksVerifyExternalPayersRoute,
   ApiPublicPaymentsMercadopagoRoute: ApiPublicPaymentsMercadopagoRoute,

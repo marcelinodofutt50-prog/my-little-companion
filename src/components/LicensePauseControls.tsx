@@ -1,117 +1,177 @@
-import { useState } from 'react'
-import { PauseCircle, PlayCircle, Loader2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { PauseCircle, PlayCircle, Loader2, CalendarDays } from 'lucide-react'
 import { toast } from 'sonner'
 import { useServerFn } from '@tanstack/react-start'
 import { Button } from '@/components/ui/button'
-import { suspendMyLicense, reactivateMyLicense } from '@/lib/license.functions'
-import type { LicenseExpiryState } from '@/lib/expiry'
-import { canPauseLicense, canResumeLicense } from '@/lib/license-pause-rules'
+import { Calendar } from '@/components/ui/calendar'
+import {
+  suspendMyLicense,
+  reactivateMyLicense,
+  staffPauseLicense,
+  staffResumeLicense,
+} from '@/lib/license.functions'
+import { licenseExpiryState, type LicenseExpiryState } from '@/lib/expiry'
+import {
+  canPauseLicense,
+  canResumeLicense,
+  pauseWindow,
+  pausedThisMonth,
+  planResume,
+  spMidnight,
+  spYmd,
+  MAX_PAUSE_DAYS,
+} from '@/lib/license-pause-rules'
 import { friendlyPanelError } from '@/lib/panel-errors'
 
 type Props = {
   license: any
-  state: LicenseExpiryState
+  state?: LicenseExpiryState
   onDone: () => void
+  /** Equipe: pausa qualquer licença, sem o limite de 1x por mês. */
+  staff?: boolean
+}
+
+function fmtDay(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
 function humanLeft(ms: number | null): string {
-  if (ms === null) return '—'
+  if (ms === null) return 'vitalício'
   const mins = Math.floor(ms / 60000)
   const days = Math.floor(mins / 1440)
   const hours = Math.floor((mins % 1440) / 60)
-  const m = mins % 60
+  if (days > 0) return `${days}d e ${hours}h`
+  if (hours > 0) return `${hours}h e ${mins % 60}min`
+  return `${mins % 60}min`
+}
 
-  if (days > 0) return `${days}d, ${hours}h e ${m}min`
-  if (hours > 0) return `${hours}h e ${m}min`
-  return `${m}min`
+/** Converte um Date do calendário (horário local) para AAAA-MM-DD sem mudar o dia. */
+function localYmd(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+function ymdToLocal(ymd: string): Date {
+  const [y, m, d] = ymd.split('-').map(Number) as [number, number, number]
+  return new Date(y, m - 1, d)
 }
 
 /**
- * Pausar / despausar a licença. Enquanto pausada nenhum dia é contado e a
- * senha do painel é trocada por uma aleatória; ao despausar o cliente recebe
- * de volta o tempo exato que faltava e a senha original.
+ * Pausar / despausar o login. Enquanto pausado o login fica bloqueado no
+ * BTmob, os dias da licença não contam e a taxa do servidor fica congelada.
+ * O login volta sozinho no dia escolhido (ou antes, pelo botão).
  */
-export function LicensePauseControls({ license, state, onDone }: Props) {
-  const pause = useServerFn(suspendMyLicense)
-  const resume = useServerFn(reactivateMyLicense)
+export function LicensePauseControls({ license, state: stateProp, onDone, staff = false }: Props) {
+  const pause = useServerFn(staff ? staffPauseLicense : suspendMyLicense)
+  const resume = useServerFn(staff ? staffResumeLicense : reactivateMyLicense)
   const [busy, setBusy] = useState(false)
-  const [confirming, setConfirming] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [day, setDay] = useState<string | null>(null)
 
+  const state = stateProp ?? licenseExpiryState(license)
   const paused = state.paused
   const pauseGate = canPauseLicense(license)
   const resumeGate = canResumeLicense(license)
+  const usedThisMonth = !staff && pausedThisMonth(license.last_pause_started_at)
+  const win = useMemo(() => pauseWindow(), [open])
+
+  // Simula o retorno no dia escolhido para mostrar as novas datas antes de confirmar.
+  const preview = useMemo(() => {
+    if (!day) return null
+    const now = new Date()
+    return planResume(
+      {
+        suspended_at: now.toISOString(),
+        expires_at: license.expires_at,
+        server_paid_until: license.server_paid_until,
+        plan_slug: license.plan_slug,
+      },
+      spMidnight(day),
+    )
+  }, [day, license.expires_at, license.server_paid_until, license.plan_slug])
+
+  const resumePreview = useMemo(
+    () => (paused && license.suspended_at ? planResume(license) : null),
+    [paused, license],
+  )
+
   if (license.disabled_at) return null
   if (license.revoked && !paused) return null
 
   const run = async (fn: () => Promise<any>, ok: string, loading: string) => {
-    if (busy) return;
-    setBusy(true);
-    const t = toast.loading(loading);
-    // O painel externo cai por alguns segundos com frequência: em falha
-    // passageira tentamos de novo sozinhos antes de avisar que não deu certo.
+    if (busy) return
+    setBusy(true)
+    const t = toast.loading(loading)
     const attempt = async () => {
-      const res = await fn();
-      if (!res || !res.ok) throw new Error(res?.message || 'O servidor não confirmou a operação');
-      return res;
-    };
+      const res = await fn()
+      if (!res || !res.ok) throw new Error(res?.message || 'O servidor não confirmou a operação')
+      return res
+    }
     try {
-      let res;
       try {
-        res = await attempt();
+        await attempt()
       } catch (first: any) {
-        const msg = String(first?.message ?? first);
-        const retryable = /não está respondendo|timeout|rede|conex|indispon|tente novamente/i.test(msg);
-        if (!retryable) throw first;
-        toast.loading('O servidor demorou a responder — tentando de novo…', { id: t });
-        await new Promise((r) => setTimeout(r, 1500));
-        res = await attempt();
+        const msg = String(first?.message ?? first)
+        if (!/não está respondendo|timeout|rede|conex|indispon/i.test(msg)) throw first
+        toast.loading('O servidor demorou a responder — tentando de novo…', { id: t })
+        await new Promise((r) => setTimeout(r, 1500))
+        await attempt()
       }
-      toast.success(ok, { id: t });
-      void res;
-      // Refresh component state via parent callback
-      onDone();
+      toast.success(ok, { id: t })
+      setOpen(false)
+      setDay(null)
+      onDone()
     } catch (e: any) {
-      const msg = friendlyPanelError(e, 'O servidor não respondeu ao comando');
       toast.error('Não foi possível concluir agora', {
         id: t,
-        description: `${msg} Nada foi alterado na sua licença — tente de novo em alguns minutos.`,
+        description: friendlyPanelError(e, 'O servidor não respondeu ao comando'),
         duration: 9000,
-      });
+      })
     } finally {
-      // Re-enable interactions only after completion
-      setBusy(false);
-      setConfirming(false);
+      setBusy(false)
     }
-  };
-
+  }
 
   if (paused) {
     return (
       <div className="space-y-2 rounded-md border border-amber-400/40 bg-amber-400/10 p-3">
-        <div className="font-mono text-[10px] font-bold uppercase text-amber-500">Licença pausada</div>
+        <div className="font-mono text-[10px] font-bold uppercase text-amber-500">Login pausado</div>
         <p className="text-[11px] leading-relaxed text-muted-foreground">
-          Nenhum dia está sendo contado. Guardamos{' '}
-          <span className="font-semibold text-foreground">{humanLeft(state.pausedMsLeft)}</span> de acesso
-          para quando você despausar. O login está bloqueado no servidor até lá.
+          O login está bloqueado no BTmob e nenhum dia está sendo contado. Guardamos{' '}
+          <span className="font-semibold text-foreground">{humanLeft(state.pausedMsLeft)}</span> de licença.
+          {license.pause_until && (
+            <>
+              {' '}Volta sozinho em <span className="font-semibold text-foreground">{fmtDay(license.pause_until)}</span>.
+            </>
+          )}
         </p>
-        {!resumeGate.ok && (
-          <p className="text-[11px] font-medium text-amber-500">{resumeGate.message}</p>
+        {resumePreview?.newServerPaidUntil && (
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Se voltar agora, a taxa do servidor passa a vencer em{' '}
+            <span className="font-semibold text-foreground">{fmtDay(resumePreview.newServerPaidUntil)}</span>.
+          </p>
         )}
+        {!resumeGate.ok && <p className="text-[11px] font-medium text-amber-500">{resumeGate.message}</p>}
         <Button
           size="sm"
           className="font-mono text-[10px] uppercase"
           disabled={busy || !resumeGate.ok}
-          onClick={() => void run(() => resume({ data: { licenseId: license.id } }), 'Licença despausada — sua senha original voltou a funcionar', 'Despausando e devolvendo seus dias no painel…')}
+          onClick={() =>
+            void run(
+              () => resume({ data: { licenseId: license.id } }),
+              'Login reativado — a senha original voltou a funcionar',
+              'Reativando o login no painel…',
+            )
+          }
         >
           {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="mr-1.5 h-3.5 w-3.5" />}
-          Despausar login
+          Voltar agora
         </Button>
       </div>
     )
   }
 
   if (!state.active && !pauseGate.ok) return null
-
   if (!pauseGate.ok) {
     return (
       <p className="text-[11px] leading-relaxed text-muted-foreground">
@@ -119,41 +179,87 @@ export function LicensePauseControls({ license, state, onDone }: Props) {
       </p>
     )
   }
+  if (usedThisMonth) {
+    return (
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        <span className="font-semibold text-foreground">Pausa indisponível:</span> você já pausou esta licença
+        este mês. Poderá pausar de novo no mês que vem.
+      </p>
+    )
+  }
+
+  if (!open) {
+    return (
+      <Button size="sm" variant="outline" className="font-mono text-[10px] uppercase" onClick={() => setOpen(true)}>
+        <PauseCircle className="mr-1.5 h-3.5 w-3.5" /> Pausar login
+      </Button>
+    )
+  }
+
+  const nDays = day
+    ? Math.round((spMidnight(day).getTime() - spMidnight(spYmd(new Date())).getTime()) / 86_400_000)
+    : null
 
   return (
-    <div className="space-y-2">
-      {confirming ? (
-        <div className="space-y-2 rounded-md border border-border/60 bg-background/60 p-3">
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Ao pausar, sua senha do painel é trocada por uma senha aleatória e o login para de funcionar
-            na hora. Os dias restantes ficam congelados e voltam quando você despausar.
-          </p>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="destructive"
-              className="font-mono text-[10px] uppercase"
-              disabled={busy}
-              onClick={() => void run(() => pause({ data: { licenseId: license.id } }), 'Login pausado — nenhum dia será contado', 'Pausando o login no painel…')}
-            >
-              {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PauseCircle className="mr-1.5 h-3.5 w-3.5" />}
-              Confirmar pausa
-            </Button>
-            <Button size="sm" variant="outline" className="font-mono text-[10px] uppercase" disabled={busy} onClick={() => setConfirming(false)}>
-              Cancelar
-            </Button>
+    <div className="space-y-3 rounded-md border border-border/60 bg-background/60 p-3">
+      <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase text-foreground">
+        <CalendarDays className="h-3.5 w-3.5" /> Até quando quer pausar?
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        Escolha o dia em que o login volta (até {MAX_PAUSE_DAYS} dias
+        {staff ? '' : ', 1 pausa por mês'}). Enquanto pausado o login não funciona no BTmob, mas você não
+        perde dias e a taxa do servidor fica congelada. Dá para voltar antes pelo botão.
+      </p>
+      <Calendar
+        mode="single"
+        selected={day ? ymdToLocal(day) : undefined}
+        onSelect={(d) => setDay(d ? localYmd(d) : null)}
+        disabled={[{ before: ymdToLocal(win.min) }, { after: ymdToLocal(win.max) }]}
+        startMonth={ymdToLocal(win.min)}
+        endMonth={ymdToLocal(win.max)}
+        className="rounded-md border border-border/50"
+      />
+      {day && preview && (
+        <div className="space-y-1 rounded-md border border-border/50 bg-card/40 p-2 text-[11px] text-muted-foreground">
+          <div>
+            Pausa de <span className="font-semibold text-foreground">{nDays} dia(s)</span> · volta em{' '}
+            <span className="font-semibold text-foreground">{fmtDay(spMidnight(day).toISOString())}</span>
           </div>
+          {preview.newExpiresAt && (
+            <div>
+              Licença passa a vencer em <span className="font-semibold text-foreground">{fmtDay(preview.newExpiresAt)}</span>
+            </div>
+          )}
+          {preview.newServerPaidUntil && (
+            <div>
+              Taxa do servidor: de {fmtDay(license.server_paid_until)} para{' '}
+              <span className="font-semibold text-foreground">{fmtDay(preview.newServerPaidUntil)}</span>
+            </div>
+          )}
         </div>
-      ) : (
+      )}
+      <div className="flex gap-2">
         <Button
           size="sm"
-          variant="outline"
+          variant="destructive"
           className="font-mono text-[10px] uppercase"
-          onClick={() => setConfirming(true)}
+          disabled={busy || !day}
+          onClick={() =>
+            day &&
+            void run(
+              () => pause({ data: { licenseId: license.id, resumeOn: day } }),
+              'Login pausado — nenhum dia será contado',
+              'Pausando o login no painel…',
+            )
+          }
         >
-          <PauseCircle className="mr-1.5 h-3.5 w-3.5" /> Pausar login
+          {busy ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <PauseCircle className="mr-1.5 h-3.5 w-3.5" />}
+          Confirmar pausa
         </Button>
-      )}
+        <Button size="sm" variant="outline" className="font-mono text-[10px] uppercase" disabled={busy} onClick={() => { setOpen(false); setDay(null) }}>
+          Cancelar
+        </Button>
+      </div>
     </div>
   )
 }

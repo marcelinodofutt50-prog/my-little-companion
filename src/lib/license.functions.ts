@@ -18,17 +18,14 @@ function yesterdayYMD(): string {
 // never lets one user touch another user's rows.
 
 /**
- * PAUSAR a licença (cliente).
- * - Congela os dias: guardamos `expires_at_before_suspend` e o instante da
- *   pausa, então o tempo restante é recalculado no despause.
- * - Bloqueia o acesso de verdade: expire_date = ontem no painel E a senha é
- *   trocada por uma senha aleatória (a original continua guardada cifrada).
+ * PAUSAR o login (cliente): escolhe o dia de retorno (até 30 dias), 1x por mês.
+ * Os dias da licença e a taxa do servidor ficam congelados até voltar.
  */
 export const suspendMyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: any) => {
-    return z.object({ licenseId: z.string().uuid() }).parse(input);
-  })
+  .validator((input: any) =>
+    z.object({ licenseId: z.string().uuid(), resumeOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
@@ -39,231 +36,69 @@ export const suspendMyLicense = createServerFn({ method: "POST" })
       }
       throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
     }
-    const { canPauseLicense } = await import("./license-pause-rules");
+    const { canPauseLicense, validateResumeDay, pausedThisMonth, spMidnight } = await import("./license-pause-rules");
     const gate = canPauseLicense(lic as any);
     if (!gate.ok) throw new Error(gate.message);
     if (!lic) throw new Error("Licença não encontrada");
-
-
-    const panel = (lic as any).panel ?? "v457";
-    const { yaarsaExtend, yaarsaSetPassword, generateCredentials, decrypt } = await import("./yaarsa.server");
-    const { sha256Hex } = await import("./password-safety.server");
-
-    // 0) SEGURANÇA: só pausamos se conseguirmos recuperar a senha original AGORA.
-    // Assim nunca trancamos um cliente que não conseguiríamos destravar depois.
-    let original: string | null = null;
-    try { original = decrypt(lic.yaarsa_password_enc); } catch { original = null; }
-    if (!original || original.length < 4) {
-      throw new Error("Não conseguimos validar sua senha original — fale com o suporte antes de pausar.");
+    const day = validateResumeDay(data.resumeOn);
+    if (!day.ok) throw new Error(day.message);
+    if (pausedThisMonth((lic as any).last_pause_started_at)) {
+      throw new Error("Você já pausou esta licença este mês. Poderá pausar de novo no mês que vem.");
     }
-    const originalFp = sha256Hex(original);
-    const storedFp = (lic as any).password_fingerprint as string | null;
-    if (storedFp && storedFp !== originalFp) {
-      throw new Error("Divergência na senha registrada desta licença — fale com o suporte.");
-    }
-
-    const { retryPanelCall } = await import("./panel-retry.server");
-
-    // 1) trava a data no painel (repetimos em falha passageira do painel)
-    const yr = await retryPanelCall(
-      () => yaarsaExtend(lic.yaarsa_email, yesterdayYMD(), panel),
-      { label: "pause:extend" },
-    );
-    if (yr.Fail) {
-      console.error("[suspendMyLicense] Yaarsa Date Fail:", yr.Fail);
-      // Fallback 1: Alguns painéis recusam a data de "ontem" se ela cair num range inválido.
-      // Tentamos uma data fixa bem antiga (1970) para forçar o bloqueio por expiração.
-      const yrRetry = await retryPanelCall(
-        () => yaarsaExtend(lic.yaarsa_email, "1970-01-01", panel),
-        { label: "pause:extend-1970" },
-      );
-
-      if (yrRetry.Fail) {
-        console.error("[suspendMyLicense] Yaarsa Date Retry Fail:", yrRetry.Fail);
-        // Fallback Final: Se o painel estiver offline ou com erro de conexão persistente,
-        // não podemos garantir que a licença parou de contar no servidor.
-        throw new Error(`O servidor de licenças não está respondendo. Tente pausar novamente em alguns minutos.`);
-      }
-    }
-
-    // 2) troca a senha por uma aleatória (bloqueio real do login).
-    // A senha de pausa NUNCA é igual à original e NUNCA é gravada como senha
-    // do cliente — guardamos apenas a impressão digital para poder rejeitá-la.
-    let tempPassword = generateCredentials().password;
-    for (let i = 0; i < 5 && sha256Hex(tempPassword) === originalFp; i++) {
-      tempPassword = generateCredentials().password;
-    }
-    if (sha256Hex(tempPassword) === originalFp) {
-      throw new Error("Falha ao gerar senha de pausa segura — tente novamente.");
-    }
-    const pr = await retryPanelCall(
-      () => yaarsaSetPassword(lic.yaarsa_email, tempPassword, panel, lic.yaarsa_username),
-      { label: "pause:password" },
-    );
-    if (pr.Fail) {
-      // Se for apenas erro de "não encontrado", tentamos criar a conta (upsert informal)
-      if (/1005|não encontrado|not found/i.test(pr.Fail)) {
-        console.warn("[suspendMyLicense] Account missing during pause, attempting reconstruction...");
-        const { yaarsaCreateAccount, panelFromPlanSlug } = await import("./yaarsa.server");
-        await yaarsaCreateAccount({
-           username: lic.yaarsa_username,
-           email: lic.yaarsa_email,
-           password: tempPassword,
-           planSlug: (lic as any).plan_slug || "mensal",
-           totalPaid: 0,
-           panel: panelFromPlanSlug((lic as any).plan_slug)
-        });
-      } else {
-        // rollback da data para não deixar o cliente sem acesso sem pausa efetiva
-        console.error("[suspendMyLicense] Yaarsa Pass Fail:", pr.Fail);
-        const back = lic.expires_at ? new Date(lic.expires_at).toISOString().slice(0, 10) : "2099-12-31";
-        await yaarsaExtend(lic.yaarsa_email, back, panel);
-        throw new Error(`Erro ao configurar trava de segurança. Tente novamente. (Detalhe: ${pr.Fail})`);
-      }
-    }
-
-    const now = new Date();
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: upErr } = await supabaseAdmin.from("licenses").update({
-      suspended_at: now.toISOString(),
-      suspended_by: "user",
-      expires_at_before_suspend: lic.expires_at,
-      password_fingerprint: originalFp,
-      suspend_password_fingerprint: sha256Hex(tempPassword),
-    }).eq("id", lic.id).eq("user_id", userId);
-    if (upErr) throw new Error(upErr.message);
-
-    await supabaseAdmin.from("integration_logs").insert({
-      source: `yaarsa-${panel}`, action: "license_pause", outcome: "success",
-      context: { license_id: lic.id, expires_at: lic.expires_at } as any,
-    } as any);
-
-    const msLeft = lic.expires_at ? Math.max(0, new Date(lic.expires_at).getTime() - now.getTime()) : null;
-    return { ok: true, paused_at: now.toISOString(), ms_left: msLeft, message: "Licença suspensa com sucesso" };
+    const { pauseLicenseCore } = await import("./license-pause.server");
+    return pauseLicenseCore(lic, { by: "user", pauseUntil: spMidnight(data.resumeOn), actorId: userId });
   });
 
-/**
- * DESPAUSAR: devolve exatamente o tempo que faltava quando pausou e restaura
- * a senha original do cliente no painel.
- */
+/** DESPAUSAR antes da data (cliente). */
 export const reactivateMyLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: any) => {
-    return z.object({ licenseId: z.string().uuid() }).parse(input);
-  })
+  .validator((input: any) => z.object({ licenseId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: lic, error } = await supabase
       .from("licenses").select("*").eq("id", data.licenseId).eq("user_id", userId).maybeSingle();
-    if (error) {
-      if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
-        await trackSchemaFailure(error, "reactivateMyLicense", false, { stage: "initial_fetch" }, userId);
-      }
-      throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
-    }
+    if (error) throw new Error("A conexão com o banco falhou. Verifique sua internet e tente novamente.");
     const { canResumeLicense } = await import("./license-pause-rules");
     const gate = canResumeLicense(lic as any);
     if (!gate.ok) throw new Error(gate.message);
-    if (!lic || !lic.suspended_at) throw new Error("Licença não encontrada");
+    const { resumeLicenseCore } = await import("./license-pause.server");
+    return resumeLicenseCore(lic, { by: "user", actorId: userId });
+  });
 
-    const panel = (lic as any).panel ?? "v457";
-    const baseline = lic.expires_at_before_suspend ?? lic.expires_at;
-
-    // Tempo que faltava NO MOMENTO DA PAUSA — os dias parados não contam.
-    // Licença vitalícia (sem baseline) volta com validade longa padrão.
-    const LIFETIME_YMD = "2099-12-31";
-    const msLeft = baseline
-      ? Math.max(0, new Date(baseline).getTime() - new Date(lic.suspended_at).getTime())
-      : null;
-    if (msLeft !== null && msLeft <= 0) throw new Error("A licença já estava expirada quando foi pausada — renove o plano");
-
-    const newExpires = msLeft !== null ? new Date(Date.now() + msLeft) : null;
-    const ymd = newExpires ? newExpires.toISOString().slice(0, 10) : LIFETIME_YMD;
-
-    const { yaarsaExtend, yaarsaSetPassword, decrypt } = await import("./yaarsa.server");
-    const { sha256Hex } = await import("./password-safety.server");
-
-    // 0) SEGURANÇA: valida a senha ANTES de mexer no painel.
-    let original: string | null = null;
-    try { original = decrypt(lic.yaarsa_password_enc); } catch { original = null; }
-    if (!original || original.length < 4) {
-      throw new Error("Não foi possível recuperar a senha original — fale com o suporte");
-    }
-    const fp = sha256Hex(original);
-    const expectedFp = (lic as any).password_fingerprint as string | null;
-    if (expectedFp && expectedFp !== fp) {
-      throw new Error("A senha registrada não confere com a original desta licença — fale com o suporte.");
-    }
-    const pausedFp = (lic as any).suspend_password_fingerprint as string | null;
-    if (pausedFp && pausedFp === fp) {
-      throw new Error("Bloqueado: a senha guardada é a senha temporária da pausa — fale com o suporte.");
-    }
-
-    const { retryPanelCall } = await import("./panel-retry.server");
-
-    // 1) devolve os dias
-    let yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
-      label: "resume:extend",
-    });
-
-    // Healer agressivo: se falhar a extensão, tentamos ações alternativas
-    if (yr.Fail) {
-      console.error("[reactivateMyLicense] Yaarsa Extend Fail:", yr.Fail);
-      
-      // Se o erro for 1005 (não encontrado), tentamos recriar a conta com a senha original
-      if (/1005|não encontrado|not found/i.test(yr.Fail)) {
-        const { yaarsaCreateAccount } = await import("./yaarsa.server");
-        await yaarsaCreateAccount({
-          username: lic.yaarsa_username,
-          email: lic.yaarsa_email,
-          password: original,
-          planSlug: lic.plan_slug || "mensal",
-          totalPaid: 0,
-          panel
-        });
-        // Tenta estender novamente após recriar
-        yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
-          label: "resume:extend-after-create",
-        });
-      } else {
-        // Tentativa de re-sincronização agressiva em caso de timeout/rede
-        await new Promise(r => setTimeout(r, 800));
-        yr = await retryPanelCall(() => yaarsaExtend(lic.yaarsa_email, ymd, panel), {
-          label: "resume:extend-retry",
-        });
-      }
-      
-      if (yr.Fail) {
-        throw new Error(`O servidor não conseguiu processar o retorno dos dias. Detalhe: ${yr.Fail}`);
-      }
-    }
-
-    // 2) restaura a senha original (a mesma entregue na compra)
-    // Crítico: se isso falhar o cliente fica preso com a senha da pausa, então
-    // insistimos algumas vezes antes de desistir.
-    const pr = await retryPanelCall(
-      () => yaarsaSetPassword(lic.yaarsa_email, original, panel, lic.yaarsa_username),
-      { label: "resume:password", attempts: 4 },
-    );
-    if (pr.Fail) throw new Error(`Painel (senha): ${pr.Fail}`);
-
+/** Equipe: pausar o login de qualquer cliente (sem limite mensal, até 30 dias). */
+export const staffPauseLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: any) =>
+    z.object({ licenseId: z.string().uuid(), resumeOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("./admin-helpers.server");
+    await assertStaff(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: upErr } = await supabaseAdmin.from("licenses").update({
-      suspended_at: null,
-      suspended_by: null,
-      expires_at_before_suspend: null,
-      ...(newExpires ? { expires_at: newExpires.toISOString() } : {}),
-      password_fingerprint: fp,
-      suspend_password_fingerprint: null,
-    }).eq("id", lic.id).eq("user_id", userId);
-    if (upErr) throw new Error(upErr.message);
+    const { data: lic } = await supabaseAdmin.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    const { canPauseLicense, validateResumeDay, spMidnight } = await import("./license-pause-rules");
+    const gate = canPauseLicense(lic as any);
+    if (!gate.ok) throw new Error(gate.message);
+    const day = validateResumeDay(data.resumeOn);
+    if (!day.ok) throw new Error(day.message);
+    const { pauseLicenseCore } = await import("./license-pause.server");
+    return pauseLicenseCore(lic, { by: "staff", pauseUntil: spMidnight(data.resumeOn), actorId: context.userId });
+  });
 
-    await supabaseAdmin.from("integration_logs").insert({
-      source: `yaarsa-${panel}`, action: "license_resume", outcome: "success",
-      context: { license_id: lic.id, new_expires_at: newExpires?.toISOString() ?? null } as any,
-    } as any);
-
-    return { ok: true, expires_at: newExpires?.toISOString() ?? null, message: "Licença reativada com sucesso" };
+/** Equipe: despausar o login de qualquer cliente. */
+export const staffResumeLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: any) => z.object({ licenseId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import("./admin-helpers.server");
+    await assertStaff(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lic } = await supabaseAdmin.from("licenses").select("*").eq("id", data.licenseId).maybeSingle();
+    const { canResumeLicense } = await import("./license-pause-rules");
+    const gate = canResumeLicense(lic as any);
+    if (!gate.ok) throw new Error(gate.message);
+    const { resumeLicenseCore } = await import("./license-pause.server");
+    return resumeLicenseCore(lic, { by: "staff", actorId: context.userId });
   });
 
 export const disableMyLicense = createServerFn({ method: "POST" })
