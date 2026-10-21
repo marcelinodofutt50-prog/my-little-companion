@@ -19,3 +19,4 @@
 - Creator program writes (applications, license claims, videos, staff reviews) go only through SECURITY DEFINER RPCs; tables are SELECT-only for clients so members cannot self-approve or bypass limits.
 
 - The published site (shadowdashstore.com) uses the backend at FILES_SUPABASE_* (DB: FILES_SUPABASE_DB_URL); apply every db/*.sql and drizzle migration there too, not only to Lovable Cloud or EXT_SUPABASE_*. Why: changes applied only elsewhere left the live site without the Creator functions.
+- Login pause/resume logic lives only in `src/lib/license-pause.server.ts` (panel calls) and `src/lib/license-pause-rules.ts` (pure date math); client, staff and the auto-resume cron all call the same core so dates never diverge.
