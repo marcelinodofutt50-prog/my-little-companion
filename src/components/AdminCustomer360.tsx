@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LicensePauseControls } from "@/components/LicensePauseControls";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -229,24 +230,37 @@ export function AdminCustomer360({
   const load = useServerFn(adminCustomer360);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const requestId = useRef(0);
 
   const fetchData = async (uid: string) => {
+    const request = ++requestId.current;
     setLoading(true);
+    setLoadError(null);
     try {
-      setData(await load({ data: { userId: uid } }));
+      const result = await load({ data: { userId: uid } });
+      if (request !== requestId.current) return;
+      if (!result || !Array.isArray(result.licenses) || !Array.isArray(result.orders)) {
+        throw new Error("Não foi possível carregar a ficha. Tente novamente.");
+      }
+      setData(result);
     } catch (e: any) {
-      toast.error("Falha ao carregar ficha", { description: e?.message });
+      if (request !== requestId.current) return;
+      setLoadError("Não foi possível carregar a ficha. Tente novamente.");
+      toast.error("Falha ao carregar ficha");
     } finally {
-      setLoading(false);
+      if (request === requestId.current) setLoading(false);
     }
   };
 
   useEffect(() => {
+    setData(null);
     if (!userId) {
-      setData(null);
+      requestId.current++;
       return;
     }
     fetchData(userId);
+    return () => { requestId.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
@@ -287,7 +301,7 @@ export function AdminCustomer360({
 
   return (
     <Sheet open={!!userId} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
+      <SheetContent side="right" className="z-[70] w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader className="text-left">
           <SheetTitle className="font-mono text-base">
             {data?.profile?.display_name || data?.profile?.full_name || "Ficha do cliente"}
@@ -297,6 +311,20 @@ export function AdminCustomer360({
           </SheetDescription>
         </SheetHeader>
 
+        {loadError && (
+          <div className="mt-4 space-y-3" role="alert">
+            <p className="text-sm text-destructive">{loadError}</p>
+            <Button variant="outline" size="sm" disabled={loading} onClick={() => userId && void fetchData(userId)}>
+              <RefreshCw className="mr-2 h-3 w-3" /> Tentar novamente
+            </Button>
+          </div>
+        )}
+        <ErrorBoundary key={userId} name="Ficha do cliente" fallback={
+          <div className="mt-4 space-y-3" role="alert">
+            <p className="text-sm text-destructive">Não foi possível exibir a ficha deste cliente.</p>
+            <Button variant="outline" size="sm" onClick={onClose}>Fechar ficha</Button>
+          </div>
+        }>
         {loading && !data ? (
           <div className="mt-4 space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -613,6 +641,7 @@ export function AdminCustomer360({
             </Tabs>
           </div>
         ) : null}
+        </ErrorBoundary>
       </SheetContent>
     </Sheet>
   );

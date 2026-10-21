@@ -20,3 +20,5 @@
 
 - The published site (shadowdashstore.com) uses the backend at FILES_SUPABASE_* (DB: FILES_SUPABASE_DB_URL); apply every db/*.sql and drizzle migration there too, not only to Lovable Cloud or EXT_SUPABASE_*. Why: changes applied only elsewhere left the live site without the Creator functions.
 - Login pause/resume logic lives only in `src/lib/license-pause.server.ts` (panel calls) and `src/lib/license-pause-rules.ts` (pure date math); client, staff and the auto-resume cron all call the same core so dates never diverge.
+- Global promotional countdowns use a shared pure deadline helper and hydrate the clock after mount; this prevents session resets and SSR mismatches without changing checkout eligibility.
+- Customer sheets isolate rendering errors and ignore superseded requests; this keeps an individual customer failure from breaking admin or displaying the previous customer's data.
