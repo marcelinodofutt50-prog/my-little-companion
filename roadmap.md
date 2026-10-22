@@ -1,8 +1,8 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 21/10 — ficha e contador
-- [ ] Corrigir o travamento ao abrir a ficha do cliente e verificar a abertura.
-- [ ] Exibir um contador pequeno no topo para Vitalício R$ 999, com prazo fixo de 60 dias.
+- [~] Ficha: erros de carregamento tratados, respostas antigas ignoradas e falhas isoladas do painel. Abertura com conta real pendente: conexão de autenticação indisponível (SUPABASE_POOLER_UNAVAILABLE).
+- [x] Exibir um contador pequeno no topo para Vitalício R$ 999, com prazo fixo de 60 dias; 7 testes passaram, contador conferido no computador/celular e após recarregar.
 
 ## Pedido 12/10 — suporte, sorteios, gravações e VPS
 - [x] VPS: imagens ilustrativas, indicação de uso e chamado automático transacional no Lovable Cloud; repetição verificada com rollback.
