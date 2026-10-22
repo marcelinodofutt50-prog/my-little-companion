@@ -1,3 +1,5 @@
+import { AdminLicenseActionDialog, type LicenseActionTarget } from "@/components/admin/AdminLicenseActionDialog";
+import { adminLicenseStatus, isAdminLicenseArchived, matchesAdminLicenseSearch, type AdminLicenseStatus } from "@/lib/admin-license-list";
 import { SupportStatsPanel } from "@/components/support/SupportStatsPanel";
 import { AdminDailySummary } from "@/components/AdminDailySummary";
 import { AdminSupportersPanel } from "@/components/admin/AdminSupportersPanel";
@@ -344,9 +346,15 @@ function AdminPage() {
   const [badges, setBadges] = useState<{ user_id: string; plan: string }[]>([]);
   const [email, setEmail] = useState("");
   const [licKind, setLicKind] = useState<"all" | "trial" | "paid">("all");
-  const [licStatus, setLicStatus] = useState<"all" | "active" | "expiring" | "expired" | "revoked">(
+  const [licStatus, setLicStatus] = useState<"all" | AdminLicenseStatus>(
     "all",
   );
+  const [licPanel, setLicPanel] = useState<"all" | "v455" | "v457" | "v46">("all");
+  const [licenseAction, setLicenseAction] = useState<LicenseActionTarget | null>(null);
+  const [licenseActionBusy, setLicenseActionBusy] = useState(false);
+  const licenseActionLock = useRef(false);
+  const [licenseLoadError, setLicenseLoadError] = useState<string | null>(null);
+  const [licenseLoading, setLicenseLoading] = useState(false);
   const [licView, setLicView] = useState<"table" | "grouped">("table");
   const [licLimit, setLicLimit] = useState(50);
   const [licSearch, setLicSearch] = useState("");
@@ -466,15 +474,18 @@ function AdminPage() {
 
   const loadLicenses = useCallback(() => {
     if (inflightRef.current.licenses) return inflightRef.current.licenses;
+    setLicenseLoading(true);
+    setLicenseLoadError(null);
     const p = licensesFn()
       .then((r) => {
         setLicenses(r);
         loadedRef.current.licenses = true;
         return r;
       })
-      .catch(() => {})
+      .catch(() => { setLicenseLoadError("Não foi possível atualizar as licenças. Tente novamente."); })
       .finally(() => {
         inflightRef.current.licenses = undefined;
+        setLicenseLoading(false);
       });
     inflightRef.current.licenses = p;
     return p;
@@ -585,35 +596,26 @@ function AdminPage() {
       loadLicenses();
   }, [tab, loadUsers, loadRoles, loadOrders, loadLicenses]);
 
-  async function revoke(id: string) {
-    if (!confirm("Revogar esta licença?")) return;
+  /** All mutations keep the selected customer visible and reject repeated clicks. */
+  async function confirmLicenseAction(date: string) {
+    if (!licenseAction || licenseActionLock.current) return;
+    licenseActionLock.current = true;
+    setLicenseActionBusy(true);
+    const { action, license } = licenseAction;
     try {
-      await revokeFn({ data: { licenseId: id } });
-      toast.success("Revogada");
-      setLicenses(await licensesFn());
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  }
-  async function extend(id: string) {
-    const d = prompt("Nova data (YYYY-MM-DD)");
-    if (!d) return;
-    try {
-      await extendFn({ data: { licenseId: id, newExpireDate: d } });
-      toast.success("Estendida");
-      setLicenses(await licensesFn());
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  }
-  async function renew(id: string) {
-    if (!confirm("Renovar servidor deste cliente até o próximo dia 20?")) return;
-    try {
-      await renewFn({ data: { licenseId: id } });
-      toast.success("Servidor renovado");
-      setLicenses(await licensesFn());
-    } catch (e: any) {
-      toast.error(e.message);
+      const data = { licenseId: license.id };
+      if (action === "revoke") await revokeFn({ data });
+      if (action === "extend") await extendFn({ data: { ...data, newExpireDate: date } });
+      if (action === "renew") await renewFn({ data });
+      if (action === "recreate") await recreateFn({ data });
+      toast.success(action === "recreate" ? "Credenciais recriadas. Confira a senha na licença." : "Licença atualizada");
+      setLicenseAction(null);
+      await loadLicenses();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível concluir a ação.");
+    } finally {
+      licenseActionLock.current = false;
+      setLicenseActionBusy(false);
     }
   }
   /** Abre o fluxo de senha (status + conferência no painel + atualização). */
@@ -621,19 +623,6 @@ function AdminPage() {
     setPwdDialog({ open: true, license });
   }
 
-  async function recreate(id: string) {
-
-    if (!confirm("Recriar credenciais do login? A senha anterior será substituída.")) return;
-    try {
-      const r: any = await recreateFn({ data: { licenseId: id } });
-      toast.success(`Nova credencial: ${r.credentials.username} / ${r.credentials.password}`, {
-        duration: 20000,
-      });
-      setLicenses(await licensesFn());
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  }
   /** Abre o modal explicativo e dispara análise de IA com os fatores do caso. */
   function openFixLoginBug(id: string) {
     if (fixingLic) return;
@@ -1771,6 +1760,8 @@ function AdminPage() {
                 const bucketOf = (
                   l: any,
                 ): { key: string; label: string; order: number; tone: string } => {
+                  if (l.disabled_at) return { key: "disabled", label: "Desativadas", order: 98, tone: "text-danger" };
+                  if (l.suspended_at && !l.revoked) return { key: "paused", label: "Pausadas", order: 91, tone: "text-cyan" };
                   if (l.revoked)
                     return { key: "revoked", label: "Revogadas", order: 99, tone: "text-danger" };
                   if (!l.expires_at)
@@ -1813,34 +1804,8 @@ function AdminPage() {
                     tone: "text-muted-foreground",
                   };
                 };
-                const statusOf = (l: any): "active" | "expiring" | "expired" | "revoked" => {
-                  if (l.revoked) return "revoked";
-                  if (!l.expires_at) return "active";
-                  const diff = new Date(l.expires_at).getTime() - now;
-                  if (diff < 0) return "expired";
-                  if (diff <= 5 * dayMs) return "expiring";
-                  return "active";
-                };
-                // "Arquivada": morta há mais de 3 dias (vencida ou revogada).
-                // Se voltar a valer (cliente reativou / admin estendeu), sai do arquivo sozinha.
-                const ARCHIVE_AFTER_DAYS = 3;
-                const isArchived = (l: any): boolean => {
-                  const s = statusOf(l);
-                  if (s !== "expired" && s !== "revoked") return false;
-                  const ref =
-                    s === "expired"
-                      ? new Date(l.expires_at).getTime()
-                      : new Date(
-                          l.server_overdue_at ??
-                            l.disabled_at ??
-                            l.updated_at ??
-                            l.created_at ??
-                            now,
-                        ).getTime();
-                  if (!Number.isFinite(ref)) return false;
-                  return now - ref > ARCHIVE_AFTER_DAYS * dayMs;
-                };
-                const q = licSearch.trim().toLowerCase();
+                const statusOf = (l: any) => adminLicenseStatus(l, now);
+                const isArchived = (l: any) => isAdminLicenseArchived(l, now);
                 const visibleBase = licenses.filter((l) =>
                   licScope === "active" ? !isArchived(l) : isArchived(l),
                 );
@@ -1851,15 +1816,17 @@ function AdminPage() {
                   if (licKind === "trial" && !l.is_trial) return false;
                   if (licKind === "paid" && l.is_trial) return false;
                   if (licStatus !== "all" && statusOf(l) !== licStatus) return false;
-                  if (q) {
-                    const hay =
-                      `${l.yaarsa_username ?? ""} ${l.yaarsa_email ?? ""} ${l.profile?.email ?? ""} ${l.profile?.full_name ?? ""} ${l.plan_slug ?? ""}`.toLowerCase();
-                    if (!hay.includes(q)) return false;
-                  }
+                  if (licPanel !== "all" && panelOfLicense(l) !== licPanel) return false;
+                  if (!matchesAdminLicenseSearch(l, licSearch)) return false;
                   return true;
                 });
                 const statusPill = (l: any) => {
                   const s = statusOf(l);
+                  if (s === "paused" || s === "disabled") return (
+                    <span className={`inline-flex rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${s === "paused" ? "text-cyan" : "text-danger"}`}>
+                      {s === "paused" ? "pausada" : "desativada"}
+                    </span>
+                  );
                   if (s === "revoked")
                     return (
                       <span className="inline-flex rounded border border-danger/50 bg-danger/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-danger">
@@ -1885,6 +1852,11 @@ function AdminPage() {
                   );
                 };
                 const expiresCell = (l: any) => {
+                  if (statusOf(l) === "paused") return <div className="font-mono text-xs text-cyan">
+                    Dias congelados
+                    {l.pause_until && <div className="text-[10px] text-muted-foreground">Retorno: {new Date(l.pause_until).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</div>}
+                  </div>;
+                  if (l.expires_at && !Number.isFinite(Date.parse(l.expires_at))) return <span className="text-danger">Data inválida</span>;
                   if (!l.expires_at)
                     return <span className="text-muted-foreground">vitalícia</span>;
                   const d = new Date(l.expires_at);
@@ -1916,7 +1888,7 @@ function AdminPage() {
                 const liveByUser = new Map<string, number>();
                 for (const l of licenses) {
                   const st = statusOf(l);
-                  if (st === "expired" || st === "revoked") continue;
+                  if (st === "expired" || st === "revoked" || st === "disabled" || st === "paused") continue;
                   const k = l.profile?.email ?? l.user_id;
                   liveByUser.set(k, (liveByUser.get(k) ?? 0) + 1);
                 }
@@ -1931,7 +1903,7 @@ function AdminPage() {
                         : 450;
                   const tierTone = panelTone(panel);
                   const dupCount = liveByUser.get(l.profile?.email ?? l.user_id) ?? 0;
-                  const canFix = isAdminUser && st !== "revoked" && st !== "expired" && !l.is_trial;
+                  const canFix = isAdminUser && (st === "active" || st === "expiring") && !l.is_trial;
                   return (
                     <tr key={l.id} className="border-b border-border/20 hover:bg-neon/5">
                       <td className="p-3 whitespace-nowrap">{expiresCell(l)}</td>
@@ -1943,7 +1915,7 @@ function AdminPage() {
                           </div>
                         )}
                       </td>
-                      <td className="p-3">
+                      <td className="p-3" data-sensitive>
                         <div className="font-mono text-xs text-foreground">
                           {l.profile?.email ?? <span className="text-muted-foreground">—</span>}
                         </div>
@@ -1992,7 +1964,7 @@ function AdminPage() {
                           <span className="text-muted-foreground">sem cobrança</span>
                         ) : (
                           <>
-                            {formatBrl(fee)}
+                            <span data-sensitive>{formatBrl(fee)}</span>
                             <span className="text-muted-foreground">/mês</span>
                             {l.paid_externally && (
                               <div className="font-mono text-[9px] uppercase text-cyan">
@@ -2003,13 +1975,16 @@ function AdminPage() {
                         )}
                       </td>
                       <td className="p-3 text-right whitespace-nowrap">
+                        <Button size="sm" variant="ghost" title="Abrir ficha do cliente" disabled={!l.user_id} onClick={() => setCustomer360(l.user_id)}>
+                          <Users className="h-3 w-3" /><span className="ml-1 text-xs">Ficha</span>
+                        </Button>
                         {isAdminUser ? (
                           <div className="flex items-center justify-end gap-1">
                             {canFix && (
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={fixingLic === l.id}
+                              disabled={fixingLic === l.id || licenseActionBusy}
                               title="Corrigir bug de erro (BMob): +1 dia, reaplica a senha e volta a data"
                               onClick={() => openFixLoginBug(l.id)}
                               className="h-7 gap-1 border-amber-400/60 px-2 font-mono text-[10px] uppercase tracking-wider text-amber-400 hover:bg-amber-400/10"
@@ -2026,7 +2001,8 @@ function AdminPage() {
                               size="sm"
                               variant="ghost"
                               title="Renovar servidor (próx. dia 20)"
-                              onClick={() => renew(l.id)}
+                              onClick={() => setLicenseAction({ action: "renew", license: l })}
+                              disabled={licenseActionBusy || fixingLic === l.id || st === "paused" || l.is_trial}
                             >
                               <RefreshCw className="h-3 w-3 text-cyan" />
                             </Button>
@@ -2034,6 +2010,7 @@ function AdminPage() {
                               size="sm"
                               variant="ghost"
                               title="Senha do login: conferir no painel e atualizar para o cliente"
+                              disabled={licenseActionBusy || fixingLic === l.id || st === "paused"}
                               onClick={() => openPasswordDialog(l)}
                             >
                               <KeyRound
@@ -2051,7 +2028,8 @@ function AdminPage() {
                               size="sm"
                               variant="ghost"
                               title="Recriar credenciais do login"
-                              onClick={() => recreate(l.id)}
+                              onClick={() => setLicenseAction({ action: "recreate", license: l })}
+                              disabled={licenseActionBusy || fixingLic === l.id || st === "paused"}
                             >
                               <RotateCw className="h-3 w-3 text-violet" />
                             </Button>
@@ -2059,7 +2037,8 @@ function AdminPage() {
                               size="sm"
                               variant="ghost"
                               title="Estender manualmente"
-                              onClick={() => extend(l.id)}
+                              onClick={() => setLicenseAction({ action: "extend", license: l })}
+                              disabled={licenseActionBusy || fixingLic === l.id || st === "paused"}
                             >
                               <Calendar className="h-3 w-3" />
                             </Button>
@@ -2067,7 +2046,8 @@ function AdminPage() {
                               size="sm"
                               variant="ghost"
                               title="Revogar"
-                              onClick={() => revoke(l.id)}
+                              onClick={() => setLicenseAction({ action: "revoke", license: l })}
+                              disabled={licenseActionBusy || fixingLic === l.id || st === "revoked"}
                             >
                               <Ban className="h-3 w-3 text-danger" />
                             </Button>
@@ -2107,7 +2087,7 @@ function AdminPage() {
                           .reduce<Map<string, Group>>((m, l) => {
                             const b = bucketOf(l);
                             if (!m.has(b.key)) m.set(b.key, { ...b, items: [] });
-                            m.get(b.key)!.items.push(l);
+                            m.get(b.key)?.items.push(l);
                             return m;
                           }, new Map<string, Group>())
                           .values(),
@@ -2143,24 +2123,30 @@ function AdminPage() {
                               { k: "archived", label: `Arquivadas · ${archivedCount}` },
                             ] as const
                           ).map((t) => (
-                            <button
+                            <Button
+                              type="button" variant="ghost" size="sm"
                               key={t.k}
-                              onClick={() => setLicScope(t.k)}
+                              onClick={() => { setLicScope(t.k); setLicLimit(50); }}
                               className={`px-2 py-1 transition-colors ${licScope === t.k ? "bg-neon/15 text-neon" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"}`}
                             >
                               {t.label}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
+                        <Button size="sm" variant="ghost" disabled={licenseLoading} title="Atualizar licenças" aria-label="Atualizar licenças" onClick={() => loadLicenses()}><RefreshCw className={`h-4 w-4 ${licenseLoading ? "animate-spin" : ""}`} /></Button>
+                        <select aria-label="Filtrar versão" value={licPanel} onChange={(e) => { setLicPanel(e.target.value as typeof licPanel); setLicLimit(50); }} className="h-7 rounded border border-border bg-background px-2 text-xs text-foreground">
+                          <option value="all">Todas as versões</option><option value="v455">4.5.5</option><option value="v457">4.5.7</option><option value="v46">4.6</option>
+                        </select>
                         <input
                           value={licSearch}
                           onChange={(e) => {
                             setLicSearch(e.target.value);
                             setLicLimit(50);
                           }}
-                          placeholder="buscar email, login, plano…"
+                          aria-label="Buscar licenças"
+                          placeholder="e-mail, login, IP ou ID…"
                           className="h-7 w-52 rounded border border-border/40 bg-background/40 px-2 font-mono text-[11px] text-foreground placeholder:text-muted-foreground focus:border-neon/60 focus:outline-none"
                         />
                         <div className="flex overflow-hidden rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
@@ -2169,17 +2155,20 @@ function AdminPage() {
                               { k: "all", label: "todas" },
                               { k: "active", label: "ativas" },
                               { k: "expiring", label: "expirando" },
+                              { k: "paused", label: "pausadas" },
+                              { k: "disabled", label: "desativadas" },
                               { k: "expired", label: "vencidas" },
                               { k: "revoked", label: "revogadas" },
                             ] as const
                           ).map((t) => (
-                            <button
+                            <Button
+                              type="button" variant="ghost" size="sm"
                               key={t.k}
-                              onClick={() => setLicStatus(t.k)}
+                              onClick={() => { setLicStatus(t.k); setLicLimit(50); }}
                               className={`px-2 py-1 transition-colors ${licStatus === t.k ? "bg-neon/15 text-neon" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"}`}
                             >
                               {t.label}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                         <div className="flex overflow-hidden rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
@@ -2190,13 +2179,14 @@ function AdminPage() {
                               { k: "paid", label: `pagas · ${paidCount}` },
                             ] as const
                           ).map((t) => (
-                            <button
+                            <Button
+                              type="button" variant="ghost" size="sm"
                               key={t.k}
-                              onClick={() => setLicKind(t.k)}
+                              onClick={() => { setLicKind(t.k); setLicLimit(50); }}
                               className={`px-2 py-1 transition-colors ${licKind === t.k ? "bg-neon/15 text-neon" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"}`}
                             >
                               {t.label}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                         <div className="flex overflow-hidden rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
@@ -2206,16 +2196,20 @@ function AdminPage() {
                               { k: "grouped", label: "por vencimento" },
                             ] as const
                           ).map((t) => (
-                            <button
+                            <Button
+                              type="button" variant="ghost" size="sm"
                               key={t.k}
                               onClick={() => setLicView(t.k)}
                               className={`px-2 py-1 transition-colors ${licView === t.k ? "bg-violet/15 text-violet" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"}`}
                             >
                               {t.label}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                       </div>
+                      {licenseLoadError && <div role="alert" className="flex w-full items-center justify-between gap-2 text-sm text-danger">
+                        {licenseLoadError}<Button size="sm" variant="outline" onClick={() => loadLicenses()}>Tentar novamente</Button>
+                      </div>}
                       {licScope === "archived" && (
                         <div className="w-full rounded border border-danger/30 bg-danger/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-danger">
                           Licenças vencidas/revogadas há mais de 3 dias. Se reativadas, voltam ao
@@ -2223,6 +2217,7 @@ function AdminPage() {
                         </div>
                       )}
                     </div>
+                    {licenseLoading && <div role="status" className="flex items-center gap-2 p-3 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Atualizando licenças…</div>}
                     {licView === "table" ? (
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[960px] text-sm">
@@ -2504,6 +2499,8 @@ function AdminPage() {
           setTab("chat");
         }}
       />
+
+      <AdminLicenseActionDialog target={licenseAction} busy={licenseActionBusy} onClose={() => setLicenseAction(null)} onConfirm={confirmLicenseAction} />
 
       <LicensePasswordSyncDialog
         license={pwdDialog.license}

@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 22/10 — licenças do admin
+- [ ] Melhorar busca, filtros, identificação de pausadas e acesso à ficha.
+- [ ] Confirmar ações com identificação do cliente, impedir cliques repetidos e não exibir senhas em avisos.
+- [ ] Testar regras de apresentação e conferir a tela; conta real depende da conexão de autenticação.
+
 ## Pedido 21/10 — ficha e contador
 - [~] Ficha: erros de carregamento tratados, respostas antigas ignoradas e falhas isoladas do painel. Abertura com conta real pendente: conexão de autenticação indisponível (SUPABASE_POOLER_UNAVAILABLE).
 - [x] Exibir um contador pequeno no topo para Vitalício R$ 999, com prazo fixo de 60 dias; 7 testes passaram, contador conferido no computador/celular e após recarregar.
