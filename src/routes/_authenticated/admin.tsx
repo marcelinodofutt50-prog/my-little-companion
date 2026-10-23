@@ -354,6 +354,7 @@ function AdminPage() {
   const [licenseActionBusy, setLicenseActionBusy] = useState(false);
   const licenseActionLock = useRef(false);
   const [licenseLoadError, setLicenseLoadError] = useState<string | null>(null);
+  const [licenseActionWarning, setLicenseActionWarning] = useState<string | null>(null);
   const [licenseLoading, setLicenseLoading] = useState(false);
   const [licView, setLicView] = useState<"table" | "grouped">("table");
   const [licLimit, setLicLimit] = useState(50);
@@ -602,13 +603,22 @@ function AdminPage() {
     licenseActionLock.current = true;
     setLicenseActionBusy(true);
     const { action, license } = licenseAction;
+    setLicenseActionWarning(null);
     try {
       const data = { licenseId: license.id };
-      if (action === "revoke") await revokeFn({ data });
-      if (action === "extend") await extendFn({ data: { ...data, newExpireDate: date } });
+      let warning: string | null = null;
+      if (action === "revoke") {
+        const result = await revokeFn({ data });
+        if (result.panelRemoved === false) warning = "A licença foi revogada no site, mas o bloqueio no BTmob não foi confirmado. Confira o acesso antes de encerrar o atendimento.";
+      }
+      if (action === "extend") {
+        const result = await extendFn({ data: { ...data, newExpireDate: date } });
+        if (result.panelSynced === false) warning = "A validade foi salva no site, mas não foi confirmada no BTmob. Confira o painel antes de encerrar o atendimento.";
+      }
       if (action === "renew") await renewFn({ data });
       if (action === "recreate") await recreateFn({ data });
-      toast.success(action === "recreate" ? "Credenciais recriadas. Confira a senha na licença." : "Licença atualizada");
+      if (warning) { setLicenseActionWarning(warning); toast.warning(warning); }
+      else toast.success(action === "recreate" ? "Credenciais recriadas. Confira a senha na licença." : "Licença atualizada");
       setLicenseAction(null);
       await loadLicenses();
     } catch (e: unknown) {
@@ -2113,7 +2123,7 @@ function AdminPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 p-3">
                       <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                         <span>
-                          {filtered.length} de {visibleBase.length} · trials {trialsCount} · pagas{" "}
+                          {filtered.length} de {visibleBase.length} carregadas · trials {trialsCount} · pagas{" "}
                           {paidCount}
                         </span>
                         <div className="flex overflow-hidden rounded border border-border/40 bg-background/40 font-mono text-[10px] uppercase tracking-wider">
@@ -2207,6 +2217,8 @@ function AdminPage() {
                           ))}
                         </div>
                       </div>
+                      {licenses.length >= 200 && <div className="w-full text-xs text-muted-foreground">Busca limitada às 200 licenças mais recentes. Para clientes antigos, use a busca de clientes e abra a ficha.</div>}
+                      {licenseActionWarning && <div role="alert" className="w-full text-sm text-danger">{licenseActionWarning}</div>}
                       {licenseLoadError && <div role="alert" className="flex w-full items-center justify-between gap-2 text-sm text-danger">
                         {licenseLoadError}<Button size="sm" variant="outline" onClick={() => loadLicenses()}>Tentar novamente</Button>
                       </div>}
