@@ -14,7 +14,7 @@ const content: Record<LicenseAction, { title: string; description: string; confi
   revoke: { title: "Revogar licença", description: "O acesso deste cliente será bloqueado. Esta ação não é uma pausa e não congela os dias restantes.", confirm: "Revogar acesso" },
   extend: { title: "Alterar validade", description: "Confira a nova data antes de alterar a validade desta licença.", confirm: "Salvar validade" },
   renew: { title: "Renovar servidor", description: "A mensalidade do servidor será renovada até o próximo dia 20, conforme a regra atual.", confirm: "Renovar servidor" },
-  recreate: { title: "Recriar credenciais", description: "A senha anterior será substituída. Após concluir, confira a nova senha no botão de senha da licença.", confirm: "Recriar credenciais" },
+  recreate: { title: "Recriar credenciais", description: "Um novo login e uma nova senha serão criados, com recálculo da validade e da mensalidade do servidor. O acesso será reativado. Após concluir, confira a senha na licença.", confirm: "Recriar credenciais" },
 };
 
 export function AdminLicenseActionDialog({ target, busy, onClose, onConfirm }: {
