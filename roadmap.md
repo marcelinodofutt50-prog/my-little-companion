@@ -1,9 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 22/10 — licenças do admin
-- [ ] Melhorar busca, filtros, identificação de pausadas e acesso à ficha.
-- [ ] Confirmar ações com identificação do cliente, impedir cliques repetidos e não exibir senhas em avisos.
-- [ ] Testar regras de apresentação e conferir a tela; conta real depende da conexão de autenticação.
+- [x] Melhorar busca por IP/ID, filtros por versão/status, identificação de pausadas e acesso à ficha; limite atual de 200 registros explicitado.
+- [x] Confirmar ações com identificação do cliente, impedir cliques repetidos e não exibir senhas em avisos; falhas parciais do painel mostram aviso persistente.
+- [x] Oito testes passaram; calendário, confirmação e cancelamento conferidos isoladamente no navegador.
+- [ ] Conferir a lista e operações com conta real: autenticação bloqueada por conexão indisponível (SUPABASE_POOLER_UNAVAILABLE). Nenhuma licença real foi alterada.
 
 ## Pedido 21/10 — ficha e contador
 - [~] Ficha: erros de carregamento tratados, respostas antigas ignoradas e falhas isoladas do painel. Abertura com conta real pendente: conexão de autenticação indisponível (SUPABASE_POOLER_UNAVAILABLE).
