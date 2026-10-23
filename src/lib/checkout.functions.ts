@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCheckoutPlan } from "@/lib/checkout-plan";
 
 export const createCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -60,9 +61,9 @@ export const createCheckout = createServerFn({ method: "POST" })
 
 
 
-    const { data: plan, error: planErr } = await supabase
+    const { data: foundPlan, error: planErr } = await supabase
       .from("plans").select("*").eq("slug", data.planSlug).eq("active", true).maybeSingle();
-    if (planErr || !plan) throw new Error("Plano não encontrado");
+    const plan = requireCheckoutPlan(foundPlan, planErr);
 
     // Guarda: renovação legacy R$250 é exclusiva de clientes antigos v4.5.7.
     if (plan.slug === "server-monthly-legacy") {

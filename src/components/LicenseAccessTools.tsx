@@ -184,7 +184,7 @@ export function LicenseAccessTools({
         </Button>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Link to="/renovar-servidor">
+        <Link to="/planos">
           <Button
             size="sm"
             variant="outline"

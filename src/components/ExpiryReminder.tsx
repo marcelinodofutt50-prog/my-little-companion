@@ -64,7 +64,7 @@ export function ExpiryReminder() {
           {items.length > 1 ? <span className="text-muted-foreground"> · +{items.length - 1} outro(s) item(ns) próximo(s) do vencimento</span> : null}
         </div>
         <Link
-          to={worst.trial ? "/planos" : "/renovar-servidor"}
+          to="/planos"
           className="rgb-border rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
         >
           {worst.trial ? "Ver planos" : <span className="rgb-text animate-rgb-text">Renovar servidor</span>}

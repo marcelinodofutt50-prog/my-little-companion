@@ -23,3 +23,4 @@
 - Global promotional countdowns use a shared pure deadline helper and hydrate the clock after mount; this prevents session resets and SSR mismatches without changing checkout eligibility.
 - Customer sheets isolate rendering errors and ignore superseded requests; this keeps an individual customer failure from breaking admin or displaying the previous customer's data.
 - Admin license lists use pure display helpers for status/archive/search and identified confirmation dialogs for mutations; paused access stays visible and credentials never appear in success notifications.
+- General customer renewal links go to the eligibility-filtered plans catalog, not the legacy credential-claim page; catalog lookup errors remain distinct from missing products so standard customers are not forced into legacy-only checkout.

@@ -1,5 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 23/10 — plano ausente na renovação
+- [ ] Diagnosticar e corrigir a identificação/disponibilidade do plano de servidor sem alterar preços.
+- [ ] Testar a regressão e conferir o pedido de renovação; pagamento real não será realizado.
+
 ## Pedido 22/10 — licenças do admin
 - [x] Melhorar busca por IP/ID, filtros por versão/status, identificação de pausadas e acesso à ficha; limite atual de 200 registros explicitado.
 - [x] Confirmar ações com identificação do cliente, impedir cliques repetidos e não exibir senhas em avisos; falhas parciais do painel mostram aviso persistente.

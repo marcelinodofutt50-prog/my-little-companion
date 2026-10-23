@@ -75,7 +75,8 @@ export function ExpiryAlertBanner({ licenses, serverNow: baseNow }: Props) {
   if (alerts.length === 0) return null
 
   alerts.sort((a, b) => a.ms - b.ms)
-  const worst = alerts[0]!
+  const worst = alerts[0]
+  if (!worst) return null
   const c = severityColor(worst.sev)
   const rem = remainingUntil(worst.targetAt, serverNow)
   const under24h = worst.ms <= DAY
@@ -116,7 +117,7 @@ export function ExpiryAlertBanner({ licenses, serverNow: baseNow }: Props) {
       </div>
 
       {worst.isServerFee ? (
-        <Link to="/renovar-servidor" className="shrink-0">
+        <Link to="/planos" className="shrink-0">
           <span className="rgb-border inline-flex rounded-lg bg-primary/10 px-4 py-2 font-mono text-[10px] font-bold uppercase hover:bg-primary/20">
             <span className="rgb-text animate-rgb-text">Renovar servidor</span>
           </span>
