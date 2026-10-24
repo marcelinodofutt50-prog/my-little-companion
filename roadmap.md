@@ -1,5 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 24/10 — login, trial e pausa
+- [ ] Verificar acesso e erros recentes de login e resgate de trial; distinguir novos cadastros de novos membros sem mudar preço/eligibilidade sem definição.
+- [ ] Corrigir pausa para remover o login no painel e retorno para recriar com senha e dias preservados; testar sem alterar licenças reais de clientes.
+
 ## Pedido 24/10 — excesso de chamadas de autenticação
 - [x] Removidos recarregamentos em falhas de rede e invalidações repetidas da mesma sessão, mantendo validação e 2FA; navegador confirmou zero recarregamentos após erro de rede.
 - [x] Verificações simultâneas de seis consumidores do navegador deduplicadas, sem cache de identidade concluída; quatro testes passaram.
