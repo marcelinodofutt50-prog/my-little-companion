@@ -24,3 +24,5 @@
 - Customer sheets isolate rendering errors and ignore superseded requests; this keeps an individual customer failure from breaking admin or displaying the previous customer's data.
 - Admin license lists use pure display helpers for status/archive/search and identified confirmation dialogs for mutations; paused access stays visible and credentials never appear in success notifications.
 - General customer renewal links go to the eligibility-filtered plans catalog, not the legacy credential-claim page; catalog lookup errors remain distinct from missing products so standard customers are not forced into legacy-only checkout.
+
+- Browser identity consumers share only concurrent getUser validation via browser-auth-user; never cache completed identity checks or share server callers. Root auth invalidation tracks account transitions, not repeated same-user SIGNED_IN events, and ordinary network failures must not reload the page, to prevent request amplification without weakening server authorization.

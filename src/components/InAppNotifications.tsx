@@ -1,3 +1,4 @@
+import { getBrowserAuthUser } from "@/lib/browser-auth-user";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -98,7 +99,7 @@ export function InAppNotifications() {
     const t = setInterval(() => void refresh(), 60_000);
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
-    supabase.auth.getUser().then(async ({ data }) => {
+    getBrowserAuthUser().then(async ({ data }) => {
       const uid = data.user?.id;
       if (!uid) return;
       const role = await fetchMyRole(uid);

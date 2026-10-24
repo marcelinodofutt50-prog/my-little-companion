@@ -23,6 +23,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { I18nProvider } from "@/lib/i18n";
+import { createAuthTransitionFilter, isChunkLoadError } from "@/lib/auth-request-control";
 import { CurrencyProvider } from "@/lib/currency";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 
@@ -326,10 +327,7 @@ function InnerRootComponent() {
       const message = 'reason' in e ? (e.reason?.message || '') : e.message;
       const msgLower = (typeof message === 'string' ? message : '').toLowerCase();
       
-      if (msgLower.includes('failed to fetch dynamically imported module') || 
-          msgLower.includes('error loading dynamically imported module') ||
-          msgLower.includes('failed to fetch') ||
-          msgLower.includes('chunkloaderror')) {
+      if (isChunkLoadError(msgLower)) {
         console.warn('Chunk loading or module fetch failed. Force refreshing page...');
         window.location.reload();
       }
@@ -344,8 +342,9 @@ function InnerRootComponent() {
   }, []);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+    const isTransition = createAuthTransitionFilter();
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isTransition(event, session?.user.id ?? null)) return;
       router.invalidate();
       // Nunca reutilize dados privados da conta anterior durante uma troca de sessão.
       queryClient.removeQueries({ queryKey: ["partner-area"] });

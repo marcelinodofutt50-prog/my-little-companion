@@ -1,3 +1,4 @@
+import { getBrowserAuthUser } from "@/lib/browser-auth-user";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -228,7 +229,7 @@ function AuthPage() {
   }, [code, type, navigate, next]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    getBrowserAuthUser().then(({ data }) => {
       if (data.user) navigate({ to: (next as any) || "/dashboard" });
     });
   }, [navigate, next]);

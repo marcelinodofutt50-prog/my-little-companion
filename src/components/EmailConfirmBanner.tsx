@@ -1,3 +1,4 @@
+import { getBrowserAuthUser } from "@/lib/browser-auth-user";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MailWarning, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -53,7 +54,7 @@ export function EmailConfirmBanner() {
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getUser().then(({ data }) => {
+    getBrowserAuthUser().then(({ data }) => {
       if (!active) return;
       const user = data.user;
       if (!user) return;

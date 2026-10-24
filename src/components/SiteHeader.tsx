@@ -1,3 +1,4 @@
+import { getBrowserAuthUser } from "@/lib/browser-auth-user";
 import { BanNotice } from "@/components/BanNotice";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -44,7 +45,7 @@ export function SiteHeader() {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    getBrowserAuthUser().then(({ data }) => setUser(data.user ?? null));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
     return () => sub.subscription.unsubscribe();
   }, []);
