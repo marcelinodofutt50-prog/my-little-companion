@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 24/10 — login, trial e pausa
+- [x] Serviço externo auth e catálogo responderam 200; banco registra 15 contas com login nas últimas 24h e 4 trials emitidos desde 24/10 00:00 UTC. Não comprova ausência de falhas para todos.
+- [x] Trial possui proteção contra repetição; oferta de boas-vindas usa idade do cadastro, sem prova de pessoa nova. Preço e elegibilidade não alterados.
+- [x] Pausa usa remoção confirmada; retorno recria login com senha original e validade calculada no painel do IP exibido. Oito testes passaram, sem alteração de licenças reais.
+- [ ] Conferir login e pausa ponta a ponta com conta real: solicitante sem conta correspondente na autenticação gerenciada; atualizar site externo e testar uma licença autorizada antes de certificar funcionamento real.
+
 ## Pedido 24/10 — excesso de chamadas de autenticação
 - [x] Removidos recarregamentos em falhas de rede e invalidações repetidas da mesma sessão, mantendo validação e 2FA; navegador confirmou zero recarregamentos após erro de rede.
 - [x] Verificações simultâneas de seis consumidores do navegador deduplicadas, sem cache de identidade concluída; quatro testes passaram.
