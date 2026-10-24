@@ -69,7 +69,7 @@ export const createCheckout = createServerFn({ method: "POST" })
     if (plan.slug === "server-monthly-legacy") {
       const { data: prof } = await supabase.from("profiles").select("legacy_status").eq("id", userId).maybeSingle();
       const st = (prof?.legacy_status ?? "unchecked") as string;
-      if (st !== "v457" && st !== "both") {
+      if (st !== "v457" && st !== "both" && !data.legacyClaim && !data.targetLicenseId) {
         throw new Error("Este preço de renovação é exclusivo para clientes antigos. Use a Renovação Servidor padrão em /planos.");
       }
     }
@@ -77,7 +77,7 @@ export const createCheckout = createServerFn({ method: "POST" })
     if (plan.slug === "server-monthly") {
       const { data: prof } = await supabase.from("profiles").select("legacy_status").eq("id", userId).maybeSingle();
       const st = (prof?.legacy_status ?? "unchecked") as string;
-      if (st === "v457" || st === "both") {
+      if ((st === "v457" || st === "both") && !data.targetLicenseId) {
         throw new Error("Você é cliente antigo — use a renovação em /renovar-servidor (R$ 250).");
       }
     }
@@ -226,13 +226,15 @@ export const createCheckout = createServerFn({ method: "POST" })
       }
       const { data: target } = await supabase
         .from("licenses")
-        .select("id, is_trial, disabled_at")
+        .select("id, is_trial, disabled_at, is_legacy")
         .eq("id", data.targetLicenseId)
         .eq("user_id", userId)
         .maybeSingle();
       if (!target) throw new Error("Login não encontrado na sua conta.");
       if (target.is_trial) throw new Error("O teste grátis não usa renovação de servidor.");
       if (target.disabled_at) throw new Error("Este login está desativado — fale com o suporte.");
+      const expectedPlan = target.is_legacy ? "server-monthly-legacy" : "server-monthly";
+      if (plan.slug !== expectedPlan) throw new Error("Escolha a renovação correspondente a este login.");
       targetLicenseId = target.id;
     }
 

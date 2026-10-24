@@ -1,3 +1,4 @@
+import { RENEWAL_ACTION, isServerRenewalRequest } from "./support-renewal-rules";
 import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
 import { withGeminiFallback } from "./gemini-provider.server";
@@ -243,6 +244,12 @@ async function buildCustomerMemory(
 
 export async function triggerSupportAI(threadId: string, userId: string, userMessage: string) {
   console.log(`[support-ai] analyzing thread ${threadId} for user ${userId}`);
+  if (isServerRenewalRequest(userMessage)) {
+    await postSystemMessage(threadId, `Abra a renovação e escolha o login da sua conta do site. Se ele não aparecer, use a alternativa “Login BTmob antigo”. Nunca informe a senha do Gmail.
+Se já pagou, não pague outra vez: aguarde a confirmação e peça à equipe para conferir a liberação.
+${RENEWAL_ACTION}`);
+    return;
+  }
 
   // Fim de semana: avisamos uma vez por dia que não há horário fixo de resposta.
   if (isWeekendInSaoPaulo() && !(await weekendNoticeSentToday(threadId))) {
