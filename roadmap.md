@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 24/10 — renovação, bot e retenção
+- [ ] Renovação: aceitar seleção do login vinculado à conta do site e manter alternativa BTmob; entrega só conclui após confirmação no painel, com retomada segura em falha.
+- [ ] Suporte: resposta direta com botão de renovação/compra e orientação sem pedir senha do Gmail.
+- [ ] Encerramento automático: somente resolução confirmada, sem pagamento pendente nem nova dúvida; manter prazo existente de 5 horas.
+- [ ] Testar regras e telas; divulgar recursos existentes no atendimento sem alterar o visual inicial ou inventar ofertas.
+
 ## Pedido 24/10 — login, trial e pausa
 - [x] Serviço externo auth e catálogo responderam 200; banco registra 15 contas com login nas últimas 24h e 4 trials emitidos desde 24/10 00:00 UTC. Não comprova ausência de falhas para todos.
 - [x] Trial possui proteção contra repetição; oferta de boas-vindas usa idade do cadastro, sem prova de pessoa nova. Preço e elegibilidade não alterados.
