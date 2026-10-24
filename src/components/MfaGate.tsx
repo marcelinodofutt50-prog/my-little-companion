@@ -1,3 +1,4 @@
+import { getBrowserAuthUser } from "@/lib/browser-auth-user";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,13 +24,13 @@ export function MfaGate({ children }: { children?: ReactNode }) {
       const totp = f?.totp?.find((x) => x.status === "verified");
       if (totp) {
         // Aparelho confiável: o banco confere o token (guardado só como hash) e libera esta sessão.
-        const { data: u } = await supabase.auth.getUser();
+        const { data: u } = await getBrowserAuthUser();
         const key = u.user ? `shadow:mfa-trust:${u.user.id}` : null;
         const tok = key ? localStorage.getItem(key) : null;
         if (tok) {
           const { data: ok } = await supabase.rpc("redeem_trusted_device" as any, { _token: tok } as any);
           if (ok === true) { setNeed(false); return; }
-          localStorage.removeItem(key!);
+          if (key) localStorage.removeItem(key);
         }
         setFactorId(totp.id); setNeed(true); return;
       }
@@ -52,7 +53,7 @@ export function MfaGate({ children }: { children?: ReactNode }) {
     setBusy(false);
     if (error) { setErr("Código incorreto ou vencido. Confira o app e tente de novo."); return; }
     if (trust) {
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await getBrowserAuthUser();
       const label = `${navigator.platform || "Dispositivo"} · ${(navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg|OPR)\/[\d]+/) || ["navegador"])[0]}`;
       const { data: tok } = await supabase.rpc("trust_this_device" as any, { _label: label } as any);
       if (u.user && typeof tok === "string") localStorage.setItem(`shadow:mfa-trust:${u.user.id}`, tok);

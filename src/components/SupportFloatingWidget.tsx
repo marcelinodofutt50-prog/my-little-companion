@@ -1,3 +1,4 @@
+import { getBrowserAuthUser } from "@/lib/browser-auth-user";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -36,7 +37,7 @@ export function SupportFloatingWidget() {
     setError(null);
     (async () => {
       try {
-        const { data } = await supabase.auth.getUser();
+        const { data } = await getBrowserAuthUser();
         if (!data.user) throw new Error("Entre na sua conta para falar com o suporte.");
         const t: any = await openFn();
         if (!cancelled) { setUid(data.user.id); setThread(t?.id ?? t?.thread?.id ?? null); }

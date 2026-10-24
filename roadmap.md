@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 24/10 — excesso de chamadas de autenticação
+- [x] Removidos recarregamentos em falhas de rede e invalidações repetidas da mesma sessão, mantendo validação e 2FA; navegador confirmou zero recarregamentos após erro de rede.
+- [x] Verificações simultâneas de seis consumidores do navegador deduplicadas, sem cache de identidade concluída; quatro testes passaram.
+- [ ] Medir redução no site externo e conferir login com conta real: criação de sessão bloqueada por indisponibilidade do banco; atualização do site externo e registros do provedor ainda necessários, sem garantia de retirar aviso de cota passada.
+
 ## Pedido 23/10 — plano ausente na renovação
 - [ ] Diagnosticar e corrigir a identificação/disponibilidade do plano de servidor sem alterar preços.
 - [ ] Testar a regressão e conferir o pedido de renovação; pagamento real não será realizado.
