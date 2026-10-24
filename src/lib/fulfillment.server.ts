@@ -255,7 +255,7 @@ async function fulfillOrderInner(orderId: string) {
         const versionTier = legacyClaim.panel === "v46" ? "lifetime_46" : legacyClaim.panel === "v455" ? "weekly" : "monthly_457";
         const planSlug = legacyClaim.panel === "v46" ? "login-lifetime" : legacyClaim.panel === "v455" ? "login-7d" : "login-30d";
         const usernameGuess = emailLower.split("@")[0].slice(0, 16);
-        const { data: newLic } = await supabaseAdmin.from("licenses").insert({
+        const { data: newLic, error: newLicError } = await supabaseAdmin.from("licenses").insert({
           user_id: order.user_id,
           plan_slug: planSlug,
           yaarsa_username: usernameGuess,
@@ -292,12 +292,12 @@ async function fulfillOrderInner(orderId: string) {
       const issues: string[] = [];
       try {
         const yr = await yaarsaExtend(emailLower, plan.panelExpireDate, legacyClaim.panel);
-        if (yr?.Fail) issues.push(`painel: ${yr.Fail}`);
+        if (yr?.Fail || !yr?.Success) issues.push("painel: renovação não confirmada");
       } catch (e: any) { issues.push(`painel: ${e?.message ?? "sem resposta"}`); }
       try {
         const pw = decrypt(legacyClaim.password_enc);
         const pr: any = await yaarsaSetPassword(emailLower, pw, legacyClaim.panel, licRow.yaarsa_username, plan.panelExpireDate);
-        if (pr?.Fail) issues.push(`senha: ${pr.Fail}`);
+        if (pr?.Fail || !pr?.Success) issues.push("senha: aplicação não confirmada");
       } catch (e: any) { issues.push(`senha: ${e?.message ?? "sem resposta"}`); }
       if (issues.length) throw new Error("Renovação ainda não confirmada no painel: " + issues.join(" | "));
       if (licenseId) {
