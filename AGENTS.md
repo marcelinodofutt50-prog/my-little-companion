@@ -26,3 +26,6 @@
 - General customer renewal links go to the eligibility-filtered plans catalog, not the legacy credential-claim page; catalog lookup errors remain distinct from missing products so standard customers are not forced into legacy-only checkout.
 
 - Browser identity consumers share only concurrent getUser validation via browser-auth-user; never cache completed identity checks or share server callers. Root auth invalidation tracks account transitions, not repeated same-user SIGNED_IN events, and ordinary network failures must not reload the page, to prevent request amplification without weakening server authorization.
+
+- Server-renewal fulfillment uses renewal-delivery to require panel expiry and original-password application before saving active access; failures remain retryable and paused licenses never recreate access. Renewal options are owner-scoped and the checkout validates the selected license price class.
+- Support renewal guidance uses a fixed system-only action marker rendered as allowlisted internal Buttons; auto-close requires the latest customer resolution confirmation, no pending order/crypto payment, five idle hours and an unchanged thread update timestamp, so silence or payment claims cannot authorize closure.

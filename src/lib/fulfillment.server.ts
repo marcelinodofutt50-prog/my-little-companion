@@ -1,3 +1,4 @@
+import { deliverServerRenewal } from "./renewal-delivery";
 import { createHmac, timingSafeEqual } from "crypto";
 import { planServerRenewal, nextServerCutoff, firstLifetimeServerCutoff } from "@/lib/server-renewal";
 
@@ -341,21 +342,19 @@ async function fulfillOrderInner(orderId: string) {
       const panel = l.server_ip ? panelForHost(l.server_ip) : (l as any).panel ?? "v457";
       if (!panel) throw new Error("Painel do login não identificado.");
       const plan = planServerRenewal(l as any, nextDay20);
-      // Paying a frozen license must not recreate access in the panel.
-      if (!l.suspended_at) {
-        try {
-          const yr = await yaarsaExtend(l.yaarsa_email, plan.panelExpireDate, panel);
-          if (yr?.Fail || !yr?.Success) throw new Error("Painel não confirmou a validade.");
-          const password = decrypt(l.yaarsa_password_enc);
-          const pr = await yaarsaSetPassword(l.yaarsa_email, password, panel, l.yaarsa_username, plan.panelExpireDate);
-          if (pr?.Fail || !pr?.Success) throw new Error("Painel não confirmou a senha do login.");
-        } catch {
-          extendFailures.push({ id: l.id, reason: "Renovação não confirmada no painel" });
-          continue;
-        }
+      try {
+        await deliverServerRenewal({
+          paused: !!l.suspended_at,
+          extend: () => yaarsaExtend(l.yaarsa_email, plan.panelExpireDate, panel),
+          applyPassword: () => yaarsaSetPassword(l.yaarsa_email, decrypt(l.yaarsa_password_enc), panel, l.yaarsa_username, plan.panelExpireDate),
+          save: async () => {
+            const { error } = await supabaseAdmin.from("licenses").update(plan.patch as any).eq("id", l.id);
+            if (error) throw new Error("Falha ao registrar renovação");
+          },
+        });
+      } catch {
+        extendFailures.push({ id: l.id, reason: "Renovação não confirmada no painel ou banco" });
       }
-      const { error: renewalError } = await supabaseAdmin.from("licenses").update(plan.patch as any).eq("id", l.id);
-      if (renewalError) extendFailures.push({ id: l.id, reason: "Falha ao registrar renovação" });
     }
     if (extendFailures.length) throw new Error("Renovação pendente de confirmação; nova tentativa automática agendada.");
 
