@@ -29,6 +29,6 @@ describe("auth request amplification", () => {
   it("does not reload the page on auth/network failures", () => {
     expect(isChunkLoadError("Failed to fetch")).toBe(false);
     expect(isChunkLoadError("AuthRetryableFetchError: Failed to fetch")).toBe(false);
-    expect(isChunkLoadError("Failed to fetch dynamically imported module: /assets/page.js")).toBe(true);
+    expect(isChunkLoadError("Failed to fetch dynamically imported module: /test-fixtures/page.js")).toBe(true);
   });
 });
