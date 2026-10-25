@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 25/10 — anúncios e comprovantes
+- [ ] Retirar anúncio da meta de 300 inscritos e reduzir interrupções promocionais no painel.
+- [ ] Solicitação opcional de comprovante por compra, arquivo privado e consulta da equipe por pagador/pedido.
+- [ ] Captura segura de comprovantes enviados no chat e registros de pagamento disponíveis no provedor.
+- [ ] Testar regras, acesso e fluxo; aplicar estrutura nos ambientes necessários e registrar limitações reais.
+
 ## Pedido 24/10 — renovação, bot e retenção
 - [x] Renovação: seleção do login vinculado à conta do site e alternativa BTmob; preço validado por licença e falhas de painel não concluem entrega, entrando na retomada existente.
 - [x] Suporte: resposta determinística concluída antes de retornar, botões de renovação/compra/tutoriais e orientação para não pagar duas vezes nem informar senha do Gmail.
