@@ -36,7 +36,11 @@ export const submitPurchaseReceipt = createServerFn({ method:'POST' })
 
 export const searchPurchaseEvidence = createServerFn({ method:'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((v:unknown) => z.object({ query:z.string().max(100), page:z.number().int().min(0).max(1000).default(0) }).parse(v))
+  .inputValidator((v:unknown) => z.object({
+    query:z.string().max(100),
+    page:z.number().int().min(0).max(1000).default(0),
+    source:z.enum(['all','customer','support','mercadopago']).default('all'),
+  }).parse(v))
   .handler(async ({ data, context }) => {
     const { assertAdminRole } = await import('./roles.server');
     await assertAdminRole(context);
@@ -47,9 +51,28 @@ export const searchPurchaseEvidence = createServerFn({ method:'POST' })
       if (z.string().uuid().safeParse(term).success) filters.push(`order_id.eq.${term}`,`user_id.eq.${term}`);
       query = query.or(filters.join(','));
     }
+    if (data.source !== 'all') query = query.eq('source', data.source);
     const { data:rows,error,count } = await query.order('created_at',{ascending:false}).range(data.page*30,data.page*30+29);
     if (error) throw new Error('Não foi possível pesquisar os comprovantes.');
-    return { rows:rows ?? [],total:count ?? 0 };
+    // Enriquecimento profissional: e-mail do cliente e plano/valor do pedido,
+    // para a equipe identificar a pessoa sem decorar IDs.
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const userIds = [...new Set((rows ?? []).map((r:any) => r.user_id))];
+    const orderIds = [...new Set((rows ?? []).map((r:any) => r.order_id).filter(Boolean))];
+    const [{ data:profiles }, { data:orders }] = await Promise.all([
+      userIds.length ? supabaseAdmin.from('profiles').select('id,email').in('id', userIds) : { data: [] as any[] },
+      orderIds.length ? supabaseAdmin.from('orders').select('id,plan_slug,amount,status').in('id', orderIds) : { data: [] as any[] },
+    ]);
+    const emailById = new Map((profiles ?? []).map((p:any) => [p.id, p.email]));
+    const orderById = new Map((orders ?? []).map((o:any) => [o.id, o]));
+    const enriched = (rows ?? []).map((r:any) => ({
+      ...r,
+      customer_email: emailById.get(r.user_id) ?? null,
+      order_plan: r.order_id ? (orderById.get(r.order_id)?.plan_slug ?? null) : null,
+      order_amount: r.order_id ? (orderById.get(r.order_id)?.amount ?? null) : null,
+      order_status: r.order_id ? (orderById.get(r.order_id)?.status ?? null) : null,
+    }));
+    return { rows:enriched,total:count ?? 0 };
   });
 
 export const getPurchaseEvidenceDownload = createServerFn({ method:'POST' })
