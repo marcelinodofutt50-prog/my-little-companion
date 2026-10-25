@@ -60,13 +60,12 @@ function ErrorComponent({ error: rawError, reset }: ErrorComponentProps) {
     
     // Auto-fix for ChunkLoadErrors / Failed to fetch module
     const msg = error.message?.toLowerCase() || "";
-    if (msg.includes('failed to fetch dynamically imported module') || 
+    if (msg.includes('failed to fetch dynamically imported module') ||
         msg.includes('chunkloaderror')) {
       console.warn("Detected chunk load error in boundary, performing auto-refresh...");
-      // Forçamos o reload se for erro de chunk
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      // Recarrega no máximo 1x por sessão; se o chunk continuar faltando,
+      // mostra a tela de erro em vez de entrar em loop de F5 infinito.
+      setTimeout(() => reloadOnceForStaleChunk(), 500);
     }
   }, [error]);
 
@@ -329,7 +328,7 @@ function InnerRootComponent() {
       
       if (isChunkLoadError(msgLower)) {
         console.warn('Chunk loading or module fetch failed. Force refreshing page...');
-        window.location.reload();
+        reloadOnceForStaleChunk();
       }
     };
 
