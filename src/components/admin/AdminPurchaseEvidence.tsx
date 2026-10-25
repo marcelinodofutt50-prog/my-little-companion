@@ -4,7 +4,7 @@ import { Download, Loader2, Search, HandCoins, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getPurchaseEvidenceDownload, searchPurchaseEvidence, organizeSupportEvidence } from '@/lib/purchase-evidence.functions';
-import { listPlansForManualPayment, listCustomerLicensesForManualPayment, listManualPayments, registerManualPayment } from '@/lib/manual-payment-functions';
+import { listPlansForManualPayment, listCustomerLicensesForManualPayment, listManualPayments, registerManualPayment } from '@/lib/manual-payment.functions';
 
 type Evidence = { id:string; order_id:string | null; user_id:string; payer_name:string | null; source:string; provider_payment_id:string | null; payment_status:string | null; amount:number | null; filename:string | null; storage_path:string | null; source_message_id:string | null; created_at:string; customer_email:string | null; order_plan:string | null; order_amount:number | null; order_status:string | null };
 type Plan = { slug:string; name:string; price_brl:number; category:string };
