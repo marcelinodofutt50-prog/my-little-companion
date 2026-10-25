@@ -1,5 +1,12 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 25/10 — comprovantes no admin, revisão geral e PIX por fora
+- [x] Aba Comprovantes do admin profissionalizada: filtro por origem, e-mail do cliente, plano/valor/status do pedido vinculado e botão "Registrar pagamento" em anexos sem vínculo.
+- [x] Registro de PIX feito por fora (chat do suporte): admin informa e-mail do cliente, plano e login alvo (renovação); o pedido usa o preço oficial conferido pela integridade e a entrega é a mesma de uma compra normal (licença nova ou renovação), com auditoria e histórico próprio.
+- [x] Revisão de pagamento/entrega: corrigido bug real — falha ao gravar o comprovante do provedor derrubava o webhook do Mercado Pago (HTTP 400), fazendo o provedor reenviar notificações sem fim; agora o registro é melhor-esforço e nunca bloqueia a entrega.
+- [x] 440 testes passaram (12 novos de registro manual), tipos sem erro, compilação OK; página pública sem erros no navegador.
+- [ ] Conferir a aba Comprovantes e o registro manual com conta de admin real e atualizar o site externo: preview sem sessão do solicitante (conta não existe na autenticação do preview). Nenhum pagamento real foi registrado.
+
 ## Pedido 25/10 — anúncios e comprovantes
 - [x] Retirados os dois anúncios automáticos (meta de 300 inscritos e oferta diária), sem mudar o layout do painel.
 - [x] Comprovante opcional na confirmação, histórico e chat geral (envio privado); Admin → Comprovantes com busca paginada, download temporário e organização de anexos do suporte.
