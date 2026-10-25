@@ -7,6 +7,9 @@ import { BackToDashboard } from "@/components/BackToDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { PurchaseReceiptForm } from '@/components/PurchaseReceiptForm';
+import { listMyOrders, type MyOrder } from '@/lib/orders.functions';
+import { useServerFn } from '@tanstack/react-start';
 
 export const Route = createFileRoute("/_authenticated/clientes-chat")({
   head: () => ({
@@ -53,6 +56,10 @@ function CustomerChatPage() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [receiptOrders,setReceiptOrders] = useState<MyOrder[] | null>(null);
+  const [receiptOrder,setReceiptOrder] = useState('');
+  const [receiptOpen,setReceiptOpen] = useState(false);
+  const ordersFn = useServerFn(listMyOrders);
   const bottom = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -223,6 +230,10 @@ function CustomerChatPage() {
             <div ref={bottom} />
           </div>
 
+          <div className="border-t border-border px-3 py-2">
+            <Button size="sm" variant="ghost" onClick={async () => { setReceiptOpen(v => !v); if (!receiptOrders) { try {setReceiptOrders(await ordersFn({data:{}}));} catch {toast.error('Não foi possível carregar suas compras.');} } }}>Enviar comprovante privado à equipe</Button>
+            {receiptOpen && <div className="max-h-80 overflow-y-auto"><label className="block text-xs">Compra<select aria-label="Compra do comprovante" className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm" value={receiptOrder} onChange={e => setReceiptOrder(e.target.value)}><option value="">Selecione sua compra</option>{(receiptOrders ?? []).filter(o => o.paid_at || ['paid','processing','delivered','refunded'].includes(o.stage)).map(o => <option key={o.id} value={o.id}>{o.plan_name ?? o.plan_slug} · #{o.id.slice(0,8)}</option>)}</select></label>{receiptOrder && <PurchaseReceiptForm key={receiptOrder} orderId={receiptOrder} />}</div>}
+          </div>
           <form className="flex gap-2 border-t border-border p-3" onSubmit={(e) => { e.preventDefault(); send(); }}>
             <Input value={text} maxLength={1000} onChange={(e) => setText(e.target.value)}
               placeholder={`Conversar em #${current.label}`} />

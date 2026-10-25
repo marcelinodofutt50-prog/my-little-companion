@@ -8,7 +8,6 @@ import { SiteUpdatesSection } from "@/components/SiteUpdatesSection";
 import { SupportFloatingWidget } from "@/components/SupportFloatingWidget";
 import { PromotionsWidget } from "@/components/PromotionsWidget";
 import { StaffDeskCard } from "@/components/staff/StaffDeskCard";
-import { YoutubeMilestoneDialog } from "@/components/YoutubeMilestoneDialog";
 
 
 import { useTheme } from '@/lib/theme'
@@ -30,7 +29,6 @@ import { TrialActivationCard } from '@/components/TrialActivationCard'
 import { WelcomeProfileDialog } from '@/components/WelcomeProfileDialog'
 import { useQuery } from '@tanstack/react-query'
 import { TrialEndedReferralOffer } from '@/components/TrialEndedReferralOffer'
-import { DailyReferralPromo } from '@/components/DailyReferralPromo'
 import { SupporterCard } from '@/components/SupporterCard'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -369,7 +367,6 @@ function DashboardPage() {
                 <span className="rounded-md border border-border/60 bg-card/90 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur-md">Menu</span>
               </div>
               <StaffDeskCard />
-              <DailyReferralPromo enabled={!!profile} referralCode={(profile as any)?.referral_code ?? null} />
               <SupporterCard userId={(profile as any)?.id ?? null} />
               {!licensesLoading && !activeLicense && (() => {
                 const endedTrial = (licenses ?? []).find((l: any) => l.is_trial)
@@ -954,7 +951,6 @@ function DashboardPage() {
           </main>
         </SidebarInset>
         <SupportFloatingWidget />
-        <YoutubeMilestoneDialog />
       </div>
       
       <SecurityWelcomeDialog />

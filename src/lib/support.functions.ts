@@ -504,6 +504,10 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     let url: string | null = null;
     if (data.attachmentPath) {
+      const raw = data.attachmentPath.replace(/^s2\//,'');
+      const ownerPrefix = `${context.userId}/${data.threadId}/`;
+      const staffPrefix = `staff/${data.threadId}/`;
+      if (raw.includes('..') || raw.includes('\\') || (!raw.startsWith(ownerPrefix) && !(isStaff && raw.startsWith(staffPrefix)))) throw new Error('Anexo não pertence a esta conversa.');
       const { createDownload } = await import("@/lib/storage-gateway.server");
       url = await createDownload("support-media", data.attachmentPath, 60 * 60 * 24 * 7);
     }
@@ -680,11 +684,14 @@ export const createSupportUploadUrl = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const safe = data.filename.replace(/[^\w.\-]+/g, "_").slice(-80);
+    const { data:thread,error:threadError } = await context.supabase.from('support_threads').select('id,user_id').eq('id',data.threadId).maybeSingle();
+    if (threadError || !thread) throw new Error('Conversa não encontrada.');
     let isStaff = false;
     if (data.staff) {
       const { data: staffOk } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
       isStaff = !!staffOk;
     }
+    if (!isStaff && thread.user_id !== context.userId) throw new Error('Acesso negado a esta conversa.');
     const prefix = isStaff ? `staff/${data.threadId}` : `${context.userId}/${data.threadId}`;
     const { createUpload } = await import("@/lib/storage-gateway.server");
     const up = await createUpload("support-media", `${prefix}/${Date.now()}-${safe}`);

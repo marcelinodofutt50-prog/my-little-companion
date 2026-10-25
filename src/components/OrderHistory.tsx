@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, PackageCheck, RotateCcw, AlertTriangle, Gift, Receipt, Search, Filter, CalendarRange, X, Clock } from "lucide-react";
 import { listMyOrders, type MyOrder } from "@/lib/orders.functions";
 import { Button } from "@/components/ui/button";
+import { PurchaseReceiptForm } from '@/components/PurchaseReceiptForm';
 
 const STAGE_META: Record<string, { label: string; cls: string; icon: typeof PackageCheck }> = {
   delivered: { label: "entregue", cls: "border-neon/40 bg-neon/10 text-neon", icon: PackageCheck },
@@ -178,6 +179,7 @@ export function OrderHistory() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {(o.paid_at || ['paid','processing','delivered','refunded'].includes(o.stage)) && <PurchaseReceiptForm orderId={o.id} compact />}
                   <div className="font-mono text-sm text-foreground">R$ {o.amount.toFixed(2).replace(".", ",")}</div>
                   <Button
                     size="sm"

@@ -78,6 +78,7 @@ import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 import { AdminTagline } from "@/components/AdminTagline";
+import { AdminPurchaseEvidence } from '@/components/admin/AdminPurchaseEvidence';
 
 import {
   AdminAnnouncementsPanel,
@@ -221,6 +222,7 @@ type Tab =
   | "external"
   | "users"
   | "orders"
+  | "receipts"
   | "licenses"
   | "referrals"
   | "staff"
@@ -269,6 +271,7 @@ const TAB_DESC: Record<Tab, string> = {
   users: "Todas as contas cadastradas no site, com e-mail e data de criação.",
   licenses: "Todos os logins criados: ativos, vencendo, expirados e revogados.",
   orders: "Todas as compras: quem pagou, quanto, quando e se foi entregue.",
+  receipts: "Comprovantes privados e dados do pagamento, pesquisáveis pelo nome do pagador ou pedido.",
   market: "Produtos do Mercado: cadastrar, editar preço, imagem e ativar/desativar.",
   announcements: "Comunicados Corporativos: criar, editar e publicar avisos no dashboard dos clientes.",
   referrals: "Indicações e cashback: quem indicou quem e quanto tem a receber.",
@@ -780,6 +783,7 @@ function AdminPage() {
       accent: "violet",
       items: [
         { id: "orders", label: "Pedidos", icon: DollarSign },
+        { id: "receipts", label: "Comprovantes", icon: ScrollText },
         { id: "refunds", label: "Reembolsos", icon: RotateCcw, hint: "prazo 2 dias" },
         { id: "partners", label: "Parceiros & VPS", icon: Server, hint: "acessos enviados" },
         { id: "referrals", label: "Indicações", icon: Gift, hint: "cashback / pix" },
@@ -1590,6 +1594,7 @@ function AdminPage() {
                 </div>
               </div>
             )}
+            {tab === "receipts" && <AdminPurchaseEvidence />}
             {tab === "orders" &&
               (() => {
                 const q = orderSearch.trim().toLowerCase();

@@ -111,6 +111,9 @@ export type MpPayment = {
   transaction_amount?: number;
   external_reference?: string | null;
   metadata?: Record<string, unknown> | null;
+  payer?: { first_name?: string | null; last_name?: string | null } | null;
+  currency_id?: string;
+  date_approved?: string | null;
 };
 
 export async function getMercadoPagoPayment(paymentId: string | number): Promise<MpPayment> {
