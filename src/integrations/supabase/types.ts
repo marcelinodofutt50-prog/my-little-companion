@@ -2557,6 +2557,81 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_evidence: {
+        Row: {
+          amount: number | null
+          approved_at: string | null
+          created_at: string
+          currency: string | null
+          filename: string | null
+          id: string
+          mime_type: string | null
+          order_id: string | null
+          payer_name: string | null
+          payment_status: string | null
+          provider_payment_id: string | null
+          sha256: string | null
+          source: string
+          source_message_id: string | null
+          storage_bucket: string | null
+          storage_path: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          approved_at?: string | null
+          created_at?: string
+          currency?: string | null
+          filename?: string | null
+          id?: string
+          mime_type?: string | null
+          order_id?: string | null
+          payer_name?: string | null
+          payment_status?: string | null
+          provider_payment_id?: string | null
+          sha256?: string | null
+          source: string
+          source_message_id?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          approved_at?: string | null
+          created_at?: string
+          currency?: string | null
+          filename?: string | null
+          id?: string
+          mime_type?: string | null
+          order_id?: string | null
+          payer_name?: string | null
+          payment_status?: string | null
+          provider_payment_id?: string | null
+          sha256?: string | null
+          source?: string
+          source_message_id?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_evidence_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_evidence_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_recent_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recovery_codes: {
         Row: {
           code_hash: string
