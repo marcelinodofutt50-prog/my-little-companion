@@ -30,15 +30,16 @@ export const registerManualPayment = createServerFn({ method: "POST" })
       .from("profiles").select("id,email").ilike("email", email).maybeSingle();
     if (!customer) throw new Error("Não encontramos uma conta com esse e-mail.");
 
-    const { data: plan } = await supabaseAdmin
+    const { data: planRow } = await supabaseAdmin
       .from("plans").select("slug,name,price_brl,category,active").eq("slug", data.planSlug).maybeSingle();
 
     const ruleError = manualPaymentError({
-      plan: plan as any,
+      plan: planRow as any,
       targetLicenseId: data.targetLicenseId ?? null,
       note: data.note ?? null,
     });
-    if (ruleError) throw new Error(ruleError);
+    if (ruleError || !planRow) throw new Error(ruleError ?? "Plano não encontrado ou inativo.");
+    const plan = planRow as { slug: string; name: string; price_brl: number; category: string };
 
     // Renovação: o login precisa ser do cliente informado.
     if (plan.category === "server") {

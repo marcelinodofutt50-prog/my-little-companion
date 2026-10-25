@@ -138,7 +138,7 @@ export function AdminPurchaseEvidence() {
     </header>
     {showManual && <ManualPaymentPanel prefillEmail={manualPrefill.email} prefillEvidenceId={manualPrefill.evidenceId} onDone={() => { setPage(0); setTerm(term => term); }} />}
     <form className="flex gap-2" onSubmit={e => {e.preventDefault();setPage(0);setTerm(query);}}><Input aria-label="Pesquisar comprovantes" placeholder="Nome do pagador, ID completo do pedido/cliente ou pagamento" value={query} onChange={e => setQuery(e.target.value)} maxLength={100}/><Button type="submit" disabled={loading}><Search className="mr-2 h-4 w-4" />Buscar</Button></form>
-    <div className="flex flex-wrap gap-2">{(Object.keys(SOURCE_LABELS) as (keyof typeof SOURCE_LABELS)[]).map(key => <Button key={key} size="sm" variant={source === key ? 'default' : 'outline'} onClick={() => { setSource(key); setPage(0); }}>{SOURCE_LABELS[key]}</Button>)}</div>
+    <div className="flex flex-wrap gap-2">{(['all','customer','support','mercadopago'] as const).map(key => <Button key={key} size="sm" variant={source === key ? 'default' : 'outline'} onClick={() => { setSource(key); setPage(0); }}>{SOURCE_LABELS[key]}</Button>)}</div>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="space-y-2">{result.rows.length === 0 && <p className="text-sm text-muted-foreground">Nenhum registro encontrado.</p>}{result.rows.map(row => <article key={row.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-4" data-sensitive>
       <div className="min-w-0 space-y-1">
