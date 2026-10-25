@@ -61,8 +61,12 @@ async function handlePayment(paymentId: string) {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { data:linked } = await supabaseAdmin.from('orders').select('id').eq('mp_payment_id',String(payment.id)).maybeSingle();
     if (linked) {
-      const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
-      await recordProviderEvidence(supabaseAdmin,linked.id,payment);
+      // Registro de comprovante é melhor-esforço: uma falha aqui NUNCA pode
+      // derrubar o webhook (senão o Mercado Pago reenvia para sempre).
+      try {
+        const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
+        await recordProviderEvidence(supabaseAdmin,linked.id,payment);
+      } catch { console.warn('[evidence] registro do provedor ficou para nova tentativa'); }
     }
     await log(`pagamento ${paymentId} com status ${payment.status} — nada a entregar`, true);
     return;
@@ -85,8 +89,10 @@ async function handlePayment(paymentId: string) {
     .eq("status", "paid")
     .maybeSingle();
   if (existing) {
-    const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
-    await recordProviderEvidence(supabaseAdmin,existing.id,payment);
+    try {
+      const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
+      await recordProviderEvidence(supabaseAdmin,existing.id,payment);
+    } catch { console.warn('[evidence] registro do provedor ficou para nova tentativa'); }
     await log(`pagamento duplicado ${paymentId} ignorado`, true);
     return;
   }
@@ -119,8 +125,10 @@ async function handlePayment(paymentId: string) {
 
   const { fulfillOrder } = await import("@/lib/fulfillment.server");
   const result = await fulfillOrder(orderId);
-  const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
-  await recordProviderEvidence(supabaseAdmin,orderId,payment);
+  try {
+    const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
+    await recordProviderEvidence(supabaseAdmin,orderId,payment);
+  } catch { console.warn('[evidence] registro do provedor ficou para nova tentativa'); }
   await log(
     `pedido ${orderId} → ${result.ok ? "ok" : "falha"}${(result as any).reason ? ` (${(result as any).reason})` : ""}`,
     result.ok,

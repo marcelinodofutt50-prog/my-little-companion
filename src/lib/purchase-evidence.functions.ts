@@ -57,8 +57,9 @@ export const searchPurchaseEvidence = createServerFn({ method:'POST' })
     // Enriquecimento profissional: e-mail do cliente e plano/valor do pedido,
     // para a equipe identificar a pessoa sem decorar IDs.
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const userIds = [...new Set((rows ?? []).map((r:any) => String(r.user_id)))];
-    const orderIds = [...new Set((rows ?? []).map((r:any) => r.order_id).filter(Boolean).map(String))];
+    const list = (rows ?? []) as any[];
+    const userIds: string[] = [...new Set(list.map((r:any) => String(r.user_id)))];
+    const orderIds: string[] = [...new Set(list.map((r:any) => r.order_id).filter(Boolean).map(String))];
     const [{ data:profiles }, { data:orders }] = await Promise.all([
       userIds.length ? supabaseAdmin.from('profiles').select('id,email').in('id', userIds) : { data: [] as any[] },
       orderIds.length ? supabaseAdmin.from('orders').select('id,plan_slug,amount,status').in('id', orderIds) : { data: [] as any[] },
