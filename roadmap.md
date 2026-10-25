@@ -1,10 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 25/10 — anúncios e comprovantes
-- [ ] Retirar anúncio da meta de 300 inscritos e reduzir interrupções promocionais no painel.
-- [ ] Solicitação opcional de comprovante por compra, arquivo privado e consulta da equipe por pagador/pedido.
-- [ ] Captura segura de comprovantes enviados no chat e registros de pagamento disponíveis no provedor.
-- [ ] Testar regras, acesso e fluxo; aplicar estrutura nos ambientes necessários e registrar limitações reais.
+- [x] Retirados os dois anúncios automáticos (meta de 300 inscritos e oferta diária), sem mudar o layout do painel.
+- [x] Comprovante opcional na confirmação, histórico e chat geral (envio privado); Admin → Comprovantes com busca paginada, download temporário e organização de anexos do suporte.
+- [x] Anexos do suporte indexados transacionalmente, inclusive históricos, como candidatos não verificados; registros mínimos do Mercado Pago por pagamento, sem documento bancário inventado ou aprovação por anexo. Nome do chat depende da leitura da equipe, sem OCR automático.
+- [x] Estrutura e bucket privado aplicados no Lovable Cloud e FILES; 21 testes passaram (7 de comprovantes + 14 regressões), testes SQL de permissões/limite/vínculo passaram com rollback; assets válidos, compilação OK e página pública sem erros.
+- [ ] Envio e pesquisa ponta a ponta com conta real e atualização do site externo: solicitante não tem conta correspondente na autenticação do preview; precisa entrar no preview e atualizar o deploy externo. Nenhum comprovante falso foi gravado em compra real e nenhum pagamento foi realizado.
 
 ## Pedido 24/10 — renovação, bot e retenção
 - [x] Renovação: seleção do login vinculado à conta do site e alternativa BTmob; preço validado por licença e falhas de painel não concluem entrega, entrando na retomada existente.

@@ -20,12 +20,15 @@ export async function fulfillOrder(orderId: string) {
     const result = await fulfillOrderInner(orderId);
     // Also covers missed-webhook reconciliation, without affecting fulfillment.
     try {
-      const { data:paymentOrder } = await supabaseAdmin.from('orders').select('mp_payment_id').eq('id',orderId).maybeSingle();
-      const paymentId = String(paymentOrder?.mp_payment_id ?? '');
-      if (/^\d+$/.test(paymentId)) {
-        const { getMercadoPagoPayment } = await import('./mercadopago.server');
-        const { recordProviderEvidence } = await import('./purchase-evidence.server');
-        await recordProviderEvidence(supabaseAdmin,orderId,await getMercadoPagoPayment(paymentId));
+      if (result.ok) {
+        const { data:paymentOrder } = await supabaseAdmin.from('orders').select('mp_payment_id').eq('id',orderId).maybeSingle();
+        const paymentId = String(paymentOrder?.mp_payment_id ?? '');
+        const { data:existingEvidence } = await supabaseAdmin.from('purchase_evidence').select('id').eq('order_id',orderId).eq('source','mercadopago').maybeSingle();
+        if (/^\d+$/.test(paymentId) && !existingEvidence) {
+          const { getMercadoPagoPayment } = await import('./mercadopago.server');
+          const { recordProviderEvidence } = await import('./purchase-evidence.server');
+          await recordProviderEvidence(supabaseAdmin,orderId,await getMercadoPagoPayment(paymentId));
+        }
       }
     } catch { console.warn('[evidence] Provider record pending retry'); }
     if (result.ok) {
