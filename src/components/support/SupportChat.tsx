@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+import { RENEWAL_ACTION } from "@/lib/support-renewal-rules";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
@@ -1016,10 +1018,17 @@ export function SupportChat({
                     )}
                     {m.body && (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                        {m.body}
+                        {m.is_system ? m.body.replace(RENEWAL_ACTION, "").trim() : m.body}
                         {/* Espaço reservado para o horário caber na última linha, como no WhatsApp. */}
                         <span className="pointer-events-none inline-block w-14 select-none align-bottom" />
                       </p>
+                    )}
+                    {m.is_system && m.body?.includes(RENEWAL_ACTION) && (
+                      <div className="my-3 flex flex-wrap justify-center gap-2">
+                        <Button asChild size="sm"><Link to="/renovar-servidor">Renovar meu servidor</Link></Button>
+                        <Button asChild size="sm" variant="outline"><Link to="/planos">Adquirir uma licença</Link></Button>
+                        <Button asChild size="sm" variant="ghost"><Link to="/tutoriais">Tutoriais</Link></Button>
+                      </div>
                     )}
                     {m.attachment_url && (
                       <div data-sensitive><Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} /></div>

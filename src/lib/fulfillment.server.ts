@@ -1,3 +1,4 @@
+import { deliverServerRenewal } from "./renewal-delivery";
 import { createHmac, timingSafeEqual } from "crypto";
 import { planServerRenewal, nextServerCutoff, firstLifetimeServerCutoff } from "@/lib/server-renewal";
 
@@ -255,7 +256,7 @@ async function fulfillOrderInner(orderId: string) {
         const versionTier = legacyClaim.panel === "v46" ? "lifetime_46" : legacyClaim.panel === "v455" ? "weekly" : "monthly_457";
         const planSlug = legacyClaim.panel === "v46" ? "login-lifetime" : legacyClaim.panel === "v455" ? "login-7d" : "login-30d";
         const usernameGuess = emailLower.split("@")[0].slice(0, 16);
-        const { data: newLic } = await supabaseAdmin.from("licenses").insert({
+        const { data: newLic, error: newLicError } = await supabaseAdmin.from("licenses").insert({
           user_id: order.user_id,
           plan_slug: planSlug,
           yaarsa_username: usernameGuess,
@@ -271,7 +272,8 @@ async function fulfillOrderInner(orderId: string) {
           panel: legacyClaim.panel,
           order_id: order.id,
         } as any).select("id").single();
-        licenseId = newLic?.id;
+        if (newLicError || !newLic) throw new Error("Não foi possível registrar o login para renovação.");
+        licenseId = newLic.id;
         await supabaseAdmin.from("integration_logs").insert({
           source: `yaarsa-${legacyClaim.panel}`, action: "legacy_renewal_provision", outcome: "success",
           context: { user_id: order.user_id, email: emailLower, order_id: order.id, license_id: licenseId } as any,
@@ -286,19 +288,22 @@ async function fulfillOrderInner(orderId: string) {
         : { data: null as any };
       const { resolvePanelServerHost, yaarsaSetPassword, decrypt } = await import("@/lib/yaarsa.server");
       const panelHost = await resolvePanelServerHost(legacyClaim.panel);
+      if (!licRow) throw new Error("Login da renovação não encontrado.");
       const plan = planServerRenewal((licRow ?? { id: licenseId, expires_at: null, plan_slug: legacyClaim.panel === "v46" ? "login-lifetime" : "login-30d" }) as any, nextDay20);
       const issues: string[] = [];
       try {
         const yr = await yaarsaExtend(emailLower, plan.panelExpireDate, legacyClaim.panel);
-        if (yr?.Fail) issues.push(`painel: ${yr.Fail}`);
+        if (yr?.Fail || !yr?.Success) issues.push("painel: renovação não confirmada");
       } catch (e: any) { issues.push(`painel: ${e?.message ?? "sem resposta"}`); }
       try {
         const pw = decrypt(legacyClaim.password_enc);
-        const pr: any = await yaarsaSetPassword(emailLower, pw, legacyClaim.panel);
-        if (pr?.Fail) issues.push(`senha: ${pr.Fail}`);
+        const pr: any = await yaarsaSetPassword(emailLower, pw, legacyClaim.panel, licRow.yaarsa_username, plan.panelExpireDate);
+        if (pr?.Fail || !pr?.Success) issues.push("senha: aplicação não confirmada");
       } catch (e: any) { issues.push(`senha: ${e?.message ?? "sem resposta"}`); }
+      if (issues.length) throw new Error("Renovação ainda não confirmada no painel: " + issues.join(" | "));
       if (licenseId) {
-        await supabaseAdmin.from("licenses").update({ ...plan.patch, server_ip: panelHost } as any).eq("id", licenseId);
+        const { error: renewalError } = await supabaseAdmin.from("licenses").update({ ...plan.patch, server_ip: panelHost } as any).eq("id", licenseId);
+        if (renewalError) throw new Error("Não foi possível registrar a renovação confirmada.");
       }
       await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString(), ...(issues.length ? { last_fulfillment_error: issues.join(" | ") } : {}) } as any).eq("id", orderId);
       await supabaseAdmin.from("integration_logs").insert({
@@ -324,34 +329,34 @@ async function fulfillOrderInner(orderId: string) {
       ? (allLics ?? []).filter((l: any) => l.id === targetLicenseId)
       : [];
 
-    // Sem escolha explícita: reativa tudo que estava em atraso (comportamento
-    // histórico). Com escolha: só o login escolhido é renovado.
-    if (!chosen.length) {
-      await supabaseAdmin.rpc("reactivate_server_licenses_for_user", {
-        _user_id: beneficiaryId,
-        _paid_until: nextDay20.toISOString(),
-      });
-    }
-
-    const touched = chosen.length ? chosen : (allLics ?? []);
-
-
+    if (targetLicenseId && !chosen.length) throw new Error("Login escolhido para renovação não encontrado na conta.");
+    const touched = targetLicenseId ? chosen : (allLics ?? []);
+    if (!touched.length) throw new Error("Nenhum login elegível para receber esta renovação.");
 
     // Empurra TODA licença paga do cliente para o próximo dia 20 e devolve o
     // acesso: quem pagou a taxa do servidor não pode continuar como "inativa".
     const extendFailures: { id: string; reason: string }[] = [];
     for (const l of touched) {
-      const panel = (l as any).panel ?? "v457";
+      const { refreshPanelOverrides, panelForHost, yaarsaSetPassword, decrypt } = await import("@/lib/yaarsa.server");
+      await refreshPanelOverrides();
+      const panel = l.server_ip ? panelForHost(l.server_ip) : (l as any).panel ?? "v457";
+      if (!panel) throw new Error("Painel do login não identificado.");
       const plan = planServerRenewal(l as any, nextDay20);
       try {
-        const yr = await yaarsaExtend(l.yaarsa_email, plan.panelExpireDate, panel);
-        if (yr?.Fail) extendFailures.push({ id: l.id, reason: String(yr.Fail) });
-      } catch (e: any) {
-        extendFailures.push({ id: l.id, reason: e?.message ?? "erro de conexão com o painel" });
+        await deliverServerRenewal({
+          paused: !!l.suspended_at,
+          extend: () => yaarsaExtend(l.yaarsa_email, plan.panelExpireDate, panel),
+          applyPassword: () => yaarsaSetPassword(l.yaarsa_email, decrypt(l.yaarsa_password_enc), panel, l.yaarsa_username, plan.panelExpireDate),
+          save: async () => {
+            const { error } = await supabaseAdmin.from("licenses").update(plan.patch as any).eq("id", l.id);
+            if (error) throw new Error("Falha ao registrar renovação");
+          },
+        });
+      } catch {
+        extendFailures.push({ id: l.id, reason: "Renovação não confirmada no painel ou banco" });
       }
-      // Regra única compartilhada com o autoatendimento e com os testes E2E.
-      await supabaseAdmin.from("licenses").update(plan.patch as any).eq("id", l.id);
     }
+    if (extendFailures.length) throw new Error("Renovação pendente de confirmação; nova tentativa automática agendada.");
 
     await supabaseAdmin.from("orders").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", orderId);
     await supabaseAdmin.from("webhook_logs").insert({

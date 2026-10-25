@@ -34,6 +34,7 @@ const mockSupabaseQuery = {
 vi.mock("../../../src/integrations/supabase/client.server", () => ({
   supabaseAdmin: {
     from: vi.fn(() => mockSupabaseQuery),
+    rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
     storage: {
       from: vi.fn(() => ({
         createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: "http://url" }, error: null }),

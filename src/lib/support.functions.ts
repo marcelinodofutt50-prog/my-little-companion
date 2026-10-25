@@ -575,8 +575,16 @@ export const sendMessage = createServerFn({ method: "POST" })
       );
     }
 
+    // Deterministic renewal guidance must complete before the Worker returns.
+    const { isServerRenewalRequest } = await import("./support-renewal-rules");
+    const renewalRequest = !isStaff && !!data.body && isServerRenewalRequest(data.body);
+    if (renewalRequest) {
+      const { triggerSupportAI } = await import("./support-ai.server");
+      await triggerSupportAI(effectiveThreadId, context.userId, data.body ?? "").catch(() => undefined);
+    }
+
     // Inicia análise por IA se não for staff e a mensagem contiver gatilhos de erro de login
-    if (!isStaff && data.body) {
+    if (!isStaff && data.body && !renewalRequest) {
       const { triggerSupportAI } = await import("./support-ai.server");
       // Rodamos em background sem dar await para não travar a resposta do usuário
       triggerSupportAI(effectiveThreadId, context.userId, data.body).catch(e => {

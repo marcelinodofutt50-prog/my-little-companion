@@ -1,3 +1,4 @@
+import { listMyRenewalOptions } from "@/lib/renewal-options.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -16,9 +17,9 @@ import { siteUrl } from "@/lib/site-url";
 export const Route = createFileRoute("/renovar-servidor")({
   head: () => ({
     meta: [
-      { title: "Renovar Servidor · Cliente Antigo — Shadow" },
+      { title: "Renovar Servidor — Shadow" },
       { name: "description", content: "Renove seu servidor Shadow por R$ 250/mês. Vinculamos seu login existente e realinhamos o vencimento para o próximo dia 20." },
-      { property: "og:title", content: "Renovar Servidor · Cliente Antigo — Shadow" },
+      { property: "og:title", content: "Renovar Servidor — Shadow" },
       { property: "og:description", content: "Renovação de servidor Shadow para clientes antigos: mantenha seu login e vencimento alinhado." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: siteUrl("/renovar-servidor") },
@@ -42,13 +43,35 @@ function LegacyRenewalPage() {
   const [checking, setChecking] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [going, setGoing] = useState(false);
+  const [legacyMode, setLegacyMode] = useState(false);
+  const [options, setOptions] = useState<Awaited<ReturnType<typeof listMyRenewalOptions>>>([]);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
+  const optionsFn = useServerFn(listMyRenewalOptions);
 
   const lookupFn = useServerFn(checkLegacyEmail);
   const checkoutFn = useServerFn(createCheckout);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+    let active = true;
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!active) return;
+      setLoggedIn(!!data.user);
+      if (data.user) {
+        try { const rows = await optionsFn(); if (active) setOptions(rows); }
+        catch { if (active) setOptionsError("Não foi possível carregar os logins. Atualize a página ou fale com o suporte."); }
+      }
+    });
+    return () => { active = false; };
   }, []);
+
+  async function renewOption(option: (typeof options)[number]) {
+    if (going || option.price === null) return;
+    setGoing(true); setErr(null);
+    try {
+      const result = await checkoutFn({ data: { planSlug: option.planSlug, targetLicenseId: option.id, returnOrigin: window.location.origin } });
+      window.location.href = result.checkoutUrl;
+    } catch (e) { setErr(e instanceof Error ? e.message : "Não foi possível iniciar a renovação."); setGoing(false); }
+  }
 
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   // IPv4 (0-255 por octeto) ou IPv6 simples (hex + :)
@@ -133,17 +156,31 @@ function LegacyRenewalPage() {
       <main className="relative z-10 mx-auto max-w-2xl px-4 py-12">
         <div className="mb-8 text-center">
           <div className="font-mono text-xs uppercase tracking-[0.3em] text-cyan">// server renewal · legacy</div>
-          <h1 className="mt-2 text-3xl font-bold">Renovar Servidor · Cliente Antigo</h1>
+          <h1 className="mt-2 text-3xl font-bold">Renovar Servidor</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Verificamos automaticamente seu login 4.5.5, 4.5.7 ou 4.6 antes de seguir para o pagamento.
+            Selecione seu login vinculado ou renove com os dados do login BTmob antigo.
           </p>
         </div>
 
-        <div className="terminal-card scanlines relative space-y-5 p-6">
+        <div className="mb-6 flex gap-2">
+          <Button variant={legacyMode ? "outline" : "default"} onClick={() => setLegacyMode(false)}>Minha conta do site</Button>
+          <Button variant={legacyMode ? "default" : "outline"} onClick={() => setLegacyMode(true)}>Login BTmob antigo</Button>
+        </div>
+        {!legacyMode && <section className="space-y-4">
+          {loggedIn === null && <Loader2 className="h-5 w-5 animate-spin" />}
+          {optionsError && <p role="alert" className="text-sm text-destructive">{optionsError}</p>}
+          {loggedIn && !optionsError && !options.length && <p className="text-sm text-muted-foreground">Nenhum login pago vinculado. <Button variant="link" onClick={() => setLegacyMode(true)}>Usar login BTmob antigo</Button></p>}
+          {options.map((option) => <div key={option.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-4">
+            <div className="min-w-0"><p data-sensitive className="break-all font-mono text-sm">{option.yaarsa_email}</p><p className="text-xs text-muted-foreground">{option.panel} · {option.server_paid_until ? new Date(option.server_paid_until).toLocaleDateString("pt-BR") : "Servidor sem vencimento registrado"}</p></div>
+            <Button disabled={going || option.price === null} onClick={() => renewOption(option)}>{going ? "Aguarde…" : option.price === null ? "Plano indisponível" : `Renovar · ${formatBrl(option.price)}`}</Button>
+          </div>)}
+          {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
+        </section>}
+        {legacyMode && <div className="terminal-card scanlines relative space-y-5 p-6">
           {/* Step 1 — email */}
           <section>
             <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-              <span className="rounded bg-cyan/10 px-1.5 py-0.5 text-cyan">1</span> Email do seu login
+              <span className="rounded bg-cyan/10 px-1.5 py-0.5 text-cyan">1</span> E-mail do login BTmob
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
@@ -218,7 +255,7 @@ function LegacyRenewalPage() {
               )}
 
               <div className="rounded border border-cyan/20 bg-cyan/5 p-3 font-mono text-[11px] text-cyan/80">
-                Após o pagamento confirmado, a IA revisa a licença, estende o vencimento no painel e libera o servidor até o próximo dia 20 (horário de Brasília). Sua senha e o IP do servidor certo são conferidos no painel automaticamente.
+                Após o pagamento confirmado, a renovação precisa ser confirmada no painel para liberar o servidor até o próximo dia 20 (horário de Brasília). Sua senha e o IP do servidor certo são conferidos no painel automaticamente.
               </div>
 
               <Button
@@ -237,7 +274,7 @@ function LegacyRenewalPage() {
               <AlertCircle className="h-4 w-4" /> {err}
             </div>
           )}
-        </div>
+        </div>}
 
         <div className="mt-6 text-center text-xs text-muted-foreground">
           Cliente novo? <button onClick={() => navigate({ to: "/planos" })} className="text-neon hover:underline">Ver planos</button>

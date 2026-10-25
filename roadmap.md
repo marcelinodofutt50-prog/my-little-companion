@@ -1,5 +1,12 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 24/10 — renovação, bot e retenção
+- [x] Renovação: seleção do login vinculado à conta do site e alternativa BTmob; preço validado por licença e falhas de painel não concluem entrega, entrando na retomada existente.
+- [x] Suporte: resposta determinística concluída antes de retornar, botões de renovação/compra/tutoriais e orientação para não pagar duas vezes nem informar senha do Gmail.
+- [x] Encerramento automático: exige última confirmação explícita do cliente, sem pagamento/entrega pendente, 5 horas e atualização da conversa inalterada.
+- [x] 26 testes passaram; validação de assets e compilação sem erros; página pública de renovação conferida sem erros no navegador. Sem mudanças na homepage/dashboard ou ofertas inventadas.
+- [ ] Conferir seleção da licença, resposta do bot e renovação ponta a ponta com conta real e atualizar site externo: sessão do solicitante indisponível e nenhuma compra/licença real foi alterada. Rotina externa de fechamento ainda não teve execução confirmada.
+
 ## Pedido 24/10 — login, trial e pausa
 - [x] Serviço externo auth e catálogo responderam 200; banco registra 15 contas com login nas últimas 24h e 4 trials emitidos desde 24/10 00:00 UTC. Não comprova ausência de falhas para todos.
 - [x] Trial possui proteção contra repetição; oferta de boas-vindas usa idade do cadastro, sem prova de pessoa nova. Preço e elegibilidade não alterados.

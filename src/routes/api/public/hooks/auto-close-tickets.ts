@@ -1,12 +1,11 @@
+import { canAutoCloseSupport, type ResolutionMessage } from "@/lib/support-renewal-rules";
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Fecha automaticamente tickets de suporte parados.
+ * Fecha somente atendimentos com resolução confirmada pelo cliente.
  *
- * Regra: se o ticket está aberto (ou em andamento) e a última mensagem
- * — de cliente ou de suporte — tem mais de 5 horas, o ticket é encerrado
- * e uma mensagem de sistema é registrada na conversa. O cliente pode
- * abrir uma nova conversa a qualquer momento.
+ * Regra: confirmação explícita, cinco horas sem mensagens e nenhuma
+ * pendência de pagamento ou entrega. Silêncio não significa resolução.
  *
  * Auth: Bearer CRON_TRIGGER_TOKEN.
  */
@@ -47,24 +46,39 @@ export const Route = createFileRoute("/api/public/hooks/auto-close-tickets")({
 
         let closed = 0;
         for (const t of stale) {
-          const { error: upErr } = await supabaseAdmin
+          const [messages, pending, crypto] = await Promise.all([
+            supabaseAdmin.from("support_messages").select("body, is_admin, is_system, created_at")
+              .eq("thread_id", t.id).order("created_at", { ascending: false }).limit(30),
+            supabaseAdmin.from("orders").select("id").eq("user_id", t.user_id)
+              .in("status", ["pending", "created", "processing", "yaarsa_failed"]).limit(1),
+            supabaseAdmin.from("crypto_payments").select("id").eq("user_id", t.user_id)
+              .in("status", ["pending", "confirmed", "failed"]).limit(1),
+          ]);
+          // Fail closed when any evidence cannot be read.
+          if (messages.error || pending.error || crypto.error) continue;
+          if (!canAutoCloseSupport((messages.data ?? []) as ResolutionMessage[],
+            !!pending.data?.length || !!crypto.data?.length)) continue;
+
+          const { data: updated, error: upErr } = await supabaseAdmin
             .from("support_threads")
             .update({
               status: "closed",
               closed_at: new Date().toISOString(),
-              closed_by_name: "Sistema (inatividade)",
+              closed_by_name: "Sistema (resolução confirmada)",
               unread_by_staff: 0,
             })
             .eq("id", t.id)
-            .neq("status", "closed");
-          if (upErr) continue;
+            .neq("status", "closed")
+            .eq("updated_at", t.updated_at)
+            .select("id").maybeSingle();
+          if (upErr || !updated) continue;
           closed++;
           await supabaseAdmin.from("support_messages").insert({
             thread_id: t.id,
             sender_id: t.user_id,
             is_admin: true,
             is_system: true,
-            body: `Ticket encerrado automaticamente por inatividade (${IDLE_HOURS}h sem mensagens). Se ainda precisar de ajuda, é só enviar uma nova mensagem que abrimos outro atendimento.`,
+            body: `Atendimento encerrado após confirmação da resolução e ${IDLE_HOURS}h sem novas mensagens. Se ainda precisar de ajuda, é só enviar uma nova mensagem que abrimos outro atendimento.`,
           });
         }
 
