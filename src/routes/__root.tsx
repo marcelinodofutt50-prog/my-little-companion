@@ -28,6 +28,23 @@ import { CurrencyProvider } from "@/lib/currency";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 
 
+// Recarrega no máximo 1x por sessão quando um chunk de uma versão antiga
+// some após um deploy. Sem essa trava, a tela de erro recarrega em loop
+// infinito (o "F5 a cada poucos segundos") se o cache do navegador/CDN
+// continuar servindo o HTML antigo.
+const CHUNK_RELOAD_KEY = "shadow:root-chunk-reload";
+function reloadOnceForStaleChunk() {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.sessionStorage.getItem(CHUNK_RELOAD_KEY)) return;
+    window.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+  } catch {
+    // sessionStorage indisponível (modo privado restrito): não recarrega.
+    return;
+  }
+  window.location.reload();
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -60,13 +77,12 @@ function ErrorComponent({ error: rawError, reset }: ErrorComponentProps) {
     
     // Auto-fix for ChunkLoadErrors / Failed to fetch module
     const msg = error.message?.toLowerCase() || "";
-    if (msg.includes('failed to fetch dynamically imported module') || 
+    if (msg.includes('failed to fetch dynamically imported module') ||
         msg.includes('chunkloaderror')) {
       console.warn("Detected chunk load error in boundary, performing auto-refresh...");
-      // Forçamos o reload se for erro de chunk
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      // Recarrega no máximo 1x por sessão; se o chunk continuar faltando,
+      // mostra a tela de erro em vez de entrar em loop de F5 infinito.
+      setTimeout(() => reloadOnceForStaleChunk(), 500);
     }
   }, [error]);
 
@@ -329,7 +345,7 @@ function InnerRootComponent() {
       
       if (isChunkLoadError(msgLower)) {
         console.warn('Chunk loading or module fetch failed. Force refreshing page...');
-        window.location.reload();
+        reloadOnceForStaleChunk();
       }
     };
 
