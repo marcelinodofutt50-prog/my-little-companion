@@ -9,6 +9,7 @@ import { PaymentCelebration } from "@/components/PaymentCelebration";
 import { Button } from "@/components/ui/button";
 import { getOrderState } from "@/lib/checkout.functions";
 import { motion } from "framer-motion";
+import { PurchaseReceiptForm } from '@/components/PurchaseReceiptForm';
 
 export const Route = createFileRoute("/pagamento/sucesso")({
   validateSearch: (s: Record<string, unknown>) => ({ order: String(s.order ?? "") }),
@@ -212,6 +213,7 @@ function SuccessPage() {
             </>
           )}
         </div>
+        {order && (license || deliveryTicket || status === 'paid' || status === 'processing') && <PurchaseReceiptForm key={order} orderId={order} />}
       </main>
     </div>
   );

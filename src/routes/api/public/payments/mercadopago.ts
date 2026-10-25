@@ -58,6 +58,12 @@ async function handlePayment(paymentId: string) {
   const payment = await getMercadoPagoPayment(paymentId);
 
   if (payment.status !== "approved") {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data:linked } = await supabaseAdmin.from('orders').select('id').eq('mp_payment_id',String(payment.id)).maybeSingle();
+    if (linked) {
+      const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
+      await recordProviderEvidence(supabaseAdmin,linked.id,payment);
+    }
     await log(`pagamento ${paymentId} com status ${payment.status} — nada a entregar`, true);
     return;
   }
@@ -79,6 +85,8 @@ async function handlePayment(paymentId: string) {
     .eq("status", "paid")
     .maybeSingle();
   if (existing) {
+    const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
+    await recordProviderEvidence(supabaseAdmin,existing.id,payment);
     await log(`pagamento duplicado ${paymentId} ignorado`, true);
     return;
   }
@@ -111,6 +119,8 @@ async function handlePayment(paymentId: string) {
 
   const { fulfillOrder } = await import("@/lib/fulfillment.server");
   const result = await fulfillOrder(orderId);
+  const { recordProviderEvidence } = await import('@/lib/purchase-evidence.server');
+  await recordProviderEvidence(supabaseAdmin,orderId,payment);
   await log(
     `pedido ${orderId} → ${result.ok ? "ok" : "falha"}${(result as any).reason ? ` (${(result as any).reason})` : ""}`,
     result.ok,

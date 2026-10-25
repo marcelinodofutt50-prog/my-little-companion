@@ -78,6 +78,7 @@ import { AdminMobileNav } from "@/components/AdminMobileNav";
 import { AdminActiveProblems } from "@/components/AdminActiveProblems";
 import { useAdminSectionCounts } from "@/lib/useAdminSectionCounts";
 import { AdminTagline } from "@/components/AdminTagline";
+import { AdminPurchaseEvidence } from '@/components/admin/AdminPurchaseEvidence';
 
 import {
   AdminAnnouncementsPanel,
@@ -221,6 +222,7 @@ type Tab =
   | "external"
   | "users"
   | "orders"
+  | "receipts"
   | "licenses"
   | "referrals"
   | "staff"
@@ -780,6 +782,7 @@ function AdminPage() {
       accent: "violet",
       items: [
         { id: "orders", label: "Pedidos", icon: DollarSign },
+        { id: "receipts", label: "Comprovantes", icon: ScrollText },
         { id: "refunds", label: "Reembolsos", icon: RotateCcw, hint: "prazo 2 dias" },
         { id: "partners", label: "Parceiros & VPS", icon: Server, hint: "acessos enviados" },
         { id: "referrals", label: "Indicações", icon: Gift, hint: "cashback / pix" },
@@ -1590,6 +1593,9 @@ function AdminPage() {
                 </div>
               </div>
             )}
+            {tab === "orders" &&
+              <AdminPurchaseEvidence />}
+            {tab === "receipts" && <AdminPurchaseEvidence />}
             {tab === "orders" &&
               (() => {
                 const q = orderSearch.trim().toLowerCase();
