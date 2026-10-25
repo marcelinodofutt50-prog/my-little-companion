@@ -193,7 +193,7 @@ async function fulfillOrderInner(orderId: string) {
 
     // Insert the new v4.6 license (lifetime tier — expires 20 years out).
     const lifetimeExpiry = new Date(); lifetimeExpiry.setFullYear(lifetimeExpiry.getFullYear() + 20);
-    const { data: newLic, error: newLicError } = await supabaseAdmin.from("licenses").insert({
+    const { data: newLic } = await supabaseAdmin.from("licenses").insert({
       user_id: order.user_id,
       order_id: order.id,
       plan_slug: "login-lifetime",
