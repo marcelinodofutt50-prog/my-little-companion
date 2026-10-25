@@ -79,3 +79,22 @@ export const getPurchaseEvidenceDownload = createServerFn({ method:'POST' })
     }
     return { url };
   });
+
+export const organizeSupportEvidence = createServerFn({ method:'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v:unknown) => z.object({id:z.string().uuid(),payerName:z.string().trim().min(3).max(120),orderId:z.string().uuid().optional()}).parse(v))
+  .handler(async ({data,context}) => {
+    const { assertAdminRole } = await import('./roles.server');
+    await assertAdminRole(context);
+    const {data:row,error} = await context.supabase.from('purchase_evidence').select('user_id,source').eq('id',data.id).maybeSingle();
+    if (error || !row || row.source !== 'support') throw new Error('Anexo não encontrado.');
+    if (data.orderId) {
+      const {data:order} = await context.supabase.from('orders').select('id').eq('id',data.orderId).eq('user_id',row.user_id).maybeSingle();
+      if (!order) throw new Error('O pedido deve pertencer ao cliente que enviou o anexo.');
+    }
+    const {supabaseAdmin} = await import('@/integrations/supabase/client.server');
+    const {error:updateError} = await supabaseAdmin.from('purchase_evidence').update({payer_name:data.payerName,...(data.orderId ? {order_id:data.orderId} : {})}).eq('id',data.id).eq('source','support');
+    if (updateError) throw new Error('Não foi possível organizar o anexo.');
+    await supabaseAdmin.from('audit_logs').insert({user_id:context.userId,system:'purchase_evidence',event:'organize_support_attachment',metadata:{evidence_id:data.id}});
+    return {ok:true};
+  });
