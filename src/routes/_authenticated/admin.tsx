@@ -271,6 +271,7 @@ const TAB_DESC: Record<Tab, string> = {
   users: "Todas as contas cadastradas no site, com e-mail e data de criação.",
   licenses: "Todos os logins criados: ativos, vencendo, expirados e revogados.",
   orders: "Todas as compras: quem pagou, quanto, quando e se foi entregue.",
+  receipts: "Comprovantes privados e dados do pagamento, pesquisáveis pelo nome do pagador ou pedido.",
   market: "Produtos do Mercado: cadastrar, editar preço, imagem e ativar/desativar.",
   announcements: "Comunicados Corporativos: criar, editar e publicar avisos no dashboard dos clientes.",
   referrals: "Indicações e cashback: quem indicou quem e quanto tem a receber.",
@@ -1593,8 +1594,6 @@ function AdminPage() {
                 </div>
               </div>
             )}
-            {tab === "orders" &&
-              <AdminPurchaseEvidence />}
             {tab === "receipts" && <AdminPurchaseEvidence />}
             {tab === "orders" &&
               (() => {

@@ -10,5 +10,5 @@ export function canAttachReceipt(order: { user_id: string; paid_at?: string | nu
   return !!order && order.user_id === userId && (!!order.paid_at || ['paid','processing','refunded'].includes(order.status));
 }
 export function evidenceSearch(value: string) {
-  return value.trim().replace(/[,%_()]/g, ' ').replace(/\s+/g, ' ').slice(0, 100);
+  return value.trim().replace(/[,%_()]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
 }

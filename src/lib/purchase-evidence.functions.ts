@@ -7,6 +7,8 @@ export const submitPurchaseReceipt = createServerFn({ method:'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((v:unknown) => z.object({ orderId:z.string().uuid(), payerName:z.string().trim().min(3).max(120), filename:z.string().min(1).max(160), base64:z.string().max(Math.ceil(MAX_RECEIPT_BYTES/3)*4) }).parse(v))
   .handler(async ({ data, context }) => {
+    const { data:mfa,error:mfaError } = await context.supabase.rpc('mfa_satisfied');
+    if (mfaError || !mfa) throw new Error('Confirme a segurança da sua conta antes de enviar.');
     const { data:order, error } = await context.supabase.from('orders').select('user_id,status,paid_at').eq('id',data.orderId).eq('user_id',context.userId).maybeSingle();
     if (error || !canAttachReceipt(order,context.userId)) throw new Error('Selecione uma compra com pagamento confirmado.');
     const bytes = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0));
@@ -72,7 +74,8 @@ export const getPurchaseEvidenceDownload = createServerFn({ method:'POST' })
     // Download authorized through RLS before the privileged storage signer is touched.
     if (row.user_id !== context.userId) {
       const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-      await supabaseAdmin.from('audit_logs').insert({ actor_id:context.userId, action:'purchase_evidence_download',target_id:row.id } as any);
+      const { error:auditError } = await supabaseAdmin.from('audit_logs').insert({ user_id:context.userId, system:'purchase_evidence',event:'download',metadata:{ evidence_id:row.id } });
+      if (auditError) throw new Error('Não foi possível registrar a consulta.');
     }
     return { url };
   });
