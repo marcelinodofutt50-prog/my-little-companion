@@ -28,6 +28,23 @@ import { CurrencyProvider } from "@/lib/currency";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 
 
+// Recarrega no máximo 1x por sessão quando um chunk de uma versão antiga
+// some após um deploy. Sem essa trava, a tela de erro recarrega em loop
+// infinito (o "F5 a cada poucos segundos") se o cache do navegador/CDN
+// continuar servindo o HTML antigo.
+const CHUNK_RELOAD_KEY = "shadow:root-chunk-reload";
+function reloadOnceForStaleChunk() {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.sessionStorage.getItem(CHUNK_RELOAD_KEY)) return;
+    window.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+  } catch {
+    // sessionStorage indisponível (modo privado restrito): não recarrega.
+    return;
+  }
+  window.location.reload();
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
