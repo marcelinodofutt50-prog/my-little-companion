@@ -316,6 +316,12 @@ function AdminPage() {
   const [tab, setTab] = useState<Tab>("overview");
   // Ficha 360º do cliente (aberta pela busca global Ctrl+K)
   const [customer360, setCustomer360] = useState<string | null>(null);
+  // Ticket pedido pela busca global/ficha: a aba de chat abre direto nele.
+  const [chatThreadId, setChatThreadId] = useState<string | null>(null);
+  const openChatThread = (threadId?: string | null) => {
+    if (threadId) setChatThreadId(threadId);
+    setTab("chat");
+  };
   const [navQuery, setNavQuery] = useState("");
   const [groupVisibility, setGroupVisibility] = useState<Record<string, boolean>>({});
   const [stats, setStats] = useState<{ users: number; licenses: number; revenue: number } | null>(
@@ -904,7 +910,7 @@ function AdminPage() {
             <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 sm:col-auto sm:shrink-0">
               <AdminGlobalSearch
                 onSelectUser={(id) => setCustomer360(id)}
-                onOpenThread={() => setTab("chat")}
+                onOpenThread={(id) => openChatThread(id)}
               />
               <Button size="sm" onClick={() => setTab("chat")} className="gap-2">
                 <MessageSquare className="h-3.5 w-3.5" />
@@ -1498,7 +1504,7 @@ function AdminPage() {
                 );
               })()}
 
-            {tab === "chat" && <div className="space-y-4"><SupportStatsPanel /><AdminSupportPanel /></div>}
+            {tab === "chat" && <div className="space-y-4"><SupportStatsPanel /><AdminSupportPanel openThreadId={chatThreadId} /></div>}
             {tab === "issue" && (
               <IssueLicensePanel
                 onIssued={() =>
@@ -2511,9 +2517,9 @@ function AdminPage() {
       <AdminCustomer360
         userId={customer360}
         onClose={() => setCustomer360(null)}
-        onOpenThread={() => {
+        onOpenThread={(threadId) => {
           setCustomer360(null);
-          setTab("chat");
+          openChatThread(threadId);
         }}
       />
 
