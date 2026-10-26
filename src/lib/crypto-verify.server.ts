@@ -16,6 +16,16 @@ export type VerifyResult = {
 
 const USDT_ERC20 = "0xdac17f958d2ee523a2206206994597c13d831ec7";
 const USDT_BEP20 = "0x55d398326f99059ff775485246999027b3197955";
+const USDT_TRC20 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+
+/** Encontra a transferência TRC-20 de USDT real para o endereço esperado.
+ *  Sem o filtro de contrato, qualquer token falso aceitaria o pagamento. */
+export function findUsdtTrc20Transfer(
+  transfers: Array<{ to_address?: string; amount_str?: string; contract_address?: string }>,
+  expectedAddress: string,
+): { to_address?: string; amount_str?: string; contract_address?: string } | undefined {
+  return transfers.find((t) => t.to_address === expectedAddress && t.contract_address === USDT_TRC20);
+}
 
 // Multiple RPC endpoints so a single provider outage doesn't freeze verification.
 const EVM_RPCS: Record<"ethereum" | "bsc", string[]> = {
@@ -165,7 +175,7 @@ async function verifyTron(hash: string, expectedAddress: string): Promise<Verify
     }
     const expected = expectedAddress; // Tron base58 is case-sensitive
     const trc20: Array<{ to_address?: string; amount_str?: string; contract_address?: string }> = j.trc20TransferInfo ?? [];
-    const match = trc20.find((t) => t.to_address === expected);
+    const match = findUsdtTrc20Transfer(trc20, expected);
     return {
       ok: true,
       found: true,
