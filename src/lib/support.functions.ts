@@ -380,6 +380,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       attachmentPath: z.string().min(1).max(512).optional(),
       attachmentType: z.string().max(100).optional(),
       replyToId: z.string().uuid().optional().nullable(),
+      clientId: z.string().uuid().optional(),
     }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i);
   })
   .handler(async ({ data, context }) => {
@@ -512,6 +513,22 @@ export const sendMessage = createServerFn({ method: "POST" })
       url = await createDownload("support-media", data.attachmentPath, 60 * 60 * 24 * 7);
     }
 
+    // Idempotência: se o cliente reenviar a mesma operação (resposta perdida,
+    // retry automático ao voltar a internet), devolvemos a mensagem já gravada
+    // em vez de inserir uma duplicata.
+    if (data.clientId) {
+      const { data: existing } = await context.supabase
+        .from("support_messages")
+        .select("*")
+        .eq("sender_id", context.userId)
+        .eq("client_id", data.clientId)
+        .maybeSingle();
+      if (existing) {
+        const { normalizeSupportMessage } = await import("./support-message");
+        return normalizeSupportMessage(existing, (existing as any).thread_id ?? effectiveThreadId);
+      }
+    }
+
     // Build payload dynamically to avoid schema cache issues with reply_to_id
     const payload: any = {
       thread_id: effectiveThreadId,
@@ -520,6 +537,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       body: data.body ?? null,
       attachment_url: url,
       attachment_type: data.attachmentType ?? null,
+      ...(data.clientId ? { client_id: data.clientId } : {}),
       ...(isStaff
         ? {
             sender_name: staffIdentity.name,
@@ -554,17 +572,36 @@ export const sendMessage = createServerFn({ method: "POST" })
       error = retry.error;
     }
 
+    // Corrida de idempotência: outro retry gravou primeiro — devolve a linha
+    // existente em vez de falhar ou duplicar.
+    if (error?.code === "23505" && data.clientId) {
+      const { data: existing } = await context.supabase
+        .from("support_messages")
+        .select("*")
+        .eq("sender_id", context.userId)
+        .eq("client_id", data.clientId)
+        .maybeSingle();
+      if (existing) {
+        const { normalizeSupportMessage } = await import("./support-message");
+        return normalizeSupportMessage(existing, (existing as any).thread_id ?? effectiveThreadId);
+      }
+    }
+
     if (error) {
       console.error("[sendMessage] Insertion failed after fallback:", error);
       if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
          await trackSchemaFailure(error, "sendMessage", false, { stage: "insertion_fail" }, context.userId);
       }
-      // Last resort fallback: minimal insert to ensure message is not lost
-      const minimalPayload = { 
-        thread_id: effectiveThreadId, 
-        sender_id: context.userId, 
+      // Último recurso: insert mínimo só quando NÃO há anexo. Com anexo,
+      // transformar o envio em texto anunciaria sucesso e perderia o arquivo —
+      // nesse caso o erro sobe e o cliente pode tentar de novo.
+      if (data.attachmentPath) throw error;
+      const minimalPayload = {
+        thread_id: effectiveThreadId,
+        sender_id: context.userId,
         is_admin: isStaff,
-        body: data.body ?? "Mensagem enviada (anexo)" 
+        body: data.body ?? "Mensagem enviada",
+        ...(data.clientId ? { client_id: data.clientId } : {}),
       };
       const { data: final, error: finalErr } = await context.supabase.from("support_messages").insert(minimalPayload).select("*").maybeSingle();
       if (finalErr) throw finalErr;

@@ -373,19 +373,30 @@ export const adminAssumeThread = createServerFn({ method: "POST" })
     const { data: me } = await supabaseAdmin
       .from("profiles").select("full_name,email").eq("id", context.userId).maybeSingle();
     const name = (me?.full_name?.trim() || me?.email?.split("@")[0] || "Suporte");
-    await supabaseAdmin.from("support_threads").update({
+    // Compare-and-set: só assume se a conversa ainda não tem atendente (ou já
+    // é minha). Dois atendentes clicando juntos não se sobrescrevem.
+    const { data: updated, error: upErr } = await supabaseAdmin.from("support_threads").update({
       status: "assigned",
       assigned_to: context.userId,
       assigned_name: name,
       assigned_at: new Date().toISOString(),
-    }).eq("id", data.threadId);
-    await context.supabase.from("support_messages").insert({
+    }).eq("id", data.threadId)
+      .or(`assigned_to.is.null,assigned_to.eq.${context.userId}`)
+      .select("id, assigned_name");
+    if (upErr) throw new Error(`Não foi possível assumir a conversa: ${upErr.message}`);
+    if (!updated || updated.length === 0) {
+      const { data: current } = await supabaseAdmin
+        .from("support_threads").select("assigned_name").eq("id", data.threadId).maybeSingle();
+      throw new Error(`Esta conversa já está com ${current?.assigned_name || "outro atendente"}.`);
+    }
+    const { error: msgErr } = await context.supabase.from("support_messages").insert({
       thread_id: data.threadId,
       sender_id: context.userId,
       is_admin: true,
       is_system: true,
       body: `🎧 ${name} assumiu a conversa a partir daqui.`,
     });
+    if (msgErr) console.error("[adminAssumeThread] mensagem de sistema falhou:", msgErr);
     return { ok: true, name };
   });
 
@@ -406,19 +417,21 @@ export const adminCloseThread = createServerFn({ method: "POST" })
     const { data: me } = await supabaseAdmin
       .from("profiles").select("full_name,email").eq("id", context.userId).maybeSingle();
     const name = (me?.full_name?.trim() || me?.email?.split("@")[0] || "Suporte");
-    await supabaseAdmin.from("support_threads").update({
+    const { error: upErr } = await supabaseAdmin.from("support_threads").update({
       status: "closed",
       closed_at: new Date().toISOString(),
       closed_by: context.userId,
       closed_by_name: name,
     }).eq("id", data.threadId);
-    await context.supabase.from("support_messages").insert({
+    if (upErr) throw new Error(`Não foi possível encerrar a conversa: ${upErr.message}`);
+    const { error: msgErr } = await context.supabase.from("support_messages").insert({
       thread_id: data.threadId,
       sender_id: context.userId,
       is_admin: true,
       is_system: true,
       body: `✅ Atendimento encerrado por ${name}${data.reason ? ` — ${data.reason}` : ""}. Envie uma nova mensagem para abrir outro atendimento.`,
     });
+    if (msgErr) console.error("[adminCloseThread] mensagem de sistema falhou:", msgErr);
     return { ok: true };
   });
 

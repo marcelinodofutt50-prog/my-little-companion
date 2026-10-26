@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { adminListThreads, adminAssumeThread, adminCloseThread, adminHealUserLogins } from "@/lib/admin.functions";
@@ -35,7 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 
-export function AdminSupportPanel() {
+export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | null }) {
   const [threads, setThreads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"open" | "mine" | "closed" | "all">("open");
@@ -56,6 +56,24 @@ export function AdminSupportPanel() {
   const [histWho, setHistWho] = useState<"all" | "customer" | "staff">("all");
 
   const searchHistoryFn = useServerFn(adminSearchSupportHistory);
+
+  // Abertura externa (busca global, ficha do cliente): seleciona a conversa
+  // pedida; se ela não está no filtro atual, busca na listagem completa e mescla.
+  useEffect(() => {
+    if (!openThreadId) return;
+    setSelectedId(openThreadId);
+    if (threads.some((t) => t.id === openThreadId)) return;
+    let cancelled = false;
+    listFn({ data: { filter: "all" } })
+      .then((all: any) => {
+        if (cancelled) return;
+        const found = (all as any[]).find((t) => t.id === openThreadId);
+        if (found) setThreads((prev) => (prev.some((t) => t.id === found.id) ? prev : [found, ...prev]));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openThreadId]);
 
   /** Busca o termo no conteúdo de TODAS as mensagens antigas (inclusive tickets encerrados). */
   const handleHistorySearch = async (
@@ -156,15 +174,20 @@ export function AdminSupportPanel() {
     }
   };
 
+  // Geração por chamada: uma resposta antiga (ex.: do filtro anterior) nunca
+  // sobrescreve a lista mais recente.
+  const loadGenRef = useRef(0);
   const loadThreads = async (silent = false) => {
+    const gen = ++loadGenRef.current;
     if (!silent) setLoading(true);
     try {
       const data: any = await listFn({ data: { filter } });
+      if (loadGenRef.current !== gen) return;
       setThreads(data);
     } catch (e: any) {
-      if (!silent) toast.error("Erro ao listar tickets");
+      if (loadGenRef.current === gen && !silent) toast.error("Erro ao listar tickets");
     } finally {
-      if (!silent) setLoading(false);
+      if (loadGenRef.current === gen && !silent) setLoading(false);
     }
   };
 

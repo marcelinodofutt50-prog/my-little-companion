@@ -3604,6 +3604,7 @@ export type Database = {
           attachment_type: string | null
           attachment_url: string | null
           body: string | null
+          client_id: string | null
           created_at: string
           id: string
           is_admin: boolean
@@ -3620,6 +3621,7 @@ export type Database = {
           attachment_type?: string | null
           attachment_url?: string | null
           body?: string | null
+          client_id?: string | null
           created_at?: string
           id?: string
           is_admin?: boolean
@@ -3636,6 +3638,7 @@ export type Database = {
           attachment_type?: string | null
           attachment_url?: string | null
           body?: string | null
+          client_id?: string | null
           created_at?: string
           id?: string
           is_admin?: boolean
