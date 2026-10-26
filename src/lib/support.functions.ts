@@ -513,6 +513,22 @@ export const sendMessage = createServerFn({ method: "POST" })
       url = await createDownload("support-media", data.attachmentPath, 60 * 60 * 24 * 7);
     }
 
+    // Idempotência: se o cliente reenviar a mesma operação (resposta perdida,
+    // retry automático ao voltar a internet), devolvemos a mensagem já gravada
+    // em vez de inserir uma duplicata.
+    if (data.clientId) {
+      const { data: existing } = await context.supabase
+        .from("support_messages")
+        .select("*")
+        .eq("sender_id", context.userId)
+        .eq("client_id", data.clientId)
+        .maybeSingle();
+      if (existing) {
+        const { normalizeSupportMessage } = await import("./support-message");
+        return normalizeSupportMessage(existing, (existing as any).thread_id ?? effectiveThreadId);
+      }
+    }
+
     // Build payload dynamically to avoid schema cache issues with reply_to_id
     const payload: any = {
       thread_id: effectiveThreadId,
@@ -521,6 +537,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       body: data.body ?? null,
       attachment_url: url,
       attachment_type: data.attachmentType ?? null,
+      ...(data.clientId ? { client_id: data.clientId } : {}),
       ...(isStaff
         ? {
             sender_name: staffIdentity.name,
