@@ -71,7 +71,7 @@ import { AdminKpiCards } from "@/components/AdminKpiCards";
 import { AdminRevenuePanel } from "@/components/AdminRevenuePanel";
 import { AdminBansPanel } from "@/components/AdminBansPanel";
 import { AdminModerationPanel } from "@/components/AdminModerationPanel";
-import { type AuditLogEntry } from "@/components/AdminAuditLog";
+import { AdminAuditLogLive } from "@/components/AdminAuditLogLive";
 import { AdminGlobalSearch } from "@/components/AdminGlobalSearch";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
 import { AdminMobileNav } from "@/components/AdminMobileNav";
@@ -2466,7 +2466,7 @@ function AdminPage() {
             {tab === "logs" && <AdminLogsPanel />}
             {tab === "audit" && (
               <div className="space-y-4">
-                <AdminAuditLog entries={demoAuditEntries(email)} />
+                <AdminAuditLogLive />
                 <AutoRevocationsPanel users={users} licenses={licenses} />
               </div>
             )}
