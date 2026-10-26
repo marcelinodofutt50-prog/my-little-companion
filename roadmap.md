@@ -75,3 +75,15 @@
 - [x] Médio: limite do chat à prova de envios simultâneos (RPC com trava de transação).
 - [x] Rodar testes + compilação; aplicar migração também no banco do site publicado (FILES). zod atualizado para 4.6.6.
 - [ ] Pendentes de menor risco: revisão das políticas antigas de leitura anônima, alvo obrigatório na renovação legada e novo scan da aba Security. Exigem deploy externo para valer no site publicado.
+
+## Pedido 26/10 — admin e chat ao vivo
+- [ ] Chat: idempotência no envio (clientId único) para retry não duplicar mensagem.
+- [ ] Chat: fallback de envio não pode descartar anexo e anunciar sucesso.
+- [ ] Chat: conclusão de envio/IA valida thread ativa (resposta não entra em conversa trocada).
+- [ ] Chat: hasMore do histórico separado do refresh da cauda.
+- [ ] Chat admin: assumir/encerrar verificam erros e assumir usa compare-and-set.
+- [ ] Chat admin: loadThreads com proteção contra resposta fora de ordem.
+- [ ] Cliente: remover fluxo duplicado de mensagens/realtime em suporte.tsx.
+- [ ] Admin: auditoria real (staff_audit_logs) em vez de dados fictícios.
+- [ ] Admin: corrida na busca global (requestId) e estado de erro.
+- [ ] Admin: preservar ticket selecionado ao abrir aba de chat.
