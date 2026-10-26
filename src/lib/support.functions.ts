@@ -380,6 +380,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       attachmentPath: z.string().min(1).max(512).optional(),
       attachmentType: z.string().max(100).optional(),
       replyToId: z.string().uuid().optional().nullable(),
+      clientId: z.string().uuid().optional(),
     }).refine((v) => !!v.body || !!v.attachmentPath, { message: "Mensagem vazia" }).parse(i);
   })
   .handler(async ({ data, context }) => {
