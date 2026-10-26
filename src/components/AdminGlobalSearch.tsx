@@ -22,7 +22,10 @@ export function AdminGlobalSearch({
   const [q, setQ] = useState("");
   const [res, setRes] = useState<Result>(EMPTY);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Geração por chamada: resposta antiga nunca sobrescreve a busca mais recente.
+  const genRef = useRef(0);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -38,15 +41,21 @@ export function AdminGlobalSearch({
   useEffect(() => {
     if (!open) return;
     const term = q.trim();
-    if (term.length < 2) { setRes(EMPTY); setLoading(false); return; }
+    if (term.length < 2) { setRes(EMPTY); setLoading(false); setFailed(false); return; }
     setLoading(true);
+    const gen = ++genRef.current;
     const t = setTimeout(async () => {
       try {
-        setRes(await search({ data: { q: term } }));
+        const r = await search({ data: { q: term } });
+        if (genRef.current !== gen) return;
+        setRes(r);
+        setFailed(false);
       } catch {
+        if (genRef.current !== gen) return;
         setRes(EMPTY);
+        setFailed(true);
       } finally {
-        setLoading(false);
+        if (genRef.current === gen) setLoading(false);
       }
     }, 280);
     return () => clearTimeout(t);
@@ -90,6 +99,8 @@ export function AdminGlobalSearch({
           <div className="max-h-[60vh] overflow-y-auto p-2">
             {q.trim().length < 2 ? (
               <p className="p-4 text-center text-xs text-muted-foreground">Digite ao menos 2 caracteres.</p>
+            ) : failed && !loading ? (
+              <p className="p-4 text-center text-xs text-destructive">A busca falhou. Ajuste o termo ou tente de novo.</p>
             ) : total === 0 && !loading ? (
               <p className="p-4 text-center text-xs text-muted-foreground">Nenhum resultado para “{q}”.</p>
             ) : (
