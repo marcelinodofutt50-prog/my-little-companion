@@ -35,7 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 
-export function AdminSupportPanel() {
+export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | null }) {
   const [threads, setThreads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"open" | "mine" | "closed" | "all">("open");
@@ -56,6 +56,14 @@ export function AdminSupportPanel() {
   const [histWho, setHistWho] = useState<"all" | "customer" | "staff">("all");
 
   const searchHistoryFn = useServerFn(adminSearchSupportHistory);
+
+  // Abertura externa (busca global, ficha do cliente): seleciona a conversa
+  // pedida, mesmo que ela não esteja no filtro atual.
+  useEffect(() => {
+    if (!openThreadId) return;
+    setSelectedId(openThreadId);
+    setThreads((prev) => (prev.some((t) => t.id === openThreadId) ? prev : prev));
+  }, [openThreadId]);
 
   /** Busca o termo no conteúdo de TODAS as mensagens antigas (inclusive tickets encerrados). */
   const handleHistorySearch = async (
