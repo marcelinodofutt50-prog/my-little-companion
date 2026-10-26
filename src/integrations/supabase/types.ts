@@ -4281,6 +4281,7 @@ export type Database = {
       check_license_quota: { Args: { _staff_id: string }; Returns: boolean }
       check_rls_enabled: { Args: { target_table: string }; Returns: boolean }
       claim_creator_license: { Args: never; Returns: string }
+      community_send_guarded: { Args: { _content: string }; Returns: string }
       complete_loyalty_mission: { Args: { _mission_id: string }; Returns: Json }
       delete_my_creator_video: { Args: { _id: string }; Returns: boolean }
       expire_stale_apk_jobs: { Args: never; Returns: number }

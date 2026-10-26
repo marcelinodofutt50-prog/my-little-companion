@@ -99,6 +99,13 @@
       "when": 1792886654666,
       "tag": "0013_private_purchase_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792985151130,
+      "tag": "0014_harden_crypto_payments_and_chat_rate_limit",
+      "breakpoints": true
     }
   ]
 }
