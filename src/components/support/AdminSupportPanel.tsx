@@ -58,11 +58,21 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   const searchHistoryFn = useServerFn(adminSearchSupportHistory);
 
   // Abertura externa (busca global, ficha do cliente): seleciona a conversa
-  // pedida, mesmo que ela não esteja no filtro atual.
+  // pedida; se ela não está no filtro atual, busca na listagem completa e mescla.
   useEffect(() => {
     if (!openThreadId) return;
     setSelectedId(openThreadId);
-    setThreads((prev) => (prev.some((t) => t.id === openThreadId) ? prev : prev));
+    if (threads.some((t) => t.id === openThreadId)) return;
+    let cancelled = false;
+    listFn({ data: { filter: "all" } })
+      .then((all: any) => {
+        if (cancelled) return;
+        const found = (all as any[]).find((t) => t.id === openThreadId);
+        if (found) setThreads((prev) => (prev.some((t) => t.id === found.id) ? prev : [found, ...prev]));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openThreadId]);
 
   /** Busca o termo no conteúdo de TODAS as mensagens antigas (inclusive tickets encerrados). */
