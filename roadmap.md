@@ -67,3 +67,10 @@
 - [ ] Telegram: mensagem do usuário veio cortada — aguardando texto
 - [ ] Novas funções cliente/admin — aguardando escolha
 - [ ] Painel do cliente mais limpo — aguardando escolha
+
+## Pedido 26/10 — correções da análise profunda de segurança
+- [ ] Crítico: travar inserção direta em crypto_payments (só linhas novas "pending", sem campos de verificação) e reverificar no agendador linhas confirmadas sem prova on-chain.
+- [ ] Alto: exigir 2FA no servidor para ações de admin (mfa_satisfied em assertAdminRole).
+- [ ] Médio: verificar contrato USDT TRC-20 real na verificação Tron.
+- [ ] Médio: limite do chat à prova de envios simultâneos (RPC com trava de transação).
+- [ ] Rodar testes + compilação; aplicar migração também no banco do site publicado (FILES).
