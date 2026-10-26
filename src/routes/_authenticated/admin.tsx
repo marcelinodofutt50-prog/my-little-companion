@@ -2912,45 +2912,6 @@ function ExecStat({
   );
 }
 
-function demoAuditEntries(adminEmail: string): AuditLogEntry[] {
-  const now = Date.now();
-  const fmt = (ms: number) => new Date(now - ms).toLocaleString("pt-BR");
-  return [
-    {
-      id: "1",
-      date: fmt(15 * 60000),
-      admin: adminEmail || "admin",
-      action: "Revogou licença",
-      target: "cliente@exemplo.com",
-      status: "sucesso",
-    },
-    {
-      id: "2",
-      date: fmt(90 * 60000),
-      admin: adminEmail || "admin",
-      action: "Estendeu licença",
-      target: "usuario2@exemplo.com",
-      status: "sucesso",
-    },
-    {
-      id: "3",
-      date: fmt(4 * 3600000),
-      admin: "sistema",
-      action: "Cron: revogação automática",
-      target: "3 licenças vencidas",
-      status: "sucesso",
-    },
-    {
-      id: "4",
-      date: fmt(26 * 3600000),
-      admin: adminEmail || "admin",
-      action: "Alterou cargo",
-      target: "moderador@exemplo.com",
-      status: "falha",
-    },
-  ];
-}
-
 function MiniStat({
   label,
   value,
