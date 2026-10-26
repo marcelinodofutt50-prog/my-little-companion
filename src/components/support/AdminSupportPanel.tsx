@@ -156,15 +156,20 @@ export function AdminSupportPanel() {
     }
   };
 
+  // Geração por chamada: uma resposta antiga (ex.: do filtro anterior) nunca
+  // sobrescreve a lista mais recente.
+  const loadGenRef = useRef(0);
   const loadThreads = async (silent = false) => {
+    const gen = ++loadGenRef.current;
     if (!silent) setLoading(true);
     try {
       const data: any = await listFn({ data: { filter } });
+      if (loadGenRef.current !== gen) return;
       setThreads(data);
     } catch (e: any) {
-      if (!silent) toast.error("Erro ao listar tickets");
+      if (loadGenRef.current === gen && !silent) toast.error("Erro ao listar tickets");
     } finally {
-      if (!silent) setLoading(false);
+      if (loadGenRef.current === gen && !silent) setLoading(false);
     }
   };
 
