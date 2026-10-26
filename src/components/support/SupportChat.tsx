@@ -507,7 +507,10 @@ export function SupportChat({
           a.created_at === b.created_at ? (a.id < b.id ? -1 : 1) : a.created_at < b.created_at ? -1 : 1,
         );
       });
-      setHasMore(!!r.hasMore);
+      // Só uma carga de histórico (before) pode encerrar o cursor; o refresh
+      // da cauda (reconexão, polling de "visto") não reabre "Carregar histórico".
+      if (before) setHasMore(!!r.hasMore);
+      else if (r.hasMore) setHasMore(true);
     } catch (e: any) {
       if (activeThreadRef.current !== threadId) return;
       setLoadError(true);
@@ -711,7 +714,9 @@ export function SupportChat({
       toast.error("Você está sem internet. A mensagem será enviada assim que a conexão voltar.");
     }
 
-    const clientId = retryOf ?? `local-${crypto.randomUUID()}`;
+    // UUID puro: o mesmo identificador vai ao servidor como chave de
+    // idempotência — um reenvio nunca grava a mensagem duas vezes.
+    const clientId = retryOf ?? crypto.randomUUID();
     const newPending: PendingMsg = {
       clientId,
       body: text || null,
@@ -739,8 +744,13 @@ export function SupportChat({
           attachmentPath,
           attachmentType,
           replyToId: replyToId ?? undefined,
+          clientId,
         },
       });
+      // Se o usuário trocou de conversa enquanto o envio estava em andamento,
+      // o resultado pertence à conversa antiga: não toca no estado visual da
+      // nova (a mensagem já está gravada e chega pelo realtime da thread certa).
+      if (activeThreadRef.current !== threadId) return;
       // O servidor pode reabrir/reaproveitar outra conversa (thread fechada).
       // Nesse caso avisamos a página para seguir a conversa nova, senão o
       // cliente ficaria olhando um canal onde nada mais chega.
