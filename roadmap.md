@@ -67,3 +67,11 @@
 - [ ] Telegram: mensagem do usuário veio cortada — aguardando texto
 - [ ] Novas funções cliente/admin — aguardando escolha
 - [ ] Painel do cliente mais limpo — aguardando escolha
+
+## Pedido 26/10 — correções da análise profunda de segurança
+- [x] Crítico: travar inserção direta em crypto_payments (só linhas novas "pending", sem campos de verificação) e reverificar no agendador linhas confirmadas sem prova on-chain.
+- [x] Alto: exigir 2FA no servidor para ações de admin (mfa_satisfied em assertAdminRole).
+- [x] Médio: verificar contrato USDT TRC-20 real na verificação Tron.
+- [x] Médio: limite do chat à prova de envios simultâneos (RPC com trava de transação).
+- [x] Rodar testes + compilação; aplicar migração também no banco do site publicado (FILES). zod atualizado para 4.6.6.
+- [ ] Pendentes de menor risco: revisão das políticas antigas de leitura anônima, alvo obrigatório na renovação legada e novo scan da aba Security. Exigem deploy externo para valer no site publicado.

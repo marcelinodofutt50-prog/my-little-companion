@@ -101,6 +101,8 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
     }
 
     // ---- 6. Insert payment row ----
+    // RLS só aceita linhas novas em "pending" sem campos de verificação/valor;
+    // o valor esperado é gravado a seguir pelo client de serviço.
     const { data: inserted, error: insErr } = await supabase
       .from("crypto_payments")
       .insert({
@@ -111,7 +113,6 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
         tx_hash: hash,
         expected_address: expectedAddress,
         proof_path: proofPath,
-        amount_brl: welcomeAmount ?? Number(plan.price_brl),
         status: "pending",
         required_confirmations: 6,
       })
@@ -122,6 +123,10 @@ export const submitCryptoPayment = createServerFn({ method: "POST" })
       if (insErr?.code === "23505") throw new Error("Este hash já foi registrado.");
       throw new Error(insErr?.message || "Falha ao registrar pagamento.");
     }
+    await supabaseAdmin
+      .from("crypto_payments")
+      .update({ amount_brl: welcomeAmount ?? Number(plan.price_brl) })
+      .eq("id", inserted.id);
 
     // ---- 7. Immediate first verification pass (best effort) ----
     try {

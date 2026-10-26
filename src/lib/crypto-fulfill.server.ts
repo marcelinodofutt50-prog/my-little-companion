@@ -26,10 +26,16 @@ export async function fulfillCryptoPayment(paymentId: string): Promise<{ ok: boo
   if (!claimed) return { ok: false, reason: "not-claimable" };
 
   // ---- AMOUNT GUARD: reject underpayments ----
+  // amount_brl é gravado pelo servidor no envio; como defesa em profundidade,
+  // exigimos também um piso de 40% do preço de catálogo (cobra qualquer desconto legítimo).
   const planPrice = Number(claimed.amount_brl ?? 0);
   const paidBrl = Number(claimed.amount_brl_verified ?? 0);
   const MIN_RATIO = 0.97; // 3% tolerance (fees + FX spread)
-  if (!Number.isFinite(planPrice) || planPrice <= 0 || !Number.isFinite(paidBrl) || paidBrl <= 0 || paidBrl < planPrice * MIN_RATIO) {
+  const { data: catalogPlan } = await supabaseAdmin
+    .from("plans").select("price_brl").eq("slug", claimed.plan_slug).maybeSingle();
+  const catalogPrice = Number(catalogPlan?.price_brl ?? 0);
+  const belowCatalogFloor = catalogPrice > 0 && planPrice < catalogPrice * 0.4;
+  if (!Number.isFinite(planPrice) || planPrice <= 0 || belowCatalogFloor || !Number.isFinite(paidBrl) || paidBrl <= 0 || paidBrl < planPrice * MIN_RATIO) {
     await supabaseAdmin.from("crypto_payments").update({
       status: "rejected",
       failure_reason: `underpayment: pago R$${paidBrl.toFixed(2)} < requerido R$${(planPrice * MIN_RATIO).toFixed(2)}`,
