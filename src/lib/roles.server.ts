@@ -60,6 +60,12 @@ export async function resolveRoles(ctx: { supabase: any; userId: string }) {
 export async function assertAdminRole(ctx: { supabase: any; userId: string }) {
   const { isAdmin } = await resolveRoles(ctx);
   if (!isAdmin) throw new Error("Forbidden");
+  // 2FA no servidor: admin com fator verificado precisa estar em aal2
+  // (ou em dispositivo confiável). Quem nunca ativou 2FA não é bloqueado.
+  const { data: mfaOk, error: mfaErr } = await ctx.supabase.rpc("mfa_satisfied");
+  if (mfaErr || !mfaOk) {
+    throw new Error("Confirme a verificação em duas etapas da sua conta antes de continuar.");
+  }
 }
 
 export async function assertStaffRole(ctx: { supabase: any; userId: string }) {

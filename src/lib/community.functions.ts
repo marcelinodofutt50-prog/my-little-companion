@@ -106,23 +106,16 @@ export const sendCommunityMessage = createServerFn({ method: "POST" })
     }
 
 
-    // Anti-flood simples: máx. 5 mensagens por minuto
-    const since = new Date(Date.now() - 60 * 1000).toISOString();
-    const { count } = await supabaseAdmin
-      .from("community_messages")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("created_at", since);
+    // Anti-flood atômico: máx. 5 mensagens por minuto, com trava de transação
+    // no banco para que envios simultâneos não furem o limite.
+    const { error } = await context.supabase.rpc("community_send_guarded", { _content: data.content });
 
-    if ((count || 0) >= 5) {
-      throw new Error("Muitas transmissões seguidas. Aguarde alguns segundos.");
+    if (error) {
+      if (String(error.message).includes("rate_limited")) {
+        throw new Error("Muitas transmissões seguidas. Aguarde alguns segundos.");
+      }
+      throw new Error("Erro ao enviar mensagem: " + error.message);
     }
-
-    const { error } = await supabaseAdmin
-      .from("community_messages")
-      .insert({ user_id: userId, content: data.content });
-
-    if (error) throw new Error("Erro ao enviar mensagem: " + error.message);
     return { ok: true };
   });
 

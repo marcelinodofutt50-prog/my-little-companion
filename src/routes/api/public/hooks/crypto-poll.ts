@@ -25,8 +25,10 @@ async function processBatch() {
 
 
   for (const p of all) {
-    // Confirmed rows skip verification and go straight to fulfillment.
-    if (p.status === "confirmed") {
+    // Confirmed rows with complete server-side proof go straight to fulfillment.
+    // Rows missing verified_at/amount_brl_verified fall through to on-chain
+    // re-verification instead of being trusted blindly.
+    if (p.status === "confirmed" && p.verified_at && p.amount_brl_verified != null) {
       const f = await fulfillCryptoPayment(p.id);
       results.push({ id: p.id, status: f.ok ? "fulfilled" : "confirmed", confirmations: p.confirmations, note: f.reason });
       continue;
