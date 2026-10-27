@@ -91,6 +91,7 @@
 - [ ] Conferir chat e admin com conta real e atualizar o site externo (deploy Vercel sem cache): sessão de admin indisponível no preview.
 
 ## Pedido 27/10 — revisão defensiva do admin e chats
-- [ ] Corrigir falhas verificadas de isolamento entre conversas e acesso a anexos privados, sem modificar vendas ou entrega de licenças.
-- [ ] Adicionar e executar testes de regressão das correções de privacidade.
-- [ ] Verificar sessão autorizada e relatar limites da validação real.
+- [x] Anexos: validação canônica compartilhada antes da assinatura nos dois envios; admin rejeita arquivos de outras conversas. Histórico admin renova links temporários e valida existência da conversa.
+- [x] Privacidade: fallback de leitura do cliente mantém filtro de proprietário; erros de gravação não anunciam sucesso. Sem mudanças em vendas ou entrega de licenças.
+- [x] 31 testes direcionados passaram (24 novos), incluindo chamadas de handlers com dependências simuladas; compilação automática sem erros.
+- [ ] Validação autenticada ponta a ponta bloqueada: a conta do solicitante não foi localizada na autenticação gerenciada; entrar no preview com conta autorizada para conferir. Site externo não foi atualizado nesta revisão.
