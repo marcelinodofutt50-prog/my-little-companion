@@ -128,8 +128,11 @@ export const adminSetBanMultiplier = createServerFn({ method: "POST" })
   });
 
 async function requireStaffCtx(context: any) {
-  const { data } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
-  if (!data) throw new Error("Apenas equipe.");
+  const { data, error } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+  if (!error && data) return;
+  // Fallback à prova de falha: a RPC pode falhar por cache de schema no worker.
+  const { resolveRoles } = await import("@/lib/roles.server");
+  if (!(await resolveRoles(context)).isStaff) throw new Error("Apenas equipe.");
 }
 
 /** Mensagens bloqueadas pelo filtro da Comunidade. */
