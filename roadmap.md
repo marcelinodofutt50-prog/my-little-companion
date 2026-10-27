@@ -89,3 +89,8 @@
 - [x] Admin: preservar ticket selecionado ao abrir aba de chat.
 - [x] 445 testes passaram, tipos limpos, build OK; página de suporte sem erros no navegador (redireciona ao login deslogado).
 - [ ] Conferir chat e admin com conta real e atualizar o site externo (deploy Vercel sem cache): sessão de admin indisponível no preview.
+
+## Pedido 27/10 — revisão defensiva do admin e chats
+- [ ] Corrigir falhas verificadas de isolamento entre conversas e acesso a anexos privados, sem modificar vendas ou entrega de licenças.
+- [ ] Adicionar e executar testes de regressão das correções de privacidade.
+- [ ] Verificar sessão autorizada e relatar limites da validação real.
