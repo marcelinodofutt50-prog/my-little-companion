@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 27/10 — mídias do chat admin
+- [x] Botão Mídias por conversa com histórico paginado, filtros, visualização de imagens, reprodução e abertura de arquivos; acesso pela consulta autenticada existente e isolamento ao trocar de ticket.
+- [x] 24 testes de privacidade/anexos passaram; compilação automática sem erros.
+- [ ] Conferir abertura da galeria com admin real: conta do solicitante não encontrada na autenticação do preview; requer entrada no preview com conta autorizada. Site externo não atualizado.
+
 ## Pedido 25/10 — comprovantes no admin, revisão geral e PIX por fora
 - [x] Aba Comprovantes do admin profissionalizada: filtro por origem, e-mail do cliente, plano/valor/status do pedido vinculado e botão "Registrar pagamento" em anexos sem vínculo.
 - [x] Registro de PIX feito por fora (chat do suporte): admin informa e-mail do cliente, plano e login alvo (renovação); o pedido usa o preço oficial conferido pela integridade e a entrega é a mesma de uma compra normal (licença nova ou renovação), com auditoria e histórico próprio.

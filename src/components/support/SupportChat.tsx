@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { SecurityPinCard } from "@/components/SecurityPinCard";
 import { SupportSummaryPanel } from "./SupportSummaryPanel";
+import { SupportMediaGallery } from "./SupportMediaGallery";
 
 import {
   listMessages,
@@ -853,7 +854,10 @@ export function SupportChat({
           {connection === "live" ? <span className="h-1.5 w-1.5 rounded-full bg-primary" /> : connection === "offline" ? <AlertCircle className="h-3 w-3 text-destructive" /> : <Loader2 className="h-3 w-3 animate-spin" />}
           {connection === "live" ? "Chat conectado" : connection === "offline" ? "Sem internet" : "Reconectando ao chat…"}
         </span>
-        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Atualizar conversa" aria-label="Atualizar conversa" onClick={() => void loadMessages()}><RotateCw className="h-3 w-3" /></Button>
+        <div className="flex shrink-0 items-center gap-1">
+          {isAdmin && <SupportMediaGallery key={threadId} threadId={threadId} />}
+          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Atualizar conversa" aria-label="Atualizar conversa" onClick={() => void loadMessages()}><RotateCw className="h-3 w-3" /></Button>
+        </div>
       </div>
       {currentAgent && (
         <div className="flex items-center gap-2 border-b border-border/40 bg-card/40 px-3 py-2">
