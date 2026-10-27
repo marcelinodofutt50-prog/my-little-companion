@@ -20,6 +20,24 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 /**
+ * Checagem de equipe à prova de falha. A RPC `is_staff` pode falhar no worker
+ * (cache de schema desatualizado) e devolver vazio mesmo para admin — nesse
+ * caso confirmamos o cargo pela fonte administrativa via resolveRoles, o mesmo
+ * padrão usado no envio de mensagens. Sem isso, o admin era tratado como
+ * cliente e recebia "Acesso negado a esta conversa" ao enviar anexos.
+ */
+async function checkStaff(context: { supabase: any; userId: string }): Promise<boolean> {
+  try {
+    const { data, error } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+    if (!error && data) return true;
+  } catch {
+    // cai no fallback abaixo
+  }
+  const { resolveRoles } = await import("@/lib/roles.server");
+  return (await resolveRoles(context)).isStaff;
+}
+
+/**
  * Carrega nome, foto e cargo de cada atendente que aparece na conversa,
  * para o cliente saber exatamente com quem está falando.
  */
@@ -250,7 +268,7 @@ export const listMessages = createServerFn({ method: "GET" })
       // Plano B com acesso total: só para o dono do ticket ou a equipe.
       const { data: th } = await supabaseAdmin
         .from("support_threads").select("user_id").eq("id", data.threadId).maybeSingle();
-      const { data: staff } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+      const staff = await checkStaff(context);
       if (!th || (th.user_id !== context.userId && !staff)) throw new Error("Conversa não encontrada.");
       const adminResult = await fetchMessages(supabaseAdmin);
       rows = adminResult.data;
@@ -352,8 +370,7 @@ export const markSupportMessagesSeen = createServerFn({ method: "POST" })
     const isOwner = thread.user_id === context.userId;
     let staff = false;
     if (!isOwner) {
-      const { data: s } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
-      staff = s === true;
+      staff = await checkStaff(context);
       if (!staff) throw new Error("Acesso negado");
     }
     const now = new Date().toISOString();
@@ -721,13 +738,22 @@ export const createSupportUploadUrl = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const safe = data.filename.replace(/[^\w.\-]+/g, "_").slice(-80);
-    const { data:thread,error:threadError } = await context.supabase.from('support_threads').select('id,user_id').eq('id',data.threadId).maybeSingle();
-    if (threadError || !thread) throw new Error('Conversa não encontrada.');
     let isStaff = false;
     if (data.staff) {
-      const { data: staffOk } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
-      isStaff = !!staffOk;
+      isStaff = await checkStaff(context);
     }
+    let { data: thread, error: threadError } = await context.supabase
+      .from('support_threads').select('id,user_id').eq('id', data.threadId).maybeSingle();
+    // A RLS pode esconder a conversa do client da equipe; com o cargo já
+    // confirmado no servidor, buscamos pela fonte administrativa.
+    if ((threadError || !thread) && isStaff) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const retry = await supabaseAdmin
+        .from('support_threads').select('id,user_id').eq('id', data.threadId).maybeSingle();
+      thread = retry.data;
+      threadError = retry.error;
+    }
+    if (threadError || !thread) throw new Error('Conversa não encontrada.');
     if (!isStaff && thread.user_id !== context.userId) throw new Error('Acesso negado a esta conversa.');
     const prefix = isStaff ? `staff/${data.threadId}` : `${context.userId}/${data.threadId}`;
     const { createUpload } = await import("@/lib/storage-gateway.server");

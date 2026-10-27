@@ -7,13 +7,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * banco, então TODA leitura de candidaturas retornava "Forbidden".
  */
 async function isStaffUser(ctx: { supabase: any; userId: string }) {
-  const { data } = await ctx.supabase.rpc("is_staff", { _user_id: ctx.userId });
-  return !!data;
+  const { data, error } = await ctx.supabase.rpc("is_staff", { _user_id: ctx.userId });
+  if (!error && data) return true;
+  // Fallback à prova de falha: a RPC pode falhar por cache de schema no worker.
+  const { resolveRoles } = await import("@/lib/roles.server");
+  return (await resolveRoles(ctx)).isStaff;
 }
 
 async function isAdminUser(ctx: { supabase: any; userId: string }) {
-  const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  return !!data;
+  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
+  if (!error && data) return true;
+  const { resolveRoles } = await import("@/lib/roles.server");
+  return (await resolveRoles(ctx)).isAdmin;
 }
 
 export const submitStaffApplication = createServerFn({ method: "POST" })
