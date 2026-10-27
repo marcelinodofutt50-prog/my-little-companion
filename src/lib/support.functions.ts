@@ -20,6 +20,24 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 /**
+ * Checagem de equipe à prova de falha. A RPC `is_staff` pode falhar no worker
+ * (cache de schema desatualizado) e devolver vazio mesmo para admin — nesse
+ * caso confirmamos o cargo pela fonte administrativa via resolveRoles, o mesmo
+ * padrão usado no envio de mensagens. Sem isso, o admin era tratado como
+ * cliente e recebia "Acesso negado a esta conversa" ao enviar anexos.
+ */
+async function checkStaff(context: { supabase: any; userId: string }): Promise<boolean> {
+  try {
+    const { data, error } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+    if (!error && data) return true;
+  } catch {
+    // cai no fallback abaixo
+  }
+  const { resolveRoles } = await import("@/lib/roles.server");
+  return (await resolveRoles(context)).isStaff;
+}
+
+/**
  * Carrega nome, foto e cargo de cada atendente que aparece na conversa,
  * para o cliente saber exatamente com quem está falando.
  */
