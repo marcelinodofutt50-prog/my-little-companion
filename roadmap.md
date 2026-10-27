@@ -2,7 +2,8 @@
 
 ## Pedido 27/10 — mídias do chat admin
 - [x] Botão Mídias por conversa com histórico paginado, filtros, visualização de imagens, reprodução e abertura de arquivos; acesso pela consulta autenticada existente e isolamento ao trocar de ticket.
-- [ ] Verificar testes de privacidade e abertura autenticada da galeria.
+- [x] 24 testes de privacidade/anexos passaram; compilação automática sem erros.
+- [ ] Conferir abertura da galeria com admin real: conta do solicitante não encontrada na autenticação do preview; requer entrada no preview com conta autorizada. Site externo não atualizado.
 
 ## Pedido 25/10 — comprovantes no admin, revisão geral e PIX por fora
 - [x] Aba Comprovantes do admin profissionalizada: filtro por origem, e-mail do cliente, plano/valor/status do pedido vinculado e botão "Registrar pagamento" em anexos sem vínculo.
