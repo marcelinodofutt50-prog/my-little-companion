@@ -738,13 +738,22 @@ export const createSupportUploadUrl = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const safe = data.filename.replace(/[^\w.\-]+/g, "_").slice(-80);
-    const { data:thread,error:threadError } = await context.supabase.from('support_threads').select('id,user_id').eq('id',data.threadId).maybeSingle();
-    if (threadError || !thread) throw new Error('Conversa não encontrada.');
     let isStaff = false;
     if (data.staff) {
-      const { data: staffOk } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
-      isStaff = !!staffOk;
+      isStaff = await checkStaff(context);
     }
+    let { data: thread, error: threadError } = await context.supabase
+      .from('support_threads').select('id,user_id').eq('id', data.threadId).maybeSingle();
+    // A RLS pode esconder a conversa do client da equipe; com o cargo já
+    // confirmado no servidor, buscamos pela fonte administrativa.
+    if ((threadError || !thread) && isStaff) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const retry = await supabaseAdmin
+        .from('support_threads').select('id,user_id').eq('id', data.threadId).maybeSingle();
+      thread = retry.data;
+      threadError = retry.error;
+    }
+    if (threadError || !thread) throw new Error('Conversa não encontrada.');
     if (!isStaff && thread.user_id !== context.userId) throw new Error('Acesso negado a esta conversa.');
     const prefix = isStaff ? `staff/${data.threadId}` : `${context.userId}/${data.threadId}`;
     const { createUpload } = await import("@/lib/storage-gateway.server");
