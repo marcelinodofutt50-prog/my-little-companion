@@ -447,6 +447,12 @@ export const adminListThreadMessages = createServerFn({ method: "GET" })
     await assertStaff(context);
     const { pickAdminClient } = await import("./admin-read.server");
     const { db } = await pickAdminClient(context.supabase);
+
+    // Verify the thread actually exists before reading messages.
+    const { data: thread } = await db
+      .from("support_threads").select("id").eq("id", data.threadId).maybeSingle();
+    if (!thread) throw new Error("Conversa não encontrada");
+
     const limit = data.limit ?? 30;
     let q = db
       .from("support_messages").select("*")
@@ -460,7 +466,33 @@ export const adminListThreadMessages = createServerFn({ method: "GET" })
     const list = normalizeSupportMessages(rows, data.threadId);
     const hasMore = list.length > limit;
     const page = hasMore ? list.slice(0, limit) : list;
-    return { messages: page.reverse(), hasMore };
+    const ordered = page.reverse();
+
+    // Renew signed URLs for attachments (they expire).
+    const {
+      SUPPORT_MEDIA_BUCKET,
+      SUPPORT_MEDIA_SIGNED_TTL,
+      extractSupportMediaPath,
+    } = await import("./support-media");
+    const paths = Array.from(
+      new Set(ordered.map((m: any) => extractSupportMediaPath(m.attachment_url)).filter((p: any): p is string => !!p)),
+    );
+    if (paths.length > 0) {
+      try {
+        const { createDownloads } = await import("@/lib/storage-gateway.server");
+        const signed = await createDownloads(SUPPORT_MEDIA_BUCKET, paths, SUPPORT_MEDIA_SIGNED_TTL);
+        const byPath = new Map<string, string>(Object.entries(signed));
+        for (const m of ordered) {
+          const p = extractSupportMediaPath((m as any).attachment_url);
+          const fresh = p ? byPath.get(p) : undefined;
+          if (fresh) (m as any).attachment_url = fresh;
+        }
+      } catch {
+        // Keep original (possibly still-valid) URLs on failure.
+      }
+    }
+
+    return { messages: ordered, hasMore };
 
   });
 
@@ -481,8 +513,18 @@ export const adminSendMessage = createServerFn({ method: "POST" })
     // preserves is_admin=true. When inserted via service_role, auth.uid()
     // is NULL and the trigger forces is_admin=false, making replies appear
     // as if the client sent them.
+    // Verify the thread exists and retrieve the owner to authorize the attachment path.
+    const { supabaseAdmin: adminDb } = await import("@/integrations/supabase/client.server");
+    const { data: thread } = await adminDb
+      .from("support_threads").select("id, user_id").eq("id", data.threadId).maybeSingle();
+    if (!thread) throw new Error("Conversa não encontrada");
+
     let attachmentUrl: string | null = null;
     if (data.attachmentPath) {
+      const { canAttachSupportMedia } = await import("./support-attachment-access");
+      if (!canAttachSupportMedia(data.attachmentPath, data.threadId, thread.user_id, true)) {
+        throw new Error("Anexo não pertence a esta conversa.");
+      }
       const { createDownload } = await import("@/lib/storage-gateway.server");
       try {
         attachmentUrl = await createDownload("support-media", data.attachmentPath, 60 * 60 * 24 * 7);
