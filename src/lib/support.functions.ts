@@ -345,10 +345,14 @@ export const markThreadReadByCustomer = createServerFn({ method: "POST" })
       if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         console.warn("[Support] Schema cache error in markRead, retrying via admin tunnel...");
-        await supabaseAdmin
+        const { error: fallbackError } = await supabaseAdmin
           .from("support_threads")
           .update({ unread_by_customer: 0 })
-          .eq("id", data.threadId);
+          .eq("id", data.threadId)
+          .eq("user_id", context.userId);
+        if (fallbackError) throw new Error("Não foi possível marcar a conversa como lida.");
+      } else {
+        throw new Error("Não foi possível marcar a conversa como lida.");
       }
     }
     
@@ -522,10 +526,10 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     let url: string | null = null;
     if (data.attachmentPath) {
-      const raw = data.attachmentPath.replace(/^s2\//,'');
-      const ownerPrefix = `${context.userId}/${data.threadId}/`;
-      const staffPrefix = `staff/${data.threadId}/`;
-      if (raw.includes('..') || raw.includes('\\') || (!raw.startsWith(ownerPrefix) && !(isStaff && raw.startsWith(staffPrefix)))) throw new Error('Anexo não pertence a esta conversa.');
+      const { canAttachSupportMedia } = await import("./support-attachment-access");
+      if (!canAttachSupportMedia(data.attachmentPath, data.threadId, context.userId, isStaff)) {
+        throw new Error("Anexo não pertence a esta conversa.");
+      }
       const { createDownload } = await import("@/lib/storage-gateway.server");
       url = await createDownload("support-media", data.attachmentPath, 60 * 60 * 24 * 7);
     }
