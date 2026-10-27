@@ -268,7 +268,7 @@ export const listMessages = createServerFn({ method: "GET" })
       // Plano B com acesso total: só para o dono do ticket ou a equipe.
       const { data: th } = await supabaseAdmin
         .from("support_threads").select("user_id").eq("id", data.threadId).maybeSingle();
-      const { data: staff } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
+      const staff = await checkStaff(context);
       if (!th || (th.user_id !== context.userId && !staff)) throw new Error("Conversa não encontrada.");
       const adminResult = await fetchMessages(supabaseAdmin);
       rows = adminResult.data;
@@ -370,8 +370,7 @@ export const markSupportMessagesSeen = createServerFn({ method: "POST" })
     const isOwner = thread.user_id === context.userId;
     let staff = false;
     if (!isOwner) {
-      const { data: s } = await context.supabase.rpc("is_staff", { _user_id: context.userId });
-      staff = s === true;
+      staff = await checkStaff(context);
       if (!staff) throw new Error("Acesso negado");
     }
     const now = new Date().toISOString();
