@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — mídias importantes na ficha
+- [ ] Destacar anexos privados na galeria e consultar/remover destaques na ficha, sem aprovar pagamentos.
+- [ ] Testar autorização, persistência e isolamento; aplicar no site externo quando disponível.
+- [ ] Emissão de licenças não alterada por restrição de segurança contextual.
+
 ## Pedido 28/10 — Creator: recuperação automática segura
 - [x] Recuperação de leituras transitórias: no máximo duas tentativas, 12 segundos cada, intervalo de 500 ms; consultas canceladas ao trocar conta, sair ou iniciar outra leitura. Gravações nunca repetidas automaticamente.
 - [x] Identidade conferida com getUser e ações ocultadas durante nova leitura/falha, sem alterar regras de licença ou recompensa.
