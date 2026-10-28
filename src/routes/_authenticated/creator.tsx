@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createLatestRequest } from "@/lib/latest-request";
+import { createAccountActions } from "@/lib/account-actions";
 import { creatorErrorMessage, CREATOR_INVALID_URL, deleteVideoOutcome } from "@/lib/creator-errors";
 import { toast } from "sonner";
 import {
@@ -65,6 +66,7 @@ function CreatorPage() {
   const [sending, setSending] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
   const gate = useRef(createLatestRequest());
+  const actions = useRef(createAccountActions());
   const seenUid = useRef<string | null>(null);
 
   const load = useCallback(async () => {
@@ -74,9 +76,13 @@ function CreatorPage() {
       if (sessionError) throw sessionError;
       if (!isCurrent()) return;
       const id = s.session?.user?.id ?? null;
+      actions.current.enter(id);
       // Another account: never keep the previous account's data on screen.
       if (seenUid.current !== id) {
         seenUid.current = id;
+        actions.current.enter(id);
+        setClaiming(false); setSending(false); setRemovingId(null);
+        setUrl(""); setTitle("");
         setApp(null); setClaim(null); setVideos([]); setRefCode(null);
       }
       setUid(id);
@@ -116,48 +122,69 @@ function CreatorPage() {
       if (nextId === seenUid.current) return;
       g.cancel();
       seenUid.current = nextId;
+      actions.current.enter(nextId);
+      setClaiming(false); setSending(false); setRemovingId(null);
       setUid(nextId); setApp(null); setClaim(null); setVideos([]); setRefCode(null);
       setUrl(""); setTitle(""); setLoadError(false); setLoaded(false);
       // Auth callbacks never await another auth operation.
       queueMicrotask(() => { if (active) void load(); });
     });
-    return () => { active = false; g.cancel(); subscription.unsubscribe(); };
+    return () => { active = false; g.cancel(); actions.current.cancel(); subscription.unsubscribe(); };
   }, [load]);
 
   const claimLicense = async () => {
+    const action = actions.current.begin("claim");
+    if (!action) return;
     setClaiming(true);
-    const { error } = await supabase.rpc("claim_creator_license");
-    setClaiming(false);
-    if (error) { console.error("[creator]", error); return toast.error(errMsg(error.message, (error as any).code)); }
-    toast.success("Pedido de licença enviado! A equipe libera em breve.");
-    load();
+    try {
+      const { error } = await supabase.rpc("claim_creator_license");
+      if (!action.isCurrent()) return;
+      if (error) return toast.error(errMsg(error.message, error.code));
+      toast.success("Pedido de licença enviado! A equipe libera em breve.");
+      void load();
+    } catch {
+      if (action.isCurrent()) toast.error(creatorErrorMessage());
+    } finally {
+      if (action.finish()) setClaiming(false);
+    }
   };
 
   const sendVideo = async () => {
     const u = url.trim();
     if (!/^https:\/\/\S+$/i.test(u)) return toast.error(ERR.invalid_url);
+    const action = actions.current.begin("send");
+    if (!action) return;
     setSending(true);
-    const { error } = await supabase.rpc("submit_creator_video", { _url: u.slice(0, 300), _title: title.trim().slice(0, 120) });
-    setSending(false);
-    if (error) { console.error("[creator]", error); return toast.error(errMsg(error.message, (error as any).code)); }
-    toast.success("Vídeo enviado para a equipe!");
-    setUrl(""); setTitle("");
-    load();
+    try {
+      const { error } = await supabase.rpc("submit_creator_video", { _url: u.slice(0, 300), _title: title.trim().slice(0, 120) });
+      if (!action.isCurrent()) return;
+      if (error) return toast.error(errMsg(error.message, error.code));
+      toast.success("Vídeo enviado para a equipe!");
+      setUrl(""); setTitle("");
+      void load();
+    } catch {
+      if (action.isCurrent()) toast.error(creatorErrorMessage());
+    } finally {
+      if (action.finish()) setSending(false);
+    }
   };
 
   const removeVideo = async (id: string) => {
     if (removingId || !confirm("Remover este vídeo da análise?")) return;
+    const action = actions.current.begin("remove");
+    if (!action) return;
     setRemovingId(id);
     try {
       const { data, error } = await supabase.rpc("delete_my_creator_video", { _id: id });
+      if (!action.isCurrent()) return;
       const out = deleteVideoOutcome(error, data);
       if (!out.ok) return toast.error(out.message);
       toast.success("Vídeo removido.");
-      load();
+      void load();
     } catch {
-      toast.error(creatorErrorMessage());
+      if (action.isCurrent()) toast.error(creatorErrorMessage());
     } finally {
-      setRemovingId(null);
+      if (action.finish()) setRemovingId(null);
     }
   };
 

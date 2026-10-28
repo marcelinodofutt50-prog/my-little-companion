@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { safeCreatorVideoHref } from "@/lib/creator-link-safety";
 import { createLatestRequest } from "@/lib/latest-request";
+import { createAccountActions } from "@/lib/account-actions";
+import { creatorErrorMessage } from "@/lib/creator-errors";
 
 type Claim = { id: string; user_id: string; status: string; staff_note: string | null; created_at: string; nick?: string };
 type Video = { id: string; user_id: string; url: string; title: string; platform: string; status: string; staff_note: string | null; created_at: string; nick?: string };
@@ -19,6 +21,7 @@ export function AdminCreatorContentPanel() {
   const [loadError, setLoadError] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const gate = useRef(createLatestRequest());
+  const actions = useRef(createAccountActions());
 
   const load = useCallback(async () => {
     const isCurrent = gate.current.begin();
@@ -52,38 +55,44 @@ export function AdminCreatorContentPanel() {
     }
   }, []);
   useEffect(() => {
-    load();
     const g = gate.current;
     let active = true;
     let account: string | null | undefined;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextAccount = session?.user.id ?? null;
-      if (account === undefined) { account = nextAccount; return; }
       if (account === nextAccount) return;
       account = nextAccount;
+      actions.current.enter(nextAccount);
+      setBusyId(null);
       g.cancel();
       setClaims([]); setVideos([]); setNotes({}); setLoadError(false); setLoading(true);
-      queueMicrotask(() => { if (active) void load(); });
+      queueMicrotask(() => {
+        if (!active) return;
+        if (nextAccount) void load();
+        else setLoading(false);
+      });
     });
-    return () => { active = false; g.cancel(); subscription.unsubscribe(); };
+    return () => { active = false; g.cancel(); actions.current.cancel(); subscription.unsubscribe(); };
   }, [load]);
 
   const review = async (kind: "video" | "claim", id: string, status: string, persistedNote: string | null) => {
-    if (busyId) return;
+    const action = actions.current.begin("review");
+    if (!action) return;
     setBusyId(id);
     try {
       // Untouched draft keeps the saved note instead of silently erasing it.
       const draft = notes[id];
       const note = (draft !== undefined ? draft : persistedNote ?? "").slice(0, 300);
       const { error } = await supabase.rpc("review_creator_item", { _kind: kind, _id: id, _status: status, _note: note });
-      if (error) return toast.error(error.message.includes("not_allowed") ? "Sem permissão (confirme o 2FA)." : "Não foi possível salvar.");
+      if (!action.isCurrent()) return;
+      if (error) return toast.error(creatorErrorMessage(error.message, error.code));
       toast.success("Salvo.");
       setNotes((n) => { const { [id]: _drop, ...rest } = n; return rest; });
       await load();
     } catch {
-      toast.error("Não foi possível salvar. Tente novamente.");
+      if (action.isCurrent()) toast.error(creatorErrorMessage());
     } finally {
-      setBusyId(null);
+      if (action.finish()) setBusyId(null);
     }
   };
 
