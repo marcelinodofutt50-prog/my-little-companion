@@ -1073,7 +1073,7 @@ export function SupportChat({
                   return (
                   <div
                     key={m.id}
-                    className={`group/msg relative max-w-[85%] sm:max-w-[75%] rounded-2xl shadow-sm ${tail} ${staffSender ? "pl-3 pr-4 py-3" : "px-3 py-2"} ${bubbleClass(g.author)} ${
+                    className={`group/msg relative max-w-[88%] sm:max-w-[78%] rounded-2xl shadow-sm ${tail} ${staffSender ? "pl-4 pr-5 py-3" : "px-4 py-2.5"} ${bubbleClass(g.author)} ${
                       g.author === "system" ? "text-center" : ""
                     }`}
                   >
@@ -1109,7 +1109,7 @@ export function SupportChat({
                       </div>
                     )}
                     {quoted && (
-                      <div className="mb-2 rounded-lg border-l-2 border-current/40 bg-black/20 px-2 py-1 text-[11px] opacity-80">
+                      <div className="mb-2 rounded-lg border-l-2 border-current/40 bg-black/20 px-2.5 py-1.5 text-xs opacity-80">
                         <span className="block font-mono text-[9px] uppercase tracking-wide opacity-70">
                           Respondendo
                         </span>
@@ -1129,7 +1129,7 @@ export function SupportChat({
                       </button>
                     )}
                     {m.body && (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                      <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
                         {m.is_system ? m.body.replace(RENEWAL_ACTION, "").trim() : m.body}
                       </p>
                     )}
@@ -1144,7 +1144,7 @@ export function SupportChat({
                       <div data-sensitive><Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} /></div>
                     )}
                     <div
-                      className={`flex items-center gap-1 text-[10px] tabular-nums opacity-70 ${
+                      className={`flex items-center gap-1 text-[11px] tabular-nums opacity-70 ${
                         g.author === "system" ? "justify-center pt-1" : "justify-end"
                       } mt-1`}
                     >
@@ -1174,13 +1174,13 @@ export function SupportChat({
         {pending.map((p) => (
           <div key={p.clientId} className="flex flex-col items-end gap-1">
             <div
-              className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2 ${
+              className={`max-w-[88%] sm:max-w-[78%] rounded-2xl px-4 py-2.5 ${
                 p.status === "failed"
                   ? "bg-destructive/10 border border-destructive/50"
                   : "bg-primary/60 text-primary-foreground"
               }`}
             >
-              {p.body && <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>}
+              {p.body && <p className="text-base whitespace-pre-wrap break-words">{p.body}</p>}
               {p.previewUrl && (
                 <div data-sensitive>
                 <img
