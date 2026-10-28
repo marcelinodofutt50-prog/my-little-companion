@@ -1,8 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 28/10 — admin: carregamento, busca e chat
-- [ ] Corrigir respostas antigas na busca e histórico, carregamento de tickets e recuperação de falhas; preservar compras/licenças.
-- [ ] Testar regressões e verificar a tela disponível; registrar limitações de sessão.
+- [x] Corrigir respostas antigas na busca/histórico, carregamento preso após atualização silenciosa e erros de classificação; adicionar nova tentativa e proteger rascunho contra reformulação atrasada de outra conversa, sem mudar compras/licenças.
+- [x] 31 testes direcionados passaram e compilação automática OK; acesso deslogado encaminha para /auth sem erros. Cloud saudável, sem saturação atual.
+- [ ] Validar buscas e atendimento autenticados: conta do solicitante ausente no Cloud; exige entrada no preview com conta admin. Site externo precisa do deploy atualizado.
 
 ## Pedido 28/10 — isolamento de permissões do Creator
 - [x] Restringir consulta de status a proprietário/equipe com MFA; retirar gravações diretas e migrar revisão de pedidos para RPC com responsável confirmado; aplicado no Cloud e FILES, sem alterar licenças ou recompensas.
