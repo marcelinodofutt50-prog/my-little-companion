@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { Toolbar, ToolbarGroup, toolbarItem } from "@/components/support/chat-toolbar";
 
 const brl = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 const dt = (v?: string | null) => (v ? new Date(v).toLocaleDateString("pt-BR") : "—");
@@ -122,7 +123,7 @@ export function SupportCustomerContext({
     : "";
 
   return (
-    <div className="border-b border-border/40 bg-background/20 px-3 py-2 md:px-4">
+    <Toolbar className="gap-1.5 bg-background/20">
       <div className="flex flex-wrap items-center gap-1.5">
         <button
           type="button"
