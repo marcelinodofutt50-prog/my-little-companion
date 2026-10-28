@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — estabilidade e privacidade do Creator
+- [ ] Tratar falhas de carregamento sem mostrar bloqueio falso ou dados incompletos; oferecer nova tentativa.
+- [ ] Invalidar leituras antigas e limpar dados ao sair/trocar conta; sem mudanças em licenças, recompensas ou envio de vídeos.
+- [ ] Executar regressões e conferir a tela autenticada se houver sessão autorizada.
+
 ## Pedido 28/10 — revisão profunda e melhorias defensivas do admin
 - [x] Corrigir exposição de texto em notificações, imagem antiga aberta e upload atrasado ao trocar conversa; separar horários do texto nas mensagens.
 - [x] Restringir retornos de pagamento a origens explícitas, esconder erros internos e usar aleatoriedade criptográfica em cortesias; sem novos produtos ou entrega de licenças.
