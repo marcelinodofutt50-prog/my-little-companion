@@ -274,7 +274,7 @@ function CreatorPage() {
                 {v.staff_note && <p className="mt-1 text-xs text-muted-foreground">Equipe: {v.staff_note}</p>}
               </div>
               <div className="flex shrink-0 items-center gap-2">
-              {v.status === "pending" && <button onClick={() => removeVideo(v.id)} aria-label="Remover vídeo" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}
+              {v.status === "pending" && <button onClick={() => removeVideo(v.id)} disabled={removingId !== null} aria-label="Remover vídeo" className="text-muted-foreground hover:text-destructive disabled:opacity-40"><Trash2 className="h-3.5 w-3.5" /></button>}
               <span className={`flex shrink-0 items-center gap-1 font-mono text-[10px] uppercase ${v.status === "approved" ? "text-primary" : v.status === "rejected" ? "text-destructive" : "text-muted-foreground"}`}>
                 {v.status === "approved" ? <CheckCircle2 className="h-3.5 w-3.5" /> : v.status === "rejected" ? <XCircle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
                 {VIDEO_LABEL[v.status] ?? v.status}
