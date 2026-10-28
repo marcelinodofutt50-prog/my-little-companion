@@ -1362,9 +1362,9 @@ export function SupportChat({
               }
 
             }}
-            rows={2}
+            rows={5}
             placeholder="Escreva sua mensagem…"
-            className="w-full min-h-[68px] max-h-56 resize-y bg-background/40 text-sm leading-relaxed"
+            className="w-full min-h-[132px] max-h-[320px] resize-y bg-background/40 text-sm leading-relaxed"
           />
           {body.length > MAX_BODY - 500 && (
             <span
