@@ -164,4 +164,5 @@
 - [x] Marcar/desmarcar testado como admin no navegador (galeria e ficha): aparece só na ficha do cliente dono da conversa; some ao desmarcar; confirmado no banco.
 - [x] Outros clientes: leitura vazia, inserção bloqueada pelas regras, funções do admin respondem "Forbidden"; acesso anônimo negado.
 - [x] Corrigido: lista nunca devolve o link antigo guardado (falha fechada); histórico grande não quebra nem corta mídias sem aviso. 6 testes passaram, build OK.
-- [ ] Aplicar migrações 0019/0020 no banco do site publicado (FILES) e fazer deploy Vercel sem cache.
+- [x] Migrações 0019/0020 aplicadas no banco do site publicado (FILES): RLS ativo, sem acesso anônimo.
+- [ ] Deploy Vercel sem cache para o código novo chegar ao site publicado.
