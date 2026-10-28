@@ -42,3 +42,7 @@
 - Chat media upload tickets confirm the sender's role on the server before granting a storage path; the browser never declares staff status. A client-supplied flag locked attendants out of customer conversations while text messages kept working.
 
 - Chat async work is scoped to a conversation visit, not just its ID; changing account, leaving or A→B→A invalidates old callbacks before state mutations, and desktop notifications never include customer text.
+
+- Payment destination validation uses explicit project origins rather than wildcard hosting domains; notification destinations use a narrower allowlist to prevent caller-selected callbacks.
+- Schema health reads return generic failures, and global schema-repair RPCs require server-side administrative authorization and MFA; ordinary customer diagnostics cannot trigger repairs.
+- APK job client INSERT grants are defensively revoked; existing user-scoped creation handlers are blocked, not migrated to privileged execution. Do not describe creation as operational.

@@ -396,7 +396,9 @@ export function SupportChat({
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
   const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
-  const [zoomUrl, setZoomUrl] = useState<string | null>(null);
+  const [zoomedAttachment, setZoomedAttachment] = useState<{ scopeKey: string; url: string } | null>(null);
+  const zoomUrl = zoomedAttachment?.scopeKey === draftKey ? zoomedAttachment.url : null;
+  const setZoomUrl = (url: string | null) => setZoomedAttachment(url ? { scopeKey: draftKey, url } : null);
   const [refining, setRefining] = useState<null | RefineTone>(null);
   const [preRefine, setPreRefine] = useState<string | null>(null);
   useEffect(() => {

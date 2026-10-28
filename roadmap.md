@@ -4,9 +4,10 @@
 - [x] Corrigir exposição de texto em notificações, imagem antiga aberta e upload atrasado ao trocar conversa; separar horários do texto nas mensagens.
 - [x] Restringir retornos de pagamento a origens explícitas, esconder erros internos e usar aleatoriedade criptográfica em cortesias; sem novos produtos ou entrega de licenças.
 - [x] Conter inserções diretas inseguras em filas de APK e execução pública da missão sem prova; criação de APK fica bloqueada para clientes, sem refazer esse serviço.
-- [ ] Executar testes de regressão e conferir compilação.
+- [x] 503 testes passaram em 72 arquivos; compilação automática OK e ACLs verificadas no Cloud; /admin redireciona para /auth sem erros no navegador.
 - [ ] Validar atendimento conectado: emissão de sessão própria indisponível (conta do solicitante ausente); depende de entrada autorizada no preview.
-- [ ] Aplicação externa e atualização do site externo dependem de deploy; análise profunda e revisão de dependências ainda pendentes.
+- [ ] Proteções do banco externo: conexão recusada por certificado não confiável; não foi desativada a validação TLS. Atualização da tela externa depende de deploy.
+- [ ] Análise profunda em andamento; dependências possuem avisos de vulnerabilidade não corrigidos nesta revisão, e leitura pública de arquivos requer classificação antes de restringir.
 
 ## Pedido 28/10 — admin: carregamento, busca e chat
 - [x] Corrigir respostas antigas na busca/histórico, carregamento preso após atualização silenciosa e erros de classificação; adicionar nova tentativa e proteger rascunho contra reformulação atrasada de outra conversa, sem mudar compras/licenças.
