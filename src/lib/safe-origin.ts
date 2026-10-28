@@ -1,5 +1,10 @@
 /** Aceita só origens do próprio site para o retorno do pagamento (evita redirecionar para sites falsos). */
-const ALLOWED = [/^https:\/\/(www\.)?shadowdashstore\.com$/i, /^https:\/\/[a-z0-9-]+\.lovable\.app$/i, /^https:\/\/[a-z0-9-]+\.vercel\.app$/i, /^http:\/\/localhost(:\d+)?$/i];
+const ALLOWED = [
+  /^https:\/\/(www\.)?shadowdashstore\.com$/i,
+  /^https:\/\/hug-and-snuggle-bot\.lovable\.app$/i,
+  /^https:\/\/id-preview--aa5c6d4b-4a83-49d2-a5ba-32781957814c\.lovable\.app$/i,
+  /^http:\/\/localhost(:\d+)?$/i,
+];
 export const DEFAULT_ORIGIN = "https://www.shadowdashstore.com";
 export function safeReturnOrigin(input: string): string {
   try {

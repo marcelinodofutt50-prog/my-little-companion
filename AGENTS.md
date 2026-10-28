@@ -40,3 +40,5 @@
 - Highlight buttons pair bg-neon with text-neon-foreground, a token defined per theme in styles.css; without that token the text silently inherits and renders unreadable on the fill.
 
 - Chat media upload tickets confirm the sender's role on the server before granting a storage path; the browser never declares staff status. A client-supplied flag locked attendants out of customer conversations while text messages kept working.
+
+- Chat async work is scoped to a conversation visit, not just its ID; changing account, leaving or A→B→A invalidates old callbacks before state mutations, and desktop notifications never include customer text.
