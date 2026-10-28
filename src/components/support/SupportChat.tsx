@@ -563,6 +563,7 @@ export function SupportChat({
     // Ao trocar de conversa, nada da anterior pode vazar para esta.
     setReplyTo(null);
     setPreRefine(null);
+    setZoomUrl(null);
     setPending((prev) => {
       for (const p of prev) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
       return [];
@@ -755,6 +756,7 @@ export function SupportChat({
       created_at: new Date().toISOString(),
     };
 
+    if (activeThreadRef.current !== threadId) return;
     setPending((prev) =>
       retryOf ? prev.map((p) => (p.clientId === retryOf ? newPending : p)) : [...prev, newPending],
     );
@@ -830,6 +832,11 @@ export function SupportChat({
       const path = ticket.path;
       await putToSignedUrl(ticket.uploadUrl, file, file.type || "application/octet-stream");
       toast.dismiss(toastId);
+      if (activeThreadRef.current !== threadId) {
+        // O atendente trocou de conversa durante o envio: não mexe no rascunho da nova.
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        return;
+      }
       await handleSend(path, file.type || "application/octet-stream", undefined, {
         name: file.name,
         ...(previewUrl ? { previewUrl } : {}),

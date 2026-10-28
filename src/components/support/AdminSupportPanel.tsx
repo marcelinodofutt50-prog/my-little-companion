@@ -226,10 +226,10 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
         scheduleReload();
         const m = payload?.new;
         if (m && !m.is_admin && !m.is_system) {
-          const preview = String(m.body ?? m.content ?? "Nova mensagem").slice(0, 80);
+          // Privacidade: o texto do cliente nunca vai para notificações do sistema nem para o aviso global.
           try { playNotifyDing(); } catch {}
-          try { showDesktopNotification("Nova mensagem no suporte", preview); } catch {}
-          toast.info("Nova mensagem de cliente", { description: preview, action: { label: "Abrir", onClick: () => setSelectedId(m.thread_id) } });
+          try { showDesktopNotification("Nova mensagem no suporte", "Abra o painel para ver a mensagem."); } catch {}
+          toast.info("Nova mensagem de cliente", { action: { label: "Abrir", onClick: () => setSelectedId(m.thread_id) } });
         }
       })
       .subscribe();
