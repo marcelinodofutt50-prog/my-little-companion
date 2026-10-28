@@ -1180,7 +1180,7 @@ export function SupportChat({
                   : "bg-primary/60 text-primary-foreground"
               }`}
             >
-              {p.body && <p className="text-sm whitespace-pre-wrap break-words">{p.body}</p>}
+              {p.body && <p className="text-base whitespace-pre-wrap break-words">{p.body}</p>}
               {p.previewUrl && (
                 <div data-sensitive>
                 <img
