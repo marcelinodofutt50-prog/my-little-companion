@@ -615,7 +615,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                   <ToolbarGroup label="Classificação do atendimento">
                     <Select
                       value={selectedThread.priority}
-                      onValueChange={val => setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads())}
+                      onValueChange={val => { void setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads()).catch(() => toast.error("Não foi possível alterar a prioridade.")); }}
                     >
                       <SelectTrigger className={cn(toolbarSelect, "w-24")}>
                         <SelectValue placeholder="Prioridade" />
@@ -628,7 +628,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                     </Select>
                     <Select
                       value={selectedThread.category}
-                      onValueChange={val => setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads())}
+                      onValueChange={val => { void setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads()).catch(() => toast.error("Não foi possível alterar a categoria.")); }}
                     >
                       <SelectTrigger className={cn(toolbarSelect, "w-40")}>
                         <SelectValue placeholder="Categoria" />
