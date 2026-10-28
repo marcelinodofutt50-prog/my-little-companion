@@ -11,7 +11,12 @@ export const detectLegacyForCurrentUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId, claims } = context;
-    const email = (claims?.email as string | undefined)?.toLowerCase();
+    // Só e-mail confirmado conta: o claim do token pode não ter sido verificado.
+    const { supabaseAdmin: authAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: authUser } = await authAdmin.auth.admin.getUserById(userId);
+    const confirmedEmail = authUser?.user?.email_confirmed_at ? authUser.user.email : undefined;
+    const email = confirmedEmail?.toLowerCase() ?? undefined;
+    void claims;
     if (!email) return { status: "unchecked", panels: [] as string[], cached: false, inconclusive: true };
 
     const { data: profile } = await supabase
