@@ -23,6 +23,8 @@ import {
   Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ToolbarGroup, toolbarItem, toolbarSelect } from "@/components/support/chat-toolbar";
 import { Input } from "@/components/ui/input";
 import { 
   Select,
@@ -541,55 +543,68 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                   </p>
                   </div>
                 </div>
-                <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1 md:flex-nowrap">
+                <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1">
+                  <ToolbarGroup className="md:ml-auto" label="Classificação do atendimento">
+                    <Select
+                      value={selectedThread.priority}
+                      onValueChange={val => setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads())}
+                    >
+                      <SelectTrigger className={cn(toolbarSelect, "w-28")}>
+                        <SelectValue placeholder="Prioridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="alta">Alta</SelectItem>
+                        <SelectItem value="critica">Crítica</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                  <Select 
-                    value={selectedThread.priority} 
-                    onValueChange={val => setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads())}
-                  >
-                    <SelectTrigger className="w-24 h-8 text-[10px] font-mono">
-                      <SelectValue placeholder="Prioridade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="alta">Alta</SelectItem>
-                      <SelectItem value="critica">Crítica</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Select
+                      value={selectedThread.category}
+                      onValueChange={val => setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads())}
+                    >
+                      <SelectTrigger className={cn(toolbarSelect, "w-36")}>
+                        <SelectValue placeholder="Categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SUPPORT_CATEGORY_META.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.emoji} {c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </ToolbarGroup>
 
-                  <Select 
-                    value={selectedThread.category} 
-                    onValueChange={val => setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads())}
-                  >
-                    <SelectTrigger className="w-32 h-8 text-[10px] font-mono">
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SUPPORT_CATEGORY_META.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.emoji} {c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ToolbarGroup label="Ações do atendimento">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={healing}
+                      className={cn(toolbarItem, "text-cyan-400 hover:text-cyan-300")}
+                      onClick={() => handleHealBugs(selectedThread.user_id)}
+                    >
+                      {healing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wrench className="h-3 w-3" />}
+                      Corrigir bugs
+                    </Button>
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={healing}
-                    className="h-8 font-mono text-[10px] uppercase border-cyan-500/40 text-cyan-400 hover:text-cyan-300"
-                    onClick={() => handleHealBugs(selectedThread.user_id)}
-                  >
-                    {healing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Wrench className="h-3 w-3 mr-1" />}
-                    Corrigir Bugs
-                  </Button>
+                    {!selectedThread.assigned_to && (
+                      <Button
+                        size="sm"
+                        className="h-7 gap-1.5 rounded-none border-0 bg-neon px-2.5 font-mono text-[10px] uppercase tracking-wider text-neon-foreground hover:bg-neon/80"
+                        onClick={() => handleAssume(selectedThread.id)}
+                      >
+                        <ShieldCheck className="h-3 w-3" /> Assumir
+                      </Button>
+                    )}
 
-                  <Button 
-                    size="sm" 
-                    variant="destructive" 
-                    className="h-8 font-mono text-[10px] uppercase"
-                    onClick={() => handleClose(selectedThread.id)}
-                  >
-                    Encerrar
-                  </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 gap-1.5 rounded-none border-0 bg-destructive px-2.5 font-mono text-[10px] uppercase tracking-wider text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => handleClose(selectedThread.id)}
+                    >
+                      Encerrar
+                    </Button>
+                  </ToolbarGroup>
                 </div>
               </div>
             </div>
@@ -602,32 +617,16 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
 
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               <SupportChat 
-                threadId={selectedThread.id} 
-                userId={myId || ""} 
-                isAdmin={true} 
-                customerName={selectedThread.profile?.display_name || selectedThread.profile?.email || "Cliente"} 
+...
                 insertDraft={draft}
-              />
-            </div>
-
-            <div className="p-2 border-t border-border/20 bg-muted/10 flex flex-wrap items-center justify-between gap-2">
-
-              <QuickRepliesDropdown
-                onPick={(body) =>
-                  setDraft({ text: body, nonce: Date.now() })
+                composerExtras={
+                  <QuickRepliesDropdown
+                    onPick={(body) => setDraft({ text: body, nonce: Date.now() })}
+                  />
                 }
               />
-              
-              {!selectedThread.assigned_to && (
-                <Button 
-                  size="sm" 
-                  className="bg-neon text-neon-foreground hover:bg-neon/80 font-mono text-[10px] uppercase"
-                  onClick={() => handleAssume(selectedThread.id)}
-                >
-                  <ShieldCheck className="h-3 w-3 mr-2" /> Assumir Ticket
-                </Button>
-              )}
             </div>
+
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-muted-foreground bg-[radial-gradient(circle_at_center,_var(--neon)_0%,_transparent_50%)] opacity-20">
