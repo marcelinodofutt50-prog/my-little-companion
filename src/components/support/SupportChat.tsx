@@ -439,6 +439,9 @@ export function SupportChat({
   };
 
   const listRef = useRef<HTMLDivElement>(null);
+  // Estado do botão "Carregar histórico" e posição de leitura ao paginar.
+  const historyBtnRef = useRef({ ...initialHistoryButtonState });
+  const restoreScrollRef = useRef<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
@@ -578,6 +581,8 @@ export function SupportChat({
     setMsgs([]);
     setUnseen(0);
     setHasMore(false);
+    historyBtnRef.current = { ...initialHistoryButtonState };
+    restoreScrollRef.current = null;
     setLoadError(false);
     setConnection(navigator.onLine ? "reconnecting" : "offline");
     // Ao trocar de conversa, nada da anterior pode vazar para esta.
@@ -726,6 +731,14 @@ export function SupportChat({
   }, [zoomUrl]);
 
   useEffect(() => {
+    // Paginação de histórico: mantém a mensagem que a pessoa estava lendo na
+    // tela, em vez de rolar para o final e esconder o que acabou de carregar.
+    if (restoreScrollRef.current != null && listRef.current) {
+      const el = listRef.current;
+      el.scrollTop = el.scrollHeight - restoreScrollRef.current + el.scrollTop;
+      restoreScrollRef.current = null;
+      return;
+    }
     if (!loadingOlder && atBottom) scrollToBottom();
   }, [msgs.length, pending.length]);
 
