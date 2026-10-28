@@ -148,7 +148,7 @@ function SupportPage() {
   return (
     <div className="client-enterprise min-h-screen">
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-4 py-8">
+      <main className="mx-auto w-full max-w-5xl px-4 py-8">
         <div className="mb-4"><BackToDashboard /></div>
         <div className="osint-panel osint-corners osint-sweep relative overflow-hidden p-5" style={{ ["--osint-sweep-h" as any]: "120px" }}>
           <div className="osint-label text-neon">// support channel</div>
@@ -252,7 +252,7 @@ function SupportPage() {
           ))}
         </div>
 
-        <div className="mt-5 terminal-card scanlines relative h-[76vh] min-h-[560px] max-h-[calc(100dvh-150px)] sm:h-[82vh] sm:max-h-[calc(100dvh-140px)] md:h-[86vh] lg:h-[88vh] overflow-hidden flex flex-col">
+        <div className="mt-5 terminal-card scanlines relative h-[80vh] min-h-[620px] max-h-[calc(100dvh-120px)] sm:h-[86vh] sm:max-h-[calc(100dvh-110px)] md:h-[90vh] lg:h-[92vh] overflow-hidden flex flex-col">
           {thread?.id && uid ? (
             <SupportChat
               threadId={thread.id}
