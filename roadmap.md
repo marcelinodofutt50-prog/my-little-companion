@@ -1,8 +1,8 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 28/10 — mídias importantes na ficha
-- [ ] Destacar anexos privados na galeria e consultar/remover destaques na ficha, sem aprovar pagamentos.
-- [ ] Testar autorização, persistência e isolamento; aplicar no site externo quando disponível.
+- [x] Destacar anexos privados na galeria (botão Marcar + filtro Importantes) e consultar/remover na ficha do cliente, sem aprovar pagamentos; só admin com 2FA.
+- [x] 2 testes do agrupamento passaram. [ ] Não validado conectado como admin (sem sessão no preview) e tabela ainda não aplicada no site externo (FILES).
 - [ ] Emissão de licenças não alterada por restrição de segurança contextual.
 
 ## Pedido 28/10 — Creator: recuperação automática segura
