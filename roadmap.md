@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — Creator: recuperação automática segura
+- [ ] Adicionar recuperação limitada de leituras transitórias, com prazo de espera e cancelamento ao trocar conta ou sair; nunca repetir gravações automaticamente.
+- [ ] Impedir ações sobre dados desatualizados enquanto a leitura falha; manter regras atuais de licença/recompensa.
+- [ ] Testar falhas, cancelamento e isolamento; conferir compilação e registrar limites da validação autenticada.
+
 ## Pedido 28/10 — Creator: isolamento de ações por conta
 - [x] Respostas de ações antigas não alteram avisos, rascunhos ou bloqueios de outra conta; operações invalidadas ao trocar conta ou sair da tela, com trava síncrona contra cliques repetidos e tratamento de falhas.
 - [x] 29 testes passaram, incluindo 6 de isolamento A→B→A, conta desconectada, saída da tela e concorrência; compilação automática OK e /creator encaminhou para /auth sem erros. Sem mudar regras de licença ou recompensas.
