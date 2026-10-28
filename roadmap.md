@@ -1,9 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 28/10 — Creator: isolamento de ações por conta
-- [ ] Impedir que respostas de ações iniciadas em outra conta alterem avisos, rascunhos ou bloqueios da conta atual; invalidar também ao sair da tela.
-- [ ] Cobrir troca A→B→A, cliques simultâneos e falhas com testes, sem mudar regras de licença ou recompensas.
-- [ ] Verificar telas autenticadas quando houver sessão autorizada disponível; site externo exige deploy.
+- [x] Respostas de ações antigas não alteram avisos, rascunhos ou bloqueios de outra conta; operações invalidadas ao trocar conta ou sair da tela, com trava síncrona contra cliques repetidos e tratamento de falhas.
+- [x] 29 testes passaram, incluindo 6 de isolamento A→B→A, conta desconectada, saída da tela e concorrência; compilação automática OK e /creator encaminhou para /auth sem erros. Sem mudar regras de licença ou recompensas.
+- [ ] Validar ações com Creator/equipe conectados: emissão de sessão própria recusada porque o solicitante não possui conta no preview; depende de entrada autorizada. Site externo exige deploy.
 
 ## Pedido 28/10 — estabilidade e privacidade do Creator
 - [x] Área do Creator e revisão da equipe: falha de leitura mostra aviso com "Tentar novamente" em vez de "só para Creators aprovados"/"Nada aqui"; leituras antigas são ignoradas e dados são limpos ao trocar de conta.
