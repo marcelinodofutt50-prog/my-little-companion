@@ -227,7 +227,6 @@ export function SupportCustomerContext({
             </ToolbarGroup>
           </>
         )}
-      </div>
-    </div>
+    </Toolbar>
   );
 }
