@@ -46,3 +46,5 @@
 - Payment destination validation uses explicit project origins rather than wildcard hosting domains; notification destinations use a narrower allowlist to prevent caller-selected callbacks.
 - Schema health reads return generic failures, and global schema-repair RPCs require server-side administrative authorization and MFA; ordinary customer diagnostics cannot trigger repairs.
 - APK job client INSERT grants are defensively revoked; existing user-scoped creation handlers are blocked, not migrated to privileged execution. Do not describe creation as operational.
+
+- Creator screens (member area and staff review) share creator-errors messages, ignore superseded loads via latest-request, and treat a failed read as an error with retry, never as "not approved" or "empty"; staff review preserves the saved note unless edited. Why: a failed query otherwise locks approved creators out or erases comments.
