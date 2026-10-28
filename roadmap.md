@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — envio de prints no chat
+- [x] Atendentes voltaram a enviar prints nos chats: o pedido de upload passa a confirmar o cargo no servidor, em vez de depender de um aviso do navegador que nunca chegava para a equipe; cliente continua restrito à própria conversa.
+- [x] Impressão enviada de fato em conversa de teste: arquivo guardado e mensagem registrada (imagem/png, pela conta da equipe), sem aviso de acesso negado; 22 testes de acesso a anexos passaram, incluindo 4 novos.
+- [ ] Atualizar o site externo: enquanto o deploy na Vercel não for refeito sem cache, o envio de prints continua quebrado em shadowdashstore.com, que ainda roda o código antigo.
+
 ## Pedido 28/10 — chat do admin mais organizado
 - [x] Faixas do atendimento agrupadas: prioridade/categoria junto de Resumo do atendimento e Mídias numa única linha de ferramentas; Corrigir bugs, Assumir e Encerrar no cabeçalho do ticket; ficha do cliente com Ficha e Copiar ficha colados.
 - [x] Título do ticket e e-mail do cliente voltam a aparecer por extenso; nenhum botão solto e nenhum ícone de atualizar repetido.
