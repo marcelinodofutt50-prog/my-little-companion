@@ -290,7 +290,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   return (
     <div className="flex flex-col md:flex-row h-[calc(100dvh-12rem)] min-h-[520px] md:h-[calc(100vh-9rem)] md:min-h-[620px] bg-card/30 border border-border/40 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
       {/* Sidebar de Tickets */}
-      <div className={`${selectedId ? "hidden md:flex" : "flex"} w-full md:w-80 shrink-0 min-h-0 flex-col border-b md:border-b-0 md:border-r border-border/40 bg-background/40`}>
+      <div className={`${selectedId ? "hidden md:flex" : "flex"} w-full md:w-72 shrink-0 min-h-0 flex-col border-b md:border-b-0 md:border-r border-border/40 bg-background/40`}>
 
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
