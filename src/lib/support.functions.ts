@@ -756,7 +756,14 @@ export const createSupportUploadUrl = createServerFn({ method: "POST" })
       threadError = retry.error;
     }
     if (threadError || !thread) throw new Error('Conversa não encontrada.');
-    if (!isStaff && thread.user_id !== context.userId) throw new Error('Acesso negado a esta conversa.');
+    if (
+      !canOpenSupportUpload({
+        isStaff,
+        threadOwnerId: thread.user_id,
+        userId: context.userId,
+      })
+    )
+      throw new Error('Acesso negado a esta conversa.');
     const prefix = isStaff ? `staff/${data.threadId}` : `${context.userId}/${data.threadId}`;
     const { createUpload } = await import("@/lib/storage-gateway.server");
     const up = await createUpload("support-media", `${prefix}/${Date.now()}-${safe}`);
