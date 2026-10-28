@@ -27,6 +27,10 @@ import {
   SupportMessage,
 } from "@/lib/support-message";
 import {
+  initialHistoryButtonState,
+  reduceHistoryButton,
+} from "@/lib/support-history";
+import {
   Send,
   Paperclip,
   Loader2,
