@@ -123,8 +123,7 @@ export function SupportCustomerContext({
     : "";
 
   return (
-    <Toolbar className="gap-1.5 bg-background/20">
-      <div className="flex flex-wrap items-center gap-1.5">
+    <Toolbar className="bg-background/20">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
