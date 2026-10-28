@@ -50,8 +50,7 @@ export const runSchemaHealthCheck = createServerFn({ method: "POST" })
         return {
           status: "unstable",
           latency,
-          error: clientError.message,
-          code: clientError.code,
+          error: "Falha na verificação de integridade do banco. Detalhes registrados para a equipe.",
           timestamp: new Date().toISOString(),
           needs_repair: isPGRST108
         };
@@ -67,7 +66,7 @@ export const runSchemaHealthCheck = createServerFn({ method: "POST" })
       console.error("[health-check] Erro fatal durante execução:", err);
       return {
         status: "critical",
-        error: err.message || "Erro interno de sistema",
+        error: "Erro interno durante a verificação.",
         timestamp: new Date().toISOString()
       };
     }

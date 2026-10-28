@@ -30,8 +30,12 @@ const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 /** Código legível por telefone: SHDW-XXXX-XXXX (sem 0/O/1/I). */
 export function generateRedeemCode(prefix = "SHDW"): string {
-  const block = (n: number) =>
-    Array.from({ length: n }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join("");
+  // Aleatoriedade criptográfica: 32 símbolos dividem 256 igualmente, sem viés.
+  const block = (n: number) => {
+    const bytes = new Uint8Array(n);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join("");
+  };
   return `${prefix}-${block(4)}-${block(4)}`;
 }
 

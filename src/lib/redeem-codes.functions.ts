@@ -108,12 +108,19 @@ export const previewRedeemCode = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { normalizeRedeemCode, checkRedeemCode, describeRedeemCode } = await import("./redeem-rules");
+    const guard = await import("./redeem-guard.server");
+
+    const blocked = await guard.redeemAttemptBlocked();
+    if (blocked) return { ok: false as const, message: blocked };
 
     const code = normalizeRedeemCode(data.code);
     const { data: row } = await supabaseAdmin
       .from("redeem_codes" as any).select("*").eq("code", code).maybeSingle();
     const check = checkRedeemCode(row as any);
-    if (!check.ok) return { ok: false as const, message: check.message };
+    if (!check.ok) {
+      if (check.reason === "not_found") await guard.recordRedeemFailure();
+      return { ok: false as const, message: check.message };
+    }
     if ((row as any).target_user_id && (row as any).target_user_id !== context.userId) {
       return { ok: false as const, message: "Este código pertence a outro membro." };
     }
@@ -153,6 +160,10 @@ export const redeemMyCode = createServerFn({ method: "POST" })
 
     const code = normalizeRedeemCode(data.code);
 
+    const guard = await import("./redeem-guard.server");
+    const blocked = await guard.redeemAttemptBlocked();
+    if (blocked) throw new Error(blocked);
+
     return await withOpLock(
       `redeem:${userId}:${code}`,
       async () => {
@@ -160,9 +171,15 @@ export const redeemMyCode = createServerFn({ method: "POST" })
           "reserve_redeem_code",
           { _code: code, _user_id: userId },
         );
-        if (reservationError) throw new Error(reservationError.message);
+        if (reservationError) {
+          await guard.recordRedeemFailure();
+          throw new Error(reservationError.message);
+        }
         const rc = reservation?.[0];
-        if (!rc) throw new Error("Não foi possível reservar este código agora.");
+        if (!rc) {
+          await guard.recordRedeemFailure();
+          throw new Error("Não foi possível reservar este código agora.");
+        }
 
         const rollback = async () => {
           const { error } = await supabaseAdmin.rpc("release_redeem_code_claim", {
