@@ -54,7 +54,18 @@ export function AdminCreatorContentPanel() {
   useEffect(() => {
     load();
     const g = gate.current;
-    return () => g.cancel();
+    let active = true;
+    let account: string | null | undefined;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextAccount = session?.user.id ?? null;
+      if (account === undefined) { account = nextAccount; return; }
+      if (account === nextAccount) return;
+      account = nextAccount;
+      g.cancel();
+      setClaims([]); setVideos([]); setNotes({}); setLoadError(false); setLoading(true);
+      queueMicrotask(() => { if (active) void load(); });
+    });
+    return () => { active = false; g.cancel(); subscription.unsubscribe(); };
   }, [load]);
 
   const review = async (kind: "video" | "claim", id: string, status: string, persistedNote: string | null) => {
@@ -69,6 +80,8 @@ export function AdminCreatorContentPanel() {
       toast.success("Salvo.");
       setNotes((n) => { const { [id]: _drop, ...rest } = n; return rest; });
       await load();
+    } catch {
+      toast.error("Não foi possível salvar. Tente novamente.");
     } finally {
       setBusyId(null);
     }

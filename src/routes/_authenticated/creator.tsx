@@ -70,7 +70,8 @@ function CreatorPage() {
   const load = useCallback(async () => {
     const isCurrent = gate.current.begin();
     try {
-      const { data: s } = await supabase.auth.getSession();
+      const { data: s, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
       if (!isCurrent()) return;
       const id = s.session?.user?.id ?? null;
       // Another account: never keep the previous account's data on screen.
@@ -88,10 +89,9 @@ function CreatorPage() {
       ]);
       if (!isCurrent()) return;
       // A failed read is not "no application": keep what we had and offer retry.
-      if (a.error) { console.error("[creator]", a.error); setLoadError(true); return setLoaded(true); }
-      if (c.error || v.error) {
-        console.error("[creator]", c.error ?? v.error);
-        toast.error("Alguns dados não carregaram. Atualize a página para tentar de novo.");
+      if (a.error || c.error || v.error || pr.error) {
+        setLoadError(true);
+        return setLoaded(true);
       }
       setLoadError(false);
       setApp((a.data as any) ?? null);
@@ -110,7 +110,18 @@ function CreatorPage() {
   useEffect(() => {
     load();
     const g = gate.current;
-    return () => g.cancel();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextId = session?.user.id ?? null;
+      if (nextId === seenUid.current) return;
+      g.cancel();
+      seenUid.current = nextId;
+      setUid(nextId); setApp(null); setClaim(null); setVideos([]); setRefCode(null);
+      setUrl(""); setTitle(""); setLoadError(false); setLoaded(false);
+      // Auth callbacks never await another auth operation.
+      queueMicrotask(() => { if (active) void load(); });
+    });
+    let active = true;
+    return () => { active = false; g.cancel(); subscription.unsubscribe(); };
   }, [load]);
 
   const claimLicense = async () => {
@@ -143,6 +154,8 @@ function CreatorPage() {
       if (!out.ok) return toast.error(out.message);
       toast.success("Vídeo removido.");
       load();
+    } catch {
+      toast.error(creatorErrorMessage());
     } finally {
       setRemovingId(null);
     }
@@ -150,7 +163,7 @@ function CreatorPage() {
 
   if (!loaded) return <div className="flex justify-center p-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
-  if (loadError && !app) {
+  if (loadError) {
     return (
       <div className="mx-auto max-w-2xl p-4 sm:p-6">
         <Card className="border-destructive/40"><CardContent className="space-y-3 p-6 text-center">
@@ -274,7 +287,7 @@ function CreatorPage() {
                 {v.staff_note && <p className="mt-1 text-xs text-muted-foreground">Equipe: {v.staff_note}</p>}
               </div>
               <div className="flex shrink-0 items-center gap-2">
-              {v.status === "pending" && <button onClick={() => removeVideo(v.id)} disabled={removingId !== null} aria-label="Remover vídeo" className="text-muted-foreground hover:text-destructive disabled:opacity-40"><Trash2 className="h-3.5 w-3.5" /></button>}
+              {v.status === "pending" && <Button size="icon" variant="ghost" onClick={() => removeVideo(v.id)} disabled={removingId !== null} aria-label="Remover vídeo" title="Remover vídeo" className="h-7 w-7 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>}
               <span className={`flex shrink-0 items-center gap-1 font-mono text-[10px] uppercase ${v.status === "approved" ? "text-primary" : v.status === "rejected" ? "text-destructive" : "text-muted-foreground"}`}>
                 {v.status === "approved" ? <CheckCircle2 className="h-3.5 w-3.5" /> : v.status === "rejected" ? <XCircle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
                 {VIDEO_LABEL[v.status] ?? v.status}
