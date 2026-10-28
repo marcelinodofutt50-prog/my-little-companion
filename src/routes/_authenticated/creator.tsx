@@ -108,6 +108,7 @@ function CreatorPage() {
     }
   }, []);
   useEffect(() => {
+    let active = true;
     load();
     const g = gate.current;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -120,7 +121,6 @@ function CreatorPage() {
       // Auth callbacks never await another auth operation.
       queueMicrotask(() => { if (active) void load(); });
     });
-    let active = true;
     return () => { active = false; g.cancel(); subscription.unsubscribe(); };
   }, [load]);
 
