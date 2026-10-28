@@ -530,6 +530,10 @@ export function SupportChat({
   };
 
   const loadMessages = async (before?: string) => {
+    // Carga de histórico: guarda a altura atual para restaurar a posição de
+    // leitura depois — sem isso a tela rolava para o final e parecia que
+    // nada tinha carregado.
+    if (before) restoreScrollRef.current = listRef.current?.scrollHeight ?? null;
     try {
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
       if (!isActiveConversation()) return;
@@ -545,11 +549,14 @@ export function SupportChat({
           a.created_at === b.created_at ? (a.id < b.id ? -1 : 1) : a.created_at < b.created_at ? -1 : 1,
         );
       });
-      // Só uma carga de histórico (before) pode encerrar o cursor; o refresh
-      // da cauda (reconexão, polling de "visto") não reabre "Carregar histórico".
-      if (before) setHasMore(!!r.hasMore);
-      else if (r.hasMore) setHasMore(true);
+      // Só a carga inicial e as cargas de histórico mexem no botão "Carregar
+      // histórico"; o refresh da cauda (reconexão, polling de "visto") nunca
+      // reabre o botão depois que o histórico acabou.
+      const kind = before ? "history" : historyBtnRef.current.firstLoadDone ? "refresh" : "initial";
+      historyBtnRef.current = reduceHistoryButton(historyBtnRef.current, { kind, serverHasMore: !!r.hasMore });
+      setHasMore(historyBtnRef.current.hasMore);
     } catch (e: any) {
+      restoreScrollRef.current = null;
       if (!isActiveConversation()) return;
       setLoadError(true);
       // eslint-disable-next-line no-console
