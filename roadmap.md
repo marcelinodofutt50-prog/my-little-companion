@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — Creator: isolamento de ações por conta
+- [ ] Impedir que respostas de ações iniciadas em outra conta alterem avisos, rascunhos ou bloqueios da conta atual; invalidar também ao sair da tela.
+- [ ] Cobrir troca A→B→A, cliques simultâneos e falhas com testes, sem mudar regras de licença ou recompensas.
+- [ ] Verificar telas autenticadas quando houver sessão autorizada disponível; site externo exige deploy.
+
 ## Pedido 28/10 — estabilidade e privacidade do Creator
 - [x] Área do Creator e revisão da equipe: falha de leitura mostra aviso com "Tentar novamente" em vez de "só para Creators aprovados"/"Nada aqui"; leituras antigas são ignoradas e dados são limpos ao trocar de conta.
 - [x] Equipe: botões travados durante a gravação (sem cliques duplos), comentário já salvo é preservado ao aprovar/recusar de novo, contagem deixa claro que cobre os vídeos mais recentes. Creator: erro ao remover vídeo mostra o motivo real (ex.: 2FA).
