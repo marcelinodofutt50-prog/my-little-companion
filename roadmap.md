@@ -159,3 +159,9 @@
 - [x] Privacidade: fallback de leitura do cliente mantém filtro de proprietário; erros de gravação não anunciam sucesso. Sem mudanças em vendas ou entrega de licenças.
 - [x] 31 testes direcionados passaram (24 novos), incluindo chamadas de handlers com dependências simuladas; compilação automática sem erros.
 - [ ] Validação autenticada ponta a ponta bloqueada: a conta do solicitante não foi localizada na autenticação gerenciada; entrar no preview com conta autorizada para conferir. Site externo não foi atualizado nesta revisão.
+
+## Pedido 28/10 — validação das mídias importantes (sessão autorizada)
+- [x] Marcar/desmarcar testado como admin no navegador (galeria e ficha): aparece só na ficha do cliente dono da conversa; some ao desmarcar; confirmado no banco.
+- [x] Outros clientes: leitura vazia, inserção bloqueada pelas regras, funções do admin respondem "Forbidden"; acesso anônimo negado.
+- [x] Corrigido: lista nunca devolve o link antigo guardado (falha fechada); histórico grande não quebra nem corta mídias sem aviso. 6 testes passaram, build OK.
+- [ ] Aplicar migrações 0019/0020 no banco do site publicado (FILES) e fazer deploy Vercel sem cache.
