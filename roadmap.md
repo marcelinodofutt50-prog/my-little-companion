@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — histórico de mensagens do chat
+- [x] Botão "Carregar histórico" não reabre após histórico esgotado: refresh da cauda (reconexão, polling de "visto", foco da aba) não altera mais o estado do botão; regra pura em support-history.ts com 6 testes.
+- [x] Paginação mantém a posição de leitura (restaura scroll pela altura anterior) em vez de rolar ao final e esconder as mensagens carregadas.
+- [x] Validado no navegador como cliente de teste: 30 iniciais → 45 antigas após clique, botão some ao final, sem toast de erro. 180 testes passaram; build OK. Mensagens de teste removidas.
+- [ ] Site externo (Vercel) precisa de deploy sem cache para receber a correção.
+
 ## Pedido 28/10 — mídias importantes na ficha
 - [x] Destacar anexos privados na galeria (botão Marcar + filtro Importantes) e consultar/remover na ficha do cliente, sem aprovar pagamentos; só admin com 2FA.
 - [x] 170 testes passaram; permissões/RLS verificadas no Cloud; compilação automática OK.
