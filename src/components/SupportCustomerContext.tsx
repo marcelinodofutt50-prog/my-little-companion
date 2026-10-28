@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import {
   IdCard,
   Copy,
-  RefreshCw,
   ShieldCheck,
   Wallet,
   ShoppingBag,
@@ -212,16 +211,7 @@ export function SupportCustomerContext({
                 }}
                 className={toolbarItem}
               >
-                <Copy className="h-3 w-3" /> resumo
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label="Atualizar ficha do cliente"
-                onClick={() => void fetchData(true)}
-                className={toolbarItem}
-              >
-                <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+                <Copy className="h-3 w-3" /> copiar ficha
               </Button>
             </ToolbarGroup>
           </>

@@ -32,3 +32,6 @@
 - Purchase evidence is private and separate from payment approval: customer uploads use owned paid orders and validated bytes; support attachments are transactionally indexed as unverified candidates, and provider snapshots are allowlisted and idempotent. Only owners/admins may download through RLS-checked short-lived URLs, so receipts cannot approve purchases or expose financial documents in community chat.
 - Support attachment send endpoints share canonical storage-key authorization before privileged signing, and customer read-state fallbacks retain owner filters; this prevents cross-conversation disclosure or mutation when administrative clients bypass RLS.
 - Admin chat media galleries read through the existing authenticated staff message endpoint, scan history only while open, and reset on thread changes; this preserves access checks and prevents previous-conversation media from leaking into the selected chat.
+
+- Admin support chat controls live in the shared toolbar clusters from chat-toolbar.tsx: classification with conversation tools in one row, ticket lifecycle actions in the header. No control gets its own row, so the panel stays scannable.
+- Highlight buttons pair bg-neon with text-neon-foreground, a token defined per theme in styles.css; without that token the text silently inherits and renders unreadable on the fill.
