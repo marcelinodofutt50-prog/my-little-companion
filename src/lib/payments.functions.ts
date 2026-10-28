@@ -35,13 +35,14 @@ export const createOrderPaymentSession = createServerFn({ method: "POST" })
       const { assertCanonicalOrderAmount } = await import("@/lib/order-integrity.server");
       const integrity = await assertCanonicalOrderAmount(supabaseAdmin, order as any);
       const { createOrderCheckoutSession } = await import("@/lib/stripe-payments.server");
+      const { safeReturnUrl } = await import("@/lib/safe-origin");
       const session = await createOrderCheckoutSession({
         env: data.environment as StripeEnv,
         order: order as any,
         planName: integrity.planName ?? order.plan_slug,
         planPriceBrl: integrity.expectedAmount,
         buyerEmail: (claims?.email as string | undefined) ?? undefined,
-        returnUrl: data.returnUrl,
+        returnUrl: safeReturnUrl(data.returnUrl),
       });
 
       await supabaseAdmin
@@ -96,10 +97,11 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
 
     try {
       const { createStripeClient } = await import("@/lib/stripe.server");
+      const { safeReturnUrl } = await import("@/lib/safe-origin");
       const stripe = createStripeClient(data.environment as StripeEnv);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id,
-        ...(data.returnUrl ? { return_url: data.returnUrl } : {}),
+        ...(data.returnUrl ? { return_url: safeReturnUrl(data.returnUrl) } : {}),
       });
       return { url: portal.url };
     } catch (error) {

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { RENEWAL_ACTION } from "@/lib/support-renewal-rules";
+import { createConversationScope } from "@/lib/conversation-scope";
 import { createLatestRequest } from "@/lib/latest-request";
 import { useEffect, useRef, useState, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -361,6 +362,14 @@ export function SupportChat({
   const refineRequest = useRef(createLatestRequest());
   // Rascunho por conversa: evita perder o texto ao trocar de ticket ou recarregar.
   const draftKey = `shadow:draft:${userId}:${threadId}`;
+  const conversationScope = useRef(createConversationScope());
+  const conversationVisit = conversationScope.current.enter(draftKey);
+  const mounted = useRef(true);
+  const isActiveConversation = () => mounted.current && conversationVisit();
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
   const restoredDraftKey = useRef<string | null>(null);
   const persistedDraftKey = useRef<string | null>(null);
   const activeThreadRef = useRef(threadId);
@@ -387,7 +396,9 @@ export function SupportChat({
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
   const [replyTo, setReplyTo] = useState<SupportMessage | null>(null);
-  const [zoomUrl, setZoomUrl] = useState<string | null>(null);
+  const [zoomedAttachment, setZoomedAttachment] = useState<{ scopeKey: string; url: string } | null>(null);
+  const zoomUrl = zoomedAttachment?.scopeKey === draftKey ? zoomedAttachment.url : null;
+  const setZoomUrl = (url: string | null) => setZoomedAttachment(url ? { scopeKey: draftKey, url } : null);
   const [refining, setRefining] = useState<null | RefineTone>(null);
   const [preRefine, setPreRefine] = useState<string | null>(null);
   useEffect(() => {
@@ -413,14 +424,14 @@ export function SupportChat({
     setRefining(tone);
     try {
       const res: any = await refineFn({ data: { threadId, draft, tone } });
-      if (!isCurrent() || activeThreadRef.current !== threadId || bodyRef.current !== originalBody) return;
+      if (!isCurrent() || !isActiveConversation() || bodyRef.current !== originalBody) return;
       if (res?.text) {
         setPreRefine(draft);
         setBody(res.text);
         toast.success("Texto reformulado — revise antes de enviar.");
       }
     } catch (e: any) {
-      if (!isCurrent() || activeThreadRef.current !== threadId) return;
+      if (!isCurrent() || !isActiveConversation()) return;
       toast.error(e?.message || "Não foi possível reformular o texto agora.");
     } finally {
       if (isCurrent()) setRefining(null);
@@ -521,7 +532,7 @@ export function SupportChat({
   const loadMessages = async (before?: string) => {
     try {
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
-      if (activeThreadRef.current !== threadId) return;
+      if (!isActiveConversation()) return;
       setLoadError(false);
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
       if (r.senders) setSenders((prev) => ({ ...prev, ...r.senders }));
@@ -539,13 +550,13 @@ export function SupportChat({
       if (before) setHasMore(!!r.hasMore);
       else if (r.hasMore) setHasMore(true);
     } catch (e: any) {
-      if (activeThreadRef.current !== threadId) return;
+      if (!isActiveConversation()) return;
       setLoadError(true);
       // eslint-disable-next-line no-console
       console.error("[SupportChat] listMessages error:", e);
       toast.error("Erro ao carregar mensagens");
     } finally {
-      if (activeThreadRef.current === threadId) {
+      if (isActiveConversation()) {
         setLoading(false);
         setLoadingOlder(false);
       }
@@ -555,6 +566,8 @@ export function SupportChat({
 
   useEffect(() => {
     setLoading(true);
+    setUploading(false);
+    setDragActive(false);
     setMsgs([]);
     setUnseen(0);
     setHasMore(false);
@@ -563,6 +576,7 @@ export function SupportChat({
     // Ao trocar de conversa, nada da anterior pode vazar para esta.
     setReplyTo(null);
     setPreRefine(null);
+    setZoomUrl(null);
     setPending((prev) => {
       for (const p of prev) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
       return [];
@@ -582,6 +596,7 @@ export function SupportChat({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
         (payload) => {
+          if (!isActiveConversation()) return;
           const next = normalizeSupportMessage(payload.new, threadId);
           if (!next.id || msgIdsRef.current.has(next.id)) return;
           msgIdsRef.current.add(next.id);
@@ -622,6 +637,7 @@ export function SupportChat({
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
         (payload) => {
+          if (!isActiveConversation()) return;
           const upd = normalizeSupportMessage(payload.new, threadId);
           if (!upd.id) return;
           setMsgs((prev) => prev.map((m) => (m.id === upd.id ? { ...m, read_at: upd.read_at } : m)));
@@ -635,6 +651,7 @@ export function SupportChat({
         typingTimerRef.current = setTimeout(() => setPeerTyping(null), 4000);
       })
       .subscribe((status) => {
+        if (!isActiveConversation()) return;
         setConnection(!navigator.onLine ? "offline" : status === "SUBSCRIBED" ? "live" : "reconnecting");
         if (status !== "SUBSCRIBED") return;
         // Só recarrega em RE-conexão (a carga inicial já aconteceu acima).
@@ -729,6 +746,7 @@ export function SupportChat({
     retryOf?: string,
     meta?: { name?: string; previewUrl?: string },
   ) => {
+    if (!isActiveConversation()) return;
     const previous = retryOf ? pendingRef.current.find((p) => p.clientId === retryOf) : undefined;
     const text = (retryOf ? (previous?.body ?? "") : body.trim()).slice(0, MAX_BODY);
     // Reenvio de anexo reaproveita o arquivo que já subiu para o storage.
@@ -755,6 +773,7 @@ export function SupportChat({
       created_at: new Date().toISOString(),
     };
 
+    if (!isActiveConversation()) return;
     setPending((prev) =>
       retryOf ? prev.map((p) => (p.clientId === retryOf ? newPending : p)) : [...prev, newPending],
     );
@@ -777,7 +796,7 @@ export function SupportChat({
       // Se o usuário trocou de conversa enquanto o envio estava em andamento,
       // o resultado pertence à conversa antiga: não toca no estado visual da
       // nova (a mensagem já está gravada e chega pelo realtime da thread certa).
-      if (activeThreadRef.current !== threadId) return;
+      if (!isActiveConversation()) return;
       // O servidor pode reabrir/reaproveitar outra conversa (thread fechada).
       // Nesse caso avisamos a página para seguir a conversa nova, senão o
       // cliente ficaria olhando um canal onde nada mais chega.
@@ -797,6 +816,7 @@ export function SupportChat({
       });
       setAtBottom(true);
     } catch (e: any) {
+      if (!isActiveConversation()) return;
       const message = e?.message || "Falha ao enviar a mensagem.";
       setPending((prev) =>
         prev.map((p) => (p.clientId === clientId ? { ...p, status: "failed", error: message } : p)),
@@ -822,23 +842,32 @@ export function SupportChat({
     const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
     setUploading(true);
     const toastId = toast.loading(`Enviando ${file.name}…`);
+    let previewTransferred = false;
     try {
       const safeName = safeMediaFileName(file.name || "arquivo");
       const { createSupportUploadUrl } = await import("@/lib/support.functions");
       const { putToSignedUrl } = await import("@/lib/signed-upload");
+      if (!isActiveConversation()) return;
       const ticket = await createSupportUploadUrl({ data: { threadId, filename: safeName } });
+      if (!isActiveConversation()) return;
       const path = ticket.path;
       await putToSignedUrl(ticket.uploadUrl, file, file.type || "application/octet-stream");
       toast.dismiss(toastId);
-      await handleSend(path, file.type || "application/octet-stream", undefined, {
+      if (!isActiveConversation()) {
+        // O atendente trocou de conversa durante o envio: não mexe no rascunho da nova.
+        return;
+      }
+      previewTransferred = true;
+      await handleSendRef.current?.(path, file.type || "application/octet-stream", undefined, {
         name: file.name,
         ...(previewUrl ? { previewUrl } : {}),
       });
     } catch (err: any) {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      toast.error(err?.message || "Falha ao anexar o arquivo.", { id: toastId });
+      if (isActiveConversation()) toast.error(err?.message || "Falha ao anexar o arquivo.");
     } finally {
-      setUploading(false);
+      toast.dismiss(toastId);
+      if (!previewTransferred && previewUrl) URL.revokeObjectURL(previewUrl);
+      if (isActiveConversation()) setUploading(false);
     }
   };
 
@@ -1078,8 +1107,6 @@ export function SupportChat({
                     {m.body && (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                         {m.is_system ? m.body.replace(RENEWAL_ACTION, "").trim() : m.body}
-                        {/* Espaço reservado para o horário caber na última linha, como no WhatsApp. */}
-                        <span className={`pointer-events-none inline-block select-none align-bottom ${g.author === "me" ? "w-24" : "w-14"}`} />
                       </p>
                     )}
                     {m.is_system && m.body?.includes(RENEWAL_ACTION) && (
@@ -1095,7 +1122,7 @@ export function SupportChat({
                     <div
                       className={`flex items-center gap-1 text-[10px] tabular-nums opacity-70 ${
                         g.author === "system" ? "justify-center pt-1" : "justify-end"
-                      } ${m.body ? "-mt-4" : "mt-1"}`}
+                      } mt-1`}
                     >
                       <span>{hhmm(m.created_at)}</span>
                       {g.author === "me" &&

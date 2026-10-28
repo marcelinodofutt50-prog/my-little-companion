@@ -40,14 +40,16 @@ export const createMercadoPagoCheckout = createServerFn({ method: "POST" })
         return { error: "O Mercado Pago ainda não está configurado nesta versão do site." };
       }
 
-      const origin = data.returnOrigin.replace(/\/$/, "");
+      const { safeReturnOrigin, safeNotificationOrigin } = await import("@/lib/safe-origin");
+      const origin = safeReturnOrigin(data.returnOrigin).replace(/\/$/, "");
+      const notifyOrigin = safeNotificationOrigin(data.returnOrigin).replace(/\/$/, "");
       const pref = await createOrderPreference({
         order: order as any,
         planName: integrity.planName ?? order.plan_slug,
         expectedAmount: integrity.expectedAmount,
         buyerEmail: (claims?.email as string | undefined) ?? undefined,
         returnOrigin: origin,
-        notificationUrl: `${origin}/api/public/payments/mercadopago`,
+        notificationUrl: `${notifyOrigin}/api/public/payments/mercadopago`,
       });
 
       await supabaseAdmin

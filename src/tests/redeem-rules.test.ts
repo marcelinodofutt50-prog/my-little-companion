@@ -9,9 +9,12 @@ import {
 
 describe("regras dos códigos de cortesia", () => {
   it("normaliza códigos e gera formato legível sem caracteres ambíguos", () => {
-    vi.spyOn(Math, "random").mockReturnValue(0.2);
+    const insecure = vi.spyOn(Math, "random").mockReturnValue(0.2);
+    const secure = vi.spyOn(crypto, "getRandomValues");
     expect(normalizeRedeemCode(" shdw-abcd  -2345 ")).toBe("SHDW-ABCD-2345");
     expect(generateRedeemCode()).toMatch(/^SHDW-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/);
+    expect(secure).toHaveBeenCalledTimes(2);
+    expect(insecure).not.toHaveBeenCalled();
     vi.restoreAllMocks();
   });
 

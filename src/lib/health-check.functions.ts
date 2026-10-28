@@ -10,7 +10,6 @@ import { trackSchemaFailure } from "./tutorials.functions";
 export const runSchemaHealthCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const start = Date.now();
     
     console.log("[health-check] Iniciando validação de integridade pós-deploy...");
@@ -22,7 +21,6 @@ export const runSchemaHealthCheck = createServerFn({ method: "POST" })
         .select("id")
         .limit(1);
         
-      const clientHealthy = !clientError;
       const latency = Date.now() - start;
 
       // 2. Se houver falha de schema, tentar identificar a causa
@@ -43,15 +41,21 @@ export const runSchemaHealthCheck = createServerFn({ method: "POST" })
 
         // Tentar reparo automático imediato se for falha de cache
         if (isPGRST108) {
-          console.warn("[health-check] Inconsistência detectada. Disparando auto-reparo...");
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          try {
+            const { assertAdmin } = await import("@/lib/admin-helpers.server");
+            await assertAdmin(context);
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            await supabaseAdmin.rpc("force_refresh_schema_permissions");
+          } catch {
+            // A leitura pode ser usada pelo cliente; reparos globais exigem admin + MFA.
+            console.warn("[health-check] Reparo global não executado.");
+          }
         }
 
         return {
           status: "unstable",
           latency,
-          error: clientError.message,
-          code: clientError.code,
+          error: "Falha na verificação de integridade do banco. Detalhes registrados para a equipe.",
           timestamp: new Date().toISOString(),
           needs_repair: isPGRST108
         };
@@ -67,7 +71,7 @@ export const runSchemaHealthCheck = createServerFn({ method: "POST" })
       console.error("[health-check] Erro fatal durante execução:", err);
       return {
         status: "critical",
-        error: err.message || "Erro interno de sistema",
+        error: "Erro interno durante a verificação.",
         timestamp: new Date().toISOString()
       };
     }
