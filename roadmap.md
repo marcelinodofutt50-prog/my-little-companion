@@ -1,5 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — admin: carregamento, busca e chat
+- [ ] Corrigir respostas antigas na busca e histórico, carregamento de tickets e recuperação de falhas; preservar compras/licenças.
+- [ ] Testar regressões e verificar a tela disponível; registrar limitações de sessão.
+
 ## Pedido 28/10 — isolamento de permissões do Creator
 - [x] Restringir consulta de status a proprietário/equipe com MFA; retirar gravações diretas e migrar revisão de pedidos para RPC com responsável confirmado; aplicado no Cloud e FILES, sem alterar licenças ou recompensas.
 - [x] Teste SQL com rollback passou no FILES: proprietário lê seus registros, outra conta não lê/apaga/revisa, equipe revisa com atribuição correta; permissões SELECT-only confirmadas no Cloud, 15 testes de links passaram e compilação OK.

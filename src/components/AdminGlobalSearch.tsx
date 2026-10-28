@@ -4,6 +4,8 @@ import { adminGlobalSearch } from "@/lib/admin.functions";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Search, User, Receipt, ShieldCheck, MessageSquare, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { createLatestRequest } from "@/lib/latest-request";
 
 type Result = { users: any[]; orders: any[]; licenses: any[]; threads: any[] };
 const EMPTY: Result = { users: [], orders: [], licenses: [], threads: [] };
@@ -25,7 +27,8 @@ export function AdminGlobalSearch({
   const [failed, setFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   // Geração por chamada: resposta antiga nunca sobrescreve a busca mais recente.
-  const genRef = useRef(0);
+  const requestRef = useRef(createLatestRequest());
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -39,28 +42,30 @@ export function AdminGlobalSearch({
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    const isCurrent = requestRef.current.begin();
+    if (!open) { setRes(EMPTY); setLoading(false); setFailed(false); return; }
     const term = q.trim();
     if (term.length < 2) { setRes(EMPTY); setLoading(false); setFailed(false); return; }
     setLoading(true);
-    const gen = ++genRef.current;
+    setRes(EMPTY);
+    setFailed(false);
     const t = setTimeout(async () => {
       try {
         const r = await search({ data: { q: term } });
-        if (genRef.current !== gen) return;
+        if (!isCurrent()) return;
         setRes(r);
         setFailed(false);
       } catch {
-        if (genRef.current !== gen) return;
+        if (!isCurrent()) return;
         setRes(EMPTY);
         setFailed(true);
       } finally {
-        if (genRef.current === gen) setLoading(false);
+        if (isCurrent()) setLoading(false);
       }
     }, 280);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); requestRef.current.cancel(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, open]);
+  }, [q, open, retry]);
 
   const total = useMemo(
     () => res.users.length + res.orders.length + res.licenses.length + res.threads.length,
@@ -71,14 +76,14 @@ export function AdminGlobalSearch({
 
   return (
     <>
-      <button
+      <Button variant="outline" aria-label="Buscar no painel"
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
       >
         <Search className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Buscar cliente, pedido, licença…</span>
         <kbd className="hidden rounded border border-border/60 px-1 font-mono text-[10px] sm:inline">Ctrl K</kbd>
-      </button>
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg gap-0 overflow-hidden p-0">
@@ -100,7 +105,7 @@ export function AdminGlobalSearch({
             {q.trim().length < 2 ? (
               <p className="p-4 text-center text-xs text-muted-foreground">Digite ao menos 2 caracteres.</p>
             ) : failed && !loading ? (
-              <p className="p-4 text-center text-xs text-destructive">A busca falhou. Ajuste o termo ou tente de novo.</p>
+              <div role="alert" className="space-y-2 p-4 text-center text-xs text-destructive">A busca falhou.<Button variant="outline" size="sm" onClick={() => setRetry((v) => v + 1)}>Tentar novamente</Button></div>
             ) : total === 0 && !loading ? (
               <p className="p-4 text-center text-xs text-muted-foreground">Nenhum resultado para “{q}”.</p>
             ) : (
