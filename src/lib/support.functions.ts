@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SUPPORT_CATEGORIES } from "@/lib/support-categories";
 import { trackSchemaFailure } from "./tutorials.functions";
+import { canOpenSupportUpload } from "./support-upload-access";
 
 export type SupportSender = {
   id: string;
