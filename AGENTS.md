@@ -35,3 +35,5 @@
 
 - Admin support chat controls live in the shared toolbar clusters from chat-toolbar.tsx: classification with conversation tools in one row, ticket lifecycle actions in the header. No control gets its own row, so the panel stays scannable.
 - Highlight buttons pair bg-neon with text-neon-foreground, a token defined per theme in styles.css; without that token the text silently inherits and renders unreadable on the fill.
+
+- Chat media upload tickets confirm the sender's role on the server before granting a storage path; the browser never declares staff status. A client-supplied flag locked attendants out of customer conversations while text messages kept working.
