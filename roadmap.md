@@ -1,9 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 28/10 — estabilidade e privacidade do Creator
-- [ ] Tratar falhas de carregamento sem mostrar bloqueio falso ou dados incompletos; oferecer nova tentativa.
-- [ ] Invalidar leituras antigas e limpar dados ao sair/trocar conta; sem mudanças em licenças, recompensas ou envio de vídeos.
-- [ ] Executar regressões e conferir a tela autenticada se houver sessão autorizada.
+- [x] Área do Creator e revisão da equipe: falha de leitura mostra aviso com "Tentar novamente" em vez de "só para Creators aprovados"/"Nada aqui"; leituras antigas são ignoradas e dados são limpos ao trocar de conta.
+- [x] Equipe: botões travados durante a gravação (sem cliques duplos), comentário já salvo é preservado ao aprovar/recusar de novo, contagem deixa claro que cobre os vídeos mais recentes. Creator: erro ao remover vídeo mostra o motivo real (ex.: 2FA).
+- [x] 22 testes passaram (4 novos de mensagens/remoção) e compilação OK; licenças, recompensas e regras de envio não foram alteradas.
+- [ ] Conferir as telas com conta Creator/equipe reais: a conta do solicitante não existe na autenticação do preview. Site externo precisa do deploy.
+- [ ] Não feito (decisão de política): moderadores revisarem Creators (hoje a aba exige permissão de anúncios) e limite de links dos pedidos de apoiador.
 
 ## Pedido 28/10 — revisão profunda e melhorias defensivas do admin
 - [x] Corrigir exposição de texto em notificações, imagem antiga aberta e upload atrasado ao trocar conversa; separar horários do texto nas mensagens.
