@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createLatestRequest } from "@/lib/latest-request";
 import { createAccountActions } from "@/lib/account-actions";
+import { recoverCreatorRead } from "@/lib/creator-read-recovery";
 import { creatorErrorMessage, CREATOR_INVALID_URL, deleteVideoOutcome } from "@/lib/creator-errors";
 import { toast } from "sonner";
 import {
@@ -68,14 +69,22 @@ function CreatorPage() {
   const gate = useRef(createLatestRequest());
   const actions = useRef(createAccountActions());
   const seenUid = useRef<string | null>(null);
+  const readController = useRef<AbortController | null>(null);
 
   const load = useCallback(async () => {
+    readController.current?.abort();
+    const controller = new AbortController();
+    readController.current = controller;
     const isCurrent = gate.current.begin();
+    setLoaded(false);
     try {
-      const { data: s, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw sessionError;
+      const s = await recoverCreatorRead(async () => {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        return data;
+      }, controller.signal);
       if (!isCurrent()) return;
-      const id = s.session?.user?.id ?? null;
+      const id = s.user?.id ?? null;
       actions.current.enter(id);
       // Another account: never keep the previous account's data on screen.
       if (seenUid.current !== id) {
@@ -87,18 +96,18 @@ function CreatorPage() {
       }
       setUid(id);
       if (!id) { setLoadError(false); return setLoaded(true); }
-      const [a, c, v, pr] = await Promise.all([
-        supabase.from("supporter_applications").select("status, staff_note").eq("user_id", id).maybeSingle(),
-        supabase.from("creator_license_claims").select("status, staff_note, created_at").eq("user_id", id).maybeSingle(),
-        supabase.from("creator_videos").select("id, url, title, platform, status, staff_note, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(50),
-        supabase.from("profiles").select("referral_code").eq("id", id).maybeSingle(),
-      ]);
+      const [a, c, v, pr] = await recoverCreatorRead(async (signal) => {
+        const results = await Promise.all([
+          supabase.from("supporter_applications").select("status, staff_note").eq("user_id", id).abortSignal(signal).maybeSingle(),
+          supabase.from("creator_license_claims").select("status, staff_note, created_at").eq("user_id", id).abortSignal(signal).maybeSingle(),
+          supabase.from("creator_videos").select("id, url, title, platform, status, staff_note, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(50).abortSignal(signal),
+          supabase.from("profiles").select("referral_code").eq("id", id).abortSignal(signal).maybeSingle(),
+        ]);
+        const failed = results.find((result) => result.error);
+        if (failed?.error) throw { ...failed.error, status: failed.status };
+        return results;
+      }, controller.signal);
       if (!isCurrent()) return;
-      // A failed read is not "no application": keep what we had and offer retry.
-      if (a.error || c.error || v.error || pr.error) {
-        setLoadError(true);
-        return setLoaded(true);
-      }
       setLoadError(false);
       setApp((a.data as any) ?? null);
       if (!c.error) setClaim((c.data as any) ?? null);
@@ -121,6 +130,7 @@ function CreatorPage() {
       const nextId = session?.user.id ?? null;
       if (nextId === seenUid.current) return;
       g.cancel();
+      readController.current?.abort();
       seenUid.current = nextId;
       actions.current.enter(nextId);
       setClaiming(false); setSending(false); setRemovingId(null);
@@ -129,7 +139,7 @@ function CreatorPage() {
       // Auth callbacks never await another auth operation.
       queueMicrotask(() => { if (active) void load(); });
     });
-    return () => { active = false; g.cancel(); actions.current.cancel(); subscription.unsubscribe(); };
+    return () => { active = false; g.cancel(); readController.current?.abort(); actions.current.cancel(); subscription.unsubscribe(); };
   }, [load]);
 
   const claimLicense = async () => {
