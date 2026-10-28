@@ -1,5 +1,12 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — chat do admin mais organizado
+- [x] Faixas do atendimento agrupadas: prioridade/categoria junto de Resumo do atendimento e Mídias numa única linha de ferramentas; Corrigir bugs, Assumir e Encerrar no cabeçalho do ticket; ficha do cliente com Ficha e Copiar ficha colados.
+- [x] Título do ticket e e-mail do cliente voltam a aparecer por extenso; nenhum botão solto e nenhum ícone de atualizar repetido.
+- [x] Botão Assumir legível nos dois temas: cor de destaque com texto próprio definido por tema (antes usava um nome de cor inexistente e o texto ficava escuro sobre azul).
+- [x] Respostas rápidas junto da caixa de mensagem; resumo do atendimento compacto com expansão opcional; 469 testes e compilação OK; conversa conferida no navegador com conta da equipe.
+- [ ] Atualizar o site externo para que a organização chegue aos atendentes: o deploy na Vercel ainda não foi refeito sem cache.
+
 ## Pedido 27/10 — mídias do chat admin
 - [x] Botão Mídias por conversa com histórico paginado, filtros, visualização de imagens, reprodução e abertura de arquivos; acesso pela consulta autenticada existente e isolamento ao trocar de ticket.
 - [x] 24 testes de privacidade/anexos passaram; compilação automática sem erros.
