@@ -16,6 +16,7 @@ export function CustomerImportantMedia({ userId, onOpenThread }: { userId: strin
   const [items, setItems] = useState<ImportantMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [truncated, setTruncated] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const gen = useRef(0);
 
@@ -24,7 +25,7 @@ export function CustomerImportantMedia({ userId, onOpenThread }: { userId: strin
     setLoading(true); setError(false);
     try {
       const r = await list({ data: { userId } });
-      if (gen.current === request) setItems(r.items);
+      if (gen.current === request) { setItems(r.items); setTruncated(r.truncated); }
     } catch {
       if (gen.current === request) setError(true);
     } finally {
@@ -34,6 +35,7 @@ export function CustomerImportantMedia({ userId, onOpenThread }: { userId: strin
 
   useEffect(() => {
     setItems([]);
+    setTruncated(false);
     setBusy(null);
     void load();
     return () => { gen.current++; };
@@ -62,6 +64,7 @@ export function CustomerImportantMedia({ userId, onOpenThread }: { userId: strin
       {loading && items.length === 0 && <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Carregando…</p>}
       {error && <div role="alert" className="flex items-center justify-between gap-2 text-xs text-destructive">Não foi possível carregar as mídias importantes.<Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => void load()}><RotateCw className="mr-1 h-3 w-3" />Tentar novamente</Button></div>}
       {!loading && !error && items.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma mídia importante.</p>}
+      {truncated && <p className="text-[11px] text-muted-foreground">Mostrando as mídias marcadas mais recentes; há mais no histórico deste cliente.</p>}
       <div className="grid grid-cols-2 gap-2">
         {items.map((item) => {
           const kind = mediaKind(item.attachmentType, item.attachmentUrl);

@@ -35,44 +35,52 @@ export const adminListImportantMedia = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { pickAdminClient } = await import("./admin-read.server");
     const { db } = await pickAdminClient(context.supabase);
+    const THREAD_LIMIT = 500, ROW_LIMIT = 200, GROUP_SIZE = 80;
     let threadIds: string[] = [];
+    let threadsTruncated = false;
     if (data.threadId) {
       const { data: t } = await db.from("support_threads").select("id").eq("id", data.threadId).maybeSingle();
       if (!t) throw new Error("Conversa não encontrada");
       threadIds = [t.id];
     } else if (data.userId) {
-      const { data: ts, error } = await db.from("support_threads").select("id").eq("user_id", data.userId).limit(500);
+      const { data: ts, error } = await db.from("support_threads").select("id").eq("user_id", data.userId).order("created_at", { ascending: false }).limit(THREAD_LIMIT + 1);
       if (error) throw new Error("Não foi possível carregar as mídias importantes.");
-      threadIds = (ts ?? []).map((t: any) => t.id);
+      threadsTruncated = (ts ?? []).length > THREAD_LIMIT;
+      threadIds = (ts ?? []).slice(0, THREAD_LIMIT).map((t: any) => t.id);
     }
-    if (threadIds.length === 0) return { items: [] };
-    const { data: rows, error } = await db
-      .from("customer_important_media")
-      .select("message_id, marked_at, support_messages!inner(id, thread_id, attachment_url, attachment_type, created_at, is_admin, sender_id)")
-      .in("support_messages.thread_id", threadIds)
-      .order("marked_at", { ascending: false })
-      .limit(200);
-    if (error) throw new Error("Não foi possível carregar as mídias importantes.");
-    const { toImportantMediaItems } = await import("./important-media");
-    const items = toImportantMediaItems((rows ?? []) as any, threadIds);
+    if (threadIds.length === 0) return { items: [], truncated: false };
+    const { chunkIds, mergeBookmarkRows, toSignedImportantMediaItems } = await import("./important-media");
+    const groups: any[][] = [];
+    for (const group of chunkIds(threadIds, GROUP_SIZE)) {
+      const { data: rows, error } = await db
+        .from("customer_important_media")
+        .select("message_id, marked_at, support_messages!inner(id, thread_id, attachment_url, attachment_type, created_at, is_admin, sender_id)")
+        .in("support_messages.thread_id", group)
+        .order("marked_at", { ascending: false })
+        .limit(ROW_LIMIT);
+      if (error) throw new Error("Não foi possível carregar as mídias importantes.");
+      groups.push(rows ?? []);
+    }
+    const merged = mergeBookmarkRows(groups, ROW_LIMIT);
+    const rows = merged.rows;
     const { SUPPORT_MEDIA_BUCKET, SUPPORT_MEDIA_SIGNED_TTL, extractSupportMediaPath } = await import("./support-media");
     const { canAttachSupportMedia } = await import("./support-attachment-access");
-    const safePaths = new Map<string, string>();
-    for (const row of rows ?? []) {
+    // Only canonical storage keys owned by the conversation (or staff) may be signed.
+    const pathFor = (row: any): string | null => {
       const m = row.support_messages;
       const path = extractSupportMediaPath(m?.attachment_url);
-      if (m && path && canAttachSupportMedia(path, m.thread_id, m.sender_id, true)) safePaths.set(row.message_id, path);
-    }
-    const paths = Array.from(new Set(safePaths.values()));
+      return m && path && canAttachSupportMedia(path, m.thread_id, m.sender_id, true) ? path : null;
+    };
+    const paths = Array.from(new Set(rows.map(pathFor).filter((p: string | null): p is string => !!p)));
+    let signed: Record<string, string> = {};
     if (paths.length) {
       try {
         const { createDownloads } = await import("@/lib/storage-gateway.server");
-        const signed = await createDownloads(SUPPORT_MEDIA_BUCKET, paths, SUPPORT_MEDIA_SIGNED_TTL);
-        for (const item of items) {
-          const p = safePaths.get(item.messageId);
-          if (p && signed[p]) item.attachmentUrl = signed[p];
-        }
-      } catch { /* mantém links existentes */ }
+        signed = await createDownloads(SUPPORT_MEDIA_BUCKET, paths, SUPPORT_MEDIA_SIGNED_TTL);
+      } catch {
+        // Fail closed: never fall back to the stored link.
+        throw new Error("Não foi possível carregar as mídias importantes.");
+      }
     }
-    return { items };
+    return { items: toSignedImportantMediaItems(rows as any, threadIds, pathFor, signed), truncated: merged.truncated || threadsTruncated };
   });
