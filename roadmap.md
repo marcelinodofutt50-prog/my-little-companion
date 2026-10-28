@@ -1,5 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — caixa de mensagem maior
+- [x] A caixa de escrever no chat passou de 2 linhas (68 px) para 5 linhas (132 px) e aceita crescer até 320 px; cliente medido no navegador: 612 x 132 px.
+- [ ] Site externo (Vercel) precisa de deploy sem cache para receber a mudança.
+
 ## Pedido 28/10 — histórico de mensagens do chat
 - [x] Botão "Carregar histórico" não reabre após histórico esgotado: refresh da cauda (reconexão, polling de "visto", foco da aba) não altera mais o estado do botão; regra pura em support-history.ts com 6 testes.
 - [x] Paginação mantém a posição de leitura (restaura scroll pela altura anterior) em vez de rolar ao final e esconder as mensagens carregadas.
