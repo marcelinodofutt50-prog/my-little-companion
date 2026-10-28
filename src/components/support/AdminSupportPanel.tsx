@@ -616,8 +616,11 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
             />
 
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              <SupportChat 
-...
+              <SupportChat
+                threadId={selectedThread.id}
+                userId={myId || ""}
+                isAdmin={true}
+                customerName={selectedThread.profile?.display_name || selectedThread.profile?.email || "Cliente"}
                 insertDraft={draft}
                 composerExtras={
                   <QuickRepliesDropdown
