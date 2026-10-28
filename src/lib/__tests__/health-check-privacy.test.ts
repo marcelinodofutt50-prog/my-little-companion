@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ track: vi.fn(), repair: vi.fn() }));
+const mocks = vi.hoisted(() => ({ track: vi.fn(), repair: vi.fn(), assertAdmin: vi.fn() }));
 vi.mock('@tanstack/react-start', () => ({
   createServerFn: () => {
     const chain = { middleware: () => chain, handler: (fn: unknown) => fn };
@@ -8,6 +8,7 @@ vi.mock('@tanstack/react-start', () => ({
   },
 }));
 vi.mock('@/integrations/supabase/auth-middleware', () => ({ requireSupabaseAuth: {} }));
+vi.mock('@/lib/admin-helpers.server', () => ({ assertAdmin: mocks.assertAdmin }));
 vi.mock('../tutorials.functions', () => ({ trackSchemaFailure: mocks.track }));
 vi.mock('@/integrations/supabase/client.server', () => ({ supabaseAdmin: { rpc: mocks.repair } }));
 import { runSchemaHealthCheck } from '../health-check.functions';
@@ -16,7 +17,7 @@ const run = runSchemaHealthCheck as unknown as Handler;
 function context(error: unknown) {
   return { userId: 'owner', supabase: { from: () => ({ select: () => ({ limit: async () => ({ error }) }) }) } };
 }
-beforeEach(() => { mocks.track.mockReset(); mocks.repair.mockReset(); });
+beforeEach(() => { mocks.track.mockReset(); mocks.repair.mockReset(); mocks.assertAdmin.mockReset(); mocks.assertAdmin.mockRejectedValue(new Error("Forbidden")); });
 
 describe('health check public error privacy', () => {
   it('omits database error text and codes from responses', async () => {
@@ -25,6 +26,7 @@ describe('health check public error privacy', () => {
     expect(result.status).toBe('unstable');
     expect(result).not.toHaveProperty('code');
     expect(JSON.stringify(result)).not.toContain('private_table');
+    expect(mocks.repair).not.toHaveBeenCalled();
     expect(mocks.track).toHaveBeenCalledWith(internal, expect.anything(), false, expect.anything(), 'owner');
   });
   it('does not expose exceptions when internal logging fails', async () => {
@@ -32,6 +34,12 @@ describe('health check public error privacy', () => {
     const result = await run({ context: context({ message: 'internal' }) });
     expect(result.status).toBe('critical');
     expect(JSON.stringify(result)).not.toContain('hostname');
+  });
+  it('allows global repair only after administrative authorization', async () => {
+    mocks.assertAdmin.mockResolvedValueOnce(undefined);
+    await run({ context: context({ code: 'PGRST108', message: 'schema cache' }) });
+    expect(mocks.assertAdmin).toHaveBeenCalled();
+    expect(mocks.repair).toHaveBeenCalledWith('force_refresh_schema_permissions');
   });
   it('returns healthy for a successful scoped read', async () => {
     expect((await run({ context: context(null) })).status).toBe('healthy');

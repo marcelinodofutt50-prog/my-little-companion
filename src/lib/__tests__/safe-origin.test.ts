@@ -18,7 +18,7 @@ describe('payment destination isolation', () => {
   });
   it('rejects malformed origins and domain spoofing', () => {
     expect(safeReturnOrigin('https://shadowdashstore.com.attacker.example')).toBe(DEFAULT_ORIGIN);
-    expect(safeReturnUrl('javascript:alert(1)')).toBe(`${DEFAULT_ORIGIN}alert(1)`);
+    expect(safeReturnUrl('javascript:alert(1)')).toBe(DEFAULT_ORIGIN);
     expect(safeNotificationOrigin('not a url')).toBe(DEFAULT_ORIGIN);
   });
 });

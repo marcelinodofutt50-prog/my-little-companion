@@ -19,6 +19,7 @@ export function safeReturnOrigin(input: string): string {
 export function safeReturnUrl(input: string): string {
   try {
     const u = new URL(input);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return DEFAULT_ORIGIN;
     const origin = safeReturnOrigin(u.origin);
     return `${origin}${u.pathname}${u.search}`;
   } catch {

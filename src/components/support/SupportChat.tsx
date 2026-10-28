@@ -363,7 +363,13 @@ export function SupportChat({
   // Rascunho por conversa: evita perder o texto ao trocar de ticket ou recarregar.
   const draftKey = `shadow:draft:${userId}:${threadId}`;
   const conversationScope = useRef(createConversationScope());
-  const isActiveConversation = conversationScope.current.enter(draftKey);
+  const conversationVisit = conversationScope.current.enter(draftKey);
+  const mounted = useRef(true);
+  const isActiveConversation = () => mounted.current && conversationVisit();
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
   const restoredDraftKey = useRef<string | null>(null);
   const persistedDraftKey = useRef<string | null>(null);
   const activeThreadRef = useRef(threadId);
@@ -491,7 +497,6 @@ export function SupportChat({
   // Libera as pré-visualizações locais ao sair do chat (evita vazar memória).
   useEffect(
     () => () => {
-      conversationScope.current.cancel();
       for (const p of pendingRef.current) if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
     },
     [],
@@ -739,6 +744,7 @@ export function SupportChat({
     retryOf?: string,
     meta?: { name?: string; previewUrl?: string },
   ) => {
+    if (!isActiveConversation()) return;
     const previous = retryOf ? pendingRef.current.find((p) => p.clientId === retryOf) : undefined;
     const text = (retryOf ? (previous?.body ?? "") : body.trim()).slice(0, MAX_BODY);
     // Reenvio de anexo reaproveita o arquivo que já subiu para o storage.
