@@ -1,5 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — segurança do Creator
+- [x] Restringir links de vídeos armazenados nas telas do Creator e da equipe a HTTPS e plataformas permitidas, rejeitando credenciais, portas alternativas e destinos disfarçados; sem alterar licença, recompensas ou divulgação.
+- [ ] Testar proteção de links e conferir compilação.
+
 ## Pedido 28/10 — envio de prints no chat
 - [x] Atendentes voltaram a enviar prints nos chats: o pedido de upload passa a confirmar o cargo no servidor, em vez de depender de um aviso do navegador que nunca chegava para a equipe; cliente continua restrito à própria conversa.
 - [x] Impressão enviada de fato em conversa de teste: arquivo guardado e mensagem registrada (imagem/png, pela conta da equipe), sem aviso de acesso negado; 22 testes de acesso a anexos passaram, incluindo 4 novos.
