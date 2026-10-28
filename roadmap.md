@@ -2,7 +2,7 @@
 
 ## Pedido 28/10 — segurança do Creator
 - [x] Restringir links de vídeos armazenados nas telas do Creator e da equipe a HTTPS e plataformas permitidas, rejeitando credenciais, portas alternativas e destinos disfarçados; sem alterar licença, recompensas ou divulgação.
-- [ ] Testar proteção de links e conferir compilação.
+- [x] 15 testes de links passaram e compilação automática sem erros; fluxo autenticado do Creator não foi exercitado, e o site externo ainda exige atualização.
 
 ## Pedido 28/10 — envio de prints no chat
 - [x] Atendentes voltaram a enviar prints nos chats: o pedido de upload passa a confirmar o cargo no servidor, em vez de depender de um aviso do navegador que nunca chegava para a equipe; cliente continua restrito à própria conversa.
