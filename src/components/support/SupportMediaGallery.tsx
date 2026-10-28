@@ -71,7 +71,7 @@ export function SupportMediaGallery({ threadId }: { threadId: string }) {
 
   return (
     <>
-      <Button type="button" variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-xs" onClick={() => setOpen(true)} title="Ver mídias desta conversa">
+      <Button type="button" variant="ghost" size="sm" className={toolbarItem} onClick={() => setOpen(true)} title="Ver mídias desta conversa">
         <Images className="h-3.5 w-3.5" /> Mídias
       </Button>
       <Dialog open={open} onOpenChange={(value) => { setOpen(value); if (!value) setSelected(null); }}>

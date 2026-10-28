@@ -193,12 +193,12 @@ export function SupportCustomerContext({
               </>
             )}
 
-            <div className="ml-auto flex items-center gap-1">
+            <ToolbarGroup className="ml-auto" label="Ações da ficha do cliente">
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 onClick={onOpenFicha}
-                className="h-6 gap-1 px-2 font-mono text-[9px] uppercase"
+                className={toolbarItem}
               >
                 <IdCard className="h-3 w-3" /> ficha
               </Button>
@@ -210,19 +210,20 @@ export function SupportCustomerContext({
                   navigator.clipboard.writeText(summaryText);
                   toast.success("Resumo copiado para repasse");
                 }}
-                className="h-6 gap-1 px-2 font-mono text-[9px] uppercase"
+                className={toolbarItem}
               >
                 <Copy className="h-3 w-3" /> resumo
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
+                aria-label="Atualizar ficha do cliente"
                 onClick={() => void fetchData(true)}
-                className="h-6 gap-1 px-2 font-mono text-[9px] uppercase"
+                className={toolbarItem}
               >
                 <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
               </Button>
-            </div>
+            </ToolbarGroup>
           </>
         )}
       </div>
