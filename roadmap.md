@@ -2,7 +2,8 @@
 
 ## Pedido 28/10 — mídias importantes na ficha
 - [x] Destacar anexos privados na galeria (botão Marcar + filtro Importantes) e consultar/remover na ficha do cliente, sem aprovar pagamentos; só admin com 2FA.
-- [x] 2 testes do agrupamento passaram. [ ] Não validado conectado como admin (sem sessão no preview) e tabela ainda não aplicada no site externo (FILES).
+- [x] 170 testes passaram; permissões/RLS verificadas no Cloud; compilação automática OK.
+- [ ] Fluxo conectado como admin: conta do solicitante ausente no preview. Site externo: migração recusada por SELF_SIGNED_CERT_IN_CHAIN, sem desativar TLS; requer aplicação e deploy autorizado.
 - [ ] Emissão de licenças não alterada por restrição de segurança contextual.
 
 ## Pedido 28/10 — Creator: recuperação automática segura
