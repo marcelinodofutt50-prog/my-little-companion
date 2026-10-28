@@ -592,6 +592,36 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                 isAdmin={true}
                 customerName={selectedThread.profile?.display_name || selectedThread.profile?.email || "Cliente"}
                 insertDraft={draft}
+                toolbarExtras={
+                  <ToolbarGroup label="Classificação do atendimento">
+                    <Select
+                      value={selectedThread.priority}
+                      onValueChange={val => setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads())}
+                    >
+                      <SelectTrigger className={cn(toolbarSelect, "w-24")}>
+                        <SelectValue placeholder="Prioridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="alta">Alta</SelectItem>
+                        <SelectItem value="critica">Crítica</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={selectedThread.category}
+                      onValueChange={val => setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads())}
+                    >
+                      <SelectTrigger className={cn(toolbarSelect, "w-40")}>
+                        <SelectValue placeholder="Categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SUPPORT_CATEGORY_META.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.emoji} {c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </ToolbarGroup>
+                }
                 composerExtras={
                   <QuickRepliesDropdown
                     onPick={(body) => setDraft({ text: body, nonce: Date.now() })}
