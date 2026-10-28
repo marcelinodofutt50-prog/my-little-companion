@@ -1,5 +1,9 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — isolamento de permissões do Creator
+- [ ] Revisar permissões de leitura e ações do Creator; corrigir acesso entre usuários sem alterar licenças ou recompensas.
+- [ ] Testar isolamento com usuários distintos e conferir as permissões nos ambientes disponíveis.
+
 ## Pedido 28/10 — segurança do Creator
 - [x] Restringir links de vídeos armazenados nas telas do Creator e da equipe a HTTPS e plataformas permitidas, rejeitando credenciais, portas alternativas e destinos disfarçados; sem alterar licença, recompensas ou divulgação.
 - [x] 15 testes de links passaram e compilação automática sem erros; fluxo autenticado do Creator não foi exercitado, e o site externo ainda exige atualização.
