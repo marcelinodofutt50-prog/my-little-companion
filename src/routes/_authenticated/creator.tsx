@@ -76,6 +76,7 @@ function CreatorPage() {
       if (sessionError) throw sessionError;
       if (!isCurrent()) return;
       const id = s.session?.user?.id ?? null;
+      actions.current.enter(id);
       // Another account: never keep the previous account's data on screen.
       if (seenUid.current !== id) {
         seenUid.current = id;
