@@ -1,11 +1,16 @@
 import { Link } from "@tanstack/react-router";
 import { RENEWAL_ACTION } from "@/lib/support-renewal-rules";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { SecurityPinCard } from "@/components/SecurityPinCard";
-import { SupportSummaryPanel } from "./SupportSummaryPanel";
+import {
+  useThreadSummary,
+  SupportSummaryTrigger,
+  SupportSummaryBody,
+} from "./SupportSummaryPanel";
+import { Toolbar, ToolbarGroup, ToolbarLabel, toolbarItem } from "./chat-toolbar";
 import { SupportMediaGallery } from "./SupportMediaGallery";
 
 import {
@@ -39,8 +44,10 @@ import {
   Download,
   CheckCheck,
   Check,
+  Hash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { playNotifyDing } from "@/lib/notify-sound";
@@ -88,6 +95,8 @@ interface SupportChatProps {
    * o mesmo template várias vezes seguidas.
    */
   insertDraft?: { text: string; nonce: number } | null;
+  /** Controles que a tela mãe quer ver na primeira linha do compositor (ex.: respostas rápidas). */
+  composerExtras?: ReactNode;
 }
 
 export type SenderInfo = {
@@ -334,7 +343,9 @@ export function SupportChat({
   onNewMessage,
   onThreadMigrated,
   insertDraft,
+  composerExtras,
 }: SupportChatProps) {
+  const summaryState = useThreadSummary(threadId);
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
   const [pending, setPending] = useState<PendingMsg[]>([]);
   const [loading, setLoading] = useState(true);
@@ -849,16 +860,32 @@ export function SupportChat({
           Solte o arquivo para anexar
         </div>
       )}
-      <div role="status" className="flex min-h-8 items-center justify-between gap-2 border-b border-border px-3 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-2">
+      <Toolbar role="status" className="bg-background/40">
+        <ToolbarLabel>
           {connection === "live" ? <span className="h-1.5 w-1.5 rounded-full bg-primary" /> : connection === "offline" ? <AlertCircle className="h-3 w-3 text-destructive" /> : <Loader2 className="h-3 w-3 animate-spin" />}
           {connection === "live" ? "Chat conectado" : connection === "offline" ? "Sem internet" : "Reconectando ao chat…"}
-        </span>
-        <div className="flex shrink-0 items-center gap-1">
+        </ToolbarLabel>
+        {summaryState.summary?.protocol && (
+          <ToolbarLabel className="hidden sm:inline-flex">
+            <Hash className="h-3 w-3" /> {summaryState.summary.protocol}
+          </ToolbarLabel>
+        )}
+        <ToolbarGroup className="ml-auto" label="Ferramentas da conversa">
+          <SupportSummaryTrigger state={summaryState} />
           {isAdmin && <SupportMediaGallery key={threadId} threadId={threadId} />}
-          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Atualizar conversa" aria-label="Atualizar conversa" onClick={() => void loadMessages()}><RotateCw className="h-3 w-3" /></Button>
-        </div>
-      </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={cn(toolbarItem, "px-2")}
+            title="Atualizar conversa"
+            aria-label="Atualizar conversa"
+            onClick={() => void loadMessages()}
+          >
+            <RotateCw className="h-3 w-3" />
+          </Button>
+        </ToolbarGroup>
+      </Toolbar>
       {currentAgent && (
         <div className="flex items-center gap-2 border-b border-border/40 bg-card/40 px-3 py-2">
           <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
@@ -875,7 +902,7 @@ export function SupportChat({
           <SecurityPinCard compact />
         </div>
       )}
-      <SupportSummaryPanel threadId={threadId} />
+      <SupportSummaryBody state={summaryState} />
 
       <div
 
@@ -1034,7 +1061,7 @@ export function SupportChat({
                       <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                         {m.is_system ? m.body.replace(RENEWAL_ACTION, "").trim() : m.body}
                         {/* Espaço reservado para o horário caber na última linha, como no WhatsApp. */}
-                        <span className="pointer-events-none inline-block w-14 select-none align-bottom" />
+                        <span className={`pointer-events-none inline-block select-none align-bottom ${g.author === "me" ? "w-24" : "w-14"}`} />
                       </p>
                     )}
                     {m.is_system && m.body?.includes(RENEWAL_ACTION) && (
@@ -1179,43 +1206,46 @@ export function SupportChat({
           handleSend();
         }}
       >
-        {isAdmin && (
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-              Reformular com IA
-            </span>
-            {REFINE_TONES.map((t) => (
-              <Button
-                key={t.tone}
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={!body.trim() || refining !== null}
-                onClick={() => handleRefine(t.tone)}
-                className="h-6 gap-1 px-2 text-[10px]"
-              >
-                {refining === t.tone ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Wand2 className="h-3 w-3" />
+        {(composerExtras || isAdmin) && (
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            {composerExtras}
+            {isAdmin && (
+              <ToolbarGroup className="ml-auto" label="Reformular com IA">
+                <ToolbarLabel className="px-2.5">Reformular com IA</ToolbarLabel>
+                {REFINE_TONES.map((t) => (
+                  <Button
+                    key={t.tone}
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    disabled={!body.trim() || refining !== null}
+                    onClick={() => handleRefine(t.tone)}
+                    className={toolbarItem}
+                  >
+                    {refining === t.tone ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-3 w-3" />
+                    )}
+                    {t.label}
+                  </Button>
+                ))}
+                {preRefine && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    disabled={refining !== null}
+                    onClick={() => {
+                      setBody(preRefine);
+                      setPreRefine(null);
+                    }}
+                    className={toolbarItem}
+                  >
+                    <Undo2 className="h-3 w-3" /> Desfazer
+                  </Button>
                 )}
-                {t.label}
-              </Button>
-            ))}
-            {preRefine && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={refining !== null}
-                onClick={() => {
-                  setBody(preRefine);
-                  setPreRefine(null);
-                }}
-                className="h-6 gap-1 px-2 text-[10px] text-muted-foreground"
-              >
-                <Undo2 className="h-3 w-3" /> Desfazer
-              </Button>
+              </ToolbarGroup>
             )}
           </div>
         )}
