@@ -3337,7 +3337,7 @@ function AdminChatPanel() {
       const { putToSignedUrl } = await import("@/lib/signed-upload");
       let path: string;
       try {
-        const ticket = await createSupportUploadUrl({ data: { threadId: activeId, filename: safeName, staff: true } });
+        const ticket = await createSupportUploadUrl({ data: { threadId: activeId, filename: safeName } });
         path = ticket.path;
         await putToSignedUrl(ticket.uploadUrl, file, file.type || undefined);
       } catch (upErr: any) {

@@ -736,16 +736,13 @@ export const createSupportUploadUrl = createServerFn({ method: "POST" })
       .object({
         threadId: z.string().uuid(),
         filename: z.string().trim().min(1).max(200),
-        staff: z.boolean().optional(),
       })
       .parse(i),
   )
   .handler(async ({ data, context }) => {
     const safe = data.filename.replace(/[^\w.\-]+/g, "_").slice(-80);
-    let isStaff = false;
-    if (data.staff) {
-      isStaff = await checkStaff(context);
-    }
+    // O cargo é sempre confirmado no servidor: nunca depende de um campo do navegador.
+    const isStaff = await checkStaff(context);
     let { data: thread, error: threadError } = await context.supabase
       .from('support_threads').select('id,user_id').eq('id', data.threadId).maybeSingle();
     // A RLS pode esconder a conversa do client da equipe; com o cargo já
