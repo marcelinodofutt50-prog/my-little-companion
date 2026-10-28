@@ -49,3 +49,4 @@
 
 - Creator screens (member area and staff review) share creator-errors messages, ignore superseded loads via latest-request, and treat a failed read as an error with retry, never as "not approved" or "empty"; staff review preserves the saved note unless edited. Why: a failed query otherwise locks approved creators out or erases comments.
 - Creator mutation UI uses account-actions to invalidate completions across account transitions and unmount, with synchronous per-operation locks; authorization stays in RPCs/RLS. Why: old responses must not clear another account's drafts or release its active locks.
+- Creator read recovery uses creator-read-recovery with bounded transient-only retries and AbortSignals scoped to the current load; never retry mutations automatically, because a lost response may hide a committed write.

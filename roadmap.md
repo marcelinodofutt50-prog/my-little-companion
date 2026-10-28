@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — Creator: recuperação automática segura
+- [x] Recuperação de leituras transitórias: no máximo duas tentativas, 12 segundos cada, intervalo de 500 ms; consultas canceladas ao trocar conta, sair ou iniciar outra leitura. Gravações nunca repetidas automaticamente.
+- [x] Identidade conferida com getUser e ações ocultadas durante nova leitura/falha, sem alterar regras de licença ou recompensa.
+- [x] 34 testes passaram, incluindo cinco de recuperação/cancelamento; compilação automática OK às 02:47:37 UTC.
+- [ ] Validar com Creator conectado: emissão de sessão própria recusada porque o solicitante não tem conta no preview; depende de entrar no preview com conta autorizada. Site externo não atualizado.
+
 ## Pedido 28/10 — Creator: isolamento de ações por conta
 - [x] Respostas de ações antigas não alteram avisos, rascunhos ou bloqueios de outra conta; operações invalidadas ao trocar conta ou sair da tela, com trava síncrona contra cliques repetidos e tratamento de falhas.
 - [x] 29 testes passaram, incluindo 6 de isolamento A→B→A, conta desconectada, saída da tela e concorrência; compilação automática OK e /creator encaminhou para /auth sem erros. Sem mudar regras de licença ou recompensas.
