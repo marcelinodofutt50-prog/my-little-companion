@@ -1,7 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
-## Pedido 28/10 — caixa de mensagem maior
-- [x] A caixa de escrever no chat passou de 2 linhas (68 px) para 5 linhas (132 px) e aceita crescer até 320 px; cliente medido no navegador: 612 x 132 px.
+## Pedido 28/10 — janela do chat maior
+- [x] Página /suporte: coluna alargada (max-w-3xl → max-w-5xl) e card do chat mais alto; medido no navegador 992 x 745 px (antes 736 x 715) e área de mensagens 988 x 526 px (antes 732 x 456).
+- [x] Chat do painel: lista de mensagens ganhou espaço (558 x 297 px, antes 526 x 220) — caixa de escrever voltou a 3 linhas (92 px, ainda dá para arrastar e crescer) e a lista lateral afunilou de 320 para 288 px.
+- [x] Chat flutuante: 460 x 700 px (antes 380 x 560), com área de mensagens de 456 x 420 px.
+- [x] Texto das mensagens continua em 16 px; compilação automática OK às 21:40 UTC.
 - [ ] Site externo (Vercel) precisa de deploy sem cache para receber a mudança.
 
 ## Pedido 28/10 — histórico de mensagens do chat
