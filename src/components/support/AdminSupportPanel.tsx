@@ -563,7 +563,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                       value={selectedThread.category}
                       onValueChange={val => setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads())}
                     >
-                      <SelectTrigger className={cn(toolbarSelect, "w-32")}>
+                      <SelectTrigger className={cn(toolbarSelect, "w-40")}>
                         <SelectValue placeholder="Categoria" />
                       </SelectTrigger>
                       <SelectContent>
