@@ -24,8 +24,7 @@ export function AdminSupportersPanel() {
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const review = async (id: string, status: "approved" | "rejected" | "pending") => {
-    // New RPC is deliberately used without modifying generated database types.
-    const { error } = await (supabase.rpc as Function)("review_supporter_application", {
+    const { error } = await supabase.rpc("review_supporter_application", {
       _id: id, _status: status, _note: (notes[id] || "").slice(0, 300),
     });
     if (error) return toast.error("Não foi possível salvar.");
