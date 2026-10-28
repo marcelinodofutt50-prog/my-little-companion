@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createLatestRequest } from "@/lib/latest-request";
+import { creatorErrorMessage, CREATOR_INVALID_URL, deleteVideoOutcome } from "@/lib/creator-errors";
 import { toast } from "sonner";
 import {
   BadgeCheck, CheckCircle2, Clapperboard, Clock, ExternalLink, Gift, KeyRound, Link2, Loader2,
@@ -29,21 +31,8 @@ type AppRow = { status: "pending" | "approved" | "rejected"; staff_note: string 
 type Claim = { status: "requested" | "delivered" | "rejected"; staff_note: string | null; created_at: string };
 type Video = { id: string; url: string; title: string; platform: string; status: string; staff_note: string | null; created_at: string };
 
-const ERR: Record<string, string> = {
-  not_allowed: "Confirme o código do 2FA e tente de novo.",
-  not_creator: "Só Creators aprovados podem fazer isso.",
-  invalid_url: "Link inválido. Use um link completo começando com https://",
-  platform_not_allowed: "Aceitamos YouTube, TikTok, Instagram, Kwai, Facebook, Telegram ou X.",
-  rate_limited: "Limite de 5 vídeos por dia. Envie o resto amanhã.",
-  duplicate: "Esse vídeo já foi enviado.",
-};
-const errMsg = (m?: string, code?: string) => {
-  const known = Object.entries(ERR).find(([k]) => m?.includes(k))?.[1];
-  if (known) return known;
-  if (code === "PGRST202" || /could not find the function/i.test(m ?? "")) return "O sistema está atualizando. Recarregue a página (F5) e tente de novo.";
-  if (/jwt|session|401/i.test(m ?? "")) return "Sua sessão expirou. Saia e entre de novo na conta.";
-  return `Não deu agora. Tente de novo em instantes.${code ? ` (código ${code})` : ""}`;
-};
+const errMsg = creatorErrorMessage;
+const ERR = { invalid_url: CREATOR_INVALID_URL };
 
 const SCRIPT = [
   { icon: Sparkles, t: "Apresente o site", d: "Mostre a página inicial, explique o que é a Shadow e para quem é." },
@@ -68,31 +57,61 @@ function CreatorPage() {
   const [claim, setClaim] = useState<Claim | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [sending, setSending] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
+  const gate = useRef(createLatestRequest());
+  const seenUid = useRef<string | null>(null);
 
   const load = useCallback(async () => {
-    const { data: s } = await supabase.auth.getSession();
-    const id = s.session?.user?.id ?? null;
-    setUid(id);
-    if (!id) return setLoaded(true);
-    const [a, c, v, pr] = await Promise.all([
-      supabase.from("supporter_applications").select("status, staff_note").eq("user_id", id).maybeSingle(),
-      supabase.from("creator_license_claims").select("status, staff_note, created_at").eq("user_id", id).maybeSingle(),
-      supabase.from("creator_videos").select("id, url, title, platform, status, staff_note, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(50),
-      supabase.from("profiles").select("referral_code").eq("id", id).maybeSingle(),
-    ]);
-    setRefCode(((pr.data as any)?.referral_code as string) ?? null);
-    setApp((a.data as any) ?? null);
-    setClaim((c.data as any) ?? null);
-    setVideos((v.data as any) ?? []);
-    setLoaded(true);
-    if ((a.data as any)?.status === "approved") supabase.rpc("mark_creator_welcome_seen").then(() => {});
+    const isCurrent = gate.current.begin();
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      if (!isCurrent()) return;
+      const id = s.session?.user?.id ?? null;
+      // Another account: never keep the previous account's data on screen.
+      if (seenUid.current !== id) {
+        seenUid.current = id;
+        setApp(null); setClaim(null); setVideos([]); setRefCode(null);
+      }
+      setUid(id);
+      if (!id) { setLoadError(false); return setLoaded(true); }
+      const [a, c, v, pr] = await Promise.all([
+        supabase.from("supporter_applications").select("status, staff_note").eq("user_id", id).maybeSingle(),
+        supabase.from("creator_license_claims").select("status, staff_note, created_at").eq("user_id", id).maybeSingle(),
+        supabase.from("creator_videos").select("id, url, title, platform, status, staff_note, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(50),
+        supabase.from("profiles").select("referral_code").eq("id", id).maybeSingle(),
+      ]);
+      if (!isCurrent()) return;
+      // A failed read is not "no application": keep what we had and offer retry.
+      if (a.error) { console.error("[creator]", a.error); setLoadError(true); return setLoaded(true); }
+      if (c.error || v.error) {
+        console.error("[creator]", c.error ?? v.error);
+        toast.error("Alguns dados não carregaram. Atualize a página para tentar de novo.");
+      }
+      setLoadError(false);
+      setApp((a.data as any) ?? null);
+      if (!c.error) setClaim((c.data as any) ?? null);
+      if (!v.error) setVideos((v.data as any) ?? []);
+      if (!pr.error) setRefCode(((pr.data as any)?.referral_code as string) ?? null);
+      setLoaded(true);
+      if ((a.data as any)?.status === "approved") supabase.rpc("mark_creator_welcome_seen").then(() => {});
+    } catch (e) {
+      if (!isCurrent()) return;
+      console.error("[creator]", e);
+      setLoadError(true);
+      setLoaded(true);
+    }
   }, []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const g = gate.current;
+    return () => g.cancel();
+  }, [load]);
 
   const claimLicense = async () => {
     setClaiming(true);
@@ -116,14 +135,32 @@ function CreatorPage() {
   };
 
   const removeVideo = async (id: string) => {
-    if (!confirm("Remover este vídeo da análise?")) return;
-    const { data, error } = await supabase.rpc("delete_my_creator_video", { _id: id });
-    if (error || !data) return toast.error("Só dá para remover vídeos ainda em análise.");
-    toast.success("Vídeo removido.");
-    load();
+    if (removingId || !confirm("Remover este vídeo da análise?")) return;
+    setRemovingId(id);
+    try {
+      const { data, error } = await supabase.rpc("delete_my_creator_video", { _id: id });
+      const out = deleteVideoOutcome(error, data);
+      if (!out.ok) return toast.error(out.message);
+      toast.success("Vídeo removido.");
+      load();
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   if (!loaded) return <div className="flex justify-center p-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+
+  if (loadError && !app) {
+    return (
+      <div className="mx-auto max-w-2xl p-4 sm:p-6">
+        <Card className="border-destructive/40"><CardContent className="space-y-3 p-6 text-center">
+          <h1 className="text-xl font-black uppercase">Não foi possível carregar</h1>
+          <p className="text-sm text-muted-foreground">Não conseguimos conferir o seu cadastro agora. Isso não significa que você perdeu o acesso.</p>
+          <Button onClick={() => { setLoaded(false); load(); }}>Tentar novamente</Button>
+        </CardContent></Card>
+      </div>
+    );
+  }
 
   if (!uid || app?.status !== "approved") {
     return (
