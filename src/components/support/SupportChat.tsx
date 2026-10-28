@@ -97,6 +97,8 @@ interface SupportChatProps {
   insertDraft?: { text: string; nonce: number } | null;
   /** Controles que a tela mãe quer ver na primeira linha do compositor (ex.: respostas rápidas). */
   composerExtras?: ReactNode;
+  /** Controles extras da equipe na faixa de ferramentas (ex.: prioridade e categoria). */
+  toolbarExtras?: ReactNode;
 }
 
 export type SenderInfo = {
@@ -344,6 +346,7 @@ export function SupportChat({
   onThreadMigrated,
   insertDraft,
   composerExtras,
+  toolbarExtras,
 }: SupportChatProps) {
   const summaryState = useThreadSummary(threadId);
   const [msgs, setMsgs] = useState<SupportMessage[]>([]);
@@ -870,7 +873,9 @@ export function SupportChat({
             <Hash className="h-3 w-3" /> {summaryState.summary.protocol}
           </ToolbarLabel>
         )}
-        <ToolbarGroup className="ml-auto" label="Ferramentas da conversa">
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
+        {toolbarExtras}
+        <ToolbarGroup label="Ferramentas da conversa">
           <SupportSummaryTrigger state={summaryState} />
           {isAdmin && <SupportMediaGallery key={threadId} threadId={threadId} />}
           <Button
@@ -885,6 +890,7 @@ export function SupportChat({
             <RotateCw className="h-3 w-3" />
           </Button>
         </ToolbarGroup>
+        </div>
       </Toolbar>
       {currentAgent && (
         <div className="flex items-center gap-2 border-b border-border/40 bg-card/40 px-3 py-2">
