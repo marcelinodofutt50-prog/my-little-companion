@@ -6,6 +6,7 @@ import { normalizeSupportMessages, type SupportMessage } from "@/lib/support-mes
 import { mediaFileName, mediaKind } from "@/lib/support-media";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toolbarItem } from "./chat-toolbar";
 
 const filters = [
   { id: "all", label: "Todas" },
