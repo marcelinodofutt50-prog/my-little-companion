@@ -89,7 +89,7 @@ export function QuickRepliesDropdown({
       </button>
 
       {open && (
-        <div className="absolute bottom-full right-0 z-30 mb-2 w-80 rounded-md border border-border bg-card shadow-xl">
+        <div className="absolute bottom-full left-0 z-30 mb-2 w-80 rounded-md border border-border bg-card shadow-xl">
           <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
             <span className="font-mono text-[10px] uppercase tracking-wider text-neon">
               // templates

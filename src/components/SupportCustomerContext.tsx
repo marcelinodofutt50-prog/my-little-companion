@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { Toolbar, ToolbarGroup, toolbarItem } from "@/components/support/chat-toolbar";
 
 const brl = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 const dt = (v?: string | null) => (v ? new Date(v).toLocaleDateString("pt-BR") : "—");
@@ -122,8 +123,7 @@ export function SupportCustomerContext({
     : "";
 
   return (
-    <div className="border-b border-border/40 bg-background/20 px-3 py-2 md:px-4">
-      <div className="flex flex-wrap items-center gap-1.5">
+    <Toolbar className="bg-background/20">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -193,12 +193,12 @@ export function SupportCustomerContext({
               </>
             )}
 
-            <div className="ml-auto flex items-center gap-1">
+            <ToolbarGroup className="ml-auto" label="Ações da ficha do cliente">
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 onClick={onOpenFicha}
-                className="h-6 gap-1 px-2 font-mono text-[9px] uppercase"
+                className={toolbarItem}
               >
                 <IdCard className="h-3 w-3" /> ficha
               </Button>
@@ -210,22 +210,22 @@ export function SupportCustomerContext({
                   navigator.clipboard.writeText(summaryText);
                   toast.success("Resumo copiado para repasse");
                 }}
-                className="h-6 gap-1 px-2 font-mono text-[9px] uppercase"
+                className={toolbarItem}
               >
                 <Copy className="h-3 w-3" /> resumo
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
+                aria-label="Atualizar ficha do cliente"
                 onClick={() => void fetchData(true)}
-                className="h-6 gap-1 px-2 font-mono text-[9px] uppercase"
+                className={toolbarItem}
               >
                 <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
               </Button>
-            </div>
+            </ToolbarGroup>
           </>
         )}
-      </div>
-    </div>
+    </Toolbar>
   );
 }
