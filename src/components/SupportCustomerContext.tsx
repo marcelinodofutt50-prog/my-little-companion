@@ -212,7 +212,7 @@ export function SupportCustomerContext({
                 }}
                 className={toolbarItem}
               >
-                <Copy className="h-3 w-3" /> resumo
+                <Copy className="h-3 w-3" /> copiar ficha
               </Button>
               <Button
                 size="sm"

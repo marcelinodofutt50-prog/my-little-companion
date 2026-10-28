@@ -543,13 +543,13 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                   </p>
                   </div>
                 </div>
-                <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1">
+                <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1 md:flex-nowrap">
                   <ToolbarGroup className="md:ml-auto" label="Classificação do atendimento">
                     <Select
                       value={selectedThread.priority}
                       onValueChange={val => setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads())}
                     >
-                      <SelectTrigger className={cn(toolbarSelect, "w-28")}>
+                      <SelectTrigger className={cn(toolbarSelect, "w-24")}>
                         <SelectValue placeholder="Prioridade" />
                       </SelectTrigger>
                       <SelectContent>
@@ -563,7 +563,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                       value={selectedThread.category}
                       onValueChange={val => setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads())}
                     >
-                      <SelectTrigger className={cn(toolbarSelect, "w-36")}>
+                      <SelectTrigger className={cn(toolbarSelect, "w-32")}>
                         <SelectValue placeholder="Categoria" />
                       </SelectTrigger>
                       <SelectContent>
