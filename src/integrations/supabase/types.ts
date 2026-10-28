@@ -893,6 +893,32 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_important_media: {
+        Row: {
+          marked_at: string
+          marked_by: string
+          message_id: string
+        }
+        Insert: {
+          marked_at?: string
+          marked_by: string
+          message_id: string
+        }
+        Update: {
+          marked_at?: string
+          marked_by?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_important_media_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "support_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_identities: {
         Row: {
           attrs_hash: string | null
