@@ -35,6 +35,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CustomerImportantMedia } from "@/components/admin/CustomerImportantMedia";
 import { LicensePinReveal } from "@/components/admin/LicensePinReveal";
 import { LicensePasswordSyncDialog } from "@/components/admin/LicensePasswordSyncDialog";
 
@@ -437,6 +438,12 @@ export function AdminCustomer360({
                     </p>
                   </div>
                 </Section>
+
+                {userId && (
+                  <Section title="Mídias importantes">
+                    <CustomerImportantMedia userId={userId} onOpenThread={onOpenThread} />
+                  </Section>
+                )}
 
                 <Section title="Antifraude / testes" count={(data.fraud ?? []).length}>
                   {(data.fraud ?? []).length === 0 && (data.trials ?? []).length === 0

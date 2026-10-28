@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Images, Loader2, Paperclip, RotateCw, ExternalLink } from "lucide-react";
+import { Images, Loader2, Paperclip, RotateCw, ExternalLink, Star } from "lucide-react";
+import { toast } from "sonner";
+import { adminListImportantMedia, adminSetImportantMedia } from "@/lib/important-media.functions";
 import { adminListThreadMessages } from "@/lib/admin.functions";
 import { normalizeSupportMessages, type SupportMessage } from "@/lib/support-message";
 import { mediaFileName, mediaKind } from "@/lib/support-media";
@@ -14,6 +16,7 @@ const filters = [
   { id: "video", label: "Vídeos" },
   { id: "audio", label: "Áudios" },
   { id: "file", label: "Arquivos" },
+  { id: "important", label: "Importantes" },
 ] as const;
 type Filter = (typeof filters)[number]["id"];
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -28,12 +31,23 @@ export function SupportMediaGallery({ threadId }: { threadId: string }) {
   const [selected, setSelected] = useState<SupportMessage | null>(null);
   const generation = useRef(0);
   const list = useServerFn(adminListThreadMessages);
+  const listMarked = useServerFn(adminListImportantMedia);
+  const setMarked = useServerFn(adminSetImportantMedia);
+  const [marked, setMarkedIds] = useState<Set<string>>(new Set());
+  const [markBusy, setMarkBusy] = useState<string | null>(null);
+  const markGeneration = useRef(0);
 
   useEffect(() => {
     if (!open) return;
     const request = ++generation.current;
     let cancelled = false;
     setItems([]);
+    setMarkedIds(new Set());
+    setMarkBusy(null);
+    const markRequest = ++markGeneration.current;
+    listMarked({ data: { threadId } })
+      .then((r) => { if (!cancelled && markGeneration.current === markRequest) setMarkedIds(new Set(r.items.map((i) => i.messageId))); })
+      .catch(() => { if (!cancelled && markGeneration.current === markRequest) toast.error("Não foi possível carregar as mídias importantes."); });
     setSelected(null);
     setError(false);
     setFilter("all");
@@ -63,10 +77,28 @@ export function SupportMediaGallery({ threadId }: { threadId: string }) {
     };
     void scan();
     return () => { cancelled = true; };
-  }, [open, threadId, retry, list]);
+  }, [open, threadId, retry, list, listMarked]);
+
+  const toggleImportant = async (messageId: string) => {
+    if (markBusy) return;
+    const next = !marked.has(messageId);
+    const visit = markGeneration.current;
+    setMarkBusy(messageId);
+    try {
+      await setMarked({ data: { messageId, important: next } });
+      if (markGeneration.current !== visit) return;
+      setMarkedIds((cur) => { const copy = new Set(cur); if (next) copy.add(messageId); else copy.delete(messageId); return copy; });
+      toast.success(next ? "Salva na ficha do cliente como mídia importante" : "Destaque removido da ficha");
+    } catch (e: any) {
+      toast.error(e?.message === "Forbidden" ? "Somente administradores podem marcar mídias importantes." : (e?.message || "Não foi possível salvar o destaque."));
+    } finally {
+      if (markGeneration.current === visit) setMarkBusy(null);
+    }
+  };
 
   const visible = items.filter((item) => {
     const kind = mediaKind(item.attachment_type, item.attachment_url);
+    if (filter === "important") return marked.has(item.id);
     return filter === "all" || kind === filter || (filter === "file" && kind === "pdf");
   });
 
@@ -103,13 +135,18 @@ export function SupportMediaGallery({ threadId }: { threadId: string }) {
                   <div className="space-y-1 p-3">
                     <p className="truncate text-xs font-medium" title={name}>{name}</p>
                     <p className="text-xs text-muted-foreground">{item.is_admin ? "Equipe" : "Cliente"} · {Number.isNaN(date.getTime()) ? "" : dateFormatter.format(date)}</p>
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline underline-offset-4"><ExternalLink className="h-3 w-3" />Abrir arquivo</a>
+                    <div className="flex items-center justify-between gap-2">
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline underline-offset-4"><ExternalLink className="h-3 w-3" />Abrir arquivo</a>
+                      <Button type="button" size="sm" variant={marked.has(item.id) ? "secondary" : "ghost"} className="h-7 gap-1 px-2 text-xs" aria-pressed={marked.has(item.id)} disabled={markBusy !== null} onClick={() => void toggleImportant(item.id)} title="Salvar na ficha do cliente">
+                        {markBusy === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Star className={`h-3 w-3 ${marked.has(item.id) ? "fill-current" : ""}`} />}{marked.has(item.id) ? "Importante" : "Marcar"}
+                      </Button>
+                    </div>
                   </div>
                 </article>;
               })}
             </div>
             {loading && <div role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Carregando mídias…</div>}
-            {!loading && !error && visible.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">{items.length ? "Nenhuma mídia neste filtro." : "Nenhuma mídia enviada nesta conversa."}</p>}
+            {!loading && !error && visible.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">{items.length ? (filter === "important" ? "Nenhuma mídia importante marcada nesta conversa." : "Nenhuma mídia neste filtro.") : "Nenhuma mídia enviada nesta conversa."}</p>}
           </div>
           <Dialog open={selected !== null} onOpenChange={(value) => { if (!value) setSelected(null); }}>
             <DialogContent className="w-[calc(100%-2rem)] max-w-4xl">
