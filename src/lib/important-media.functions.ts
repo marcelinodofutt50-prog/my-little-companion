@@ -40,15 +40,15 @@ export const adminListImportantMedia = createServerFn({ method: "GET" })
       const { data: t } = await db.from("support_threads").select("id").eq("id", data.threadId).maybeSingle();
       if (!t) throw new Error("Conversa não encontrada");
       threadIds = [t.id];
-    } else {
-      const { data: ts, error } = await db.from("support_threads").select("id").eq("user_id", data.userId!).limit(500);
+    } else if (data.userId) {
+      const { data: ts, error } = await db.from("support_threads").select("id").eq("user_id", data.userId).limit(500);
       if (error) throw new Error("Não foi possível carregar as mídias importantes.");
       threadIds = (ts ?? []).map((t: any) => t.id);
     }
     if (threadIds.length === 0) return { items: [] };
     const { data: rows, error } = await db
       .from("customer_important_media")
-      .select("message_id, marked_at, support_messages!inner(id, thread_id, attachment_url, attachment_type, created_at, is_admin)")
+      .select("message_id, marked_at, support_messages!inner(id, thread_id, attachment_url, attachment_type, created_at, is_admin, sender_id)")
       .in("support_messages.thread_id", threadIds)
       .order("marked_at", { ascending: false })
       .limit(200);
@@ -56,13 +56,20 @@ export const adminListImportantMedia = createServerFn({ method: "GET" })
     const { toImportantMediaItems } = await import("./important-media");
     const items = toImportantMediaItems((rows ?? []) as any, threadIds);
     const { SUPPORT_MEDIA_BUCKET, SUPPORT_MEDIA_SIGNED_TTL, extractSupportMediaPath } = await import("./support-media");
-    const paths = Array.from(new Set(items.map((i) => extractSupportMediaPath(i.attachmentUrl)).filter((p): p is string => !!p)));
+    const { canAttachSupportMedia } = await import("./support-attachment-access");
+    const safePaths = new Map<string, string>();
+    for (const row of rows ?? []) {
+      const m = row.support_messages;
+      const path = extractSupportMediaPath(m?.attachment_url);
+      if (m && path && canAttachSupportMedia(path, m.thread_id, m.sender_id, true)) safePaths.set(row.message_id, path);
+    }
+    const paths = Array.from(new Set(safePaths.values()));
     if (paths.length) {
       try {
         const { createDownloads } = await import("@/lib/storage-gateway.server");
         const signed = await createDownloads(SUPPORT_MEDIA_BUCKET, paths, SUPPORT_MEDIA_SIGNED_TTL);
         for (const item of items) {
-          const p = extractSupportMediaPath(item.attachmentUrl);
+          const p = safePaths.get(item.messageId);
           if (p && signed[p]) item.attachmentUrl = signed[p];
         }
       } catch { /* mantém links existentes */ }

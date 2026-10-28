@@ -34,6 +34,7 @@ export function CustomerImportantMedia({ userId, onOpenThread }: { userId: strin
 
   useEffect(() => {
     setItems([]);
+    setBusy(null);
     void load();
     return () => { gen.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -49,6 +50,7 @@ export function CustomerImportantMedia({ userId, onOpenThread }: { userId: strin
       setItems((cur) => cur.filter((i) => i.messageId !== messageId));
       toast.success("Destaque removido");
     } catch (e: any) {
+      if (gen.current !== request) return;
       toast.error(e?.message === "Forbidden" ? "Somente administradores podem alterar destaques." : "Não foi possível remover o destaque.");
     } finally {
       if (gen.current === request) setBusy(null);
@@ -59,7 +61,7 @@ export function CustomerImportantMedia({ userId, onOpenThread }: { userId: strin
     <div className="space-y-1.5" data-sensitive>
       {loading && items.length === 0 && <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Carregando…</p>}
       {error && <div role="alert" className="flex items-center justify-between gap-2 text-xs text-destructive">Não foi possível carregar as mídias importantes.<Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => void load()}><RotateCw className="mr-1 h-3 w-3" />Tentar novamente</Button></div>}
-      {!loading && !error && items.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma mídia importante. No chat, abra “Mídias” e toque em “Marcar”.</p>}
+      {!loading && !error && items.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma mídia importante.</p>}
       <div className="grid grid-cols-2 gap-2">
         {items.map((item) => {
           const kind = mediaKind(item.attachmentType, item.attachmentUrl);

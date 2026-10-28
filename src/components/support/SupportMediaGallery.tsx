@@ -76,7 +76,7 @@ export function SupportMediaGallery({ threadId }: { threadId: string }) {
       }
     };
     void scan();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; markGeneration.current++; };
   }, [open, threadId, retry, list, listMarked]);
 
   const toggleImportant = async (messageId: string) => {
@@ -90,6 +90,7 @@ export function SupportMediaGallery({ threadId }: { threadId: string }) {
       setMarkedIds((cur) => { const copy = new Set(cur); if (next) copy.add(messageId); else copy.delete(messageId); return copy; });
       toast.success(next ? "Salva na ficha do cliente como mídia importante" : "Destaque removido da ficha");
     } catch (e: any) {
+      if (markGeneration.current !== visit) return;
       toast.error(e?.message === "Forbidden" ? "Somente administradores podem marcar mídias importantes." : (e?.message || "Não foi possível salvar o destaque."));
     } finally {
       if (markGeneration.current === visit) setMarkBusy(null);
