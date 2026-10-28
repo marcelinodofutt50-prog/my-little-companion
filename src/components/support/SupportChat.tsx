@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { RENEWAL_ACTION } from "@/lib/support-renewal-rules";
+import { createLatestRequest } from "@/lib/latest-request";
 import { useEffect, useRef, useState, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
@@ -355,6 +356,9 @@ export function SupportChat({
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [body, setBody] = useState("");
+  const bodyRef = useRef(body);
+  bodyRef.current = body;
+  const refineRequest = useRef(createLatestRequest());
   // Rascunho por conversa: evita perder o texto ao trocar de ticket ou recarregar.
   const draftKey = `shadow:draft:${userId}:${threadId}`;
   const restoredDraftKey = useRef<string | null>(null);
@@ -386,6 +390,10 @@ export function SupportChat({
   const [zoomUrl, setZoomUrl] = useState<string | null>(null);
   const [refining, setRefining] = useState<null | RefineTone>(null);
   const [preRefine, setPreRefine] = useState<string | null>(null);
+  useEffect(() => {
+    setRefining(null);
+    return () => { refineRequest.current.cancel(); };
+  }, [threadId, userId]);
 
   const listFn = useServerFn(listMessages);
   const sendFn = useServerFn(sendMessage);
@@ -400,18 +408,22 @@ export function SupportChat({
   const handleRefine = async (tone: RefineTone) => {
     const draft = body.trim();
     if (!draft || refining) return;
+    const originalBody = body;
+    const isCurrent = refineRequest.current.begin();
     setRefining(tone);
     try {
       const res: any = await refineFn({ data: { threadId, draft, tone } });
+      if (!isCurrent() || activeThreadRef.current !== threadId || bodyRef.current !== originalBody) return;
       if (res?.text) {
         setPreRefine(draft);
         setBody(res.text);
         toast.success("Texto reformulado — revise antes de enviar.");
       }
     } catch (e: any) {
+      if (!isCurrent() || activeThreadRef.current !== threadId) return;
       toast.error(e?.message || "Não foi possível reformular o texto agora.");
     } finally {
-      setRefining(null);
+      if (isCurrent()) setRefining(null);
     }
   };
 

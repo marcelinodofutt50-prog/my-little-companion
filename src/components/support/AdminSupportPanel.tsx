@@ -36,6 +36,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
+import { createLatestRequest } from "@/lib/latest-request";
 
 export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | null }) {
   const [threads, setThreads] = useState<any[]>([]);
@@ -53,6 +54,9 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyResults, setHistoryResults] = useState<any[] | null>(null);
   const [historyQuery, setHistoryQuery] = useState("");
+  const historyRequest = useRef(createLatestRequest());
+  const [historyError, setHistoryError] = useState(false);
+  const [listError, setListError] = useState(false);
   const [histStatus, setHistStatus] = useState<"all" | "open" | "closed">("all");
   const [histDays, setHistDays] = useState(0);
   const [histWho, setHistWho] = useState<"all" | "customer" | "staff">("all");
@@ -87,7 +91,10 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
       return;
     }
     setHistoryMode(true);
+    const isCurrent = historyRequest.current.begin();
     setHistoryLoading(true);
+    setHistoryError(false);
+    setHistoryResults(null);
     setHistoryQuery(q);
     try {
       const res: any = await searchHistoryFn({ data: {
@@ -96,16 +103,21 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
         days: over.days ?? histDays,
         who: over.who ?? histWho,
       } });
-      setHistoryResults(res?.results ?? []);
+      if (isCurrent()) setHistoryResults(res?.results ?? []);
     } catch (e: any) {
+      if (!isCurrent()) return;
       toast.error(e?.message || "Falha ao buscar no histórico");
+      setHistoryError(true);
       setHistoryResults([]);
     } finally {
-      setHistoryLoading(false);
+      if (isCurrent()) setHistoryLoading(false);
     }
   };
 
   const exitHistoryMode = () => {
+    historyRequest.current.cancel();
+    setHistoryLoading(false);
+    setHistoryError(false);
     setHistoryMode(false);
     setHistoryResults(null);
   };
@@ -186,10 +198,12 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
       const data: any = await listFn({ data: { filter } });
       if (loadGenRef.current !== gen) return;
       setThreads(data);
+      setListError(false);
     } catch (e: any) {
+      if (loadGenRef.current === gen) setListError(true);
       if (loadGenRef.current === gen && !silent) toast.error("Erro ao listar tickets");
     } finally {
-      if (loadGenRef.current === gen && !silent) setLoading(false);
+      if (loadGenRef.current === gen) setLoading(false);
     }
   };
 
@@ -206,7 +220,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
       timer = setTimeout(() => { timer = null; void loadThreads(true); }, 900);
     };
 
-    const ch = supabase.channel("admin-chat-updates")
+    const ch = supabase.channel(`admin-chat-updates-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "support_threads" }, () => scheduleReload())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages" }, (payload: any) => {
         scheduleReload();
@@ -220,8 +234,10 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
       })
       .subscribe();
 
-    return () => { if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
+    return () => { ++loadGenRef.current; if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
   }, [filter]);
+
+  useEffect(() => () => { historyRequest.current.cancel(); }, []);
 
   // Contador de não lidas no título da aba do navegador.
   const unreadTotal = threads.reduce((n, t) => n + (Number(t.unread_by_staff || 0) > 0 ? 1 : 0), 0);
@@ -396,12 +412,15 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
         </div>
 
         <div className="flex-1 overflow-y-auto border-t border-border/40">
+          {listError && !historyMode && <div role="alert" className="flex flex-wrap items-center gap-2 p-3 text-xs text-destructive">Não foi possível atualizar os tickets.<Button size="sm" variant="outline" onClick={() => void loadThreads()}>Tentar novamente</Button></div>}
           {historyMode ? (
             historyLoading ? (
               <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin mb-2" />
                 <span className="text-[10px] font-mono uppercase">Buscando no histórico...</span>
               </div>
+            ) : historyError ? (
+              <div role="alert" className="space-y-2 p-4 text-xs text-destructive">Não foi possível buscar no histórico.<Button size="sm" variant="outline" onClick={() => void handleHistorySearch()}>Tentar novamente</Button></div>
             ) : !historyResults || historyResults.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground italic text-xs">
                 Nenhuma conversa antiga encontrada com esse termo
@@ -596,7 +615,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                   <ToolbarGroup label="Classificação do atendimento">
                     <Select
                       value={selectedThread.priority}
-                      onValueChange={val => setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads())}
+                      onValueChange={val => { void setPriorityFn({ data: { threadId: selectedThread.id, priority: val as any } }).then(() => loadThreads()).catch(() => toast.error("Não foi possível alterar a prioridade.")); }}
                     >
                       <SelectTrigger className={cn(toolbarSelect, "w-24")}>
                         <SelectValue placeholder="Prioridade" />
@@ -609,7 +628,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                     </Select>
                     <Select
                       value={selectedThread.category}
-                      onValueChange={val => setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads())}
+                      onValueChange={val => { void setCategoryFn({ data: { threadId: selectedThread.id, category: val as any } }).then(() => loadThreads()).catch(() => toast.error("Não foi possível alterar a categoria.")); }}
                     >
                       <SelectTrigger className={cn(toolbarSelect, "w-40")}>
                         <SelectValue placeholder="Categoria" />
