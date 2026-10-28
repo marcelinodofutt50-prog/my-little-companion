@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { safeCreatorVideoHref } from "@/lib/creator-link-safety";
 
 type Claim = { id: string; user_id: string; status: string; staff_note: string | null; created_at: string; nick?: string };
 type Video = { id: string; user_id: string; url: string; title: string; platform: string; status: string; created_at: string; nick?: string };
@@ -72,21 +73,24 @@ export function AdminCreatorContentPanel() {
           </div>
         </div>
         {shownVideos.length === 0 && <p className="text-sm text-muted-foreground">Nada aqui.</p>}
-        {shownVideos.map((v) => (
+        {shownVideos.map((v) => {
+          const safeHref = safeCreatorVideoHref(v.url);
+          return (
           <div key={v.id} className="space-y-1 rounded-md border border-border p-2 text-sm">
             <div className="flex items-center justify-between gap-2">
               <span><b>{v.nick}</b> <span className="text-xs text-muted-foreground">· {v.platform} · {new Date(v.created_at).toLocaleDateString("pt-BR")}</span></span>
               <span className="font-mono text-[10px] uppercase text-muted-foreground">{v.status === "pending" ? "pendente" : v.status === "approved" ? "aprovado" : "recusado"}</span>
             </div>
             {v.title && <p className="text-xs">{v.title}</p>}
-            {/^https:\/\/\S+$/i.test(v.url) && <a href={v.url} target="_blank" rel="noopener noreferrer nofollow" className="break-all text-xs text-primary underline">{v.url}</a>}
+            {safeHref ? <a href={safeHref} target="_blank" rel="noopener noreferrer nofollow" className="break-all text-xs text-primary underline">{v.url}</a> : <span className="text-xs text-destructive">Link bloqueado por segurança.</span>}
             <div className="flex flex-wrap gap-2 pt-1">
               {note(v.id, "Comentário (aparece para o creator)")}
               {v.status !== "approved" && <Button size="sm" onClick={() => review("video", v.id, "approved")}>Aprovar</Button>}
               {v.status !== "rejected" && <Button size="sm" variant="outline" onClick={() => review("video", v.id, "rejected")}>Recusar</Button>}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </CardContent></Card>
   );

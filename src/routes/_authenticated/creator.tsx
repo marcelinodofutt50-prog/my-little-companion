@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { safeCreatorVideoHref } from "@/lib/creator-link-safety";
 
 export const Route = createFileRoute("/_authenticated/creator")({
   head: () => ({
@@ -226,11 +227,13 @@ function CreatorPage() {
         </div>
         <div className="space-y-2">
           {videos.length === 0 && <p className="text-sm text-muted-foreground">Nenhum vídeo enviado ainda.</p>}
-          {videos.map((v) => (
+          {videos.map((v) => {
+            const safeHref = safeCreatorVideoHref(v.url);
+            return (
             <div key={v.id} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{v.title || v.platform.toUpperCase()}</p>
-                <a href={v.url} target="_blank" rel="noopener noreferrer nofollow" className="flex items-center gap-1 truncate font-mono text-[11px] text-primary underline"><Link2 className="h-3 w-3 shrink-0" />{v.url}</a>
+                {safeHref ? <a href={safeHref} target="_blank" rel="noopener noreferrer nofollow" className="flex items-center gap-1 truncate font-mono text-[11px] text-primary underline"><Link2 className="h-3 w-3 shrink-0" />{v.url}</a> : <span className="text-xs text-destructive">Link bloqueado por segurança.</span>}
                 {v.staff_note && <p className="mt-1 text-xs text-muted-foreground">Equipe: {v.staff_note}</p>}
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -241,7 +244,8 @@ function CreatorPage() {
               </span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent></Card>
 
