@@ -24,7 +24,9 @@ export function AdminSupportersPanel() {
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const review = async (id: string, status: "approved" | "rejected" | "pending") => {
-    const { error } = await supabase.from("supporter_applications").update({ status, staff_note: (notes[id] || "").slice(0, 300) || null } as any).eq("id", id);
+    const { error } = await supabase.rpc("review_supporter_application", {
+      _id: id, _status: status, _note: (notes[id] || "").slice(0, 300),
+    });
     if (error) return toast.error("Não foi possível salvar.");
     toast.success(status === "approved" ? "Cargo de Creator liberado — o cliente verá a mensagem de parabéns." : status === "rejected" ? "Pedido recusado." : "Cargo removido, pedido voltou para análise.");
     load();

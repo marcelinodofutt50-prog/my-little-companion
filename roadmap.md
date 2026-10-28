@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 28/10 — isolamento de permissões do Creator
+- [x] Restringir consulta de status a proprietário/equipe com MFA; retirar gravações diretas e migrar revisão de pedidos para RPC com responsável confirmado; aplicado no Cloud e FILES, sem alterar licenças ou recompensas.
+- [x] Teste SQL com rollback passou no FILES: proprietário lê seus registros, outra conta não lê/apaga/revisa, equipe revisa com atribuição correta; permissões SELECT-only confirmadas no Cloud, 15 testes de links passaram e compilação OK.
+- [ ] Conferir a tela autenticada: conta do solicitante ausente no Cloud; teste SQL com troca de papel bloqueado pela conexão gerenciada. Atualização da tela de revisão no site externo depende do deploy Vercel; análise profunda em andamento.
+
 ## Pedido 28/10 — segurança do Creator
 - [x] Restringir links de vídeos armazenados nas telas do Creator e da equipe a HTTPS e plataformas permitidas, rejeitando credenciais, portas alternativas e destinos disfarçados; sem alterar licença, recompensas ou divulgação.
 - [x] 15 testes de links passaram e compilação automática sem erros; fluxo autenticado do Creator não foi exercitado, e o site externo ainda exige atualização.

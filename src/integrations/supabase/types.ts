@@ -4407,6 +4407,10 @@ export type Database = {
         Args: { _id: string; _kind: string; _note: string; _status: string }
         Returns: undefined
       }
+      review_supporter_application: {
+        Args: { _id: string; _note: string; _status: string }
+        Returns: undefined
+      }
       revoke_unpaid_server_licenses: {
         Args: never
         Returns: {
