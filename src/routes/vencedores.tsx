@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Trophy } from "lucide-react";
+import { Gift, Trophy } from "lucide-react";
+import { WinnersGrid } from "@/components/GiveawayWinnersCard";
+import { groupWinnersByGiveaway } from "@/lib/winner-groups";
 import { SiteHeader } from "@/components/SiteHeader";
 import { siteUrl } from "@/lib/site-url";
 import { listPublicWinners } from "@/lib/winner-board.functions";
@@ -38,25 +40,15 @@ function WinnersPage() {
         </header>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {!error && winners.length === 0 && <p className="terminal-card p-6 text-center text-sm text-muted-foreground">Os vencedores aparecem aqui assim que forem registrados.</p>}
-        {winners.length > 0 && (
-          <div className="terminal-card overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
-                <tr><th className="p-3">Apelido</th><th className="p-3">Sorteio</th><th className="p-3">Prêmio</th><th className="p-3">Data</th></tr>
-              </thead>
-              <tbody>
-                {winners.map((w) => (
-                  <tr key={w.id} className="border-b border-border/50 last:border-0">
-                    <td className="p-3 font-semibold text-primary">{w.nickname}</td>
-                    <td className="p-3">{w.giveaway_title}</td>
-                    <td className="p-3">{w.prize_label}</td>
-                    <td className="whitespace-nowrap p-3 text-muted-foreground">{formatDay(w.awarded_on)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {groupWinnersByGiveaway(winners).map((g) => (
+          <section key={g.title} className="terminal-card space-y-4 p-5">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-base font-bold uppercase"><Gift className="h-5 w-5 text-primary" /> {g.title}</h2>
+              <span className="whitespace-nowrap text-xs text-muted-foreground">{formatDay(g.latest)}</span>
+            </div>
+            <WinnersGrid winners={g.winners} />
+          </section>
+        ))}
       </main>
     </div>
   );
