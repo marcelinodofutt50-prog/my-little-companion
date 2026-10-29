@@ -2487,7 +2487,7 @@ function AdminPage() {
               {tab === "client_status" && <AdminClientStatusPanel />}
               {tab === "security_attempts" && <AdminSecurityAttemptsPanel />}
               {tab === "vip" && <AdminVipPanel />}
-              {tab === "giveaways" && <div className="space-y-6"><AdminGiveawaysPanel /><AdminSupportersPanel /><AdminCreatorContentPanel /></div>}
+              {tab === "giveaways" && <div className="space-y-6"><AdminGiveawaysPanel /><AdminWinnerBoardPanel /><AdminSupportersPanel /><AdminCreatorContentPanel /></div>}
               {tab === "nexus" && <StaffNexusChat className="min-h-[560px]" />}
               {tab === "academy" && <StaffAcademyPanel />}
               {tab === "applications" && <AdminStaffApplicationsPanel />}
