@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 29/10 — segurança pendente e TLS
+- [ ] Conferir pendências atuais, corrigir autorização de comprovantes e acesso expirado, impedir autoatribuição de indicação e preservar bloqueios de APK/missões.
+- [ ] Exigir validação de certificado/hostname em conexões PostgreSQL; nunca aceitar certificado inválido.
+- [ ] Testar correções, conferir dependências e documentar limitações do banco externo.
+
 ## Pedido 29/10 — botão de edição dos vencedores (só admin)
 - [x] Botão "Editar" no card do sorteio do Shadow Pass, visível só para admin; edita/adiciona/remove apelidos e prêmios; "Novo sorteio" cria outro card no mesmo estilo; /vencedores usa o mesmo estilo por sorteio.
 - [x] Gravação exige admin + 2FA no servidor e no banco (UPDATE restrito a 4 colunas). Testado no navegador: adicionar e remover como admin; visitante não vê o botão. Edição de linha existente (Salvar) não testada no navegador.
