@@ -1,9 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 29/10 — tabela pública de vencedores
-- [ ] Lista pública somente com apelidos e cadastro/remoção manual pelo administrador.
-- [ ] Validar privacidade, acesso admin e exibição pública; sem automação de licenças.
-- [ ] Aplicar estrutura no banco externo e informar necessidade de deploy.
+- [x] Página /vencedores (apelido, sorteio, prêmio, data) e cadastro/remoção manual na aba Sorteios do admin; apelidos com dados pessoais são recusados.
+- [x] Testado no navegador: cadastro como admin aparece na página pública; visitante não grava nem lê o autor do registro. 7 testes passaram; registro de teste removido.
+- [x] Estrutura aplicada no Cloud e no banco do site publicado (FILES).
+- [ ] Deploy Vercel sem cache para a página chegar ao site publicado.
 
 ## Pedido 28/10 — janela do chat maior
 - [x] Página /suporte: coluna alargada (max-w-3xl → max-w-5xl) e card do chat mais alto; medido no navegador 992 x 745 px (antes 736 x 715) e área de mensagens 988 x 526 px (antes 732 x 456).
