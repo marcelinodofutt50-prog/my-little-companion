@@ -52,3 +52,5 @@
 - Creator read recovery uses creator-read-recovery with bounded transient-only retries and AbortSignals scoped to the current load; never retry mutations automatically, because a lost response may hide a committed write.
 
 - Important-media bookmarks are admin+MFA-only rows (RLS and server check) that reference an existing support message and store no copy; the customer is derived from the conversation, files stay private via short-lived signed URLs, and a bookmark never approves a payment. The list endpoint is fail-closed: it returns only bookmarks whose storage key passed canonical validation and got a fresh signed link, never the stored URL, and it chunks thread ids so large histories neither break the request nor silently drop rows.
+
+- The public winners list (`giveaway_winner_board`, page `/vencedores`) is filled manually by MFA-validated admins; visitors read only nickname/title/prize/date columns, writes are RLS-limited to admins, and nicknames pass `winner-board.ts` privacy validation. Why: public rows must never expose personal data or imply automatic prize delivery.
