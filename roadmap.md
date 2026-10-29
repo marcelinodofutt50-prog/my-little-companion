@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 29/10 — botão de edição dos vencedores (só admin)
+- [x] Botão "Editar" no card do sorteio do Shadow Pass, visível só para admin; edita/adiciona/remove apelidos e prêmios; "Novo sorteio" cria outro card no mesmo estilo; /vencedores usa o mesmo estilo por sorteio.
+- [x] Gravação exige admin + 2FA no servidor e no banco (UPDATE restrito a 4 colunas). Testado no navegador: adicionar e remover como admin; visitante não vê o botão. Edição de linha existente (Salvar) não testada no navegador.
+- [x] Aplicado no Cloud e no banco do site publicado (FILES), com verificação de certificado desligada nesta conexão pontual.
+- [ ] Deploy Vercel sem cache.
+
 ## Pedido 29/10 — tabela pública de vencedores
 - [x] Página /vencedores (apelido, sorteio, prêmio, data) e cadastro/remoção manual na aba Sorteios do admin; apelidos com dados pessoais são recusados.
 - [x] Testado no navegador: cadastro como admin aparece na página pública; visitante não grava nem lê o autor do registro. 7 testes passaram; registro de teste removido.
