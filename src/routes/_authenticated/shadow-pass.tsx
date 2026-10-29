@@ -33,6 +33,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { BackToDashboard } from "@/components/BackToDashboard";
 import { SecurityPinCard } from "@/components/SecurityPinCard";
 import { AccountSecurityTab } from "@/components/AccountSecurityTab";
+import { EditWinnersButton, GiveawayWinnersCards, WinnersGrid, useWinnerBoard } from "@/components/GiveawayWinnersCard";
+import { groupWinnersByGiveaway } from "@/lib/winner-groups";
 
 export const Route = createFileRoute('/_authenticated/shadow-pass')({
   head: () => ({
@@ -61,6 +63,7 @@ function ShadowPassPage() {
     queryFn: () => getShadowPassData(),
   });
 
+  const winnerBoard = useWinnerBoard();
   const [messageText, setMessageText] = useState("");
   const fetchMessages = useServerFn(getCommunityMessages);
   const sendMsgFn = useServerFn(sendCommunityMessage);
@@ -504,13 +507,18 @@ function ShadowPassPage() {
                       5 membros válidos serão sorteados: 1 Vitalício, 2 Mensais e 2 Semanais.
                     </CardDescription>
                   </div>
-                  <Badge variant="outline">
-                    {community.giveaway.status === "completed" ? "Concluído" : "Em andamento"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {community.giveaway.status === "completed" || manualWinners.length > 0 ? "Concluído" : "Em andamento"}
+                    </Badge>
+                    <EditWinnersButton title={community.giveaway.title} />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {community.giveaway.status === "completed" ? (
+                {manualWinners.length > 0 ? (
+                  <WinnersGrid winners={manualWinners} />
+                ) : community.giveaway.status === "completed" ? (
                   <div className="grid gap-3 sm:grid-cols-2">
                     {community.giveaway.winners.map((winner: any) => (
                       <div key={winner.position} className={cn(
