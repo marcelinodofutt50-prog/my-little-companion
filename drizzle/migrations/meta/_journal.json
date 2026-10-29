@@ -176,6 +176,13 @@
       "when": 1793246565584,
       "tag": "0024_winner_board_harden_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793269192392,
+      "tag": "0025_winner_board_admin_update",
+      "breakpoints": true
     }
   ]
 }
