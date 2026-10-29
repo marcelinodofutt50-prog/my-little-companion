@@ -1039,6 +1039,36 @@ export type Database = {
         }
         Relationships: []
       }
+      giveaway_winner_board: {
+        Row: {
+          awarded_on: string
+          created_at: string
+          created_by: string
+          giveaway_title: string
+          id: string
+          nickname: string
+          prize_label: string
+        }
+        Insert: {
+          awarded_on?: string
+          created_at?: string
+          created_by: string
+          giveaway_title: string
+          id?: string
+          nickname: string
+          prize_label: string
+        }
+        Update: {
+          awarded_on?: string
+          created_at?: string
+          created_by?: string
+          giveaway_title?: string
+          id?: string
+          nickname?: string
+          prize_label?: string
+        }
+        Relationships: []
+      }
       integration_logs: {
         Row: {
           action: string | null

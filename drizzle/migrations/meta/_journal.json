@@ -148,6 +148,27 @@
       "when": 1793156732216,
       "tag": "0020_important_media_tighten_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793240335404,
+      "tag": "0021_giveaway_winner_board",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793240411961,
+      "tag": "0022_winner_board_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793240440281,
+      "tag": "0023_winner_board_columns",
+      "breakpoints": true
     }
   ]
 }
