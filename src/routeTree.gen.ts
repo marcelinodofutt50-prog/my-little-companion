@@ -26,6 +26,7 @@ import { Route as RenovarServidorRouteImport } from './routes/renovar-servidor'
 import { Route as ShadowHubRouteImport } from './routes/shadow-hub'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as TutorialRouteImport } from './routes/tutorial'
+import { Route as VencedoresRouteImport } from './routes/vencedores'
 import { Route as VpsRouteImport } from './routes/vps'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedClientesChatRouteImport } from './routes/_authenticated/clientes-chat'
@@ -152,6 +153,11 @@ const TermosRoute = TermosRouteImport.update({
 const TutorialRoute = TutorialRouteImport.update({
   id: '/tutorial',
   path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VencedoresRoute = VencedoresRouteImport.update({
+  id: '/vencedores',
+  path: '/vencedores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VpsRoute = VpsRouteImport.update({
@@ -407,6 +413,7 @@ export interface FileRoutesByFullPath {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
+  '/vencedores': typeof VencedoresRoute
   '/vps': typeof VpsRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes-chat': typeof AuthenticatedClientesChatRoute
@@ -468,6 +475,7 @@ export interface FileRoutesByTo {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
+  '/vencedores': typeof VencedoresRoute
   '/vps': typeof VpsRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes-chat': typeof AuthenticatedClientesChatRoute
@@ -531,6 +539,7 @@ export interface FileRoutesById {
   '/shadow-hub': typeof ShadowHubRoute
   '/termos': typeof TermosRoute
   '/tutorial': typeof TutorialRouteWithChildren
+  '/vencedores': typeof VencedoresRoute
   '/vps': typeof VpsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/clientes-chat': typeof AuthenticatedClientesChatRoute
@@ -594,6 +603,7 @@ export interface FileRouteTypes {
     | '/shadow-hub'
     | '/termos'
     | '/tutorial'
+    | '/vencedores'
     | '/vps'
     | '/admin'
     | '/clientes-chat'
@@ -655,6 +665,7 @@ export interface FileRouteTypes {
     | '/shadow-hub'
     | '/termos'
     | '/tutorial'
+    | '/vencedores'
     | '/vps'
     | '/admin'
     | '/clientes-chat'
@@ -717,6 +728,7 @@ export interface FileRouteTypes {
     | '/shadow-hub'
     | '/termos'
     | '/tutorial'
+    | '/vencedores'
     | '/vps'
     | '/_authenticated/admin'
     | '/_authenticated/clientes-chat'
@@ -780,6 +792,7 @@ export interface RootRouteChildren {
   ShadowHubRoute: typeof ShadowHubRoute
   TermosRoute: typeof TermosRoute
   TutorialRoute: typeof TutorialRouteWithChildren
+  VencedoresRoute: typeof VencedoresRoute
   VpsRoute: typeof VpsRoute
   PagamentoCheckoutRoute: typeof PagamentoCheckoutRoute
   PagamentoErroRoute: typeof PagamentoErroRoute
@@ -926,6 +939,13 @@ declare module '@tanstack/react-router' {
       path: '/tutorial'
       fullPath: '/tutorial'
       preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vencedores': {
+      id: '/vencedores'
+      path: '/vencedores'
+      fullPath: '/vencedores'
+      preLoaderRoute: typeof VencedoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vps': {
@@ -1314,6 +1334,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShadowHubRoute: ShadowHubRoute,
   TermosRoute: TermosRoute,
   TutorialRoute: TutorialRouteWithChildren,
+  VencedoresRoute: VencedoresRoute,
   VpsRoute: VpsRoute,
   PagamentoCheckoutRoute: PagamentoCheckoutRoute,
   PagamentoErroRoute: PagamentoErroRoute,

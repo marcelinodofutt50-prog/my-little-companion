@@ -5,6 +5,7 @@ import { AdminDailySummary } from "@/components/AdminDailySummary";
 import { AdminSupportersPanel } from "@/components/admin/AdminSupportersPanel";
 import { AdminCreatorContentPanel } from "@/components/admin/AdminCreatorContentPanel";
 import { AdminGiveawaysPanel } from "@/components/admin/AdminGiveawaysPanel";
+import { AdminWinnerBoardPanel } from "@/components/admin/AdminWinnerBoardPanel";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
