@@ -162,6 +162,13 @@
       "when": 1793240411961,
       "tag": "0022_winner_board_access",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793240440281,
+      "tag": "0023_winner_board_columns",
+      "breakpoints": true
     }
   ]
 }
