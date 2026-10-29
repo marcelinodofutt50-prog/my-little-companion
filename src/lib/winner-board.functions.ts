@@ -81,3 +81,32 @@ export const adminRemoveWinner = createServerFn({ method: "POST" })
     if (!rows?.length) throw new Error("Registro não encontrado. Atualize a lista.");
     return { ok: true };
   });
+
+/** Só informa à tela se deve mostrar o botão de edição; a autorização real fica nas gravações. */
+export const amIWinnerAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { resolveRoles } = await import("@/lib/roles.server");
+    const { isAdmin } = await resolveRoles(context);
+    return { isAdmin };
+  });
+
+export const adminUpdateWinner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      nickname: winnerNickname,
+      prize_label: z.string().trim().min(2).max(120),
+    }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: rows, error } = await (context.supabase as any)
+      .from("giveaway_winner_board")
+      .update({ nickname: data.nickname, prize_label: data.prize_label })
+      .eq("id", data.id).select("id");
+    if (error) throw new Error("Não foi possível salvar a alteração.");
+    if (!rows?.length) throw new Error("Registro não encontrado. Atualize a lista.");
+    return { ok: true };
+  });
