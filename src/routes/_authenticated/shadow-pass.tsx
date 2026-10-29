@@ -509,7 +509,7 @@ function ShadowPassPage() {
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="whitespace-nowrap">
                       {community.giveaway.status === "completed" || manualWinners.length > 0 ? "Concluído" : "Em andamento"}
                     </Badge>
                     <EditWinnersButton title={community.giveaway.title} />
