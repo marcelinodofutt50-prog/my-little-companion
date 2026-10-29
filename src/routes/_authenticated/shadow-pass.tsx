@@ -120,6 +120,7 @@ function ShadowPassPage() {
   });
 
   const { identity, loyalty, community, vip, reputation, staff } = data as any;
+  const manualWinners = groupWinnersByGiveaway(winnerBoard.data?.winners ?? []).find((g) => g.title === community.giveaway.title)?.winners ?? [];
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(identity.nickname);
   const [isAnonymous, setIsAnonymous] = useState(!!(identity.isAnonymous || identity.metadata?.is_anonymous));
@@ -552,6 +553,7 @@ function ShadowPassPage() {
                 )}
               </CardContent>
             </Card>
+            <GiveawayWinnersCards exclude={community.giveaway.title} />
           </section>
 
           {/* Diagnóstico de Infraestrutura (Botão Discreto) */}
