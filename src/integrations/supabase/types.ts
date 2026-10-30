@@ -919,6 +919,60 @@ export type Database = {
           },
         ]
       }
+      customer_purchase_records: {
+        Row: {
+          amount: number | null
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          kind: string
+          note: string | null
+          purchased_on: string | null
+          receipt_message_id: string | null
+          title: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          kind: string
+          note?: string | null
+          purchased_on?: string | null
+          receipt_message_id?: string | null
+          title?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          purchased_on?: string | null
+          receipt_message_id?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_purchase_records_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_purchase_records_receipt_message_id_fkey"
+            columns: ["receipt_message_id"]
+            isOneToOne: false
+            referencedRelation: "support_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_identities: {
         Row: {
           attrs_hash: string | null

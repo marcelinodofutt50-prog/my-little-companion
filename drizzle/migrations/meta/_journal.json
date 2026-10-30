@@ -183,6 +183,13 @@
       "when": 1793269192392,
       "tag": "0025_winner_board_admin_update",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793404351004,
+      "tag": "0026_customer_purchase_records",
+      "breakpoints": true
     }
   ]
 }
