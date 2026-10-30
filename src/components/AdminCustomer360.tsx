@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CustomerImportantMedia } from "@/components/admin/CustomerImportantMedia";
+import { CustomerPurchaseRecords } from "@/components/admin/CustomerPurchaseRecords";
 import { LicensePinReveal } from "@/components/admin/LicensePinReveal";
 import { LicensePasswordSyncDialog } from "@/components/admin/LicensePasswordSyncDialog";
 
@@ -395,11 +396,12 @@ export function AdminCustomer360({
             )}
 
             <Tabs defaultValue="resumo">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="resumo" className="text-[11px]">Resumo</TabsTrigger>
                 <TabsTrigger value="licencas" className="text-[11px]">Licenças</TabsTrigger>
                 <TabsTrigger value="financeiro" className="text-[11px]">Financeiro</TabsTrigger>
                 <TabsTrigger value="suporte" className="text-[11px]">Suporte</TabsTrigger>
+                <TabsTrigger value="registro" className="text-[11px]">Registro</TabsTrigger>
               </TabsList>
 
               <TabsContent value="resumo" className="mt-4 space-y-4">
@@ -644,6 +646,9 @@ export function AdminCustomer360({
                     {data.loyalty?.last_action_at ? ` · última ação ${d(data.loyalty.last_action_at)}` : ""}
                   </div>
                 </Section>
+              </TabsContent>
+            <TabsContent value="registro" className="mt-4">
+                {userId && <CustomerPurchaseRecords userId={userId} />}
               </TabsContent>
             </Tabs>
           </div>
