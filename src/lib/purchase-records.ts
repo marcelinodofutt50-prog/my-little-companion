@@ -9,7 +9,7 @@ export type PurchaseRecordKind = (typeof PURCHASE_RECORD_KINDS)[number];
 
 /** Sequência longa de dígitos parece número de cartão; não deve ficar em anotações. */
 export function looksLikeCardNumber(text: string): boolean {
-  return /(?:\d[ -]?){13,19}/.test(text) && text.replace(/\D/g, "").length >= 13 && /\d{4}[ -]?\d{4}[ -]?\d{4}[ -]?\d{1,7}/.test(text);
+  return /(?:^|\D)(?:\d[ -]?){12,18}\d(?:\D|$)/.test(text);
 }
 
 /** Converte "1.234,56" / "350" / "350.5" em número com 2 casas, ou null se vazio/inválido. */
