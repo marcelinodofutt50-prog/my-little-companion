@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 30/10 — ficha privada de compras no chat
+- [ ] Registrar compras legítimas e notas na ficha, com comprovantes do chat, sem benefícios ou licenças automáticos.
+- [ ] Restringir dados e ações a admin com MFA e validar vínculo do comprovante com o cliente.
+- [ ] Testar isolamento, conferir a tela autenticada e aplicar estrutura externa apenas com TLS validado.
+
 ## Pedido 29/10 — segurança pendente e TLS
 - [ ] Conferir pendências atuais, corrigir autorização de comprovantes e acesso expirado, impedir autoatribuição de indicação e preservar bloqueios de APK/missões.
 - [ ] Exigir validação de certificado/hostname em conexões PostgreSQL; nunca aceitar certificado inválido.
