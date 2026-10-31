@@ -90,9 +90,10 @@ export const adminListReceiptCandidates = createServerFn({ method: "GET" })
     let signed: Map<string, string>;
     try { signed = await signAttachments(rows); } catch { throw new Error("Não foi possível carregar os anexos do cliente."); }
     return {
-      items: rows.filter((m) => signed.has(m.id)).map((m) => ({
-        messageId: m.id, url: signed.get(m.id)!, type: m.attachment_type, sentAt: m.created_at,
-      })),
+      items: rows.flatMap((m) => {
+        const url = signed.get(m.id);
+        return url ? [{ messageId: m.id, url, type: m.attachment_type, sentAt: m.created_at }] : [];
+      }),
     };
   });
 

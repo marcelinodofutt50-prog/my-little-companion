@@ -1,9 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 30/10 — ficha privada de compras no chat
-- [ ] Registrar compras legítimas e notas na ficha, com comprovantes do chat, sem benefícios ou licenças automáticos.
-- [ ] Restringir dados e ações a admin com MFA e validar vínculo do comprovante com o cliente.
-- [ ] Testar isolamento, conferir a tela autenticada e aplicar estrutura externa apenas com TLS validado.
+- [x] Aba "Registro" na ficha do cliente (aberta pelo chat ao vivo): compras (produto, valor, data), anotações e comprovante escolhido entre anexos do cliente; sem benefício, licença ou aprovação de pagamento automáticos.
+- [x] Só admin com 2FA (servidor + RLS; sem acesso anônimo nem UPDATE); comprovante de outro cliente recusado no banco. Testado no navegador como admin: salvar com comprovante e remover; 8 testes novos passaram.
+- [ ] Banco do site publicado (FILES): migrações 0026 e 0027 não aplicadas, pois a conexão com validação de certificado falhou; TLS não foi desativado. Requer CA confiável.
+- [ ] Deploy Vercel sem cache.
 
 ## Pedido 29/10 — segurança pendente e TLS
 - [ ] Conferir pendências atuais, corrigir autorização de comprovantes e acesso expirado, impedir autoatribuição de indicação e preservar bloqueios de APK/missões.
