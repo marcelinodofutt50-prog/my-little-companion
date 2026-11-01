@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 01/11 — registros e fechamento automático do chat
+- [ ] Melhorar busca/filtros e recuperação de anexos na ficha privada, corrigindo travas e respostas antigas sem conceder benefícios.
+- [ ] Corrigir execução e seleção de tickets resolvidos no fechamento automático, preservando cinco horas, confirmação do cliente e bloqueios de pagamento.
+- [ ] Testar regressões e fluxo autorizado; conferir rotina do site externo com TLS verificado.
+
 ## Pedido 30/10 — ficha privada de compras no chat
 - [x] Aba "Registro" na ficha do cliente (aberta pelo chat ao vivo): compras (produto, valor, data), anotações e comprovante escolhido entre anexos do cliente; sem benefício, licença ou aprovação de pagamento automáticos.
 - [x] Só admin com 2FA (servidor + RLS; sem acesso anônimo nem UPDATE); comprovante de outro cliente recusado no banco. Testado no navegador como admin: salvar com comprovante e remover; 8 testes novos passaram.
