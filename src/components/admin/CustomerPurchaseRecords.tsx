@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ExternalLink, Loader2, Paperclip, Plus, RotateCw, Trash2 } from "lucide-react";
+import { ExternalLink, Loader2, Paperclip, Plus, RotateCw, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,8 @@ import {
   adminListPurchaseRecords,
   adminListReceiptCandidates,
 } from "@/lib/purchase-records.functions";
-import { parseAmountInput, totalRecordedPurchases, type PurchaseRecordItem } from "@/lib/purchase-records";
+import { filterPurchaseRecords, purchaseRecordInputSchema, parseAmountInput, totalRecordedPurchases, type PurchaseRecordItem } from "@/lib/purchase-records";
+import { createAccountActions } from "@/lib/account-actions";
 import { mediaKind } from "@/lib/support-media";
 
 const fmt = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -42,8 +43,11 @@ export function CustomerPurchaseRecords({ userId }: { userId: string }) {
   const [candidatesError, setCandidatesError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [recordFilter, setRecordFilter] = useState<"all" | "purchase" | "note">("all");
+  const actions = useRef(createAccountActions());
+  const candidateGen = useRef(0);
   const gen = useRef(0);
-  const saveLock = useRef(false);
 
   const load = async () => {
     const request = ++gen.current;
@@ -66,74 +70,74 @@ export function CustomerPurchaseRecords({ userId }: { userId: string }) {
   useEffect(() => {
     // Troca de cliente: limpa tudo e invalida respostas antigas.
     setItems([]); setTruncated(false); setOpen(false); setBusy(null); setSaving(false);
-    saveLock.current = false;
+    actions.current.enter(userId); candidateGen.current++;
+    setQuery(""); setRecordFilter("all");
     resetForm();
     void load();
-    return () => { gen.current++; };
+    return () => { gen.current++; candidateGen.current++; actions.current.cancel(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  const openForm = async () => {
+  const openForm = async (refresh = false) => {
     setOpen(true);
-    if (candidates) return;
-    const request = gen.current;
+    if (candidates && !refresh) return;
+    const request = ++candidateGen.current;
+    setCandidatesError(false); setCandidates(null);
     try {
       const r = await candidatesFn({ data: { userId } });
-      if (gen.current === request) setCandidates(r.items);
+      if (candidateGen.current === request) setCandidates(r.items);
     } catch {
-      if (gen.current === request) setCandidatesError(true);
+      if (candidateGen.current === request) setCandidatesError(true);
     }
   };
 
   const save = async () => {
-    if (saveLock.current) return;
-    const parsed = parseAmountInput(amount);
+    const parsed = kind === "purchase" ? parseAmountInput(amount) : null;
     if (parsed === "invalid") { toast.error("Valor inválido. Exemplo: 350,00"); return; }
-    saveLock.current = true;
-    const request = gen.current;
+    const payload = purchaseRecordInputSchema.safeParse({
+      userId, kind, title: kind === "purchase" ? title : undefined,
+      note: note || undefined, amount: parsed,
+      purchasedOn: kind === "purchase" && purchasedOn ? purchasedOn : null,
+      receiptMessageId: receiptId,
+    });
+    if (!payload.success) { toast.error(payload.error.issues[0]?.message ?? "Confira os dados do registro."); return; }
+    const action = actions.current.begin("mutation");
+    if (!action) return;
     setSaving(true);
     try {
-      await add({
-        data: {
-          userId, kind,
-          title: kind === "purchase" ? title : undefined,
-          note: note || undefined,
-          amount: kind === "purchase" ? parsed : null,
-          purchasedOn: kind === "purchase" && purchasedOn ? purchasedOn : null,
-          receiptMessageId: receiptId,
-        },
-      });
-      if (gen.current !== request) return;
+      await add({ data: payload.data });
+      if (!action.isCurrent()) return;
       toast.success("Registro salvo na ficha");
       resetForm(); setOpen(false);
       await load();
     } catch (e: any) {
-      if (gen.current !== request) return;
+      if (!action.isCurrent()) return;
       toast.error(e?.message === "Forbidden" ? "Somente administradores podem editar esta ficha." : e?.message || "Não foi possível salvar o registro.");
     } finally {
-      if (gen.current === request) { setSaving(false); saveLock.current = false; }
+      if (action.finish()) setSaving(false);
     }
   };
 
   const del = async (id: string) => {
-    if (busy) return;
     if (!confirm("Remover este registro da ficha? O anexo no chat não é apagado.")) return;
-    const request = gen.current;
+    const action = actions.current.begin("mutation");
+    if (!action) return;
     setBusy(id);
     try {
       await remove({ data: { id } });
-      if (gen.current !== request) return;
+      if (!action.isCurrent()) return;
       setItems((cur) => cur.filter((i) => i.id !== id));
       toast.success("Registro removido");
     } catch (e: any) {
-      if (gen.current !== request) return;
+      if (!action.isCurrent()) return;
       toast.error(e?.message || "Não foi possível remover o registro.");
     } finally {
-      if (gen.current === request) setBusy(null);
+      if (action.finish()) setBusy(null);
     }
   };
 
   const total = totalRecordedPurchases(items);
+  const visibleItems = filterPurchaseRecords(items, recordFilter, query);
 
   return (
     <div className="space-y-3" data-sensitive>
@@ -145,7 +149,13 @@ export function CustomerPurchaseRecords({ userId }: { userId: string }) {
         <p className="text-xs text-muted-foreground">
           {items.filter((i) => i.kind === "purchase").length} compra(s) registrada(s) · {brl(total)}
         </p>
-        {!open && <Button size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => void openForm()}><Plus className="h-3 w-3" />Novo registro</Button>}
+        <div className="flex items-center gap-1"><Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Atualizar ficha" title="Atualizar ficha e comprovantes" disabled={loading || saving || busy !== null} onClick={() => void load()}><RotateCw className="h-3.5 w-3.5" /></Button>
+        {!open && <Button size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => void openForm()}><Plus className="h-3 w-3" />Novo registro</Button>}</div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-0 flex-1"><Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" /><Input aria-label="Buscar registros" placeholder="Buscar produto ou nota" value={query} onChange={(e) => setQuery(e.target.value)} className="h-8 pl-8 text-xs" /></div>
+        <div className="flex gap-1" aria-label="Filtrar registros">{(["all", "purchase", "note"] as const).map((f) => <Button key={f} size="sm" variant={recordFilter === f ? "secondary" : "ghost"} aria-pressed={recordFilter === f} className="h-8 px-2 text-xs" onClick={() => setRecordFilter(f)}>{f === "all" ? "Todos" : f === "purchase" ? "Compras" : "Notas"}</Button>)}</div>
       </div>
 
       {open && (
@@ -167,7 +177,7 @@ export function CustomerPurchaseRecords({ userId }: { userId: string }) {
           <Textarea value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} rows={3} placeholder={kind === "purchase" ? "Observação (opcional). Não escreva senhas nem número de cartão." : "Anotação interna. Não escreva senhas nem número de cartão."} className="text-xs" aria-label="Observação" />
 
           <div className="space-y-1">
-            <p className="text-[11px] font-medium text-muted-foreground">Comprovante (anexo já enviado neste cliente no chat)</p>
+            <div className="flex items-center justify-between gap-2"><p className="text-xs font-medium text-muted-foreground">Comprovante do cliente</p><Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Atualizar anexos" title="Atualizar anexos" onClick={() => void openForm(true)}><RotateCw className="h-3 w-3" /></Button></div>
             {!candidates && !candidatesError && <p className="flex items-center gap-2 text-[11px] text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Carregando anexos…</p>}
             {candidatesError && <p role="alert" className="text-[11px] text-destructive">Não foi possível carregar os anexos do cliente.</p>}
             {candidates && candidates.length === 0 && <p className="text-[11px] text-muted-foreground">Este cliente ainda não enviou anexos no chat.</p>}
@@ -175,18 +185,18 @@ export function CustomerPurchaseRecords({ userId }: { userId: string }) {
               {(candidates ?? []).map((c) => {
                 const selected = receiptId === c.messageId;
                 return (
-                  <button key={c.messageId} type="button" aria-pressed={selected} onClick={() => setReceiptId(selected ? null : c.messageId)}
-                    className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border bg-muted/30 ${selected ? "border-primary ring-2 ring-primary" : "border-border/60"}`}
+                  <Button key={c.messageId} variant="outline" type="button" aria-label={`Selecionar comprovante de ${fmt.format(new Date(c.sentAt))}`} aria-pressed={selected} onClick={() => setReceiptId(selected ? null : c.messageId)}
+                    className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-md border bg-muted/30 p-0 ${selected ? "border-primary ring-2 ring-primary" : "border-border/60"}`}
                     title={fmt.format(new Date(c.sentAt))}>
                     {mediaKind(c.type, c.url) === "image" ? <img src={c.url} alt="Anexo do chat" className="h-full w-full object-cover" /> : <Paperclip className="h-5 w-5 text-muted-foreground" />}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
           </div>
 
           <div className="flex justify-end gap-1">
-            <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={saving} onClick={() => { resetForm(); setOpen(false); }}>Cancelar</Button>
+            <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={saving} onClick={() => { candidateGen.current++; resetForm(); setOpen(false); }}>Cancelar</Button>
             <Button size="sm" className="h-7 px-3 text-[11px]" disabled={saving || (kind === "purchase" ? !title.trim() : !note.trim())} onClick={() => void save()}>
               {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : "Salvar"}
             </Button>
@@ -205,18 +215,19 @@ export function CustomerPurchaseRecords({ userId }: { userId: string }) {
       {truncated && <p className="text-[11px] text-muted-foreground">Mostrando os 100 registros mais recentes.</p>}
 
       <div className="space-y-1.5">
-        {items.map((r) => (
+        {!loading && !error && items.length > 0 && visibleItems.length === 0 && <p className="text-xs text-muted-foreground">Nenhum registro encontrado.</p>}
+        {visibleItems.map((r) => (
           <article key={r.id} className="rounded-lg border border-border/60 bg-card/40 p-2 text-xs">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate font-medium">{r.kind === "purchase" ? r.title : "Anotação"}</p>
+                <p className="break-words font-medium text-sm">{r.kind === "purchase" ? r.title : "Anotação"}</p>
                 <p className="text-[10px] text-muted-foreground">
                   {r.kind === "purchase" && r.amount != null ? `${brl(r.amount)} · ` : ""}
                   {r.purchasedOn ? `compra em ${day(r.purchasedOn)} · ` : ""}
                   registrado em {fmt.format(new Date(r.createdAt))}
                 </p>
               </div>
-              <Button size="sm" variant="ghost" className="h-6 px-1.5 text-destructive hover:text-destructive" disabled={busy !== null} onClick={() => void del(r.id)} title="Remover registro">
+              <Button size="sm" variant="ghost" className="h-6 px-1.5 text-destructive hover:text-destructive" disabled={busy !== null || saving} onClick={() => void del(r.id)} title="Remover registro" aria-label="Remover registro">
                 {busy === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
               </Button>
             </div>
