@@ -9,6 +9,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * individualmente (para acionamento manual / futuro plano Pro).
  */
 const TASKS = [
+  "auto-close-tickets",
   "reconcile-pending",
   "resume-paused-licenses",
   "verify-external-payers",
@@ -16,7 +17,6 @@ const TASKS = [
   "daily-license-check",
   "reconcile-yaarsa",
   "resend-confirmations",
-  "auto-close-tickets",
   "cleanup-apk-jobs",
 ] as const;
 
@@ -25,7 +25,9 @@ async function runDailyMaintenance(request: Request) {
   const denied = cronUnauthorized(request);
   if (denied) return denied;
 
-  const secret = (process.env.CRON_SECRET ?? process.env.CRON_TRIGGER_TOKEN ?? "").trim();
+  const secret = [process.env.CRON_SECRET, process.env.CRON_TRIGGER_TOKEN]
+    .map((v) => (v ?? "").trim()).find((v) => v.length >= 16);
+  if (!secret) return new Response("Unauthorized", { status: 401 });
   const origin = new URL(request.url).origin;
   const started = Date.now();
 
@@ -79,7 +81,7 @@ async function runDailyMaintenance(request: Request) {
 
   return new Response(
     JSON.stringify({ ok: failed.length === 0, totalMs: Date.now() - started, results }),
-    { status: 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } },
+    { status: failed.length ? 503 : 200, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } },
   );
 }
 
