@@ -67,3 +67,9 @@ export type PurchaseRecordItem = {
 export function totalRecordedPurchases(items: PurchaseRecordItem[]): number {
   return Math.round(items.filter((i) => i.kind === "purchase").reduce((sum, i) => sum + (i.amount ?? 0), 0) * 100) / 100;
 }
+
+export function filterPurchaseRecords(items: PurchaseRecordItem[], kind: "all" | PurchaseRecordKind, query: string) {
+  const normalize = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const q = normalize(query.trim());
+  return items.filter((r) => (kind === "all" || r.kind === kind) && (!q || normalize(`${r.title ?? ""} ${r.note ?? ""}`).includes(q)));
+}

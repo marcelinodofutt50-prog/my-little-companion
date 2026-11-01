@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { looksLikeCardNumber, parseAmountInput, purchaseRecordInputSchema, totalRecordedPurchases } from "../purchase-records";
+import { filterPurchaseRecords, looksLikeCardNumber, parseAmountInput, purchaseRecordInputSchema, totalRecordedPurchases } from "../purchase-records";
 
 const uid = "11111111-1111-4111-8111-111111111111";
 
@@ -41,6 +41,12 @@ describe("parseAmountInput", () => {
 });
 
 describe("totalRecordedPurchases", () => {
+  it("filters notes and purchases by accent-insensitive product or note", () => {
+    const base = { amount: null, purchasedOn: null, createdAt: "", receipt: null };
+    const rows = [{ ...base, id: "a", kind: "purchase" as const, title: "Consultoria", note: "Reunião" }, { ...base, id: "b", kind: "note" as const, title: null, note: "Reunião pendente" }];
+    expect(filterPurchaseRecords(rows, "purchase", "reuniao").map((r) => r.id)).toEqual(["a"]);
+    expect(filterPurchaseRecords(rows, "note", "consultoria")).toEqual([]);
+  });
   it("sums only purchases", () => {
     const base = { title: null, note: null, purchasedOn: null, createdAt: "", receipt: null };
     expect(totalRecordedPurchases([
