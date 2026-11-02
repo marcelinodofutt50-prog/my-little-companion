@@ -3,7 +3,7 @@
 ## Pedido 01/11 — registros e fechamento automático do chat
 - [x] Busca/filtros, atualização da ficha/anexos, validação antes de salvar e travas independentes de atualização; sem conceder benefícios. Salvar/buscar/remover compra de consultoria QA testados no navegador como admin; registro removido.
 - [x] Fechamento: seleção ordenada/paginada, última confirmação do cliente consultada separadamente, diagnósticos por motivo; cinco horas e bloqueios de pagamento preservados. Botões para preparar pergunta da equipe e confirmação do cliente, sem envio automático.
-- [x] 33 testes passaram. Rotina real autorizada: 4 avaliados, 2 sem confirmação, 2 com pagamento pendente, nenhum fechado indevidamente; chamada anônima recebeu 401. Compilação automática OK.
+- [x] 32 testes passaram. Rotina real autorizada: 4 avaliados, 2 sem confirmação, 2 com pagamento pendente, nenhum fechado indevidamente; chamada anônima recebeu 401. Compilação automática OK.
 - [x] FILES consultado com verify-full e CA oficial: rotina já executa a cada 30 minutos; 28 tickets ociosos, nenhuma última confirmação explícita. Nenhum novo agendamento/custo. Estrutura de registros presente.
 - [ ] Atualizar site externo na Vercel sem cache; depende de publicação externa. Encerramento positivo validado em teste isolado, não em ticket real elegível (nenhum disponível).
 
