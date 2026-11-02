@@ -57,4 +57,5 @@
 - The public winners list (`giveaway_winner_board`, page `/vencedores`) is filled manually by MFA-validated admins; visitors read only nickname/title/prize/date columns, writes are RLS-limited to admins, and nicknames pass `winner-board.ts` privacy validation. Why: public rows must never expose personal data or imply automatic prize delivery.
 
 - The private purchase file (`customer_purchase_records`, "Registro" tab of the customer sheet) is admin+MFA-only through RLS and server functions; receipts are links to existing chat attachments validated by a DB trigger against the same customer, signed fail-closed, and records never grant licenses, benefits or payment approval. Why: it is a manual staff log, not a payment or entitlement source.
+- Purchase-record mutations use account-actions independently of list refresh generations; candidate reads use a separate generation so refreshing cannot strand a save lock or restore cancelled attachments.
 - Connect to the FILES production DB with PGSSLMODE=verify-full and Supabase's public root CA (prod-ca-2021.crt); this validates TLS without bypassing certificates.

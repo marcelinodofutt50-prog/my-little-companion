@@ -967,6 +967,7 @@ export function SupportChat({
       )}
       {!isAdmin && (
         <div className="flex items-center justify-end gap-2 border-b border-border/40 bg-card/20 px-3 py-1.5">
+          <Button type="button" variant="ghost" size="sm" className="mr-auto h-7 gap-1 text-xs" disabled={!!body.trim() || pending.length > 0} title="Preparar confirmação de resolução para enviar" onClick={() => setBody("Resolvido, agora está tudo funcionando.")}><CheckCheck className="h-3 w-3" />Problema resolvido</Button>
           <span className="hidden font-mono text-[9px] uppercase tracking-widest text-muted-foreground sm:inline">
             Só informe se o atendente pedir
           </span>
