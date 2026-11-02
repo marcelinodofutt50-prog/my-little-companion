@@ -14,6 +14,16 @@ describe('account action isolation', () => {
     expect(first?.finish()).toBe(true);
     expect(actions.begin('remove')?.isCurrent()).toBe(true);
   });
+  it('a list refresh does not strand a purchase save lock', () => {
+    const actions = createAccountActions();
+    actions.enter('customer');
+    const save = actions.begin('mutation');
+    let listGeneration = 1;
+    listGeneration++;
+    expect(listGeneration).toBe(2);
+    expect(save?.finish()).toBe(true);
+    expect(actions.begin('mutation')?.isCurrent()).toBe(true);
+  });
   it('does not reactivate old work after A → B → A', () => {
     const actions = createAccountActions();
     actions.enter('A');

@@ -564,6 +564,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                 </div>
                 <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1 md:flex-nowrap">
                   <ToolbarGroup label="Ações do atendimento">
+                    {selectedThread.status !== "closed" && <Button size="sm" variant="outline" className={toolbarItem} title="Preparar pergunta de confirmação para o cliente" onClick={() => setDraft({ text: "Seu problema foi resolvido? Se estiver tudo certo, confirme aqui com ‘Resolvido’. Se ainda houver alguma pendência, me conte para continuarmos o atendimento.", nonce: Date.now() })}><CheckCircle2 className="h-3 w-3" />Confirmar resolução</Button>}
                     <Button
                       size="sm"
                       variant="ghost"
