@@ -1,14 +1,16 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 01/11 — registros e fechamento automático do chat
-- [ ] Melhorar busca/filtros e recuperação de anexos na ficha privada, corrigindo travas e respostas antigas sem conceder benefícios.
-- [ ] Corrigir execução e seleção de tickets resolvidos no fechamento automático, preservando cinco horas, confirmação do cliente e bloqueios de pagamento.
-- [ ] Testar regressões e fluxo autorizado; conferir rotina do site externo com TLS verificado.
+- [x] Busca/filtros, atualização da ficha/anexos, validação antes de salvar e travas independentes de atualização; sem conceder benefícios. Salvar/buscar/remover compra de consultoria QA testados no navegador como admin; registro removido.
+- [x] Fechamento: seleção ordenada/paginada, última confirmação do cliente consultada separadamente, diagnósticos por motivo; cinco horas e bloqueios de pagamento preservados. Botões para preparar pergunta da equipe e confirmação do cliente, sem envio automático.
+- [x] 32 testes passaram. Rotina real autorizada: 4 avaliados, 2 sem confirmação, 2 com pagamento pendente, nenhum fechado indevidamente; chamada anônima recebeu 401. Compilação automática OK.
+- [x] FILES consultado com verify-full e CA oficial: rotina já executa a cada 30 minutos; 28 tickets ociosos, nenhuma última confirmação explícita. Nenhum novo agendamento/custo. Estrutura de registros presente.
+- [ ] Atualizar site externo na Vercel sem cache; depende de publicação externa. Encerramento positivo validado em teste isolado, não em ticket real elegível (nenhum disponível).
 
 ## Pedido 30/10 — ficha privada de compras no chat
 - [x] Aba "Registro" na ficha do cliente (aberta pelo chat ao vivo): compras (produto, valor, data), anotações e comprovante escolhido entre anexos do cliente; sem benefício, licença ou aprovação de pagamento automáticos.
 - [x] Só admin com 2FA (servidor + RLS; sem acesso anônimo nem UPDATE); comprovante de outro cliente recusado no banco. Testado no navegador como admin: salvar com comprovante e remover; 8 testes novos passaram.
-- [ ] Banco do site publicado (FILES): migrações 0026 e 0027 não aplicadas, pois a conexão com validação de certificado falhou; TLS não foi desativado. Requer CA confiável.
+- [x] Banco do site publicado (FILES): estrutura presente e consultada em 01/11 com certificado oficial e verify-full, sem desligar TLS.
 - [ ] Deploy Vercel sem cache.
 
 ## Pedido 29/10 — segurança pendente e TLS
