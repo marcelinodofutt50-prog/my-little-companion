@@ -38,6 +38,7 @@ export const adminListPurchaseRecords = createServerFn({ method: "GET" })
       .select("id, kind, title, note, amount, purchased_on, created_at, receipt_message_id")
       .eq("customer_id", data.userId)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(MAX_RECORDS + 1);
     if (error) throw new Error("Não foi possível carregar a ficha de compras.");
     const list = (rows ?? []).slice(0, MAX_RECORDS);
@@ -84,7 +85,8 @@ export const adminListReceiptCandidates = createServerFn({ method: "GET" })
       .in("thread_id", threadIds)
       .not("attachment_url", "is", null)
       .order("created_at", { ascending: false })
-      .limit(MAX_CANDIDATES);
+      .order("id", { ascending: false })
+      .limit(100);
     if (mErr) throw new Error("Não foi possível carregar os anexos do cliente.");
     const rows = msgs ?? [];
     let signed: Map<string, string>;
@@ -93,7 +95,7 @@ export const adminListReceiptCandidates = createServerFn({ method: "GET" })
       items: rows.flatMap((m) => {
         const url = signed.get(m.id);
         return url ? [{ messageId: m.id, url, type: m.attachment_type, sentAt: m.created_at }] : [];
-      }),
+      }).slice(0, MAX_CANDIDATES),
     };
   });
 
