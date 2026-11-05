@@ -5,7 +5,7 @@
 export const SHADOW_PIX = {
   key: "70002248433",
   keyType: "Aleatória",
-  holder: "Bruno Gomes",
+  holder: "Patricia Gomes",
 } as const;
 
 export function buildPixInstructions(): string {
