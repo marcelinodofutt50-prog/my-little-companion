@@ -376,7 +376,10 @@ function PlansPage() {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get("ref");
       if (ref) setReferral(ref.toUpperCase());
-      const promo = params.get("cupom");
+      let promo = params.get("cupom");
+      if (!promo) {
+        try { promo = window.localStorage.getItem("shadow_coupon"); } catch { promo = null; }
+      }
       if (promo && CODE_RE.test(promo.trim().toUpperCase())) setCoupon(promo.trim().toUpperCase());
     }
   }, []);
