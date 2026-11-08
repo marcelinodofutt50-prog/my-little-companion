@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 08/11 — bugs gerais do site
+- [ ] Corrigir falhas reproduzíveis na tela de acesso com armazenamento bloqueado ou inválido e respostas antigas de verificação de e-mail.
+- [ ] Ocultar detalhes internos na tela pública de erro e cancelar recarregamento pendente ao sair dela.
+- [ ] Executar testes direcionados e verificar os fluxos públicos no navegador sem alterar o visual.
+
 ## Pedido 01/11 — registros e fechamento automático do chat
 - [x] Busca/filtros, atualização da ficha/anexos, validação antes de salvar e travas independentes de atualização; sem conceder benefícios. Salvar/buscar/remover compra de consultoria QA testados no navegador como admin; registro removido.
 - [x] Fechamento: seleção ordenada/paginada, última confirmação do cliente consultada separadamente, diagnósticos por motivo; cinco horas e bloqueios de pagamento preservados. Botões para preparar pergunta da equipe e confirmação do cliente, sem envio automático.
