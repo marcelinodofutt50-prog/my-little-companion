@@ -1,6 +1,6 @@
 import { getBrowserAuthUser } from "@/lib/browser-auth-user";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Mail, LifeBuoy, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -15,6 +15,8 @@ import { logEmailEvent } from "@/lib/email-metrics.functions";
 import { checkSignupAllowed, recordSignupIp } from "@/lib/antifraud.functions";
 import { checkEmailAvailability, confirmFreshSignupEmail, createAccountWhenEmailBlocked } from "@/lib/signup.functions";
 import { checkAuthSecurity, reportAuthOutcome } from "@/lib/security.functions";
+import { attemptsInfo, bumpAttempts, clearStoredLimits, readCooldown, writeCooldown } from "@/lib/auth-local-limits";
+import { createLatestRequest } from "@/lib/latest-request";
 
 
 export const Route = createFileRoute("/auth")({
@@ -55,65 +57,12 @@ const schema = z.object({
 });
 
 /** Travas locais são por usuário (e-mail): cada e-mail tem seu próprio cooldown. */
-const COOLDOWN_KEY = "shadow.auth.emailCooldownUntil";
-const ATTEMPTS_KEY = "shadow.auth.emailAttempts";
 const MAX_ATTEMPTS_PER_HOUR = 8;
 /** Trava local nunca passa de 60s: o limite real do servidor já foi ampliado. */
 const MAX_COOLDOWN_SECS = 60;
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
-}
-
-function keyFor(base: string, email: string): string | null {
-  const normalized = normalizeEmail(email);
-  if (!normalized) return null;
-  return `${base}:${normalized}`;
-}
-
-function readCooldown(email: string): number {
-  if (typeof window === "undefined") return 0;
-  const key = keyFor(COOLDOWN_KEY, email);
-  if (!key) return 0;
-  const until = Number(window.localStorage.getItem(key) ?? 0);
-  if (!until) return 0;
-  return Math.max(0, Math.ceil((until - Date.now()) / 1000));
-}
-
-function writeCooldown(email: string, secs: number) {
-  if (typeof window === "undefined") return;
-  const key = keyFor(COOLDOWN_KEY, email);
-  if (!key) return;
-  window.localStorage.setItem(key, String(Date.now() + secs * 1000));
-}
-
-/** Conta tentativas de envio na última hora para o e-mail informado. */
-function bumpAttempts(email: string): number {
-  if (typeof window === "undefined") return 0;
-  const key = keyFor(ATTEMPTS_KEY, email);
-  if (!key) return 0;
-  const now = Date.now();
-  let list: number[] = [];
-  try {
-    list = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-  } catch { list = []; }
-  list = list.filter((t) => now - t < 3600_000);
-  list.push(now);
-  window.localStorage.setItem(key, JSON.stringify(list));
-  return list.length;
-}
-
-/** Tentativas de envio na última hora + horário do último envio (para o status). */
-function attemptsInfo(email: string): { count: number; last: number | null } {
-  if (typeof window === "undefined") return { count: 0, last: null };
-  const key = keyFor(ATTEMPTS_KEY, email);
-  if (!key) return { count: 0, last: null };
-  const now = Date.now();
-  try {
-    const list: number[] = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-    const recent = list.filter((t) => now - t < 3600_000);
-    return { count: recent.length, last: recent.length ? recent[recent.length - 1] : null };
-  } catch { return { count: 0, last: null }; }
 }
 
 function formatTime(ts: number): string {
@@ -144,6 +93,7 @@ function AuthPage() {
   const [signupBlockUntil, setSignupBlockUntil] = useState<number | null>(null);
   const [signupBlockSecs, setSignupBlockSecs] = useState(0);
   const [securityNotice, setSecurityNotice] = useState<string | null>(null);
+  const emailCheck = useRef(createLatestRequest());
 
   useEffect(() => {
     if (!signupBlockUntil) return setSignupBlockSecs(0);
@@ -158,19 +108,25 @@ function AuthPage() {
   }, [signupBlockUntil]);
 
   // Digitou outro e-mail? o aviso de "já cadastrado" some.
-  useEffect(() => { setEmailTaken(false); }, [email]);
+  useEffect(() => {
+    emailCheck.current.cancel();
+    setEmailTaken(false);
+    setCheckingEmail(false);
+    return () => emailCheck.current.cancel();
+  }, [email, mode]);
 
   /** Checagem ao sair do campo, só no cadastro: evita erro depois de preencher tudo. */
   async function verifyEmailFree() {
     if (mode !== "up") return;
     const clean = normalizeEmail(email);
     if (!z.string().email().safeParse(clean).success) return;
+    const isCurrent = emailCheck.current.begin();
     setCheckingEmail(true);
     try {
       const r = await checkEmailAvailability({ data: { email: clean } });
-      setEmailTaken(!r.available);
+      if (isCurrent()) setEmailTaken(!r.available);
     } catch { /* checagem é só conveniência */ }
-    finally { setCheckingEmail(false); }
+    finally { if (isCurrent()) setCheckingEmail(false); }
   }
 
   // Cooldown e histórico são por e-mail: trocar de e-mail mostra o estado do novo usuário.
@@ -195,11 +151,7 @@ function AuthPage() {
 
   /** Limpa travas locais do e-mail atual após sucesso (evita cliente preso em "Aguarde Xs"). */
   function clearLocalLimits() {
-    if (typeof window === "undefined") return;
-    const cd = keyFor(COOLDOWN_KEY, email);
-    const at = keyFor(ATTEMPTS_KEY, email);
-    if (cd) window.localStorage.removeItem(cd);
-    if (at) window.localStorage.removeItem(at);
+    clearStoredLimits(email);
     setCooldown(0);
     setEmailBlocked(false);
     setSendInfo({ count: 0, last: null });
