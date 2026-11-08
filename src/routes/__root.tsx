@@ -26,6 +26,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { createAuthTransitionFilter, isChunkLoadError } from "@/lib/auth-request-control";
 import { CurrencyProvider } from "@/lib/currency";
 import { ThemeProvider, useTheme } from "@/lib/theme";
+import { Button } from "@/components/ui/button";
 
 
 // Recarrega no máximo 1x por sessão quando um chunk de uma versão antiga
@@ -76,13 +77,12 @@ function ErrorComponent({ error: rawError, reset }: ErrorComponentProps) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
     
     // Auto-fix for ChunkLoadErrors / Failed to fetch module
-    const msg = error.message?.toLowerCase() || "";
-    if (msg.includes('failed to fetch dynamically imported module') ||
-        msg.includes('chunkloaderror')) {
+    if (isChunkLoadError(error.message || "")) {
       console.warn("Detected chunk load error in boundary, performing auto-refresh...");
       // Recarrega no máximo 1x por sessão; se o chunk continuar faltando,
       // mostra a tela de erro em vez de entrar em loop de F5 infinito.
-      setTimeout(() => reloadOnceForStaleChunk(), 500);
+      const timer = setTimeout(() => reloadOnceForStaleChunk(), 500);
+      return () => clearTimeout(timer);
     }
   }, [error]);
 
@@ -95,8 +95,8 @@ function ErrorComponent({ error: rawError, reset }: ErrorComponentProps) {
         <h1 className="font-mono text-xl text-danger uppercase tracking-[0.3em]">// system_error</h1>
         <p className="mt-4 text-sm text-muted-foreground">Algo falhou no processo. Tente novamente.</p>
         
-        {/* Mostra detalhes do erro apenas em desenvolvimento ou se for um erro conhecido */}
-        <div className="mt-4 p-3 bg-black/40 text-[10px] text-left font-mono overflow-auto max-h-40 rounded border border-danger/20 text-muted-foreground/80">
+        {/* Never expose internal exception details on the published site. */}
+        {import.meta.env.DEV && <div className="mt-4 p-3 bg-muted/40 text-[10px] text-left font-mono overflow-auto max-h-40 rounded border border-danger/20 text-muted-foreground/80">
           <div className="text-danger/60 mb-1 uppercase tracking-tighter">Stack Trace / Details:</div>
           {error.message || "Unknown error occurred"}
           {error.stack && (
@@ -104,21 +104,19 @@ function ErrorComponent({ error: rawError, reset }: ErrorComponentProps) {
               {error.stack.split('\n').slice(0, 3).join('\n')}
             </div>
           )}
-        </div>
+        </div>}
 
         <div className="mt-8 flex flex-col gap-3">
-          <button
+          <Button
             onClick={() => { 
-              router.invalidate(); 
+              void router.invalidate();
               reset(); 
-              // Se o reset do router não bastar, um reload com 'true' tenta forçar o bypass do cache
-              window.location.reload();
             }}
             className="w-full rounded-md bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-all font-mono uppercase tracking-widest"
           >
             Tentar novamente
-          </button>
-          <button
+          </Button>
+          <Button variant="outline"
             onClick={() => {
               // Limpa caches e força reload completo
               if ('caches' in window) {
@@ -131,7 +129,7 @@ function ErrorComponent({ error: rawError, reset }: ErrorComponentProps) {
             className="w-full rounded-md border border-border py-2.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
           >
             Limpar Cache & Reiniciar
-          </button>
+          </Button>
           <a 
             href="/" 
             className="mt-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
