@@ -1,9 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 08/11 — bugs gerais do site
-- [ ] Corrigir falhas reproduzíveis na tela de acesso com armazenamento bloqueado ou inválido e respostas antigas de verificação de e-mail.
-- [ ] Ocultar detalhes internos na tela pública de erro e cancelar recarregamento pendente ao sair dela.
-- [ ] Executar testes direcionados e verificar os fluxos públicos no navegador sem alterar o visual.
+- [x] Dados locais de tentativas/cooldown protegidos contra bloqueio e conteúdo inválido; verificação de e-mail cancela respostas antigas ao trocar campo/modo ou sair.
+- [x] Detalhes internos limitados a desenvolvimento; recarregamento de chunk cancelado ao sair da tela; Tentar novamente não força reload.
+- [x] 7 testes passaram; seis páginas públicas abriram sem erros de execução; bloqueio dos dados locais de tentativas reproduzido e rechecado sem erro. Compilação automática OK. Sem alteração do visual.
+- [ ] Publicação externa na Vercel depende de deploy; login real/admin não validados nesta revisão. Bloqueio completo do armazenamento ainda envolve o adaptador de autenticação gerado, que não pode ser editado.
 
 ## Pedido 01/11 — registros e fechamento automático do chat
 - [x] Busca/filtros, atualização da ficha/anexos, validação antes de salvar e travas independentes de atualização; sem conceder benefícios. Salvar/buscar/remover compra de consultoria QA testados no navegador como admin; registro removido.
