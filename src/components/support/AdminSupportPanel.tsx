@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 import { createLatestRequest } from "@/lib/latest-request";
+import { createChatOperations } from "@/lib/chat-operations";
 
 export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | null }) {
   const [threads, setThreads] = useState<any[]>([]);
@@ -46,6 +47,11 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   const [catFilter, setCatFilter] = useState<string>("all");
   const [prioFilter, setPrioFilter] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
+  const ticketOperations = useRef(createChatOperations());
+  const [ticketBusy, setTicketBusy] = useState<string | null>(null);
+  const openHistoryRequest = useRef(createLatestRequest());
   const [myId, setMyId] = useState<string | null>(null);
   const [fichaUserId, setFichaUserId] = useState<string | null>(null);
   const [healing, setHealing] = useState(false);
@@ -124,9 +130,12 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
 
   /** Abre uma conversa encontrada no histórico, mesmo que não esteja na lista atual. */
   const openHistoryThread = async (threadId: string) => {
+    const isCurrent = openHistoryRequest.current.begin();
+    setSelectedId(threadId);
     if (!threads.some((t) => t.id === threadId)) {
       try {
         const all: any = await listFn({ data: { filter: "all" } });
+        if (!isCurrent() || selectedIdRef.current !== threadId) return;
         setThreads((prev) => {
           const merged = [...prev];
           for (const t of all ?? []) {
@@ -136,7 +145,6 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
         });
       } catch {}
     }
-    setSelectedId(threadId);
   };
 
   const listFn = useServerFn(adminListThreads);
@@ -197,7 +205,11 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
     try {
       const data: any = await listFn({ data: { filter } });
       if (loadGenRef.current !== gen) return;
-      setThreads(data);
+      setThreads((prev) => {
+        // A live filter refresh must not unmount the conversation being read.
+        const selected = prev.find((t) => t.id === selectedIdRef.current);
+        return selected && !data.some((t: any) => t.id === selected.id) ? [...data, selected] : data;
+      });
       setListError(false);
     } catch (e: any) {
       if (loadGenRef.current === gen) setListError(true);
@@ -210,7 +222,10 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   useEffect(() => {
     loadThreads();
     try { requestNotifyPermission(); } catch {}
-    supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null));
+    let disposed = false;
+    supabase.auth.getUser().then(({ data }) => {
+      if (!disposed) setMyId(data.user?.id ?? null);
+    }).catch(() => { if (!disposed) setListError(true); });
 
     // Vários eventos em sequência (mensagem + atualização do ticket) viram UMA
     // recarga silenciosa — antes cada evento refazia a lista inteira e piscava.
@@ -232,12 +247,28 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
           toast.info("Nova mensagem de cliente", { action: { label: "Abrir", onClick: () => setSelectedId(m.thread_id) } });
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (!disposed && status === "SUBSCRIBED") scheduleReload();
+      });
 
-    return () => { ++loadGenRef.current; if (timer) clearTimeout(timer); supabase.removeChannel(ch); };
+    const recover = () => {
+      if (!disposed && navigator.onLine && document.visibilityState === "visible") scheduleReload();
+    };
+    window.addEventListener("online", recover);
+    window.addEventListener("focus", recover);
+    document.addEventListener("visibilitychange", recover);
+    return () => {
+      disposed = true;
+      ++loadGenRef.current;
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("online", recover);
+      window.removeEventListener("focus", recover);
+      document.removeEventListener("visibilitychange", recover);
+      supabase.removeChannel(ch);
+    };
   }, [filter]);
 
-  useEffect(() => () => { historyRequest.current.cancel(); }, []);
+  useEffect(() => () => { historyRequest.current.cancel(); openHistoryRequest.current.cancel(); }, []);
 
   // Contador de não lidas no título da aba do navegador.
   const unreadTotal = threads.reduce((n, t) => n + (Number(t.unread_by_staff || 0) > 0 ? 1 : 0), 0);
@@ -267,23 +298,35 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   const selectedThread = threads.find(t => t.id === selectedId);
 
   const handleAssume = async (id: string) => {
+    const release = ticketOperations.current.begin(id);
+    if (!release) return;
+    setTicketBusy(id);
     try {
       await assumeFn({ data: { threadId: id } });
       toast.success("Ticket assumido com sucesso");
       loadThreads();
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      release();
+      setTicketBusy((current) => current === id ? null : current);
     }
   };
 
   const handleClose = async (id: string) => {
+    const release = ticketOperations.current.begin(id);
+    if (!release) return;
+    setTicketBusy(id);
     try {
       await closeFn({ data: { threadId: id } });
       toast.success("Ticket encerrado");
-      setSelectedId(null);
+      setSelectedId((current) => current === id ? null : current);
       loadThreads();
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      release();
+      setTicketBusy((current) => current === id ? null : current);
     }
   };
 
@@ -579,6 +622,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                     {!selectedThread.assigned_to && (
                       <Button
                         size="sm"
+                        disabled={ticketBusy === selectedThread.id}
                         className="h-7 gap-1.5 rounded-none border-0 bg-neon px-2.5 font-mono text-[10px] uppercase tracking-wider text-neon-foreground hover:bg-neon/80"
                         onClick={() => handleAssume(selectedThread.id)}
                       >
@@ -589,6 +633,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                     <Button
                       size="sm"
                       variant="destructive"
+                      disabled={ticketBusy === selectedThread.id || selectedThread.status === "closed"}
                       className="h-7 gap-1.5 rounded-none border-0 bg-destructive px-2.5 font-mono text-[10px] uppercase tracking-wider text-destructive-foreground hover:bg-destructive/90"
                       onClick={() => handleClose(selectedThread.id)}
                     >

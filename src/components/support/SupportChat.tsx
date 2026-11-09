@@ -377,6 +377,7 @@ export function SupportChat({
   }, []);
   const restoredDraftKey = useRef<string | null>(null);
   const operations = useRef(createChatOperations());
+  const refreshInFlight = useRef<Promise<void> | null>(null);
   const activeThreadRef = useRef(threadId);
   activeThreadRef.current = threadId;
   useEffect(() => {
@@ -539,7 +540,7 @@ export function SupportChat({
     setUnseen(0);
   };
 
-  const loadMessages = async (before?: string) => {
+  const performLoadMessages = async (before?: string) => {
     const release = operations.current.begin(before ? "history" : "refresh");
     if (!release) return;
     if (before) setLoadingOlder(true);
@@ -581,9 +582,22 @@ export function SupportChat({
     }
   };
 
+  const loadMessages = (before?: string): Promise<void> => {
+    if (before) return performLoadMessages(before);
+    const running = refreshInFlight.current;
+    if (running) return running;
+    const request = performLoadMessages();
+    refreshInFlight.current = request;
+    void request.finally(() => {
+      if (refreshInFlight.current === request) refreshInFlight.current = null;
+    });
+    return request;
+  };
+
 
   useEffect(() => {
     operations.current.reset();
+    refreshInFlight.current = null;
     setLoading(true);
     setLoadingOlder(false);
     setAtBottom(true);
@@ -616,7 +630,6 @@ export function SupportChat({
     }
     markSeen();
 
-    let subscribedOnce = false;
     const ch = supabase
       .channel(`thread-messages-${threadId}-${crypto.randomUUID()}`)
       .on(
@@ -674,9 +687,11 @@ export function SupportChat({
         if (!isActiveConversation()) return;
         setConnection(!navigator.onLine ? "offline" : status === "SUBSCRIBED" ? "live" : "reconnecting");
         if (status !== "SUBSCRIBED") return;
-        // Só recarrega em RE-conexão (a carga inicial já aconteceu acima).
-        if (subscribedOnce) void loadMessages();
-        subscribedOnce = true;
+        // Finish the pre-subscription snapshot, then reconcile the startup gap.
+        void (async () => {
+          await refreshInFlight.current;
+          if (isActiveConversation()) await loadMessages();
+        })();
       });
     const typingChannel = supabase.channel(`thread-typing-${threadId}`)
       .on("broadcast", { event: "typing" }, ({ payload }: any) => {
@@ -767,8 +782,10 @@ export function SupportChat({
   const handleSendRef = useRef<((...a: any[]) => Promise<void>) | null>(null);
   useEffect(() => {
     const retryFailed = async () => {
+      const isCurrentVisit = conversationScope.current.enter(draftKey);
       const failed = pendingRef.current.filter((p) => p.status === "failed");
       for (const item of failed) {
+        if (!mounted.current || !isCurrentVisit()) return;
         try {
           await handleSendRef.current?.(undefined, undefined, item.clientId);
         } catch { /* mantém marcada como falha */ }
@@ -776,7 +793,7 @@ export function SupportChat({
     };
     window.addEventListener("online", retryFailed);
     return () => window.removeEventListener("online", retryFailed);
-  }, []);
+  }, [draftKey]);
 
   const handleSend = async (
     attachmentPathArg?: string,
