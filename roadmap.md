@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 09/11 — estabilidade do chat ao vivo
+- [ ] Corrigir isolamento dos rascunhos, concorrência de envio/upload e carregamento de histórico, sem mudar licenças ou pagamentos.
+- [ ] Testar regressões e verificar o chat no navegador; sessão autorizada depende da recuperação do banco de autenticação (emissão retornou indisponibilidade).
+- [ ] Site externo depende de atualização na Vercel sem cache.
+
 ## Pedido 08/11 — bugs gerais do site
 - [x] Dados locais de tentativas/cooldown protegidos contra bloqueio e conteúdo inválido; verificação de e-mail cancela respostas antigas ao trocar campo/modo ou sair.
 - [x] Detalhes internos limitados a desenvolvimento; recarregamento de chunk cancelado ao sair da tela; Tentar novamente não força reload.
