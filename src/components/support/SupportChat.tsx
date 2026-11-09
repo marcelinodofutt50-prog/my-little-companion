@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { RENEWAL_ACTION } from "@/lib/support-renewal-rules";
 import { createConversationScope } from "@/lib/conversation-scope";
 import { createLatestRequest } from "@/lib/latest-request";
+import { createChatOperations, readChatDraft } from "@/lib/chat-operations";
 import { useEffect, useRef, useState, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
@@ -375,23 +376,26 @@ export function SupportChat({
     return () => { mounted.current = false; };
   }, []);
   const restoredDraftKey = useRef<string | null>(null);
-  const persistedDraftKey = useRef<string | null>(null);
+  const operations = useRef(createChatOperations());
+  const refreshInFlight = useRef<Promise<void> | null>(null);
   const activeThreadRef = useRef(threadId);
   activeThreadRef.current = threadId;
   useEffect(() => {
+    let saved = "";
     try {
-      const saved = typeof window !== "undefined" ? window.localStorage.getItem(draftKey) : null;
-      setBody(saved ?? "");
-      restoredDraftKey.current = draftKey;
+      saved = readChatDraft(draftKey, window.localStorage);
     } catch { /* storage indisponível */ }
+    bodyRef.current = saved;
+    setBody(saved);
+    restoredDraftKey.current = draftKey;
     // eslint-disable-next-line react-hooks/exhaustive-deps
    }, [threadId, userId]);
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
       if (restoredDraftKey.current !== draftKey) return;
-      // Switching tickets must not write the previous ticket's text here.
-      if (draftKey !== persistedDraftKey.current) { persistedDraftKey.current = draftKey; return; }
+      // The restore effect updates the ref synchronously, before this effect.
+      if (body !== bodyRef.current) return;
       if (body.trim()) window.localStorage.setItem(draftKey, body);
       else window.localStorage.removeItem(draftKey);
     } catch { /* storage indisponível */ }
@@ -536,17 +540,17 @@ export function SupportChat({
     setUnseen(0);
   };
 
-  const loadMessages = async (before?: string) => {
-    // Carga de histórico: guarda a altura atual para restaurar a posição de
-    // leitura depois — sem isso a tela rolava para o final e parecia que
-    // nada tinha carregado.
-    if (before) restoreScrollRef.current = listRef.current?.scrollHeight ?? null;
+  const performLoadMessages = async (before?: string) => {
+    const release = operations.current.begin(before ? "history" : "refresh");
+    if (!release) return;
+    if (before) setLoadingOlder(true);
     try {
       const r: any = await listFn({ data: { threadId, limit: 30, before } });
       if (!isActiveConversation()) return;
       setLoadError(false);
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
       if (r.senders) setSenders((prev) => ({ ...prev, ...r.senders }));
+      if (before) restoreScrollRef.current = listRef.current?.scrollHeight ?? null;
       // Sempre mesclamos: recarregar (reconexão, aba voltando) não pode apagar
       // o histórico antigo que o cliente já abriu nem mensagens em tempo real.
       setMsgs((prev) => {
@@ -563,23 +567,44 @@ export function SupportChat({
       historyBtnRef.current = reduceHistoryButton(historyBtnRef.current, { kind, serverHasMore: !!r.hasMore });
       setHasMore(historyBtnRef.current.hasMore);
     } catch (e: any) {
-      restoreScrollRef.current = null;
       if (!isActiveConversation()) return;
+      if (before) restoreScrollRef.current = null;
       setLoadError(true);
       // eslint-disable-next-line no-console
       console.error("[SupportChat] listMessages error:", e);
       toast.error("Erro ao carregar mensagens");
     } finally {
+      release();
       if (isActiveConversation()) {
         setLoading(false);
-        setLoadingOlder(false);
+        if (before) setLoadingOlder(false);
       }
     }
   };
 
+  const loadMessages = (before?: string): Promise<void> => {
+    if (before) return performLoadMessages(before);
+    const running = refreshInFlight.current;
+    if (running) return running;
+    const request = performLoadMessages();
+    refreshInFlight.current = request;
+    void request.finally(() => {
+      if (refreshInFlight.current === request) refreshInFlight.current = null;
+    });
+    return request;
+  };
+
 
   useEffect(() => {
+    operations.current.reset();
+    refreshInFlight.current = null;
     setLoading(true);
+    setLoadingOlder(false);
+    setAtBottom(true);
+    atBottomRef.current = true;
+    setSenders({});
+    sendersRef.current = {};
+    lastResyncRef.current = 0;
     setUploading(false);
     setDragActive(false);
     setMsgs([]);
@@ -605,9 +630,8 @@ export function SupportChat({
     }
     markSeen();
 
-    let subscribedOnce = false;
     const ch = supabase
-      .channel(`thread-${threadId}`)
+      .channel(`thread-messages-${threadId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages", filter: `thread_id=eq.${threadId}` },
@@ -659,22 +683,26 @@ export function SupportChat({
           setMsgs((prev) => prev.map((m) => (m.id === upd.id ? { ...m, read_at: upd.read_at } : m)));
         },
       )
-      .on("broadcast", { event: "typing" }, ({ payload }: any) => {
-        // Só mostra o "digitando" do outro lado (cliente vê equipe, equipe vê cliente).
-        if (!payload || payload.uid === userId || !!payload.admin === isAdmin) return;
-        setPeerTyping(payload.admin ? "Atendente" : (customerName || "Cliente"));
-        if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-        typingTimerRef.current = setTimeout(() => setPeerTyping(null), 4000);
-      })
       .subscribe((status) => {
         if (!isActiveConversation()) return;
         setConnection(!navigator.onLine ? "offline" : status === "SUBSCRIBED" ? "live" : "reconnecting");
         if (status !== "SUBSCRIBED") return;
-        // Só recarrega em RE-conexão (a carga inicial já aconteceu acima).
-        if (subscribedOnce) void loadMessages();
-        subscribedOnce = true;
+        // Finish the pre-subscription snapshot, then reconcile the startup gap.
+        void (async () => {
+          await refreshInFlight.current;
+          if (isActiveConversation()) await loadMessages();
+        })();
       });
-    channelRef.current = ch;
+    const typingChannel = supabase.channel(`thread-typing-${threadId}`)
+      .on("broadcast", { event: "typing" }, ({ payload }: any) => {
+        if (!isActiveConversation() || !payload || payload.uid === userId || !!payload.admin === isAdmin) return;
+        setPeerTyping(payload.admin ? "Atendente" : (customerName || "Cliente"));
+        if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => {
+          if (isActiveConversation()) setPeerTyping(null);
+        }, 4000);
+      }).subscribe();
+    channelRef.current = typingChannel;
     setPeerTyping(null);
 
     // Rede/aba voltando: reconciliar a conversa.
@@ -704,6 +732,7 @@ export function SupportChat({
       channelRef.current = null;
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       supabase.removeChannel(ch);
+      supabase.removeChannel(typingChannel);
     };
   }, [threadId, userId]);
 
@@ -717,7 +746,7 @@ export function SupportChat({
       if (document.visibilityState === "visible") void loadMessages();
     }, 15000);
     return () => clearInterval(id);
-  }, [hasMyUnseen, threadId]);
+  }, [hasMyUnseen, threadId, userId]);
 
   // Fecha o visualizador de imagem com Esc.
   useEffect(() => {
@@ -753,8 +782,10 @@ export function SupportChat({
   const handleSendRef = useRef<((...a: any[]) => Promise<void>) | null>(null);
   useEffect(() => {
     const retryFailed = async () => {
+      const isCurrentVisit = conversationScope.current.enter(draftKey);
       const failed = pendingRef.current.filter((p) => p.status === "failed");
       for (const item of failed) {
+        if (!mounted.current || !isCurrentVisit()) return;
         try {
           await handleSendRef.current?.(undefined, undefined, item.clientId);
         } catch { /* mantém marcada como falha */ }
@@ -762,7 +793,7 @@ export function SupportChat({
     };
     window.addEventListener("online", retryFailed);
     return () => window.removeEventListener("online", retryFailed);
-  }, []);
+  }, [draftKey]);
 
   const handleSend = async (
     attachmentPathArg?: string,
@@ -772,11 +803,14 @@ export function SupportChat({
   ) => {
     if (!isActiveConversation()) return;
     const previous = retryOf ? pendingRef.current.find((p) => p.clientId === retryOf) : undefined;
-    const text = (retryOf ? (previous?.body ?? "") : body.trim()).slice(0, MAX_BODY);
+    if (retryOf && (!previous || previous.status !== "failed")) return;
+    const text = (retryOf ? (previous?.body ?? "") : bodyRef.current.trim()).slice(0, MAX_BODY);
     // Reenvio de anexo reaproveita o arquivo que já subiu para o storage.
     const attachmentPath = attachmentPathArg ?? previous?.attachmentPath;
     const attachmentType = attachmentTypeArg ?? previous?.attachmentType;
     if (!text && !attachmentPath) return;
+    const release = operations.current.begin(retryOf ? `retry:${retryOf}` : "compose");
+    if (!release) return;
     const replyToId = retryOf ? null : replyTo?.id ?? null;
 
     if (typeof navigator !== "undefined" && navigator.onLine === false && !retryOf) {
@@ -802,6 +836,7 @@ export function SupportChat({
       retryOf ? prev.map((p) => (p.clientId === retryOf ? newPending : p)) : [...prev, newPending],
     );
     if (!retryOf) {
+      bodyRef.current = "";
       setBody("");
       setReplyTo(null);
     }
@@ -846,6 +881,8 @@ export function SupportChat({
         prev.map((p) => (p.clientId === clientId ? { ...p, status: "failed", error: message } : p)),
       );
       toast.error(message);
+    } finally {
+      release();
     }
   };
 
@@ -853,7 +890,7 @@ export function SupportChat({
 
   /** Sobe o arquivo para o storage e envia como anexo. */
   const uploadAndSend = async (file: File) => {
-    if (uploading) return;
+    if (!isActiveConversation()) return;
     if (file.size > SUPPORT_MEDIA_MAX_BYTES) {
       toast.error(`Arquivo muito grande (${formatBytes(file.size)}). O limite é ${formatBytes(SUPPORT_MEDIA_MAX_BYTES)}.`);
       return;
@@ -862,6 +899,8 @@ export function SupportChat({
       toast.error("Esse arquivo está vazio.");
       return;
     }
+    const release = operations.current.begin("upload");
+    if (!release) return;
     const isImage = (file.type || "").startsWith("image/");
     const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
     setUploading(true);
@@ -882,13 +921,14 @@ export function SupportChat({
         return;
       }
       previewTransferred = true;
-      await handleSendRef.current?.(path, file.type || "application/octet-stream", undefined, {
+      await handleSend(path, file.type || "application/octet-stream", undefined, {
         name: file.name,
         ...(previewUrl ? { previewUrl } : {}),
       });
     } catch (err: any) {
       if (isActiveConversation()) toast.error(err?.message || "Falha ao anexar o arquivo.");
     } finally {
+      release();
       toast.dismiss(toastId);
       if (!previewTransferred && previewUrl) URL.revokeObjectURL(previewUrl);
       if (isActiveConversation()) setUploading(false);
@@ -992,9 +1032,10 @@ export function SupportChat({
             variant="ghost"
             size="sm"
             className="w-full text-[10px] uppercase font-mono"
+            disabled={loadingOlder || loading}
             onClick={() => {
-              setLoadingOlder(true);
-              loadMessages(msgs[0]?.created_at);
+              const before = msgs[0]?.created_at;
+              if (before) void loadMessages(before);
             }}
           >
             {loadingOlder ? <Loader2 className="animate-spin h-3 w-3" /> : "Carregar histórico"}
