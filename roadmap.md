@@ -1,5 +1,12 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 10/11 — pendências de segurança e dados privados
+- [ ] Reconciliar achados antigos com código e regras efetivas, priorizando comprovantes e conversas.
+- [ ] Autorizar comprovantes de migração antes de assinar e testar isolamento entre usuários.
+- [ ] Corrigir regras ainda abertas no banco (chat expirado, indicação, missões e criação de APK), sem habilitar criação de APK.
+- [ ] Verificar TLS, aplicar alterações nos bancos acessíveis e testar acessos negados sem expor dados.
+- [ ] Registrar validações e bloqueios de publicação/autenticação sem declarar pendências resolvidas sem evidência.
+
 ## Pedido 09/11 — estabilidade do chat ao vivo
 - [x] Rascunhos limpos mesmo com armazenamento bloqueado; travas síncronas por visita para envio/upload/histórico; reenvios antigos não enviam o rascunho de outra conversa; canais de mensagens únicos e digitação separada; reconciliação após conexão inicial.
 - [x] Admin recupera lista ao reconectar/voltar à aba, preserva conversa selecionada, ignora abertura atrasada do histórico e impede assumir/encerrar em duplicidade ou fechar visualmente outro ticket. Janela e texto mantidos.
