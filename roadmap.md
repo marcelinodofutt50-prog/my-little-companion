@@ -1,8 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 09/11 — estabilidade do chat ao vivo
-- [ ] Corrigir isolamento dos rascunhos, concorrência de envio/upload e carregamento de histórico, sem mudar licenças ou pagamentos.
-- [ ] Testar regressões e verificar o chat no navegador; sessão autorizada depende da recuperação do banco de autenticação (emissão retornou indisponibilidade).
+- [x] Rascunhos limpos mesmo com armazenamento bloqueado; travas síncronas por visita para envio/upload/histórico; reenvios antigos não enviam o rascunho de outra conversa; canais de mensagens únicos e digitação separada; reconciliação após conexão inicial.
+- [x] Admin recupera lista ao reconectar/voltar à aba, preserva conversa selecionada, ignora abertura atrasada do histórico e impede assumir/encerrar em duplicidade ou fechar visualmente outro ticket. Janela e texto mantidos.
+- [x] Testes direcionados passaram; compilação automática OK. Navegador deslogado: suporte/admin encaminham para acesso sem erros.
+- [ ] Atendimento autorizado não validado: emissão de sessão retornou banco de autenticação indisponível. Permanecem para validação conectada: lacunas após mais de 30 mensagens offline, paginação de timestamps iguais e concorrência do contador de não lidas; banco indisponível impede validar correção transacional com segurança.
 - [ ] Site externo depende de atualização na Vercel sem cache.
 
 ## Pedido 08/11 — bugs gerais do site

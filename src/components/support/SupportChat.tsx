@@ -839,6 +839,8 @@ export function SupportChat({
       bodyRef.current = "";
       setBody("");
       setReplyTo(null);
+      // The snapshot is consumed; a newly typed draft or uploaded file may send.
+      release();
     }
 
     try {
@@ -1388,7 +1390,7 @@ export function SupportChat({
             aria-label="Mensagem para o suporte"
             value={body}
             maxLength={MAX_BODY}
-            onChange={(e) => { setBody(e.target.value.slice(0, MAX_BODY)); notifyTyping(); }}
+            onChange={(e) => { bodyRef.current = e.target.value.slice(0, MAX_BODY); setBody(bodyRef.current); notifyTyping(); }}
             onPaste={(e) => {
               const file = Array.from(e.clipboardData?.files ?? [])[0];
               if (file) {

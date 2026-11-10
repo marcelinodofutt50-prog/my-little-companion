@@ -31,6 +31,14 @@ describe("chat operation locks", () => {
     expect(operations.begin("history")).toBeNull();
     expect(operations.begin("refresh")).not.toBeNull();
   });
+  it("releasing a consumed draft twice cannot unlock the next draft", () => {
+    const operations = createChatOperations();
+    const release = operations.begin("compose");
+    release?.();
+    expect(operations.begin("compose")).not.toBeNull();
+    release?.();
+    expect(operations.begin("compose")).toBeNull();
+  });
 });
 
 describe("chat drafts", () => {
