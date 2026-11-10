@@ -71,4 +71,8 @@ export async function assertAdminRole(ctx: { supabase: any; userId: string }) {
 export async function assertStaffRole(ctx: { supabase: any; userId: string }) {
   const { isStaff } = await resolveRoles(ctx);
   if (!isStaff) throw new Error("Forbidden");
+  const { data: mfaOk, error: mfaErr } = await ctx.supabase.rpc("mfa_satisfied");
+  if (mfaErr || !mfaOk) {
+    throw new Error("Confirme a verificação em duas etapas da sua conta antes de continuar.");
+  }
 }

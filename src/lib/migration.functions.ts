@@ -37,7 +37,8 @@ export const submitMigrationRequest = createServerFn({ method: "POST" })
       throw new Error("Anexe pelo menos 1 comprovante de que você já usa outro servidor.");
     }
     // Só aceita arquivos dentro da pasta do próprio usuário.
-    const bad = data.proofPaths.find((p) => !p.startsWith(`${context.userId}/`));
+    const { migrationProofOwner } = await import("./migration-proof-access.server");
+    const bad = data.proofPaths.find((p) => migrationProofOwner(p) !== context.userId);
     if (bad) throw new Error("Anexo inválido. Reenvie os arquivos e tente de novo.");
 
     const { data: row, error } = await context.supabase
@@ -106,8 +107,11 @@ export const getMigrationProofUrls = createServerFn({ method: "POST" })
     z.object({ paths: z.array(z.string().min(1).max(400)).max(6) }).parse(i),
   )
   .handler(async ({ data, context }) => {
+    const { authorizeMigrationProofs } = await import("./migration-proof-access.server");
+    const { assertAdmin } = await import("./admin-helpers.server");
+    await authorizeMigrationProofs(context.supabase, context.userId, data.paths, () => assertAdmin(context));
     const { createDownloads } = await import("@/lib/storage-gateway.server");
-    const signed = await createDownloads(BUCKET, data.paths, 60 * 60).catch(() => ({} as Record<string, string>));
+    const signed = await createDownloads(BUCKET, data.paths, 60).catch(() => ({} as Record<string, string>));
     return data.paths.map((path) => ({ path, url: signed[path] ?? null }));
   });
 
@@ -126,7 +130,8 @@ export const addMigrationProofs = createServerFn({ method: "POST" })
       .parse(i),
   )
   .handler(async ({ data, context }) => {
-    const bad = data.proofPaths.find((p) => !p.startsWith(`${context.userId}/`));
+    const { migrationProofOwner } = await import("./migration-proof-access.server");
+    const bad = data.proofPaths.find((p) => migrationProofOwner(p) !== context.userId);
     if (bad) throw new Error("Anexo inválido. Reenvie os arquivos e tente de novo.");
 
     const { data: current, error: readErr } = await context.supabase
@@ -202,8 +207,8 @@ export const removeMigrationProof = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((i: unknown) => z.object({ path: z.string().trim().min(1).max(400) }).parse(i))
   .handler(async ({ data, context }) => {
-    const { stripSecondaryPrefix } = await import("@/lib/storage-routing");
-    if (!stripSecondaryPrefix(data.path).startsWith(`${context.userId}/`)) {
+    const { migrationProofOwner } = await import("./migration-proof-access.server");
+    if (migrationProofOwner(data.path) !== context.userId) {
       throw new Error("Caminho inválido");
     }
     const { removeObjects } = await import("@/lib/storage-gateway.server");
