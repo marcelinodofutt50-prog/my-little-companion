@@ -11,7 +11,10 @@ export function createChatOperations() {
       if (locks.has(key)) return null;
       locks.add(key);
       const startedVisit = visit;
+      let released = false;
       return () => {
+        if (released) return;
+        released = true;
         if (visit === startedVisit) locks.delete(key);
       };
     },
