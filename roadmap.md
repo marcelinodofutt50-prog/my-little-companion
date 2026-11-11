@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 11/11 — monitor vertical e tickets acumulados
+- [ ] Reproduzir cortes em telas verticais e corrigir dimensões do atendimento sem reduzir a área das mensagens.
+- [ ] Conferir agendamento e motivos reais dos tickets abertos, preservando pagamentos pendentes e confirmação de resolução.
+- [ ] Testar correções e documentar validações e bloqueios de publicação/acesso.
+
 ## Pedido 10/11 — pendências de segurança e dados privados
 - [x] Comprovantes de migração: chave canônica validada e dono/admin+2FA com anexo real antes de assinar; link de 60 s. Atendimento exige 2FA no servidor. 58 testes passaram.
 - [x] Banco do site publicado (TLS verify-full): chat de clientes só com licença válida e 2FA; indicação não pode ser atribuída pelo cliente; APK sem escrita de cliente; missões sem execução de cliente; proteções restritivas em conversas e arquivos privados (db/private-data-security-containment.sql).
