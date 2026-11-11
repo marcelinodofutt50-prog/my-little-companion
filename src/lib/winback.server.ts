@@ -29,10 +29,11 @@ export function computeWinbackTier(input: {
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 export function generateWinbackCode(): string {
-  // 32 símbolos dividem 256 igualmente: aleatoriedade criptográfica sem viés.
-  const bytes = new Uint8Array(5);
-  crypto.getRandomValues(bytes);
-  return `VOLTA-${Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join("")}`;
+  let s = "";
+  for (let i = 0; i < 5; i++) {
+    s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+  }
+  return `VOLTA-${s}`;
 }
 
 // Janela de urgência do cupom (minutos).
