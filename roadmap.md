@@ -1,11 +1,12 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 10/11 — pendências de segurança e dados privados
-- [ ] Reconciliar achados antigos com código e regras efetivas, priorizando comprovantes e conversas.
-- [ ] Autorizar comprovantes de migração antes de assinar e testar isolamento entre usuários.
-- [ ] Corrigir regras ainda abertas no banco (chat expirado, indicação, missões e criação de APK), sem habilitar criação de APK.
-- [ ] Verificar TLS, aplicar alterações nos bancos acessíveis e testar acessos negados sem expor dados.
-- [ ] Registrar validações e bloqueios de publicação/autenticação sem declarar pendências resolvidas sem evidência.
+- [x] Comprovantes de migração: chave canônica validada e dono/admin+2FA com anexo real antes de assinar; link de 60 s. Atendimento exige 2FA no servidor. 58 testes passaram.
+- [x] Banco do site publicado (TLS verify-full): chat de clientes só com licença válida e 2FA; indicação não pode ser atribuída pelo cliente; APK sem escrita de cliente; missões sem execução de cliente; proteções restritivas em conversas e arquivos privados (db/private-data-security-containment.sql).
+- [x] Códigos de cupom VOLTA com aleatoriedade criptográfica; criação de build exige licença não expirada (criação segue bloqueada).
+- [ ] Banco Lovable Cloud inacessível (migração recusada); aplicar db/private-data-security-containment.sql quando voltar.
+- [ ] Não testado com sessão real de cliente/admin (emissão de sessão indisponível); deploy Vercel sem cache.
+- [ ] Revisão futura: leitura aberta de community_messages/community_goals (chat comunitário) e buckets públicos de anúncios/tutoriais — mantidos por serem públicos de propósito.
 
 ## Pedido 09/11 — estabilidade do chat ao vivo
 - [x] Rascunhos limpos mesmo com armazenamento bloqueado; travas síncronas por visita para envio/upload/histórico; reenvios antigos não enviam o rascunho de outra conversa; canais de mensagens únicos e digitação separada; reconciliação após conexão inicial.
