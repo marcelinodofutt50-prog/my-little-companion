@@ -52,8 +52,11 @@ export const createBuildJob = createServerFn({ method: "POST" })
       // 1) Access check
       const { data: license, error: lErr } = await context.supabase
         .from("licenses")
-        .select("plan_slug")
+        .select("plan_slug, expires_at, revoked, disabled_at")
         .eq("user_id", context.userId)
+        .eq("revoked", false)
+        .is("disabled_at", null)
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
