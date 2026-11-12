@@ -1173,7 +1173,7 @@ export function SupportChat({
                       </button>
                     )}
                     {m.body && (
-                      <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
+                      <p className="text-base leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                         {m.is_system ? m.body.replace(RENEWAL_ACTION, "").trim() : m.body}
                       </p>
                     )}
@@ -1224,7 +1224,7 @@ export function SupportChat({
                   : "bg-primary/60 text-primary-foreground"
               }`}
             >
-              {p.body && <p className="text-base whitespace-pre-wrap break-words">{p.body}</p>}
+              {p.body && <p className="text-base whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{p.body}</p>}
               {p.previewUrl && (
                 <div data-sensitive>
                 <img
@@ -1384,7 +1384,7 @@ export function SupportChat({
           >
             {uploading ? <Loader2 className="animate-spin h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
           </Button>
-          <div className="flex-1 relative">
+          <div className="flex-1 min-w-0 relative">
           <Textarea
             ref={textRef}
             aria-label="Mensagem para o suporte"

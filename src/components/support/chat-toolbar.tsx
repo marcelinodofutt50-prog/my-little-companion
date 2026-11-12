@@ -52,7 +52,7 @@ export function ToolbarGroup({
       role={label ? "group" : undefined}
       aria-label={label}
       className={cn(
-        "flex min-w-0 items-stretch divide-x divide-border/40 overflow-hidden rounded-md border border-border/50 bg-background/40",
+        "flex min-w-0 max-w-full items-stretch divide-x divide-border/40 overflow-x-auto overflow-y-hidden rounded-md [scrollbar-width:thin] [&>*]:shrink-0 border border-border/50 bg-background/40",
         className,
       )}
     >

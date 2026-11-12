@@ -81,7 +81,7 @@ export function SiteHeader() {
         <SocialLinks className="hidden border-l border-border/50 pl-3 sm:flex" />
 
         {/* Desktop nav */}
-        <nav className="ml-6 hidden flex-1 items-center gap-7 lg:flex">
+        <nav className="ml-6 hidden flex-1 items-center gap-7 xl:flex">
           {primary.map((l) => (
             <Link key={l.to} to={l.to} className={linkCls(path === l.to)}>
               {l.label}
@@ -104,12 +104,12 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-3">
-          <div className="hidden lg:block"><SystemHealthIndicator /></div>
+          <div className="hidden xl:block"><SystemHealthIndicator /></div>
           {user && <InAppNotifications />}
 
           <ThemeToggle />
           <span className="hidden sm:inline-flex"><LanguageToggle /></span>
-          <span className="hidden lg:inline-flex"><CurrencyToggle /></span>
+          <span className="hidden xl:inline-flex"><CurrencyToggle /></span>
 
           {user ? (
             <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export function SiteHeader() {
           {/* Mobile menu */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button size="icon" variant="ghost" className="lg:hidden">
+              <Button size="icon" variant="ghost" className="xl:hidden">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
