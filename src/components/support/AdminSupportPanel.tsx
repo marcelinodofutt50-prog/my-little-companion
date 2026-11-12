@@ -573,12 +573,12 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
       </div>
 
       {/* Área de Chat */}
-      <div className={`${selectedId ? "flex" : "hidden md:flex"} flex-1 min-w-0 min-h-0 flex-col bg-background/20 relative`}>
+      <div className={`${selectedId ? "flex" : "hidden md:flex"} flex-1 min-w-0 min-h-0 flex-col bg-background/20 relative @container`}>
         {selectedThread ? (
           <>
             {/* Header do Chat */}
             <div className="p-3 sm:p-4 border-b border-border/40 bg-background/60 backdrop-blur-md z-10">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 md:flex md:items-center md:justify-between">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 @3xl:flex @3xl:items-center @3xl:justify-between">
                 <div className="flex min-w-0 items-start gap-2">
                   <Button
                     size="icon"
@@ -605,7 +605,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                   </p>
                   </div>
                 </div>
-                <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1 md:flex-nowrap">
+                <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 @3xl:col-span-1 @3xl:flex-nowrap">
                   <ToolbarGroup label="Ações do atendimento">
                     {selectedThread.status !== "closed" && <Button size="sm" variant="outline" className={toolbarItem} title="Preparar pergunta de confirmação para o cliente" onClick={() => setDraft({ text: "Seu problema foi resolvido? Se estiver tudo certo, confirme aqui com ‘Resolvido’. Se ainda houver alguma pendência, me conte para continuarmos o atendimento.", nonce: Date.now() })}><CheckCircle2 className="h-3 w-3" />Confirmar resolução</Button>}
                     <Button
