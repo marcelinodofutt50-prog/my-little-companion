@@ -8,7 +8,7 @@
 ## Pedido 11/11 — monitor vertical e tickets acumulados
 - [x] Tela vertical: barra superior usa menu compacto abaixo de 1280 px (cortava "Entrar" e moeda); cabeçalho/barras do chat do admin se adaptam à largura da conversa, rolam em vez de cortar; textos longos quebram. 1080x1920 sem estouro horizontal em /, /auth, /planos.
 - [x] Fechamento: agendamento do site publicado tinha sumido (última execução 08/11); recriado a cada 30 min e executado: 71 avaliados, 36 sem confirmação do cliente, 35 com pagamento pendente, 0 fechados.
-- [ ] Decisão do dono: fechar tickets por silêncio prolongado e/ou ignorar pedidos pendentes antigos (regra atual exige confirmação). Chat admin não testado logado (banco Cloud indisponível). Deploy Vercel sem cache.
+- [x] Decisão do dono: manter fechamento somente com confirmação do cliente e 5 horas sem mensagens; pagamentos pendentes continuam abertos. Chat admin não testado logado (banco Cloud indisponível). Deploy Vercel sem cache.
 
 ## Pedido 10/11 — pendências de segurança e dados privados
 - [x] Comprovantes de migração: chave canônica validada e dono/admin+2FA com anexo real antes de assinar; link de 60 s. Atendimento exige 2FA no servidor. 58 testes passaram.
