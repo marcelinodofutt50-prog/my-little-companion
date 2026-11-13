@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 13/11 — melhorias no admin/suporte e compras/licenças
+- [ ] Revisar o atendimento admin e melhorar a triagem sem alterar a regra de fechamento automático.
+- [ ] Revisar compras e licenças, priorizando o problema conhecido de plano ausente na renovação.
+- [ ] Testar as regras alteradas e conferir os fluxos no navegador quando houver sessão autorizada.
+
 ## Pedido 11/11 — monitor vertical e tickets acumulados
 - [x] Tela vertical: barra superior usa menu compacto abaixo de 1280 px (cortava "Entrar" e moeda); cabeçalho/barras do chat do admin se adaptam à largura da conversa, rolam em vez de cortar; textos longos quebram. 1080x1920 sem estouro horizontal em /, /auth, /planos.
 - [x] Fechamento: agendamento do site publicado tinha sumido (última execução 08/11); recriado a cada 30 min e executado: 71 avaliados, 36 sem confirmação do cliente, 35 com pagamento pendente, 0 fechados.
