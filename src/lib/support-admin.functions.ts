@@ -234,5 +234,5 @@ export const adminSupportStats = createServerFn({ method: "GET" })
       } else if (!waiting.has(m.thread_id)) waiting.set(m.thread_id, t);
     }
     const avgMinutes = deltas.length ? Math.max(1, Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length / 60000)) : null;
-    return { hourly, avgMinutes, answered: deltas.length, waitingNow: waiting.size, status };
+    return { hourly, avgMinutes, answered: deltas.length, waitingNow: waitingNow ?? 0, status };
   });

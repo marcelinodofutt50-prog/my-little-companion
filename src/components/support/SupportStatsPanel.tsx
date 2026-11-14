@@ -28,7 +28,7 @@ export function SupportStatsPanel() {
   if (!s) return <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Carregando estatísticas…</div>;
   const kpis = [
     ["Resposta média 24h", s.avgMinutes === null ? "—" : s.avgMinutes >= 60 ? `${(s.avgMinutes / 60).toFixed(1)} h` : `${s.avgMinutes} min`],
-    ["Aguardando resposta", String(s.waitingNow)],
+    ["Aguardando retorno", String(s.waitingNow)],
     ["Lidas", String(s.status.lidas)],
     ["Não vistas pela equipe", String(s.status.naoLidasPelaEquipe)],
     ["Cliente não viu", String(s.status.naoLidasPeloCliente)],

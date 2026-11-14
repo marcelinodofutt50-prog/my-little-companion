@@ -93,7 +93,7 @@ function ManualPaymentsHistory({ refreshKey }: { refreshKey: number }) {
     let active = true; setLoading(true); setError('');
     list({ data:{ page } }).then(r => { if(active){ setRows(r.rows); setTotal(r.total); } }).catch(() => { if(active) setError('Não foi possível carregar o histórico.'); }).finally(() => { if(active) setLoading(false); });
     return () => { active = false; };
-  }, [list,page]);
+  }, [list,page,refreshKey]);
   return <section className="space-y-2">
     <h3 className="flex items-center gap-2 font-medium"><History className="h-4 w-4"/>Pagamentos registrados por fora</h3>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

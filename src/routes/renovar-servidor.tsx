@@ -47,6 +47,8 @@ function LegacyRenewalPage() {
   const [legacyMode, setLegacyMode] = useState(false);
   const [options, setOptions] = useState<Awaited<ReturnType<typeof listMyRenewalOptions>>>([]);
   const [optionsError, setOptionsError] = useState<string | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+  const [optionsReload, setOptionsReload] = useState(0);
   const optionsFn = useServerFn(listMyRenewalOptions);
 
   const lookupFn = useServerFn(checkLegacyEmail);
