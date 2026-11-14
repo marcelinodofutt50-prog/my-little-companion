@@ -189,7 +189,10 @@ function LegacyRenewalPage() {
           {shouldShowNoRenewalOptions({ loggedIn, loading: optionsLoading, error: optionsError, optionCount: options.length }) && <p className="text-sm text-muted-foreground">Nenhum login pago vinculado. <Button variant="link" onClick={() => setLegacyMode(true)}>Usar login BTmob antigo</Button></p>}
           {options.map((option) => <div key={option.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-4">
             <div className="min-w-0"><p data-sensitive className="break-all font-mono text-sm">{option.yaarsa_email}</p><p className="text-xs text-muted-foreground">{option.panel} · {option.server_paid_until ? new Date(option.server_paid_until).toLocaleDateString("pt-BR") : "Servidor sem vencimento registrado"}</p></div>
-            <Button disabled={going || option.price === null} onClick={() => renewOption(option)}>{going ? "Aguarde…" : option.price === null ? "Plano indisponível" : `Renovar · ${formatBrl(option.price)}`}</Button>
+            <div className="flex flex-col items-start gap-1 sm:items-end">
+              <Button disabled={going || option.price === null} onClick={() => renewOption(option)}>{going ? "Aguarde…" : option.price === null ? "Plano indisponível" : `Renovar · ${formatBrl(option.price)}`}</Button>
+              {option.price === null && <p className="text-xs text-muted-foreground">Tente novamente mais tarde ou <Link to="/suporte" className="text-neon underline">fale com o suporte</Link>.</p>}
+            </div>
           </div>)}
           {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
         </section>}
