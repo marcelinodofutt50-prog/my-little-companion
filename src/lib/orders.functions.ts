@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { findSchemaCacheReadError, ORDER_READ_ERROR, unresolvedOrderReadError } from "./order-read";
 
 export type MyOrder = {
   id: string;
@@ -42,18 +43,21 @@ export const listMyOrders = createServerFn({ method: "GET" })
     ]);
 
     let results = await fetchAll(context.supabase);
-    let hasError = results.some(r => r.error);
+    const pgrstError = findSchemaCacheReadError(results);
 
-    if (hasError) {
-      const pgrstError = results.find(r => r.error && (r.error.code === 'PGRST108' || r.error.message?.includes('schema cache')))?.error;
-      if (pgrstError) {
-        const { trackSchemaFailure } = await import("./tutorials.functions");
-        await trackSchemaFailure(pgrstError, "listMyOrders", false, metadata, userId);
-        results = await fetchAll(supabaseAdmin);
-        if (!results.some(r => r.error)) {
-          await trackSchemaFailure(pgrstError, "listMyOrders", true, { stage: "retry_success" }, userId);
-        }
+    if (pgrstError) {
+      const { trackSchemaFailure } = await import("./tutorials.functions");
+      await trackSchemaFailure(pgrstError, "listMyOrders", false, metadata, userId);
+      results = await fetchAll(supabaseAdmin);
+      if (!unresolvedOrderReadError(results)) {
+        await trackSchemaFailure(pgrstError, "listMyOrders", true, { stage: "retry_success" }, userId);
       }
+    }
+
+    const readError = unresolvedOrderReadError(results);
+    if (readError) {
+      console.error("[listMyOrders] falha ao carregar dados do histórico:", readError);
+      throw new Error(ORDER_READ_ERROR);
     }
 
     const [{ data: orders }, { data: licenses }, { data: plans }] = results;

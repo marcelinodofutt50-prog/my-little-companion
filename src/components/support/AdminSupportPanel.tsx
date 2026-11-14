@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 import { createLatestRequest } from "@/lib/latest-request";
 import { createChatOperations } from "@/lib/chat-operations";
+import { isAwaitingSupportResponse, supportResponseAge } from "@/lib/support-response";
 
 export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | null }) {
   const [threads, setThreads] = useState<any[]>([]);
@@ -46,6 +47,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState<string>("all");
   const [prioFilter, setPrioFilter] = useState<string>("all");
+  const [awaitingOnly, setAwaitingOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef(selectedId);
   selectedIdRef.current = selectedId;
@@ -279,10 +281,12 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
     return () => { document.title = document.title.replace(/^\(\d+\)\s*/, ""); };
   }, [unreadTotal]);
 
+  const awaitingTotal = threads.filter(isAwaitingSupportResponse).length;
   const filteredThreads = useMemo(() => {
     const rank: Record<string, number> = { critica: 0, alta: 1, normal: 2 };
     const q = search.trim().toLowerCase();
     return threads
+      .filter(t => !awaitingOnly || isAwaitingSupportResponse(t))
       .filter(t => catFilter === "all" || (t.category || "outro") === catFilter)
       .filter(t => prioFilter === "all" || (t.priority || "normal") === prioFilter)
       .filter(t => !q ||
@@ -293,7 +297,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
       .sort((a, b) =>
         (Number(b.unread_by_staff || 0) > 0 ? 1 : 0) - (Number(a.unread_by_staff || 0) > 0 ? 1 : 0) ||
         (rank[a.priority || "normal"] ?? 2) - (rank[b.priority || "normal"] ?? 2));
-  }, [threads, search, catFilter, prioFilter]);
+  }, [threads, search, catFilter, prioFilter, awaitingOnly]);
 
   const selectedThread = threads.find(t => t.id === selectedId);
 
@@ -349,6 +353,18 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                 title="Unificar tickets duplicados do mesmo cliente"
               >
                 {merging ? <Loader2 className="h-3 w-3 animate-spin" /> : "Unificar"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={awaitingOnly ? "secondary" : "ghost"}
+                aria-label={awaitingOnly ? "Mostrar todos os tickets" : "Mostrar só tickets aguardando retorno"}
+                aria-pressed={awaitingOnly}
+                title="Filtrar clientes cuja última mensagem ainda não teve retorno da equipe"
+                onClick={() => setAwaitingOnly((value) => !value)}
+                className="h-7 gap-1 px-2 text-[10px] font-mono"
+              >
+                <Clock className="h-3 w-3" />{awaitingTotal}
               </Button>
               <Badge variant="outline" className="font-mono">{threads.length}</Badge>
             </div>
@@ -509,7 +525,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
             </div>
           ) : filteredThreads.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground italic text-xs">
-              Nenhum ticket encontrado
+              {awaitingOnly ? "Nenhum ticket aguardando retorno" : "Nenhum ticket encontrado"}
             </div>
           ) : (
             <div className="divide-y divide-border/20">
@@ -554,6 +570,8 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                       <div className="flex items-center gap-1.5">
                       {unread > 0 ? (
                         <span className="text-[9px] font-mono uppercase text-neon">Não visto pela equipe</span>
+                      ) : isAwaitingSupportResponse(t) ? (
+                        <span className="text-[9px] font-mono uppercase text-amber-500">Aguardando retorno {supportResponseAge(t)}</span>
                       ) : Number(t.unread_by_customer || 0) > 0 ? (
                         <span className="text-[9px] font-mono uppercase text-muted-foreground">Cliente não viu</span>
                       ) : (

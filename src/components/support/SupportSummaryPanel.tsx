@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { createThreadSummaryRequestGuard } from "@/lib/support-summary-request";
 import { summarizeThread, escalateThread, type ThreadSummary } from "@/lib/support-summary.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -26,47 +27,67 @@ import { ToolbarGroup, toolbarItem } from "./chat-toolbar";
  * para esse botão.
  */
 export function useThreadSummary(threadId: string) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [escalating, setEscalating] = useState(false);
-  const [summary, setSummary] = useState<ThreadSummary | null>(null);
+  const [summaryResult, setSummaryResult] = useState<{ threadId: string; value: ThreadSummary } | null>(null);
+  const [openThreadId, setOpenThreadId] = useState<string | null>(null);
+  const [loadingThreadId, setLoadingThreadId] = useState<string | null>(null);
+  const [escalatingThreadId, setEscalatingThreadId] = useState<string | null>(null);
+  const requests = useRef(createThreadSummaryRequestGuard(threadId));
+  requests.current.enter(threadId);
 
   const summarize = useServerFn(summarizeThread);
   const escalate = useServerFn(escalateThread);
 
+  // O conteúdo também carrega o dono: mesmo antes deste efeito rodar, uma
+  // renderização da conversa B nunca enxerga o resumo salvo da conversa A.
+  const summary = summaryResult?.threadId === threadId ? summaryResult.value : null;
+  const open = openThreadId === threadId;
+  const loading = loadingThreadId === threadId;
+  const escalating = escalatingThreadId === threadId;
+
+  useEffect(() => {
+    setSummaryResult(null);
+    setOpenThreadId(null);
+    setLoadingThreadId(null);
+    setEscalatingThreadId(null);
+  }, [threadId]);
+  useEffect(() => () => requests.current.cancel(), []);
+
   const generate = async () => {
-    setLoading(true);
+    const request = requests.current.begin(threadId);
+    setLoadingThreadId(threadId);
     try {
-      const r = (await summarize({ data: { threadId } })) as ThreadSummary;
-      setSummary(r);
-      setOpen(true);
+      const value = (await summarize({ data: { threadId } })) as ThreadSummary;
+      if (!requests.current.isCurrent(request)) return;
+      setSummaryResult({ threadId, value });
+      setOpenThreadId(threadId);
     } catch (e: any) {
-      toast.error(e?.message || "Não foi possível gerar o resumo.");
+      if (requests.current.isCurrent(request)) toast.error(e?.message || "Não foi possível gerar o resumo.");
     } finally {
-      setLoading(false);
+      if (requests.current.isCurrent(request)) setLoadingThreadId(null);
     }
   };
 
   const doEscalate = async () => {
-    setEscalating(true);
+    const request = requests.current.begin(threadId);
+    const reason = summary?.diagnosis?.slice(0, 400);
+    setEscalatingThreadId(threadId);
     try {
-      const r: any = await escalate({
-        data: { threadId, reason: summary?.diagnosis?.slice(0, 400) },
-      });
-      toast.success(`Encaminhado para o suporte. Protocolo ${r.protocol}`);
+      const r: any = await escalate({ data: { threadId, reason } });
+      if (requests.current.isCurrent(request)) toast.success(`Encaminhado para o suporte. Protocolo ${r.protocol}`);
     } catch (e: any) {
-      toast.error(e?.message || "Falha ao encaminhar para o suporte.");
+      if (requests.current.isCurrent(request)) toast.error(e?.message || "Falha ao encaminhar para o suporte.");
     } finally {
-      setEscalating(false);
+      if (requests.current.isCurrent(request)) setEscalatingThreadId(null);
     }
   };
 
   /** Primeira abertura gera o resumo; depois só recolhe/expande. */
   const toggle = () => {
-    if (summary) setOpen((v) => !v);
+    if (summary) setOpenThreadId(open ? null : threadId);
     else void generate();
   };
 
+  const setOpen = (value: boolean) => setOpenThreadId(value ? threadId : null);
   return { open, setOpen, loading, escalating, summary, generate, toggle, doEscalate };
 }
 

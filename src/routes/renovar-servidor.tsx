@@ -13,6 +13,7 @@ import { markCheckoutIntent } from "@/components/WinbackOffer";
 import { checkLegacyEmail } from "@/lib/license.functions";
 import { formatBrl } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
+import { shouldShowNoRenewalOptions } from "@/lib/renewal-options-view";
 
 export const Route = createFileRoute("/renovar-servidor")({
   head: () => ({
@@ -46,6 +47,8 @@ function LegacyRenewalPage() {
   const [legacyMode, setLegacyMode] = useState(false);
   const [options, setOptions] = useState<Awaited<ReturnType<typeof listMyRenewalOptions>>>([]);
   const [optionsError, setOptionsError] = useState<string | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+  const [optionsReload, setOptionsReload] = useState(0);
   const optionsFn = useServerFn(listMyRenewalOptions);
 
   const lookupFn = useServerFn(checkLegacyEmail);
@@ -53,16 +56,30 @@ function LegacyRenewalPage() {
 
   useEffect(() => {
     let active = true;
+    setOptionsLoading(true);
+    setOptionsError(null);
     supabase.auth.getUser().then(async ({ data }) => {
       if (!active) return;
       setLoggedIn(!!data.user);
-      if (data.user) {
-        try { const rows = await optionsFn(); if (active) setOptions(rows); }
-        catch { if (active) setOptionsError("Não foi possível carregar os logins. Atualize a página ou fale com o suporte."); }
+      if (!data.user) {
+        setOptionsLoading(false);
+        return;
       }
+      try {
+        const rows = await optionsFn();
+        if (active) setOptions(rows);
+      } catch {
+        if (active) setOptionsError("Não foi possível carregar os logins. Tente novamente ou fale com o suporte.");
+      } finally {
+        if (active) setOptionsLoading(false);
+      }
+    }).catch(() => {
+      if (!active) return;
+      setOptionsError("Não foi possível verificar sua conta. Tente novamente.");
+      setOptionsLoading(false);
     });
     return () => { active = false; };
-  }, []);
+  }, [optionsReload]);
 
   async function renewOption(option: (typeof options)[number]) {
     if (going || option.price === null) return;
@@ -167,12 +184,15 @@ function LegacyRenewalPage() {
           <Button variant={legacyMode ? "default" : "outline"} onClick={() => setLegacyMode(true)}>Login BTmob antigo</Button>
         </div>
         {!legacyMode && <section className="space-y-4">
-          {loggedIn === null && <Loader2 className="h-5 w-5 animate-spin" />}
-          {optionsError && <p role="alert" className="text-sm text-destructive">{optionsError}</p>}
-          {loggedIn && !optionsError && !options.length && <p className="text-sm text-muted-foreground">Nenhum login pago vinculado. <Button variant="link" onClick={() => setLegacyMode(true)}>Usar login BTmob antigo</Button></p>}
+          {(loggedIn === null || optionsLoading) && !optionsError && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" />Carregando seus logins…</p>}
+          {optionsError && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive"><span>{optionsError}</span><Button size="sm" variant="outline" onClick={() => setOptionsReload((value) => value + 1)}>Tentar novamente</Button></div>}
+          {shouldShowNoRenewalOptions({ loggedIn, loading: optionsLoading, error: optionsError, optionCount: options.length }) && <p className="text-sm text-muted-foreground">Nenhum login pago vinculado. <Button variant="link" onClick={() => setLegacyMode(true)}>Usar login BTmob antigo</Button></p>}
           {options.map((option) => <div key={option.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-4">
             <div className="min-w-0"><p data-sensitive className="break-all font-mono text-sm">{option.yaarsa_email}</p><p className="text-xs text-muted-foreground">{option.panel} · {option.server_paid_until ? new Date(option.server_paid_until).toLocaleDateString("pt-BR") : "Servidor sem vencimento registrado"}</p></div>
-            <Button disabled={going || option.price === null} onClick={() => renewOption(option)}>{going ? "Aguarde…" : option.price === null ? "Plano indisponível" : `Renovar · ${formatBrl(option.price)}`}</Button>
+            <div className="flex flex-col items-start gap-1 sm:items-end">
+              <Button disabled={going || option.price === null} onClick={() => renewOption(option)}>{going ? "Aguarde…" : option.price === null ? "Plano indisponível" : `Renovar · ${formatBrl(option.price)}`}</Button>
+              {option.price === null && <p className="text-xs text-muted-foreground">Tente novamente mais tarde ou <Link to="/suporte" className="text-neon underline">fale com o suporte</Link>.</p>}
+            </div>
           </div>)}
           {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
         </section>}
