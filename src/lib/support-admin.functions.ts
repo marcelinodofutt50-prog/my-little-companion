@@ -204,6 +204,15 @@ export const adminSupportStats = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true })
       .limit(5000);
     if (error) throw new Error(`[support_messages] ${error.code ?? ""} ${error.message}`);
+    // A fila atual vem dos tickets abertos, não da amostra de 24h usada no
+    // tempo médio. Assim tickets antigos continuam contando e encerrados saem.
+    const { count: waitingNow, error: waitingError } = await supabaseAdmin
+      .from("support_threads")
+      .select("id", { count: "exact", head: true })
+      .neq("status", "closed")
+      .not("last_customer_message_at", "is", null)
+      .or("last_staff_message_at.is.null,last_customer_message_at.gt.last_staff_message_at");
+    if (waitingError) throw new Error("Não foi possível contar os tickets aguardando retorno.");
     const hourly = Array.from({ length: 24 }, (_, i) => {
       const d = new Date(since.getTime() + (i + 1) * 3600_000);
       return { hour: `${String(d.getHours()).padStart(2, "0")}h`, clientes: 0, equipe: 0 };

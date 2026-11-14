@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { createThreadSummaryRequestGuard } from "@/lib/support-summary-request";
 import { summarizeThread, escalateThread, type ThreadSummary } from "@/lib/support-summary.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";

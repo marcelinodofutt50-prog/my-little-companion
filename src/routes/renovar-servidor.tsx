@@ -13,6 +13,7 @@ import { markCheckoutIntent } from "@/components/WinbackOffer";
 import { checkLegacyEmail } from "@/lib/license.functions";
 import { formatBrl } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
+import { shouldShowNoRenewalOptions } from "@/lib/renewal-options-view";
 
 export const Route = createFileRoute("/renovar-servidor")({
   head: () => ({

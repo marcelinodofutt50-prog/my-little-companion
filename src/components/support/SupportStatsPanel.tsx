@@ -13,7 +13,13 @@ export function SupportStatsPanel() {
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
-    const load = () => fn().then((r) => alive && setS(r)).catch((e) => alive && setErr(e?.message || "Falha"));
+    const load = () => fn()
+      .then((r) => {
+        if (!alive) return;
+        setS(r);
+        setErr(null);
+      })
+      .catch((e) => alive && setErr(e?.message || "Falha"));
     load();
     const id = setInterval(() => { if (document.visibilityState === "visible") load(); }, 60000);
     return () => { alive = false; clearInterval(id); };

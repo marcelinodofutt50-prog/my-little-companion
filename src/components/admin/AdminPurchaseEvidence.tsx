@@ -82,7 +82,7 @@ function ManualPaymentPanel({ prefillEmail, prefillEvidenceId, onDone }: { prefi
   </form>;
 }
 
-function ManualPaymentsHistory() {
+function ManualPaymentsHistory({ refreshKey }: { refreshKey: number }) {
   const [rows,setRows] = useState<{ id:string; customer_email:string | null; plan_slug:string; amount:number; status:string; created_at:string; paid_at:string | null; note:string | null }[]>([]);
   const [total,setTotal] = useState(0);
   const [page,setPage] = useState(0);
