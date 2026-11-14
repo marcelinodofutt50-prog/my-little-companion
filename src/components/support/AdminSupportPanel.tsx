@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { playNotifyDing, requestNotifyPermission, showDesktopNotification } from "@/lib/notify-sound";
 import { createLatestRequest } from "@/lib/latest-request";
 import { createChatOperations } from "@/lib/chat-operations";
+import { isAwaitingSupportResponse, supportResponseAge } from "@/lib/support-response";
 
 export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | null }) {
   const [threads, setThreads] = useState<any[]>([]);

@@ -56,16 +56,30 @@ function LegacyRenewalPage() {
 
   useEffect(() => {
     let active = true;
+    setOptionsLoading(true);
+    setOptionsError(null);
     supabase.auth.getUser().then(async ({ data }) => {
       if (!active) return;
       setLoggedIn(!!data.user);
-      if (data.user) {
-        try { const rows = await optionsFn(); if (active) setOptions(rows); }
-        catch { if (active) setOptionsError("Não foi possível carregar os logins. Atualize a página ou fale com o suporte."); }
+      if (!data.user) {
+        setOptionsLoading(false);
+        return;
       }
+      try {
+        const rows = await optionsFn();
+        if (active) setOptions(rows);
+      } catch {
+        if (active) setOptionsError("Não foi possível carregar os logins. Tente novamente ou fale com o suporte.");
+      } finally {
+        if (active) setOptionsLoading(false);
+      }
+    }).catch(() => {
+      if (!active) return;
+      setOptionsError("Não foi possível verificar sua conta. Tente novamente.");
+      setOptionsLoading(false);
     });
     return () => { active = false; };
-  }, []);
+  }, [optionsReload]);
 
   async function renewOption(option: (typeof options)[number]) {
     if (going || option.price === null) return;

@@ -21,6 +21,7 @@ function ManualPaymentPanel({ prefillEmail, prefillEvidenceId, onDone }: { prefi
   const [note,setNote] = useState('');
   const [loadingPlans,setLoadingPlans] = useState(true);
   const [loadingLicenses,setLoadingLicenses] = useState(false);
+  const [licenseError,setLicenseError] = useState('');
   const [submitting,setSubmitting] = useState(false);
   const [error,setError] = useState('');
   const [success,setSuccess] = useState('');
@@ -37,11 +38,18 @@ function ManualPaymentPanel({ prefillEmail, prefillEvidenceId, onDone }: { prefi
   const selectedPlan = plans.find(p => p.slug === planSlug) ?? null;
 
   useEffect(() => {
-    if (!selectedPlan || selectedPlan.category !== 'server' || !email.includes('@')) { setLicenses([]); setLicenseId(''); return; }
-    let active = true; setLoadingLicenses(true);
+    setLicenses([]);
+    setLicenseId('');
+    setLicenseError('');
+    if (!selectedPlan || selectedPlan.category !== 'server' || !email.includes('@')) {
+      setLoadingLicenses(false);
+      return;
+    }
+    let active = true;
+    setLoadingLicenses(true);
     loadLicenses({ data:{ customerEmail: email } })
       .then(r => { if(active) setLicenses(r.licenses as LicenseOption[]); })
-      .catch(() => { if(active) setLicenses([]); })
+      .catch(() => { if(active) setLicenseError('Não foi possível carregar os logins deste cliente.'); })
       .finally(() => { if(active) setLoadingLicenses(false); });
     return () => { active = false; };
   }, [loadLicenses, selectedPlan, email]);
@@ -119,6 +127,7 @@ export function AdminPurchaseEvidence() {
   const [downloading,setDownloading] = useState<string | null>(null);
   const [showManual,setShowManual] = useState(false);
   const [manualPrefill,setManualPrefill] = useState<{email?:string;evidenceId?:string}>({});
+  const [refreshKey,setRefreshKey] = useState(0);
   const search = useServerFn(searchPurchaseEvidence);
   const download = useServerFn(getPurchaseEvidenceDownload);
   const organize = useServerFn(organizeSupportEvidence);
