@@ -1,9 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 13/11 — melhorias no admin/suporte e compras/licenças
-- [ ] Revisar o atendimento admin e melhorar a triagem sem alterar a regra de fechamento automático.
-- [ ] Revisar compras e licenças, priorizando o problema conhecido de plano ausente na renovação.
-- [ ] Testar as regras alteradas e conferir os fluxos no navegador quando houver sessão autorizada.
+- [x] Suporte: resumo e encaminhamento isolados por ticket; respostas antigas não cruzam conversas. Filtro e idade de clientes aguardando retorno; contador atual vem dos tickets abertos, não da amostra de 24h; estatísticas se recuperam após falha temporária. Regra de fechamento inalterada.
+- [x] Compras: falha de leitura não aparece mais como histórico vazio, com nova tentativa; registro manual limpa cliente/login anterior, mostra erro de busca, atualiza listas após salvar e não confunde pagamento registrado com entrega comprovada.
+- [x] Renovação: carregamento não anuncia mais falsamente "nenhum login"; erro tem nova tentativa e plano indisponível orienta suporte. Preços, elegibilidade e entrega inalterados. Causa de catálogo/is_legacy não verificada porque o banco está indisponível.
+- [x] 60 testes passaram; compilação automática OK; renovação, admin e suporte abriram sem erros no navegador deslogado. Fluxos autenticados e deploy Vercel sem cache continuam pendentes.
 
 ## Pedido 11/11 — monitor vertical e tickets acumulados
 - [x] Tela vertical: barra superior usa menu compacto abaixo de 1280 px (cortava "Entrar" e moeda); cabeçalho/barras do chat do admin se adaptam à largura da conversa, rolam em vez de cortar; textos longos quebram. 1080x1920 sem estouro horizontal em /, /auth, /planos.
