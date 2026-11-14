@@ -31,7 +31,6 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useMoney, UsdNotice } from "@/lib/currency";
-import { WELCOME_PLAN_SLUG, WELCOME_PRICE_BRL, welcomeRemainingMs } from "@/lib/welcome-offer";
 import { createCheckout } from "@/lib/checkout.functions";
 import { siteUrl } from "@/lib/site-url";
 import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus, listMyLicenses } from "@/lib/license.functions";
@@ -304,13 +303,6 @@ function PlansPage() {
     }
   }, [search?.clear_cache]);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [welcomeUntil, setWelcomeUntil] = useState<number | null>(null);
-  const [welcomeNow, setWelcomeNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!welcomeUntil) return;
-    const t = setInterval(() => setWelcomeNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [welcomeUntil]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [isLegacy, setIsLegacy] = useState(false);
 
@@ -353,12 +345,8 @@ function PlansPage() {
             .from("account_bans").select("price_multiplier").eq("user_id", u.user.id).is("revoked_at", null).maybeSingle();
           if (ban) mult = Number(ban.price_multiplier) || 1;
         }
-        // Oferta de boas-vindas: Vitalício R$ 999,90 nas primeiras 6h30 (o servidor confere de novo).
-        const welcomeLeft = u.user && mult === 1 ? welcomeRemainingMs(u.user.created_at) : 0;
-        setWelcomeUntil(welcomeLeft > 0 ? Date.now() + welcomeLeft : null);
         setPlans(((data ?? []) as Plan[]).map((p) => {
           if (mult > 1) return { ...p, price_brl: Math.round(Number(p.price_brl) * mult * 100) / 100 };
-          if (welcomeLeft > 0 && p.slug === WELCOME_PLAN_SLUG) return { ...p, price_brl: Math.min(Number(p.price_brl), WELCOME_PRICE_BRL) };
           return p;
         }));
       } catch (err) {
@@ -969,21 +957,6 @@ function PlansPage() {
           </div>
           <UsdNotice className="mb-4" />
           
-          {welcomeUntil && welcomeUntil > welcomeNow && (() => {
-            const left = Math.floor((welcomeUntil - welcomeNow) / 1000);
-            const hh = String(Math.floor(left / 3600)).padStart(2, "0");
-            const mm = String(Math.floor((left % 3600) / 60)).padStart(2, "0");
-            const ss = String(left % 60).padStart(2, "0");
-            return (
-              <div className="mb-6 flex flex-col gap-2 rounded-xl border border-primary/50 bg-primary/10 p-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// {en ? "welcome · new member" : "boas-vindas · membro novo"}</div>
-                  <div className="mt-1 font-display text-lg">{en ? "Lifetime for " : "Vitalício por "}<span className="text-primary">{formatBrl(WELCOME_PRICE_BRL)}</span>{en ? " — only in your first 6h30" : " — só nas suas primeiras 6h30"}</div>
-                </div>
-                <div className="font-mono text-2xl tabular-nums text-primary">{hh}:{mm}:{ss}</div>
-              </div>
-            );
-          })()}
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {licenses.filter(p => (usage === "all" || usageOf(p) === usage))
               .sort((a, b) => (a.price_brl || 0) - (b.price_brl || 0))
@@ -1039,7 +1012,7 @@ function PlansPage() {
                         if (isLifetime || !(is7d || isMonthly) || s.includes("trial")) return undefined;
                         const lt = licenses.find((x) => x.slug === "login-lifetime");
                         if (!lt || Number(lt.price_brl) <= Number(p.price_brl)) return undefined;
-                        return { slug: lt.slug, price: Number(lt.price_brl), welcome: !!welcomeUntil && welcomeUntil > welcomeNow };
+                        return { slug: lt.slug, price: Number(lt.price_brl) };
                       })()}
                     />
 
@@ -1536,7 +1509,7 @@ function FaqSection() {
 
 // ============ Plan Card ============
 const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoading, onBuy, featured, upsell }: {
-  upsell?: { slug: string; price: number; welcome: boolean };
+  upsell?: { slug: string; price: number };
   plan: Plan;
   coupon: Coupon | null;
   cashback: number;
@@ -1621,9 +1594,6 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
             <p className="mb-2 text-[11px] text-muted-foreground leading-relaxed">
               {en ? <>The <b className="text-foreground">Lifetime</b> plan costs <b className="text-primary">{fmt(upsell.price)}</b> once — the same as {months} renewals of this plan.</> : <>O <b className="text-foreground">Vitalício</b> sai por <b className="text-primary">{fmt(upsell.price)}</b> uma vez só — o mesmo que {months} renovações deste plano.</>}
             </p>
-            {upsell.welcome && (
-              <p className="mb-4 text-[10px] font-mono uppercase tracking-wider text-primary">{tr("Preço de boas-vindas ainda valendo para sua conta", "Welcome price still active for your account")}</p>
-            )}
             <div className="mt-2 flex w-full flex-col gap-2">
               <Button className="w-full font-mono text-[9px] uppercase tracking-widest" onClick={() => { setShowUpsell(false); onBuy(upsell.slug); }}>
                 {tr("Quero o Vitalício", "I want Lifetime")}
