@@ -2,9 +2,9 @@
 
 ## Pedido 13/11 — melhorias no admin/suporte e compras/licenças
 - [x] Suporte: resumo e encaminhamento isolados por ticket; respostas antigas não cruzam conversas. Filtro e idade de clientes aguardando retorno; contador atual vem dos tickets abertos, não da amostra de 24h; estatísticas se recuperam após falha temporária. Regra de fechamento inalterada.
-- [x] Compras: falha de leitura não aparece mais como histórico vazio, com nova tentativa; registro manual limpa cliente/login anterior, mostra erro de busca, atualiza listas após salvar e não confunde pagamento registrado com entrega comprovada.
+- [x] Compras: falha de leitura não aparece mais como histórico vazio, com nova tentativa; registro manual limpa cliente/login anterior, mostra erro de busca e atualiza listas após salvar. Pedido pago ou estado desconhecido não aparece mais como entregue sem evidência.
 - [x] Renovação: carregamento não anuncia mais falsamente "nenhum login"; erro tem nova tentativa e plano indisponível orienta suporte. Preços, elegibilidade e entrega inalterados. Causa de catálogo/is_legacy não verificada porque o banco está indisponível.
-- [x] 60 testes passaram; compilação automática OK; renovação, admin e suporte abriram sem erros no navegador deslogado. Fluxos autenticados e deploy Vercel sem cache continuam pendentes.
+- [x] 62 testes passaram; compilação automática OK; renovação, admin e suporte abriram sem erros no navegador deslogado. Fluxos autenticados e deploy Vercel sem cache continuam pendentes.
 
 ## Pedido 11/11 — monitor vertical e tickets acumulados
 - [x] Tela vertical: barra superior usa menu compacto abaixo de 1280 px (cortava "Entrar" e moeda); cabeçalho/barras do chat do admin se adaptam à largura da conversa, rolam em vez de cortar; textos longos quebram. 1080x1920 sem estouro horizontal em /, /auth, /planos.
