@@ -47,6 +47,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState<string>("all");
   const [prioFilter, setPrioFilter] = useState<string>("all");
+  const [awaitingOnly, setAwaitingOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef(selectedId);
   selectedIdRef.current = selectedId;

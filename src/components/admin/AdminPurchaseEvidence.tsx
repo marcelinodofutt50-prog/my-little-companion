@@ -75,11 +75,12 @@ function ManualPaymentPanel({ prefillEmail, prefillEvidenceId, onDone }: { prefi
       </select>
     </label>
     {selectedPlan?.category === 'server' && <label className="block text-xs">Login do cliente que será renovado
-      <select required className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={licenseId} onChange={e => setLicenseId(e.target.value)} disabled={loadingLicenses}>
-        <option value="">{loadingLicenses ? 'Carregando logins…' : 'Selecione…'}</option>
+      <select required className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={licenseId} onChange={e => setLicenseId(e.target.value)} disabled={loadingLicenses || !!licenseError}>
+        <option value="">{loadingLicenses ? 'Carregando logins…' : licenseError ? 'Não foi possível carregar' : 'Selecione…'}</option>
         {licenses.map(l => <option key={l.id} value={l.id}>{l.yaarsa_email} · {l.plan_slug}</option>)}
       </select>
     </label>}
+    {licenseError && <p role="alert" className="text-sm text-destructive">{licenseError}</p>}
     <label className="block text-xs">Observação interna (opcional)
       <Input maxLength={300} value={note} onChange={e => setNote(e.target.value)} placeholder="Ex.: PIX enviado no chat do suporte em 24/10" />
     </label>
@@ -109,7 +110,7 @@ function ManualPaymentsHistory({ refreshKey }: { refreshKey: number }) {
       {rows.length === 0 && <p className="text-sm text-muted-foreground">Nenhum registro ainda.</p>}
       {rows.map(r => <article key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3 text-sm" data-sensitive>
         <div className="min-w-0"><p className="font-medium">{r.customer_email ?? 'Cliente não identificado'}</p><p className="text-xs text-muted-foreground">{r.plan_slug} · R$ {Number(r.amount).toFixed(2)} · {new Date(r.created_at).toLocaleString('pt-BR')}{r.note ? ` · ${r.note}` : ''}</p></div>
-        <span className={`text-xs ${r.status === 'paid' ? 'text-green-500' : 'text-amber-500'}`}>{r.status === 'paid' ? 'Entregue' : 'Entrega pendente'}</span>
+        <span className={`text-xs ${r.status === 'paid' ? 'text-green-500' : 'text-amber-500'}`}>{r.status === 'paid' ? 'Pagamento registrado' : 'Entrega pendente'}</span>
       </article>)}
     </div>}
     <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><Button size="sm" variant="outline" disabled={page===0 || loading} onClick={() => setPage(v => v-1)}>Anterior</Button><span>{total} registros · página {page+1}</span><Button size="sm" variant="outline" disabled={(page+1)*20 >= total || loading} onClick={() => setPage(v => v+1)}>Próxima</Button></div>
@@ -139,13 +140,13 @@ export function AdminPurchaseEvidence() {
     let active = true; setLoading(true); setError('');
     search({data:{query:term,page,source}}).then(r => { if(active) setResult(r as any); }).catch(() => {if(active) setError('Não foi possível carregar. Tente novamente.');}).finally(() => {if(active) setLoading(false);});
     return () => { active=false; };
-  }, [search,term,page,source]);
+  }, [search,term,page,source,refreshKey]);
   return <section className="space-y-4">
     <header className="flex flex-wrap items-center justify-between gap-2">
       <div><h2 className="text-xl font-semibold">Comprovantes e pagamentos</h2><p className="mt-1 text-sm text-muted-foreground">Documentos privados para atendimento de pagamentos e contestações. Um anexo não confirma pagamento ou fraude.</p></div>
       <Button variant="outline" onClick={() => { setManualPrefill({}); setShowManual(v => !v); }}><HandCoins className="mr-2 h-4 w-4"/>{showManual ? 'Fechar registro' : 'Registrar pagamento por fora'}</Button>
     </header>
-    {showManual && <ManualPaymentPanel prefillEmail={manualPrefill.email} prefillEvidenceId={manualPrefill.evidenceId} onDone={() => { setPage(0); setTerm(term => term); }} />}
+    {showManual && <ManualPaymentPanel key={manualPrefill.evidenceId ?? 'sem-comprovante'} prefillEmail={manualPrefill.email} prefillEvidenceId={manualPrefill.evidenceId} onDone={() => { setPage(0); setRefreshKey(value => value + 1); }} />}
     <form className="flex gap-2" onSubmit={e => {e.preventDefault();setPage(0);setTerm(query);}}><Input aria-label="Pesquisar comprovantes" placeholder="Nome do pagador, ID completo do pedido/cliente ou pagamento" value={query} onChange={e => setQuery(e.target.value)} maxLength={100}/><Button type="submit" disabled={loading}><Search className="mr-2 h-4 w-4" />Buscar</Button></form>
     <div className="flex flex-wrap gap-2">{(['all','customer','support','mercadopago'] as const).map(key => <Button key={key} size="sm" variant={source === key ? 'default' : 'outline'} onClick={() => { setSource(key); setPage(0); }}>{SOURCE_LABELS[key]}</Button>)}</div>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -167,6 +168,6 @@ export function AdminPurchaseEvidence() {
       {editing === row.id && <form className="w-full space-y-2" onSubmit={async e => {e.preventDefault();setSaving(true);setError('');try {await organize({data:{id:row.id,payerName:payer,...(order ? {orderId:order} : {})}});setResult(r => ({...r,rows:r.rows.map(item => item.id === row.id ? {...item,payer_name:payer,order_id:order || item.order_id} : item)}));setEditing(null);}catch{setError('Confira o nome e o ID de um pedido deste cliente.');}finally{setSaving(false);}}}><label className="block text-xs">Nome lido pela equipe no comprovante<Input required minLength={3} maxLength={120} value={payer} onChange={e => setPayer(e.target.value)}/></label><label className="block text-xs">ID completo do pedido (opcional)<Input value={order} onChange={e => setOrder(e.target.value)} /></label><div className="flex gap-2"><Button size="sm" disabled={saving} type="submit">Salvar</Button><Button size="sm" variant="ghost" type="button" disabled={saving} onClick={() => setEditing(null)}>Cancelar</Button></div></form>}
     </article>)}</div>}
     <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><Button size="sm" variant="outline" disabled={page===0 || loading} onClick={() => setPage(v => v-1)}>Anterior</Button><span>{result.total} registros · página {page+1}</span><Button size="sm" variant="outline" disabled={(page+1)*30 >= result.total || loading} onClick={() => setPage(v => v+1)}>Próxima</Button></div>
-    <ManualPaymentsHistory />
+    <ManualPaymentsHistory refreshKey={refreshKey} />
   </section>;
 }
