@@ -16,4 +16,14 @@ describe("order history read failures", () => {
   it("accepts a fully successful read", () => {
     expect(unresolvedOrderReadError([{ error: null }, { error: null }, { error: null }])).toBeNull();
   });
+
+  it("keeps paid distinct from delivered", () => {
+    const stages = { pending: {}, paid: {}, delivered: {} };
+    expect(normalizeOrderStage("paid", stages)).toBe("paid");
+    expect(normalizeOrderStage("delivered", stages)).toBe("delivered");
+  });
+
+  it("never treats an unknown order state as delivered", () => {
+    expect(normalizeOrderStage("unexpected", { pending: {}, delivered: {} })).toBe("pending");
+  });
 });
