@@ -16,7 +16,6 @@ import { Toaster } from "sonner";
 import { MfaGate } from "@/components/MfaGate";
 import { PaymentSuccessOverlay } from "@/components/PaymentSuccessOverlay";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
-import { LifetimePromoCountdown } from "@/components/LifetimePromoCountdown";
 
 
 import appCss from "../styles.css?url";
@@ -374,7 +373,6 @@ function InnerRootComponent() {
         <CurrencyProvider>
           <MfaGate>
             <div className="sticky top-0 z-[60] w-full">
-              <LifetimePromoCountdown />
               <AnnouncementsBanner />
             </div>
             <Outlet />
