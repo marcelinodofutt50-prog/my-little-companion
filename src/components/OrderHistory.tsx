@@ -4,9 +4,11 @@ import { Loader2, PackageCheck, RotateCcw, AlertTriangle, Gift, Receipt, Search,
 import { listMyOrders, type MyOrder } from "@/lib/orders.functions";
 import { Button } from "@/components/ui/button";
 import { PurchaseReceiptForm } from '@/components/PurchaseReceiptForm';
+import { normalizeOrderStage } from "@/lib/order-read";
 
 const STAGE_META: Record<string, { label: string; cls: string; icon: typeof PackageCheck }> = {
   delivered: { label: "entregue", cls: "border-neon/40 bg-neon/10 text-neon", icon: PackageCheck },
+  paid: { label: "pago · entrega pendente", cls: "border-amber/40 bg-amber/10 text-amber-400", icon: Clock },
   refunded: { label: "reembolsado", cls: "border-violet/40 bg-violet/10 text-violet", icon: RotateCcw },
   failed: { label: "falhou", cls: "border-danger/40 bg-danger/10 text-danger", icon: AlertTriangle },
   pending: { label: "pendente", cls: "border-amber/40 bg-amber/10 text-amber-400", icon: Clock },
@@ -170,7 +172,7 @@ export function OrderHistory() {
       ) : (
         <div className="space-y-2">
           {list.map((o) => {
-            const meta = STAGE_META[o.stage] ?? STAGE_META.delivered;
+            const meta = STAGE_META[normalizeOrderStage(o.stage, STAGE_META)];
             const Icon = meta.icon;
             return (
               <div

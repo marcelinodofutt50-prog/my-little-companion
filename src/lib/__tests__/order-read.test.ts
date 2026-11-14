@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findSchemaCacheReadError, unresolvedOrderReadError } from "../order-read";
+import { findSchemaCacheReadError, normalizeOrderStage, unresolvedOrderReadError } from "../order-read";
 
 describe("order history read failures", () => {
   it("keeps an ordinary query failure visible instead of treating it as an empty history", () => {
