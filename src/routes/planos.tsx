@@ -11,7 +11,6 @@ import {
   ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield, AlertTriangle, Bitcoin,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { FlashPromoBar } from "@/components/FlashPromoBar";
 import { LiveActivationTicker } from "@/components/LiveActivationTicker";
 import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
 
@@ -609,7 +608,6 @@ function PlansPage() {
   return (
     <div className="relative min-h-screen overflow-x-clip">
       <SiteHeader />
-      <FlashPromoBar />
       <WinbackOffer onUseCoupon={(code, slug) => { setCoupon(code); void buy(slug, code); }} />
 
 
