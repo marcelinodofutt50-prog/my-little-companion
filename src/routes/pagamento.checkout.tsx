@@ -186,7 +186,7 @@ function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <PaymentTestModeBanner anyProviderActive={mpOn} />
+      <PaymentTestModeBanner anyProviderActive={false} />
 
       <div className="mx-auto w-full max-w-5xl px-4 py-8">
         <Link
@@ -361,85 +361,25 @@ function CheckoutPage() {
               >
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o provedor para finalizar a compra." />
 
-                {loadingProviders ? (
-                  <p className="mt-4 flex items-center gap-2 font-mono text-xs text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Carregando formas de pagamento…
+                <div className="mt-4 space-y-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-4">
+                  <p className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-amber-400">
+                    <Clock className="h-4 w-4" /> Checkout em manutenção
                   </p>
-                ) : !mpOn ? (
-                  <div className="mt-4 space-y-2 rounded-lg border border-danger/40 bg-danger/5 p-3">
-                    <p className="flex items-center gap-2 font-mono text-xs text-danger">
-                      <AlertTriangle className="h-4 w-4" /> Pagamentos indisponíveis no momento.
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-semibold">Mercado Pago temporariamente indisponível</p>
+                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      Estamos realizando ajustes no sistema de pagamentos. Por enquanto, não é possível concluir
+                      novas compras por este checkout.
                     </p>
-                    <p className="font-mono text-[11px] text-muted-foreground">
-                      Seu pedido ({order.slice(0, 8)}) continua salvo. Fale com o suporte no Telegram para concluir a
-                      compra — a licença é liberada normalmente.
+                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      Seu pedido ({order.slice(0, 8)}) continua salvo e não foi marcado como pago. Entre em contato
+                      com o suporte para receber orientação.
                     </p>
                   </div>
-                ) : (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="flex flex-col rounded-lg border border-neon/50 bg-neon/5 p-4">
-                      <div className="flex items-start gap-3">
-                        <img
-                          src={mercadoPagoLogo}
-                          alt="Logo Mercado Pago"
-                          className="h-9 w-12 shrink-0 rounded object-contain"
-                          loading="lazy"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold">Mercado Pago</p>
-                          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">Pix, cartão ou boleto</p>
-                        </div>
-                      </div>
-                      <span className="mt-3 inline-flex w-fit items-center gap-1 rounded border border-neon/40 bg-neon/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-neon">
-                        <Zap className="h-3 w-3" /> Pix libera na hora
-                      </span>
-                      {mpError && (
-                        <p className="mt-3 flex items-center gap-1.5 font-mono text-[11px] text-danger">
-                          <AlertTriangle className="h-3.5 w-3.5" /> {mpError}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={payWithMercadoPago}
-                        disabled={mpLoading}
-                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-neon px-4 py-3 font-mono text-xs font-bold uppercase tracking-wider text-background transition hover:opacity-90 disabled:opacity-60"
-                      >
-                        {mpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                        {mpLoading ? "Abrindo Mercado Pago…" : "Pagar com Mercado Pago"}
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col rounded-lg border border-dashed border-border bg-muted/10 p-4">
-                      <div className="flex items-start gap-3">
-                        <img
-                          src={stripeLogo}
-                          alt="Logo Stripe"
-                          className="h-9 w-12 shrink-0 rounded object-contain opacity-60"
-                          loading="lazy"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-muted-foreground">Stripe</p>
-                          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-                            Cartão de crédito internacional
-                          </p>
-                        </div>
-                      </div>
-                      <span className="mt-3 inline-flex w-fit items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amber-400">
-                        <Clock className="h-3 w-3" /> Em breve
-                      </span>
-                      <button
-                        type="button"
-                        disabled
-                        className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-md border border-border px-4 py-3 font-mono text-xs font-bold uppercase tracking-wider text-muted-foreground"
-                      >
-                        <Lock className="h-4 w-4" /> Indisponível
-                      </button>
-                      <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                        Conta em verificação. Enquanto isso, o cartão também funciona pelo Mercado Pago.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  <span className="inline-flex w-fit items-center rounded border border-amber-500/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-amber-400">
+                    Pagamento temporariamente pausado
+                  </span>
+                </div>
               </section>
             </div>
 
