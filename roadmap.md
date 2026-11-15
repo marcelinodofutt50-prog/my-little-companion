@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 15/11 — correção do 2FA
+- [ ] Reproduzir e corrigir carregamento, ativação, confirmação, aparelhos confiáveis e erros do código de seis dígitos sem enfraquecer MFA.
+- [ ] Fazer recuperação por código liberar senha e autenticador de forma segura, sem reuso do código; revisar mensagens e testes.
+- [ ] Validar fluxos possíveis, registrar limitações do banco pausado e manter deploy externo como pendência.
+
 ## Pedido 13/11 — melhorias no admin/suporte e compras/licenças
 - [x] Suporte: resumo e encaminhamento isolados por ticket; respostas antigas não cruzam conversas. Filtro e idade de clientes aguardando retorno; contador atual vem dos tickets abertos, não da amostra de 24h; estatísticas se recuperam após falha temporária. Regra de fechamento inalterada.
 - [x] Compras: falha de leitura não aparece mais como histórico vazio, com nova tentativa; registro manual limpa cliente/login anterior, mostra erro de busca e atualiza listas após salvar. Pedido pago ou estado desconhecido não aparece mais como entregue sem evidência.
