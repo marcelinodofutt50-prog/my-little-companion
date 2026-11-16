@@ -16,6 +16,18 @@ import {
 import { createMercadoPagoCheckout, getPaymentProviders } from "@/lib/mercadopago.functions";
 import { listMyOrders } from "@/lib/orders.functions";
 import { saveCheckoutProfile } from "@/lib/checkout-profile.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import caktoLogo from "@/assets/cakto-brand.svg";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
 import mercadoPagoLogo from "@/assets/logo-mercadopago.svg";
@@ -365,19 +377,42 @@ function CheckoutPage() {
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o provedor para finalizar a compra." />
 
                 {canPayWithCakto && (
-                  <div className="mt-4 space-y-3 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
-                    <p className="text-sm text-foreground">
-                      Após o pagamento, envie o comprovante e o número do pedido ao suporte
-                      para a equipe confirmar a compra e entregar sua licença.
-                    </p>
+                  <div className="mt-4 space-y-4 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
+                    <div className="flex items-center gap-3">
+                      <img src={caktoLogo} alt="" width={40} height={40} className="size-10 shrink-0" />
+                      <div>
+                        <p className="font-semibold text-foreground">Cakto</p>
+                        <p className="text-sm text-muted-foreground">Assinatura mensal · R$ 750/mês</p>
+                      </div>
+                    </div>
                     {confirmed && (
-                      <a
-                        href="https://pay.cakto.com.br/haxjxbp_1331078"
-                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wide text-white"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Pagar R$ 750/mês com Cakto
-                      </a>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wide text-white"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Pagar com Cakto
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Atenção à entrega da licença</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              A entrega da licença por esse meio de pagamento é manual. Depois de pagar
+                              pela Cakto, abra um ticket no suporte do Shadow e envie o comprovante e o
+                              número do pedido <strong>#{order.slice(0, 8)}</strong> para receber sua licença.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction asChild>
+                              <a href="https://pay.cakto.com.br/haxjxbp_1331078">Continuar para a Cakto</a>
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
                 )}
