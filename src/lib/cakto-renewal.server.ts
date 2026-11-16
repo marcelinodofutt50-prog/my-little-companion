@@ -1,3 +1,5 @@
+import { serverRenewalPlanSlug } from "./server-renewal";
+
 const RENEWAL_OFFERS = {
   monthly: { amount: 450, label: "Renovação do servidor · 4.5.7", url: "https://pay.cakto.com.br/fktdd7t_1332924" },
   lifetime: { amount: 250, label: "Renovação do servidor · Vitalício", url: "https://pay.cakto.com.br/36weg6j_1332910" },
@@ -14,7 +16,7 @@ type License = {
 
 export function resolveCaktoRenewalOffer(order: Order, license: License) {
   if (!["created", "pending"].includes(order.status) || license.is_trial || license.disabled_at) return null;
-  const expectedPlan = license.is_legacy ? "server-monthly-legacy" : "server-monthly";
+  const expectedPlan = serverRenewalPlanSlug(license);
   if (order.plan_slug !== expectedPlan) return null;
 
   if (license.plan_slug === "login-30d" && license.panel === "v457" &&

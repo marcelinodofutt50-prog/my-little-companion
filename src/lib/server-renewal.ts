@@ -105,6 +105,19 @@ export function planServerRenewal(license: RenewableLicense, paidUntil: Date): R
   };
 }
 
+/** A tarifa dos painéis vinculados é definida pela licença, não pelo perfil. */
+export function serverRenewalPlanSlug(license: {
+  panel: string | null;
+  plan_slug: string | null;
+  is_legacy: boolean | null;
+}) {
+  if (license.panel === "v457") return "server-monthly";
+  if (license.panel === "v46") {
+    return license.plan_slug === "login-lifetime" ? "server-monthly-legacy" : "server-monthly";
+  }
+  return license.is_legacy ? "server-monthly-legacy" : "server-monthly";
+}
+
 /** Licença elegível à renovação de servidor (teste grátis não paga servidor). */
 export function isRenewable(l: RenewableLicense): boolean {
   return !l.is_trial && !l.disabled_at;

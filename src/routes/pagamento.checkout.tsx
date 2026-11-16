@@ -395,6 +395,14 @@ function CheckoutPage() {
               <section className="rounded-2xl border border-border bg-card/60 p-4 sm:p-5">
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o meio de pagamento." />
 
+                {isServerRenewal && renewalOffer === null && !renewalError && (
+                  <div className="mt-4 rounded-lg border border-border p-3 text-sm text-muted-foreground">
+                    A Cakto não está disponível para este pedido. Se ele foi aberto com um valor antigo,
+                    <Link to="/renovar-servidor" className="ml-1 font-semibold text-foreground underline">
+                      volte à renovação e selecione o login novamente
+                    </Link>.
+                  </div>
+                )}
                 {renewalError && (
                   <div role="alert" className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     Não foi possível verificar a renovação pela Cakto.

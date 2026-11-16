@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireCheckoutPlan } from "@/lib/checkout-plan";
 
+import { serverRenewalPlanSlug } from "./server-renewal";
+
 export const createCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) =>
@@ -218,14 +220,14 @@ export const createCheckout = createServerFn({ method: "POST" })
       }
       const { data: target } = await supabase
         .from("licenses")
-        .select("id, is_trial, disabled_at, is_legacy")
+        .select("id, is_trial, disabled_at, is_legacy, plan_slug, panel")
         .eq("id", data.targetLicenseId)
         .eq("user_id", userId)
         .maybeSingle();
       if (!target) throw new Error("Login não encontrado na sua conta.");
       if (target.is_trial) throw new Error("O teste grátis não usa renovação de servidor.");
       if (target.disabled_at) throw new Error("Este login está desativado — fale com o suporte.");
-      const expectedPlan = target.is_legacy ? "server-monthly-legacy" : "server-monthly";
+      const expectedPlan = serverRenewalPlanSlug(target);
       if (plan.slug !== expectedPlan) throw new Error("Escolha a renovação correspondente a este login.");
       targetLicenseId = target.id;
     }
