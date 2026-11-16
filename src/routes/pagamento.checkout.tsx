@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { createMercadoPagoCheckout, getPaymentProviders } from "@/lib/mercadopago.functions";
+import { createCaktoCheckout, getCaktoCheckoutEnabled } from "@/lib/cakto.functions";
 import { listMyOrders } from "@/lib/orders.functions";
 import { saveCheckoutProfile } from "@/lib/checkout-profile.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
@@ -111,6 +112,13 @@ function CheckoutPage() {
   const [mpLoading, setMpLoading] = useState(false);
   const [mpError, setMpError] = useState<string | null>(null);
 
+  const [caktoLoading, setCaktoLoading] = useState(false);
+  const [caktoError, setCaktoError] = useState<string | null>(null);
+  const { data: caktoEnabled } = useQuery({
+    queryKey: ["cakto-checkout-enabled"],
+    queryFn: () => getCaktoCheckoutEnabled(),
+  });
+
   const { data: providers, isLoading: loadingProviders } = useQuery({
     queryKey: ["payment-providers"],
     queryFn: () => getPaymentProviders(),
@@ -168,6 +176,20 @@ function CheckoutPage() {
       setSaveError((e as Error)?.message ?? "Falha ao salvar o cadastro.");
     }
     setSaving(false);
+  }
+
+  async function payWithCakto() {
+    if (!order || !confirmed || caktoLoading) return;
+    setCaktoLoading(true);
+    setCaktoError(null);
+    try {
+      const result = await createCaktoCheckout({ data: { orderId: order } });
+      if ("error" in result) throw new Error(result.error);
+      window.location.assign(result.url);
+    } catch (error) {
+      setCaktoError(error instanceof Error ? error.message : "Não foi possível abrir a Cakto.");
+      setCaktoLoading(false);
+    }
   }
 
   async function payWithMercadoPago() {
@@ -361,8 +383,6 @@ function CheckoutPage() {
               >
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o provedor para finalizar a compra." />
 
-                {/* Cakto: a URL pública está cadastrada, mas o webhook ainda não está
-                    vinculado a pedidos autenticados. Não habilitar cobranças antes disso. */}
                 {current?.plan_slug === "login-30d" && (
                   <div className="mt-4 overflow-hidden rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-card to-card shadow-[0_0_30px_-20px_rgba(16,185,129,0.5)]">
                     <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 px-4 py-3">
@@ -373,17 +393,19 @@ function CheckoutPage() {
                           <p className="font-mono text-[11px] text-muted-foreground">Checkout do plano mensal</p>
                         </div>
                       </div>
-                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-[10px] font-semibold text-emerald-400">Em integração</span>
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-[10px] font-semibold text-emerald-400">{caktoEnabled ? "Assinatura mensal" : "Em integração"}</span>
                     </div>
                     <div className="space-y-3 p-4">
-                      <p className="text-sm text-foreground">Uma nova opção de pagamento está chegando ao Shadow.</p>
-                      <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-                        A liberação automática da licença ainda está sendo conectada à confirmação da Cakto.
-                        Por segurança, o pagamento ficará bloqueado até essa validação estar pronta.
-                      </p>
-                      <button type="button" disabled className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-emerald-600/40 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wide text-white/70">
-                        <Lock className="h-4 w-4" /> Pagar com Cakto — em breve
+                      <button
+                        type="button"
+                        disabled={!caktoEnabled || !confirmed || caktoLoading}
+                        onClick={payWithCakto}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {caktoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                        {caktoEnabled ? "Pagar R$ 750 por mês com Cakto" : "Pagar com Cakto — em breve"}
                       </button>
+                      {caktoError && <p role="alert" className="text-sm text-destructive">{caktoError}</p>}
                     </div>
                   </div>
                 )}
