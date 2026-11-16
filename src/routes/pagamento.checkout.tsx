@@ -338,32 +338,33 @@ function CheckoutPage() {
               </section>
 
               {/* Passo 2 — pagamento */}
-              <section
-                className={cn(
-                  "rounded-xl border border-border bg-card/60 p-4 transition sm:p-5",
-                  !confirmed && "pointer-events-none opacity-50",
-                )}
-                aria-disabled={!confirmed}
-              >
-                <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o provedor para finalizar a compra." />
+              <section className="rounded-2xl border border-border bg-card/60 p-4 sm:p-5">
+                <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o meio de pagamento." />
 
-                {canPayWithCakto && (
-                  <div className="mt-4 space-y-4 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
-                    <div className="flex items-center gap-3">
-                      <img src="/assets/cakto-brand.svg" alt="" width={40} height={40} className="size-10 shrink-0" />
-                      <div>
-                        <p className="font-semibold text-foreground">Cakto</p>
-                        <p className="text-sm text-muted-foreground">Assinatura mensal · R$ 750/mês</p>
+                <div className={cn("mt-4 grid gap-3", canPayWithCakto && "sm:grid-cols-2")}>
+                  {canPayWithCakto && (
+                    <div className="flex flex-col rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="grid size-14 shrink-0 place-items-center rounded-xl border border-emerald-500/15 bg-background">
+                          <img src="/assets/cakto-brand.svg" alt="" width={36} height={36} className="size-9" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Cakto</p>
+                          <p className="text-xs text-muted-foreground">Assinatura mensal</p>
+                        </div>
                       </div>
-                    </div>
-                    {confirmed && (
+                      <p className="mt-4 text-xl font-bold tracking-tight text-foreground">
+                        R$ 750<span className="ml-1 text-sm font-medium text-muted-foreground">/mês</span>
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">Licença entregue pelo suporte.</p>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <button
                             type="button"
-                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wide text-white"
+                            disabled={!confirmed}
+                            className="mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            <ExternalLink className="h-4 w-4" />
+                            <ExternalLink className="size-4" aria-hidden="true" />
                             Pagar com Cakto
                           </button>
                         </AlertDialogTrigger>
@@ -384,22 +385,27 @@ function CheckoutPage() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    )}
-                  </div>
-                )}
-                <div className="mt-4 flex flex-col gap-4 rounded-xl border border-border bg-muted/30 p-4 sm:flex-row sm:items-center">
-                  <div className="relative flex h-24 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
-                    <img src="/assets/logo-mercadopago-maintenance.png" alt="" className="h-36 w-36 max-w-none object-contain" />
-                    <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 bg-amber-400 px-1 py-1 text-center font-mono text-xs font-bold uppercase tracking-wide text-black">
-                      Manutenção
-                    </span>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <p className="font-semibold text-foreground">Mercado Pago</p>
+                      {!confirmed && (
+                        <p className="mt-2 text-xs text-muted-foreground">Conclua o cadastro acima para pagar.</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col rounded-xl border border-border bg-muted/25 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative grid h-14 w-24 shrink-0 place-items-center overflow-hidden rounded-lg bg-white">
+                        <img src="/assets/logo-mercadopago-maintenance.png" alt="" width={88} height={88} className="size-[88px] max-w-none" />
+                        <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 bg-amber-400 py-0.5 text-center text-[9px] font-bold uppercase tracking-wide text-black">
+                          Manutenção
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">Mercado Pago</p>
+                    </div>
+                    <p className="mb-4 mt-4 text-sm text-muted-foreground">Pagamento temporariamente indisponível.</p>
                     <button
                       type="button"
                       disabled
-                      className="w-full cursor-not-allowed rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground sm:w-auto"
+                      className="mt-auto min-h-10 w-full cursor-not-allowed rounded-lg border border-border bg-background/60 px-3 py-2.5 text-sm font-medium text-muted-foreground"
                     >
                       Indisponível
                     </button>
