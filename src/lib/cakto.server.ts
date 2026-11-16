@@ -24,11 +24,17 @@ const actionSchema = z.object({
   expiresAt: z.string().nullish(),
 });
 
-export function caktoConfig() {
+export function caktoConfig(reportIssue?: (issue: string) => void) {
   const secret = process.env["CAKTO_WEBHOOK_SECRET"];
   const callbackSecret = process.env["CAKTO_CALLBACK_SECRET"];
   const productId = process.env["CAKTO_PRODUCT_ID"];
   const offerId = process.env["CAKTO_OFFER_ID"];
+  if (!secret) reportIssue?.("CAKTO_WEBHOOK_SECRET missing");
+  if (!callbackSecret) reportIssue?.("CAKTO_CALLBACK_SECRET missing");
+  else if (callbackSecret.length < 32) reportIssue?.("CAKTO_CALLBACK_SECRET too short");
+  else if (callbackSecret === secret) reportIssue?.("CAKTO_CALLBACK_SECRET must differ from CAKTO_WEBHOOK_SECRET");
+  if (!productId) reportIssue?.("CAKTO_PRODUCT_ID missing");
+  if (!offerId) reportIssue?.("CAKTO_OFFER_ID missing");
   if (!secret || !callbackSecret || callbackSecret.length < 32 || callbackSecret === secret ||
       !productId || !offerId) return null;
   return { secret, callbackSecret, productId, offerId };
@@ -56,7 +62,7 @@ async function readBody(request: Request) {
 }
 
 export async function handleCaktoWebhook(request: Request) {
-  const config = caktoConfig();
+  const config = caktoConfig((issue) => console.error("[cakto] configuration:", issue));
   if (!config) return new Response(null, { status: 503 });
   const body = await readBody(request).catch(() => null);
   if (body === null) return new Response(null, { status: 413 });
@@ -115,7 +121,10 @@ async function applyEvent(
       p_event: event, p_subscription: subscriptionId, p_payment: paymentId,
       p_order: orderId, p_paid_at: paidAt,
     } as never);
-    if (error) return 503;
+    if (error) {
+      console.error("[cakto] apply_cakto_event failed", error.code);
+      return 503;
+    }
     const result = actionSchema.parse(data);
     if (result.action === "unlinked") return event === "purchase_approved" ? 422 : 503;
     if (result.action === "rejected") return 422;
