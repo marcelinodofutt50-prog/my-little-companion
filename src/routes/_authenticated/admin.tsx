@@ -335,6 +335,7 @@ function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
+  const [renewalsOnly, setRenewalsOnly] = useState(false);
   const [orderStatus, setOrderStatus] = useState<"todos" | "pendentes" | "pagos" | "falhos">(
     "todos",
   );
@@ -1604,7 +1605,7 @@ function AdminPage() {
             {tab === "receipts" && <AdminPurchaseEvidence />}
             {tab === "orders" &&
               (() => {
-                const q = orderSearch.trim().toLowerCase();
+                const q = orderSearch.trim().replace(/^#/, "").toLowerCase();
                 const statusMap: Record<string, (o: any) => boolean> = {
                   todos: () => true,
                   pendentes: (o) =>
@@ -1614,10 +1615,12 @@ function AdminPage() {
                 };
                 const filteredOrders = orders.filter((o) => {
                   if (!statusMap[orderStatus](o)) return false;
-                  if (!q) return true;
-                  const hay =
-                    `${o.plan_slug ?? ""} ${o.coupon_code ?? ""} ${o.profile?.email ?? ""} ${o.status ?? ""}`.toLowerCase();
-                  return hay.includes(q);
+                  if (renewalsOnly && !["server-monthly", "server-monthly-legacy"].includes(o.plan_slug)) return false;
+                  const fields = [
+                    o.id, o.plan_slug, o.coupon_code, o.profile?.email, o.profile?.full_name,
+                    o.profile?.display_name, o.status, o.metadata?.target_license_id,
+                  ];
+                  return !q || fields.some((field) => typeof field === "string" && field.toLowerCase().includes(q));
                 });
                 const allVisibleSelected =
                   filteredOrders.length > 0 &&
@@ -1645,7 +1648,8 @@ function AdminPage() {
                         <Input
                           value={orderSearch}
                           onChange={(e) => setOrderSearch(e.target.value)}
-                          placeholder="buscar por plano, email ou cupom..."
+                          placeholder="Buscar por nº do pedido, cliente ou plano"
+                          aria-label="Buscar pedidos"
                           className="h-9 w-64 pl-8 font-mono text-xs"
                         />
                       </div>
@@ -1665,8 +1669,17 @@ function AdminPage() {
                           </button>
                         ))}
                       </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={renewalsOnly ? "default" : "outline"}
+                        aria-pressed={renewalsOnly}
+                        onClick={() => setRenewalsOnly((value) => !value)}
+                      >
+                        Renovações de servidor
+                      </Button>
                       <span className="ml-auto font-mono text-[10px] uppercase text-muted-foreground">
-                        {filteredOrders.length} pedidos
+                        {filteredOrders.length} de {orders.length} pedidos recentes
                       </span>
                     </div>
 
@@ -1724,7 +1737,7 @@ function AdminPage() {
                                   onChange={toggleAll}
                                 />
                               </th>
-                              <th className="p-3 text-left">Plano</th>
+                              <th className="p-3 text-left">Pedido / plano</th>
                               <th className="p-3 text-left">Valor</th>
                               <th className="p-3 text-left">Status</th>
                               <th className="p-3 text-left">Cupom</th>
@@ -1741,8 +1754,32 @@ function AdminPage() {
                                     onChange={() => toggleOne(o.id)}
                                   />
                                 </td>
-                                <td className="p-3 font-mono text-xs whitespace-nowrap">
-                                  {o.plan_slug}
+                                <td className="p-3">
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1.5 rounded font-mono text-xs font-semibold text-foreground hover:text-neon focus-visible:outline focus-visible:outline-2"
+                                    aria-label={`Copiar pedido #${o.id.slice(0, 8)}`}
+                                    onClick={async () => {
+                                      try {
+                                        await navigator.clipboard.writeText(o.id);
+                                        toast.success("Número do pedido copiado.");
+                                      } catch {
+                                        toast.error("Não foi possível copiar o número do pedido.");
+                                      }
+                                    }}
+                                  >
+                                    #{o.id.slice(0, 8)} <Copy className="size-3" aria-hidden="true" />
+                                  </button>
+                                  <div className="mt-1 text-xs text-muted-foreground">
+                                    {["server-monthly", "server-monthly-legacy"].includes(o.plan_slug)
+                                      ? "Renovação de servidor"
+                                      : o.plan_slug}
+                                  </div>
+                                  {typeof o.metadata?.target_license_id === "string" && (
+                                    <div className="mt-1 font-mono text-[10px] text-muted-foreground" title={o.metadata.target_license_id}>
+                                      Licença #{o.metadata.target_license_id.slice(0, 8)}
+                                    </div>
+                                  )}
                                 </td>
                                 <td className="p-3 font-mono whitespace-nowrap">
                                   {formatBrl(Number(o.amount))}
