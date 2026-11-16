@@ -68,7 +68,6 @@ import { Route as ApiPublicHooksReconcileYaarsaRouteImport } from './routes/api/
 import { Route as ApiPublicHooksResendConfirmationsRouteImport } from './routes/api/public/hooks/resend-confirmations'
 import { Route as ApiPublicHooksResumePausedLicensesRouteImport } from './routes/api/public/hooks/resume-paused-licenses'
 import { Route as ApiPublicHooksVerifyExternalPayersRouteImport } from './routes/api/public/hooks/verify-external-payers'
-import { Route as ApiPublicPaymentsCaktoRouteImport } from './routes/api/public/payments/cakto'
 import { Route as ApiPublicPaymentsMercadopagoRouteImport } from './routes/api/public/payments/mercadopago'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -384,12 +383,6 @@ const ApiPublicHooksVerifyExternalPayersRoute =
     path: '/api/public/hooks/verify-external-payers',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicPaymentsCaktoRoute =
-  ApiPublicPaymentsCaktoRouteImport.update({
-    id: '/api/public/payments/cakto',
-    path: '/api/public/payments/cakto',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicPaymentsMercadopagoRoute =
   ApiPublicPaymentsMercadopagoRouteImport.update({
     id: '/api/public/payments/mercadopago',
@@ -462,7 +455,6 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/resume-paused-licenses': typeof ApiPublicHooksResumePausedLicensesRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
-  '/api/public/payments/cakto': typeof ApiPublicPaymentsCaktoRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -525,7 +517,6 @@ export interface FileRoutesByTo {
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/resume-paused-licenses': typeof ApiPublicHooksResumePausedLicensesRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
-  '/api/public/payments/cakto': typeof ApiPublicPaymentsCaktoRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -590,7 +581,6 @@ export interface FileRoutesById {
   '/api/public/hooks/resend-confirmations': typeof ApiPublicHooksResendConfirmationsRoute
   '/api/public/hooks/resume-paused-licenses': typeof ApiPublicHooksResumePausedLicensesRoute
   '/api/public/hooks/verify-external-payers': typeof ApiPublicHooksVerifyExternalPayersRoute
-  '/api/public/payments/cakto': typeof ApiPublicPaymentsCaktoRoute
   '/api/public/payments/mercadopago': typeof ApiPublicPaymentsMercadopagoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -655,7 +645,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/resume-paused-licenses'
     | '/api/public/hooks/verify-external-payers'
-    | '/api/public/payments/cakto'
     | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -718,7 +707,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/resume-paused-licenses'
     | '/api/public/hooks/verify-external-payers'
-    | '/api/public/payments/cakto'
     | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
   id:
@@ -782,7 +770,6 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resend-confirmations'
     | '/api/public/hooks/resume-paused-licenses'
     | '/api/public/hooks/verify-external-payers'
-    | '/api/public/payments/cakto'
     | '/api/public/payments/mercadopago'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -829,7 +816,6 @@ export interface RootRouteChildren {
   ApiPublicHooksResendConfirmationsRoute: typeof ApiPublicHooksResendConfirmationsRoute
   ApiPublicHooksResumePausedLicensesRoute: typeof ApiPublicHooksResumePausedLicensesRoute
   ApiPublicHooksVerifyExternalPayersRoute: typeof ApiPublicHooksVerifyExternalPayersRoute
-  ApiPublicPaymentsCaktoRoute: typeof ApiPublicPaymentsCaktoRoute
   ApiPublicPaymentsMercadopagoRoute: typeof ApiPublicPaymentsMercadopagoRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -1249,13 +1235,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksVerifyExternalPayersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/cakto': {
-      id: '/api/public/payments/cakto'
-      path: '/api/public/payments/cakto'
-      fullPath: '/api/public/payments/cakto'
-      preLoaderRoute: typeof ApiPublicPaymentsCaktoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/payments/mercadopago': {
       id: '/api/public/payments/mercadopago'
       path: '/api/public/payments/mercadopago'
@@ -1383,7 +1362,6 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksResumePausedLicensesRoute,
   ApiPublicHooksVerifyExternalPayersRoute:
     ApiPublicHooksVerifyExternalPayersRoute,
-  ApiPublicPaymentsCaktoRoute: ApiPublicPaymentsCaktoRoute,
   ApiPublicPaymentsMercadopagoRoute: ApiPublicPaymentsMercadopagoRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
