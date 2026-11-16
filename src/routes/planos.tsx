@@ -33,7 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMoney, UsdNotice } from "@/lib/currency";
 import { createCheckout } from "@/lib/checkout.functions";
 import { siteUrl } from "@/lib/site-url";
-import { validateCoupon, getMyCashbackBalance, getMyLegacyStatus, listMyLicenses } from "@/lib/license.functions";
+import { validateCoupon, getMyCashbackBalance, listMyLicenses } from "@/lib/license.functions";
 
 import { validateReferralCode } from "@/lib/referrals.functions";
 const shadowLupin = "/assets/shadow-logo-v10.png?v=v8-400";
@@ -312,7 +312,6 @@ function PlansPage() {
   }, [search?.clear_cache]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
-  const [isLegacy, setIsLegacy] = useState(false);
 
   const [coupon, setCoupon] = useState("");
   const [couponValid, setCouponValid] = useState<Coupon | null>(null);
@@ -337,7 +336,6 @@ function PlansPage() {
   const checkoutFn = useServerFn(createCheckout);
   const validateFn = useServerFn(validateCoupon);
   const cashbackFn = useServerFn(getMyCashbackBalance);
-  const legacyFn = useServerFn(getMyLegacyStatus);
   const validateRefFn = useServerFn(validateReferralCode);
 
   useEffect(() => {
@@ -386,14 +384,13 @@ function PlansPage() {
   useEffect(() => {
     if (loggedIn) {
       cashbackFn().then((r) => setCashbackBalance(r.balance)).catch(() => {});
-      legacyFn().then((r) => setIsLegacy(r.isLegacy)).catch(() => {});
       if (referral && !referralValid) {
         validateRefFn({ data: { code: referral } })
           .then((r) => { if (r.valid) setReferralValid({ name: r.referrerName! }); })
           .catch(() => {});
       }
     }
-  }, [loggedIn, cashbackFn, legacyFn, referral, referralValid, validateRefFn]);
+  }, [loggedIn, cashbackFn, referral, referralValid, validateRefFn]);
 
   async function applyCoupon() {
     if (!loggedIn) return toast.error("Faça login para aplicar cupom");
@@ -444,6 +441,10 @@ function PlansPage() {
   function clearReferral() { setReferral(""); setReferralValid(null); setReferralError(null); }
 
   const buy = useCallback(async (slug: string, couponOverride?: string, options?: { includeServer?: boolean, addSigner?: boolean }) => {
+    if (slug === "server-monthly" || slug === "server-monthly-legacy") {
+      void navigate({ to: "/renovar-servidor" });
+      return;
+    }
     if (!loggedIn) { navigate({ to: "/auth", search: { next: "/planos" } as any }); return; }
     setLoadingPlan(slug);
     try {
@@ -561,7 +562,7 @@ function PlansPage() {
     );
   }
 
-  const { licenses, servers, sources, upgrades, addons, partners } = useMemo(() => {
+  const { licenses, hasServerRenewal, sources, upgrades, addons, partners } = useMemo(() => {
     const seen = new Set<string>();
     const unique = plans.filter((p) => {
       const key = `${p.category}|${p.price_brl}|${p.name.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
@@ -570,10 +571,6 @@ function PlansPage() {
       return true;
     });
 
-    const serverAll = unique.filter((p) => p.category === "server");
-    const serverFiltered = isLegacy
-      ? serverAll.filter((p) => p.slug === "server-monthly-legacy")
-      : serverAll.filter((p) => p.slug !== "server-monthly-legacy");
     
     const upgradeList = unique.filter((p) => p.category === "upgrade" || p.slug.includes("upgrade"));
     const addonList = unique.filter((p) => p.category === "addon" || p.slug.includes("play-protect") || p.slug.includes("bypass"));
@@ -601,13 +598,13 @@ function PlansPage() {
 
     return {
       licenses: applyBillingFilter(licenseList),
-      servers: applyBillingFilter(serverFiltered),
+      hasServerRenewal: unique.some((p) => p.slug === "server-monthly" || p.slug === "server-monthly-legacy"),
       sources: applyBillingFilter(unique.filter((p) => p.category === "source")),
       upgrades: applyBillingFilter(upgradeList),
       addons: applyBillingFilter(addonList),
       partners: unique.filter((p) => p.category === "partner").sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
     };
-  }, [plans, isLegacy, usage, billingCycle]);
+  }, [plans, usage, billingCycle]);
 
 
   const secondaryCount = sources.length;
@@ -996,12 +993,12 @@ function PlansPage() {
                     desc: "Já tem plano mensal ativo? Migre para o vitalício 4.6: sem taxa de updates, prioridade no suporte, sempre recebe atualizações e server exclusivo de vitalícios com baixa latência.",
                     slug: upgrades[0].slug,
                   };
-                } else if (isLifetime && servers.length > 0) {
+                } else if (isLifetime && hasServerRenewal) {
                   extension = {
                     icon: Server,
                     label: "RENOVAR SERVIDOR (DIA 20)",
-                    desc: "Vitalícios pagam manutenção do server todo dia 20. Quem tem plano mensal já inclui — renova junto com o login.",
-                    slug: servers[0].slug,
+                    desc: "Escolha o login que você deseja renovar para consultar o valor e continuar com o pagamento.",
+                    slug: "server-monthly",
                   };
                 }
 

@@ -158,7 +158,7 @@ function LegacyRenewalPage() {
         <SiteHeader />
         <main className="relative z-10 mx-auto max-w-xl px-4 py-16 text-center">
           <p className="text-muted-foreground">
-            Faça <Link to="/auth" className="text-neon underline">login</Link> para renovar o servidor.
+            Faça <Link to="/auth" search={{ next: "/renovar-servidor" }} className="text-neon underline">login</Link> para renovar o servidor.
           </p>
         </main>
       </div>
