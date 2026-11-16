@@ -28,6 +28,21 @@ import {
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
 
+const CAKTO_OFFERS = {
+  "login-30d": {
+    url: "https://pay.cakto.com.br/haxjxbp_1331078",
+    amount: 750,
+    label: "Assinatura mensal",
+    cadence: "/mês",
+  },
+  "login-lifetime": {
+    url: "https://pay.cakto.com.br/339nu9w_1331894",
+    amount: 1700,
+    label: "Plano Vitalício",
+    cadence: "",
+  },
+} as const;
+
 export const Route = createFileRoute("/pagamento/checkout")({
   validateSearch: (search: Record<string, unknown>): { order?: string } => ({
     order: typeof search.order === "string" ? search.order : undefined,
@@ -38,10 +53,10 @@ export const Route = createFileRoute("/pagamento/checkout")({
       {
         name: "description",
         content:
-          "Pague a assinatura mensal do Shadow pela Cakto. A equipe entrega a licença após confirmar o pagamento.",
+          "Pague seu plano Shadow pela Cakto. A equipe entrega a licença após confirmar o pagamento.",
       },
       { property: "og:title", content: "Pagamento seguro — Shadow" },
-      { property: "og:description", content: "Pague a assinatura mensal do Shadow no checkout da Cakto." },
+      { property: "og:description", content: "Pague seu plano Shadow no checkout da Cakto." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -121,10 +136,15 @@ function CheckoutPage() {
   });
 
   const current = useMemo(() => orders?.find((o) => o.id === order) ?? null, [orders, order]);
-  const canPayWithCakto =
-    current?.plan_slug === "login-30d" &&
-    current.amount === 750 &&
-    ["created", "pending"].includes(current.status);
+  const caktoOffer =
+    current?.plan_slug === "login-30d" || current?.plan_slug === "login-lifetime"
+      ? CAKTO_OFFERS[current.plan_slug]
+      : null;
+  const availableCaktoOffer =
+    current && caktoOffer && current.amount === caktoOffer.amount &&
+    ["created", "pending"].includes(current.status)
+      ? caktoOffer
+      : null;
   const errors = validate(survey);
   const set = (patch: Partial<Survey>) => setSurvey((s) => ({ ...s, ...patch }));
 
@@ -341,8 +361,8 @@ function CheckoutPage() {
               <section className="rounded-2xl border border-border bg-card/60 p-4 sm:p-5">
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o meio de pagamento." />
 
-                <div className={cn("mt-4 grid gap-3", canPayWithCakto && "sm:grid-cols-2")}>
-                  {canPayWithCakto && (
+                <div className={cn("mt-4 grid gap-3", availableCaktoOffer && "sm:grid-cols-2")}>
+                  {availableCaktoOffer && (
                     <div className="flex flex-col rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
                       <div className="flex items-center gap-3">
                         <div className="grid size-14 shrink-0 place-items-center rounded-xl border border-emerald-500/15 bg-background">
@@ -350,11 +370,14 @@ function CheckoutPage() {
                         </div>
                         <div>
                           <p className="font-semibold text-foreground">Cakto</p>
-                          <p className="text-xs text-muted-foreground">Assinatura mensal</p>
+                          <p className="text-xs text-muted-foreground">{availableCaktoOffer.label}</p>
                         </div>
                       </div>
                       <p className="mt-4 text-xl font-bold tracking-tight text-foreground">
-                        R$ 750<span className="ml-1 text-sm font-medium text-muted-foreground">/mês</span>
+                        {brl(availableCaktoOffer.amount)}
+                        {availableCaktoOffer.cadence && (
+                          <span className="ml-1 text-sm font-medium text-muted-foreground">{availableCaktoOffer.cadence}</span>
+                        )}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">Licença entregue pelo suporte.</p>
                       <AlertDialog>
@@ -380,7 +403,7 @@ function CheckoutPage() {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Voltar</AlertDialogCancel>
                             <AlertDialogAction asChild>
-                              <a href="https://pay.cakto.com.br/haxjxbp_1331078">Continuar para a Cakto</a>
+                              <a href={availableCaktoOffer.url}>Continuar para a Cakto</a>
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
