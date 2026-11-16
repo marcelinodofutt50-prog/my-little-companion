@@ -1,3 +1,4 @@
+import { useLifetimePromotion } from "@/components/LifetimePromotionBanner";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1529,6 +1530,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   const [showUpgradeConfirm, setShowUpgradeConfirm] = useState<string | null>(null);
   
   const price = Number(plan.price_brl);
+  const { active: lifetimePromotion } = useLifetimePromotion(plan.slug === "login-lifetime");
   // Cupom pessoal travado em outro plano não vale aqui — não mostramos desconto falso.
   const appliedCoupon = coupon && (!coupon.plan_slug || coupon.plan_slug === plan.slug) ? coupon : null;
   const b = useMemo(
@@ -1660,6 +1662,11 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       )}
 
       <div className="mt-6 flex flex-col gap-1">
+        {lifetimePromotion && plan.slug === "login-lifetime" && price === 1700 && (
+          <p className="mb-2 text-sm font-semibold text-primary">
+            {tr("Oferta na Cakto: R$ 999 durante a promoção.", "Cakto offer: R$ 999 during the promotion.")}
+          </p>
+        )}
         {hasBenefit && b.final < price ? (
           <>
             <div className="flex items-center gap-2">

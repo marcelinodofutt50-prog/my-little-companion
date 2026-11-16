@@ -1,3 +1,6 @@
+import { toast } from "sonner";
+import { LIFETIME_PROMOTION_PRICE, useLifetimePromotion } from "@/components/LifetimePromotionBanner";
+import { getLifetimePromotionLink } from "@/lib/lifetime-promotion.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -145,6 +148,26 @@ function CheckoutPage() {
     ["created", "pending"].includes(current.status)
       ? caktoOffer
       : null;
+  const { active: promotionActive } = useLifetimePromotion(current?.plan_slug === "login-lifetime");
+  const promotionalCheckout = promotionActive && availableCaktoOffer === CAKTO_OFFERS["login-lifetime"];
+  const [openingPromotion, setOpeningPromotion] = useState(false);
+
+  async function openPromotionalCheckout() {
+    setOpeningPromotion(true);
+    try {
+      const url = await getLifetimePromotionLink();
+      if (!url) {
+        toast.info("A promoção acabou. Confira o valor atualizado antes de continuar.");
+        return;
+      }
+      window.location.assign(url);
+    } catch {
+      toast.error("Não foi possível abrir a oferta. Tente novamente.");
+    } finally {
+      setOpeningPromotion(false);
+    }
+  }
+
   const errors = validate(survey);
   const set = (patch: Partial<Survey>) => setSurvey((s) => ({ ...s, ...patch }));
 
@@ -374,13 +397,16 @@ function CheckoutPage() {
                         </div>
                       </div>
                       <p className="mt-4 text-xl font-bold tracking-tight text-foreground">
-                        {brl(availableCaktoOffer.amount)}
+                        {promotionalCheckout && (
+                          <s className="mr-2 text-sm font-medium text-muted-foreground">{brl(availableCaktoOffer.amount)}</s>
+                        )}
+                        {brl(promotionalCheckout ? LIFETIME_PROMOTION_PRICE : availableCaktoOffer.amount)}
                         {availableCaktoOffer.cadence && (
                           <span className="ml-1 text-sm font-medium text-muted-foreground">{availableCaktoOffer.cadence}</span>
                         )}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">Licença entregue pelo suporte.</p>
-                      <AlertDialog>
+                      <AlertDialog key={promotionalCheckout ? "promotion" : "standard"}>
                         <AlertDialogTrigger asChild>
                           <button
                             type="button"
@@ -402,9 +428,21 @@ function CheckoutPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            <AlertDialogAction asChild>
-                              <a href={availableCaktoOffer.url}>Continuar para a Cakto</a>
-                            </AlertDialogAction>
+                            {promotionalCheckout ? (
+                              <AlertDialogAction
+                                disabled={openingPromotion}
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  void openPromotionalCheckout();
+                                }}
+                              >
+                                {openingPromotion ? "Abrindo oferta…" : "Continuar para a Cakto · R$ 999"}
+                              </AlertDialogAction>
+                            ) : (
+                              <AlertDialogAction asChild>
+                                <a href={availableCaktoOffer.url}>Continuar para a Cakto</a>
+                              </AlertDialogAction>
+                            )}
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -443,7 +481,14 @@ function CheckoutPage() {
                 <p className="mt-2 font-display text-lg font-bold">
                   {current?.plan_name ?? current?.plan_slug ?? "Plano Shadow"}
                 </p>
-                {current && <p className="mt-1 font-mono text-2xl font-bold text-neon">{brl(current.amount)}</p>}
+                {current && (
+                  <p className="mt-1 font-mono text-2xl font-bold text-neon">
+                    {brl(promotionalCheckout ? LIFETIME_PROMOTION_PRICE : current.amount)}
+                  </p>
+                )}
+                {promotionalCheckout && (
+                  <p className="mt-1 text-xs text-muted-foreground">Valor promocional no checkout da Cakto.</p>
+                )}
                 <p className="mt-3 font-mono text-[10px] text-muted-foreground">Pedido #{order.slice(0, 8)}</p>
               </div>
 
