@@ -361,21 +361,39 @@ function CheckoutPage() {
               >
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o provedor para finalizar a compra." />
 
+                {/* Cakto: a URL pública está cadastrada, mas o webhook ainda não está
+                    vinculado a pedidos autenticados. Não habilitar cobranças antes disso. */}
+                {current?.plan_slug === "login-30d" && (
+                  <div className="mt-4 overflow-hidden rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-card to-card shadow-[0_0_30px_-20px_rgba(16,185,129,0.5)]">
+                    <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#467f69] text-2xl font-black text-white shadow-sm" aria-hidden="true">C</div>
+                        <div>
+                          <p className="text-base font-bold tracking-tight">Cakto</p>
+                          <p className="font-mono text-[11px] text-muted-foreground">Checkout do plano mensal</p>
+                        </div>
+                      </div>
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-[10px] font-semibold text-emerald-400">Em integração</span>
+                    </div>
+                    <div className="space-y-3 p-4">
+                      <p className="text-sm text-foreground">Uma nova opção de pagamento está chegando ao Shadow.</p>
+                      <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+                        A liberação automática da licença ainda está sendo conectada à confirmação da Cakto.
+                        Por segurança, o pagamento ficará bloqueado até essa validação estar pronta.
+                      </p>
+                      <button type="button" disabled className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-emerald-600/40 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wide text-white/70">
+                        <Lock className="h-4 w-4" /> Pagar com Cakto — em breve
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="mt-4 space-y-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-4">
                   <p className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-amber-400">
-                    <Clock className="h-4 w-4" /> Checkout em manutenção
+                    <Clock className="h-4 w-4" /> Mercado Pago em manutenção
                   </p>
-                  <div className="space-y-1.5">
-                    <p className="text-sm font-semibold">Mercado Pago temporariamente indisponível</p>
-                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-                      Estamos realizando ajustes no sistema de pagamentos. Por enquanto, não é possível concluir
-                      novas compras por este checkout.
-                    </p>
-                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-                      Seu pedido ({order.slice(0, 8)}) continua salvo e não foi marcado como pago. Entre em contato
-                      com o suporte para receber orientação.
-                    </p>
-                  </div>
+                  <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    O Mercado Pago está temporariamente indisponível. Seu pedido permanece salvo e não será marcado como pago.
+                  </p>
                   <span className="inline-flex w-fit items-center rounded border border-amber-500/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-amber-400">
                     Pagamento temporariamente pausado
                   </span>
