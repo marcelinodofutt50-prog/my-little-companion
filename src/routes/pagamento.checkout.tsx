@@ -1,3 +1,4 @@
+import { getCaktoRenewalCheckout } from "@/lib/cakto-renewal.functions";
 import { toast } from "sonner";
 import { LIFETIME_PROMOTION_PRICE, useLifetimePromotion } from "@/components/LifetimePromotionBanner";
 import { getLifetimePromotionLink } from "@/lib/lifetime-promotion.functions";
@@ -143,21 +144,31 @@ function CheckoutPage() {
     current?.plan_slug === "login-30d" || current?.plan_slug === "login-lifetime"
       ? CAKTO_OFFERS[current.plan_slug]
       : null;
+  const isServerRenewal = current?.plan_slug === "server-monthly" || current?.plan_slug === "server-monthly-legacy";
+  const { data: renewalOffer, isError: renewalError, refetch: retryRenewal } = useQuery({
+    queryKey: ["cakto-renewal", current?.id],
+    queryFn: () => getCaktoRenewalCheckout({ data: { orderId: current!.id, open: false } }),
+    enabled: isServerRenewal,
+  });
   const availableCaktoOffer =
     current && caktoOffer && current.amount === caktoOffer.amount &&
     ["created", "pending"].includes(current.status)
       ? caktoOffer
-      : null;
+      : isServerRenewal ? renewalOffer ?? null : null;
   const { active: promotionActive } = useLifetimePromotion(current?.plan_slug === "login-lifetime");
   const promotionalCheckout = promotionActive && availableCaktoOffer === CAKTO_OFFERS["login-lifetime"];
   const [openingPromotion, setOpeningPromotion] = useState(false);
 
-  async function openPromotionalCheckout() {
+  async function openSpecialCaktoCheckout() {
     setOpeningPromotion(true);
     try {
-      const url = await getLifetimePromotionLink();
+      const url = isServerRenewal && current
+        ? (await getCaktoRenewalCheckout({ data: { orderId: current.id, open: true } }))?.url
+        : await getLifetimePromotionLink();
       if (!url) {
-        toast.info("A promoção acabou. Confira o valor atualizado antes de continuar.");
+        toast.info(isServerRenewal
+          ? "Este pedido deixou de ser elegível para renovação pela Cakto."
+          : "A promoção acabou. Confira o valor atualizado antes de continuar.");
         return;
       }
       window.location.assign(url);
@@ -384,6 +395,14 @@ function CheckoutPage() {
               <section className="rounded-2xl border border-border bg-card/60 p-4 sm:p-5">
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o meio de pagamento." />
 
+                {renewalError && (
+                  <div role="alert" className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                    Não foi possível verificar a renovação pela Cakto.
+                    <button type="button" className="font-semibold underline" onClick={() => void retryRenewal()}>
+                      Tentar novamente
+                    </button>
+                  </div>
+                )}
                 <div className={cn("mt-4 grid gap-3", availableCaktoOffer && "sm:grid-cols-2")}>
                   {availableCaktoOffer && (
                     <div className="flex flex-col rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
@@ -405,7 +424,9 @@ function CheckoutPage() {
                           <span className="ml-1 text-sm font-medium text-muted-foreground">{availableCaktoOffer.cadence}</span>
                         )}
                       </p>
-                      <p className="mt-1 text-sm text-muted-foreground">Licença entregue pelo suporte.</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {isServerRenewal ? "Renovação do login selecionado pelo suporte." : "Licença entregue pelo suporte."}
+                      </p>
                       <AlertDialog key={promotionalCheckout ? "promotion" : "standard"}>
                         <AlertDialogTrigger asChild>
                           <button
@@ -419,24 +440,28 @@ function CheckoutPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Atenção à entrega da licença</AlertDialogTitle>
+                            <AlertDialogTitle>{isServerRenewal ? "Atenção à renovação do servidor" : "Atenção à entrega da licença"}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              A entrega da licença por esse meio de pagamento é manual. Depois de pagar
-                              pela Cakto, abra um ticket no suporte do Shadow e envie o comprovante e o
-                              número do pedido <strong>#{order.slice(0, 8)}</strong> para receber sua licença.
+                              {isServerRenewal ? (
+                                <>A Cakto cobra a cada 30 dias. A renovação do seu login é manual. A cada pagamento, abra
+                                um ticket no suporte e envie o comprovante e o número do pedido <strong>#{order.slice(0, 8)}</strong>.</>
+                              ) : (
+                                <>A entrega da licença é manual. Depois de pagar pela Cakto, abra um ticket no suporte e
+                                envie o comprovante e o número do pedido <strong>#{order.slice(0, 8)}</strong>.</>
+                              )}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            {promotionalCheckout ? (
+                            {promotionalCheckout || isServerRenewal ? (
                               <AlertDialogAction
                                 disabled={openingPromotion}
                                 onClick={(event) => {
                                   event.preventDefault();
-                                  void openPromotionalCheckout();
+                                  void openSpecialCaktoCheckout();
                                 }}
                               >
-                                {openingPromotion ? "Abrindo oferta…" : "Continuar para a Cakto · R$ 999"}
+                                {openingPromotion ? "Abrindo Cakto…" : promotionalCheckout ? "Continuar para a Cakto · R$ 999" : "Continuar para a Cakto"}
                               </AlertDialogAction>
                             ) : (
                               <AlertDialogAction asChild>
@@ -493,8 +518,8 @@ function CheckoutPage() {
               </div>
 
               <ul className="space-y-2.5 rounded-xl border border-border bg-card/40 p-4">
-                <Perk icon={Zap}>Entrega manual da licença após confirmação do pagamento</Perk>
-                <Perk icon={BadgeCheck}>A equipe informa os dados de acesso após a confirmação</Perk>
+                <Perk icon={Zap}>{isServerRenewal ? "Renovação manual após confirmação do pagamento" : "Entrega manual da licença após confirmação do pagamento"}</Perk>
+                <Perk icon={BadgeCheck}>{isServerRenewal ? "Você mantém o login selecionado" : "A equipe informa os dados de acesso após a confirmação"}</Perk>
                 <Perk icon={ShieldCheck}>Ambiente seguro — não guardamos dados de cartão</Perk>
                 <Perk icon={Sparkles}>Suporte humano no Telegram 7 dias por semana</Perk>
               </ul>
