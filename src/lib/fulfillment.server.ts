@@ -435,8 +435,28 @@ async function fulfillOrderInner(orderId: string) {
 
 
 
-  const { resolvePanelFromPlanSlug } = await import("@/lib/yaarsa.server");
-  const targetPanel = await resolvePanelFromPlanSlug(order.plan_slug);
+  const { resolvePanelFromPlanSlug, yaarsaExtend } =
+    await import("@/lib/yaarsa.server");
+
+  // Use the persisted subscription binding so retries use the same Cakto panel.
+  let caktoMonthly = false;
+  if (order.plan_slug === "login-30d") {
+    const { data: bindings, error } = await supabaseAdmin
+      .from("cakto_subscriptions" as never)
+      .select("order_id")
+      .eq("order_id", order.id)
+      .limit(1);
+    if (error && !["PGRST205", "42P01"].includes(error.code)) {
+      throw new Error("Não foi possível identificar o provedor do pedido mensal.");
+    }
+    caktoMonthly = Boolean(bindings?.length);
+  }
+
+  const targetPanel = caktoMonthly ? "v46" : await resolvePanelFromPlanSlug(order.plan_slug);
+
+  const caktoExpiry = caktoMonthly ? new Date() : null;
+  if (caktoExpiry) caktoExpiry.setDate(caktoExpiry.getDate() + 30);
+
   const creds = generateCredentials();
   const yr = await yaarsaCreateAccount({
     username: creds.username,
@@ -446,6 +466,7 @@ async function fulfillOrderInner(orderId: string) {
     totalPaid: Number(order.amount),
     additionalInfo: `shadow-order-${order.id}`,
     panel: targetPanel,
+    ...(caktoExpiry ? { expireDate: caktoExpiry.toISOString().slice(0, 10) } : {}),
   });
   if (yr.Fail) {
     await supabaseAdmin.from("orders").update({ status: "yaarsa_failed" }).eq("id", orderId);
@@ -455,24 +476,19 @@ async function fulfillOrderInner(orderId: string) {
     return { ok: false, reason: yr.Fail };
   }
 
-  let expiresAt: Date;
+  const expiresAt = caktoExpiry ?? new Date();
   if (order.plan_slug === "login-7d") {
-    expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 7);
   } else if (order.plan_slug === "login-lifetime") {
     // Vitalício real: 20 anos
-    expiresAt = new Date(); expiresAt.setFullYear(expiresAt.getFullYear() + 20);
-  } else if (order.plan_slug === "login-30d") {
-    // Mensal: 30 dias exatos para não haver perda de dias na ativação
-    expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
-  } else {
-    // Qualquer outro plano pago por dias: 30 dias a partir da compra.
-    expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setFullYear(expiresAt.getFullYear() + 20);
+  } else if (!caktoExpiry) {
+    expiresAt.setDate(expiresAt.getDate() + 30);
   }
 
-  // Re-align Yaarsa expire_date to match our billing cycle
   const ymd = expiresAt.toISOString().slice(0, 10);
-  const { yaarsaExtend } = await import("@/lib/yaarsa.server");
-  await yaarsaExtend(creds.email, ymd, targetPanel);
+  // Other providers retain the existing panel expiry synchronization.
+  if (!caktoExpiry) await yaarsaExtend(creds.email, ymd, targetPanel);
 
   const { tierFromPlanSlug } = await import("@/lib/plans");
   const versionTier = tierFromPlanSlug(order.plan_slug);
