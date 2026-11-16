@@ -90,6 +90,10 @@ const META_EN: Record<string, string> = {
   "Bypass Play Protect da própria BTmob (assinatura ~1 dia)": "BTmob's own Play Protect bypass (signature lasts ~1 day)",
   "Atualizações grátis para sempre": "Free updates forever",
   "Suporte prioritário 24/7": "24/7 priority support",
+  "Suporte via AnyDesk": "Support via AnyDesk",
+  "Suporte por chamada": "Support by call",
+  "Acesso ao encrypter de APK uma vez por semana": "Access to the APK encrypter once a week",
+  "Descontos na renovação do servidor": "Discounts on server renewal",
   "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)": "Priority queue on our Play Protect Cloak (signature lasts 2–3 weeks)",
   "Acesso ao Bypass Play Protect (Cloak & Dropper)": "Access to the Play Protect Bypass (Cloak & Dropper)",
   "Operação mensal na versão estável 4.5.7.": "Monthly access on the stable 4.5.7 version.",
@@ -161,8 +165,12 @@ function metaForPt(plan: Plan, t: (k: any) => string, fmt: (v: number) => string
       "Bypass Play Protect da própria BTmob (assinatura ~1 dia)",
       "Atualizações grátis para sempre",
       "Suporte prioritário 24/7",
+      "Suporte via AnyDesk",
+      "Suporte por chamada",
       "Fila prioritária no Play Protect Cloak do site (assinatura de 2 a 3 semanas)",
       "Acesso ao Bypass Play Protect (Cloak & Dropper)",
+      "Acesso ao encrypter de APK uma vez por semana",
+      "Descontos na renovação do servidor",
     ],
   };
   if (s.includes("30") || s.includes("month")) return {
