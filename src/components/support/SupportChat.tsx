@@ -82,6 +82,7 @@ type PendingMsg = {
   attachmentPath?: string;
   attachmentType?: string;
   attachmentName?: string;
+  replyToId?: string | null;
   previewUrl?: string;
   status: "sending" | "failed";
   error?: string;
@@ -540,7 +541,7 @@ export function SupportChat({
     setUnseen(0);
   };
 
-  const performLoadMessages = async (before?: string) => {
+  const performLoadMessages = async (before?: string, background = false) => {
     const release = operations.current.begin(before ? "history" : "refresh");
     if (!release) return;
     if (before) setLoadingOlder(true);
@@ -549,6 +550,14 @@ export function SupportChat({
       if (!isActiveConversation()) return;
       setLoadError(false);
       const newMsgs = normalizeSupportMessages(r.messages, threadId);
+      if (!before && historyBtnRef.current.firstLoadDone) {
+        const incoming = newMsgs.filter((m) => m.sender_id !== userId && !msgIdsRef.current.has(m.id));
+        for (const m of incoming) msgIdsRef.current.add(m.id);
+        if (incoming.length) {
+          if (!atBottomRef.current) setUnseen((count) => count + incoming.length);
+          markSeen();
+        }
+      }
       if (r.senders) setSenders((prev) => ({ ...prev, ...r.senders }));
       if (before) restoreScrollRef.current = listRef.current?.scrollHeight ?? null;
       // Sempre mesclamos: recarregar (reconexão, aba voltando) não pode apagar
@@ -572,7 +581,7 @@ export function SupportChat({
       setLoadError(true);
       // eslint-disable-next-line no-console
       console.error("[SupportChat] listMessages error:", e);
-      toast.error("Erro ao carregar mensagens");
+      if (!background) toast.error("Erro ao carregar mensagens");
     } finally {
       release();
       if (isActiveConversation()) {
@@ -582,11 +591,11 @@ export function SupportChat({
     }
   };
 
-  const loadMessages = (before?: string): Promise<void> => {
+  const loadMessages = (before?: string, background = false): Promise<void> => {
     if (before) return performLoadMessages(before);
     const running = refreshInFlight.current;
     if (running) return running;
-    const request = performLoadMessages();
+    const request = performLoadMessages(undefined, background);
     refreshInFlight.current = request;
     void request.finally(() => {
       if (refreshInFlight.current === request) refreshInFlight.current = null;
@@ -711,6 +720,7 @@ export function SupportChat({
     const resync = () => {
       if (document.visibilityState !== "visible") return;
       if (!navigator.onLine) { setConnection("offline"); return; }
+      setConnection((state) => state === "offline" ? "reconnecting" : state);
       const now = Date.now();
       // focus + visibilitychange disparam juntos: evita consultas repetidas.
       if (now - lastResyncRef.current < 3000) return;
@@ -737,16 +747,18 @@ export function SupportChat({
   }, [threadId, userId]);
 
 
-  // Rede de segurança do "Visto": se o aviso em tempo real se perder, confere
-  // de novo enquanto houver mensagem minha ainda não vista.
+  // Atualiza a conversa quando o canal em tempo real está indisponível.
   const hasMyUnseen = msgs.some((m: any) => m.sender_id === userId && !m.is_system && !m.read_at && !String(m.id).startsWith("tmp"));
   useEffect(() => {
-    if (!hasMyUnseen) return;
-    const id = setInterval(() => {
-      if (document.visibilityState === "visible") void loadMessages();
-    }, 15000);
-    return () => clearInterval(id);
-  }, [hasMyUnseen, threadId, userId]);
+    if (connection === "offline" || (connection === "live" && !hasMyUnseen)) return;
+    const delay = connection === "live" ? 15000 : 8000;
+    const id = window.setInterval(() => {
+      if (navigator.onLine && document.visibilityState === "visible") {
+        void loadMessages(undefined, true);
+      }
+    }, delay);
+    return () => window.clearInterval(id);
+  }, [connection, hasMyUnseen, threadId, userId]);
 
   // Fecha o visualizador de imagem com Esc.
   useEffect(() => {
@@ -811,7 +823,7 @@ export function SupportChat({
     if (!text && !attachmentPath) return;
     const release = operations.current.begin(retryOf ? `retry:${retryOf}` : "compose");
     if (!release) return;
-    const replyToId = retryOf ? null : replyTo?.id ?? null;
+    const replyToId = retryOf ? previous?.replyToId ?? null : replyTo?.id ?? null;
 
     if (typeof navigator !== "undefined" && navigator.onLine === false && !retryOf) {
       toast.error("Você está sem internet. A mensagem será enviada assim que a conexão voltar.");
@@ -823,6 +835,7 @@ export function SupportChat({
     const newPending: PendingMsg = {
       clientId,
       body: text || null,
+      replyToId,
       ...(attachmentPath ? { attachmentPath } : {}),
       ...(attachmentType ? { attachmentType } : {}),
       ...(meta?.name ?? previous?.attachmentName ? { attachmentName: meta?.name ?? previous?.attachmentName } : {}),
@@ -973,7 +986,7 @@ export function SupportChat({
       <Toolbar role="status" className="bg-background/40">
         <ToolbarLabel>
           {connection === "live" ? <span className="h-1.5 w-1.5 rounded-full bg-primary" /> : connection === "offline" ? <AlertCircle className="h-3 w-3 text-destructive" /> : <Loader2 className="h-3 w-3 animate-spin" />}
-          {connection === "live" ? "Chat conectado" : connection === "offline" ? "Sem internet" : "Reconectando ao chat…"}
+          {connection === "live" ? "Chat conectado" : connection === "offline" ? "Sem internet" : "Reconectando · atualizando mensagens"}
         </ToolbarLabel>
         {summaryState.summary?.protocol && (
           <ToolbarLabel className="hidden sm:inline-flex">
