@@ -28,57 +28,35 @@ function MarketPage() {
   const tr = (pt: string, e: string) => (lang === "en" ? e : pt);
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [buyingSlug, setBuyingSlug] = useState<string | null>(null);
   
   const checkoutFn = useServerFn(createCheckout);
 
   useEffect(() => {
-    const fetchPlans = async () => {
+    let cancelled = false;
+
+    async function fetchPlans() {
       try {
         const { data, error } = await supabase
           .from("plans")
-          .select("*")
+          .select("slug,name,description,category,price_brl,days")
           .eq("active", true)
           .eq("status", "published")
           .in("category", ["addon", "upgrade", "source", "market"])
-
           .order("sort_order");
-        
-        if (error) {
-          if (error.code === 'PGRST108' || error.message?.includes('schema cache')) {
-            const { trackSchemaFailure } = await import("@/lib/tutorials.functions");
-            const { data: userData } = await supabase.auth.getUser();
-            await trackSchemaFailure(error, "MarketPage:fetchPlans", false, { route: window.location.pathname }, userData.user?.id);
-            
-            // Fallback para admin tunnel via server fn se necessário, mas aqui tentamos refresh e retry local primeiro
-            const { supabaseAdmin } = await import("@/integrations/supabase/client.server").catch(() => ({ supabaseAdmin: null }));
-            if (supabaseAdmin) {
-              await supabaseAdmin.rpc("force_refresh_schema_permissions");
-              const { data: retryData, error: retryError } = await supabaseAdmin
-                .from("plans")
-                .select("*")
-                .eq("active", true)
-                .eq("status", "published")
-                .in("category", ["addon", "upgrade", "source", "market"])
 
-                .order("sort_order");
-              if (!retryError) {
-                setPlans(retryData || []);
-                await trackSchemaFailure(error, "MarketPage:fetchPlans", true, { stage: "retry_success" }, userData.user?.id);
-                return;
-              }
-            }
-          }
-          throw error;
-        }
-        setPlans(data || []);
-      } catch (err) {
-        console.error(err);
+        if (error) throw error;
+        if (!cancelled) setPlans(data ?? []);
+      } catch {
+        if (!cancelled) setLoadError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
-    fetchPlans();
+    }
+
+    void fetchPlans();
+    return () => { cancelled = true; };
   }, []);
 
   const handleBuy = async (slug: string) => {
@@ -122,7 +100,11 @@ function MarketPage() {
               <UsdNotice className="mt-3" />
             </div>
 
-            {loading ? (
+            {loadError ? (
+              <p role="alert" className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+                {tr("Não foi possível carregar o catálogo.", "The catalog could not be loaded.")}
+              </p>
+            ) : loading ? (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3].map(i => (
                   <Card key={i} className="bg-black/40 border-primary/10 animate-pulse h-[300px]" />
