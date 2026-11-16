@@ -6,21 +6,29 @@ import {
   ArrowLeft,
   BadgeCheck,
   CheckCircle2,
-  Clock,
   ExternalLink,
   Loader2,
-  Lock,
   ShieldCheck,
   Sparkles,
   Zap,
 } from "lucide-react";
-import { createMercadoPagoCheckout, getPaymentProviders } from "@/lib/mercadopago.functions";
 import { listMyOrders } from "@/lib/orders.functions";
 import { saveCheckoutProfile } from "@/lib/checkout-profile.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import caktoLogo from "@/assets/cakto-brand.svg";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
-import mercadoPagoLogo from "@/assets/logo-mercadopago.svg";
-import stripeLogo from "@/assets/logo-stripe.svg";
+import mercadoPagoLogo from "@/assets/logo-mercadopago-maintenance.png";
 
 export const Route = createFileRoute("/pagamento/checkout")({
   validateSearch: (search: Record<string, unknown>): { order?: string } => ({
@@ -32,10 +40,10 @@ export const Route = createFileRoute("/pagamento/checkout")({
       {
         name: "description",
         content:
-          "Finalize sua compra Shadow com pagamento seguro por Pix, cartão ou boleto. Liberação automática da licença após a aprovação.",
+          "Pague a assinatura mensal do Shadow pela Cakto. A equipe entrega a licença após confirmar o pagamento.",
       },
       { property: "og:title", content: "Pagamento seguro — Shadow" },
-      { property: "og:description", content: "Finalize sua compra Shadow com pagamento seguro, sem sair do site." },
+      { property: "og:description", content: "Pague a assinatura mensal do Shadow no checkout da Cakto." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -108,15 +116,6 @@ function CheckoutPage() {
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [mpLoading, setMpLoading] = useState(false);
-  const [mpError, setMpError] = useState<string | null>(null);
-
-  const { data: providers, isLoading: loadingProviders } = useQuery({
-    queryKey: ["payment-providers"],
-    queryFn: () => getPaymentProviders(),
-    staleTime: 5 * 60 * 1000,
-  });
-
   const { data: orders } = useQuery({
     queryKey: ["my-orders-checkout"],
     queryFn: () => listMyOrders({ data: {} }),
@@ -124,7 +123,10 @@ function CheckoutPage() {
   });
 
   const current = useMemo(() => orders?.find((o) => o.id === order) ?? null, [orders, order]);
-  const mpOn = Boolean(providers?.mercadopago);
+  const canPayWithCakto =
+    current?.plan_slug === "login-30d" &&
+    current.amount === 750 &&
+    ["created", "pending"].includes(current.status);
   const errors = validate(survey);
   const set = (patch: Partial<Survey>) => setSurvey((s) => ({ ...s, ...patch }));
 
@@ -168,20 +170,6 @@ function CheckoutPage() {
       setSaveError((e as Error)?.message ?? "Falha ao salvar o cadastro.");
     }
     setSaving(false);
-  }
-
-  async function payWithMercadoPago() {
-    if (!order || !confirmed) return;
-    setMpLoading(true);
-    setMpError(null);
-    try {
-      const res = await createMercadoPagoCheckout({ data: { orderId: order, returnOrigin: window.location.origin } });
-      if ("error" in res) throw new Error(res.error);
-      window.location.href = res.url;
-    } catch (e) {
-      setMpError((e as Error)?.message ?? "Não foi possível abrir o Mercado Pago.");
-      setMpLoading(false);
-    }
   }
 
   return (
@@ -361,24 +349,63 @@ function CheckoutPage() {
               >
                 <StepHeader n={2} title="Como você quer pagar?" subtitle="Escolha o provedor para finalizar a compra." />
 
-                <div className="mt-4 space-y-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-4">
-                  <p className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-amber-400">
-                    <Clock className="h-4 w-4" /> Checkout em manutenção
-                  </p>
-                  <div className="space-y-1.5">
-                    <p className="text-sm font-semibold">Mercado Pago temporariamente indisponível</p>
-                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-                      Estamos realizando ajustes no sistema de pagamentos. Por enquanto, não é possível concluir
-                      novas compras por este checkout.
-                    </p>
-                    <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
-                      Seu pedido ({order.slice(0, 8)}) continua salvo e não foi marcado como pago. Entre em contato
-                      com o suporte para receber orientação.
-                    </p>
+                {canPayWithCakto && (
+                  <div className="mt-4 space-y-4 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
+                    <div className="flex items-center gap-3">
+                      <img src={caktoLogo} alt="" width={40} height={40} className="size-10 shrink-0" />
+                      <div>
+                        <p className="font-semibold text-foreground">Cakto</p>
+                        <p className="text-sm text-muted-foreground">Assinatura mensal · R$ 750/mês</p>
+                      </div>
+                    </div>
+                    {confirmed && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wide text-white"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Pagar com Cakto
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Atenção à entrega da licença</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              A entrega da licença por esse meio de pagamento é manual. Depois de pagar
+                              pela Cakto, abra um ticket no suporte do Shadow e envie o comprovante e o
+                              número do pedido <strong>#{order.slice(0, 8)}</strong> para receber sua licença.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction asChild>
+                              <a href="https://pay.cakto.com.br/haxjxbp_1331078">Continuar para a Cakto</a>
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
-                  <span className="inline-flex w-fit items-center rounded border border-amber-500/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-amber-400">
-                    Pagamento temporariamente pausado
-                  </span>
+                )}
+                <div className="mt-4 flex flex-col gap-4 rounded-xl border border-border bg-muted/30 p-4 sm:flex-row sm:items-center">
+                  <div className="relative flex h-24 w-36 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
+                    <img src={mercadoPagoLogo} alt="" className="h-36 w-36 max-w-none object-contain" />
+                    <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 bg-amber-400 px-1 py-1 text-center font-mono text-xs font-bold uppercase tracking-wide text-black">
+                      Manutenção
+                    </span>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <p className="font-semibold text-foreground">Mercado Pago</p>
+                    <button
+                      type="button"
+                      disabled
+                      className="w-full cursor-not-allowed rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground sm:w-auto"
+                    >
+                      Indisponível
+                    </button>
+                  </div>
                 </div>
               </section>
             </div>
@@ -394,8 +421,8 @@ function CheckoutPage() {
               </div>
 
               <ul className="space-y-2.5 rounded-xl border border-border bg-card/40 p-4">
-                <Perk icon={Zap}>Licença liberada automaticamente após a aprovação</Perk>
-                <Perk icon={BadgeCheck}>Login e senha aparecem no painel em “Licenças”</Perk>
+                <Perk icon={Zap}>Entrega manual da licença após confirmação do pagamento</Perk>
+                <Perk icon={BadgeCheck}>A equipe informa os dados de acesso após a confirmação</Perk>
                 <Perk icon={ShieldCheck}>Ambiente seguro — não guardamos dados de cartão</Perk>
                 <Perk icon={Sparkles}>Suporte humano no Telegram 7 dias por semana</Perk>
               </ul>
