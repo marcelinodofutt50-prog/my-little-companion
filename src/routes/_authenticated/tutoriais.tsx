@@ -15,8 +15,6 @@ import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progre
 import { useTutorialMedia } from "@/lib/tutorial-media";
 
 import { toast } from "sonner";
-// Asset externalizado (/__l5e/) não existe na Vercel — usa o arquivo público local.
-const trainingBgAsset = { url: "/assets/kraken_v28_final.webp" };
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 import { BackToDashboard } from "@/components/BackToDashboard";
@@ -215,22 +213,11 @@ function TutorialsPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative">
-        <div 
-          className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
-          style={{ 
-            backgroundImage: `url(${trainingBgAsset.url}?v=v31)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'brightness(0.6) contrast(1.2)'
-          }}
-        />
-        <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-black/50 via-black/70 to-black" />
-
+      <div className="flex min-h-screen w-full bg-background text-foreground theme-transition transition-colors duration-500 relative">
         <div className="relative z-20">
           <AppSidebar />
         </div>
-        <main className="flex-1 overflow-y-auto relative z-10">
+        <main className="min-w-0 flex-1 overflow-y-auto relative z-10">
           <SiteHeader />
           <HealthWidget />
           <div className="container mx-auto px-4 py-8">
@@ -241,7 +228,7 @@ function TutorialsPage() {
                   <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary">
                     Shadow Knowledge Base
                   </div>
-                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl rgb-text animate-rgb-text uppercase italic">
+                  <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
                     Centro de Treinamento
                   </h1>
                   <p className="mt-4 max-w-2xl text-muted-foreground">
@@ -306,7 +293,7 @@ function TutorialsPage() {
                     variant="outline" 
                     size="sm" 
                     onClick={() => window.location.reload()}
-                    className="font-mono text-[10px] uppercase border-primary/20 opacity-60 hover:opacity-100"
+                    className="font-mono text-[10px] uppercase border-primary/20"
                   >
                     Recarregar Página
                   </Button>
@@ -350,7 +337,7 @@ function TutorialsPage() {
                   setShowSyncStatus(!showSyncStatus);
                   if (showDiagnostics) setShowDiagnostics(false);
                 }}
-                className={`font-mono text-[10px] uppercase tracking-widest gap-2 border rounded-full px-4 transition-all ${showSyncStatus ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-primary/5 border-primary/10 text-primary/60 hover:text-primary'}`}
+                className={`font-mono text-[10px] uppercase tracking-widest gap-2 border rounded-full px-4 transition-all ${showSyncStatus ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-primary/5 border-primary/10 text-primary hover:bg-primary/10'}`}
               >
                 <Activity className={`h-3 w-3 ${loading ? 'animate-pulse' : ''}`} />
                 Status da Sincronização: {loading ? 'Sincronizando...' : 'Online'}
@@ -363,7 +350,7 @@ function TutorialsPage() {
                   setShowDiagnostics(!showDiagnostics);
                   if (showSyncStatus) setShowSyncStatus(false);
                 }}
-                className={`font-mono text-[10px] uppercase tracking-widest gap-2 border rounded-full px-4 transition-all ${showDiagnostics ? 'bg-orange-500/20 border-orange-500/40 text-orange-500' : 'bg-orange-500/5 border-orange-500/10 text-orange-500/60 hover:text-orange-500'}`}
+                className={`font-mono text-[10px] uppercase tracking-widest gap-2 border rounded-full px-4 transition-all ${showDiagnostics ? 'bg-orange-500/20 border-orange-500/40 text-orange-800 dark:text-orange-400' : 'bg-orange-500/5 border-orange-500/10 text-orange-800 dark:text-orange-300'}`}
               >
                 <Zap className={`h-3 w-3 ${diagLoading ? 'animate-spin' : ''}`} />
                 Painel de Diagnóstico
@@ -379,10 +366,10 @@ function TutorialsPage() {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden mb-8"
                 >
-                  <Card className="bg-black/40 border-orange-500/20 backdrop-blur-xl enterprise-surface overflow-hidden">
+                  <Card className="border-orange-500/20 overflow-hidden">
                     <div className="px-6 py-4 border-b border-orange-500/10 bg-orange-500/5 flex items-center justify-between flex-wrap gap-4">
                       <div className="flex items-center gap-3">
-                        <Zap className="h-5 w-5 text-orange-500" />
+                        <Zap className="h-5 w-5 text-orange-800 dark:text-orange-400" />
                         <div>
                           <h3 className="text-sm font-bold text-foreground font-mono uppercase tracking-widest">Diagnóstico Tático do Banco</h3>
                           <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tighter">Validação de integridade Shadow Core</p>
@@ -405,7 +392,7 @@ function TutorialsPage() {
                             }
                           }}
                           disabled={diagLoading}
-                          className="bg-orange-500 hover:bg-orange-600 text-white font-mono text-[10px] uppercase h-8"
+                          className="bg-orange-700 hover:bg-orange-800 text-white font-mono text-[10px] uppercase h-8"
                           aria-label="Executar Teste de Acesso"
                         >
                           {diagLoading ? <RefreshCw className="h-3 w-3 animate-spin mr-2" /> : <Database className="h-3 w-3 mr-2" />}
@@ -429,7 +416,7 @@ function TutorialsPage() {
                               toast.error("Erro no teste: " + err.message, { id: loadToast });
                             }
                           }}
-                          className="border-orange-500/30 text-orange-500 font-mono text-[10px] uppercase h-8 hover:bg-orange-500/10"
+                          className="border-orange-500/30 text-orange-800 dark:text-orange-400 font-mono text-[10px] uppercase h-8 hover:bg-orange-500/10"
                         >
                           Simular Falha (Resiliência)
                         </Button>
@@ -438,7 +425,7 @@ function TutorialsPage() {
 
                     
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Status da Conexão</div>
                         <div className="flex items-center gap-2">
                           <div className={`h-2 w-2 rounded-full ${diagResult ? (diagResult.success ? 'bg-green-500 animate-pulse' : 'bg-red-500') : 'bg-gray-500'}`} />
@@ -448,23 +435,23 @@ function TutorialsPage() {
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Latência Shadow</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider">
                           {diagResult?.latency ? `${diagResult.latency}ms` : '---'}
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Última Tentativa</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider">
                           {syncHistory[0]?.time || 'Aguardando'}
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Integridade de Schema</div>
-                        <div className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-2 text-green-500">
+                        <div className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-2 text-green-700 dark:text-green-400">
                           <Shield className="h-3 w-3" /> ATIVO
                         </div>
                       </div>
@@ -472,10 +459,10 @@ function TutorialsPage() {
 
                     {diagResult && !diagResult.success && (
                       <div className="mx-6 mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/20 flex items-start gap-3">
-                        <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />
+                        <AlertCircle className="h-4 w-4 text-red-700 dark:text-red-400 mt-0.5" />
                         <div className="space-y-1">
-                          <div className="text-xs font-bold text-red-500 uppercase font-mono">Erro Identificado</div>
-                          <div className="text-[10px] text-red-400/80 font-mono leading-relaxed">
+                          <div className="text-xs font-bold text-red-700 dark:text-red-400 uppercase font-mono">Erro Identificado</div>
+                          <div className="text-[10px] text-red-700 dark:text-red-400 font-mono leading-relaxed">
                             {diagResult.error || "Erro desconhecido durante a validação tática."}
                             {diagResult.code && <span className="block mt-1 font-bold">CÓDIGO: {diagResult.code}</span>}
                           </div>
@@ -496,7 +483,7 @@ function TutorialsPage() {
                     className="overflow-hidden"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                      <Card className="border-border p-4 enterprise-surface">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                             <Server className="h-4 w-4 text-primary" />
@@ -508,22 +495,22 @@ function TutorialsPage() {
                         </div>
                       </Card>
 
-                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                      <Card className="border-border p-4 enterprise-surface">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20">
-                            <ShieldCheck className="h-4 w-4 text-green-500" />
+                            <ShieldCheck className="h-4 w-4 text-green-700 dark:text-green-400" />
                           </div>
                           <div>
                             <div className="text-[10px] font-mono uppercase text-muted-foreground">Status Atual</div>
-                            <div className="text-xs font-bold text-green-500">{loading ? 'Validando Schema...' : 'Sincronizado'}</div>
+                            <div className="text-xs font-bold text-green-700 dark:text-green-400">{loading ? 'Validando Schema...' : 'Sincronizado'}</div>
                           </div>
                         </div>
                       </Card>
 
-                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                      <Card className="border-border p-4 enterprise-surface">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                            <Clock className="h-4 w-4 text-orange-500" />
+                            <Clock className="h-4 w-4 text-orange-800 dark:text-orange-400" />
                           </div>
                           <div>
                             <div className="text-[10px] font-mono uppercase text-muted-foreground">Última Verificação</div>
@@ -533,7 +520,7 @@ function TutorialsPage() {
                       </Card>
                     </div>
 
-                    <Card className="bg-black/40 border-primary/20 backdrop-blur-xl overflow-hidden enterprise-surface">
+                    <Card className="border-border overflow-hidden enterprise-surface">
                       <div className="px-4 py-2 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
                         <div className="text-[10px] font-mono uppercase tracking-widest text-primary/80">Histórico de Tentativas Recentes</div>
                         <Button 
@@ -554,27 +541,27 @@ function TutorialsPage() {
                         ) : (
                           <div className="divide-y divide-primary/5">
                             {syncHistory.map((log, i) => (
-                              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-muted transition-colors">
                                 <div className="flex items-center gap-4">
                                   <div className={`w-1.5 h-1.5 rounded-full ${log.status === 'success' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`} />
                                   <div>
                                     <div className="text-[10px] font-mono font-bold uppercase flex items-center gap-2">
                                       {log.status === 'success' ? 'Operação Concluída' : 'Falha Detectada'}
-                                      <span className={`px-1.5 py-0.5 rounded text-[8px] border ${log.type === 'manual' ? 'border-orange-500/30 bg-orange-500/5 text-orange-500' : 'border-blue-500/30 bg-blue-500/5 text-blue-500'}`}>
+                                      <span className={`px-1.5 py-0.5 rounded text-[8px] border ${log.type === 'manual' ? 'border-orange-500/30 bg-orange-500/5 text-orange-800 dark:text-orange-400' : 'border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-400'}`}>
                                         {log.type.toUpperCase()}
                                       </span>
                                     </div>
                                     <div className="text-[9px] text-muted-foreground font-mono mt-0.5">{log.message || 'Ciclo de validação de rotina.'}</div>
                                   </div>
                                 </div>
-                                <div className="text-[10px] font-mono text-muted-foreground/60">{log.time}</div>
+                                <div className="text-[10px] font-mono text-muted-foreground">{log.time}</div>
                               </div>
                             ))}
                           </div>
                         )}
                         
                         <div className="mt-6 border-t border-primary/10 pt-6">
-                          <h4 className="text-[10px] font-mono uppercase tracking-widest text-primary/50 mb-3 flex items-center gap-2">
+                          <h4 className="text-[10px] font-mono uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
                             <Activity className="h-3 w-3" /> Diagnóstico de Conexão
                           </h4>
                           <div className="grid grid-cols-2 gap-2">
@@ -584,7 +571,7 @@ function TutorialsPage() {
                             </div>
                             <div className="enterprise-surface p-3 rounded-xl border-primary/5">
                               <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-[0.2em] mb-1">Tunnel Status</div>
-                              <div className={`text-xs font-bold font-mono ${tutorials.length > 0 ? 'text-emerald-500' : 'text-orange-500 animate-pulse'}`}>
+                              <div className={`text-xs font-bold font-mono ${tutorials.length > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-orange-800 dark:text-orange-400 animate-pulse'}`}>
                                 {tutorials.length > 0 ? 'ESTÁVEL' : 'SINCRONIZANDO'}
                               </div>
                             </div>
@@ -637,13 +624,14 @@ function TutorialsPage() {
                   </Button>
                 ))}
               </div>
-              <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+              <div className="relative w-full md:w-80 md:shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                  aria-label="Buscar tutorial"
                   placeholder="Buscar tutorial..."
-                  className="pl-10 h-10 bg-primary/5 border-primary/10 rounded-full text-xs font-mono uppercase tracking-widest focus:ring-primary/20"
+                  className="h-10 rounded-full border-border bg-card pl-10 text-foreground focus-visible:ring-primary"
                 />
               </div>
             </div>
@@ -655,8 +643,8 @@ function TutorialsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-12"
                 >
-                  <div className="overflow-hidden rounded-2xl border border-primary/20 bg-black/90 dark:bg-black/95 backdrop-blur-3xl shadow-2xl transition-colors duration-500">
-                    <div className="aspect-video w-full bg-black relative">
+                  <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card text-card-foreground shadow-lg transition-colors duration-500">
+                    <div className="aspect-video w-full bg-muted relative">
                       {selected.video_url ? (
                         selectedVideoUrl ? (
                           <video 
@@ -695,12 +683,12 @@ function TutorialsPage() {
                     </div>
                     <div className="p-6 md:p-8">
                       <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="space-y-2 flex-1">
+                        <div className="min-w-0 flex-1 basis-full space-y-2 md:basis-64">
                           <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">{selected.category}</div>
                           <h2 className="text-2xl font-bold text-foreground md:text-3xl">{selected.title}</h2>
                           <p className="text-muted-foreground leading-relaxed">{selected.description}</p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                            <Button 
                              variant={completedIds.includes(selected.id) ? "default" : "outline"} 
                              size="sm" 
@@ -714,7 +702,7 @@ function TutorialsPage() {
                              )}
                            </Button>
                            {selected.youtube_url && (
-                             <Button variant="outline" size="sm" asChild className="gap-2 border-red-500/20 hover:bg-red-500/10 hover:text-red-500">
+                             <Button variant="outline" size="sm" asChild className="gap-2 border-red-500/20 hover:bg-red-500/10 hover:text-red-700 dark:hover:text-red-400">
                                <a href={selected.youtube_url} target="_blank" rel="noopener noreferrer">
                                  <Youtube className="h-4 w-4" /> Detalhes no YouTube
                                </a>
@@ -739,7 +727,7 @@ function TutorialsPage() {
                   transition={{ delay: (idx % 4) * 0.1 }}
                 >
                     <Card 
-                      className="group h-full cursor-pointer overflow-hidden border-border/40 bg-black/80 dark:bg-black/90 backdrop-blur-3xl transition-all duration-500 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
+                      className="group h-full cursor-pointer overflow-hidden border-border transition-all duration-500 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                     onClick={() => {
                       setSelected(t);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -750,14 +738,16 @@ function TutorialsPage() {
                         <TutorialThumb url={t.image_url} title={t.title} />
                       ) : (
 
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted/20 to-primary/5">
-                          <Video className="h-8 w-8 text-primary/20 group-hover:text-primary/40 transition-colors" />
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-primary/10">
+                          <Video className="h-8 w-8 text-primary/70 group-hover:text-primary transition-colors" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                      {t.image_url && (
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+                      )}
                       
                       <div className="absolute top-3 left-3 flex gap-2">
-                        <div className="rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md border border-white/10">
+                        <div className="rounded-full bg-card px-2.5 py-1 border border-border">
                           <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-primary font-bold">{t.category || "Geral"}</span>
                         </div>
                       </div>
@@ -765,8 +755,8 @@ function TutorialsPage() {
                       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
                          <div className="flex gap-2">
                            {completedIds.includes(t.id) && (
-                             <div className="rounded bg-emerald-500/10 px-2 py-0.5 backdrop-blur-md border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
-                               <span className="font-mono text-[9px] uppercase tracking-widest text-emerald-500 font-bold flex items-center gap-1">
+                             <div className="rounded bg-card px-2 py-0.5 border border-emerald-500/30 transition-colors">
+                               <span className="font-mono text-[9px] uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
                                  <CheckCircle2 className="h-2.5 w-2.5" /> Concluído
                                </span>
                              </div>
@@ -774,16 +764,17 @@ function TutorialsPage() {
                          </div>
                          <div className="flex gap-2">
                            <button 
+                             aria-label={completedIds.includes(t.id) ? "Marcar como não assistido" : "Marcar como assistido"}
                              onClick={(e) => handleToggle(e, t.id)}
-                             className="rounded-full bg-black/60 p-2.5 backdrop-blur-md hover:bg-primary/20 transition-colors border border-white/10 group-active:scale-90"
+                             className="rounded-full bg-card p-2.5 hover:bg-muted transition-colors border border-border group-active:scale-90"
                            >
                              {completedIds.includes(t.id) ? (
-                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" />
                              ) : (
-                               <Circle className="h-3.5 w-3.5 text-white/40" />
+                               <Circle className="h-3.5 w-3.5 text-muted-foreground" />
                              )}
                            </button>
-                           <div className="rounded-full bg-primary/20 p-2.5 backdrop-blur-md opacity-0 scale-90 transition-all group-hover:opacity-100 group-hover:scale-100 border border-primary/20">
+                           <div className="rounded-full bg-card p-2.5 opacity-0 scale-90 transition-all group-hover:opacity-100 group-hover:scale-100 border border-primary/20">
                              <Play className="h-3.5 w-3.5 fill-primary text-primary" />
                            </div>
                          </div>
@@ -791,7 +782,7 @@ function TutorialsPage() {
                     </div>
                     <CardContent className="p-5">
                       <h3 className="font-bold text-foreground text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight h-10">{t.title}</h3>
-                      <p className="mt-2 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity h-8">{t.description || "Nenhuma descrição disponível para este módulo."}</p>
+                      <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">{t.description || "Nenhuma descrição disponível para este módulo."}</p>
                       <div className="mt-5 flex items-center justify-between border-t border-border/40 pt-4">
                         <div className="flex items-center gap-2 text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
                            <BookOpen className="h-3 w-3 text-primary/50" /> Módulo {idx + 1}
@@ -804,11 +795,11 @@ function TutorialsPage() {
               ))}
 
               {loading && Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[4/5] rounded-xl bg-card/20 animate-pulse border border-border/10 overflow-hidden">
-                  <div className="aspect-video bg-muted/20" />
+                <div key={i} className="aspect-[4/5] rounded-xl bg-card animate-pulse border border-border overflow-hidden">
+                  <div className="aspect-video bg-muted" />
                   <div className="p-4 space-y-3">
-                    <div className="h-4 w-3/4 bg-muted/20 rounded" />
-                    <div className="h-3 w-full bg-muted/10 rounded" />
+                    <div className="h-4 w-3/4 bg-muted rounded" />
+                    <div className="h-3 w-full bg-muted rounded" />
                   </div>
                 </div>
               ))}
@@ -829,7 +820,7 @@ function TutorialsPage() {
 function TutorialThumb({ url, title }: { url: string; title: string }) {
   const resolved = useTutorialMedia(url);
   if (!resolved) {
-    return <div className="h-full w-full animate-pulse bg-gradient-to-br from-muted/20 to-primary/5" />;
+    return <div className="h-full w-full animate-pulse bg-gradient-to-br from-muted to-primary/10" />;
   }
   return (
     <img
@@ -867,23 +858,23 @@ function HealthWidget() {
   const tutorialProgressStatus = health.tables?.tutorial_progress?.accessible;
 
   return (
-    <div className="bg-black/40 border-b border-white/5 py-2 px-4 flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
+    <div className="border-b border-border bg-muted py-2 px-4 flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
       <div className="flex items-center gap-2">
-        <Database className={`h-3 w-3 ${isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}`} />
+        <Database className={`h-3 w-3 ${isHealthy ? 'text-green-700 dark:text-green-400' : isDegraded ? 'text-yellow-800 dark:text-yellow-400' : 'text-red-700 dark:text-red-400'}`} />
         <span className="text-muted-foreground">DB STATUS:</span>
-        <span className={isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}>{health.status}</span>
+        <span className={isHealthy ? 'text-green-700 dark:text-green-400' : isDegraded ? 'text-yellow-800 dark:text-yellow-400' : 'text-red-700 dark:text-red-400'}>{health.status}</span>
       </div>
-      <div className="h-3 w-[1px] bg-white/10" />
+      <div className="h-3 w-[1px] bg-border" />
       <div className="flex items-center gap-2">
-        <Activity className={`h-3 w-3 ${tutorialProgressStatus ? 'text-primary' : 'text-red-500 animate-pulse'}`} />
+        <Activity className={`h-3 w-3 ${tutorialProgressStatus ? 'text-primary' : 'text-red-700 dark:text-red-400 animate-pulse'}`} />
         <span className="text-muted-foreground">SYNC:</span>
-        <span className={tutorialProgressStatus ? 'text-primary' : 'text-red-500'}>{tutorialProgressStatus ? 'OPERATIONAL' : 'REPAIRING'}</span>
+        <span className={tutorialProgressStatus ? 'text-primary' : 'text-red-700 dark:text-red-400'}>{tutorialProgressStatus ? 'OPERATIONAL' : 'REPAIRING'}</span>
       </div>
-      <div className="h-3 w-[1px] bg-white/10" />
+      <div className="h-3 w-[1px] bg-border" />
       <div className="flex items-center gap-2">
-        <Clock className="h-3 w-3 text-yellow-500" />
+        <Clock className="h-3 w-3 text-yellow-800 dark:text-yellow-400" />
         <span className="text-muted-foreground">TRIAL:</span>
-        <span className="text-yellow-500">24H DURATION</span>
+        <span className="text-yellow-800 dark:text-yellow-400">24H DURATION</span>
       </div>
     </div>
   );
