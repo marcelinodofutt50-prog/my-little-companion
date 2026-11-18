@@ -15,6 +15,7 @@ import {
 } from "./SupportSummaryPanel";
 import { Toolbar, ToolbarGroup, ToolbarLabel, toolbarItem } from "./chat-toolbar";
 import { SupportMediaGallery } from "./SupportMediaGallery";
+import { SupportAudioMessage, SupportVoiceRecorder } from "./SupportAudio";
 
 import {
   listMessages,
@@ -307,14 +308,6 @@ function Attachment({
           className="max-h-72 w-full"
           onError={() => setBroken(true)}
         />
-      </div>
-    );
-  }
-
-  if (kind === "audio") {
-    return (
-      <div className="mt-2 rounded-lg border border-border/20 bg-muted/30 p-2">
-        <audio src={url} controls preload="metadata" className="w-full" onError={() => setBroken(true)} />
       </div>
     );
   }
@@ -811,12 +804,12 @@ export function SupportChat({
     attachmentPathArg?: string,
     attachmentTypeArg?: string,
     retryOf?: string,
-    meta?: { name?: string; previewUrl?: string },
+    meta?: { name?: string; previewUrl?: string; voiceRecording?: boolean },
   ) => {
     if (!isActiveConversation()) return;
     const previous = retryOf ? pendingRef.current.find((p) => p.clientId === retryOf) : undefined;
     if (retryOf && (!previous || previous.status !== "failed")) return;
-    const text = (retryOf ? (previous?.body ?? "") : bodyRef.current.trim()).slice(0, MAX_BODY);
+    const text = (retryOf ? previous?.body ?? "" : meta?.voiceRecording ? "" : bodyRef.current.trim()).slice(0, MAX_BODY);
     // Reenvio de anexo reaproveita o arquivo que já subiu para o storage.
     const attachmentPath = attachmentPathArg ?? previous?.attachmentPath;
     const attachmentType = attachmentTypeArg ?? previous?.attachmentType;
@@ -849,8 +842,10 @@ export function SupportChat({
       retryOf ? prev.map((p) => (p.clientId === retryOf ? newPending : p)) : [...prev, newPending],
     );
     if (!retryOf) {
-      bodyRef.current = "";
-      setBody("");
+      if (!meta?.voiceRecording) {
+        bodyRef.current = "";
+        setBody("");
+      }
       setReplyTo(null);
       // The snapshot is consumed; a newly typed draft or uploaded file may send.
       release();
@@ -899,23 +894,24 @@ export function SupportChat({
     } finally {
       release();
     }
+    return true;
   };
 
   handleSendRef.current = handleSend as any;
 
   /** Sobe o arquivo para o storage e envia como anexo. */
-  const uploadAndSend = async (file: File) => {
-    if (!isActiveConversation()) return;
+  const uploadAndSend = async (file: File, voiceRecording = false): Promise<boolean> => {
+    if (!isActiveConversation()) return false;
     if (file.size > SUPPORT_MEDIA_MAX_BYTES) {
       toast.error(`Arquivo muito grande (${formatBytes(file.size)}). O limite é ${formatBytes(SUPPORT_MEDIA_MAX_BYTES)}.`);
-      return;
+      return false;
     }
     if (file.size === 0) {
       toast.error("Esse arquivo está vazio.");
-      return;
+      return false;
     }
     const release = operations.current.begin("upload");
-    if (!release) return;
+    if (!release) return false;
     const isImage = (file.type || "").startsWith("image/");
     const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
     setUploading(true);
@@ -925,23 +921,26 @@ export function SupportChat({
       const safeName = safeMediaFileName(file.name || "arquivo");
       const { createSupportUploadUrl } = await import("@/lib/support.functions");
       const { putToSignedUrl } = await import("@/lib/signed-upload");
-      if (!isActiveConversation()) return;
+      if (!isActiveConversation()) return false;
       const ticket = await createSupportUploadUrl({ data: { threadId, filename: safeName } });
-      if (!isActiveConversation()) return;
+      if (!isActiveConversation()) return false;
       const path = ticket.path;
       await putToSignedUrl(ticket.uploadUrl, file, file.type || "application/octet-stream");
       toast.dismiss(toastId);
       if (!isActiveConversation()) {
         // O atendente trocou de conversa durante o envio: não mexe no rascunho da nova.
-        return;
+        return false;
       }
-      previewTransferred = true;
-      await handleSend(path, file.type || "application/octet-stream", undefined, {
+      const queued = await handleSend(path, file.type || "application/octet-stream", undefined, {
         name: file.name,
+        voiceRecording,
         ...(previewUrl ? { previewUrl } : {}),
       });
+      previewTransferred = Boolean(queued);
+      return previewTransferred;
     } catch (err: any) {
       if (isActiveConversation()) toast.error(err?.message || "Falha ao anexar o arquivo.");
+      return false;
     } finally {
       release();
       toast.dismiss(toastId);
@@ -1198,7 +1197,11 @@ export function SupportChat({
                       </div>
                     )}
                     {m.attachment_url && (
-                      <div data-sensitive><Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} /></div>
+                      mediaKind(m.attachment_type, m.attachment_url) === "audio" ? (
+                        <SupportAudioMessage key={draftKey + ":" + m.id} url={m.attachment_url} />
+                      ) : (
+                        <div data-sensitive><Attachment url={m.attachment_url} type={m.attachment_type} onZoom={setZoomUrl} /></div>
+                      )
                     )}
                     <div
                       className={`flex items-center gap-1 text-[11px] tabular-nums opacity-70 ${
@@ -1397,6 +1400,7 @@ export function SupportChat({
           >
             {uploading ? <Loader2 className="animate-spin h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
           </Button>
+          <SupportVoiceRecorder key={draftKey} disabled={uploading} onSend={(file) => uploadAndSend(file, true)} />
           <div className="flex-1 min-w-0 relative">
           <Textarea
             ref={textRef}
