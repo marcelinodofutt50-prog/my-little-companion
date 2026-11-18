@@ -915,6 +915,9 @@ function LifetimeLessons() {
         )}
         {state.status === "ready" ? (
           <div className="grid gap-3">
+            {state.lessons.length === 0 && (
+              <p className="text-sm text-muted-foreground">Ainda não há guias Vitalício publicados.</p>
+            )}
             {state.lessons.map((lesson) => (
               <details key={lesson.title} className="rounded-lg border border-border p-4">
                 <summary className="cursor-pointer font-medium">{lesson.title}</summary>
