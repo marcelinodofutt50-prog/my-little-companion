@@ -911,7 +911,12 @@ function LifetimeLessons() {
           <p className="text-sm text-muted-foreground">Disponível para contas com uma licença Vitalício habilitada.</p>
         )}
         {state.status === "error" && (
-          <p className="mb-3 text-sm text-muted-foreground">Não foi possível verificar sua licença. Tente novamente.</p>
+          <p className="mb-3 text-sm text-muted-foreground">Não foi possível carregar os guias. Tente novamente.</p>
+        )}
+        {(state.status === "locked" || state.status === "ready") && (
+          <Button type="button" variant="outline" size="sm" className="my-3" onClick={openLessons}>
+            Verificar novamente
+          </Button>
         )}
         {state.status === "ready" ? (
           <div className="grid gap-3">
@@ -919,7 +924,7 @@ function LifetimeLessons() {
               <p className="text-sm text-muted-foreground">Ainda não há guias Vitalício publicados.</p>
             )}
             {state.lessons.map((lesson) => (
-              <details key={lesson.title} className="rounded-lg border border-border p-4">
+              <details key={lesson.id} className="rounded-lg border border-border p-4">
                 <summary className="cursor-pointer font-medium">{lesson.title}</summary>
                 <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">
                   {lesson.steps.map((step) => <li key={step}>{step}</li>)}
