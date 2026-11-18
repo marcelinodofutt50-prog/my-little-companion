@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, ShoppingBag, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, CircleCheck, TriangleAlert, ChevronDown } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -322,14 +322,38 @@ function DashboardPage() {
     return files.length > 0 ? files : downloadsForTier('monthly_457')
   }
   const fallbackDownloads = currentLicense ? downloadsForLicense(currentLicense) : []
-  const daysLeft = expiry ? expiry.daysLeft : null
-  const lifetimeActive = !!expiry && expiry.active && expiry.countdownAt === null
-  const terminalId = activeLicense?.server_ip || "None"
   const primary = activeLicense?.yaarsa_email || ''
+  const daysLeft = expiry?.daysLeft ?? null
+  const showPlanAction = !licensesLoading && !licensesError && !expiry?.paused && (
+    !expiry?.active || (expiry.severity !== null && daysLeft !== null)
+  )
 
-  const statusColor = lifetimeActive ? "text-neon" : daysLeft === null ? "text-red-500" : daysLeft <= 3 ? "text-amber-500" : "text-neon"
-  const statusRing = lifetimeActive ? "border-neon/30 bg-neon/5 shadow-neon/10" : daysLeft === null ? "border-red-500/30 bg-red-500/5 shadow-red-500/10" : daysLeft <= 3 ? "border-amber-500/30 bg-amber-500/5 shadow-amber-500/10" : "border-neon/30 bg-neon/5 shadow-neon/10"
+  let accessTitle = 'Nenhuma licença ativa'
+  let accessDetail = 'Veja os planos disponíveis para acessar sua conta.'
+  let planActionLabel = allLicenses.length > 0 ? 'Ver opções de acesso' : 'Ver planos'
 
+  if (licensesLoading || user === undefined) {
+    accessTitle = 'Carregando licenças'
+    accessDetail = 'Estamos consultando o status do seu acesso.'
+  } else if (licensesError) {
+    accessTitle = 'Não foi possível consultar suas licenças'
+    accessDetail = 'Tente atualizar a consulta.'
+  } else if (expiry?.paused) {
+    accessTitle = 'Licença pausada'
+    accessDetail = 'Abra os detalhes da licença para retomar o acesso.'
+  } else if (expiry?.active && currentLicense) {
+    accessTitle = planLabel(currentLicense.plan_slug, currentLicense.is_trial)
+    if (daysLeft === null) {
+      accessDetail = 'Acesso ativo'
+    } else if (daysLeft <= 0) {
+      accessDetail = 'Prazo da licença atingido'
+    } else if (daysLeft === 1) {
+      accessDetail = '1 dia restante de licença'
+    } else {
+      accessDetail = daysLeft + ' dias restantes de licença'
+    }
+    planActionLabel = expiry.kind === 'trial' ? 'Ver planos após o teste' : 'Renovar licença'
+  }
 
   const copyPrimary = () => {
     if (primary) {
@@ -382,7 +406,7 @@ function DashboardPage() {
 
               <section className="enterprise-surface relative overflow-hidden border-primary/20 p-5 shadow-[0_22px_70px_-48px_var(--primary)] md:p-6">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
-                <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_220px] lg:items-stretch">
+                <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-stretch">
                   <div className="flex items-center gap-5">
                     <div className="rounded-full border border-primary/20 bg-background/70 p-2 shadow-sm">
                       {displayAvatar ? (
@@ -393,24 +417,34 @@ function DashboardPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="mb-1 flex flex-wrap items-center gap-2 font-mono text-[9px] uppercase text-muted-foreground">
-                        Console do cliente <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-primary">Alpha-Ops</span>
+                        Painel do cliente
                       </div>
                       <h1 className="truncate text-3xl font-bold text-foreground md:text-4xl">{displayName}</h1>
                       <div className="mt-2 flex items-center gap-4 font-mono text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-primary" /> {new Date().toLocaleDateString('pt-BR')}</span>
-                        <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" /> {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                         <InAppNotifications />
                       </div>
                     </div>
                   </div>
-                  <div className={`flex min-h-28 shrink-0 flex-col justify-between rounded-md border px-4 py-3 font-mono shadow-sm ${statusRing}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className={`text-[9px] font-bold uppercase tracking-widest ${statusColor}`}>Status operacional</span>
-                      {activeLicense ? <CircleCheck className={`h-4 w-4 ${statusColor}`} /> : <TriangleAlert className={`h-4 w-4 ${statusColor}`} />}
-                    </div>
-                    <div>
-                      <div className={`text-2xl font-black ${statusColor}`}>{lifetimeActive ? 'Vitalício' : daysLeft === null ? 'Sem acesso' : `${String(daysLeft).padStart(2, '0')} dias`}</div>
-                      <div className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">{licenses?.length || 0} licença(s) registrada(s)</div>
+                  <div className="min-w-0 rounded-xl border border-primary/25 bg-primary/5 p-4">
+                    <p className="flex items-center gap-2 text-xs font-semibold text-primary">
+                      <KeyRound aria-hidden="true" className="h-4 w-4" />
+                      Seu acesso
+                    </p>
+                    <h2 className="mt-2 text-lg font-bold text-foreground">{accessTitle}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{accessDetail}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {licensesLoading || user === undefined ? null : licensesError ? (
+                        <Button size="sm" onClick={() => void refetchLicenses()}>Tentar novamente</Button>
+                      ) : showPlanAction ? (
+                        <Button size="sm" asChild><Link to="/planos">{planActionLabel} <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link></Button>
+                      ) : (
+                        <Button size="sm" asChild><a href="#minhas-licencas">Gerenciar licenças <ArrowRight aria-hidden="true" className="h-4 w-4" /></a></Button>
+                      )}
+                      {expiry?.active && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href="#downloads"><Download aria-hidden="true" className="h-4 w-4" /> Downloads</a>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -419,7 +453,9 @@ function DashboardPage() {
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Minha conta</p>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={copyPrimary} disabled={!primary} className="font-mono text-[10px] uppercase"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar credenciais</Button>
-                      <Link to="/planos"><Button size="sm" className="font-mono text-[10px] uppercase"><ShoppingBag className="mr-1.5 h-3.5 w-3.5" /> Renovar agora</Button></Link>
+                      {!showPlanAction && (
+                        <Button size="sm" variant="outline" asChild><Link to="/planos">Ver planos</Link></Button>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2 bg-card/80 p-3">
@@ -430,10 +466,10 @@ function DashboardPage() {
                         variant="outline"
                         onClick={handleSync}
                         disabled={syncing}
-                        className="font-mono text-[10px] uppercase rgb-button-animated border-none"
+                        className="font-mono text-[10px] uppercase"
                       >
                         <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} />
-                        {syncing ? "Sincronizando..." : "Corrigir Erros"}
+                        {syncing ? "Sincronizando..." : "Sincronizar acesso"}
                       </Button>
                       <Link to="/play-protect"><Button size="sm" variant="outline" className="font-mono text-[10px] uppercase text-amber-500 border-amber-500/30 hover:bg-amber-500/5"><ShieldCheck className="mr-1.5 h-3.5 w-3.5" /> Bypass Play Protect (APK)</Button></Link>
                     </div>
@@ -562,10 +598,10 @@ function DashboardPage() {
                 </section>
               )}
 
-              <section className="enterprise-surface overflow-hidden shadow-[0_0_25px_rgba(var(--primary),0.05)] border-primary/10" aria-labelledby="licenses-title">
+              <section id="minhas-licencas" tabIndex={-1} className="enterprise-surface scroll-mt-6 overflow-hidden shadow-[0_0_25px_rgba(var(--primary),0.05)] border-primary/10" aria-labelledby="licenses-title">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4 bg-primary/5">
                   <div>
-                    <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase tracking-widest text-primary">Status Operacional</h2>
+                    <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase tracking-widest text-primary">Minhas licenças</h2>
                     <p className="mt-1 text-[10px] uppercase tracking-tighter text-muted-foreground/60">Acessos vinculados à sua conta empresarial</p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -862,7 +898,7 @@ function DashboardPage() {
                   </div>
               </section>
 
-              <section id="downloads" className="enterprise-surface scroll-mt-6 overflow-hidden" aria-labelledby="downloads-title">
+              <section id="downloads" tabIndex={-1} className="enterprise-surface scroll-mt-6 overflow-hidden" aria-labelledby="downloads-title">
                 <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
                   <div><h2 id="downloads-title" className="font-mono text-sm font-bold uppercase">Downloads</h2><p className="mt-1 text-xs text-muted-foreground">Arquivos liberados para o seu plano</p></div>
                   <Download className="h-5 w-5 text-primary" />
