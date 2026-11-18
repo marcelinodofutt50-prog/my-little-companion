@@ -679,6 +679,10 @@ export const adminSetRole = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.userId === context.userId) {
+      if (data.role === "admin") return { ok: true, role: data.role };
+      throw new Error("Você não pode remover seu próprio acesso de administrador.");
+    }
     // Wipe existing roles, then insert the new one
     const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
     if (del.error) throw new Error(`Falha ao limpar papéis: ${del.error.message}`);
@@ -705,9 +709,16 @@ export const adminSetRoleByEmail = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.toLowerCase();
-    const { data: prof } = await supabaseAdmin
-      .from("profiles").select("id,email").ilike("email", email).maybeSingle();
+    const profiles = supabaseAdmin.from("profiles").select("id,email");
+    const emailPattern = email.replace(/[\\%_]/g, "\\$&");
+    const match = email.includes("*") ? profiles.eq("email", email) : profiles.ilike("email", emailPattern);
+    const { data: prof, error: lookupError } = await match.maybeSingle();
+    if (lookupError) throw new Error("Não foi possível consultar a conta.");
     if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
+    if (prof.id === context.userId) {
+      if (data.role === "admin") return { ok: true, email: prof.email, role: data.role };
+      throw new Error("Você não pode remover seu próprio acesso de administrador.");
+    }
     const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", prof.id);
     if (del.error) throw new Error(`Falha ao limpar papéis: ${del.error.message}`);
     const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: prof.id, role: data.role });
@@ -727,12 +738,17 @@ export const adminListRoles = createServerFn({ method: "GET" })
     // por-usuário, então o client do próprio admin devolveria só a
     // linha dele e a aba Equipe mostrava todo mundo como "cliente".
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.from("user_roles").select("user_id, role");
-    if (error) {
-      const fb = await context.supabase.from("user_roles").select("user_id, role");
-      return fb.data ?? [];
+    const roles: { user_id: string; role: string }[] = [];
+    const pageSize = 250;
+    while (true) {
+      const { data, error } = await supabaseAdmin.from("user_roles")
+        .select("user_id, role")
+        .order("id", { ascending: true })
+        .range(roles.length, roles.length + pageSize - 1);
+      if (error || !data) throw new Error("Não foi possível carregar os cargos da equipe.");
+      if (data.length === 0) return roles;
+      roles.push(...data);
     }
-    return data ?? [];
   });
 
 // ---- Client license operations ----
@@ -1775,13 +1791,10 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     try {
-      // Otimização: A verificação de staff agora usa resolveRoles para evitar recursividade
       const { resolveRoles } = await import("./roles.server");
-      const { isStaff } = await resolveRoles({ supabase: context.supabase, userId: context.userId });
-      if (!isStaff) {
-        // Clientes comuns também passam por aqui no carregamento — apenas ignora.
-        return { ok: false, skipped: true };
-      }
+      const { isAdmin } = await resolveRoles(context);
+      if (!isAdmin) return { ok: false, skipped: true };
+      await assertAdmin(context);
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       

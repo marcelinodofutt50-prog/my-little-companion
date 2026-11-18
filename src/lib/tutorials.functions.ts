@@ -57,54 +57,19 @@ export const listTutorials = createServerFn({ method: "GET" })
     }).optional()
   }).optional().parse(d || {}))
   .middleware([requireSupabaseAuth])
-  .handler(async ({ data: input, context }): Promise<any[]> => {
-    const metadata = input?.metadata || {};
-    
-    const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
-      const timestamp = new Date().toISOString();
-      console.log(`[tutorials] [${timestamp}] [DEBUG] Busca de módulos (Tentativa ${attempt})...`);
-      
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      
-      if (input?.metadata?.force_repair) {
-        console.warn(`[tutorials] [${timestamp}] [RECOVERY] Reparo forçado solicitado.`);
-        await supabaseAdmin.rpc("force_refresh_schema_permissions");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+  .handler(async ({ context }): Promise<any[]> => {
+    await assertStaff(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("tutorials")
+      .select("*")
+      .order("display_order", { ascending: true });
 
-      const { data: clientData, error: clientError, status, statusText } = await supabaseAdmin
-        .from("tutorials")
-        .select("*")
-        .order("display_order", { ascending: true });
-          
-      if (clientError) {
-        console.error(`[tutorials] [${timestamp}] [ERROR] Falha na busca:`, {
-          code: clientError.code,
-          message: clientError.message,
-          http_status: status,
-          http_text: statusText
-        });
-
-        const isPGRST = clientError.code === 'PGRST108' || 
-                        clientError.message?.includes('schema cache') || 
-                        clientError.code === '42P01' ||
-                        clientError.code === '42703';
-        
-        if (isPGRST && attempt <= 3) {
-          console.warn(`[tutorials] [${timestamp}] [RECOVERY] Erro de schema. Tentando reparo (${attempt}/3)...`);
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          await new Promise(resolve => setTimeout(resolve, 1500 * attempt));
-          return fetchWithRetry(attempt + 1);
-        }
-        return [];
-      }
-
-      const results = (clientData || []).filter(item => item && item.id && (item.title || item.category));
-      console.log(`[tutorials] [${timestamp}] [SUCCESS] Cliente retornou ${results.length} módulos.`);
-      return results;
-    };
-
-    return await fetchWithRetry();
+    if (error) {
+      console.error("[tutorials] Falha na consulta administrativa", { code: error.code });
+      throw new Error("Não foi possível carregar as aulas.");
+    }
+    return data ?? [];
   });
 
 export const adminSaveTutorial = createServerFn({ method: "POST" })

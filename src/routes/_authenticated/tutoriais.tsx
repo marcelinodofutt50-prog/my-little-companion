@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { getLifetimeLessons } from "@/lib/lifetime-lessons.functions";
 import { getTutorials } from "@/lib/tutorial-loader.functions";
 import { getTutorialProgress, toggleTutorialStatus } from "@/lib/tutorial-progress.functions";
 import { useTutorialMedia } from "@/lib/tutorial-media";
@@ -220,6 +221,7 @@ function TutorialsPage() {
           <AppSidebar />
         </div>
         <main className="flex-1 overflow-y-auto relative z-10">
+          <LifetimeLessons />
           <SiteHeader />
           <HealthWidget />
           <div className="container mx-auto px-4 py-8">
@@ -875,5 +877,67 @@ function HealthWidget() {
         <span className="text-yellow-500">24H DURATION</span>
       </div>
     </div>
+  );
+}
+
+function LifetimeLessons() {
+  const loadLessons = useServerFn(getLifetimeLessons);
+  const [state, setState] = useState<
+    | { status: "idle" | "loading" | "locked" | "error" }
+    | { status: "ready"; lessons: NonNullable<Awaited<ReturnType<typeof getLifetimeLessons>>> }
+  >({ status: "idle" });
+
+  async function openLessons() {
+    setState({ status: "loading" });
+    try {
+      const lessons = await loadLessons();
+      setState(lessons ? { status: "ready", lessons } : { status: "locked" });
+    } catch {
+      setState({ status: "error" });
+    }
+  }
+
+  return (
+    <section aria-labelledby="lifetime-lessons-title" className="mx-auto my-6 w-[calc(100%-2rem)] max-w-5xl rounded-xl border border-border bg-card p-5 text-card-foreground sm:p-6">
+      <h2 id="lifetime-lessons-title" className="flex items-center gap-2 text-lg font-semibold">
+        <ShieldCheck aria-hidden="true" className="size-5 text-primary" />
+        Aulas exclusivas Vitalício
+      </h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Guias de segurança da conta, renovação de servidor e solução de problemas de acesso.
+      </p>
+      <div className="mt-4" aria-live="polite">
+        {state.status === "locked" && (
+          <p className="text-sm text-muted-foreground">Disponível para contas com uma licença Vitalício habilitada.</p>
+        )}
+        {state.status === "error" && (
+          <p className="mb-3 text-sm text-muted-foreground">Não foi possível carregar os guias. Tente novamente.</p>
+        )}
+        {(state.status === "locked" || state.status === "ready") && (
+          <Button type="button" variant="outline" size="sm" className="my-3" onClick={openLessons}>
+            Verificar novamente
+          </Button>
+        )}
+        {state.status === "ready" ? (
+          <div className="grid gap-3">
+            {state.lessons.length === 0 && (
+              <p className="text-sm text-muted-foreground">Ainda não há guias Vitalício publicados.</p>
+            )}
+            {state.lessons.map((lesson) => (
+              <details key={lesson.id} className="rounded-lg border border-border p-4">
+                <summary className="cursor-pointer font-medium">{lesson.title}</summary>
+                <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">
+                  {lesson.steps.map((step) => <li key={step}>{step}</li>)}
+                </ol>
+              </details>
+            ))}
+          </div>
+        ) : state.status !== "locked" && (
+          <Button type="button" onClick={openLessons} disabled={state.status === "loading"}>
+            {state.status === "loading" ? "Verificando licença…" : state.status === "error" ? "Tentar novamente" : "Abrir aulas"}
+          </Button>
+        )}
+      </div>
+    </section>
   );
 }

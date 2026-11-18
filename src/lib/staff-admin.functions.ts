@@ -159,8 +159,11 @@ export const staffAssignRole = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.toLowerCase();
-    const { data: profile } = await supabaseAdmin
-      .from("profiles").select("id, email").ilike("email", email).maybeSingle();
+    const profiles = supabaseAdmin.from("profiles").select("id, email");
+    const emailPattern = email.replace(/[\\%_]/g, "\\$&");
+    const match = email.includes("*") ? profiles.eq("email", email) : profiles.ilike("email", emailPattern);
+    const { data: profile, error: lookupError } = await match.maybeSingle();
+    if (lookupError) throw new Error("Não foi possível consultar a conta.");
     if (!profile) throw new Error("Nenhuma conta encontrada com esse e-mail.");
     const { data: existing } = await supabaseAdmin
       .from("user_roles").select("id").eq("user_id", profile.id).eq("role", data.role).maybeSingle();

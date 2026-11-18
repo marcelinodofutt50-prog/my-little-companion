@@ -15,14 +15,6 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     
-    // Auto-repair schema if needed
-    try {
-      console.log("[public-tutorials] Pre-flight schema check...");
-      await supabaseAdmin.rpc("force_refresh_schema_permissions");
-    } catch (e) {
-      console.warn("[public-tutorials] Pre-fetch schema refresh skipped:", e);
-    }
-
     let query = supabaseAdmin
       .from("tutorials")
       .select("*", { count: "exact" })
@@ -52,30 +44,7 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
         details: error.details
       });
       
-      const isSchemaError = error.message?.includes("schema cache") || 
-                           error.message?.includes("does not exist") ||
-                           error.code === 'PGRST108';
-                           
-      if (isSchemaError) {
-        console.warn("[public-tutorials] Schema cache issue detected. Attempting recovery...");
-        try {
-          await supabaseAdmin.rpc("force_refresh_schema_permissions");
-          await new Promise(r => setTimeout(r, 1000));
-          const { data: retryData, error: retryError, count: retryCount } = await query;
-          if (!retryError) {
-            return {
-              items: retryData ?? [],
-              total: retryCount ?? 0,
-              page: data.page,
-              limit: data.limit
-            };
-          }
-        } catch (repairErr) {
-          console.error("[public-tutorials] Recovery failed:", repairErr);
-        }
-      }
-      
-      throw new Error(`Erro ao listar tutoriais: ${error.message} (${error.code})`);
+      throw new Error("Não foi possível carregar os tutoriais.");
     }
 
     return {
@@ -124,9 +93,17 @@ export const signTutorialMedia = createServerFn({ method: "POST" })
       .select("video_url, image_url")
       .eq("is_active", true)
       .limit(500);
-    // O arquivo precisa ser EXATAMENTE a mídia de um tutorial ativo.
-    const matches = (u: string | null) =>
-      !!u && (u === path || u.endsWith("/" + path) || u.split("?")[0].endsWith("/" + path));
+    const matches = (value: string | null) => {
+      if (!value) return false;
+      if (value === path) return true;
+      const objectPath = value.match(/^https?:\/\/[^/?#]+\/storage\/v1\/object\/(?:public|sign)\/tutorials\/([^?#]+)(?:[?#]|$)/i)?.[1];
+      if (!objectPath) return false;
+      try {
+        return decodeURIComponent(objectPath) === path;
+      } catch {
+        return false;
+      }
+    };
     const owner = (rows ?? []).find((r: any) => matches(r.video_url) || matches(r.image_url));
 
     if (!owner) return { url: null as string | null };

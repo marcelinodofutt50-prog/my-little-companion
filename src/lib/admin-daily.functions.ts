@@ -20,11 +20,30 @@ export const adminDailySummary = createServerFn({ method: "GET" })
     const { assertStaffRole } = await import("@/lib/roles.server");
     await assertStaffRole(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const since = new Date(Date.now() - 86400000).toISOString();
+    const now = Date.now();
+    const end = new Date(now).toISOString();
+    const since = new Date(now - 86400000).toISOString();
     const db: any = supabaseAdmin;
 
+    const pageSize = 500;
+    const readSales = async () => {
+      let salesCount = 0;
+      let salesTotal = 0;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await db.from("orders").select("amount")
+          .eq("status", "paid").gte("paid_at", since).lte("paid_at", end)
+          .order("id", { ascending: true }).range(offset, offset + pageSize - 1);
+        if (error) throw new Error("Não foi possível consultar as vendas do dia.");
+        for (const { amount } of data) {
+          salesCount++;
+          salesTotal += Number(amount ?? 0);
+        }
+        if (data.length < pageSize) return { salesCount, salesTotal };
+      }
+    };
+
     const [paid, stalled, trials, blocks, healOk, healFail, panelErr] = await Promise.all([
-      db.from("orders").select("amount").eq("status", "paid").gte("paid_at", since).range(0, 999),
+      readSales(),
       db.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending").is("mp_preference_id", null).gte("created_at", since),
       db.from("licenses").select("id", { count: "exact", head: true }).eq("is_trial", true).gte("created_at", since),
       db.from("trial_blocks").select("id", { count: "exact", head: true }).gte("created_at", since),
@@ -32,10 +51,11 @@ export const adminDailySummary = createServerFn({ method: "GET" })
       db.from("integration_logs").select("id", { count: "exact", head: true }).eq("action", "license_heal_login").not("outcome", "in", "(created,recreated,already_ok)").gte("created_at", since),
       db.from("integration_logs").select("id", { count: "exact", head: true }).like("source", "yaarsa%").eq("outcome", "yaarsa_fail").gte("created_at", since),
     ]);
-    const rows = (paid.data ?? []) as { amount: number }[];
+    if ([stalled, trials, blocks, healOk, healFail, panelErr].some((result) => result.error)) {
+      throw new Error("Não foi possível consultar todos os indicadores do dia.");
+    }
     return {
-      salesCount: rows.length,
-      salesTotal: rows.reduce((s, r) => s + Number(r.amount || 0), 0),
+      ...paid,
       stalledOrders: stalled.count ?? 0,
       trialsCreated: trials.count ?? 0,
       trialsBlocked: blocks.count ?? 0,
