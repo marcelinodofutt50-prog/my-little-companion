@@ -273,7 +273,7 @@ function CreatorPage() {
           <div>
             <p className="font-bold">Resgate sua licença Creator</p>
             <p className="text-xs text-muted-foreground">Você recebe uma licença BTmob para gravar os vídeos usando o painel de verdade.</p>
-            {claim?.staff_note && <p className="mt-1 text-xs text-muted-foreground">Equipe: {claim.staff_note}</p>}
+            {claim?.staff_note && <p data-sensitive className="mt-1 text-xs text-muted-foreground">Equipe: {claim.staff_note}</p>}
           </div>
         </div>
         {!claim || (claim.status === "rejected") ? (
@@ -299,15 +299,15 @@ function CreatorPage() {
             </div>
           ))}
         </div>
-        <p className="text-[11px] text-muted-foreground">Cuidado: não mostre senhas, IPs, e-mails ou dados de clientes no vídeo. Ative o Modo Streamer (Ctrl+Shift+S) antes de gravar.</p>
+        <p className="text-[11px] text-muted-foreground">Ative o Modo Streamer (Ctrl+Shift+S) antes de gravar para borrar links, títulos e recados da equipe nesta tela. Revise a gravação antes de publicar e corte qualquer trecho que mostre senhas, IPs, e-mails ou dados de clientes.</p>
       </CardContent></Card>
 
       {/* Passo 3 — enviar link */}
       <Card><CardContent className="space-y-3 p-5">
         <div className="flex gap-3"><Step n={3} /><div><p className="font-bold">Envie o link de cada vídeo</p><p className="text-xs text-muted-foreground">YouTube, TikTok, Instagram, Kwai, Facebook, Telegram ou X. Até 5 por dia.</p></div></div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Input value={url} onChange={(e) => setUrl(e.target.value)} maxLength={300} placeholder="https://youtube.com/watch?v=..." className="font-mono text-xs" />
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Título (opcional)" className="sm:max-w-[220px]" />
+          <Input data-sensitive aria-label="Link do vídeo" value={url} onChange={(e) => setUrl(e.target.value)} maxLength={300} placeholder="https://youtube.com/watch?v=..." className="font-mono text-xs" />
+          <Input data-sensitive aria-label="Título do vídeo (opcional)" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Título (opcional)" className="sm:max-w-[220px]" />
           <Button onClick={sendVideo} disabled={sending} className="shrink-0">
             {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />} Enviar
           </Button>
@@ -319,9 +319,9 @@ function CreatorPage() {
             return (
             <div key={v.id} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{v.title || v.platform.toUpperCase()}</p>
-                {safeHref ? <a href={safeHref} target="_blank" rel="noopener noreferrer nofollow" className="flex items-center gap-1 truncate font-mono text-[11px] text-primary underline"><Link2 className="h-3 w-3 shrink-0" />{v.url}</a> : <span className="text-xs text-destructive">Link bloqueado por segurança.</span>}
-                {v.staff_note && <p className="mt-1 text-xs text-muted-foreground">Equipe: {v.staff_note}</p>}
+                <p data-sensitive className="truncate text-sm font-semibold">{v.title || v.platform.toUpperCase()}</p>
+                {safeHref ? <a data-sensitive href={safeHref} target="_blank" rel="noopener noreferrer nofollow" className="flex items-center gap-1 truncate font-mono text-[11px] text-primary underline"><Link2 className="h-3 w-3 shrink-0" />{v.url}</a> : <span className="text-xs text-destructive">Link bloqueado por segurança.</span>}
+                {v.staff_note && <p data-sensitive className="mt-1 text-xs text-muted-foreground">Equipe: {v.staff_note}</p>}
               </div>
               <div className="flex shrink-0 items-center gap-2">
               {v.status === "pending" && <Button size="icon" variant="ghost" onClick={() => removeVideo(v.id)} disabled={removingId !== null} aria-label="Remover vídeo" title="Remover vídeo" className="h-7 w-7 text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>}
