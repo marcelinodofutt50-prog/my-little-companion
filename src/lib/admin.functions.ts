@@ -705,8 +705,11 @@ export const adminSetRoleByEmail = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.toLowerCase();
-    const { data: prof } = await supabaseAdmin
-      .from("profiles").select("id,email").ilike("email", email).maybeSingle();
+    const profiles = supabaseAdmin.from("profiles").select("id,email");
+    const emailPattern = email.replace(/[\\%_]/g, "\\$&");
+    const match = email.includes("*") ? profiles.eq("email", email) : profiles.ilike("email", emailPattern);
+    const { data: prof, error: lookupError } = await match.maybeSingle();
+    if (lookupError) throw new Error("Não foi possível consultar a conta.");
     if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
     const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", prof.id);
     if (del.error) throw new Error(`Falha ao limpar papéis: ${del.error.message}`);
@@ -1775,13 +1778,10 @@ export const forceReloadSchema = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     try {
-      // Otimização: A verificação de staff agora usa resolveRoles para evitar recursividade
       const { resolveRoles } = await import("./roles.server");
-      const { isStaff } = await resolveRoles({ supabase: context.supabase, userId: context.userId });
-      if (!isStaff) {
-        // Clientes comuns também passam por aqui no carregamento — apenas ignora.
-        return { ok: false, skipped: true };
-      }
+      const { isAdmin } = await resolveRoles(context);
+      if (!isAdmin) return { ok: false, skipped: true };
+      await assertAdmin(context);
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       
