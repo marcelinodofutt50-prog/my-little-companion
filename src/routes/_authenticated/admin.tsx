@@ -354,6 +354,7 @@ function AdminPage() {
   const totalPending = navBadges.chat + navBadges.orders + navBadges.refunds + navBadges.apk;
   const [licenses, setLicenses] = useState<any[]>([]);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
+  const [rolesError, setRolesError] = useState(false);
   const [badges, setBadges] = useState<{ user_id: string; plan: string }[]>([]);
   const [email, setEmail] = useState("");
   const [licKind, setLicKind] = useState<"all" | "trial" | "paid">("all");
@@ -506,11 +507,14 @@ function AdminPage() {
     if (inflightRef.current.roles) return inflightRef.current.roles;
     const p = rolesFn()
       .then((r) => {
-        setRoles(r as any);
+        setRoles(r);
+        setRolesError(false);
         loadedRef.current.roles = true;
         return r;
       })
-      .catch(() => {})
+      .catch(() => {
+        setRolesError(true);
+      })
       .finally(() => {
         inflightRef.current.roles = undefined;
       });
@@ -719,7 +723,7 @@ function AdminPage() {
     const label = role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente";
     try {
       await setRoleFn({ data: { userId, role } });
-      setRoles((await rolesFn()) as any);
+      void loadRoles();
       toast.success(`Cargo atualizado para ${label}`, {
         description:
           role === "user"
@@ -738,7 +742,7 @@ function AdminPage() {
     setStaffBusy(true);
     try {
       const r: any = await setRoleEmailFn({ data: { email, role } });
-      setRoles((await rolesFn()) as any);
+      void loadRoles();
       setStaffEmail("");
       toast.success(
         `${r.email} agora é ${role === "admin" ? "Admin" : role === "moderator" ? "Suporte" : "Cliente"}`,
@@ -2338,6 +2342,14 @@ function AdminPage() {
 
             {tab === "staff" && (
               <div className="space-y-4">
+                {rolesError && (
+                  <div role="alert" className="rounded-lg border border-destructive/40 p-3 text-sm">
+                    Não foi possível atualizar a lista de cargos. Os dados exibidos podem estar incompletos ou desatualizados.
+                    <Button type="button" variant="outline" size="sm" className="ml-2" onClick={() => void loadRoles()}>
+                      Tentar novamente
+                    </Button>
+                  </div>
+                )}
                 <AdminPermissionsMatrix />
                 <div className="terminal-card scanlines relative overflow-hidden">
                   <div className="border-b border-border/40 p-3 font-mono text-xs uppercase text-muted-foreground">
