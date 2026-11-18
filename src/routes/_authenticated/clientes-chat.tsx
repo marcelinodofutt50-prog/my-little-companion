@@ -54,7 +54,15 @@ function CustomerChatPage() {
   const [me, setMe] = useState<{ id: string; staff: boolean } | null>(null);
   const [channel, setChannel] = useState<ChannelId>("geral");
   const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [text, setText] = useState("");
+  const [drafts, setDrafts] = useState<Partial<Record<ChannelId, string>>>({});
+  const text = drafts[channel] ?? "";
+  const [loadingMessages, setLoadingMessages] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reload, setReload] = useState(0);
+  const [newMessages, setNewMessages] = useState(false);
+  const selectedChannel = useRef<ChannelId>("geral");
+  const followLatest = useRef(true);
+  const sendLock = useRef(false);
   const [sending, setSending] = useState(false);
   const [receiptOrders,setReceiptOrders] = useState<MyOrder[] | null>(null);
   const [receiptOrder,setReceiptOrder] = useState('');
@@ -80,22 +88,35 @@ function CustomerChatPage() {
   useEffect(() => {
     if (!allowed) return;
     let alive = true;
+    let loadingSnapshot = true;
+    const changed = new Map<string, Msg>();
     (async () => {
       const { data, error } = await db
         .from("customer_chat_messages")
         .select("id,channel,user_id,author_name,author_avatar,is_staff,content,deleted_at,created_at")
         .eq("channel", channel).is("deleted_at", null)
         .order("created_at", { ascending: false }).range(0, 99);
-      if (!alive) return;
-      if (error) toast.error(error.message);
-      setMsgs(sortMsgs((data ?? []) as Msg[]));
+      if (!alive || selectedChannel.current !== channel) return;
+      loadingSnapshot = false;
+      setLoadingMessages(false);
+      setLoadError(Boolean(error));
+      if (error) return;
+      const rows = new Map(((data ?? []) as Msg[]).map((row) => [row.id, row]));
+      for (const row of changed.values()) {
+        if (row.deleted_at) rows.delete(row.id);
+        else rows.set(row.id, row);
+      }
+      setMsgs(sortMsgs([...rows.values()]).slice(-200));
+      changed.clear();
     })();
     const sub = supabase
       .channel(`customer-chat-${channel}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "customer_chat_messages", filter: `channel=eq.${channel}` },
         (p: any) => {
           const row = p.new as Msg;
-          if (!row?.id) return;
+          if (!alive || selectedChannel.current !== channel || !row?.id) return;
+          if (loadingSnapshot) changed.set(row.id, row);
+          if (p.eventType === "INSERT" && !followLatest.current) setNewMessages(true);
           setMsgs((cur) => {
             if (row.deleted_at) return cur.filter((m) => m.id !== row.id);
             const rest = cur.filter((m) => m.id !== row.id);
@@ -104,24 +125,46 @@ function CustomerChatPage() {
         })
       .subscribe();
     return () => { alive = false; supabase.removeChannel(sub); };
-  }, [allowed, channel]);
+  }, [allowed, channel, reload]);
 
   useEffect(() => {
     const el = scroller.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && followLatest.current) el.scrollTop = el.scrollHeight;
   }, [msgs]);
+
+  function selectChannel(next: ChannelId) {
+    if (selectedChannel.current === next) return;
+    selectedChannel.current = next;
+    followLatest.current = true;
+    setNewMessages(false);
+    setMsgs([]);
+    setLoadError(false);
+    setLoadingMessages(true);
+    setChannel(next);
+  }
 
   async function send() {
     const content = text.trim();
-    if (!content || sending) return;
+    if (!content || sendLock.current || loadingMessages || loadError) return;
+    sendLock.current = true;
     setSending(true);
-    const { data, error } = await db.from("customer_chat_messages")
-      .insert({ channel, content })
-      .select("id,channel,user_id,author_name,author_avatar,is_staff,content,deleted_at,created_at").single();
-    setSending(false);
-    if (error) return toast.error(error.message);
-    setText("");
-    setMsgs((cur) => sortMsgs([...cur.filter((m) => m.id !== data.id), data]));
+    try {
+      const { data, error } = await db.from("customer_chat_messages")
+        .insert({ channel, content })
+        .select("id,channel,user_id,author_name,author_avatar,is_staff,content,deleted_at,created_at").single();
+      if (error || !data) throw error;
+      setDrafts((draft) => draft[channel] === text ? { ...draft, [channel]: "" } : draft);
+      if (selectedChannel.current === channel) {
+        followLatest.current = true;
+        setNewMessages(false);
+        setMsgs((cur) => sortMsgs([...cur.filter((m) => m.id !== data.id), data]).slice(-200));
+      }
+    } catch {
+      toast.error("Não foi possível enviar. Seu rascunho foi mantido.");
+    } finally {
+      sendLock.current = false;
+      setSending(false);
+    }
   }
 
   async function remove(id: string) {
@@ -155,14 +198,14 @@ function CustomerChatPage() {
   return (
     <div className="container mx-auto flex h-[calc(100dvh-100px)] max-w-6xl flex-col gap-4 p-3 md:p-6">
       <BackToDashboard />
-      <div className="flex min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card/40">
-        <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-card/60 md:flex">
+      <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-muted/30 md:flex">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3 font-display text-sm font-black uppercase">
             <Users className="h-4 w-4 text-primary" /> Clientes Shadow
           </div>
           <nav className="flex-1 space-y-1 p-2">
             {CHANNELS.map((c) => (
-              <button key={c.id} onClick={() => { setMsgs([]); setChannel(c.id); }}
+              <button key={c.id} type="button" onClick={() => selectChannel(c.id)} aria-current={channel === c.id ? "true" : undefined}
                 className={cn("flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors",
                   channel === c.id ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:bg-muted/40 hover:text-foreground")}>
                 <Hash className="h-4 w-4" /> {c.label}
@@ -182,7 +225,7 @@ function CustomerChatPage() {
           </header>
           <div className="flex gap-1 overflow-x-auto border-b border-border p-2 md:hidden">
             {CHANNELS.map((c) => (
-              <button key={c.id} onClick={() => { setMsgs([]); setChannel(c.id); }}
+              <button key={c.id} type="button" onClick={() => selectChannel(c.id)} aria-current={channel === c.id ? "true" : undefined}
                 className={cn("shrink-0 rounded-full px-3 py-1 text-xs",
                   channel === c.id ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground")}>
                 #{c.label}
@@ -190,12 +233,27 @@ function CustomerChatPage() {
             ))}
           </div>
 
-          <div ref={scroller} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-            {msgs.length === 0 && (
+          <div ref={scroller} onScroll={(event) => {
+            const el = event.currentTarget;
+            followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 64;
+            if (followLatest.current) setNewMessages(false);
+          }} className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-4 sm:px-5">
+            {loadingMessages && <p role="status" className="py-8 text-center text-sm text-muted-foreground">Carregando mensagens…</p>}
+            {loadError && (
+              <div role="alert" className="flex flex-wrap items-center justify-center gap-2 py-4 text-sm text-muted-foreground">
+                Não foi possível carregar o canal.
+                <Button size="sm" variant="outline" onClick={() => {
+                  setLoadingMessages(true);
+                  setLoadError(false);
+                  setReload((n) => n + 1);
+                }}>Tentar novamente</Button>
+              </div>
+            )}
+            {!loadingMessages && !loadError && msgs.length === 0 && (
               <p className="py-10 text-center text-sm text-muted-foreground">Nenhuma mensagem em #{current.label} ainda. Puxe o assunto!</p>
             )}
             {msgs.map((m) => (
-              <div key={m.id} className="group flex gap-3">
+              <div key={m.id} className="group flex gap-3 rounded-lg px-2 py-2 hover:bg-muted/35">
                 {m.author_avatar ? (
                   <img src={m.author_avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
                 ) : (
@@ -204,7 +262,7 @@ function CustomerChatPage() {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className={cn("text-sm font-semibold", m.is_staff ? "text-primary" : "text-foreground")}>
                       {m.author_name ?? "Cliente"}
                     </span>
@@ -218,7 +276,7 @@ function CustomerChatPage() {
                     </span>
                     {(m.user_id === me?.id || me?.staff) && (
                       <button onClick={() => remove(m.id)} aria-label="Apagar mensagem"
-                        className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100">
+                        className="ml-auto text-muted-foreground hover:text-destructive focus-visible:text-destructive">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -230,14 +288,21 @@ function CustomerChatPage() {
             <div ref={bottom} />
           </div>
 
+          {newMessages && (
+            <Button className="mx-auto my-2" size="sm" variant="outline" onClick={() => {
+              followLatest.current = true;
+              if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight;
+              setNewMessages(false);
+            }}>Ver mensagens novas</Button>
+          )}
           <div className="border-t border-border px-3 py-2">
             <Button size="sm" variant="ghost" onClick={async () => { setReceiptOpen(v => !v); if (!receiptOrders) { try {setReceiptOrders(await ordersFn({data:{}}));} catch {toast.error('Não foi possível carregar suas compras.');} } }}>Enviar comprovante privado à equipe</Button>
             {receiptOpen && <div className="max-h-80 overflow-y-auto"><label className="block text-xs">Compra<select aria-label="Compra do comprovante" className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm" value={receiptOrder} onChange={e => setReceiptOrder(e.target.value)}><option value="">Selecione sua compra</option>{(receiptOrders ?? []).filter(o => o.paid_at || ['paid','processing','delivered','refunded'].includes(o.stage)).map(o => <option key={o.id} value={o.id}>{o.plan_name ?? o.plan_slug} · #{o.id.slice(0,8)}</option>)}</select></label>{receiptOrder && <PurchaseReceiptForm key={receiptOrder} orderId={receiptOrder} />}</div>}
           </div>
           <form className="flex gap-2 border-t border-border p-3" onSubmit={(e) => { e.preventDefault(); send(); }}>
-            <Input value={text} maxLength={1000} onChange={(e) => setText(e.target.value)}
+            <Input value={text} maxLength={1000} onChange={(e) => setDrafts((draft) => ({ ...draft, [channel]: e.target.value }))} aria-label={`Mensagem para #${current.label}`}
               placeholder={`Conversar em #${current.label}`} />
-            <Button type="submit" disabled={sending || !text.trim()} aria-label="Enviar"><Send className="h-4 w-4" /></Button>
+            <Button type="submit" disabled={sending || loadingMessages || loadError || !text.trim()} aria-label="Enviar"><Send className="h-4 w-4" />{sending ? "Enviando…" : "Enviar"}</Button>
           </form>
         </section>
       </div>
