@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { adminSaveTutorial, adminDeleteTutorial, listTutorials, updateTutorialOrder } from "@/lib/tutorials.functions";
 import { createTutorialUploadUrl, createTutorialPreviewUrl } from "@/lib/tutorial-upload.functions";
+import { adminGetLifetimePublication, adminSaveLifetimePublication } from "@/lib/lifetime-lessons.functions";
 import { useI18n } from "@/lib/i18n";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -308,6 +309,8 @@ export function AdminTutorialsPanel() {
         </div>
       </div>
 
+      <LifetimeGuidePublication />
+
       {isEditing && (
         <Card className="border-primary/20 bg-card backdrop-blur-sm overflow-hidden relative">
           {uploading && (
@@ -596,5 +599,80 @@ export function AdminTutorialsPanel() {
         </div>
       </DndContext>
     </div>
+  );
+}
+
+const lifetimeGuides = [
+  { id: "2fa", title: "Proteção da conta com 2FA" },
+  { id: "renewal", title: "Licenças e renovação de servidor" },
+  { id: "access", title: "Diagnóstico de problemas de acesso" },
+] as const;
+
+function LifetimeGuidePublication() {
+  const read = useServerFn(adminGetLifetimePublication);
+  const save = useServerFn(adminSaveLifetimePublication);
+  type GuideId = (typeof lifetimeGuides)[number]["id"];
+  const [selected, setSelected] = useState<GuideId[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function loadPublication() {
+    setBusy(true);
+    setMessage("");
+    try {
+      setSelected(await read());
+    } catch {
+      setMessage("Não foi possível carregar a configuração. Entre como administrador e tente novamente.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function savePublication(ids: GuideId[]) {
+    setBusy(true);
+    setMessage("");
+    try {
+      setSelected(await save({ data: ids }));
+      setMessage("Publicação atualizada.");
+    } catch {
+      setMessage("Não foi possível salvar. Tente novamente.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Guias exclusivos Vitalício</CardTitle>
+        <CardDescription>Escolha quais guias escritos aparecem para clientes com licença Vitalício habilitada.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {selected === null ? (
+          <Button type="button" variant="outline" disabled={busy} onClick={() => void loadPublication()}>
+            {busy ? "Carregando…" : "Configurar publicação"}
+          </Button>
+        ) : (
+          <>
+            <fieldset disabled={busy} className="grid gap-3">
+              <legend className="sr-only">Guias publicados</legend>
+              {lifetimeGuides.map(({ id, title }) => (
+                <label key={id} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={selected.includes(id)} onChange={(event) => {
+                    setSelected(event.target.checked ? [...selected, id] : selected.filter((value) => value !== id));
+                    setMessage("");
+                  }} />
+                  {title}
+                </label>
+              ))}
+            </fieldset>
+            <Button type="button" disabled={busy} onClick={() => void savePublication(selected)}>
+              {busy ? "Salvando…" : "Salvar publicação"}
+            </Button>
+          </>
+        )}
+        <p role="status" className="text-sm text-muted-foreground">{message}</p>
+      </CardContent>
+    </Card>
   );
 }
