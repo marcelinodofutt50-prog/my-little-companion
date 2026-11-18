@@ -679,6 +679,10 @@ export const adminSetRole = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.userId === context.userId) {
+      if (data.role === "admin") return { ok: true, role: data.role };
+      throw new Error("Você não pode remover seu próprio acesso de administrador.");
+    }
     // Wipe existing roles, then insert the new one
     const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
     if (del.error) throw new Error(`Falha ao limpar papéis: ${del.error.message}`);
@@ -711,6 +715,10 @@ export const adminSetRoleByEmail = createServerFn({ method: "POST" })
     const { data: prof, error: lookupError } = await match.maybeSingle();
     if (lookupError) throw new Error("Não foi possível consultar a conta.");
     if (!prof) throw new Error("Nenhuma conta encontrada com esse e-mail.");
+    if (prof.id === context.userId) {
+      if (data.role === "admin") return { ok: true, email: prof.email, role: data.role };
+      throw new Error("Você não pode remover seu próprio acesso de administrador.");
+    }
     const del = await supabaseAdmin.from("user_roles").delete().eq("user_id", prof.id);
     if (del.error) throw new Error(`Falha ao limpar papéis: ${del.error.message}`);
     const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: prof.id, role: data.role });
@@ -730,12 +738,17 @@ export const adminListRoles = createServerFn({ method: "GET" })
     // por-usuário, então o client do próprio admin devolveria só a
     // linha dele e a aba Equipe mostrava todo mundo como "cliente".
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.from("user_roles").select("user_id, role");
-    if (error) {
-      const fb = await context.supabase.from("user_roles").select("user_id, role");
-      return fb.data ?? [];
+    const roles: { user_id: string; role: string }[] = [];
+    const pageSize = 250;
+    while (true) {
+      const { data, error } = await supabaseAdmin.from("user_roles")
+        .select("user_id, role")
+        .order("id", { ascending: true })
+        .range(roles.length, roles.length + pageSize - 1);
+      if (error || !data) throw new Error("Não foi possível carregar os cargos da equipe.");
+      if (data.length === 0) return roles;
+      roles.push(...data);
     }
-    return data ?? [];
   });
 
 // ---- Client license operations ----
