@@ -63,6 +63,17 @@ function ShadowPassPage() {
     queryFn: () => getShadowPassData(),
   });
 
+  const [activeTab, setActiveTab] = useState('progress');
+  const nexusHeadingRef = useRef<HTMLHeadingElement>(null);
+  const focusNexusOnOpen = useRef(false);
+
+  useEffect(() => {
+    if (activeTab === 'nexus' && focusNexusOnOpen.current) {
+      focusNexusOnOpen.current = false;
+      nexusHeadingRef.current?.focus();
+    }
+  }, [activeTab]);
+
   const winnerBoard = useWinnerBoard();
   const [messageText, setMessageText] = useState("");
   const fetchMessages = useServerFn(getCommunityMessages);
@@ -203,7 +214,7 @@ function ShadowPassPage() {
       <BackToDashboard />
 
       {/* Header Profile */}
-      <header className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-primary/20 bg-card p-5 md:p-10 shadow-2xl">
+      <header className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-primary/20 bg-card p-4 md:p-6 shadow-lg">
         <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
           <Shield className="h-64 w-64 rotate-12" />
         </div>
@@ -211,7 +222,7 @@ function ShadowPassPage() {
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 relative z-10">
           <div className="relative shrink-0 group">
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full group-hover:bg-primary/40 transition-colors" />
-            <Avatar className="h-20 w-20 md:h-32 md:w-32 border-4 border-primary shadow-2xl relative cursor-pointer hover:scale-105 transition-transform overflow-hidden" onClick={() => fileRef.current?.click()}>
+            <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-primary shadow-2xl relative cursor-pointer hover:scale-105 transition-transform overflow-hidden" onClick={() => fileRef.current?.click()}>
               <AvatarImage
                 src={avatarOverride || identity.avatar || (identity.metadata as any)?.avatar_url || undefined}
                 className="object-cover"
@@ -258,7 +269,7 @@ function ShadowPassPage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase italic break-all">
+                  <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase italic break-all">
                     {isAnonymous ? "Membro Anônimo" : identity.nickname}
                   </h1>
                   <Button size="icon" variant="ghost" className="h-6 w-6 opacity-40 hover:opacity-100" onClick={() => setIsEditing(true)}>
@@ -316,16 +327,49 @@ function ShadowPassPage() {
         </div>
       </header>
 
-      <SecurityPinCard className="mb-6" />
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blue-700 bg-gradient-to-br from-slate-950 to-blue-950 p-5 text-white shadow-lg md:p-6">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-2xl font-bold md:text-3xl">
+            <MessageSquare aria-hidden="true" className="h-6 w-6 text-sky-300" />
+            Shadow Nexus
+          </h2>
+          <p className="mt-1 text-sm text-blue-100">
+            {nexusLoading || nexusFault || nexusOnline === 0
+              ? 'Chat da comunidade Shadow.'
+              : nexusOnline === 1
+                ? '1 pessoa conversou nos últimos 15 min.'
+                : `${nexusOnline} pessoas conversaram nos últimos 15 min.`}
+          </p>
+        </div>
+        <Button
+          type="button"
+          className="bg-sky-200 text-slate-950 hover:bg-sky-100"
+          onClick={() => {
+            if (activeTab === 'nexus') {
+              nexusHeadingRef.current?.focus();
+              return;
+            }
+            focusNexusOnOpen.current = true;
+            setActiveTab('nexus');
+          }}
+        >
+          Abrir chat <ChevronRight aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      </section>
 
-      {/* Main Content with Tabs */}
-      <Tabs defaultValue="progress" className="w-full space-y-6 md:space-y-8">
-        <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-8 mb-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-8">
+        <TabsList className="w-full flex-wrap justify-start gap-x-5 gap-y-2 rounded-none border-b border-border/40 bg-transparent p-0 h-auto md:gap-x-8">
           <TabsTrigger 
             value="progress" 
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
           >
-            Progresso & Nexus
+            Progresso
+          </TabsTrigger>
+          <TabsTrigger
+            value="nexus"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent font-mono text-[10px] uppercase tracking-widest px-0 pb-4"
+          >
+            Shadow Nexus
           </TabsTrigger>
           <TabsTrigger 
             value="missions" 
@@ -656,99 +700,6 @@ function ShadowPassPage() {
             )}
           </AnimatePresence>
 
-          {/* Mini Comunidade Anônima */}
-          <section className="space-y-4">
-            <h2 className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Shadow Nexus
-              <Badge variant="outline" className="text-[9px] border-primary/20 text-primary/60">
-                {nexusOnline} ativos
-              </Badge>
-            </h2>
-            <Card className="border-primary/10 bg-card/50 overflow-hidden">
-              <CardContent className="p-0 flex flex-col h-[400px]">
-                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
-                  {nexusFault ? (
-                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
-                      <Ghost className="h-8 w-8 opacity-50" />
-                      <p className="text-[10px] font-mono uppercase tracking-widest">Canal instável</p>
-                      <Button size="sm" variant="outline" onClick={() => refetchNexus()}>Reconectar</Button>
-                    </div>
-                  ) : nexusLoading ? (
-                    <div className="h-full flex items-center justify-center text-muted-foreground opacity-50">
-                      <p className="text-[10px] font-mono uppercase tracking-widest">Conectando ao canal...</p>
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 space-y-2">
-                      <Ghost className="h-8 w-8" />
-                      <p className="text-[10px] font-mono uppercase tracking-widest">Silêncio no vácuo...</p>
-                    </div>
-                  ) : (
-                    messages.map((msg: any) => (
-                      <div key={msg.id} className="flex flex-col space-y-1 group">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-tighter">
-                            {msg.author}
-                          </span>
-                          {msg.vip && msg.vip !== 'none' && (
-                            <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary uppercase">
-                              {msg.vip}
-                            </Badge>
-                          )}
-                          <span className="text-[8px] text-muted-foreground font-mono">
-                            {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ptBR })}
-                          </span>
-                          {msg.isMine && (
-                            <button
-                              type="button"
-                              onClick={() => deleteMessageMutation.mutate({ id: msg.id })}
-                              className="text-[8px] text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity font-mono uppercase"
-                            >
-                              apagar
-                            </button>
-                          )}
-                        </div>
-                        <div className="bg-primary/5 border border-primary/10 rounded-2xl rounded-tl-none px-3 py-2 text-xs leading-relaxed max-w-[90%] break-words">
-                          {msg.content}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-
-                
-                <div className="p-4 border-t border-primary/10 bg-black/20">
-                  <form 
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (messageText.trim()) {
-                        sendMessageMutation.mutate({ content: messageText });
-                      }
-                    }}
-                    className="flex gap-2"
-                  >
-                    <Input 
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      placeholder="Transmissão criptografada..."
-                      className="h-9 text-xs bg-background/50 border-primary/20 focus:border-primary/40"
-                      disabled={sendMessageMutation.isPending}
-                    />
-                    <Button 
-                      size="icon" 
-                      className="h-9 w-9 shrink-0" 
-                      disabled={sendMessageMutation.isPending || !messageText.trim()}
-                    >
-                      {sendMessageMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
-                  </form>
-                  <p className="mt-2 text-[8px] font-mono uppercase text-muted-foreground/60 text-center tracking-widest">
-                    O anonimato é garantido pelo protocolo Shadow Core
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
         </div>
 
         <div className="space-y-6 md:space-y-8">
@@ -861,6 +812,98 @@ function ShadowPassPage() {
             </section>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="nexus" className="m-0">
+        <section className="space-y-4">
+          <h2 ref={nexusHeadingRef} tabIndex={-1} className="text-xl font-display uppercase tracking-tight flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" /> Shadow Nexus
+          </h2>
+          <Card className="border-primary/10 bg-card/50 overflow-hidden">
+            <CardContent className="p-0 flex flex-col h-[400px]">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
+                {nexusFault ? (
+                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
+                    <Ghost className="h-8 w-8 opacity-50" />
+                    <p className="text-[10px] font-mono uppercase tracking-widest">Canal instável</p>
+                    <Button size="sm" variant="outline" onClick={() => refetchNexus()}>Reconectar</Button>
+                  </div>
+                ) : nexusLoading ? (
+                  <div className="h-full flex items-center justify-center text-muted-foreground opacity-50">
+                    <p className="text-[10px] font-mono uppercase tracking-widest">Conectando ao canal...</p>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 space-y-2">
+                    <Ghost className="h-8 w-8" />
+                    <p className="text-[10px] font-mono uppercase tracking-widest">Silêncio no vácuo...</p>
+                  </div>
+                ) : (
+                  messages.map((msg: any) => (
+                    <div key={msg.id} className="flex flex-col space-y-1 group">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-primary uppercase font-mono tracking-tighter">
+                          {msg.author}
+                        </span>
+                        {msg.vip && msg.vip !== 'none' && (
+                          <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/30 text-primary uppercase">
+                            {msg.vip}
+                          </Badge>
+                        )}
+                        <span className="text-[8px] text-muted-foreground font-mono">
+                          {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ptBR })}
+                        </span>
+                        {msg.isMine && (
+                          <button
+                            type="button"
+                            onClick={() => deleteMessageMutation.mutate({ id: msg.id })}
+                            className="text-[8px] text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity font-mono uppercase"
+                          >
+                            apagar
+                          </button>
+                        )}
+                      </div>
+                      <div className="bg-primary/5 border border-primary/10 rounded-2xl rounded-tl-none px-3 py-2 text-xs leading-relaxed max-w-[90%] break-words">
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="p-4 border-t border-primary/10 bg-black/20">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (messageText.trim()) {
+                      sendMessageMutation.mutate({ content: messageText });
+                    }
+                  }}
+                  className="flex gap-2"
+                >
+                  <Input
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    aria-label="Mensagem no Shadow Nexus"
+                    placeholder="Escreva uma mensagem..."
+                    className="h-9 text-xs bg-background/50 border-primary/20 focus:border-primary/40"
+                    disabled={sendMessageMutation.isPending}
+                  />
+                  <Button
+                    size="icon"
+                    aria-label="Enviar mensagem"
+                    className="h-9 w-9 shrink-0"
+                    disabled={sendMessageMutation.isPending || !messageText.trim()}
+                  >
+                    {sendMessageMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </form>
+                <p className="mt-2 text-[8px] font-mono uppercase text-muted-foreground/60 text-center tracking-widest">
+                  Use a opção “Tornar-se anônimo” no perfil para ocultar seu nome no chat.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
         </TabsContent>
 
         <TabsContent value="missions" className="m-0">
@@ -1069,6 +1112,7 @@ function ShadowPassPage() {
         </TabsContent>
 
         <TabsContent value="security" className="m-0">
+          <SecurityPinCard className="mb-6" />
           <AccountSecurityTab />
         </TabsContent>
       </Tabs>
