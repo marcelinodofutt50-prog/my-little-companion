@@ -54,19 +54,14 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     }
 
     const authHeader = request.headers.get('authorization');
-    const allHeaders = Object.fromEntries(request.headers.entries());
 
     if (!authHeader) {
-      console.error('[SupabaseAuth] Unauthorized: No authorization header provided', { 
-        headers: allHeaders,
-        url: request.url,
-        method: request.method
-      });
+      console.error('[SupabaseAuth] Unauthorized: No authorization header provided');
       throw new Error('Unauthorized: No authorization header provided');
     }
 
     if (!authHeader.startsWith('Bearer ')) {
-      console.error('[SupabaseAuth] Unauthorized: Only Bearer tokens are supported', { authHeader: authHeader.substring(0, 15) + '...' });
+      console.error('[SupabaseAuth] Unauthorized: Only Bearer tokens are supported');
       throw new Error('Unauthorized: Only Bearer tokens are supported');
     }
 
@@ -79,8 +74,7 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     const tokenParts = token.split('.');
     if (tokenParts.length !== 3) {
       console.error('[SupabaseAuth] Unauthorized: Invalid token (not a JWT)', { 
-        partsCount: tokenParts.length,
-        tokenStart: token.substring(0, 10) + '...'
+        partsCount: tokenParts.length
       });
       throw new Error('Unauthorized: Invalid token');
     }
