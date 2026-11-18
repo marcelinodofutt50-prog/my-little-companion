@@ -262,7 +262,7 @@ function PlayProtectPage() {
                     </div>
 
                     <div className="rounded border border-amber-500/20 bg-amber-500/5 p-3 text-[10px] leading-tight">
-                      <span className="font-bold text-amber-500 uppercase">Dica:</span> Também recomendamos desativar o Play Protect no seu dispositivo de teste (Play Store → Perfil → Play Protect → Configurações) para evitar bloqueios locais durante a instalação.
+                      <span className="font-bold text-amber-500 uppercase">Segurança na instalação.</span> Mantenha o Play Protect ativo. Se aparecer um alerta, interrompa a instalação e envie ao suporte o ID da solicitação e o texto do alerta.
                     </div>
                   </div>
 
