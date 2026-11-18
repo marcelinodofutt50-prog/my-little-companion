@@ -10,6 +10,7 @@ export const getLifetimeLessons = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .eq("plan_slug", "login-lifetime")
       .eq("is_trial", false)
+      .eq("revoked", false)
       .is("disabled_at", null)
       .limit(1)
       .maybeSingle();
@@ -17,9 +18,7 @@ export const getLifetimeLessons = createServerFn({ method: "POST" })
     if (error) throw new Error("Não foi possível verificar sua licença.");
     if (!data) return null;
 
-    const { getSetting } = await import("@/lib/app-settings.server");
-    const published = publicationSchema.safeParse(await getSetting(publicationKey, true));
-    if (!published.success) return [];
+    const published = await readLifetimePublication();
     return [
       {
         id: "2fa" as const,
@@ -48,22 +47,26 @@ export const getLifetimeLessons = createServerFn({ method: "POST" })
           "Se precisar de suporte, envie a mensagem de erro e o horário aproximado pelo ticket. Oculte senhas e códigos de autenticação.",
         ],
       },
-    ].filter((lesson) => published.data.includes(lesson.id));
+    ].filter((lesson) => published.includes(lesson.id));
   });
 
 const publicationKey = "lifetime_training_guides";
 const publicationSchema = z.array(z.enum(["2fa", "renewal", "access"])).max(3);
+
+async function readLifetimePublication() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await (supabaseAdmin as any).from("app_settings")
+    .select("value").eq("key", publicationKey).maybeSingle();
+  if (error) throw new Error("Não foi possível consultar a publicação dos guias.");
+  return publicationSchema.parse(data?.value ?? []);
+}
 
 export const adminGetLifetimePublication = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { assertAdmin } = await import("@/lib/admin-helpers.server");
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await (supabaseAdmin as any).from("app_settings")
-      .select("value").eq("key", publicationKey).maybeSingle();
-    if (error) throw new Error("Não foi possível consultar a publicação dos guias.");
-    return publicationSchema.parse(data?.value ?? []);
+    return readLifetimePublication();
   });
 
 export const adminSaveLifetimePublication = createServerFn({ method: "POST" })
