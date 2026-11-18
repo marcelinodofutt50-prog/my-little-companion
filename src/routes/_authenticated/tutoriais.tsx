@@ -16,7 +16,6 @@ import { useTutorialMedia } from "@/lib/tutorial-media";
 
 import { toast } from "sonner";
 // Asset externalizado (/__l5e/) não existe na Vercel — usa o arquivo público local.
-const trainingBgAsset = { url: "/assets/kraken_v28_final.webp" };
 import { runSchemaHealthCheck } from "@/lib/health-check.functions";
 import { testDatabaseConnection } from "@/lib/diagnostics.functions";
 import { BackToDashboard } from "@/components/BackToDashboard";
@@ -215,17 +214,7 @@ function TutorialsPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-black theme-transition transition-colors duration-500 relative">
-        <div 
-          className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-cover bg-center transition-opacity duration-1000"
-          style={{ 
-            backgroundImage: `url(${trainingBgAsset.url}?v=v31)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'brightness(0.6) contrast(1.2)'
-          }}
-        />
-        <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-black/50 via-black/70 to-black" />
+      <div className="flex min-h-screen w-full bg-background text-foreground theme-transition transition-colors duration-500 relative">
 
         <div className="relative z-20">
           <AppSidebar />
@@ -250,7 +239,7 @@ function TutorialsPage() {
                 </div>
                 
                 {!loading && tutorials.length > 0 && progress > 0 && (
-                  <div className="w-full md:w-80 space-y-4 enterprise-surface p-5 rounded-xl border-primary/20 bg-primary/5 shadow-lg shadow-primary/5 rgb-border overflow-hidden">
+                  <div className="w-full md:w-80 space-y-4 p-5 rounded-xl border-primary/20 bg-primary/5 shadow-lg shadow-primary/5 rgb-border overflow-hidden">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
                         <span className="flex items-center gap-2"><Trophy className="h-3 w-3 text-primary" /> Progresso Total</span>
@@ -271,7 +260,7 @@ function TutorialsPage() {
             </div>
 
             {!loading && tutorials.length === 0 && loadError && (
-              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-6 mb-10">
+              <div className="p-12 rounded-2xl border-primary/10 text-center space-y-6 mb-10">
                 <div className="flex justify-center">
                   <div className="p-4 rounded-full bg-primary/5 border border-primary/10 relative">
                     <BookOpen className="h-12 w-12 text-primary/20" />
@@ -315,7 +304,7 @@ function TutorialsPage() {
             )}
 
             {!loading && tutorials.length === 0 && !loadError && (
-              <div className="enterprise-surface p-12 rounded-2xl border-primary/10 text-center space-y-4 mb-10">
+              <div className="p-12 rounded-2xl border-primary/10 text-center space-y-4 mb-10">
                 <div className="flex justify-center">
                   <div className="p-4 rounded-full bg-primary/5 border border-primary/10">
                     <BookOpen className="h-12 w-12 text-primary/30" />
@@ -379,7 +368,7 @@ function TutorialsPage() {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden mb-8"
                 >
-                  <Card className="bg-black/40 border-orange-500/20 backdrop-blur-xl enterprise-surface overflow-hidden">
+                  <Card className="bg-card border-orange-500/20 backdrop-blur-xl overflow-hidden">
                     <div className="px-6 py-4 border-b border-orange-500/10 bg-orange-500/5 flex items-center justify-between flex-wrap gap-4">
                       <div className="flex items-center gap-3">
                         <Zap className="h-5 w-5 text-orange-500" />
@@ -438,7 +427,7 @@ function TutorialsPage() {
 
                     
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted/30">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Status da Conexão</div>
                         <div className="flex items-center gap-2">
                           <div className={`h-2 w-2 rounded-full ${diagResult ? (diagResult.success ? 'bg-green-500 animate-pulse' : 'bg-red-500') : 'bg-gray-500'}`} />
@@ -448,21 +437,21 @@ function TutorialsPage() {
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted/30">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Latência Shadow</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider">
                           {diagResult?.latency ? `${diagResult.latency}ms` : '---'}
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted/30">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Última Tentativa</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider">
                           {syncHistory[0]?.time || 'Aguardando'}
                         </div>
                       </div>
 
-                      <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                      <div className="p-4 rounded-xl border border-border bg-muted/30">
                         <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">Integridade de Schema</div>
                         <div className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-2 text-green-500">
                           <Shield className="h-3 w-3" /> ATIVO
@@ -496,7 +485,7 @@ function TutorialsPage() {
                     className="overflow-hidden"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                      <Card className="bg-card border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                             <Server className="h-4 w-4 text-primary" />
@@ -508,7 +497,7 @@ function TutorialsPage() {
                         </div>
                       </Card>
 
-                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                      <Card className="bg-card border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20">
                             <ShieldCheck className="h-4 w-4 text-green-500" />
@@ -520,7 +509,7 @@ function TutorialsPage() {
                         </div>
                       </Card>
 
-                      <Card className="bg-black/40 border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
+                      <Card className="bg-card border-primary/20 backdrop-blur-xl p-4 enterprise-surface">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20">
                             <Clock className="h-4 w-4 text-orange-500" />
@@ -533,7 +522,7 @@ function TutorialsPage() {
                       </Card>
                     </div>
 
-                    <Card className="bg-black/40 border-primary/20 backdrop-blur-xl overflow-hidden enterprise-surface">
+                    <Card className="bg-card border-primary/20 backdrop-blur-xl overflow-hidden enterprise-surface">
                       <div className="px-4 py-2 border-b border-primary/10 bg-primary/5 flex items-center justify-between">
                         <div className="text-[10px] font-mono uppercase tracking-widest text-primary/80">Histórico de Tentativas Recentes</div>
                         <Button 
@@ -554,7 +543,7 @@ function TutorialsPage() {
                         ) : (
                           <div className="divide-y divide-primary/5">
                             {syncHistory.map((log, i) => (
-                              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors">
                                 <div className="flex items-center gap-4">
                                   <div className={`w-1.5 h-1.5 rounded-full ${log.status === 'success' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`} />
                                   <div>
@@ -578,11 +567,11 @@ function TutorialsPage() {
                             <Activity className="h-3 w-3" /> Diagnóstico de Conexão
                           </h4>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="enterprise-surface p-3 rounded-xl border-primary/5">
+                            <div className="p-3 rounded-xl border-primary/5">
                               <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-[0.2em] mb-1">Último Código</div>
                               <div className="text-xs font-bold font-mono">{syncHistory[0]?.status === 'error' ? 'PGRST108' : '200 OK'}</div>
                             </div>
-                            <div className="enterprise-surface p-3 rounded-xl border-primary/5">
+                            <div className="p-3 rounded-xl border-primary/5">
                               <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-[0.2em] mb-1">Tunnel Status</div>
                               <div className={`text-xs font-bold font-mono ${tutorials.length > 0 ? 'text-emerald-500' : 'text-orange-500 animate-pulse'}`}>
                                 {tutorials.length > 0 ? 'ESTÁVEL' : 'SINCRONIZANDO'}
@@ -655,7 +644,7 @@ function TutorialsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-12"
                 >
-                  <div className="overflow-hidden rounded-2xl border border-primary/20 bg-black/90 dark:bg-black/95 backdrop-blur-3xl shadow-2xl transition-colors duration-500">
+                  <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card text-card-foreground shadow-2xl transition-colors duration-500">
                     <div className="aspect-video w-full bg-black relative">
                       {selected.video_url ? (
                         selectedVideoUrl ? (
@@ -739,7 +728,7 @@ function TutorialsPage() {
                   transition={{ delay: (idx % 4) * 0.1 }}
                 >
                     <Card 
-                      className="group h-full cursor-pointer overflow-hidden border-border/40 bg-black/80 dark:bg-black/90 backdrop-blur-3xl transition-all duration-500 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
+                      className="group h-full cursor-pointer overflow-hidden border-border/40 bg-card text-card-foreground transition-all duration-500 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                     onClick={() => {
                       setSelected(t);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -757,7 +746,7 @@ function TutorialsPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
                       
                       <div className="absolute top-3 left-3 flex gap-2">
-                        <div className="rounded-full bg-black/60 px-2.5 py-1 backdrop-blur-md border border-white/10">
+                        <div className="rounded-full bg-background/95 px-2.5 py-1 backdrop-blur-md border border-white/10">
                           <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-primary font-bold">{t.category || "Geral"}</span>
                         </div>
                       </div>
@@ -867,19 +856,19 @@ function HealthWidget() {
   const tutorialProgressStatus = health.tables?.tutorial_progress?.accessible;
 
   return (
-    <div className="bg-black/40 border-b border-white/5 py-2 px-4 flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
+    <div className="bg-card border-b border-border py-2 px-4 flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono uppercase tracking-widest overflow-hidden">
       <div className="flex items-center gap-2">
         <Database className={`h-3 w-3 ${isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}`} />
         <span className="text-muted-foreground">DB STATUS:</span>
         <span className={isHealthy ? 'text-green-500' : isDegraded ? 'text-yellow-500' : 'text-red-500'}>{health.status}</span>
       </div>
-      <div className="h-3 w-[1px] bg-white/10" />
+      <div className="h-3 w-[1px] bg-border" />
       <div className="flex items-center gap-2">
         <Activity className={`h-3 w-3 ${tutorialProgressStatus ? 'text-primary' : 'text-red-500 animate-pulse'}`} />
         <span className="text-muted-foreground">SYNC:</span>
         <span className={tutorialProgressStatus ? 'text-primary' : 'text-red-500'}>{tutorialProgressStatus ? 'OPERATIONAL' : 'REPAIRING'}</span>
       </div>
-      <div className="h-3 w-[1px] bg-white/10" />
+      <div className="h-3 w-[1px] bg-border" />
       <div className="flex items-center gap-2">
         <Clock className="h-3 w-3 text-yellow-500" />
         <span className="text-muted-foreground">TRIAL:</span>
