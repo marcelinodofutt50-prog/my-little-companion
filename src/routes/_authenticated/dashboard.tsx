@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, ChevronDown } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, ChevronDown, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -14,7 +14,7 @@ import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -48,7 +48,11 @@ import { LicenseAccessTools } from '@/components/LicenseAccessTools'
 import { RedeemCodeCard } from '@/components/RedeemCodeCard'
 
 import { planLabel } from '@/lib/license-display'
-import { setMyLicenseHidden, isDeadLicense } from '@/lib/license-archive.functions'
+import {
+  AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { removeMyInactiveLicense, setMyLicenseHidden, isDeadLicense } from '@/lib/license-archive.functions'
 import { SOCIAL_LINKS } from '@/components/SocialLinks'
 
 // +1 hora pelo Telegram: só liga quando o robô do grupo estiver conectado e
@@ -284,16 +288,23 @@ function DashboardPage() {
   // (ativas primeiro) e cada linha expande os detalhes embaixo dela.
   // Logins mortos removidos pelo cliente ficam escondidos (nada é apagado).
   const hideFn = useServerFn(setMyLicenseHidden)
+  const removeFn = useServerFn(removeMyInactiveLicense)
+  const removalPending = useRef(false)
+  const [removing, setRemoving] = useState(false)
+  const [removalError, setRemovalError] = useState<string | null>(null)
+  const [removal, setRemoval] = useState<{ id: string; ownerId: string; label: string; email: string | null } | null>(null)
+  const selectedRemoval = removal?.ownerId === user?.id ? removal : null
   const [openLicenseIds, setOpenLicenseIds] = useState<Record<string, boolean>>({})
   const [showHidden, setShowHidden] = useState(false)
   const [hidingId, setHidingId] = useState<string | null>(null)
   const allLicenses = ((licenses ?? []) as any[])
-  const hiddenCount = allLicenses.filter((l) => l.hidden_by_user_at).length
+  const dashboardLicenses = allLicenses.filter((license) => !license.removed_from_dashboard_at || isLicenseActive(license))
+  const hiddenCount = dashboardLicenses.filter((l) => l.hidden_by_user_at).length
   const licenseRank = (l: any) => {
     const s = licenseExpiryState(l, serverNow)
     return s.active ? 0 : s.paused ? 1 : 2
   }
-  const visibleLicenses = allLicenses
+  const visibleLicenses = dashboardLicenses
     .filter((l) => showHidden || !l.hidden_by_user_at)
     .sort((a, b) => licenseRank(a) - licenseRank(b))
   // Uma única licença visível já abre expandida; com várias, tudo começa
@@ -321,6 +332,28 @@ function DashboardPage() {
     }
   }
   
+  const confirmRemoval = async () => {
+    if (!selectedRemoval || removalPending.current) return
+    removalPending.current = true
+    setRemoving(true)
+    setRemovalError(null)
+    try {
+      const result = await removeFn({ data: { licenseId: selectedRemoval.id } })
+      if (!result.ok) {
+        setRemovalError(result.error)
+        return
+      }
+      setRemoval(null)
+      toast.success('Licença removida do painel.')
+      void refetchLicenses()
+    } catch {
+      setRemovalError('Não foi possível remover a licença. Tente novamente.')
+    } finally {
+      removalPending.current = false
+      setRemoving(false)
+    }
+  }
+
   // Sempre resolve um tier válido: version_tier -> plan_slug -> mensal (padrão),
   // garantindo que os downloads apareçam em todo recarregamento.
   const downloadsForLicense = (license: any) => {
@@ -713,13 +746,14 @@ function DashboardPage() {
                       const dead = isDeadLicense(license)
                       return (
                         <div key={license.id} className="space-y-2">
+                        <div className="flex items-stretch gap-2">
                         <button
                           type="button"
                           id={`licenca-${license.id}`}
                           aria-expanded={open}
                           onClick={() => toggleLicenseOpen(license.id)}
                           className={cn(
-                            "flex w-full scroll-mt-16 flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2.5 text-left text-xs transition-colors",
+                            "flex min-w-0 flex-1 scroll-mt-16 flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border px-3 py-3 text-left text-sm transition-colors",
                             open ? "border-primary/60 bg-primary/10" : "border-border/60 bg-background/40 hover:border-primary/40",
                           )}
                         >
@@ -735,6 +769,28 @@ function DashboardPage() {
                           {license.hidden_by_user_at && <span className="text-[10px] text-muted-foreground">(removido)</span>}
                           <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
                         </button>
+                        {dead && !active && !license.suspended_at && !license.removed_from_dashboard_at && user?.id && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-auto min-h-10 w-10 shrink-0 rounded-lg text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                            aria-label={`Remover do painel: ${planLabel(license.plan_slug, license.is_trial)} ${license.yaarsa_email ?? ''}`}
+                            title="Remover licença inativa do painel"
+                            onClick={() => {
+                              setRemovalError(null)
+                              setRemoval({
+                                id: license.id,
+                                ownerId: user.id,
+                                label: planLabel(license.plan_slug, license.is_trial),
+                                email: license.yaarsa_email ?? null,
+                              })
+                            }}
+                          >
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          </Button>
+                        )}
+                        </div>
                         {open && (
                       <Card className="border-border/60 bg-background/40 shadow-none transition-all hover:border-primary/40 hover:bg-background/50">
                         <CardContent className="space-y-4 p-5">
@@ -779,7 +835,7 @@ function DashboardPage() {
                               )}
                             </div>
                           )}
-                          {dead && (
+                          {dead && license.hidden_by_user_at && (
                             <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs">
                               <p className="text-muted-foreground">
                                 <span className="font-semibold text-foreground">Este login não pode mais ser usado.</span>{' '}
@@ -1027,6 +1083,30 @@ function DashboardPage() {
 
               <AnnouncementsSection />
             </div>
+            <AlertDialog open={!!selectedRemoval} onOpenChange={(open) => {
+              if (!open && !removalPending.current) setRemoval(null)
+            }}>
+              <AlertDialogContent className="rounded-xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remover licença do painel?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta licença inativa será removida da sua lista. Você não poderá restaurá-la pelo painel.
+                    O histórico fica disponível para o suporte.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                  <p className="font-semibold">{selectedRemoval?.label}</p>
+                  {selectedRemoval?.email && <p className="break-all text-muted-foreground">{selectedRemoval.email}</p>}
+                </div>
+                {removalError && <p role="alert" className="text-sm text-destructive">{removalError}</p>}
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={removing}>Cancelar</AlertDialogCancel>
+                  <Button type="button" variant="destructive" disabled={removing} onClick={() => void confirmRemoval()}>
+                    {removing ? 'Removendo…' : 'Remover do painel'}
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </main>
         </SidebarInset>
         <SupportFloatingWidget />
