@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
-const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
+const shadowMark = "/assets/shadow-logo-compact.png";
 import { secureSignOut } from "@/lib/session";
 import { useI18n } from "@/lib/i18n";
 import { useEffect, useState } from "react";

@@ -28,7 +28,7 @@ import { getMyIdentity } from "@/lib/identity.functions";
 import type { User } from "@supabase/supabase-js";
 
 export function SiteHeader() {
-  const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
+  const shadowMark = "/assets/shadow-logo-compact.png";
   const { location } = useRouterState();
   const path = location.pathname;
   const search = location.search as any;

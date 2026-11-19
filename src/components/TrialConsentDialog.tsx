@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -31,6 +31,14 @@ export function TrialConsentDialog({
   const [left, setLeft] = useState(WAIT_SECONDS);
   const [busy, setBusy] = useState(false);
 
+  const mounted = useRef(false);
+  const consentPending = useRef(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     setChecked(false);
@@ -40,20 +48,25 @@ export function TrialConsentDialog({
   }, [open]);
 
   async function confirm() {
+    if (!open || !checked || left > 0 || consentPending.current) return;
+    consentPending.current = true;
     setBusy(true);
     try {
       const { consentId } = await accept({ data: getDeviceSignature() });
+      if (!mounted.current) return;
       onOpenChange(false);
       onAccepted(consentId);
     } catch (e: any) {
+      if (!mounted.current) return;
       toast.error("Não foi possível continuar", { description: String(e?.message ?? e).replace(/^Error:\s*/, "") });
     } finally {
-      setBusy(false);
+      consentPending.current = false;
+      if (mounted.current) setBusy(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => { if (!consentPending.current) onOpenChange(next); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-mono text-sm uppercase">

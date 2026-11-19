@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Gift, Loader2, Copy } from "lucide-react";
 import { toast } from "sonner";
@@ -16,30 +16,44 @@ type TrialResult = {
 };
 
 /**
- * Cartão de ativação do teste grátis de 24h.
+ * Cartão de ativação do teste grátis de 3h30.
  * Aparece somente para quem ainda não tem nenhuma licença ativa.
  */
-export function TrialActivationCard({ onDone }: { onDone?: () => void }) {
+export function TrialActivationCard({ onDone, onRefresh }: { onDone?: () => void; onRefresh?: () => void }) {
   const run = useServerFn(generateTrial);
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState<TrialResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consentOpen, setConsentOpen] = useState(false);
 
+  const mounted = useRef(false);
+  const activationPending = useRef(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
   async function activate(consentId: string) {
+    if (!mounted.current || activationPending.current) return;
+    activationPending.current = true;
     setLoading(true);
     setError(null);
     try {
       const res = (await run({ data: { ...getDeviceSignature(), consentId } })) as TrialResult;
+      if (!mounted.current) return;
       setCreds(res);
       toast.success("Teste grátis ativado! Você tem 3 horas e 30 minutos.");
       onDone?.();
     } catch (e: any) {
+      if (!mounted.current) return;
+      onRefresh?.();
       const msg = String(e?.message ?? e ?? "Falha ao gerar o teste").replace(/^Error:\s*/, "");
       setError(msg);
       toast.error("Não foi possível gerar o teste", { description: msg });
     } finally {
-      setLoading(false);
+      activationPending.current = false;
+      if (mounted.current) setLoading(false);
     }
   }
 
@@ -81,7 +95,14 @@ export function TrialActivationCard({ onDone }: { onDone?: () => void }) {
                 <button
                   type="button"
                   className="flex items-center gap-1.5 truncate text-foreground hover:text-primary"
-                  onClick={() => { navigator.clipboard.writeText(String(row.value ?? "")); toast.success("Copiado!"); }}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(String(row.value ?? ""));
+                      if (mounted.current) toast.success("Copiado!");
+                    } catch {
+                      if (mounted.current) toast.error("Não foi possível copiar. Selecione o texto e copie manualmente.");
+                    }
+                  }}
                 >
                   <span className="truncate">{row.value}</span>
                   <Copy className="h-3 w-3 shrink-0" />

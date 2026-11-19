@@ -37,7 +37,7 @@ import { listMyUpdates, getUpdateDownloadUrl } from '@/lib/updates.functions'
 import { listMyLicenses, syncAllMyLicenses } from '@/lib/license.functions'
 import { getMyIdentity } from '@/lib/identity.functions'
 import { triggerDownload, downloadParts, friendlyDownloadError } from '@/lib/download'
-const shadowMark = "/assets/shadow-logo-v10.png?v=v10-100";
+const shadowMark = "/assets/shadow-logo-compact.png";
 import { downloadsForTier, tierFromPlanSlug, type VersionTier } from '@/lib/plans'
 import { useServerNow } from '@/hooks/use-server-now'
 import { licenseExpiryState } from '@/lib/expiry'
@@ -114,10 +114,12 @@ function DashboardPage() {
 
   useEffect(() => {
     let mounted = true
+    let authEventReceived = false
     supabase.auth.getSession().then(({ data }: any) => {
-      if (mounted) setUser(data.session?.user ?? null)
+      if (mounted && !authEventReceived) setUser(data.session?.user ?? null)
     })
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      authEventReceived = true
       if (mounted) setUser(session?.user ?? null)
     })
     return () => {
@@ -188,7 +190,6 @@ function DashboardPage() {
     refetchOnReconnect: 'always',
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
-    placeholderData: (prev: any) => prev,
   })
 
   // Licenças ao vivo: troca de senha, renovação e resgate de código aparecem
@@ -297,6 +298,12 @@ function DashboardPage() {
     .sort((a, b) => licenseRank(a) - licenseRank(b))
   // Uma única licença visível já abre expandida; com várias, tudo começa
   // recolhido para o resumo caber numa tela só.
+  const customerLicenses = visibleLicenses.filter((license) => !license.hidden_by_user_at)
+  const usableLicenses = customerLicenses.filter(isLicenseActive)
+  const shortcutLicense = usableLicenses.length === 1
+    ? usableLicenses[0]
+    : customerLicenses.length === 1 ? customerLicenses[0] : undefined
+
   const isLicenseOpen = (id: string) => openLicenseIds[id] ?? visibleLicenses.length === 1
   const toggleLicenseOpen = (id: string) =>
     setOpenLicenseIds((prev) => ({ ...prev, [id]: !(prev[id] ?? visibleLicenses.length === 1) }))
@@ -355,10 +362,19 @@ function DashboardPage() {
     planActionLabel = expiry.kind === 'trial' ? 'Ver planos após o teste' : 'Renovar licença'
   }
 
-  const copyPrimary = () => {
-    if (primary) {
-      navigator.clipboard.writeText(primary)
+  const [trialActivatedFor, setTrialActivatedFor] = useState<string | null>(null)
+  const handleTrialActivated = () => {
+    setTrialActivatedFor(user?.id ?? null)
+    void refetchLicenses()
+  }
+
+  const copyPrimary = async () => {
+    if (!primary) return
+    try {
+      await navigator.clipboard.writeText(primary)
       toast.success(t("dash.copied" as any) || "Copiado!")
+    } catch {
+      toast.error('Não foi possível copiar o e-mail da licença.')
     }
   }
 
@@ -398,9 +414,9 @@ function DashboardPage() {
                   <TrialEndedReferralOffer trialId={endedTrial.id} referralCode={(profile as any)?.referral_code ?? null} />
                 ) : null
               })()}
-              {trialParam === 'true' && !licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
+              {user?.id && trialParam === 'true' && !licensesLoading && !licensesError && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">
-                  <TrialActivationCard onDone={() => void refetchLicenses()} />
+                  <TrialActivationCard key={user?.id} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
                 </div>
               )}
 
@@ -428,31 +444,57 @@ function DashboardPage() {
                   <div className="min-w-0 rounded-xl border border-primary/25 bg-primary/5 p-4">
                     <p className="flex items-center gap-2 text-xs font-semibold text-primary">
                       <KeyRound aria-hidden="true" className="h-4 w-4" />
-                      Seu acesso
+                      Comece por aqui
                     </p>
                     <h2 className="mt-2 text-lg font-bold text-foreground">{accessTitle}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{accessDetail}</p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {licensesLoading || user === undefined ? null : licensesError ? (
                         <Button size="sm" onClick={() => void refetchLicenses()}>Tentar novamente</Button>
-                      ) : showPlanAction ? (
-                        <Button size="sm" asChild><Link to="/planos">{planActionLabel} <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link></Button>
-                      ) : (
-                        <Button size="sm" asChild><a href="#minhas-licencas">Gerenciar licenças <ArrowRight aria-hidden="true" className="h-4 w-4" /></a></Button>
-                      )}
-                      {expiry?.active && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href="#downloads"><Download aria-hidden="true" className="h-4 w-4" /> Downloads</a>
+                      ) : customerLicenses.length > 0 ? (
+                        <Button size="sm" asChild>
+                          <a
+                            href={shortcutLicense ? `#licenca-${shortcutLicense.id}` : '#minhas-licencas'}
+                            onClick={(event) => {
+                              if (shortcutLicense && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+                                setOpenLicenseIds((prev) => ({ ...prev, [shortcutLicense.id]: true }))
+                              }
+                            }}
+                          >
+                            {shortcutLicense ? 'Ver minha licença' : 'Ver minhas licenças'}
+                            <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                          </a>
                         </Button>
+                      ) : (
+                        <Button size="sm" asChild><Link to="/planos">Ver planos</Link></Button>
                       )}
+                      {showPlanAction && customerLicenses.length > 0 && (
+                        <Button size="sm" variant="outline" asChild><Link to="/planos">{planActionLabel}</Link></Button>
+                      )}
+                      <Button size="sm" variant="ghost" asChild>
+                        <Link to="/suporte" search={{}}>Preciso de ajuda</Link>
+                      </Button>
                     </div>
                   </div>
                 </div>
+                {trialActivatedFor && trialActivatedFor === user?.id && (
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4">
+                    <div role="status">
+                      <p className="text-sm font-semibold text-foreground">Teste grátis ativado</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Ficou com dúvidas? Em Minhas licenças, abra o seu teste para ver os dados de acesso e o prazo.
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to="/suporte" search={{}}>Ajuda com o primeiro acesso</Link>
+                    </Button>
+                  </div>
+                )}
                 <div className="mt-5 grid gap-px overflow-hidden rounded-md border border-border/50 bg-border/50 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2 bg-card/80 p-3">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/70">Minha conta</p>
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" onClick={copyPrimary} disabled={!primary} className="font-mono text-[10px] uppercase"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar credenciais</Button>
+                      <Button size="sm" variant="outline" onClick={copyPrimary} disabled={!primary} className="font-mono text-[10px] uppercase"><Copy className="mr-1.5 h-3.5 w-3.5" /> Copiar e-mail da licença</Button>
                       {!showPlanAction && (
                         <Button size="sm" variant="outline" asChild><Link to="/planos">Ver planos</Link></Button>
                       )}
@@ -514,8 +556,8 @@ function DashboardPage() {
 
               <QuickHelpStrip />
 
-              {!licensesLoading && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && trialParam !== 'true' && (
-                <TrialActivationCard onDone={() => void refetchLicenses()} />
+              {user?.id && !licensesLoading && !licensesError && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && trialParam !== 'true' && (
+                <TrialActivationCard key={user?.id} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
               )}
 
 
@@ -602,7 +644,7 @@ function DashboardPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-5 py-4 bg-primary/5">
                   <div>
                     <h2 id="licenses-title" className="font-mono text-sm font-bold uppercase tracking-widest text-primary">Minhas licenças</h2>
-                    <p className="mt-1 text-[10px] uppercase tracking-tighter text-muted-foreground/60">Acessos vinculados à sua conta empresarial</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-tighter text-muted-foreground/60">Selecione uma licença para ver os detalhes do seu acesso.</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <SupportDiagnosticButton
@@ -673,10 +715,11 @@ function DashboardPage() {
                         <div key={license.id} className="space-y-2">
                         <button
                           type="button"
+                          id={`licenca-${license.id}`}
                           aria-expanded={open}
                           onClick={() => toggleLicenseOpen(license.id)}
                           className={cn(
-                            "flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2.5 text-left text-xs transition-colors",
+                            "flex w-full scroll-mt-16 flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2.5 text-left text-xs transition-colors",
                             open ? "border-primary/60 bg-primary/10" : "border-border/60 bg-background/40 hover:border-primary/40",
                           )}
                         >
@@ -832,7 +875,7 @@ function DashboardPage() {
                               onClick={() => setRevealed((prev) => ({ ...prev, [license.id]: !prev[license.id] }))}
                             >
                               {revealed[license.id] ? <EyeOff className="mr-1.5 h-3.5 w-3.5 text-primary" /> : <Eye className="mr-1.5 h-3.5 w-3.5 text-primary" />}
-                              {revealed[license.id] ? 'Ocultar Credenciais' : 'Revelar Acesso'}
+                              {revealed[license.id] ? 'Ocultar dados da licença' : 'Mostrar dados da licença'}
                             </Button>
                           </div>
                           <div className="space-y-3">
