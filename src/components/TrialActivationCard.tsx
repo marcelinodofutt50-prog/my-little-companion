@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { generateTrial } from "@/lib/license.functions";
 import { getDeviceSignature } from "@/lib/device-signature";
+import { LicenseCountdown } from "@/components/LicenseCountdown";
 import { TrialConsentDialog } from "@/components/TrialConsentDialog";
 
 type TrialResult = {
@@ -19,7 +20,7 @@ type TrialResult = {
  * Cartão de ativação do teste grátis de 3h30.
  * Aparece somente para quem ainda não tem nenhuma licença ativa.
  */
-export function TrialActivationCard({ onDone, onRefresh }: { onDone?: () => void; onRefresh?: () => void }) {
+export function TrialActivationCard({ serverNow, onDone, onRefresh }: { serverNow: number; onDone?: () => void; onRefresh?: () => void }) {
   const run = useServerFn(generateTrial);
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState<TrialResult | null>(null);
@@ -43,7 +44,7 @@ export function TrialActivationCard({ onDone, onRefresh }: { onDone?: () => void
       const res = (await run({ data: { ...getDeviceSignature(), consentId } })) as TrialResult;
       if (!mounted.current) return;
       setCreds(res);
-      toast.success("Teste grátis ativado! Você tem 3 horas e 30 minutos.");
+      toast.success("Teste grátis ativado!");
       onDone?.();
     } catch (e: any) {
       if (!mounted.current) return;
@@ -78,7 +79,7 @@ export function TrialActivationCard({ onDone, onRefresh }: { onDone?: () => void
               {loading ? "Gerando seu teste…" : "Ativar teste grátis"}
             </Button>
             {error && (
-              <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">{error}</p>
+              <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">{error}</p>
             )}
           </>
         )}
@@ -88,12 +89,13 @@ export function TrialActivationCard({ onDone, onRefresh }: { onDone?: () => void
               { label: "Usuário", value: creds.username },
               { label: "E-mail", value: creds.email },
               { label: "Senha", value: creds.password },
-              { label: "Servidor", value: creds.server_ip || "—" },
+              ...(creds.server_ip ? [{ label: "Servidor", value: creds.server_ip }] : []),
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">{row.label}</span>
                 <button
                   type="button"
+                  aria-label={`Copiar ${row.label.toLowerCase()}`}
                   className="flex items-center gap-1.5 truncate text-foreground hover:text-primary"
                   onClick={async () => {
                     try {
@@ -109,9 +111,12 @@ export function TrialActivationCard({ onDone, onRefresh }: { onDone?: () => void
                 </button>
               </div>
             ))}
-            <p className="pt-1 text-[10px] normal-case text-muted-foreground">
-              Salve estes dados. Seu teste dura 3 horas e 30 minutos a partir de agora.
-            </p>
+            {creds.expires_at && (
+              <div className="flex items-center justify-between gap-2 pt-2">
+                <span className="text-muted-foreground">Tempo restante</span>
+                <LicenseCountdown compact target={creds.expires_at} serverNow={serverNow} />
+              </div>
+            )}
           </div>
         )}
       </div>
