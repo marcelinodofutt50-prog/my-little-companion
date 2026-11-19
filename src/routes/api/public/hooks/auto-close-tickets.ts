@@ -1,10 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Fecha somente atendimentos com resolução confirmada pelo cliente.
- *
- * Regra: confirmação explícita, cinco horas sem mensagens e nenhuma
- * pendência de pagamento ou entrega. Silêncio não significa resolução.
+ * Fecha atendimentos após cinco horas sem atividade e sem pendências de
+ * pagamento ou entrega.
  *
  * Auth: Bearer CRON_TRIGGER_TOKEN.
  */
