@@ -39,3 +39,27 @@ export function isDeadLicense(l: any, now = Date.now()): boolean {
   const expiredLongAgo = !!l?.expires_at && new Date(l.expires_at).getTime() < now - 86400000;
   return !!l?.revoked || !!l?.disabled_at || (expiredLongAgo && !l?.suspended_at);
 }
+
+/** Remove apenas da lista do cliente, preservando a licença e seu histórico. */
+export const removeMyInactiveLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: unknown) => z.object({ licenseId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const now = Date.now();
+    const cutoff = new Date(now - 86400000).toISOString();
+    const { data: removed, error } = await supabaseAdmin
+      .from("licenses")
+      .update({ removed_from_dashboard_at: new Date(now).toISOString() } as any)
+      .eq("id", data.licenseId)
+      .eq("user_id", context.userId)
+      .is("removed_from_dashboard_at", null)
+      .is("suspended_at", null)
+      .or(`revoked.eq.true,disabled_at.not.is.null,expires_at.lt.${cutoff}`)
+      .select("id")
+      .maybeSingle();
+
+    if (error) return { ok: false as const, error: "Não foi possível remover a licença agora. Tente novamente." };
+    if (!removed) return { ok: false as const, error: "Esta licença já foi removida ou não está disponível para remoção." };
+    return { ok: true as const };
+  });
