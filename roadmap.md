@@ -1,9 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 15/11 — correção do 2FA
-- [ ] Reproduzir e corrigir carregamento, ativação, confirmação, aparelhos confiáveis e erros do código de seis dígitos sem enfraquecer MFA.
-- [ ] Fazer recuperação por código liberar senha e autenticador de forma segura, sem reuso do código; revisar mensagens e testes.
-- [ ] Validar fluxos possíveis, registrar limitações do banco pausado e manter deploy externo como pendência.
+- [x] Portão de MFA não monta conteúdo antes da checagem, isola respostas antigas, protege armazenamento local, mostra erro com nova tentativa e diferencia código inválido de falha de rede. Visitantes sem sessão continuam acessando páginas públicas.
+- [x] Ativação/cancelamento, leitura de fatores, aparelhos confiáveis, desligamento com código em sessão confiável e troca de senha sem rebaixar AAL2; códigos de recuperação validados e erros explícitos.
+- [x] Recuperação consome o código atomicamente no servidor, aplica limite de tentativas no handler, redefine senha, remove fatores e aparelhos antigos; código não é liberado para reuso após falha parcial e é restaurado se a senha não mudou.
+- [x] 18 testes automatizados passaram; build OK. Fluxo real com conta temporária no banco do site publicado: ativação, códigos, erro/código correto, aparelho confiável, recuperação e novo login sem fator antigo, com zero erros de página. Conta/dados temporários removidos.
+- [ ] Publicar na Vercel sem cache para o shadowdashstore.com receber as correções.
 
 ## Pedido 13/11 — melhorias no admin/suporte e compras/licenças
 - [x] Suporte: resumo e encaminhamento isolados por ticket; respostas antigas não cruzam conversas. Filtro e idade de clientes aguardando retorno; contador atual vem dos tickets abertos, não da amostra de 24h; estatísticas se recuperam após falha temporária. Regra de fechamento inalterada.

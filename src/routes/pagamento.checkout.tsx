@@ -473,7 +473,7 @@ function CheckoutPage() {
                               </AlertDialogAction>
                             ) : (
                               <AlertDialogAction asChild>
-                                <a href={availableCaktoOffer.url}>Continuar para a Cakto</a>
+                                <a href={availableCaktoOffer.url ?? undefined}>Continuar para a Cakto</a>
                               </AlertDialogAction>
                             )}
                           </AlertDialogFooter>

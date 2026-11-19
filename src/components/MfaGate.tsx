@@ -34,6 +34,16 @@ export function MfaGate({ children }: { children?: ReactNode }) {
     setState("checking");
     setErr(null);
     try {
+      // Visitantes continuam vendo as páginas públicas mesmo se a autenticação estiver fora.
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        if (isCurrent()) {
+          setFactorId(null);
+          setState("ready");
+        }
+        return;
+      }
       const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (error) throw error;
       if (data?.currentLevel !== "aal1" || data.nextLevel !== "aal2") {
@@ -151,7 +161,7 @@ export function MfaGate({ children }: { children?: ReactNode }) {
     if (busy) return;
     setBusy(true);
     requests.current.cancel();
-    await supabase.auth.signOut().catch(() => undefined);
+    await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
     setFactorId(null);
     setCode("");
     setState("ready");
