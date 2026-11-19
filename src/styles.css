@@ -3,6 +3,7 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant theme-light (&:where(.theme-light, .theme-light *));
 
 @theme inline {
   --font-sans: "Manrope", ui-sans-serif, system-ui;
