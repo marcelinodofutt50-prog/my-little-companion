@@ -150,7 +150,7 @@ function Index() {
             transition={{ delay: 0.25 }}
             className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground/75"
           >
-            Infraestrutura de cybersegurança de alto desempenho. Provisionada em segundos. Blindada por padrão.
+            {t("home.hero.description")}
           </motion.p>
           
           <motion.div
@@ -167,7 +167,7 @@ function Index() {
                     animate={{ x: ['-100%', '100%'] }}
                     transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                   />
-                  Começar Agora <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  {t("home.cta.start")} <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </motion.div>
@@ -175,7 +175,7 @@ function Index() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
               <Button size="lg" variant="outline" asChild className="h-12 sm:h-14 w-full sm:w-auto px-6 sm:px-10 text-xs font-mono uppercase tracking-widest rounded-full border-primary/30 hover:bg-primary/5 backdrop-blur-sm">
                 <Link to="/auth" search={{ mode: 'up', trial: 'true' }}>
-                  Gerar Trial <ShieldCheck className="ml-2 h-4 w-4 text-primary animate-pulse" />
+                  {t("home.hero.trial")} <ShieldCheck className="ml-2 h-4 w-4 text-primary animate-pulse" />
                 </Link>
               </Button>
 
@@ -188,7 +188,7 @@ function Index() {
             transition={{ delay: 0.5 }}
             className="mt-10 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground"
           >
-            {["99.9% Uptime", "AES-256-GCM", "2.400+ Operadores", "Suporte: OK"].map((stat) => (
+            {["99.9% Uptime", "AES-256-GCM", t("home.trust.operators"), t("home.hero.support")].map((stat) => (
               <div key={stat} className="flex items-center justify-center gap-2 rounded-full border border-border/40 bg-card/40 px-3.5 py-1.5 tracking-tighter backdrop-blur-sm transition-colors hover:border-primary/40 hover:text-foreground">
                 <span className="text-primary">✦</span> {stat}
               </div>
@@ -243,24 +243,24 @@ function Index() {
                 ALPHA-OPS CONSOLE V4.6
               </div>
               <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-bold leading-tight tracking-tight text-foreground">
-                Gestão Empresarial <br />
-                <span className="italic text-muted-foreground/60 text-4xl sm:text-5xl md:text-7xl block">De Alto Nível.</span>
+                {t("home.dashboard.title")} <br />
+                <span className="italic text-muted-foreground/60 text-4xl sm:text-5xl md:text-7xl block">{t("home.dashboard.subtitle")}</span>
               </h2>
 
               
               <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
-                Painel OSINT redesenhado para transparência absoluta. Visualize a saúde da sua infraestrutura, status de nós globais e compliance de segurança em uma única interface táctica.
+                {t("home.dashboard.description")}
               </p>
 
               <div className="grid gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
-                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Monitoramento em tempo real de SLA</div>
-                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Gestão de credenciais com AES-256</div>
-                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Status de nodes globais (EUA, EUROPA, ÁSIA)</div>
-                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> Audit log de acessos e decisões</div>
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> {t("home.dashboard.sla")}</div>
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> {t("home.dashboard.credentials")}</div>
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> {t("home.dashboard.nodes")}</div>
+                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-primary" /> {t("home.dashboard.audit")}</div>
               </div>
 
               <Button size="lg" asChild className="h-12 px-8 text-xs font-mono uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground border border-border">
-                <Link to="/auth">Ver Demo Painel</Link>
+                <Link to="/auth">{t("home.dashboard.demo")}</Link>
               </Button>
             </div>
 
@@ -432,16 +432,16 @@ function Index() {
             >
               <Users className="h-3 w-3" /> Community Evolution
             </motion.div>
-            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tighter">Objetivos da <span className="italic text-primary">Comunidade Shadow.</span></h2>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tighter">{t("home.community.title")} <span className="italic text-primary">{t("home.community.name")}</span></h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-              Juntos somos mais fortes. Desbloqueie recompensas globais para todos os membros atingindo marcos de crescimento.
+              {t("home.community.description")}
             </p>
           </div>
 
           <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-3 max-w-5xl mx-auto">
             {[
-              { target: "2.5k", reward: "Shadow Nexus 2.0", benefit: "Redução de latência global", icon: Zap, progress: 85 },
-              { target: "5k", reward: "VIP Giveaway", benefit: "50 licenças vitalícias", icon: Gift, progress: 42 },
+              { target: "2.5k", reward: "Shadow Nexus 2.0", benefit: t("home.community.latency"), icon: Zap, progress: 85 },
+              { target: "5k", reward: "VIP Giveaway", benefit: t("home.community.licenses"), icon: Gift, progress: 42 },
               { target: "10k", reward: "Satellite Uplink", benefit: "Bypass via satélite", icon: Globe, progress: 12 },
             ].map((goal, i) => (
               <motion.div
@@ -459,7 +459,7 @@ function Index() {
                 </div>
                 <div className="flex justify-between items-end mb-2">
                   <h3 className="text-2xl font-bold font-mono text-foreground">{goal.target}</h3>
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase">Membros</span>
+                  <span className="text-[10px] font-mono text-muted-foreground uppercase">{t("home.community.members")}</span>
                 </div>
                 <div className="space-y-4">
                   <Progress value={goal.progress} className="h-2 bg-primary/5 [&>div]:bg-primary" />
@@ -482,7 +482,7 @@ function Index() {
             <FeatureCard 
               icon={Zap} 
               title="Shadow Hub" 
-              desc="Acesse nossa central pública de tutoriais e conhecimento técnico avançado."
+              desc={t("home.hub.description")}
               link="/shadow-hub"
             />
             <FeatureCard 
@@ -544,7 +544,7 @@ function Index() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
             <div className="space-y-4">
-              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Ecossistema</h4>
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t("home.footer.ecosystem")}</h4>
               <ul className="space-y-2 text-xs font-mono">
                 <li><Link to="/mercado" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Store className="h-3 w-3" /> {t('nav.market')}</Link></li>
                 <li><Link to="/indicacoes" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"><Users className="h-3 w-3" /> {t('nav.referrals')}</Link></li>
@@ -554,7 +554,7 @@ function Index() {
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Plataforma</h4>
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t("home.footer.platform")}</h4>
               <ul className="space-y-2 text-xs font-mono">
                 <li><Link to="/planos" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.plans')}</Link></li>
                 <li><Link to="/tutorial" className="text-muted-foreground hover:text-primary transition-colors">Tutorial</Link></li>
@@ -562,17 +562,17 @@ function Index() {
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Suporte</h4>
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">{t("nav.support")}</h4>
               <ul className="space-y-2 text-xs font-mono">
                 <li><Link to="/suporte" className="text-muted-foreground hover:text-primary transition-colors">{t('nav.support')}</Link></li>
-                <li><Link to="/contato" className="text-muted-foreground hover:text-primary transition-colors">Contato</Link></li>
+                <li><Link to="/contato" className="text-muted-foreground hover:text-primary transition-colors">{t("nav.contact")}</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Legal</h4>
               <ul className="space-y-2 text-xs font-mono">
-                <li><Link to="/termos" className="text-muted-foreground hover:text-primary transition-colors">Termos de Uso</Link></li>
-                <li><Link to="/privacidade" className="text-muted-foreground hover:text-primary transition-colors">Privacidade</Link></li>
+                <li><Link to="/termos" className="text-muted-foreground hover:text-primary transition-colors">{t("home.footer.terms")}</Link></li>
+                <li><Link to="/privacidade" className="text-muted-foreground hover:text-primary transition-colors">{t("home.footer.privacy")}</Link></li>
               </ul>
             </div>
             <div className="space-y-4 text-right">
