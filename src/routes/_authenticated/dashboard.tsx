@@ -416,7 +416,7 @@ function DashboardPage() {
               })()}
               {user?.id && trialParam === 'true' && !licensesLoading && !licensesError && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
                 <div className="mb-4">
-                  <TrialActivationCard key={user?.id} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
+                  <TrialActivationCard key={user?.id} serverNow={serverNow} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
                 </div>
               )}
 
@@ -485,9 +485,14 @@ function DashboardPage() {
                         Ficou com dúvidas? Em Minhas licenças, abra o seu teste para ver os dados de acesso e o prazo.
                       </p>
                     </div>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link to="/suporte" search={{}}>Ajuda com o primeiro acesso</Link>
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" asChild>
+                        <a href="#minhas-licencas">Ver dados do teste</a>
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to="/suporte" search={{}}>Ajuda com o primeiro acesso</Link>
+                      </Button>
+                    </div>
                   </div>
                 )}
                 <div className="mt-5 grid gap-px overflow-hidden rounded-md border border-border/50 bg-border/50 sm:grid-cols-2 lg:grid-cols-3">
@@ -557,7 +562,7 @@ function DashboardPage() {
               <QuickHelpStrip />
 
               {user?.id && !licensesLoading && !licensesError && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && trialParam !== 'true' && (
-                <TrialActivationCard key={user?.id} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
+                <TrialActivationCard key={user?.id} serverNow={serverNow} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
               )}
 
 
