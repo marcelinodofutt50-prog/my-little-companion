@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CryptoRouteImport } from './routes/crypto'
+import { Route as GangstarRemoteRouteImport } from './routes/gangstar-remote'
 import { Route as IndicacoesRouteImport } from './routes/indicacoes'
 import { Route as MercadoRouteImport } from './routes/mercado'
 import { Route as MigracaoRouteImport } from './routes/migracao'
@@ -93,6 +94,12 @@ const ContatoRoute = ContatoRouteImport.update({
 const CryptoRoute = CryptoRouteImport.update({
   id: '/crypto',
   path: '/crypto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
+const GangstarRemoteRoute = GangstarRemoteRouteImport.update({
+  id: '/gangstar-remote',
+  path: '/gangstar-remote',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndicacoesRoute = IndicacoesRouteImport.update({
@@ -401,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
+  '/gangstar-remote': typeof GangstarRemoteRoute
   '/indicacoes': typeof IndicacoesRoute
   '/mercado': typeof MercadoRoute
   '/migracao': typeof MigracaoRoute
@@ -463,6 +471,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
+  '/gangstar-remote': typeof GangstarRemoteRoute
   '/indicacoes': typeof IndicacoesRoute
   '/mercado': typeof MercadoRoute
   '/migracao': typeof MigracaoRoute
@@ -527,6 +536,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contato': typeof ContatoRoute
   '/crypto': typeof CryptoRoute
+  '/gangstar-remote': typeof GangstarRemoteRoute
   '/indicacoes': typeof IndicacoesRoute
   '/mercado': typeof MercadoRoute
   '/migracao': typeof MigracaoRoute
@@ -591,6 +601,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
+    | '/gangstar-remote'
     | '/indicacoes'
     | '/mercado'
     | '/migracao'
@@ -653,6 +664,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
+    | '/gangstar-remote'
     | '/indicacoes'
     | '/mercado'
     | '/migracao'
@@ -716,6 +728,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contato'
     | '/crypto'
+    | '/gangstar-remote'
     | '/indicacoes'
     | '/mercado'
     | '/migracao'
@@ -780,6 +793,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContatoRoute: typeof ContatoRoute
   CryptoRoute: typeof CryptoRoute
+  GangstarRemoteRoute: typeof GangstarRemoteRoute
   IndicacoesRoute: typeof IndicacoesRoute
   MercadoRoute: typeof MercadoRoute
   MigracaoRoute: typeof MigracaoRoute
@@ -855,6 +869,13 @@ declare module '@tanstack/react-router' {
       path: '/crypto'
       fullPath: '/crypto'
       preLoaderRoute: typeof CryptoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gangstar-remote': {
+      id: '/gangstar-remote'
+      path: '/gangstar-remote'
+      fullPath: '/gangstar-remote'
+      preLoaderRoute: typeof GangstarRemoteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/indicacoes': {
@@ -1322,6 +1343,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContatoRoute: ContatoRoute,
   CryptoRoute: CryptoRoute,
+  GangstarRemoteRoute: GangstarRemoteRoute,
   IndicacoesRoute: IndicacoesRoute,
   MercadoRoute: MercadoRoute,
   MigracaoRoute: MigracaoRoute,

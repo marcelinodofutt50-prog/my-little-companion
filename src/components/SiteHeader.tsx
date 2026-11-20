@@ -59,6 +59,7 @@ export function SiteHeader() {
   ] as const;
 
   const more = [
+    { to: "/gangstar-remote", label: "Gangstar Remote 4.5" },
     { to: "/migracao", label: t("nav.migration") },
     { to: "/crypto", label: t("nav.crypto") },
     { to: "/contato", label: t("nav.contact") },
