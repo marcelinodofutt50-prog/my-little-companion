@@ -7,7 +7,7 @@ export const Route = createFileRoute("/gangstar-remote")({
   head: () => ({
     meta: [
       { title: "Gangstar Remote — Software para PC" },
-      { name: "description", content: "Conheça o Gangstar Remote e seus planos mensais." },
+      { name: "description", content: "Conheça os planos semanal e mensal do Gangstar Remote." },
     ],
     links: [{ rel: "canonical", href: siteUrl("/gangstar-remote") }],
   }),
@@ -28,7 +28,7 @@ function GangstarRemotePage() {
                 <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /> Software para PC
               </span>
               <h1 className="mt-6 font-display text-5xl font-black uppercase leading-[0.95] tracking-tight sm:text-7xl">Gangstar <span className="text-indigo-300">Remote</span></h1>
-              <p className="mt-6 max-w-lg text-base leading-7 text-slate-300 sm:text-lg">Conheça o Gangstar Remote e escolha o plano mensal que combina com você.</p>
+              <p className="mt-6 max-w-lg text-base leading-7 text-slate-300 sm:text-lg">Conheça o Gangstar Remote e escolha entre os planos semanal e mensal.</p>
               <a href="#planos" className="mt-9 inline-flex items-center gap-3 rounded-lg bg-indigo-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-300">Ver planos <ArrowDown className="h-4 w-4" aria-hidden="true" /></a>
             </div>
             <div aria-hidden="true" className="rounded-2xl border border-white/10 bg-[#0e101b]/90 p-4 shadow-[0_30px_100px_rgba(0,0,0,0.4)] sm:p-6">
@@ -38,16 +38,26 @@ function GangstarRemotePage() {
           </div>
         </section>
         <section id="planos" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-20 sm:px-8 sm:py-24">
-          <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-indigo-300"><Layers3 className="h-4 w-4" aria-hidden="true" /> Assinatura mensal</div>
+          <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-indigo-300"><Layers3 className="h-4 w-4" aria-hidden="true" /> Planos disponíveis</div>
           <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Escolha seu plano</h2>
-          <p className="mt-3 max-w-xl leading-7 text-slate-400">Os planos e valores do Gangstar Remote serão disponibilizados em breve.</p>
-          <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-            <div><h3 className="font-semibold">Planos em preparação</h3><p className="mt-2 text-sm leading-6 text-slate-400">As opções de assinatura e o acesso ao checkout aparecerão aqui quando estiverem disponíveis.</p></div>
-            <span className="inline-flex shrink-0 items-center gap-2 text-sm text-slate-400">Em breve <ChevronRight className="h-4 w-4" aria-hidden="true" /></span>
+          <p className="mt-3 max-w-xl leading-7 text-slate-400">Selecione o período desejado para continuar para o checkout.</p>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {[
+              { name: "Semanal", price: "R$ 1.800,00", period: "semana", checkout: "https://pay.cakto.com.br/cxwfetz_1350896" },
+              { name: "Mensal", price: "R$ 4.000,00", period: "mês", checkout: "https://pay.cakto.com.br/9mdeqxs_1349153" },
+            ].map((plan) => (
+              <article key={plan.name} className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+                <h3 className="text-xl font-semibold">{plan.name}</h3>
+                <p className="mt-3 text-sm text-slate-400">Gangstar Remote para PC</p>
+                <p className="mt-8"><span className="text-3xl font-bold tracking-tight">{plan.price}</span><span className="ml-2 text-sm text-slate-400">/ {plan.period}</span></p>
+                <a href={plan.checkout} className="mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-300">Escolher {plan.name.toLowerCase()} <ChevronRight className="h-4 w-4" aria-hidden="true" /></a>
+              </article>
+            ))}
           </div>
         </section>
       </main>
     </div>
   );
 }
+
 
