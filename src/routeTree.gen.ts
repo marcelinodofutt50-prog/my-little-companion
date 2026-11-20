@@ -96,7 +96,6 @@ const CryptoRoute = CryptoRouteImport.update({
   path: '/crypto',
   getParentRoute: () => rootRouteImport,
 } as any)
-
 const GangstarRemoteRoute = GangstarRemoteRouteImport.update({
   id: '/gangstar-remote',
   path: '/gangstar-remote',
