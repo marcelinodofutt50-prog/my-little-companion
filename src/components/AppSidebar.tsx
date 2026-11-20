@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Clapperboard, LayoutDashboard,
-  Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull, Trophy, User, Lightbulb, Crown, Bitcoin, MessagesSquare } from "lucide-react";
+  Gift, Sparkles, LifeBuoy, ShieldAlert, Download, Users, LogOut, ShieldCheck, Store, Server, Video, Skull, Trophy, User, Lightbulb, Crown, Bitcoin, MessagesSquare, Monitor } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
 import type { MouseEvent } from "react";
@@ -69,6 +69,7 @@ const navigation: { label: { pt: string; en: string }; items: Item[] }[] = [
     items: [
       { title: "Marketplace", url: "/mercado", icon: Store, tKey: "nav.market" as const },
       { title: "Kraken (2.0)", url: "/servidor/kraken", icon: Skull, tKey: "nav.kraken" as const },
+      { title: "Gangstar Remote 4.5", url: "/gangstar-remote", icon: Monitor },
       { title: "Asset Provisioning", url: "/play-protect", icon: ShieldCheck, tKey: "nav.playprotect" as const },
     ],
   },
