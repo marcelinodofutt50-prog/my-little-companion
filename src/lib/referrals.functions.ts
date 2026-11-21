@@ -1,3 +1,4 @@
+import { requireTrialIssuanceEnabled } from "./ban-rules";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -126,6 +127,7 @@ export const activateTrialReward = createServerFn({ method: "POST" })
     attrs: typeof input?.attrs === "string" ? input.attrs.slice(0, 600) : undefined,
   }))
   .handler(async ({ data, context }) => {
+    requireTrialIssuanceEnabled();
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { internalGenerateTrial } = await import("./license.server");

@@ -5,6 +5,14 @@ export const TRIAL_DURATION_MS = 3.5 * 60 * 60 * 1000;
 export const TRIAL_TERMS_VERSION = "v2-3h30";
 export const TRIAL_CONSENT_MAX_AGE_MS = 30 * 60 * 1000;
 
+const TRIAL_ISSUANCE_ENABLED = false;
+
+export function requireTrialIssuanceEnabled(): void {
+  if (!TRIAL_ISSUANCE_ENABLED) {
+    throw new Error("A emissão de novos testes grátis está suspensa.");
+  }
+}
+
 export function shouldBanGroup(groupSize: number): boolean {
   return groupSize >= MULTI_ACCOUNT_BAN_THRESHOLD;
 }

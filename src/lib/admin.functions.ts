@@ -1,3 +1,4 @@
+import { requireTrialIssuanceEnabled } from "./ban-rules";
 import { safeSearch } from "@/lib/safe-search";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -814,6 +815,7 @@ export const adminReplaceUserTrial = createServerFn({ method: "POST" })
   .validator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    requireTrialIssuanceEnabled();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { yaarsaCreateAccount, yaarsaRemoveAccount, generateCredentials, encrypt } = await import("./yaarsa.server");
 
