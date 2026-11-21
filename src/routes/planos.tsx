@@ -1017,6 +1017,7 @@ function PlansPage() {
                       isLoading={loadingPlan === p.slug}
                       onBuy={buy}
                       featured={p.slug === "login-lifetime"}
+                      lifetimeOfferEnabled={loggedIn === true}
                       upsell={(() => {
                         if (isLifetime || !(is7d || isMonthly) || s.includes("trial")) return undefined;
                         const lt = licenses.find((x) => x.slug === "login-lifetime");
@@ -1517,7 +1518,7 @@ function FaqSection() {
 }
 
 // ============ Plan Card ============
-const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoading, onBuy, featured, upsell }: {
+const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoading, onBuy, featured, lifetimeOfferEnabled, upsell }: {
   upsell?: { slug: string; price: number };
   plan: Plan;
   coupon: Coupon | null;
@@ -1526,13 +1527,14 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   isLoading: boolean;
   onBuy: (s: string) => void;
   featured?: boolean;
+  lifetimeOfferEnabled: boolean;
 }) {
   const { t } = useI18n();
   const { fmt: formatBrl, parts: moneyParts } = useMoney();
   const [showUpgradeConfirm, setShowUpgradeConfirm] = useState<string | null>(null);
   
   const price = Number(plan.price_brl);
-  const { active: lifetimePromotion } = useLifetimePromotion(plan.slug === "login-lifetime");
+  const { active: lifetimePromotion } = useLifetimePromotion(lifetimeOfferEnabled && plan.slug === "login-lifetime");
   // Cupom pessoal travado em outro plano não vale aqui — não mostramos desconto falso.
   const appliedCoupon = coupon && (!coupon.plan_slug || coupon.plan_slug === plan.slug) ? coupon : null;
   const b = useMemo(
@@ -1667,8 +1669,8 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         {lifetimePromotion && hasLifetimeOffer(plan.slug, price) && (
           <p className="mb-2 text-sm font-semibold text-primary">
             {tr(
-              `Oferta na Cakto: de ${formatBrl(LIFETIME_OFFER_REGULAR_PRICE_BRL)} por ${formatBrl(LIFETIME_OFFER_PRICE_BRL)}.`,
-              `Cakto offer: ${formatBrl(LIFETIME_OFFER_PRICE_BRL)}.`,
+              `Boas-vindas: de ${formatBrl(LIFETIME_OFFER_REGULAR_PRICE_BRL)} por ${formatBrl(LIFETIME_OFFER_PRICE_BRL)} nas primeiras 6 horas da conta.`,
+              `Welcome offer: ${formatBrl(LIFETIME_OFFER_PRICE_BRL)} during your account's first 6 hours.`,
             )}
           </p>
         )}

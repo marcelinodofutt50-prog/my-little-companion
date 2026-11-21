@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 21/11 — anúncio para novos membros
+- [ ] Criar e exibir a arte Vitalício R$ 999,99 para novos membros.
+- [ ] Limitar a elegibilidade e a abertura do checkout às primeiras 6 horas da conta, com validação no servidor e sem contador.
+- [ ] Testar os limites de tempo, conferir o anúncio no navegador e compilar.
+- [ ] Publicar na Vercel sem cache para atualizar o shadowdashstore.com.
+
 ## Pedido 21/11 — oferta Vitalício de R$ 999,99
 - [x] Restaurar o preço promocional na página de planos e no checkout Cakto, sem contador; o dono confirmou R$ 999,99 após a conferência do link.
 - [x] 4 testes passaram, build OK e oferta ativa conferida no navegador, sem contador e sem erros de página; checkout confere R$ 999,99.
