@@ -469,7 +469,7 @@ function CheckoutPage() {
                                   void openSpecialCaktoCheckout();
                                 }}
                               >
-                                {openingPromotion ? "Abrindo Cakto…" : promotionalCheckout ? "Continuar para a Cakto · R$ 999" : "Continuar para a Cakto"}
+                                {openingPromotion ? "Abrindo Cakto…" : promotionalCheckout ? `Continuar para a Cakto · ${brl(LIFETIME_PROMOTION_PRICE)}` : "Continuar para a Cakto"}
                               </AlertDialogAction>
                             ) : (
                               <AlertDialogAction asChild>

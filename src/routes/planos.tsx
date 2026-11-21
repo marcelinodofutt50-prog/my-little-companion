@@ -1,4 +1,9 @@
 import { useLifetimePromotion } from "@/components/LifetimePromotionBanner";
+import {
+  hasLifetimeOffer,
+  LIFETIME_OFFER_PRICE_BRL,
+  LIFETIME_OFFER_REGULAR_PRICE_BRL,
+} from "@/lib/lifetime-offer";
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useThemeSearchParam } from "@/hooks/use-theme-param";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1659,9 +1664,12 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
       )}
 
       <div className="mt-6 flex flex-col gap-1">
-        {lifetimePromotion && plan.slug === "login-lifetime" && price === 1700 && (
+        {lifetimePromotion && hasLifetimeOffer(plan.slug, price) && (
           <p className="mb-2 text-sm font-semibold text-primary">
-            {tr("Oferta na Cakto: R$ 999 durante a promoção.", "Cakto offer: R$ 999 during the promotion.")}
+            {tr(
+              `Oferta na Cakto: de ${formatBrl(LIFETIME_OFFER_REGULAR_PRICE_BRL)} por ${formatBrl(LIFETIME_OFFER_PRICE_BRL)}.`,
+              `Cakto offer: ${formatBrl(LIFETIME_OFFER_PRICE_BRL)}.`,
+            )}
           </p>
         )}
         {hasBenefit && b.final < price ? (

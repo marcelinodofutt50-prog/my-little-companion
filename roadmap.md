@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 21/11 — oferta Vitalício de R$ 999,90
+- [x] Preparar o preço promocional na página de planos e no checkout Cakto, sem contador.
+- [x] Testar o valor e a elegibilidade da oferta; 4 testes passaram e o build está OK.
+- [ ] Ativação aguarda o link correto da Cakto: o link antigo foi conferido e cobra R$ 999,99. A oferta permanece desativada para não anunciar um valor e cobrar outro.
+- [ ] Publicar na Vercel sem cache para atualizar o shadowdashstore.com.
+
 ## Pedido 15/11 — correção do 2FA
 - [x] Portão de MFA não monta conteúdo antes da checagem, isola respostas antigas, protege armazenamento local, mostra erro com nova tentativa e diferencia código inválido de falha de rede. Visitantes sem sessão continuam acessando páginas públicas.
 - [x] Ativação/cancelamento, leitura de fatores, aparelhos confiáveis, desligamento com código em sessão confiável e troca de senha sem rebaixar AAL2; códigos de recuperação validados e erros explícitos.
