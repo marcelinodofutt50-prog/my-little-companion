@@ -91,6 +91,7 @@ function DashboardPage() {
   const [tutorialOpen, setTutorialOpen] = useState(false)
   const [user, setUser] = useState<any>(undefined)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [trialActivatedFor, setTrialActivatedFor] = useState<string | null>(null)
   const serverNow = useServerNow()
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   // Auto-oculta credenciais reveladas após 30s (shoulder-surfing).
@@ -280,6 +281,20 @@ function DashboardPage() {
     return s.active || s.paused
   }
   const activeLicense = licenses?.find((l: any) => licenseExpiryState(l, serverNow).active)
+  const accountAge = serverNow - Date.parse(user?.created_at ?? profile?.created_at ?? '')
+  const trialCandidate = Boolean(user?.id && accountAge >= 0 && accountAge <= 24 * 60 * 60 * 1000 &&
+    !licensesLoading && !licensesError && !activeLicense && licenses?.every((license: any) => !license.is_trial))
+  const trialHistory = useQuery({
+    queryKey: ['dashboard-trial-used', user?.id],
+    enabled: trialCandidate,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('trials').select('user_id').eq('user_id', user.id).limit(1)
+      if (error) throw error
+      return data.length > 0
+    },
+  })
+  const showTrialCard = trialCandidate && trialHistory.isSuccess && trialHistory.data === false &&
+    !trialHistory.isFetching && trialActivatedFor !== user?.id
   const pausedLicense = licenses?.find((l: any) => licenseExpiryState(l, serverNow).paused)
   const currentLicense = activeLicense || pausedLicense
   const expiry = currentLicense ? licenseExpiryState(currentLicense, serverNow) : null
@@ -395,7 +410,6 @@ function DashboardPage() {
     planActionLabel = expiry.kind === 'trial' ? 'Ver planos após o teste' : 'Renovar licença'
   }
 
-  const [trialActivatedFor, setTrialActivatedFor] = useState<string | null>(null)
   const handleTrialActivated = () => {
     setTrialActivatedFor(user?.id ?? null)
     void refetchLicenses()
@@ -447,7 +461,7 @@ function DashboardPage() {
                   <TrialEndedReferralOffer trialId={endedTrial.id} referralCode={(profile as any)?.referral_code ?? null} />
                 ) : null
               })()}
-              {user?.id && trialParam === 'true' && !licensesLoading && !licensesError && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && (
+              {showTrialCard && trialParam === 'true' && (
                 <div className="mb-4">
                   <TrialActivationCard key={user?.id} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
                 </div>
@@ -589,7 +603,7 @@ function DashboardPage() {
 
               <QuickHelpStrip />
 
-              {user?.id && !licensesLoading && !licensesError && !activeLicense && (licenses ?? []).every((l: any) => !l.is_trial) && trialParam !== 'true' && (
+              {showTrialCard && trialParam !== 'true' && (
                 <TrialActivationCard key={user?.id} onDone={handleTrialActivated} onRefresh={() => void refetchLicenses()} />
               )}
 
