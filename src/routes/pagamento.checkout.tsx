@@ -126,8 +126,22 @@ function brl(v: number) {
 
 function CheckoutPage() {
   const { order } = Route.useSearch();
-  const storageKey = order ? `shadow:checkout-survey:${order}` : "";
+  useEffect(() => {
+    try {
+      const storage = window.localStorage;
+      for (let i = storage.length - 1; i >= 0; i--) {
+        const key = storage.key(i);
+        if (key?.startsWith("shadow:checkout-survey:")) storage.removeItem(key);
+      }
+    } catch {
+      // O navegador pode bloquear o armazenamento local.
+    }
+  }, []);
 
+  return <CheckoutForm key={order ?? ""} order={order} />;
+}
+
+function CheckoutForm({ order }: { order?: string }) {
   const [survey, setSurvey] = useState<Survey>(EMPTY);
   const [confirmed, setConfirmed] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -182,16 +196,6 @@ function CheckoutPage() {
   const errors = validate(survey);
   const set = (patch: Partial<Survey>) => setSurvey((s) => ({ ...s, ...patch }));
 
-  useEffect(() => {
-    if (!storageKey) return;
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (raw) setSurvey({ ...EMPTY, ...JSON.parse(raw) });
-    } catch {
-      /* ignore */
-    }
-  }, [storageKey]);
-
   async function confirmSurvey() {
     setTouched(true);
     setSaveError(null);
@@ -212,11 +216,6 @@ function CheckoutPage() {
         },
       });
       if (!res?.ok) throw new Error(res?.error ?? "Não foi possível salvar seu cadastro.");
-      try {
-        if (storageKey) window.localStorage.setItem(storageKey, JSON.stringify(survey));
-      } catch {
-        /* ignore */
-      }
       setConfirmed(true);
     } catch (e) {
       setSaveError((e as Error)?.message ?? "Falha ao salvar o cadastro.");
