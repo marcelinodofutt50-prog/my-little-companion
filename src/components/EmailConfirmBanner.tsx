@@ -18,11 +18,21 @@ const BACKOFF_MS = 5 * 60 * 1000; // espera 5 min após falha (limite de envio, 
 
 type AutoState = { attempts: number; lastAt: number; done: boolean };
 
-const keyFor = (email: string) => `sd_confirm_auto_${email.trim().toLowerCase()}`;
+const keyFor = (userId: string) => `sd_confirm_user_${userId}`;
 
-function readAuto(email: string): AutoState {
+function readAuto(userId: string, email: string): AutoState {
   try {
-    const raw = localStorage.getItem(keyFor(email));
+    const key = keyFor(userId);
+    const legacyKey = `sd_confirm_auto_${email.trim().toLowerCase()}`;
+    const stored = localStorage.getItem(key);
+    const legacy = localStorage.getItem(legacyKey);
+    const raw = stored ?? legacy;
+    if (legacy !== null) {
+      try {
+        if (stored === null) localStorage.setItem(key, legacy);
+        localStorage.removeItem(legacyKey);
+      } catch { /* Keep the retry state available when migration is blocked. */ }
+    }
     if (!raw) return { attempts: 0, lastAt: 0, done: false };
     const parsed = JSON.parse(raw);
     return {
@@ -35,16 +45,17 @@ function readAuto(email: string): AutoState {
   }
 }
 
-function writeAuto(email: string, state: AutoState) {
+function writeAuto(userId: string, state: AutoState) {
   try {
-    localStorage.setItem(keyFor(email), JSON.stringify(state));
+    localStorage.setItem(keyFor(userId), JSON.stringify(state));
   } catch {
     /* storage indisponível: segue sem persistir */
   }
 }
 
 export function EmailConfirmBanner() {
-  const [email, setEmail] = useState<string | null>(null);
+  const [account, setAccount] = useState<{ id: string; email: string } | null>(null);
+  const email = account?.email;
   const [confirmed, setConfirmed] = useState(true);
   const [sending, setSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -58,9 +69,9 @@ export function EmailConfirmBanner() {
       if (!active) return;
       const user = data.user;
       if (!user) return;
-      setEmail(user.email ?? null);
+      if (user.email) setAccount({ id: user.id, email: user.email });
       setConfirmed(Boolean((user as any).email_confirmed_at ?? (user as any).confirmed_at));
-      if (user.email) setAuto(readAuto(user.email));
+      if (user.email) setAuto(readAuto(user.id, user.email));
     });
     return () => {
       active = false;
@@ -75,13 +86,13 @@ export function EmailConfirmBanner() {
 
   const send = useCallback(
     async (mode: "auto" | "manual") => {
-      if (!email || busy.current) return;
+      if (!account || busy.current) return;
       busy.current = true;
       if (mode === "manual") setSending(true);
       try {
         const { error } = await supabase.auth.resend({
           type: "signup",
-          email,
+          email: account.email,
           options: { emailRedirectTo: siteUrl() },
         });
         if (error) throw error;
@@ -92,7 +103,7 @@ export function EmailConfirmBanner() {
           done: mode === "auto" ? auto.attempts + 1 >= MAX_AUTO_ATTEMPTS : auto.done,
         };
         setAuto(next);
-        writeAuto(email, next);
+        writeAuto(account.id, next);
         setCooldown(60);
         setAutoStatus(
           mode === "auto"
@@ -106,7 +117,7 @@ export function EmailConfirmBanner() {
           // Falha (limite de envio ou instabilidade): não gasta tentativa, tenta de novo depois.
           const next = { ...auto, lastAt: Date.now() - RETRY_INTERVAL_MS + BACKOFF_MS };
           setAuto(next);
-          writeAuto(email, next);
+          writeAuto(account.id, next);
           setAutoStatus("Serviço de e-mail cheio no momento. Tentamos de novo mais tarde, automaticamente.");
         } else {
           // Manual: evita mensagem alarmista. A conta já está liberada, então o usuário não fica preso.
@@ -122,7 +133,7 @@ export function EmailConfirmBanner() {
         setSending(false);
       }
     },
-    [auto, email],
+    [auto, account],
   );
 
   // Reenvio automático: tenta quando o envio volta a funcionar, respeitando o limite.
