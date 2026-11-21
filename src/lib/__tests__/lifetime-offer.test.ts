@@ -6,9 +6,9 @@ import {
 } from "@/lib/lifetime-offer";
 
 describe("oferta do plano Vitalício", () => {
-  it("oferece o Vitalício de R$ 1.700 por R$ 999,90", () => {
+  it("oferece o Vitalício de R$ 1.700 por R$ 999,99", () => {
     expect(LIFETIME_OFFER_REGULAR_PRICE_BRL).toBe(1700);
-    expect(LIFETIME_OFFER_PRICE_BRL).toBe(999.9);
+    expect(LIFETIME_OFFER_PRICE_BRL).toBe(999.99);
     expect(hasLifetimeOffer("login-lifetime", 1700)).toBe(true);
   });
 

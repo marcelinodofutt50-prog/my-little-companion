@@ -30,7 +30,7 @@ export function LifetimePromotionBanner() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:flex-nowrap">
         <p className="text-center text-sm font-semibold" role="status">
           Vitalício de <s>R$ {LIFETIME_OFFER_REGULAR_PRICE_BRL.toLocaleString("pt-BR")}</s> por{" "}
-          <strong>R$ 999,90</strong> na Cakto.
+          <strong>R$ 999,99</strong> na Cakto.
         </p>
         <Link to="/planos" className="rounded-md bg-amber-300 px-3 py-1.5 text-sm font-bold text-amber-950 hover:bg-amber-200">
           Ver oferta
