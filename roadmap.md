@@ -1,9 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
 ## Pedido 21/11 — anúncio para novos membros
-- [ ] Criar e exibir a arte Vitalício R$ 999,99 para novos membros.
-- [ ] Limitar a elegibilidade e a abertura do checkout às primeiras 6 horas da conta, com validação no servidor e sem contador.
-- [ ] Testar os limites de tempo, conferir o anúncio no navegador e compilar.
+- [x] Criar e exibir a arte Vitalício R$ 999,99 para novos membros.
+- [x] Limitar a elegibilidade e a abertura do checkout às primeiras 6 horas da conta, com validação no servidor e sem contador.
+- [x] 10 testes passaram, assets e build OK; anúncio conferido no computador e celular, sem erros ou estouro horizontal.
+- [ ] Conta temporária para checagem autenticada não pôde ser criada (gateway error); regras do servidor foram testadas com mocks, sem abrir pagamento.
 - [ ] Publicar na Vercel sem cache para atualizar o shadowdashstore.com.
 
 ## Pedido 21/11 — oferta Vitalício de R$ 999,99
