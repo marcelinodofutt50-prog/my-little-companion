@@ -1518,7 +1518,7 @@ function FaqSection() {
 }
 
 // ============ Plan Card ============
-const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoading, onBuy, featured, lifetimeOfferEnabled, upsell }: {
+const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoading, onBuy, featured, lifetimeOfferEnabled = false, upsell }: {
   upsell?: { slug: string; price: number };
   plan: Plan;
   coupon: Coupon | null;
@@ -1527,7 +1527,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
   isLoading: boolean;
   onBuy: (s: string) => void;
   featured?: boolean;
-  lifetimeOfferEnabled: boolean;
+  lifetimeOfferEnabled?: boolean;
 }) {
   const { t } = useI18n();
   const { fmt: formatBrl, parts: moneyParts } = useMoney();

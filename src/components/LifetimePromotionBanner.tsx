@@ -7,7 +7,7 @@ import {
   getMyLifetimePromotion,
 } from "@/lib/lifetime-promotion.functions";
 import { LIFETIME_OFFER_PRICE_BRL } from "@/lib/lifetime-offer";
-import welcomeOfferImage from "@/assets/vitalicio-novos-membros.jpg";
+import welcomeOfferImage from "@/media/vitalicio-novos-membros.jpg.asset.json";
 
 export const LIFETIME_PROMOTION_PRICE = LIFETIME_OFFER_PRICE_BRL;
 
@@ -43,7 +43,7 @@ export function LifetimePromotionBanner() {
         className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
       >
         <img
-          src={welcomeOfferImage}
+          src={welcomeOfferImage.url}
           alt="Oferta de boas-vindas: Vitalício por R$ 999,99, somente para novos membros nas primeiras 6 horas"
           width={1536}
           height={864}
