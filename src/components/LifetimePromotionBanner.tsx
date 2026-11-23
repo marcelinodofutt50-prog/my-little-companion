@@ -11,6 +11,10 @@ import welcomeOfferImage from "@/media/vitalicio-novos-membros.jpg.asset.json";
 
 export const LIFETIME_PROMOTION_PRICE = LIFETIME_OFFER_PRICE_BRL;
 
+// A Vercel não expõe a rota interna /__l5e; o domínio público do projeto
+// entrega o mesmo asset imutável também para shadowdashstore.com.
+const WELCOME_OFFER_IMAGE_URL = `https://hug-and-snuggle-bot.lovable.app${welcomeOfferImage.url}`;
+
 export function useLifetimePromotion(enabled = true) {
   const query = useQuery({
     queryKey: ["my-lifetime-promotion"],
@@ -33,21 +37,23 @@ export function LifetimePromotionBanner() {
     staleTime: 5 * 60_000,
   });
   const [dismissed, setDismissed] = useState(false);
-  if (!query.data?.active || dismissed) return null;
+  const [imageFailed, setImageFailed] = useState(false);
+  if (!query.data?.active || dismissed || imageFailed) return null;
 
   return (
     <div className="relative border-b border-amber-400/30 bg-background">
       <Link
         to="/planos"
         aria-label="Ver oferta Vitalício de R$ 999,99 para novos membros nas primeiras 6 horas"
-        className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+        className="flex justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
       >
         <img
-          src={welcomeOfferImage.url}
+          src={WELCOME_OFFER_IMAGE_URL}
           alt="Oferta de boas-vindas: Vitalício por R$ 999,99, somente para novos membros nas primeiras 6 horas"
           width={1536}
           height={864}
-          className="mx-auto h-auto max-h-72 w-full object-contain"
+          onError={() => setImageFailed(true)}
+          className="block h-40 w-auto max-w-full object-contain"
         />
       </Link>
       <button

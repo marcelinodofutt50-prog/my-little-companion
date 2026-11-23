@@ -1,5 +1,11 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 23/11 — banner do Vitalício quebrado e grande demais
+- [x] Corrigir o carregamento da arte no domínio publicado, onde a rota interna retorna 404, usando o endereço público imutável do asset.
+- [x] Reduzir a altura máxima de 288 para 160 px, ajustar a caixa à arte e remover o espaço vazio se a imagem falhar.
+- [x] Navegador: arte carregada (1536×864 naturais), caixa de 284×160 px no computador/celular, sem overflow ou erros; falha simulada remove toda a faixa. 8 testes e validação de assets passaram; restante da página inalterado.
+- [ ] Publicar na Vercel sem cache para atualizar o shadowdashstore.com.
+
 ## Pedido 21/11 — anúncio para novos membros
 - [x] Criar e exibir a arte Vitalício R$ 999,99 para novos membros.
 - [x] Limitar a elegibilidade e a abertura do checkout às primeiras 6 horas da conta, com validação no servidor e sem contador.
