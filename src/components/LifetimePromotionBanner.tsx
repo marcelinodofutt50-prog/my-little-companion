@@ -37,33 +37,42 @@ export function LifetimePromotionBanner() {
     staleTime: 5 * 60_000,
   });
   const [dismissed, setDismissed] = useState(false);
+  const [imageSource, setImageSource] = useState(WELCOME_OFFER_IMAGE_URL);
   const [imageFailed, setImageFailed] = useState(false);
   if (!query.data?.active || dismissed || imageFailed) return null;
 
   return (
-    <div className="relative border-b border-amber-400/30 bg-background">
-      <Link
-        to="/planos"
-        aria-label="Ver oferta Vitalício de R$ 999,99 para novos membros nas primeiras 6 horas"
-        className="flex justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
-      >
-        <img
-          src={WELCOME_OFFER_IMAGE_URL}
-          alt="Oferta de boas-vindas: Vitalício por R$ 999,99, somente para novos membros nas primeiras 6 horas"
-          width={1536}
-          height={864}
-          onError={() => setImageFailed(true)}
-          className="block h-40 w-auto max-w-full object-contain"
-        />
-      </Link>
-      <button
-        type="button"
-        onClick={() => setDismissed(true)}
-        aria-label="Fechar aviso"
-        className="absolute right-3 top-3 rounded-full border border-border bg-background/80 p-2 text-foreground backdrop-blur transition-colors hover:bg-background"
-      >
-        <X className="size-4" aria-hidden="true" />
-      </button>
+    <div className="border-b border-amber-400/30 bg-background">
+      <div className="relative mx-auto w-fit max-w-full">
+        <Link
+          to="/planos"
+          aria-label="Ver oferta Vitalício de R$ 999,99 para novos membros nas primeiras 6 horas"
+          className="flex justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+        >
+          <img
+            src={imageSource}
+            alt="Oferta de boas-vindas: Vitalício por R$ 999,99, somente para novos membros nas primeiras 6 horas"
+            width={1536}
+            height={864}
+            onError={() => {
+              if (imageSource !== welcomeOfferImage.url) {
+                setImageSource(welcomeOfferImage.url);
+              } else {
+                setImageFailed(true);
+              }
+            }}
+            className="block h-40 w-auto max-w-full object-contain"
+          />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          aria-label="Fechar aviso"
+          className="absolute right-2 top-2 rounded-full border border-border bg-background/80 p-2 text-foreground backdrop-blur transition-colors hover:bg-background"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }

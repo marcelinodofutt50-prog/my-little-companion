@@ -1,5 +1,10 @@
 # Roadmap (pedido em 17 partes, ordem P0→P4)
 
+## Pedido 23/11 — banner ainda quebrado
+- [x] Reproduzido no preview: a arte externa respondia 200, mas o anúncio dependia desse único endereço e o botão de fechar ficava no canto da tela. Adicionada alternativa no mesmo domínio, remoção da faixa somente se ambas falharem e botão preso à arte; tamanho de 160 px mantido.
+- [x] Navegador: carregamento normal e falha externa simulada exibem a arte completa (1536×864 naturais); falha das duas rotas remove a faixa vazia; botão dentro da imagem e nenhum erro de página. Build e validação de assets OK.
+- [ ] shadowdashstore.com recusou a conexão durante a checagem e o endereço principal informa que não há build publicado; atualização externa continua dependendo do deploy na Vercel sem cache.
+
 ## Pedido 23/11 — banner do Vitalício quebrado e grande demais
 - [x] Corrigir o carregamento da arte no domínio publicado, onde a rota interna retorna 404, usando o endereço público imutável do asset.
 - [x] Reduzir a altura máxima de 288 para 160 px, ajustar a caixa à arte e remover o espaço vazio se a imagem falhar.
