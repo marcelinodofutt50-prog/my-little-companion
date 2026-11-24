@@ -331,8 +331,12 @@ function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [userFilter, setUserFilter] = useState("");
+  // Resultado da busca no servidor fica SEPARADO do lote base, senão o dashboard
+  // (que calcula KPIs sobre orders/licenses/users) contaria sobre o subconjunto.
+  const [userResults, setUserResults] = useState<any[] | null>(null);
 
   const [orders, setOrders] = useState<any[]>([]);
+  const [orderResults, setOrderResults] = useState<any[] | null>(null);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
   const [renewalsOnly, setRenewalsOnly] = useState(false);
@@ -353,6 +357,7 @@ function AdminPage() {
   };
   const totalPending = navBadges.chat + navBadges.orders + navBadges.refunds + navBadges.apk;
   const [licenses, setLicenses] = useState<any[]>([]);
+  const [licenseResults, setLicenseResults] = useState<any[] | null>(null);
   const [roles, setRoles] = useState<{ user_id: string; role: string }[]>([]);
   const [badges, setBadges] = useState<{ user_id: string; plan: string }[]>([]);
   const [email, setEmail] = useState("");
@@ -469,25 +474,17 @@ function AdminPage() {
   // Busca de pedidos no servidor (debounced). O lote padrão traz só os 200 mais
   // recentes; sem isto, pedido de cliente fora desse lote não aparecia na busca.
   const orderSearchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const didServerOrderSearch = useRef(false);
   useEffect(() => {
     const term = orderSearch.trim().replace(/^#/, "");
     if (orderSearchTimer.current) clearTimeout(orderSearchTimer.current);
-    if (term.length < 3) {
-      if (didServerOrderSearch.current) {
-        didServerOrderSearch.current = false;
-        void loadOrders(); // restaura o lote padrão (recentes) ao limpar a busca
-      }
-      return;
-    }
+    if (term.length < 3) { setOrderResults(null); return; }
     orderSearchTimer.current = setTimeout(() => {
-      didServerOrderSearch.current = true;
       ordersFn({ data: { search: term } })
-        .then((r) => { setOrders(r); setOrdersError(null); loadedRef.current.orders = true; })
+        .then((r) => { setOrderResults(r); setOrdersError(null); })
         .catch((e: any) => setOrdersError(e?.message ?? "Não foi possível buscar pedidos. Tente novamente."));
     }, 400);
     return () => { if (orderSearchTimer.current) clearTimeout(orderSearchTimer.current); };
-  }, [orderSearch, ordersFn, loadOrders]);
+  }, [orderSearch, ordersFn]);
 
   const loadUsers = useCallback(() => {
     if (inflightRef.current.users) return inflightRef.current.users;
@@ -511,25 +508,17 @@ function AdminPage() {
   // Busca de usuários no servidor (debounced). O lote padrão traz só os 500 mais
   // recentes; sem isto, cadastro antigo não aparecia no filtro da aba.
   const userSearchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const didServerUserSearch = useRef(false);
   useEffect(() => {
     const term = userFilter.trim();
     if (userSearchTimer.current) clearTimeout(userSearchTimer.current);
-    if (term.length < 3) {
-      if (didServerUserSearch.current) {
-        didServerUserSearch.current = false;
-        void loadUsers(); // restaura o lote padrão (recentes) ao limpar a busca
-      }
-      return;
-    }
+    if (term.length < 3) { setUserResults(null); return; }
     userSearchTimer.current = setTimeout(() => {
-      didServerUserSearch.current = true;
       usersFn({ data: { search: term } })
-        .then((r) => { setUsers(r); setUsersError(null); loadedRef.current.users = true; })
+        .then((r) => { setUserResults(r); setUsersError(null); })
         .catch((e: any) => setUsersError(e?.message ?? "Não foi possível buscar usuários. Tente novamente."));
     }, 400);
     return () => { if (userSearchTimer.current) clearTimeout(userSearchTimer.current); };
-  }, [userFilter, usersFn, loadUsers]);
+  }, [userFilter, usersFn]);
 
   const loadLicenses = useCallback(() => {
     if (inflightRef.current.licenses) return inflightRef.current.licenses;
@@ -553,28 +542,20 @@ function AdminPage() {
   // Busca de licenças no servidor (debounced). O lote padrão traz só as 200 mais
   // recentes; sem isto, licença de cliente fora desse lote nunca aparecia na busca.
   const licSearchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const didServerLicSearch = useRef(false);
   useEffect(() => {
     const term = licSearch.trim();
     if (licSearchTimer.current) clearTimeout(licSearchTimer.current);
-    if (term.length < 3) {
-      if (didServerLicSearch.current) {
-        didServerLicSearch.current = false;
-        void loadLicenses(); // restaura o lote padrão (recentes) ao limpar a busca
-      }
-      return;
-    }
+    if (term.length < 3) { setLicenseResults(null); return; }
     licSearchTimer.current = setTimeout(() => {
-      didServerLicSearch.current = true;
       setLicenseLoading(true);
       setLicenseLoadError(null);
       licensesFn({ data: { search: term } })
-        .then((r) => { setLicenses(r); loadedRef.current.licenses = true; })
+        .then((r) => setLicenseResults(r))
         .catch(() => setLicenseLoadError("Não foi possível buscar licenças. Tente novamente."))
         .finally(() => setLicenseLoading(false));
     }, 400);
     return () => { if (licSearchTimer.current) clearTimeout(licSearchTimer.current); };
-  }, [licSearch, licensesFn, loadLicenses]);
+  }, [licSearch, licensesFn]);
 
   const loadRoles = useCallback(() => {
     if (inflightRef.current.roles) return inflightRef.current.roles;
@@ -1643,7 +1624,7 @@ function AdminPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {users
+                        {(userResults ?? users)
                           .filter((u) => {
                             const q = userFilter.trim().toLowerCase();
                             if (!q) return true;
@@ -1686,7 +1667,7 @@ function AdminPage() {
                   pagos: (o) => o.status === "paid",
                   falhos: (o) => o.status === "failed" || o.status === "cancelled",
                 };
-                const filteredOrders = orders.filter((o) => {
+                const filteredOrders = (orderResults ?? orders).filter((o) => {
                   if (!statusMap[orderStatus](o)) return false;
                   if (renewalsOnly && !["server-monthly", "server-monthly-legacy"].includes(o.plan_slug)) return false;
                   const fields = [
@@ -1944,10 +1925,11 @@ function AdminPage() {
                 // arquivadas (revogadas/expiradas/desativadas) — senão o staff procura
                 // um cliente e a tela diz "nenhuma" mesmo existindo licença.
                 const searching = licSearch.trim().length > 0;
+                const sourceLicenses = licenseResults ?? licenses;
                 const visibleBase = searching
-                  ? licenses
-                  : licenses.filter((l) => (licScope === "active" ? !isArchived(l) : isArchived(l)));
-                const archivedCount = licenses.filter(isArchived).length;
+                  ? sourceLicenses
+                  : sourceLicenses.filter((l) => (licScope === "active" ? !isArchived(l) : isArchived(l)));
+                const archivedCount = sourceLicenses.filter(isArchived).length;
                 const trialsCount = visibleBase.filter((l) => l.is_trial).length;
                 const paidCount = visibleBase.length - trialsCount;
                 const filtered = visibleBase.filter((l) => {
