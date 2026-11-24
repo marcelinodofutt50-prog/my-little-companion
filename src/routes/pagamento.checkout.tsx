@@ -505,6 +505,30 @@ function CheckoutPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Não perca a venda quando a Cakto não está disponível p/ este pedido */}
+                {!availableCaktoOffer && !isServerRenewal && (
+                  <div className="mt-3 rounded-lg border border-cyan/30 bg-cyan/5 p-3">
+                    <p className="text-sm font-semibold text-foreground">Prefere outro meio de pagamento?</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Você também pode pagar com cripto (BTC, ETH ou USDT) ou falar com o suporte para liberar outra forma de pagamento para este pedido.
+                    </p>
+                    <div className="mt-2.5 flex flex-wrap gap-2">
+                      <Link
+                        to="/crypto"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-cyan/40 bg-cyan/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-cyan transition hover:bg-cyan/20"
+                      >
+                        Pagar com cripto
+                      </Link>
+                      <Link
+                        to="/suporte"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition hover:text-foreground"
+                      >
+                        Falar com o suporte
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </section>
             </div>
 
@@ -531,6 +555,35 @@ function CheckoutPage() {
                 <Perk icon={ShieldCheck}>Ambiente seguro — não guardamos dados de cartão</Perk>
                 <Perk icon={Sparkles}>Suporte humano no Telegram 7 dias por semana</Perk>
               </ul>
+
+              {/* Garantia — reforço de confiança no momento do pagamento */}
+              <div className="rounded-xl border border-neon/30 bg-neon/5 p-4">
+                <p className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-wider text-neon">
+                  <ShieldCheck className="h-4 w-4" /> Garantia de 7 dias
+                </p>
+                <p className="mt-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                  Se a licença não for entregue, você solicita o reembolso direto pelo painel. O pagamento acontece em ambiente externo — o Shadow nunca guarda os dados do seu cartão.
+                </p>
+              </div>
+
+              {/* Upsell honesto p/ quem está comprando o plano mensal */}
+              {current?.plan_slug === "login-30d" && (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-primary">// upgrade sugerido</p>
+                  <p className="mt-1.5 text-sm font-semibold text-foreground">
+                    Vitalício por {brl(CAKTO_OFFERS["login-lifetime"].amount)} — pagamento único
+                  </p>
+                  <p className="mt-1 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    Custa o mesmo que {Math.ceil(CAKTO_OFFERS["login-lifetime"].amount / CAKTO_OFFERS["login-30d"].amount)} meses do plano mensal, mas você paga uma vez só, sem renovação, e recebe as atualizações 4.6+ pra sempre.
+                  </p>
+                  <Link
+                    to="/planos"
+                    className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-primary underline-offset-4 hover:underline"
+                  >
+                    Ver o plano Vitalício <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              )}
             </aside>
           </div>
         )}
