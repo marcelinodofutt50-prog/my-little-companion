@@ -683,6 +683,17 @@ export function SupportChat({
                       : 1,
                 ),
           );
+          // Reconcilia a mensagem otimista: se este insert é o eco de um envio
+          // nosso (mesmo client_id), remove o pendente — mesmo que o POST tenha
+          // perdido a resposta e ele estivesse marcado como "falhou" (fantasma).
+          if (next.client_id) {
+            setPending((prev) => {
+              const done = prev.find((p) => p.clientId === next.client_id);
+              if (!done) return prev;
+              if (done.previewUrl) URL.revokeObjectURL(done.previewUrl);
+              return prev.filter((p) => p.clientId !== next.client_id);
+            });
+          }
         },
       )
       .on(

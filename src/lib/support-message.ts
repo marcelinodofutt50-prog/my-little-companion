@@ -23,6 +23,8 @@ export type SupportMessage = {
   /** Quando o outro lado viu a mensagem (null = ainda não visto). */
   read_at: string | null;
   created_at: string;
+  /** Chave de idempotência do cliente que enviou — reconcilia a mensagem otimista. */
+  client_id: string | null;
 };
 
 export function normalizeSupportMessage(row: any, fallbackThreadId?: string): SupportMessage {
@@ -41,6 +43,7 @@ export function normalizeSupportMessage(row: any, fallbackThreadId?: string): Su
     sender_avatar_url: row?.sender_avatar_url ?? null,
     read_at: row?.read_at ?? null,
     created_at: row?.created_at ?? new Date().toISOString(),
+    client_id: row?.client_id ?? null,
   };
 }
 
