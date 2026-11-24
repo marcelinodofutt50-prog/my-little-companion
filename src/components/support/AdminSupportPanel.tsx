@@ -243,10 +243,18 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
         scheduleReload();
         const m = payload?.new;
         if (m && !m.is_admin && !m.is_system) {
-          // Privacidade: o texto do cliente nunca vai para notificações do sistema nem para o aviso global.
-          try { playNotifyDing(); } catch {}
-          try { showDesktopNotification("Nova mensagem no suporte", "Abra o painel para ver a mensagem."); } catch {}
-          toast.info("Nova mensagem de cliente", { action: { label: "Abrir", onClick: () => setSelectedId(m.thread_id) } });
+          // Não alarmar a conversa que o atendente já está lendo (aberta + aba visível):
+          // antes, dava ding/toast para a própria conversa em foco a cada mensagem.
+          const openAndVisible = m.thread_id === selectedIdRef.current && document.visibilityState === "visible";
+          if (!openAndVisible) {
+            // Privacidade: o texto do cliente nunca vai para notificações do sistema nem para o aviso global.
+            try { playNotifyDing(); } catch {}
+            // Notificação de desktop só quando a aba NÃO está em foco (evita spam com o app na frente).
+            if (document.visibilityState !== "visible") {
+              try { showDesktopNotification("Nova mensagem no suporte", "Abra o painel para ver a mensagem."); } catch {}
+            }
+            toast.info("Nova mensagem de cliente", { action: { label: "Abrir", onClick: () => setSelectedId(m.thread_id) } });
+          }
         }
       })
       .subscribe((status) => {
