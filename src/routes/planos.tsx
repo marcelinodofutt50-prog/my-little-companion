@@ -629,7 +629,7 @@ function PlansPage() {
         <div className="pointer-events-none absolute inset-0 -z-0 opacity-[0.07]"
              style={{ backgroundImage: "linear-gradient(oklch(0.78 0.13 82) 1px, transparent 1px), linear-gradient(90deg, oklch(0.78 0.13 82) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
 
-        <div className="mx-auto max-w-5xl px-4 pt-14 pb-10 md:pt-20 md:pb-14 text-center">
+        <div className="mx-auto max-w-5xl px-4 pt-10 pb-10 md:pt-14 md:pb-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}

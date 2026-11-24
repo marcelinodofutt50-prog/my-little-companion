@@ -1,50 +1,29 @@
-import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ShieldCheck, Users, Clock, TrendingUp } from "lucide-react";
+import { Clock, TrendingUp, BadgeCheck, Lock } from "lucide-react";
 
-/** Live viewer count — deterministic pseudo-random so it doesn't jump wildly. */
-function useLiveViewers() {
-  const [n, setN] = useState<number>(0);
-  useEffect(() => {
-    const seed = () => {
-      const h = new Date().getHours();
-      const base = h >= 20 || h < 2 ? 42 : h >= 12 ? 28 : 15;
-      return base + Math.floor(Math.random() * 12);
-    };
-    setN(seed());
-    const id = setInterval(() => setN((prev) => Math.max(8, prev + (Math.random() > 0.5 ? 1 : -1))), 8000);
-    return () => clearInterval(id);
-  }, []);
-  return n;
-}
-
-/** Live viewers + guarantee strip for the plans page. */
+/** Trust pillars for the plans page — honest, calm, no fabricated urgency. */
 export function ConversionBoosters() {
-  const viewers = useLiveViewers();
   return (
     <section className="mb-8 grid gap-3 md:grid-cols-3">
-      <div className="flex items-center gap-3 rounded-lg border border-neon/30 bg-neon/5 p-3">
-        <Users className="h-5 w-5 text-neon" />
+      <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 p-3.5">
+        <Lock className="h-5 w-5 shrink-0 text-neon" />
         <div className="min-w-0">
-          <div className="font-mono text-xs font-bold text-neon">
-            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-neon align-middle" />{" "}
-            {viewers} pessoas vendo os planos agora
-          </div>
-          <div className="font-mono text-[10px] text-muted-foreground">demanda alta — ative logo</div>
+          <div className="font-mono text-xs font-bold text-foreground">Pagamento oficial</div>
+          <div className="font-mono text-[10px] text-muted-foreground">PIX, cartão ou cripto — não guardamos seu cartão</div>
         </div>
       </div>
-      <div className="flex items-center gap-3 rounded-lg border border-cyan/30 bg-cyan/5 p-3">
-        <ShieldCheck className="h-5 w-5 text-cyan" />
+      <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 p-3.5">
+        <BadgeCheck className="h-5 w-5 shrink-0 text-cyan" />
         <div className="min-w-0">
-          <div className="font-mono text-xs font-bold text-cyan">Garantia de reembolso</div>
-          <div className="font-mono text-[10px] text-muted-foreground">se a licença falhar, devolvemos 100%</div>
+          <div className="font-mono text-xs font-bold text-foreground">Garantia de 7 dias</div>
+          <div className="font-mono text-[10px] text-muted-foreground">se a licença falhar, reembolso de 100%</div>
         </div>
       </div>
-      <div className="flex items-center gap-3 rounded-lg border border-violet/30 bg-violet/5 p-3">
-        <Clock className="h-5 w-5 text-violet" />
+      <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 p-3.5">
+        <Clock className="h-5 w-5 shrink-0 text-violet" />
         <div className="min-w-0">
-          <div className="font-mono text-xs font-bold text-violet">Ativação instantânea</div>
-          <div className="font-mono text-[10px] text-muted-foreground">login entregue no chat em segundos</div>
+          <div className="font-mono text-xs font-bold text-foreground">Ativação rápida</div>
+          <div className="font-mono text-[10px] text-muted-foreground">login liberado no painel em minutos</div>
         </div>
       </div>
     </section>
