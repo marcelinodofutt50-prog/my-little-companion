@@ -502,6 +502,33 @@ function AdminPage() {
     inflightRef.current.licenses = p;
     return p;
   }, [licensesFn]);
+
+  // Busca de licenças no servidor (debounced). O lote padrão traz só as 200 mais
+  // recentes; sem isto, licença de cliente fora desse lote nunca aparecia na busca.
+  const licSearchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const didServerLicSearch = useRef(false);
+  useEffect(() => {
+    const term = licSearch.trim();
+    if (licSearchTimer.current) clearTimeout(licSearchTimer.current);
+    if (term.length < 3) {
+      if (didServerLicSearch.current) {
+        didServerLicSearch.current = false;
+        void loadLicenses(); // restaura o lote padrão (recentes) ao limpar a busca
+      }
+      return;
+    }
+    licSearchTimer.current = setTimeout(() => {
+      didServerLicSearch.current = true;
+      setLicenseLoading(true);
+      setLicenseLoadError(null);
+      licensesFn({ data: { search: term } })
+        .then((r) => { setLicenses(r); loadedRef.current.licenses = true; })
+        .catch(() => setLicenseLoadError("Não foi possível buscar licenças. Tente novamente."))
+        .finally(() => setLicenseLoading(false));
+    }, 400);
+    return () => { if (licSearchTimer.current) clearTimeout(licSearchTimer.current); };
+  }, [licSearch, licensesFn, loadLicenses]);
+
   const loadRoles = useCallback(() => {
     if (inflightRef.current.roles) return inflightRef.current.roles;
     const p = rolesFn()
@@ -2266,7 +2293,7 @@ function AdminPage() {
                           ))}
                         </div>
                       </div>
-                      {licenses.length >= 200 && <div className="w-full text-xs text-muted-foreground">Busca limitada às 200 licenças mais recentes. Para clientes antigos, use a busca de clientes e abra a ficha.</div>}
+                      {!licSearch.trim() && licenses.length >= 200 && <div className="w-full text-xs text-muted-foreground">Mostrando as 200 licenças mais recentes. Use a busca (e-mail, login, IP ou ID) para localizar qualquer cliente — inclusive antigos, direto no servidor.</div>}
                       {licenseActionWarning && <div role="alert" className="w-full text-sm text-danger">{licenseActionWarning}</div>}
                       {licenseLoadError && <div role="alert" className="flex w-full items-center justify-between gap-2 text-sm text-danger">
                         {licenseLoadError}<Button size="sm" variant="outline" onClick={() => loadLicenses()}>Tentar novamente</Button>

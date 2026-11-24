@@ -50,17 +50,46 @@ export const adminListOrders = createServerFn({ method: "GET" })
   });
 
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const adminListLicenses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((i: unknown) => z.object({ search: z.string().max(120).optional() }).optional().parse(i))
+  .handler(async ({ data, context }) => {
     try {
       await assertStaff(context);
-      const { data, error } = await context.supabase.from("licenses").select("*").order("created_at", { ascending: false }).limit(200);
+      const term = (data?.search ?? "").trim();
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      let query = context.supabase.from("licenses").select("*");
+
+      if (term) {
+        // Busca no servidor. Sem isto, apenas as 200 licenças mais recentes eram
+        // pesquisáveis (filtro client-side), então clientes antigos nunca apareciam.
+        const { data: profHits } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .or(`email.ilike.%${term}%,full_name.ilike.%${term}%`)
+          .limit(200);
+        const userIds = Array.from(new Set((profHits ?? []).map((p: any) => p.id).filter(Boolean)));
+
+        // Neutraliza os caracteres que quebrariam a sintaxe do filtro .or() do PostgREST.
+        const safe = term.replace(/[,()%*]/g, " ").trim();
+        const ors = [
+          `yaarsa_username.ilike.%${safe}%`,
+          `yaarsa_email.ilike.%${safe}%`,
+          `server_ip.ilike.%${safe}%`,
+        ];
+        if (UUID_RE.test(term)) ors.push(`id.eq.${term}`);
+        if (userIds.length) ors.push(`user_id.in.(${userIds.join(",")})`);
+        query = query.or(ors.join(","));
+      }
+
+      const { data: rows0, error } = await query.order("created_at", { ascending: false }).limit(200);
       if (error) throw new Error(error.message);
-      const rows = data ?? [];
+      const rows = rows0 ?? [];
       const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
       if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
       const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
       return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));
