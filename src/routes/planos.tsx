@@ -659,6 +659,29 @@ function PlansPage() {
             Ativação automática via PIX. Sem burocracia. Login entregue direto no painel.
           </motion.p>
 
+          {/* Primary CTA — a hero não tinha ação; agora leva direto pros planos */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.14 }}
+            className="mt-7 flex flex-wrap items-center justify-center gap-3"
+          >
+            <a
+              href="#planos"
+              className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground shadow-lg shadow-primary/40 transition-all hover:shadow-primary/60 hover:-translate-y-0.5 active:scale-[0.98]"
+            >
+              <Zap className="h-4 w-4 transition-transform group-hover:scale-125 group-hover:rotate-12" />
+              Ver planos agora
+            </a>
+            <a
+              href="#advisor"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-6 py-3.5 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground backdrop-blur transition-all hover:border-primary/40 hover:text-primary"
+            >
+              Qual plano é o meu?
+              <ChevronRight className="h-4 w-4" />
+            </a>
+          </motion.div>
+
           {/* Trust seals */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -888,7 +911,9 @@ function PlansPage() {
         )}
 
         {/* Quem está em dúvida escolhe aqui antes de ver os preços ===== */}
-        <PlanAdvisor className="mb-10" />
+        <div id="advisor" className="scroll-mt-24">
+          <PlanAdvisor className="mb-10" />
+        </div>
 
         {/* PLAN GROUPS ====================================== */}
         <div className="sticky top-16 z-40 -mx-4 mb-8 bg-background/80 px-4 py-4 backdrop-blur-md border-b border-border/40 sm:static sm:top-0 sm:mx-0 sm:mb-12 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:border-0">
@@ -961,7 +986,7 @@ function PlansPage() {
 
 
 
-        <div className="mb-16">
+        <div id="planos" className="mb-16 scroll-mt-24">
           <div className="mb-6 flex flex-col gap-1 border-b border-border/40 pb-4 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// licenças shadow</div>
