@@ -1559,7 +1559,6 @@ function AdminPage() {
 
             {tab === "users" && (
               <div className="space-y-4">
-                {isAdminUser && <AdminTrialResetPanel />}
                 <div className="terminal-card scanlines relative overflow-hidden">
                   <div className="flex flex-wrap items-center gap-2 border-b border-border/30 p-3">
                     <Input
@@ -1839,8 +1838,10 @@ function AdminPage() {
                   </div>
                 );
               })()}
-            {tab === "licenses" &&
-              (() => {
+            {tab === "licenses" && (
+              <div className="space-y-4">
+                {isAdminUser && <AdminTrialResetPanel />}
+                {(() => {
                 const now = Date.now();
                 const dayMs = 86400000;
                 const bucketOf = (
@@ -2366,6 +2367,8 @@ function AdminPage() {
                   </div>
                 );
               })()}
+              </div>
+            )}
 
             {tab === "staff" && (
               <div className="space-y-4">
