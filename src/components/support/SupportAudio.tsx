@@ -158,17 +158,33 @@ export function SupportVoiceRecorder({ disabled, onSend }: {
   );
 }
 
-export function SupportAudioMessage({ url }: { url: string }) {
+export function SupportAudioPlayer({ url }: { url: string }) {
   const [brokenUrl, setBrokenUrl] = useState<string | null>(null);
+  const [unknownDurationUrl, setUnknownDurationUrl] = useState<string | null>(null);
 
+  if (brokenUrl === url) {
+    return <div className="space-y-1 text-xs text-muted-foreground" role="status">
+      <p>Não foi possível carregar o áudio.</p>
+      <button type="button" className="mr-3 underline" onClick={() => setBrokenUrl(null)}>Tentar novamente</button>
+      <a href={url} target="_blank" rel="noopener noreferrer" className="underline">Abrir arquivo</a>
+    </div>;
+  }
+
+  return <div className="w-full min-w-0 space-y-1">
+    <audio key={url} src={url} controls preload="metadata" aria-label="Reproduzir mensagem de voz"
+      className="block h-10 w-full min-w-0"
+      onDurationChange={({ currentTarget }) => setUnknownDurationUrl(Number.isFinite(currentTarget.duration) ? null : url)}
+      onLoadedMetadata={({ currentTarget }) => setUnknownDurationUrl(Number.isFinite(currentTarget.duration) ? null : url)}
+      onError={() => setBrokenUrl(url)} />
+    {unknownDurationUrl === url && <p className="text-xs text-muted-foreground">Duração indisponível. Use o botão de reprodução para ouvir.</p>}
+  </div>;
+}
+
+export function SupportAudioMessage({ url }: { url: string }) {
   return (
     <div data-sensitive className="mt-2 w-72 max-w-full space-y-2 rounded-xl border border-border bg-card p-2.5 text-card-foreground">
       <p className="flex items-center gap-2 text-xs font-semibold"><AudioLines aria-hidden="true" className="h-4 w-4 text-primary" /> Mensagem de voz</p>
-      {brokenUrl === url ? (
-        <p className="text-xs text-muted-foreground">Não foi possível reproduzir. <a href={url} target="_blank" rel="noopener noreferrer" className="underline">Abrir arquivo</a></p>
-      ) : (
-        <audio key={url} src={url} controls preload="none" aria-label="Reproduzir mensagem de voz" className="block h-10 w-full min-w-0" onError={() => setBrokenUrl(url)} />
-      )}
+      <SupportAudioPlayer url={url} />
     </div>
   );
 }
