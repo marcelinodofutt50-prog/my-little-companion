@@ -31,15 +31,40 @@ export const adminListUsers = createServerFn({ method: "GET" })
 
 export const adminListOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((i: unknown) => z.object({ search: z.string().max(120).optional() }).optional().parse(i))
+  .handler(async ({ data, context }) => {
     try {
       await assertStaff(context);
-      const { data, error } = await context.supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
+      const term = (data?.search ?? "").trim();
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      let query = context.supabase.from("orders").select("*");
+
+      if (term) {
+        // Busca no servidor: sem isto, só os 200 pedidos mais recentes eram
+        // pesquisáveis (filtro client-side), então pedidos antigos "sumiam".
+        const { data: profHits } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .or(`email.ilike.%${term}%,full_name.ilike.%${term}%`)
+          .limit(200);
+        const userIds = Array.from(new Set((profHits ?? []).map((p: any) => p.id).filter(Boolean)));
+
+        const safe = term.replace(/[,()%*]/g, " ").trim();
+        const ors = [
+          `plan_slug.ilike.%${safe}%`,
+          `coupon_code.ilike.%${safe}%`,
+        ];
+        if (UUID_RE.test(term)) ors.push(`id.eq.${term}`);
+        if (userIds.length) ors.push(`user_id.in.(${userIds.join(",")})`);
+        query = query.or(ors.join(","));
+      }
+
+      const { data: rows0, error } = await query.order("created_at", { ascending: false }).limit(200);
       if (error) throw new Error(error.message);
-      const rows = data ?? [];
+      const rows = rows0 ?? [];
       const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
       if (ids.length === 0) return rows.map((r: any) => ({ ...r, profile: null }));
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: profs } = await supabaseAdmin.from("profiles").select("id,email,full_name,display_name").in("id", ids);
       const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
       return rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) ?? null }));

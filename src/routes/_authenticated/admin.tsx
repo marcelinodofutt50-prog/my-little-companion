@@ -465,6 +465,30 @@ function AdminPage() {
     inflightRef.current.orders = p;
     return p;
   }, [ordersFn]);
+
+  // Busca de pedidos no servidor (debounced). O lote padrão traz só os 200 mais
+  // recentes; sem isto, pedido de cliente fora desse lote não aparecia na busca.
+  const orderSearchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const didServerOrderSearch = useRef(false);
+  useEffect(() => {
+    const term = orderSearch.trim().replace(/^#/, "");
+    if (orderSearchTimer.current) clearTimeout(orderSearchTimer.current);
+    if (term.length < 3) {
+      if (didServerOrderSearch.current) {
+        didServerOrderSearch.current = false;
+        void loadOrders(); // restaura o lote padrão (recentes) ao limpar a busca
+      }
+      return;
+    }
+    orderSearchTimer.current = setTimeout(() => {
+      didServerOrderSearch.current = true;
+      ordersFn({ data: { search: term } })
+        .then((r) => { setOrders(r); setOrdersError(null); loadedRef.current.orders = true; })
+        .catch((e: any) => setOrdersError(e?.message ?? "Não foi possível buscar pedidos. Tente novamente."));
+    }, 400);
+    return () => { if (orderSearchTimer.current) clearTimeout(orderSearchTimer.current); };
+  }, [orderSearch, ordersFn, loadOrders]);
+
   const loadUsers = useCallback(() => {
     if (inflightRef.current.users) return inflightRef.current.users;
     const p = usersFn()
