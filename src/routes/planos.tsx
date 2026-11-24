@@ -13,11 +13,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   CheckCircle2, Loader2, Tag, Users, X, AlertCircle, ShieldCheck, Zap, Lock,
-  HeadphonesIcon, Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight, ArrowLeftRight,
+  Sparkles, Crown, Calendar, Clock, Server, Code2, ArrowUpRight, ArrowLeftRight,
   ChevronRight, Check, Minus, Search, Info, CreditCard, Rocket, Shield, AlertTriangle, Bitcoin,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { LiveActivationTicker } from "@/components/LiveActivationTicker";
 import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
 
 import { GuaranteeStrip } from "@/components/GuaranteeStrip";
@@ -622,87 +621,24 @@ function PlansPage() {
       <WinbackOffer onUseCoupon={(code, slug) => { setCoupon(code); void buy(slug, code); }} />
 
 
-      {/* HERO — professional, animated ================================================= */}
-      <section className="relative overflow-hidden border-b border-border/40">
-        <div className="pointer-events-none absolute inset-0 -z-0 opacity-60"
-             style={{ background: "radial-gradient(ellipse 60% 45% at 50% 0%, oklch(0.28 0.09 82 / 0.22), transparent 70%)" }} />
-        {/* Animated grid backdrop */}
-        <div className="pointer-events-none absolute inset-0 -z-0 opacity-[0.07]"
-             style={{ backgroundImage: "linear-gradient(oklch(0.78 0.13 82) 1px, transparent 1px), linear-gradient(90deg, oklch(0.78 0.13 82) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
-
-        <div className="mx-auto max-w-5xl px-4 pt-14 pb-10 md:pt-20 md:pb-14 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.28em] text-primary backdrop-blur"
-          >
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-            </span>
-            Ativações em tempo real
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="mt-4 text-balance font-display text-4xl font-bold tracking-tight sm:text-5xl md:text-7xl text-foreground"
-          >
-            Escolha seu <span className="text-primary italic">acesso.</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground md:text-base"
-          >
-            Ativação automática via PIX. Sem burocracia. Login entregue direto no painel.
-          </motion.p>
-
-          {/* Trust seals */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70"
-          >
-            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Pagamento seguro</span>
-            <span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-primary" /> &lt; 1 min</span>
-            <span className="flex items-center gap-1.5"><HeadphonesIcon className="h-3.5 w-3.5 text-primary" /> Suporte 24/7</span>
-            <span className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-primary" /> AES-256</span>
-          </motion.div>
-
-          {/* Live activation ticker */}
-          <LiveActivationTicker />
-
-          {/* Enterprise metrics strip */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4"
-          >
-            {[
-              { v: "2.400+", l: "Operadores" },
-              { v: "99.98%", l: "Uptime" },
-              { v: "47s", l: "Ativação média" },
-              { v: "4.9★", l: "Satisfação" },
-            ].map((m, i) => (
-              <motion.div
-                key={m.l}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 + i * 0.06, type: "spring", stiffness: 180 }}
-                className="rounded-lg border border-border/50 bg-card/40 px-3 py-2 backdrop-blur"
-              >
-                <div className="font-display text-lg font-bold text-primary">{m.v}</div>
-                <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{m.l}</div>
-              </motion.div>
+      <header aria-labelledby="plans-title" className="border-b border-border bg-card text-card-foreground">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pb-12 pt-10 sm:px-6 md:flex-row md:items-end md:justify-between md:py-16">
+          <h1 id="plans-title" className="border-l-4 border-primary pl-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+            {en ? "Plans" : "Planos"}
+          </h1>
+          <nav aria-label={en ? "Customer information" : "Informações para o cliente"} className="flex flex-wrap gap-x-5 gap-y-1">
+            {([
+              ["/termos", en ? "Terms of use" : "Termos de uso"],
+              ["/privacidade", en ? "Privacy" : "Privacidade"],
+              ["/contato", en ? "Contact" : "Contato"],
+            ] as const).map(([to, label]) => (
+              <Link key={to} to={to} className="inline-flex min-h-11 items-center rounded-sm text-sm font-medium underline decoration-primary/50 underline-offset-4 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                {label}
+              </Link>
             ))}
-          </motion.div>
+          </nav>
         </div>
-      </section>
+      </header>
 
       <main className="relative z-10 mx-auto max-w-6xl px-4 pb-24 sm:px-6">
         <motion.section
