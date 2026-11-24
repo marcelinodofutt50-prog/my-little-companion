@@ -469,11 +469,12 @@ function PlansPage() {
           : undefined,
       } });
       markCheckoutIntent(slug);
-      
-      // Delay to ensure the loading state is visible before redirect
+
+      // Pequeno respiro só para o estado de carregamento piscar; antes eram 500ms
+      // de espera artificial sentida no clique de pagar.
       setTimeout(() => {
         window.location.href = r.checkoutUrl;
-      }, 500);
+      }, 120);
     } catch (e: any) {
       console.error("[CheckoutError]", e);
       toast.error(e?.message?.includes("Plano") ? e.message : `Não foi possível iniciar o checkout: ${e?.message || "Erro desconhecido"}`);
@@ -1938,7 +1939,7 @@ function LegacyLookup() {
       });
       setDone(true);
       if (r.already) alert("Essa licença já estava vinculada ao seu dashboard.");
-      setTimeout(() => { window.location.href = "/dashboard"; }, 800);
+      setTimeout(() => { window.location.href = "/dashboard"; }, 350);
     } catch (e: any) {
       setErr(e?.message || "Falha ao reivindicar");
     } finally { setClaiming(false); }

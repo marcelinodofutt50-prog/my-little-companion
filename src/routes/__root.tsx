@@ -21,6 +21,7 @@ import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
+import { MotionConfig } from "framer-motion";
 import { I18nProvider } from "@/lib/i18n";
 import { createAuthTransitionFilter, isChunkLoadError } from "@/lib/auth-request-control";
 import { CurrencyProvider } from "@/lib/currency";
@@ -371,15 +372,18 @@ function InnerRootComponent() {
       <ThemeProvider>
         <I18nProvider>
         <CurrencyProvider>
-          <MfaGate>
-            <div className="sticky top-0 z-[60] w-full">
-              <AnnouncementsBanner />
-            </div>
-            <Outlet />
-            <PaymentSuccessOverlay />
-            <StreamerMode />
-          </MfaGate>
-          <ThemedToaster />
+          {/* Respeita "reduzir movimento" do SO: menos animação/jank em mobile e baixo custo. */}
+          <MotionConfig reducedMotion="user">
+            <MfaGate>
+              <div className="sticky top-0 z-[60] w-full">
+                <AnnouncementsBanner />
+              </div>
+              <Outlet />
+              <PaymentSuccessOverlay />
+              <StreamerMode />
+            </MfaGate>
+            <ThemedToaster />
+          </MotionConfig>
         </CurrencyProvider>
         </I18nProvider>
       </ThemeProvider>
