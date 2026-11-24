@@ -20,7 +20,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { LiveActivationTicker } from "@/components/LiveActivationTicker";
 import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
 
-import { GuaranteeStrip } from "@/components/GuaranteeStrip";
 import { Testimonials } from "@/components/Testimonials";
 import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
 import { useI18n } from "@/lib/i18n";
@@ -729,6 +728,9 @@ function PlansPage() {
           </div>
         </motion.section>
 
+        {/* Social proof + garantia + urgência (live viewers) =========== */}
+        <ConversionBoosters />
+
         {/* BENEFITS PANEL ==================================== */}
         {loggedIn && (
           <details open={anyBenefit} className="group mx-auto mb-14 max-w-3xl overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur">
@@ -884,6 +886,9 @@ function PlansPage() {
             <LegacyLookup />
           </details>
         )}
+
+        {/* Quem está em dúvida escolhe aqui antes de ver os preços ===== */}
+        <PlanAdvisor className="mb-10" />
 
         {/* PLAN GROUPS ====================================== */}
         <div className="sticky top-16 z-40 -mx-4 mb-8 bg-background/80 px-4 py-4 backdrop-blur-md border-b border-border/40 sm:static sm:top-0 sm:mx-0 sm:mb-12 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:border-0">
@@ -1060,6 +1065,9 @@ function PlansPage() {
 
         </div>
 
+        {/* Como funciona a compra (reduz atrito pós-preço) ============= */}
+        <HowItWorksSteps variant="checkout" className="mb-16" />
+
         {partners.length > 0 ? (
           <PartnerSection plans={partners} onBuy={buy} loadingPlan={loadingPlan} />
         ) : null}
@@ -1118,6 +1126,24 @@ function PlansPage() {
         )}
 
         
+
+        {/* Comparativo detalhado entre as linhas ======================= */}
+        <TierComparison />
+
+        {/* Simulador de infraestrutura / checkout unificado ============ */}
+        {plans.length > 0 && (
+          <OrderCalculator
+            plans={plans}
+            onBuy={(slug, options) => buy(slug, undefined, options)}
+          />
+        )}
+
+        {/* Prova social + selos de confiança =========================== */}
+        <Testimonials />
+        <TrustBadges className="mt-10 mb-4" />
+
+        {/* Dúvidas rápidas antes do FAQ completo ======================= */}
+        <PreCheckoutFaq />
 
         <FaqSection />
 
