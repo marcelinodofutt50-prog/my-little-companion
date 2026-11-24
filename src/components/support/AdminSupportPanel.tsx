@@ -302,9 +302,22 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
         t.profile?.email?.toLowerCase().includes(q) ||
         t.profile?.display_name?.toLowerCase().includes(q))
       .slice()
-      .sort((a, b) =>
-        (Number(b.unread_by_staff || 0) > 0 ? 1 : 0) - (Number(a.unread_by_staff || 0) > 0 ? 1 : 0) ||
-        (rank[a.priority || "normal"] ?? 2) - (rank[b.priority || "normal"] ?? 2));
+      .sort((a, b) => {
+        // Fila justa: quem aguarda resposta do suporte sobe; entre esses, quem
+        // espera há mais tempo (updated_at mais antigo) vem primeiro.
+        const aw = isAwaitingSupportResponse(a) ? 1 : 0;
+        const bw = isAwaitingSupportResponse(b) ? 1 : 0;
+        if (aw !== bw) return bw - aw;
+        if (aw === 1) {
+          return new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime();
+        }
+        // Não aguardando: não lidas, depois prioridade, depois mais recente.
+        const un = (Number(b.unread_by_staff || 0) > 0 ? 1 : 0) - (Number(a.unread_by_staff || 0) > 0 ? 1 : 0);
+        if (un) return un;
+        const pr = (rank[a.priority || "normal"] ?? 2) - (rank[b.priority || "normal"] ?? 2);
+        if (pr) return pr;
+        return new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
+      });
   }, [threads, search, catFilter, prioFilter, awaitingOnly]);
 
   const selectedThread = threads.find(t => t.id === selectedId);
@@ -542,13 +555,18 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                 const unread = Number(t.unread_by_staff || 0);
                 const priority = t.priority || "normal";
                 const cat = categoryMeta(t.category);
-                
+                const awaiting = isAwaitingSupportResponse(t);
+
                 return (
                   <button
                     key={t.id}
                     onClick={() => setSelectedId(t.id)}
-                    className={`w-full text-left p-4 transition-all hover:bg-muted/30 relative ${
-                      isSelected ? "bg-primary/10 border-r-2 border-primary" : ""
+                    className={`w-full text-left p-4 transition-all hover:bg-muted/30 relative border-l-2 ${
+                      isSelected
+                        ? "bg-primary/10 border-r-2 border-r-primary border-l-transparent"
+                        : awaiting
+                          ? "border-l-amber-500/70 bg-amber-500/[0.04]"
+                          : "border-l-transparent"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
