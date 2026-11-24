@@ -1,10 +1,14 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Search, RefreshCcw, Copy, Check, ClipboardList, ShieldAlert, User } from "lucide-react";
+import { Loader2, Search, RefreshCcw, Copy, Check, ClipboardList, ShieldAlert, User, Server, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminFindUsers, adminReplaceUserTrial } from "@/lib/admin.functions";
+import { adminGetTrialPanel } from "@/lib/panel-servers.functions";
+
+const PANEL_LABEL: Record<string, string> = { v455: "Servidor 4.5.5", v457: "Servidor 4.5.7", v46: "Servidor 4.6" };
+const panelLabel = (p?: string | null) => (p ? PANEL_LABEL[p] ?? p : "—");
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,19 +36,29 @@ type FoundUser = {
 };
 
 type NewCreds = { username: string; email: string; password: string };
+type TrialPanelInfo = { choice: string; effective: string; available: Record<string, boolean> };
 
 export function AdminTrialResetPanel() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<FoundUser[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [result, setResult] = useState<Record<string, NewCreds & { expires_at: string }>>({});
+  const [result, setResult] = useState<Record<string, NewCreds & { expires_at: string; panel?: string }>>({});
   const [confirmUser, setConfirmUser] = useState<FoundUser | null>(null);
   const inFlight = useRef(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [trialPanel, setTrialPanel] = useState<TrialPanelInfo | null>(null);
 
   const findFn = useServerFn(adminFindUsers);
   const replaceFn = useServerFn(adminReplaceUserTrial);
+  const getTrialPanelFn = useServerFn(adminGetTrialPanel);
+
+  // Mostra em qual servidor os próximos trials serão criados (e avisa se o
+  // escolhido estiver fora do ar), pra não gerar login no painel errado.
+  useEffect(() => {
+    getTrialPanelFn().then((r: any) => setTrialPanel(r)).catch(() => {});
+  }, [getTrialPanelFn]);
+  const chosenDown = !!trialPanel && trialPanel.choice !== "auto" && trialPanel.available?.[trialPanel.choice] === false;
 
   async function search(e?: React.FormEvent) {
     e?.preventDefault();
@@ -70,10 +84,10 @@ export function AdminTrialResetPanel() {
     const toastId = toast.loading(`Recriando trial de ${label}...`);
     try {
       const res: any = await replaceFn({ data: { userId: u.id } });
-      setResult((prev) => ({ ...prev, [u.id]: { ...res.credentials, expires_at: res.expires_at } }));
+      setResult((prev) => ({ ...prev, [u.id]: { ...res.credentials, expires_at: res.expires_at, panel: res.panel } }));
       toast.success("Trial recriado com sucesso", {
         id: toastId,
-        description: `${label} · user: ${res.credentials.username} · expira ${new Date(res.expires_at).toLocaleString("pt-BR")}`,
+        description: `${label} · ${panelLabel(res.panel)} · user: ${res.credentials.username} · expira ${new Date(res.expires_at).toLocaleString("pt-BR")}`,
       });
       await search();
     } catch (err: any) {
@@ -127,6 +141,20 @@ export function AdminTrialResetPanel() {
       <p className="mt-0.5 text-xs text-muted-foreground">
         Busque por apelido, e-mail, nome ou usuário do painel. O trial antigo é removido do servidor e substituído por credenciais novas.
       </p>
+
+      {trialPanel && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[10px]">
+          <span className="inline-flex items-center gap-1.5 rounded border border-neon/30 bg-neon/5 px-2 py-1 text-neon">
+            <Server className="h-3 w-3" /> Próximos trials em: {panelLabel(trialPanel.effective)}
+            {trialPanel.choice === "auto" && <span className="text-muted-foreground">(automático)</span>}
+          </span>
+          {chosenDown && (
+            <span className="inline-flex items-center gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-amber-400">
+              <AlertTriangle className="h-3 w-3" /> {panelLabel(trialPanel.choice)} indisponível — caindo em {panelLabel(trialPanel.effective)}
+            </span>
+          )}
+        </div>
+      )}
 
       <form onSubmit={search} className="mt-3 flex gap-2">
         <Input
@@ -212,6 +240,7 @@ export function AdminTrialResetPanel() {
                       );
                     })}
                     <div className="text-muted-foreground">expira: {new Date(creds.expires_at).toLocaleString("pt-BR")}</div>
+                    {creds.panel && <div className="text-neon">servidor: {panelLabel(creds.panel)}</div>}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button
@@ -269,6 +298,12 @@ export function AdminTrialResetPanel() {
                   <p>Este cliente não tem trial registrado — um novo será criado.</p>
                 )}
                 <p>Novas credenciais de 24h serão geradas e exibidas aqui.</p>
+                {trialPanel && (
+                  <p className="text-xs text-muted-foreground">
+                    Servidor de destino: <span className="font-mono text-foreground">{panelLabel(trialPanel.effective)}</span>
+                    {chosenDown && <span className="text-amber-400"> ({panelLabel(trialPanel.choice)} está fora do ar)</span>}
+                  </p>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
