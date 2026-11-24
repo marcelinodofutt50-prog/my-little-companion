@@ -844,21 +844,26 @@ export const adminReplaceUserTrial = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { yaarsaCreateAccount, yaarsaRemoveAccount, generateCredentials, encrypt } = await import("./yaarsa.server");
+    const { yaarsaCreateAccount, yaarsaRemoveAccount, generateCredentials, encrypt, resolveTrialPanel } = await import("./yaarsa.server");
 
     const { data: oldLic } = await supabaseAdmin
       .from("licenses").select("*")
       .eq("user_id", data.userId).eq("is_trial", true).maybeSingle();
 
-    const panel: "v457" | "v46" = (oldLic as any)?.panel ?? "v457";
+    // Painel ANTIGO: onde a conta velha realmente vive, usado só para removê-la.
+    const oldPanel = ((oldLic as any)?.panel ?? "v457") as any;
+    // Painel NOVO: respeita o "Servidor dos próximos testes grátis" escolhido pelo
+    // admin (resolveTrialPanel lê getTrialPanelChoice e evita painel fora do ar).
+    // Antes ficava cravado no painel antigo/​v457, criando trial num server em manutenção.
+    const newPanel = await resolveTrialPanel();
 
     // 1) Remove conta antiga no painel (best-effort, ignora "não encontrado").
     if (oldLic) {
-      const rem = await yaarsaRemoveAccount(oldLic.yaarsa_email, panel);
+      const rem = await yaarsaRemoveAccount(oldLic.yaarsa_email, oldPanel);
       if (rem.Fail && !/not.*found|inexist|1005/i.test(rem.Fail)) {
         // não bloqueia: log e segue
         await supabaseAdmin.from("integration_logs").insert({
-          source: `yaarsa-${panel}`, action: "admin_replace_trial_remove", outcome: "warn",
+          source: `yaarsa-${oldPanel}`, action: "admin_replace_trial_remove", outcome: "warn",
           error: rem.Fail, context: { user_id: data.userId, email: oldLic.yaarsa_email } as any,
         } as any);
       }
@@ -866,12 +871,12 @@ export const adminReplaceUserTrial = createServerFn({ method: "POST" })
       await supabaseAdmin.from("licenses").delete().eq("id", oldLic.id);
     }
 
-    // 2) Cria trial fresco.
+    // 2) Cria trial fresco no painel selecionado.
     const creds = generateCredentials();
     const yr = await yaarsaCreateAccount({
       username: creds.username, email: creds.email, password: creds.password,
       planSlug: "trial", totalPaid: 0, additionalInfo: `shadow-admin-retrial-${data.userId}`,
-      panel,
+      panel: newPanel,
     });
     if (yr.Fail) throw new Error(`Painel: ${yr.Fail}`);
 
@@ -884,7 +889,7 @@ export const adminReplaceUserTrial = createServerFn({ method: "POST" })
       yaarsa_password_enc: encrypt(creds.password),
       expires_at: expiresAt.toISOString(),
       is_trial: true,
-      panel,
+      panel: newPanel,
     } as any).select("*").single();
     if (insErr || !newLic) throw new Error(insErr?.message || "Falha ao gravar licença");
 
@@ -894,11 +899,11 @@ export const adminReplaceUserTrial = createServerFn({ method: "POST" })
     );
 
     await supabaseAdmin.from("integration_logs").insert({
-      source: `yaarsa-${panel}`, action: "admin_replace_trial", outcome: "success",
-      context: { user_id: data.userId, new_email: creds.email, expires_at: expiresAt.toISOString() } as any,
+      source: `yaarsa-${newPanel}`, action: "admin_replace_trial", outcome: "success",
+      context: { user_id: data.userId, new_email: creds.email, expires_at: expiresAt.toISOString(), old_panel: oldPanel } as any,
     } as any);
 
-    return { ok: true, credentials: creds, expires_at: expiresAt.toISOString(), panel };
+    return { ok: true, credentials: creds, expires_at: expiresAt.toISOString(), panel: newPanel };
   });
 
 
