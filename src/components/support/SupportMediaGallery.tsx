@@ -9,6 +9,7 @@ import { mediaFileName, mediaKind } from "@/lib/support-media";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toolbarItem } from "./chat-toolbar";
+import { SupportAudioPlayer } from "./SupportAudio";
 
 const filters = [
   { id: "all", label: "Todas" },
@@ -130,7 +131,7 @@ export function SupportMediaGallery({ threadId }: { threadId: string }) {
                   <div className="flex h-40 items-center justify-center overflow-hidden bg-muted/30 p-2">
                     {kind === "image" ? <Button type="button" variant="ghost" className="h-full w-full p-0" aria-label={`Ampliar ${name}`} onClick={() => setSelected(item)}><img src={url} alt={name} loading="lazy" className="h-full w-full object-contain" /></Button>
                       : kind === "video" ? <video src={url} controls preload="metadata" playsInline className="h-full w-full object-contain" />
-                      : kind === "audio" ? <audio src={url} controls preload="none" className="w-full" />
+                      : kind === "audio" ? <SupportAudioPlayer url={url} />
                       : <Paperclip className="h-8 w-8 text-muted-foreground" />}
                   </div>
                   <div className="space-y-1 p-3">
