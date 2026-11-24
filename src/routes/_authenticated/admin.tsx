@@ -1892,9 +1892,13 @@ function AdminPage() {
                 };
                 const statusOf = (l: any) => adminLicenseStatus(l, now);
                 const isArchived = (l: any) => isAdminLicenseArchived(l, now);
-                const visibleBase = licenses.filter((l) =>
-                  licScope === "active" ? !isArchived(l) : isArchived(l),
-                );
+                // Busca dirigida tem que achar tudo: com termo ativo, não escondemos
+                // arquivadas (revogadas/expiradas/desativadas) — senão o staff procura
+                // um cliente e a tela diz "nenhuma" mesmo existindo licença.
+                const searching = licSearch.trim().length > 0;
+                const visibleBase = searching
+                  ? licenses
+                  : licenses.filter((l) => (licScope === "active" ? !isArchived(l) : isArchived(l)));
                 const archivedCount = licenses.filter(isArchived).length;
                 const trialsCount = visibleBase.filter((l) => l.is_trial).length;
                 const paidCount = visibleBase.length - trialsCount;
