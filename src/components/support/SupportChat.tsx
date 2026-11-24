@@ -53,8 +53,18 @@ import {
   CheckCheck,
   Check,
   Hash,
+  MessageSquarePlus,
 } from "lucide-react";
+import { buildTrainingReply, buildVisualErrorReply } from "@/lib/support-canned";
 import { Button } from "@/components/ui/button";
+
+/** Respostas rápidas para o atendente inserir no composer (editáveis antes de enviar). */
+const QUICK_REPLIES: { label: string; build: () => string }[] = [
+  { label: "Saudação", build: () => "Olá! Sou do suporte Shadow. Como posso te ajudar hoje? ⚡" },
+  { label: "Treinamento", build: buildTrainingReply },
+  { label: "Network error", build: buildVisualErrorReply },
+  { label: "Encerrar", build: () => "Posso ajudar em mais alguma coisa? Se estiver tudo certo, encerro o atendimento por aqui — qualquer coisa é só chamar. 🙏" },
+];
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -1338,6 +1348,25 @@ export function SupportChat({
         {(composerExtras || isAdmin) && (
           <div className="mb-2 flex flex-wrap items-center gap-2">
             {composerExtras}
+            {isAdmin && (
+              <ToolbarGroup label="Respostas rápidas">
+                <ToolbarLabel className="px-2.5">Respostas rápidas</ToolbarLabel>
+                {QUICK_REPLIES.map((q) => (
+                  <Button
+                    key={q.label}
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className={toolbarItem}
+                    onClick={() =>
+                      setBody((prev) => (prev.trim() ? prev.replace(/\s*$/, "") + "\n\n" + q.build() : q.build()))
+                    }
+                  >
+                    <MessageSquarePlus className="h-3 w-3" /> {q.label}
+                  </Button>
+                ))}
+              </ToolbarGroup>
+            )}
             {isAdmin && (
               <ToolbarGroup className="ml-auto" label="Reformular com IA">
                 <ToolbarLabel className="px-2.5">Reformular com IA</ToolbarLabel>
