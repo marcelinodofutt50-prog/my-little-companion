@@ -433,7 +433,7 @@ function CheckoutPage() {
                         )}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {isServerRenewal ? "Renovação do login selecionado pelo suporte." : "Licença entregue pelo suporte."}
+                        {isServerRenewal ? "Renovação do login selecionado pelo suporte." : "Licença ativada pela equipe em poucos minutos após o pagamento."}
                       </p>
                       <AlertDialog key={promotionalCheckout ? "promotion" : "standard"}>
                         <AlertDialogTrigger asChild>
@@ -448,14 +448,14 @@ function CheckoutPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>{isServerRenewal ? "Atenção à renovação do servidor" : "Atenção à entrega da licença"}</AlertDialogTitle>
+                            <AlertDialogTitle>{isServerRenewal ? "Atenção à renovação do servidor" : "Como funciona a ativação"}</AlertDialogTitle>
                             <AlertDialogDescription>
                               {isServerRenewal ? (
                                 <>A Cakto cobra a cada 30 dias. A renovação do seu login é manual. A cada pagamento, abra
                                 um ticket no suporte e envie o comprovante e o número do pedido <strong>#{order.slice(0, 8)}</strong>.</>
                               ) : (
-                                <>A entrega da licença é manual. Depois de pagar pela Cakto, abra um ticket no suporte e
-                                envie o comprovante e o número do pedido <strong>#{order.slice(0, 8)}</strong>.</>
+                                <>Assim que você paga pela Cakto, a equipe ativa sua licença — normalmente em poucos minutos.
+                                Para confirmar a ativação, envie o comprovante e o número do pedido <strong>#{order.slice(0, 8)}</strong> no suporte.</>
                               )}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
@@ -550,7 +550,7 @@ function CheckoutPage() {
               </div>
 
               <ul className="space-y-2.5 rounded-xl border border-border bg-card/40 p-4">
-                <Perk icon={Zap}>{isServerRenewal ? "Renovação manual após confirmação do pagamento" : "Entrega manual da licença após confirmação do pagamento"}</Perk>
+                <Perk icon={Zap}>{isServerRenewal ? "Renovação manual após confirmação do pagamento" : "Ativação em poucos minutos pela equipe após o pagamento"}</Perk>
                 <Perk icon={BadgeCheck}>{isServerRenewal ? "Você mantém o login selecionado" : "A equipe informa os dados de acesso após a confirmação"}</Perk>
                 <Perk icon={ShieldCheck}>Ambiente seguro — não guardamos dados de cartão</Perk>
                 <Perk icon={Sparkles}>Suporte humano no Telegram 7 dias por semana</Perk>
