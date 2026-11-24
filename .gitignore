@@ -38,6 +38,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+vercel-env-*.txt
 
 # relatórios com carimbo de data (o "latest" fica versionado)
 reports/security-e2e-2*
