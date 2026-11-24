@@ -12,16 +12,23 @@ import { trackSchemaFailure } from "./tutorials.functions";
 
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((i: unknown) => z.object({ search: z.string().max(120).optional() }).optional().parse(i))
+  .handler(async ({ data, context }) => {
     try {
       await assertStaff(context);
-      const { data, error } = await context.supabase
+      const term = (data?.search ?? "").trim();
+      let query = context.supabase
         .from("profiles")
-        .select("id,email,full_name,display_name,created_at")
-        .order("created_at", { ascending: false })
-        .limit(500);
+        .select("id,email,full_name,display_name,created_at");
+      if (term) {
+        // Busca no servidor: sem isto, só os 500 cadastros mais recentes eram
+        // pesquisáveis (filtro client-side), então usuários antigos "sumiam".
+        const safe = term.replace(/[,()%*]/g, " ").trim();
+        query = query.or(`email.ilike.%${safe}%,full_name.ilike.%${safe}%,display_name.ilike.%${safe}%`);
+      }
+      const { data: rows, error } = await query.order("created_at", { ascending: false }).limit(term ? 100 : 500);
       if (error) throw new Error(error.message);
-      return data ?? [];
+      return rows ?? [];
     } catch (err: any) {
       console.error("[ADMIN_ERR] listUsers:", err);
       throw err;

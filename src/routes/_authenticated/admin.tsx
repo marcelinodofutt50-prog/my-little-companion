@@ -508,6 +508,29 @@ function AdminPage() {
     return p;
   }, [usersFn]);
 
+  // Busca de usuários no servidor (debounced). O lote padrão traz só os 500 mais
+  // recentes; sem isto, cadastro antigo não aparecia no filtro da aba.
+  const userSearchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const didServerUserSearch = useRef(false);
+  useEffect(() => {
+    const term = userFilter.trim();
+    if (userSearchTimer.current) clearTimeout(userSearchTimer.current);
+    if (term.length < 3) {
+      if (didServerUserSearch.current) {
+        didServerUserSearch.current = false;
+        void loadUsers(); // restaura o lote padrão (recentes) ao limpar a busca
+      }
+      return;
+    }
+    userSearchTimer.current = setTimeout(() => {
+      didServerUserSearch.current = true;
+      usersFn({ data: { search: term } })
+        .then((r) => { setUsers(r); setUsersError(null); loadedRef.current.users = true; })
+        .catch((e: any) => setUsersError(e?.message ?? "Não foi possível buscar usuários. Tente novamente."));
+    }, 400);
+    return () => { if (userSearchTimer.current) clearTimeout(userSearchTimer.current); };
+  }, [userFilter, usersFn, loadUsers]);
+
   const loadLicenses = useCallback(() => {
     if (inflightRef.current.licenses) return inflightRef.current.licenses;
     setLicenseLoading(true);
