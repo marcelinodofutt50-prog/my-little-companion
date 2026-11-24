@@ -649,7 +649,7 @@ function PlansPage() {
             transition={{ delay: 0.05 }}
             className="mt-4 text-balance font-display text-4xl font-bold tracking-tight sm:text-5xl md:text-7xl text-foreground"
           >
-            Escolha seu <span className="text-primary italic">acesso.</span>
+            Escolha seu <span className="italic bg-gradient-to-br from-primary via-primary to-primary/50 bg-clip-text text-transparent">acesso.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -717,9 +717,10 @@ function PlansPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4 + i * 0.06, type: "spring", stiffness: 180 }}
-                className="rounded-lg border border-border/50 bg-card/40 px-3 py-2 backdrop-blur"
+                className="group/metric relative overflow-hidden rounded-xl border border-border/60 bg-card/50 px-3 py-3 backdrop-blur transition-colors hover:border-primary/40"
               >
-                <div className="font-display text-lg font-bold text-primary">{m.v}</div>
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 transition-opacity group-hover/metric:opacity-100" />
+                <div className="font-display text-xl font-bold text-primary">{m.v}</div>
                 <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{m.l}</div>
               </motion.div>
             ))}
@@ -950,7 +951,7 @@ function PlansPage() {
                 <button
                   onClick={() => setBillingCycle("yearly")}
                   className={`relative rounded-full px-4 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition-all ${
-                    billingCycle === "yearly" ? "bg-primary text-primary-foreground shadow-[0_0_10px_oklch(0.78_0.13_82/0.3)]" : "text-muted-foreground hover:bg-white/5"
+                    billingCycle === "yearly" ? "bg-primary text-primary-foreground shadow-[0_0_10px_oklch(0.65_0.16_260/0.3)]" : "text-muted-foreground hover:bg-white/5"
                   }`}
                 >
                   Anual
@@ -1244,7 +1245,7 @@ function OrderCalculator({ plans, onBuy }: { plans: Plan[]; onBuy: (slug: string
   const addonPlans = plans.filter(p => p.category === "addon" || p.category === "upgrade");
 
   return (
-    <section className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-sm shadow-[0_0_50px_-12px_oklch(0.78_0.13_82/0.2)]">
+    <section className="mt-16 rounded-2xl border border-primary/20 bg-primary/5 p-6 backdrop-blur-sm shadow-[0_0_50px_-12px_oklch(0.65_0.16_260/0.2)]">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">// simulador de infraestrutura</div>
@@ -1618,9 +1619,9 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
     <div className={[
       "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-700",
       featured
-        ? "border-primary/40 bg-gradient-to-b from-primary/[0.08] via-card to-card shadow-[0_20px_60px_-20px_oklch(0.78_0.13_82/0.3)] sm:scale-[1.03] z-10"
+        ? "border-primary/40 bg-gradient-to-b from-primary/[0.08] via-card to-card shadow-[0_20px_60px_-20px_oklch(0.65_0.16_260/0.3)] sm:scale-[1.03] z-10"
         : "border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/50 hover:-translate-y-1.5 shadow-lg shadow-black/20",
-      isLifetime ? "ring-2 ring-primary/20 shadow-[0_0_50px_-10px_oklch(0.78_0.13_82/0.4)]" : "",
+      isLifetime ? "ring-2 ring-primary/20 shadow-[0_0_50px_-10px_oklch(0.65_0.16_260/0.4)]" : "",
     ].join(" ")}>
       {showUpgradeConfirm && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
@@ -1672,7 +1673,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       {/* Glow Effect */}
       <div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100" 
-           style={{ background: `radial-gradient(600px circle at var(--x) var(--y), oklch(0.78 0.13 82 / 0.1), transparent 40%)` }} 
+           style={{ background: `radial-gradient(600px circle at var(--x) var(--y), oklch(0.65 0.16 260 / 0.12), transparent 40%)` }}
            onMouseMove={(e) => {
              const rect = e.currentTarget.getBoundingClientRect();
              e.currentTarget.style.setProperty("--x", `${e.clientX - rect.left}px`);
@@ -1682,7 +1683,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
 
       {badgeLabel && (
-        <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/20 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary shadow-[0_0_10px_oklch(0.78_0.13_82/0.2)]">
+        <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/20 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary shadow-[0_0_10px_oklch(0.65_0.16_260/0.2)]">
           <Crown className="h-3 w-3 animate-pulse" /> {badgeLabel}
         </div>
       )}
@@ -1691,7 +1692,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         <div className={[
           "relative grid h-12 w-12 place-items-center rounded-xl border transition-all duration-300",
           featured 
-            ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_15px_oklch(0.78_0.13_82/0.2)]" 
+            ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_15px_oklch(0.65_0.16_260/0.2)]" 
             : "border-border/60 bg-background/40 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary",
         ].join(" ")}>
           <Icon className="h-6 w-6" />
@@ -1741,8 +1742,8 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
           </>
         ) : (
           <div className="flex items-baseline gap-1">
-            <span className="font-display text-5xl font-bold tracking-tighter">{moneyParts(price).main}</span>
-            <span className="font-display text-2xl font-bold">{moneyParts(price).cents}</span>
+            <span className={`font-display text-5xl font-bold tracking-tighter ${featured ? "text-primary" : "text-foreground"}`}>{moneyParts(price).main}</span>
+            <span className={`font-display text-2xl font-bold ${featured ? "text-primary" : "text-foreground/90"}`}>{moneyParts(price).cents}</span>
           </div>
         )}
       </div>
@@ -1808,7 +1809,7 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         className={[
           "group/btn w-full font-mono uppercase tracking-[0.2em] text-[10px] h-12 transition-all duration-500 active:scale-[0.98]",
           featured 
-            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_25px_oklch(0.78_0.13_82/0.4)] hover:shadow-[0_0_40px_oklch(0.78_0.13_82/0.6)]" 
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_25px_oklch(0.65_0.16_260/0.4)] hover:shadow-[0_0_40px_oklch(0.65_0.16_260/0.6)]" 
             : "border-2 border-primary/20 bg-background/50 hover:bg-primary/5 hover:border-primary/50 shadow-sm",
         ].join(" ")}
         variant={featured ? "default" : "outline"}
@@ -1980,7 +1981,7 @@ function LegacyLookup() {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="group flex w-full items-center justify-between rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-primary shadow-[0_0_20px_-8px_oklch(0.78_0.13_82/0.45)] transition-all hover:border-primary/70 hover:bg-primary/10 hover:shadow-[0_0_28px_-10px_oklch(0.78_0.13_82/0.55)]"
+              className="group flex w-full items-center justify-between rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 font-mono text-[11px] uppercase tracking-wider text-primary shadow-[0_0_20px_-8px_oklch(0.65_0.16_260/0.45)] transition-all hover:border-primary/70 hover:bg-primary/10 hover:shadow-[0_0_28px_-10px_oklch(0.65_0.16_260/0.55)]"
             >
               <span className="flex items-center gap-2">
                 <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-primary" />
