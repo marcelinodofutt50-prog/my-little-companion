@@ -126,7 +126,7 @@ export const signTutorialMedia = createServerFn({ method: "POST" })
 
     const { data: rows } = await supabaseAdmin
       .from("tutorials")
-      .select("video_url, image_url")
+      .select("video_url, image_url, allowed_plans")
       .eq("is_active", true)
       .limit(500);
     // O arquivo precisa ser EXATAMENTE a mídia de um tutorial ativo.
@@ -135,6 +135,13 @@ export const signTutorialMedia = createServerFn({ method: "POST" })
     const owner = (rows ?? []).find((r: any) => matches(r.video_url) || matches(r.image_url));
 
     if (!owner) return { url: null as string | null };
+
+    // Gating: mídia de tutorial restrito a planos só é assinada para quem tem direito.
+    if (!isTutorialPublic(owner)) {
+      const { optionalUserId, canAccessTutorial } = await import("@/lib/tutorial-access.server");
+      const uid = await optionalUserId();
+      if (!(await canAccessTutorial(owner, uid))) return { url: null as string | null };
+    }
 
     const { createDownload } = await import("@/lib/storage-gateway.server");
     try {

@@ -76,3 +76,37 @@ export async function gateTutorialsForUser<T extends Record<string, any>>(
     return ap.some((s) => mine.has(s));
   });
 }
+
+/**
+ * Resolve o usuário atual pelo Bearer token do request, SEM lançar (anônimo => null).
+ * Usado em endpoints públicos que precisam de uma checagem opcional de direito.
+ */
+export async function optionalUserId(): Promise<string | null> {
+  try {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const req: any = getRequest();
+    const auth: string = req?.headers?.get?.("authorization") || "";
+    if (!auth.startsWith("Bearer ")) return null;
+    const token = auth.slice(7);
+    if (token.split(".").length !== 3) return null;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.auth.getClaims(token);
+    const sub = (data as any)?.claims?.sub;
+    return typeof sub === "string" && sub ? sub : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Pode acessar a MÍDIA deste tutorial? Público => sempre. Restrito => só usuário
+ * com licença ativa de um dos planos liberados. Fecha o furo de assinar mídia
+ * restrita por quem adivinha o caminho.
+ */
+export async function canAccessTutorial(row: any, userId: string | null): Promise<boolean> {
+  if (isTutorialPublic(row)) return true;
+  if (!userId) return false;
+  const mine = await activePlanSlugs(userId);
+  const ap = tutorialAllowedPlans(row).map((s) => s.toLowerCase());
+  return ap.some((s) => mine.has(s));
+}

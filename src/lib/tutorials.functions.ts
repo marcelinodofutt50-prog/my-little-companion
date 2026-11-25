@@ -58,8 +58,10 @@ export const listTutorials = createServerFn({ method: "GET" })
   }).optional().parse(d || {}))
   .middleware([requireSupabaseAuth])
   .handler(async ({ data: input, context }): Promise<any[]> => {
+    // Listagem administrativa (inclui inativos/restritos via service role): só staff.
+    await assertStaff(context);
     const metadata = input?.metadata || {};
-    
+
     const fetchWithRetry = async (attempt = 1): Promise<any[]> => {
       const timestamp = new Date().toISOString();
       console.log(`[tutorials] [${timestamp}] [DEBUG] Busca de módulos (Tentativa ${attempt})...`);
