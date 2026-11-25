@@ -55,7 +55,7 @@ export function SiteHeader() {
     { to: "/vps", label: "VPS" },
     { to: "/tutoriais", label: t("nav.tutorial") },
     { to: "/mercado", label: t("nav.market") },
-    
+    { to: "/creators", label: "Creators" },
   ] as const;
 
   const more = [
