@@ -166,11 +166,20 @@ function GangstarRemotePage() {
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_90%_at_50%_-10%,oklch(0.65_0.16_260/0.18),transparent_70%)]" />
-          <div className="relative mx-auto max-w-5xl px-4 pt-14 pb-14 md:pt-20 md:pb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}
-            >
-              <div className="flex items-center gap-3 text-xs font-semibold tracking-wide">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.035]"
+            style={{
+              backgroundImage:
+                "linear-gradient(oklch(1 0 0) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0) 1px, transparent 1px)",
+              backgroundSize: "46px 46px",
+              maskImage: "radial-gradient(70% 70% at 50% 30%, #000, transparent)",
+              WebkitMaskImage: "radial-gradient(70% 70% at 50% 30%, #000, transparent)",
+            }}
+          />
+          <div className="relative mx-auto grid max-w-5xl items-center gap-10 px-4 pt-14 pb-14 md:pt-20 md:pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+            {/* Pitch */}
+            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
+              <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold tracking-wide">
                 <span
                   className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
                   style={{ borderColor: ember(0.33), color: EMBER, background: ember(0.07) }}
@@ -184,13 +193,13 @@ function GangstarRemotePage() {
                 <span className="rounded-full border border-border/50 px-3 py-1.5 text-muted-foreground">BUILD 4.5</span>
               </div>
 
-              <h1 className="mt-7 font-display text-5xl font-black leading-[0.92] tracking-tight md:text-7xl">
+              <h1 className="mt-7 font-display text-5xl font-black leading-[0.9] tracking-tight md:text-6xl lg:text-7xl">
                 Gangstar <span className="text-primary">Remote</span>
-                <span className="block text-muted-foreground/40">4.5</span>
+                <span className="mt-1 block text-transparent" style={{ WebkitTextStroke: `1.5px ${ember(0.55)}` }}>4.5</span>
               </h1>
 
               <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
-                A unidade remota da Shadow pra Gangstar. <span className="text-foreground">All Banks, bancos liberados sem restrições ou detecções</span>, encrypter indetectável e bypass nativo — tudo controlado pelo painel, com ativação rápida pela equipe.
+                A unidade remota da Shadow pra Gangstar. <span className="text-foreground">All Banks, bancos liberados sem restrições ou detecções</span>, encrypter indetectável e bypass nativo — tudo controlado pelo painel.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -207,29 +216,42 @@ function GangstarRemotePage() {
               </div>
             </motion.div>
 
-            {/* Mini-console tático */}
+            {/* Painel de operação (HUD) */}
             <motion.div
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
-              className="mt-12 overflow-hidden rounded-2xl border border-border/50 bg-card/50 backdrop-blur"
+              className="overflow-hidden rounded-2xl border bg-card/50 shadow-2xl shadow-black/40 backdrop-blur"
+              style={{ borderColor: ember(0.22) }}
             >
               <div className="flex items-center gap-2 border-b border-border/50 px-4 py-2.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
-                <span className="ml-2 font-mono text-xs text-muted-foreground">shadow://remote/gangstar-4.5</span>
+                <span className="ml-2 font-mono text-[11px] text-muted-foreground">shadow://remote/gangstar-4.5</span>
+                <span className="ml-auto font-mono text-[10px] font-semibold" style={{ color: EMBER }}>
+                  {online ? "ONLINE" : "STANDBY"}
+                </span>
               </div>
-              <div className="grid gap-px bg-border/60 sm:grid-cols-3">
+              <div className="divide-y divide-border/40">
                 {[
-                  { k: "Núcleo", v: "4.5 estável", icon: Cpu },
-                  { k: "Proteção", v: "Encrypter + Bypass", icon: ShieldCheck },
-                  { k: "Destaque", v: "All Banks ∞", icon: Zap },
-                ].map((s) => (
-                  <div key={s.k} className="bg-card/60 px-4 py-4">
-                    <s.icon className="mb-2 h-4 w-4 text-primary" />
-                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.k}</div>
-                    <div className="font-display text-base font-bold">{s.v}</div>
+                  { k: "NÚCLEO", v: "4.5 estável" },
+                  { k: "ENCRYPTER", v: "v1 · v2 · v3 · v4" },
+                  { k: "ALL BANKS", v: "liberado" },
+                  { k: "BYPASS", v: "nativo + website" },
+                  { k: "DETECÇÃO", v: "oculta · VPN/proxy" },
+                ].map((r) => (
+                  <div key={r.k} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{r.k}</span>
+                    <span className="flex items-center gap-2 text-sm">
+                      <span className="font-medium">{r.v}</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px] shadow-emerald-400/60" />
+                    </span>
                   </div>
                 ))}
+              </div>
+              <div className="border-t border-border/50 bg-background/40 px-4 py-3 font-mono text-xs">
+                <span className="text-muted-foreground">&gt; </span>
+                <span className="text-foreground">inject --unit remote-4.5 --stealth</span>
+                <span className="ml-0.5 inline-block h-3.5 w-[7px] translate-y-0.5 animate-pulse align-middle" style={{ background: EMBER }} />
               </div>
             </motion.div>
           </div>
@@ -332,13 +354,16 @@ function GangstarRemotePage() {
 
           <div className="mt-8 overflow-hidden rounded-2xl border border-border/50">
             <div className="grid grid-cols-[1.3fr_1fr_1fr] text-sm">
-              <div className="px-4 py-4 font-semibold text-muted-foreground">Recurso</div>
+              <div className="px-4 py-4 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Recurso</div>
               <div className="border-l border-border/50 px-3 py-4 text-center">
                 <div className="font-display font-bold">BTMob</div>
                 <div className="text-[11px] text-muted-foreground">Mais em conta</div>
               </div>
-              <div className="border-l px-3 py-4 text-center" style={{ borderColor: ember(0.2), background: ember(0.06) }}>
-                <div className="font-display font-bold" style={{ color: EMBER }}>Remote 4.5</div>
+              <div className="relative border-l px-3 py-4 text-center" style={{ borderColor: ember(0.2), background: ember(0.08) }}>
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-0.5" style={{ background: EMBER }} />
+                <div className="flex items-center justify-center gap-1.5 font-display font-bold" style={{ color: EMBER }}>
+                  <Crown className="h-3.5 w-3.5" /> Remote 4.5
+                </div>
                 <div className="text-[11px] text-muted-foreground">Recomendado</div>
               </div>
             </div>
