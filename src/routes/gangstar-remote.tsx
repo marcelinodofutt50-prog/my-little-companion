@@ -139,7 +139,7 @@ function GangstarRemotePage() {
               </h1>
 
               <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
-                A unidade remota da Shadow pra Gangstar. <span className="text-foreground">All Banks com dinheiro infinito</span>, encrypter indetectável e bypass nativo — tudo controlado pelo painel, com ativação rápida pela equipe.
+                A unidade remota da Shadow pra Gangstar. <span className="text-foreground">All Banks, bancos liberados sem restrições ou detecções</span>, encrypter indetectável e bypass nativo — tudo controlado pelo painel, com ativação rápida pela equipe.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
