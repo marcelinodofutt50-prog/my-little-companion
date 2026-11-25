@@ -145,7 +145,7 @@ function GangstarRemotePage() {
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_90%_at_50%_-10%,oklch(0.65_0.16_260/0.18),transparent_70%)]" />
-          <div className="relative mx-auto max-w-5xl px-4 pt-16 pb-16 md:pt-24 md:pb-24">
+          <div className="relative mx-auto max-w-5xl px-4 pt-14 pb-14 md:pt-20 md:pb-16">
             <motion.div
               initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}
             >
@@ -215,7 +215,7 @@ function GangstarRemotePage() {
         </section>
 
         {/* FEATURES */}
-        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
+        <section className="mx-auto max-w-5xl px-4 py-14 md:py-16">
           <p className="text-sm font-semibold text-primary">Ficha técnica</p>
           <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Análise da unidade 4.5</h2>
           <p className="mt-3 font-mono text-xs text-muted-foreground">{"// "}{FEATURES.length} módulos · núcleo 4.5 · status: operacional</p>
@@ -234,7 +234,7 @@ function GangstarRemotePage() {
 
         {/* COMO FUNCIONA */}
         <section id="como-funciona" className="scroll-mt-24 border-y border-border/50 bg-card/20">
-          <div className="mx-auto max-w-5xl px-4 py-20 md:py-28">
+          <div className="mx-auto max-w-5xl px-4 py-14 md:py-16">
             <p className="text-sm font-semibold text-primary">Em 3 passos</p>
             <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Do acesso ao comando</h2>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -251,12 +251,12 @@ function GangstarRemotePage() {
         </section>
 
         {/* VÍDEOS */}
-        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
+        <section className="mx-auto max-w-5xl px-4 py-14 md:py-16">
           <p className="text-sm font-semibold text-primary">Na prática</p>
           <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Veja a Remote 4.5 rodando</h2>
           <p className="mt-2 max-w-md text-muted-foreground">Dois vídeos mostrando a unidade em ação — do painel ao jogo.</p>
 
-          <div className="mt-8 space-y-10">
+          <div className="mt-8 space-y-8">
             {VIDEOS.map((v) => (
               <div key={v.id}>
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary">
@@ -283,7 +283,7 @@ function GangstarRemotePage() {
         </section>
 
         {/* CONFIANÇA */}
-        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
+        <section className="mx-auto max-w-5xl px-4 py-14 md:py-16">
           <div className="grid gap-4 sm:grid-cols-3">
             {[
               { icon: Radio, t: "Status transparente", d: "Online é online. Você vê antes de entrar." },
@@ -302,7 +302,7 @@ function GangstarRemotePage() {
         </section>
 
         {/* COMPARATIVO */}
-        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
+        <section className="mx-auto max-w-5xl px-4 py-14 md:py-16">
           <p className="text-sm font-semibold text-primary">Comparativo</p>
           <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">BTMob ou Gangstar Remote?</h2>
           <p className="mt-2 max-w-xl text-muted-foreground">
@@ -341,7 +341,7 @@ function GangstarRemotePage() {
 
         {/* PLANOS */}
         <section id="planos" className="scroll-mt-24 border-t border-border/50 bg-card/20">
-          <div className="mx-auto max-w-5xl px-4 py-20 md:py-28">
+          <div className="mx-auto max-w-5xl px-4 py-14 md:py-16">
             <p className="text-sm font-semibold text-primary">Planos</p>
             <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Escolhe e ativa</h2>
             <p className="mt-2 max-w-md text-muted-foreground">Pagamento pela Cakto, ativação rápida pela equipe. Sem fidelidade — você escolhe a janela.</p>
