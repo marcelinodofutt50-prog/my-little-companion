@@ -1623,6 +1623,9 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         : "border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/50 hover:-translate-y-1.5 shadow-lg shadow-black/20",
       isLifetime ? "ring-2 ring-primary/20 shadow-[0_0_50px_-10px_oklch(0.65_0.16_260/0.4)]" : "",
     ].join(" ")}>
+      {featured && (
+        <div className="pointer-events-none absolute inset-x-6 top-0 h-[2px] rounded-full bg-gradient-to-r from-transparent via-primary to-transparent" />
+      )}
       {showUpgradeConfirm && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/95 p-6 text-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
           <div className="mb-4 rounded-full bg-primary/10 p-3">
@@ -1683,8 +1686,8 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
 
       {badgeLabel && (
-        <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-primary/50 bg-primary/20 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary shadow-[0_0_10px_oklch(0.65_0.16_260/0.2)]">
-          <Crown className="h-3 w-3 animate-pulse" /> {badgeLabel}
+        <div className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold ${featured ? "bg-primary text-primary-foreground shadow-md shadow-primary/40" : "border border-border/60 bg-card/60 text-muted-foreground"}`}>
+          {featured && <Crown className="h-3 w-3" />} {badgeLabel}
         </div>
       )}
 
@@ -1699,14 +1702,11 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
           {featured && <div className="absolute -right-1 -top-1 h-3 w-3 animate-ping rounded-full bg-primary/40" />}
         </div>
         <div className="min-w-0">
-          <div className="truncate font-display text-xl tracking-tight leading-tight group-hover:text-primary transition-colors">
+          <div className={`truncate font-display font-bold tracking-tight leading-none transition-colors ${featured ? "text-[26px] text-foreground" : "text-2xl group-hover:text-primary"}`}>
             {plan.name.replace(/\s*\(Trial\)\s*/i, " — 7 dias")}
           </div>
           {meta.cadence && (
-            <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/80">
-              <span className="inline-block h-1 w-1 rounded-full bg-primary/50" />
-              {meta.cadence}
-            </div>
+            <div className="mt-1 text-xs text-muted-foreground">{meta.cadence}</div>
           )}
         </div>
       </div>
@@ -1736,13 +1736,13 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
               </span>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-5xl font-bold tracking-tighter text-primary">{moneyParts(b.final).main}</span>
+              <span className={`font-display font-bold tracking-tighter text-primary ${featured ? "text-6xl" : "text-5xl"}`}>{moneyParts(b.final).main}</span>
               <span className="font-display text-2xl font-bold text-primary">{moneyParts(b.final).cents}</span>
             </div>
           </>
         ) : (
           <div className="flex items-baseline gap-1">
-            <span className={`font-display text-5xl font-bold tracking-tighter ${featured ? "text-primary" : "text-foreground"}`}>{moneyParts(price).main}</span>
+            <span className={`font-display font-bold tracking-tighter ${featured ? "text-6xl text-primary" : "text-5xl text-foreground"}`}>{moneyParts(price).main}</span>
             <span className={`font-display text-2xl font-bold ${featured ? "text-primary" : "text-foreground/90"}`}>{moneyParts(price).cents}</span>
           </div>
         )}
@@ -1807,10 +1807,10 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
 
       <Button
         className={[
-          "group/btn w-full font-mono uppercase tracking-[0.2em] text-[10px] h-12 transition-all duration-500 active:scale-[0.98]",
-          featured 
-            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_25px_oklch(0.65_0.16_260/0.4)] hover:shadow-[0_0_40px_oklch(0.65_0.16_260/0.6)]" 
-            : "border-2 border-primary/20 bg-background/50 hover:bg-primary/5 hover:border-primary/50 shadow-sm",
+          "group/btn w-full h-12 rounded-xl text-sm font-semibold transition-all duration-300 active:scale-[0.98]",
+          featured
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/40 hover:shadow-primary/60"
+            : "border border-primary/25 bg-background/40 hover:bg-primary/10 hover:border-primary/50",
         ].join(" ")}
         variant={featured ? "default" : "outline"}
         onClick={handleClick}
@@ -1820,13 +1820,13 @@ const PlanCard = memo(function PlanCard({ plan, coupon, cashback, useCash, isLoa
         {isLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
-          <Zap className="mr-2 h-4 w-4 transition-transform duration-500 group-hover/btn:scale-125 group-hover/btn:rotate-12" />
+          <Zap className="mr-2 h-4 w-4 transition-transform duration-300 group-hover/btn:scale-110" />
         )}
-        Continuar para Checkout
+        {featured ? tr("Garantir meu acesso", "Get my access") : tr("Ir para o pagamento", "Go to checkout")}
       </Button>
-      <div className="mt-3 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+      <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
         <Shield className="h-3 w-3 text-primary/60" />
-        {hasBenefit ? "valor final confirmado no checkout" : "pagamento seguro no site"}
+        {hasBenefit ? tr("Valor final confirmado no checkout", "Final price confirmed at checkout") : tr("Pagamento seguro no site", "Secure payment on-site")}
       </div>
     </div>
   );
@@ -1848,23 +1848,30 @@ const PlanGroup = memo(function PlanGroup({ title, eyebrow, items, onBuy, loadin
     <section className="mb-16">
       <div className="mb-6 flex flex-col gap-1 border-b border-border/40 pb-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary/80">// {title.toLowerCase()}</div>
-          <h2 className="mt-1 font-display text-2xl md:text-3xl">{title}</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-bold tracking-tight">{title}</h2>
         </div>
         {eyebrow && <span className="text-sm text-muted-foreground">{eyebrow}</span>}
       </div>
       <div className={`grid gap-5 ${items.length >= 3 ? "md:grid-cols-3" : items.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1 md:mx-auto md:max-w-md"}`}>
-        {items.map((p) => (
-          <PlanCard
+        {items.map((p, i) => (
+          <motion.div
             key={p.slug}
-            plan={p}
-            coupon={coupon}
-            cashback={cashback}
-            useCash={useCash}
-            isLoading={loading === p.slug}
-            onBuy={onBuy}
-            featured={featuredSlug === p.slug}
-          />
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
+            className="h-full"
+          >
+            <PlanCard
+              plan={p}
+              coupon={coupon}
+              cashback={cashback}
+              useCash={useCash}
+              isLoading={loading === p.slug}
+              onBuy={onBuy}
+              featured={featuredSlug === p.slug}
+            />
+          </motion.div>
         ))}
       </div>
     </section>
