@@ -32,5 +32,10 @@ alter table public.manual_sales enable row level security;
 -- Sem policies: apenas service role acessa. Garante que clientes não leiam/escrevam.
 revoke all on public.manual_sales from anon, authenticated;
 
+-- IMPORTANTE: as server functions usam a service_role key, que NÃO é dona da
+-- tabela e precisa de grant explícito (o auto-grant do Supabase não cobriu esta
+-- tabela — sem isto o insert dá "permission denied for table manual_sales").
+grant all on public.manual_sales to service_role;
+
 -- Verificação:
 --   select user_id, amount, label, source, created_at from public.manual_sales order by created_at desc;
