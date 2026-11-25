@@ -57,6 +57,7 @@ function CreatorPage() {
   const [uid, setUid] = useState<string | null>(null);
   const [app, setApp] = useState<AppRow | null>(null);
   const [claim, setClaim] = useState<Claim | null>(null);
+  const [cadence, setCadence] = useState<{ status: string; cadence_anchor: string | null; reviewed_at: string | null; lapsed_at: string | null } | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -92,7 +93,7 @@ function CreatorPage() {
         actions.current.enter(id);
         setClaiming(false); setSending(false); setRemovingId(null);
         setUrl(""); setTitle("");
-        setApp(null); setClaim(null); setVideos([]); setRefCode(null);
+        setApp(null); setClaim(null); setCadence(null); setVideos([]); setRefCode(null);
       }
       setUid(id);
       if (!id) { setLoadError(false); return setLoaded(true); }
@@ -115,6 +116,14 @@ function CreatorPage() {
       if (!pr.error) setRefCode(((pr.data as any)?.referral_code as string) ?? null);
       setLoaded(true);
       if ((a.data as any)?.status === "approved") supabase.rpc("mark_creator_welcome_seen").then(() => {});
+      // Cadência de creator — campos novos. Query isolada: se o SQL ainda não foi
+      // aplicado (coluna inexistente), vem r.error e o banner simplesmente não aparece.
+      if (id && (a.data as any)?.status === "approved") {
+        supabase.from("creator_license_claims")
+          .select("status, cadence_anchor, reviewed_at, lapsed_at")
+          .eq("user_id", id).maybeSingle()
+          .then((r) => { if (isCurrent() && !r.error) setCadence((r.data as any) ?? null); });
+      }
     } catch (e) {
       if (!isCurrent()) return;
       console.error("[creator]", e);
@@ -234,6 +243,24 @@ function CreatorPage() {
   const next = LEVELS.find((l) => l.min > approvedCount);
   const refLink = refCode ? `${window.location.origin}/auth?ref=${refCode}` : "";
 
+  // Cadência: precisa de 1 vídeo APROVADO a cada 14 dias ou perde cargo + licença.
+  // deadline = maior(âncora de entrega, último vídeo aprovado) + 14 dias.
+  const DAY = 86400000;
+  const cadenceInfo = (() => {
+    if (!cadence || (cadence.status !== "delivered" && cadence.status !== "lapsed")) return null;
+    if (cadence.lapsed_at) return { kind: "lapsed" as const, daysLeft: 0 };
+    const lastApproved = videos.filter((v) => v.status === "approved")
+      .map((v) => +new Date(v.created_at)).sort((a, b) => b - a)[0] ?? 0;
+    const anchor = Math.max(
+      cadence.cadence_anchor ? +new Date(cadence.cadence_anchor) : (cadence.reviewed_at ? +new Date(cadence.reviewed_at) : 0),
+      lastApproved,
+    );
+    if (!anchor) return null;
+    const daysLeft = Math.ceil((anchor + 14 * DAY - Date.now()) / DAY);
+    const kind = daysLeft <= 0 ? ("overdue" as const) : daysLeft <= 3 ? ("warning" as const) : ("ok" as const);
+    return { kind, daysLeft };
+  })();
+
   return (
     <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -246,6 +273,37 @@ function CreatorPage() {
           <Stat label="Aprovados" value={approvedCount} />
         </div>
       </div>
+
+      {cadenceInfo && (cadenceInfo.kind === "lapsed" || cadenceInfo.kind === "overdue") && (
+        <div className="relative overflow-hidden rounded-2xl border border-destructive/40 bg-destructive/[0.07] p-5">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-destructive" />
+          <p className="flex items-center gap-2 text-base font-bold text-destructive">
+            <XCircle className="h-5 w-5" /> {cadenceInfo.kind === "lapsed" ? "Acesso de creator encerrado" : "Prazo vencido — aja agora"}
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            {cadenceInfo.kind === "lapsed"
+              ? "Você perdeu o cargo e a licença de creator por ficar mais de 14 dias sem um vídeo aprovado. Fale com a equipe se quiser voltar ao programa."
+              : "Seu prazo de documentação passou. Poste um vídeo e peça aprovação da equipe o quanto antes para não perder o cargo e a licença de creator."}
+          </p>
+        </div>
+      )}
+      {cadenceInfo && cadenceInfo.kind === "warning" && (
+        <div className="relative overflow-hidden rounded-2xl border border-amber-500/40 bg-amber-500/[0.07] p-5">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500" />
+          <p className="flex items-center gap-2 text-base font-bold text-amber-400">
+            <Clock className="h-5 w-5" /> {cadenceInfo.daysLeft <= 0 ? "Último dia" : `Faltam ${cadenceInfo.daysLeft} dia${cadenceInfo.daysLeft === 1 ? "" : "s"}`} para documentar
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            Poste um vídeo e tenha ele <span className="text-foreground">aprovado pela equipe</span> para manter seu cargo e sua licença. É preciso 1 vídeo aprovado a cada 14 dias.
+          </p>
+        </div>
+      )}
+      {cadenceInfo && cadenceInfo.kind === "ok" && (
+        <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+          <span className="text-muted-foreground">Cadência em dia — próximo vídeo aprovado em <span className="font-semibold text-foreground">{cadenceInfo.daysLeft} dias</span> para manter o acesso.</span>
+        </div>
+      )}
 
       <Card><CardContent className="space-y-2 p-4">
         <div className="flex items-center justify-between gap-2">
