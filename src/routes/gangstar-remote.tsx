@@ -4,11 +4,14 @@ import { motion } from "framer-motion";
 import {
   Radio, ShieldCheck, Cpu, Fingerprint, SatelliteDish,
   Terminal, Zap, ArrowRight, CheckCircle2, Lock, Headset,
-  Crown, BadgeCheck, Clock,
+  Crown, BadgeCheck, Clock, CreditCard, XCircle, Plus,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { siteUrl } from "@/lib/site-url";
 
 const title = "Gangstar Remote 4.5";
@@ -108,8 +111,20 @@ const PLANS: RemotePlan[] = [
   },
 ];
 
+// Comparativo: BTMob (opção mais em conta) x Gangstar Remote 4.5
+type CompareRow = { label: string; btmob: string | boolean; gangstar: string | boolean };
+const COMPARE: CompareRow[] = [
+  { label: "All Banks — dinheiro infinito", btmob: false, gangstar: true },
+  { label: "Encrypter", btmob: false, gangstar: true },
+  { label: "Detecção", btmob: "Detectável", gangstar: "Indetectável" },
+  { label: "Bypass Website", btmob: false, gangstar: true },
+  { label: "Funções exclusivas", btmob: false, gangstar: true },
+  { label: "Custo", btmob: "Mais em conta", gangstar: "Premium" },
+];
+
 function GangstarRemotePage() {
   const [online, setOnline] = useState(true);
+  const [checkout, setCheckout] = useState<RemotePlan | null>(null);
   // Pulso de status apenas visual (hidrata após montar, sem tocar elegibilidade)
   useEffect(() => {
     const id = setInterval(() => setOnline((v) => v), 4000);
@@ -249,6 +264,44 @@ function GangstarRemotePage() {
           </div>
         </section>
 
+        {/* COMPARATIVO */}
+        <section className="mx-auto max-w-5xl px-4 py-16">
+          <p className="text-sm font-semibold text-primary">Comparativo</p>
+          <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">BTMob ou Gangstar Remote?</h2>
+          <p className="mt-2 max-w-xl text-muted-foreground">
+            A BTMob é a opção mais em conta pra começar, mas é detectável. A Remote 4.5 é a unidade premium: All Banks, encrypter e indetectável.
+          </p>
+
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border/60">
+            <div className="grid grid-cols-[1.3fr_1fr_1fr] text-sm">
+              <div className="px-4 py-4 font-semibold text-muted-foreground">Recurso</div>
+              <div className="border-l border-border/60 px-3 py-4 text-center">
+                <div className="font-display font-bold">BTMob</div>
+                <div className="text-[11px] text-muted-foreground">Mais em conta</div>
+              </div>
+              <div className="border-l px-3 py-4 text-center" style={{ borderColor: ember(0.2), background: ember(0.06) }}>
+                <div className="font-display font-bold" style={{ color: EMBER }}>Remote 4.5</div>
+                <div className="text-[11px] text-muted-foreground">Recomendado</div>
+              </div>
+            </div>
+            {COMPARE.map((row, i) => (
+              <div key={row.label} className={`grid grid-cols-[1.3fr_1fr_1fr] items-center border-t border-border/60 text-sm ${i % 2 ? "bg-card/20" : ""}`}>
+                <div className="px-4 py-3.5">{row.label}</div>
+                <div className="flex items-center justify-center border-l border-border/60 px-3 py-3.5 text-center text-muted-foreground">
+                  {typeof row.btmob === "boolean"
+                    ? (row.btmob ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <XCircle className="h-4 w-4 opacity-40" />)
+                    : <span>{row.btmob}</span>}
+                </div>
+                <div className="flex items-center justify-center border-l px-3 py-3.5 text-center" style={{ borderColor: ember(0.2), background: ember(0.04) }}>
+                  {typeof row.gangstar === "boolean"
+                    ? (row.gangstar ? <CheckCircle2 className="h-4 w-4" style={{ color: EMBER }} /> : <XCircle className="h-4 w-4 opacity-40" />)
+                    : <span className="font-medium" style={{ color: EMBER }}>{row.gangstar}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* PLANOS */}
         <section id="planos" className="scroll-mt-24 border-t border-border/60 bg-card/20">
           <div className="mx-auto max-w-5xl px-4 py-16">
@@ -313,17 +366,17 @@ function GangstarRemotePage() {
                       ))}
                     </ul>
 
-                    <a href={p.href} target="_blank" rel="noopener noreferrer" className="mt-8">
+                    <div className="mt-8">
                       {p.featured ? (
-                        <Button size="lg" className="h-12 w-full rounded-xl text-sm font-semibold text-white transition-transform group-hover:scale-[1.02]" style={{ background: EMBER, boxShadow: `0 14px 34px -12px ${ember(0.66)}` }}>
+                        <Button onClick={() => setCheckout(p)} size="lg" className="h-12 w-full rounded-xl text-sm font-semibold text-white transition-transform group-hover:scale-[1.02]" style={{ background: EMBER, boxShadow: `0 14px 34px -12px ${ember(0.66)}` }}>
                           {p.cta} <ArrowRight className="ml-1.5 h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button size="lg" variant="outline" className="h-12 w-full rounded-xl border-border/60 text-sm font-semibold">
+                        <Button onClick={() => setCheckout(p)} size="lg" variant="outline" className="h-12 w-full rounded-xl border-border/60 text-sm font-semibold">
                           {p.cta}
                         </Button>
                       )}
-                    </a>
+                    </div>
                   </div>
                 );
               })}
@@ -343,6 +396,30 @@ function GangstarRemotePage() {
           </div>
         </section>
 
+        {/* ADD-ON AVULSO */}
+        <section className="mx-auto max-w-5xl px-4 pt-10">
+          <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-card/40 p-7 md:p-8">
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(120%_120%_at_100%_50%,oklch(0.65_0.16_260/0.12),transparent_70%)]" />
+            <div className="relative grid gap-6 md:grid-cols-[1.5fr_1fr] md:items-center">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  <Plus className="h-3.5 w-3.5" /> Avulso pra quem já tem BTMob
+                </span>
+                <h3 className="mt-3 font-display text-2xl font-bold tracking-tight">Encrypter + Bypass da Gangstar, por fora</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Já roda a BTMob e só quer o que falta? Leva o encrypter e o bypass da Gangstar separados e deixa o seu setup indetectável — sem trocar de painel.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Link to="/contato">
+                  <Button size="lg" className="h-12 w-full rounded-xl text-sm font-semibold">Quero o avulso</Button>
+                </Link>
+                <span className="text-center text-[11px] text-muted-foreground">Valor e ativação direto com a equipe.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PARCERIA OFICIAL */}
         <section className="px-4 pt-16">
           <div className="mx-auto max-w-5xl">
@@ -356,7 +433,7 @@ function GangstarRemotePage() {
                     <BadgeCheck className="h-4 w-4" /> Parceria oficial
                   </div>
                   <p className="mt-2 text-base leading-relaxed text-foreground md:text-lg">
-                    A <span className="font-semibold">ShadowDashStore</span> é parceira oficial da <span className="font-semibold" style={{ color: EMBER }}>UniãoDos7</span> — grupo de alta elite e de Rauls destemidos.
+                    A <span className="font-semibold">ShadowDashStore</span> é parceira oficial da <span className="font-semibold" style={{ color: EMBER }}>UniãoDos7</span> — grupo de alta elite, de Rauls destemidos.
                   </p>
                 </div>
               </div>
@@ -393,6 +470,68 @@ function GangstarRemotePage() {
           </div>
         </section>
       </main>
+
+      {/* CHECKOUT MODAL */}
+      <Dialog open={!!checkout} onOpenChange={(o) => !o && setCheckout(null)}>
+        <DialogContent className="max-w-md border-border/60">
+          {checkout && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display text-xl">
+                  Gangstar Remote 4.5 — {checkout.name}
+                </DialogTitle>
+                <DialogDescription>
+                  {checkout.duration} · ativação rápida pela equipe
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+                <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Incluso</div>
+                <ul className="space-y-2">
+                  {checkout.perks.map((perk) => (
+                    <li key={perk} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" style={{ color: checkout.featured ? EMBER : BLUE }} />
+                      <span>{perk}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div
+                className="flex items-end justify-between rounded-xl border p-4"
+                style={checkout.featured ? { borderColor: ember(0.3), background: ember(0.06) } : { borderColor: blue(0.3), background: blue(0.06) }}
+              >
+                <div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Total</div>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <CreditCard className="h-3.5 w-3.5" /> Cartão ou Pix pela Cakto
+                  </div>
+                </div>
+                <div className="flex items-end gap-1" style={{ color: checkout.featured ? EMBER : BLUE }}>
+                  <span className="font-display text-sm font-bold">R$</span>
+                  <span className="font-display text-3xl font-black leading-none">{checkout.price}</span>
+                  <span className="mb-0.5 text-xs text-muted-foreground">{checkout.per}</span>
+                </div>
+              </div>
+
+              <DialogFooter className="mt-1">
+                <a href={checkout.href} target="_blank" rel="noopener noreferrer" className="w-full">
+                  <Button
+                    size="lg"
+                    className="h-12 w-full rounded-xl text-sm font-semibold text-white"
+                    style={checkout.featured ? { background: EMBER, boxShadow: `0 14px 34px -12px ${ember(0.66)}` } : undefined}
+                  >
+                    Ir para o pagamento <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </a>
+              </DialogFooter>
+              <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
+                <Lock className="h-3.5 w-3.5 text-primary/70" /> Você será levado ao checkout seguro da Cakto.
+              </p>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
