@@ -144,11 +144,7 @@ function GangstarRemotePage() {
       <main>
         {/* HERO */}
         <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_90%_at_50%_-10%,oklch(0.65_0.16_260/0.22),transparent_70%)]" />
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-[1px]"
-            style={{ background: `linear-gradient(90deg,transparent,${EMBER},transparent)`, opacity: 0.5 }}
-          />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_90%_at_50%_-10%,oklch(0.65_0.16_260/0.18),transparent_70%)]" />
           <div className="relative mx-auto max-w-5xl px-4 pt-16 pb-16 md:pt-24 md:pb-24">
             <motion.div
               initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}
@@ -164,7 +160,7 @@ function GangstarRemotePage() {
                   </span>
                   REMOTE // {online ? "ONLINE" : "STANDBY"}
                 </span>
-                <span className="rounded-full border border-border/60 px-3 py-1.5 text-muted-foreground">BUILD 4.5</span>
+                <span className="rounded-full border border-border/50 px-3 py-1.5 text-muted-foreground">BUILD 4.5</span>
               </div>
 
               <h1 className="mt-7 font-display text-5xl font-black leading-[0.92] tracking-tight md:text-7xl">
@@ -183,7 +179,7 @@ function GangstarRemotePage() {
                   </Button>
                 </a>
                 <a href="#como-funciona">
-                  <Button size="lg" variant="outline" className="h-12 rounded-xl border-border/60 px-6 text-sm font-semibold">
+                  <Button size="lg" variant="outline" className="h-12 rounded-xl border-border/50 px-6 text-sm font-semibold">
                     Como funciona
                   </Button>
                 </a>
@@ -193,9 +189,9 @@ function GangstarRemotePage() {
             {/* Mini-console tático */}
             <motion.div
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}
-              className="mt-12 overflow-hidden rounded-2xl border border-border/60 bg-card/50 backdrop-blur"
+              className="mt-12 overflow-hidden rounded-2xl border border-border/50 bg-card/50 backdrop-blur"
             >
-              <div className="flex items-center gap-2 border-b border-border/60 px-4 py-2.5">
+              <div className="flex items-center gap-2 border-b border-border/50 px-4 py-2.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
@@ -219,36 +215,31 @@ function GangstarRemotePage() {
         </section>
 
         {/* FEATURES */}
-        <section className="mx-auto max-w-5xl px-4 py-16">
-          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-primary">Ficha técnica</p>
-          <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">Análise da unidade 4.5</h2>
-          <p className="mt-3 font-mono text-xs text-muted-foreground">{"// "}{FEATURES.length} módulos ativos · núcleo 4.5 · status: operacional</p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
+          <p className="text-sm font-semibold text-primary">Ficha técnica</p>
+          <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Análise da unidade 4.5</h2>
+          <p className="mt-3 font-mono text-xs text-muted-foreground">{"// "}{FEATURES.length} módulos · núcleo 4.5 · status: operacional</p>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <Card key={f.t} className="group relative overflow-hidden border-border/60 bg-card/40 p-5 transition-colors hover:border-primary/40">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/25 bg-primary/5">
-                    <f.icon className="h-5 w-5 text-primary" />
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: EMBER }} /> ativo
-                  </span>
-                </div>
-                <h3 className="font-bold">{f.t}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{f.d}</p>
+              <Card key={f.t} className="border-border/50 bg-card/40 p-6 transition-colors hover:border-primary/40">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/5">
+                  <f.icon className="h-5 w-5 text-primary" />
+                </span>
+                <h3 className="mt-4 font-semibold">{f.t}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.d}</p>
               </Card>
             ))}
           </div>
         </section>
 
         {/* COMO FUNCIONA */}
-        <section id="como-funciona" className="scroll-mt-24 border-y border-border/60 bg-card/20">
-          <div className="mx-auto max-w-5xl px-4 py-16">
+        <section id="como-funciona" className="scroll-mt-24 border-y border-border/50 bg-card/20">
+          <div className="mx-auto max-w-5xl px-4 py-20 md:py-28">
             <p className="text-sm font-semibold text-primary">Em 3 passos</p>
             <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Do acesso ao comando</h2>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {STEPS.map((s, i) => (
-                <div key={s.t} className="rounded-2xl border border-border/60 bg-card/40 p-6">
+                <div key={s.t} className="rounded-2xl border border-border/50 bg-card/40 p-6">
                   <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl border border-primary/30 font-display text-sm font-black text-primary">{i + 1}</div>
                   <s.icon className="mb-3 h-5 w-5 text-primary" />
                   <h3 className="text-lg font-bold">{s.t}</h3>
@@ -260,7 +251,7 @@ function GangstarRemotePage() {
         </section>
 
         {/* VÍDEOS */}
-        <section className="mx-auto max-w-5xl px-4 py-16">
+        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
           <p className="text-sm font-semibold text-primary">Na prática</p>
           <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Veja a Remote 4.5 rodando</h2>
           <p className="mt-2 max-w-md text-muted-foreground">Dois vídeos mostrando a unidade em ação — do painel ao jogo.</p>
@@ -273,7 +264,7 @@ function GangstarRemotePage() {
                 </div>
                 <h3 className="mt-1.5 font-display text-xl font-bold md:text-2xl">{v.title}</h3>
                 <p className="mt-1 max-w-xl text-sm text-muted-foreground">{v.desc}</p>
-                <div className="mt-4 overflow-hidden rounded-2xl border border-border/60 bg-black shadow-xl shadow-black/40">
+                <div className="mt-4 overflow-hidden rounded-2xl border border-border/50 bg-black shadow-xl shadow-black/40">
                   <div className="aspect-video w-full">
                     <iframe
                       className="h-full w-full"
@@ -292,14 +283,14 @@ function GangstarRemotePage() {
         </section>
 
         {/* CONFIANÇA */}
-        <section className="mx-auto max-w-5xl px-4 py-16">
+        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
           <div className="grid gap-4 sm:grid-cols-3">
             {[
               { icon: Radio, t: "Status transparente", d: "Online é online. Você vê antes de entrar." },
               { icon: ShieldCheck, t: "Acesso que segura", d: "Feito pra manter a sessão viva, não pra cair no primeiro aperto." },
               { icon: Headset, t: "Equipe junto", d: "Suporte da Shadow do seu lado na ativação e no dia a dia." },
             ].map((t) => (
-              <div key={t.t} className="flex gap-3 rounded-2xl border border-border/60 bg-card/40 p-5">
+              <div key={t.t} className="flex gap-3 rounded-2xl border border-border/50 bg-card/40 p-5">
                 <t.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <div>
                   <div className="font-bold">{t.t}</div>
@@ -311,17 +302,17 @@ function GangstarRemotePage() {
         </section>
 
         {/* COMPARATIVO */}
-        <section className="mx-auto max-w-5xl px-4 py-16">
+        <section className="mx-auto max-w-5xl px-4 py-20 md:py-28">
           <p className="text-sm font-semibold text-primary">Comparativo</p>
           <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">BTMob ou Gangstar Remote?</h2>
           <p className="mt-2 max-w-xl text-muted-foreground">
             A BTMob é a opção mais em conta pra começar, mas é detectável. A Remote 4.5 é a unidade premium: All Banks, encrypter e indetectável.
           </p>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-border/60">
+          <div className="mt-8 overflow-hidden rounded-2xl border border-border/50">
             <div className="grid grid-cols-[1.3fr_1fr_1fr] text-sm">
               <div className="px-4 py-4 font-semibold text-muted-foreground">Recurso</div>
-              <div className="border-l border-border/60 px-3 py-4 text-center">
+              <div className="border-l border-border/50 px-3 py-4 text-center">
                 <div className="font-display font-bold">BTMob</div>
                 <div className="text-[11px] text-muted-foreground">Mais em conta</div>
               </div>
@@ -331,9 +322,9 @@ function GangstarRemotePage() {
               </div>
             </div>
             {COMPARE.map((row, i) => (
-              <div key={row.label} className={`grid grid-cols-[1.3fr_1fr_1fr] items-center border-t border-border/60 text-sm ${i % 2 ? "bg-card/20" : ""}`}>
+              <div key={row.label} className={`grid grid-cols-[1.3fr_1fr_1fr] items-center border-t border-border/50 text-sm ${i % 2 ? "bg-card/20" : ""}`}>
                 <div className="px-4 py-3.5">{row.label}</div>
-                <div className="flex items-center justify-center border-l border-border/60 px-3 py-3.5 text-center text-muted-foreground">
+                <div className="flex items-center justify-center border-l border-border/50 px-3 py-3.5 text-center text-muted-foreground">
                   {typeof row.btmob === "boolean"
                     ? (row.btmob ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <XCircle className="h-4 w-4 opacity-40" />)
                     : <span>{row.btmob}</span>}
@@ -349,8 +340,8 @@ function GangstarRemotePage() {
         </section>
 
         {/* PLANOS */}
-        <section id="planos" className="scroll-mt-24 border-t border-border/60 bg-card/20">
-          <div className="mx-auto max-w-5xl px-4 py-16">
+        <section id="planos" className="scroll-mt-24 border-t border-border/50 bg-card/20">
+          <div className="mx-auto max-w-5xl px-4 py-20 md:py-28">
             <p className="text-sm font-semibold text-primary">Planos</p>
             <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Escolhe e ativa</h2>
             <p className="mt-2 max-w-md text-muted-foreground">Pagamento pela Cakto, ativação rápida pela equipe. Sem fidelidade — você escolhe a janela.</p>
@@ -363,7 +354,7 @@ function GangstarRemotePage() {
                   <div
                     key={p.name}
                     className={`group relative flex flex-col overflow-hidden rounded-3xl border p-7 ${
-                      p.featured ? "bg-gradient-to-b from-card/70 to-card/40" : "border-border/60 bg-card/40"
+                      p.featured ? "bg-gradient-to-b from-card/70 to-card/40" : "border-border/50 bg-card/40"
                     }`}
                     style={p.featured ? { borderColor: ember(0.4), boxShadow: `0 0 0 1px ${ember(0.13)}, 0 30px 70px -32px ${ember(0.4)}` } : undefined}
                   >
@@ -418,7 +409,7 @@ function GangstarRemotePage() {
                           {p.cta} <ArrowRight className="ml-1.5 h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button onClick={() => setCheckout(p)} size="lg" variant="outline" className="h-12 w-full rounded-xl border-border/60 text-sm font-semibold">
+                        <Button onClick={() => setCheckout(p)} size="lg" variant="outline" className="h-12 w-full rounded-xl border-border/50 text-sm font-semibold">
                           {p.cta}
                         </Button>
                       )}
@@ -434,7 +425,7 @@ function GangstarRemotePage() {
                 { icon: Lock, t: "Pagamento seguro pela Cakto" },
                 { icon: Clock, t: "Sem fidelidade" },
               ].map((c) => (
-                <span key={c.t} className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1.5 text-muted-foreground">
+                <span key={c.t} className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-card/40 px-3 py-1.5 text-muted-foreground">
                   <c.icon className="h-3.5 w-3.5 text-primary/70" /> {c.t}
                 </span>
               ))}
@@ -445,7 +436,6 @@ function GangstarRemotePage() {
         {/* ADD-ON AVULSO */}
         <section className="mx-auto max-w-5xl px-4 pt-10">
           <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-card/40 p-7 md:p-8">
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(120%_120%_at_100%_50%,oklch(0.65_0.16_260/0.12),transparent_70%)]" />
             <div className="relative grid gap-6 md:grid-cols-[1.5fr_1fr] md:items-center">
               <div>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -504,7 +494,7 @@ function GangstarRemotePage() {
                   </Button>
                 </a>
                 <Link to="/contato">
-                  <Button size="lg" variant="outline" className="h-12 rounded-xl border-border/60 px-6 text-sm font-semibold">
+                  <Button size="lg" variant="outline" className="h-12 rounded-xl border-border/50 px-6 text-sm font-semibold">
                     Falar com a equipe
                   </Button>
                 </Link>
@@ -519,7 +509,7 @@ function GangstarRemotePage() {
 
       {/* CHECKOUT MODAL */}
       <Dialog open={!!checkout} onOpenChange={(o) => !o && setCheckout(null)}>
-        <DialogContent className="max-w-md border-border/60">
+        <DialogContent className="max-w-md border-border/50">
           {checkout && (
             <>
               <DialogHeader>
@@ -531,7 +521,7 @@ function GangstarRemotePage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+              <div className="rounded-xl border border-border/50 bg-card/40 p-4">
                 <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Incluso</div>
                 <ul className="space-y-2">
                   {checkout.perks.map((perk) => (
