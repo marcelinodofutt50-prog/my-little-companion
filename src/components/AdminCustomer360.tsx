@@ -394,7 +394,7 @@ export function AdminCustomer360({
   };
 
   const isActive = (l: any) =>
-    !l.revoked && !l.disabled_at && (!l.expires_at || new Date(l.expires_at) > new Date());
+    !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at) > new Date());
 
   const fullReport = useMemo(() => {
     if (!data) return "";
@@ -611,7 +611,7 @@ export function AdminCustomer360({
                             <div className="flex items-center justify-between gap-2">
                               <CopyLine value={l.yaarsa_email} label="Login do painel" />
                               <Badge variant={active ? "default" : "secondary"} className="shrink-0 text-[10px]">
-                                {active ? "ativa" : l.revoked ? "revogada" : "expirada"}
+                                {active ? "ativa" : l.suspended_at ? "pausada" : l.revoked ? "revogada" : "expirada"}
                               </Badge>
                             </div>
                             <div className="mt-0.5 text-[11px] text-muted-foreground">

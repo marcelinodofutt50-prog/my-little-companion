@@ -1751,7 +1751,7 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
     const paidCount = paidOrders.length + manualSales.length;
     const cashbackBalance = (cashback.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
     const isActive = (l: any) =>
-      !l.revoked && !l.disabled_at && (!l.expires_at || new Date(l.expires_at).getTime() > now);
+      !l.revoked && !l.disabled_at && !l.suspended_at && (!l.expires_at || new Date(l.expires_at).getTime() > now);
     const activeLicenses = (licenses.data ?? []).filter(isActive);
     const nextExpiry = activeLicenses
       .map((l: any) => l.expires_at as string | null)

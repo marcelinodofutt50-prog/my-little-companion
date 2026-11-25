@@ -34,12 +34,13 @@ async function activePlanSlugs(userId: string): Promise<Set<string>> {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("licenses")
-      .select("plan_slug, expires_at, revoked")
+      .select("plan_slug, expires_at, revoked, suspended_at")
       .eq("user_id", userId);
     const now = Date.now();
     return new Set(
       (data ?? [])
-        .filter((l: any) => !l.revoked && (!l.expires_at || new Date(l.expires_at).getTime() > now))
+        // Ativa = não revogada, não pausada e não vencida (mesma semântica do resto do app).
+        .filter((l: any) => !l.revoked && !l.suspended_at && (!l.expires_at || new Date(l.expires_at).getTime() > now))
         .map((l: any) => String(l.plan_slug ?? "").toLowerCase())
         .filter(Boolean),
     );
