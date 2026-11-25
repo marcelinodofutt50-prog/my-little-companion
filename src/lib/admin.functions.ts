@@ -1729,7 +1729,26 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
     const now = Date.now();
     const paidOrders = (orders.data ?? []).filter((o: any) => o.status === "paid");
     const pendingOrders = (orders.data ?? []).filter((o: any) => o.status === "pending");
-    const totalSpent = paidOrders.reduce((s: number, o: any) => s + Number(o.amount || 0), 0);
+
+    // Vendas externas registradas manualmente (Cakto/Gangstar etc.) — contam no gasto.
+    // try/catch: se a tabela ainda não existir no banco, o 360 segue funcionando.
+    let manualSales: any[] = [];
+    try {
+      const { data: ms } = await supabaseAdmin
+        .from("manual_sales")
+        .select("id, amount, label, source, note, created_at, created_by")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      manualSales = ms ?? [];
+    } catch {
+      manualSales = [];
+    }
+    const manualSalesTotal = manualSales.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+
+    const ordersSpent = paidOrders.reduce((s: number, o: any) => s + Number(o.amount || 0), 0);
+    const totalSpent = ordersSpent + manualSalesTotal;
+    const paidCount = paidOrders.length + manualSales.length;
     const cashbackBalance = (cashback.data ?? []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
     const isActive = (l: any) =>
       !l.revoked && !l.disabled_at && (!l.expires_at || new Date(l.expires_at).getTime() > now);
@@ -1803,8 +1822,11 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
       playProtect: playProtect.data ?? [],
       redeemUses: redeemUses.data ?? [],
       alerts,
+      manualSales,
       summary: {
         totalSpent,
+        manualSalesTotal,
+        manualSalesCount: manualSales.length,
         paidOrdersCount: paidOrders.length,
         ordersCount: (orders.data ?? []).length,
         pendingOrdersCount: pendingOrders.length,
@@ -1818,7 +1840,7 @@ export const adminCustomer360 = createServerFn({ method: "POST" })
         daysToExpiry,
         lastOrderAt: lastOrder?.created_at ?? null,
         lastOrderStatus: lastOrder?.status ?? null,
-        ticketMedio: paidOrders.length ? totalSpent / paidOrders.length : 0,
+        ticketMedio: paidCount ? totalSpent / paidCount : 0,
         loyaltyPoints: (loyalty.data as any)?.points ?? profile.data?.reward_points ?? 0,
         vipTier: profile.data?.vip_tier ?? (loyalty.data as any)?.current_tier ?? null,
         trustScore: profile.data?.trust_score ?? null,

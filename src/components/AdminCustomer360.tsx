@@ -8,6 +8,7 @@ import {
   adminRevokeLicense,
   adminHealLicenseLogin,
 } from "@/lib/admin.functions";
+import { adminAddManualSale, adminDeleteManualSale } from "@/lib/manual-sales.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -230,10 +231,16 @@ export function AdminCustomer360({
   onOpenThread?: (threadId: string) => void;
 }) {
   const load = useServerFn(adminCustomer360);
+  const addSaleFn = useServerFn(adminAddManualSale);
+  const delSaleFn = useServerFn(adminDeleteManualSale);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const requestId = useRef(0);
+  const [saleAmount, setSaleAmount] = useState("");
+  const [saleLabel, setSaleLabel] = useState("");
+  const [saleSource, setSaleSource] = useState("cakto");
+  const [savingSale, setSavingSale] = useState(false);
 
   const fetchData = async (uid: string) => {
     const request = ++requestId.current;
@@ -252,6 +259,35 @@ export function AdminCustomer360({
       toast.error("Falha ao carregar ficha");
     } finally {
       if (request === requestId.current) setLoading(false);
+    }
+  };
+
+  const addManualSale = async () => {
+    if (!userId) return;
+    const amount = Number(String(saleAmount).replace(",", "."));
+    if (!Number.isFinite(amount) || amount <= 0) return toast.error("Informe um valor válido.");
+    if (!saleLabel.trim()) return toast.error("Informe o plano/descrição da venda.");
+    setSavingSale(true);
+    try {
+      await addSaleFn({ data: { userId, amount, label: saleLabel.trim(), source: saleSource.trim() || "externo" } });
+      toast.success("Venda externa registrada — já conta no gasto.");
+      setSaleAmount(""); setSaleLabel("");
+      await fetchData(userId);
+    } catch (e: any) {
+      toast.error("Falha ao registrar: " + (e?.message || "erro"));
+    } finally {
+      setSavingSale(false);
+    }
+  };
+
+  const removeManualSale = async (id: string) => {
+    if (!userId) return;
+    try {
+      await delSaleFn({ data: { id } });
+      toast.success("Venda removida.");
+      await fetchData(userId);
+    } catch (e: any) {
+      toast.error("Falha ao remover: " + (e?.message || "erro"));
     }
   };
 
@@ -583,6 +619,59 @@ export function AdminCustomer360({
                             <Badge variant={o.status === "paid" ? "default" : "secondary"} className="text-[10px]">
                               {o.status}
                             </Badge>
+                          </div>
+                        </div>
+                      ))}
+                </Section>
+
+                <Section title="Vendas externas" count={(data.manualSales ?? []).length}>
+                  <div className="rounded-lg border border-primary/25 bg-primary/5 p-2.5">
+                    <div className="text-[11px] text-muted-foreground">
+                      Registre venda feita por fora (Cakto/Gangstar). Soma no <b>Gasto total</b> — sem criar pedido.
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Input
+                        value={saleLabel}
+                        onChange={(e) => setSaleLabel(e.target.value)}
+                        placeholder="Plano (ex.: Gangstar Mensal)"
+                        className="col-span-2 h-8 text-xs"
+                      />
+                      <Input
+                        value={saleAmount}
+                        onChange={(e) => setSaleAmount(e.target.value)}
+                        inputMode="decimal"
+                        placeholder="Valor (ex.: 4000)"
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        value={saleSource}
+                        onChange={(e) => setSaleSource(e.target.value)}
+                        placeholder="Origem (cakto, pix...)"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <Button size="sm" className="mt-2 h-8 w-full text-xs" disabled={savingSale} onClick={addManualSale}>
+                      {savingSale ? <Loader2 className="h-3 w-3 animate-spin" /> : "Registrar venda"}
+                    </Button>
+                  </div>
+
+                  {(data.manualSales ?? []).length === 0
+                    ? null
+                    : (data.manualSales as any[]).map((m) => (
+                        <div key={m.id} className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-card/40 p-2 text-xs">
+                          <div className="min-w-0">
+                            <div className="truncate">{m.label}</div>
+                            <div className="text-[11px] text-muted-foreground">{dt(m.created_at)} · {m.source}</div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="font-mono tabular-nums">{brl(m.amount)}</span>
+                            <button
+                              onClick={() => removeManualSale(m.id)}
+                              className="rounded px-1.5 text-muted-foreground hover:text-destructive"
+                              title="Remover venda"
+                            >
+                              ×
+                            </button>
                           </div>
                         </div>
                       ))}
