@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Radio, Gauge, ShieldCheck, Cpu, Fingerprint, SatelliteDish,
+  Radio, ShieldCheck, Cpu, Fingerprint, SatelliteDish,
   Terminal, Zap, ArrowRight, CheckCircle2, Lock, Headset,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -31,12 +31,12 @@ export const Route = createFileRoute("/gangstar-remote")({
 const EMBER = "oklch(0.72 0.17 55)";
 
 const FEATURES = [
-  { icon: SatelliteDish, t: "Controle remoto total", d: "Comande a sessão inteira pelo painel — sem depender de nada preso no aparelho." },
-  { icon: ShieldCheck, t: "Bypass de verdade", d: "Camada de proteção ativa que mantém o acesso vivo enquanto outros caem." },
-  { icon: Cpu, t: "Injeção estável", d: "Núcleo 4.5 otimizado: entra limpo, segura o FPS e não trava no meio da run." },
-  { icon: Fingerprint, t: "Sessão blindada", d: "Credenciais e sessão isoladas, do jeito que o resto do ecossistema Shadow trabalha." },
-  { icon: Gauge, t: "Latência baixa", d: "Resposta de comando pensada pra não deixar delay entre você e a ação." },
-  { icon: Radio, t: "Status ao vivo", d: "Você sempre sabe se a unidade está online antes de entrar." },
+  { icon: Zap, t: "All Banks", d: "Destrava todos os bancos do mapa e libera dinheiro infinito na sua conta dentro do jogo." },
+  { icon: Fingerprint, t: "Encrypter indetectável", d: "Mantém a unidade oculta da detecção pra reduzir o risco de ban enquanto você joga." },
+  { icon: ShieldCheck, t: "Bypass nativo", d: "Proteção embutida no núcleo 4.5: segura o acesso sem depender de nada externo." },
+  { icon: Radio, t: "Bypass Website", d: "Passa pela verificação de site sem travar a sua entrada na unidade." },
+  { icon: Cpu, t: "Funções exclusivas", d: "Recursos que só a Remote 4.5 entrega — além do pacote padrão de mod." },
+  { icon: Terminal, t: "Credenciais pelo painel", d: "Seu login aparece direto no painel Shadow, pronto pra usar na hora." },
 ];
 
 const STEPS = [
@@ -64,8 +64,14 @@ const PLANS: RemotePlan[] = [
     price: "1.800",
     cents: "",
     duration: "Acesso por 7 dias",
-    note: "Pra testar a unidade ou operar numa janela curta.",
-    perks: ["Unidade Remote 4.5 completa", "Bypass ativo", "Suporte da equipe"],
+    note: "Pra testar a unidade completa ou operar numa janela curta.",
+    perks: [
+      "All Banks — dinheiro infinito no jogo",
+      "Bypass nativo",
+      "Encrypter indetectável",
+      "Credenciais pelo painel",
+      "Suporte da equipe",
+    ],
     href: "https://pay.cakto.com.br/cxwfetz_1350896",
     featured: false,
   },
@@ -75,8 +81,15 @@ const PLANS: RemotePlan[] = [
     price: "4.000",
     cents: "",
     duration: "Acesso por 30 dias",
-    note: "Melhor valor — o dia a dia de quem roda sério.",
-    perks: ["Unidade Remote 4.5 completa", "Bypass ativo", "Prioridade no suporte", "Status ao vivo no painel"],
+    note: "Melhor valor — a unidade inteira pra quem roda sério todo dia.",
+    perks: [
+      "Tudo do plano Semanal",
+      "Funções exclusivas da Remote 4.5",
+      "Bypass Website",
+      "Encrypter sempre atualizado",
+      "Prioridade no suporte",
+      "Status ao vivo no painel",
+    ],
     href: "https://pay.cakto.com.br/9mdeqxs_1349153",
     featured: true,
   },
@@ -126,7 +139,7 @@ function GangstarRemotePage() {
               </h1>
 
               <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
-                A unidade remota da Shadow. Injeção estável, bypass que segura o acesso e o controle da sessão inteira na palma da sua mão — direto pelo painel.
+                A unidade remota da Shadow pra Gangstar. <span className="text-foreground">All Banks com dinheiro infinito</span>, encrypter indetectável e bypass nativo — tudo controlado pelo painel, com ativação rápida pela equipe.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -157,8 +170,8 @@ function GangstarRemotePage() {
               <div className="grid gap-px bg-border/60 sm:grid-cols-3">
                 {[
                   { k: "Núcleo", v: "4.5 estável", icon: Cpu },
-                  { k: "Proteção", v: "Bypass ativo", icon: ShieldCheck },
-                  { k: "Resposta", v: "Baixa latência", icon: Gauge },
+                  { k: "Proteção", v: "Encrypter + Bypass", icon: ShieldCheck },
+                  { k: "Destaque", v: "All Banks ∞", icon: Zap },
                 ].map((s) => (
                   <div key={s.k} className="bg-card/60 px-4 py-4">
                     <s.icon className="mb-2 h-4 w-4 text-primary" />
