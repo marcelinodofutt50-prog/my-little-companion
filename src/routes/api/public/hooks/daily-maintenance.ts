@@ -15,6 +15,7 @@ const TASKS = [
   "verify-external-payers",
   "expire-licenses",
   "daily-license-check",
+  "enforce-creator-cadence",
   "reconcile-yaarsa",
   "resend-confirmations",
   "cleanup-apk-jobs",
