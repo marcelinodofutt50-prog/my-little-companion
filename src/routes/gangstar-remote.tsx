@@ -45,6 +45,43 @@ const STEPS = [
   { icon: Zap, t: "Comande e jogue", d: "Dispara os comandos remotos e segue a run com o controle do seu lado." },
 ];
 
+type RemotePlan = {
+  name: string;
+  period: string;
+  price: string;
+  cents: string;
+  duration: string;
+  note: string;
+  perks: string[];
+  href: string;
+  featured: boolean;
+};
+
+const PLANS: RemotePlan[] = [
+  {
+    name: "Semanal",
+    period: "7 dias",
+    price: "1.800",
+    cents: "",
+    duration: "Acesso por 7 dias",
+    note: "Pra testar a unidade ou operar numa janela curta.",
+    perks: ["Unidade Remote 4.5 completa", "Bypass ativo", "Suporte da equipe"],
+    href: "https://pay.cakto.com.br/cxwfetz_1350896",
+    featured: false,
+  },
+  {
+    name: "Mensal",
+    period: "30 dias",
+    price: "4.000",
+    cents: "",
+    duration: "Acesso por 30 dias",
+    note: "Melhor valor — o dia a dia de quem roda sério.",
+    perks: ["Unidade Remote 4.5 completa", "Bypass ativo", "Prioridade no suporte", "Status ao vivo no painel"],
+    href: "https://pay.cakto.com.br/9mdeqxs_1349153",
+    featured: true,
+  },
+];
+
 function GangstarRemotePage() {
   const [online, setOnline] = useState(true);
   // Pulso de status apenas visual (hidrata após montar, sem tocar elegibilidade)
@@ -93,11 +130,11 @@ function GangstarRemotePage() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link to="/planos">
+                <a href="#planos">
                   <Button size="lg" className="h-12 rounded-xl px-7 text-sm font-semibold shadow-lg shadow-primary/40 hover:shadow-primary/60">
                     Ativar minha unidade <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Button>
-                </Link>
+                </a>
                 <a href="#como-funciona">
                   <Button size="lg" variant="outline" className="h-12 rounded-xl border-border/60 px-6 text-sm font-semibold">
                     Como funciona
@@ -186,8 +223,74 @@ function GangstarRemotePage() {
           </div>
         </section>
 
+        {/* PLANOS */}
+        <section id="planos" className="scroll-mt-24 border-t border-border/60 bg-card/20">
+          <div className="mx-auto max-w-5xl px-4 py-16">
+            <p className="text-sm font-semibold text-primary">Planos</p>
+            <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Escolhe e ativa</h2>
+            <p className="mt-2 max-w-md text-muted-foreground">Pagamento pela Cakto, ativação rápida pela equipe. Sem fidelidade — você escolhe a janela.</p>
+
+            <div className="mt-8 grid gap-5 sm:grid-cols-2">
+              {PLANS.map((p) => (
+                <div
+                  key={p.name}
+                  className={`relative flex flex-col rounded-3xl border p-7 ${
+                    p.featured ? "bg-card/60" : "border-border/60 bg-card/40"
+                  }`}
+                  style={p.featured ? { borderColor: `${EMBER}66`, boxShadow: `0 0 0 1px ${EMBER}22, 0 24px 60px -30px ${EMBER}55` } : undefined}
+                >
+                  {p.featured && (
+                    <span
+                      className="absolute right-6 top-6 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide"
+                      style={{ color: EMBER, background: `${EMBER}1a`, border: `1px solid ${EMBER}55` }}
+                    >
+                      Melhor valor
+                    </span>
+                  )}
+                  <div className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{p.name}</div>
+                  <div className="mt-3 flex items-end gap-1.5">
+                    <span className="font-display text-2xl font-bold text-muted-foreground">R$</span>
+                    <span className="font-display text-6xl font-black leading-none" style={p.featured ? { color: EMBER } : { color: "oklch(0.65 0.16 260)" }}>{p.price}</span>
+                  </div>
+                  <div className="mt-1 text-sm text-muted-foreground">{p.duration}</div>
+                  <p className="mt-3 text-sm text-muted-foreground">{p.note}</p>
+
+                  <ul className="mt-5 space-y-2.5">
+                    {p.perks.map((perk) => (
+                      <li key={perk} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" style={p.featured ? { color: EMBER } : { color: "oklch(0.65 0.16 260)" }} />
+                        <span>{perk}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <a href={p.href} target="_blank" rel="noopener noreferrer" className="mt-7">
+                    {p.featured ? (
+                      <Button
+                        size="lg"
+                        className="h-12 w-full rounded-xl text-sm font-semibold text-white"
+                        style={{ background: EMBER, boxShadow: `0 12px 30px -10px ${EMBER}aa` }}
+                      >
+                        Assinar o Mensal <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button size="lg" variant="outline" className="h-12 w-full rounded-xl border-border/60 text-sm font-semibold">
+                        Assinar o Semanal
+                      </Button>
+                    )}
+                  </a>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5 text-primary/70" /> Pagamento processado pela Cakto em ambiente externo seguro.
+            </p>
+          </div>
+        </section>
+
         {/* CTA FINAL */}
-        <section className="px-4 pb-24">
+        <section className="px-4 pb-24 pt-16">
           <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-primary/30 bg-card/40 p-10 text-center md:p-14">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(90%_120%_at_50%_0,oklch(0.65_0.16_260/0.16),transparent_70%)]" />
             <div className="relative">
@@ -197,11 +300,11 @@ function GangstarRemotePage() {
               <h2 className="font-display text-3xl font-black tracking-tight md:text-4xl">Coloca a Remote 4.5 pra rodar</h2>
               <p className="mx-auto mt-2 max-w-md text-muted-foreground">Ativação rápida pela equipe. Escolhe o plano e a unidade sobe pro seu painel.</p>
               <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                <Link to="/planos">
+                <a href="#planos">
                   <Button size="lg" className="h-12 rounded-xl px-8 text-sm font-semibold shadow-lg shadow-primary/40 hover:shadow-primary/60">
                     Ver planos e ativar <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Button>
-                </Link>
+                </a>
                 <Link to="/contato">
                   <Button size="lg" variant="outline" className="h-12 rounded-xl border-border/60 px-6 text-sm font-semibold">
                     Falar com a equipe
