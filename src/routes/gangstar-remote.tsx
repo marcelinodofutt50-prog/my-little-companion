@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Radio, ShieldCheck, Cpu, Fingerprint, SatelliteDish,
   Terminal, Zap, ArrowRight, CheckCircle2, Lock, Headset,
-  Crown, BadgeCheck, Clock, CreditCard, XCircle, Plus,
+  Crown, BadgeCheck, Clock, CreditCard, XCircle, Plus, PlayCircle,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,12 @@ const COMPARE: CompareRow[] = [
   { label: "Bypass Website", btmob: false, gangstar: true },
   { label: "Funções exclusivas", btmob: false, gangstar: true },
   { label: "Custo", btmob: "Mais em conta", gangstar: "Premium" },
+];
+
+// Vídeos de apresentação (YouTube). Títulos/descrições são copy editável.
+const VIDEOS = [
+  { id: "iUZDRXpPMyg", eyebrow: "Apresentação", title: "Gangstar Remote 4.5 em ação", desc: "A unidade rodando de verdade: All Banks, encrypter e o controle direto pelo painel." },
+  { id: "8go6JspsQds", eyebrow: "Mais um giro", title: "Por dentro do mod", desc: "Outro ângulo da Remote 4.5 funcionando, do painel até o jogo." },
 ];
 
 function GangstarRemotePage() {
@@ -242,6 +248,38 @@ function GangstarRemotePage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* VÍDEOS */}
+        <section className="mx-auto max-w-5xl px-4 py-16">
+          <p className="text-sm font-semibold text-primary">Na prática</p>
+          <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Veja a Remote 4.5 rodando</h2>
+          <p className="mt-2 max-w-md text-muted-foreground">Dois vídeos mostrando a unidade em ação — do painel ao jogo.</p>
+
+          <div className="mt-8 space-y-10">
+            {VIDEOS.map((v) => (
+              <div key={v.id}>
+                <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+                  <PlayCircle className="h-4 w-4" /> {v.eyebrow}
+                </div>
+                <h3 className="mt-1.5 font-display text-xl font-bold md:text-2xl">{v.title}</h3>
+                <p className="mt-1 max-w-xl text-sm text-muted-foreground">{v.desc}</p>
+                <div className="mt-4 overflow-hidden rounded-2xl border border-border/60 bg-black shadow-xl shadow-black/40">
+                  <div className="aspect-video w-full">
+                    <iframe
+                      className="h-full w-full"
+                      src={`https://www.youtube-nocookie.com/embed/${v.id}`}
+                      title={v.title}
+                      loading="lazy"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
