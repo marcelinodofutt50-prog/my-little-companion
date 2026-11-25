@@ -311,7 +311,7 @@ function CreatorPage() {
           <p className="font-mono text-[10px] uppercase text-muted-foreground">{next ? `${next.min - approvedCount} vídeo(s) aprovado(s) para ${next.name}` : "Nível máximo"}</p>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full bg-primary transition-all" style={{ width: `${next ? Math.min(100, (approvedCount / next.min) * 100) : 100}%` }} />
+          <div className="h-full bg-primary transition-all" style={{ width: `${next ? Math.min(100, Math.max(0, ((approvedCount - level.min) / Math.max(1, next.min - level.min)) * 100)) : 100}%` }} />
         </div>
         <p className="text-xs text-muted-foreground">{level.perk}</p>
       </CardContent></Card>
