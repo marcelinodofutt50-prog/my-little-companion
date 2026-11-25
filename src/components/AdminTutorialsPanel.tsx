@@ -35,6 +35,8 @@ export function AdminTutorialsPanel() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isOrdering, setIsOrdering] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [planOptions, setPlanOptions] = useState<{ slug: string; name: string; category: string }[]>([]);
+  const [customPlan, setCustomPlan] = useState("");
 
   const saveFn = useServerFn(adminSaveTutorial);
   const deleteFn = useServerFn(adminDeleteTutorial);
@@ -50,7 +52,36 @@ export function AdminTutorialsPanel() {
 
   useEffect(() => {
     load();
+    // Planos disponíveis para restringir um treinamento (ex.: vitalício BTMob, Gangstar).
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("plans")
+          .select("slug, name, category")
+          .eq("active", true)
+          .order("sort_order");
+        if (Array.isArray(data)) setPlanOptions(data as any);
+      } catch (e) {
+        console.warn("[AdminTutorials] falha ao carregar planos:", e);
+      }
+    })();
   }, []);
+
+  const selectedPlans: string[] = Array.isArray(current.allowed_plans) ? current.allowed_plans : [];
+  const togglePlan = (slug: string) => {
+    const s = slug.trim();
+    if (!s) return;
+    setCurrent((c: any) => {
+      const list: string[] = Array.isArray(c.allowed_plans) ? c.allowed_plans : [];
+      return { ...c, allowed_plans: list.includes(s) ? list.filter((x) => x !== s) : [...list, s] };
+    });
+  };
+  const addCustomPlan = () => {
+    const s = customPlan.trim();
+    if (!s) return;
+    if (!selectedPlans.includes(s)) togglePlan(s);
+    setCustomPlan("");
+  };
 
   async function load() {
     setLoading(true);
@@ -84,6 +115,8 @@ export function AdminTutorialsPanel() {
       image_url: clean(current.image_url),
       youtube_url: youtube,
       is_active: current.is_active !== false,
+      // Vazio = público; com slugs = só quem tem licença ativa desses planos.
+      allowed_plans: Array.isArray(current.allowed_plans) ? current.allowed_plans : [],
     };
     if (current.id) payload.id = current.id;
     if (typeof current.display_order === "number") payload.display_order = current.display_order;
@@ -364,6 +397,64 @@ export function AdminTutorialsPanel() {
                 placeholder="Explique o que o tutorial ensina..."
                 className="min-h-[100px] bg-card"
               />
+            </div>
+
+            {/* Restrição por plano */}
+            <div className="space-y-2 rounded-xl border border-border/60 bg-card/40 p-4">
+              <label className="flex items-center justify-between text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                <span>Acesso por plano</span>
+                <span className="text-[10px] normal-case tracking-normal opacity-70">
+                  {selectedPlans.length === 0 ? "Público — todos veem" : `${selectedPlans.length} plano(s)`}
+                </span>
+              </label>
+              <p className="text-[11px] text-muted-foreground">
+                Deixe vazio para liberar a todos. Marque planos para que só quem tem licença ativa deles veja este treinamento. Staff vê sempre.
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {planOptions.map((p) => {
+                  const on = selectedPlans.includes(p.slug);
+                  return (
+                    <button
+                      type="button"
+                      key={p.slug}
+                      onClick={() => togglePlan(p.slug)}
+                      title={p.slug}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs transition-colors",
+                        on ? "border-primary bg-primary/15 text-primary" : "border-border/60 bg-card hover:border-primary/40",
+                      )}
+                    >
+                      {on ? "✓ " : ""}{p.name || p.slug}
+                    </button>
+                  );
+                })}
+                {planOptions.length === 0 && (
+                  <span className="text-[11px] text-muted-foreground">Nenhum plano carregado — adicione por slug abaixo.</span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Input
+                  value={customPlan}
+                  onChange={(e) => setCustomPlan(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomPlan(); } }}
+                  placeholder="slug avulso (ex.: gangstar-mensal)"
+                  className="bg-card"
+                />
+                <Button type="button" variant="outline" onClick={addCustomPlan}>Adicionar</Button>
+              </div>
+
+              {selectedPlans.filter((s) => !planOptions.some((p) => p.slug === s)).length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {selectedPlans.filter((s) => !planOptions.some((p) => p.slug === s)).map((s) => (
+                    <span key={s} className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs text-primary">
+                      {s}
+                      <button type="button" onClick={() => togglePlan(s)} className="opacity-70 hover:opacity-100">×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

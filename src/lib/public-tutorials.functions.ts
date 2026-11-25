@@ -1,6 +1,7 @@
 import { safeSearch } from "@/lib/safe-search";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { filterPublicTutorials, isTutorialPublic } from "@/lib/tutorial-access.server";
 
 export const listPublicTutorials = createServerFn({ method: "GET" })
   .validator((input: unknown) => z.object({
@@ -63,9 +64,10 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
           await new Promise(r => setTimeout(r, 1000));
           const { data: retryData, error: retryError, count: retryCount } = await query;
           if (!retryError) {
+            const items = filterPublicTutorials(retryData ?? []);
             return {
-              items: retryData ?? [],
-              total: retryCount ?? 0,
+              items,
+              total: retryCount ?? items.length,
               page: data.page,
               limit: data.limit
             };
@@ -78,9 +80,10 @@ export const listPublicTutorials = createServerFn({ method: "GET" })
       throw new Error(`Erro ao listar tutoriais: ${error.message} (${error.code})`);
     }
 
+    const items = filterPublicTutorials(tutorials ?? []);
     return {
-      items: tutorials ?? [],
-      total: count ?? 0,
+      items,
+      total: count ?? items.length,
       page: data.page,
       limit: data.limit
     };
@@ -100,6 +103,8 @@ export const getPublicTutorialById = createServerFn({ method: "GET" })
 
     if (error) throw new Error(error.message);
     if (!tutorial) throw new Error("Tutorial não encontrado");
+    // Tutorial restrito a planos não é acessível por link público/anônimo.
+    if (!isTutorialPublic(tutorial)) throw new Error("Tutorial não encontrado");
 
     return tutorial;
   });

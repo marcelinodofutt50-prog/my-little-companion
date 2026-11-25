@@ -7,6 +7,11 @@ export const getTutorials = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { gateTutorialsForUser } = await import("@/lib/tutorial-access.server");
+
+    // Restrição por plano: staff vê tudo; demais só o que o plano ativo liberar.
+    const gate = (rows: any[]) =>
+      gateTutorialsForUser(rows || [], { supabase: context.supabase, userId: context.userId });
 
     // Shadow Protocol v21.0: Aggressive Resilient Loader
     // Tenta primeiro via cliente padrão (RLS/Cache)
@@ -22,12 +27,12 @@ export const getTutorials = createServerFn({ method: "GET" })
         .from("tutorials")
         .select("*")
         .order("display_order", { ascending: true });
-      
+
       if (adminError) {
         console.error("[Tutorials] Admin Tunnel failed as well:", adminError);
         return [];
       }
-      return adminData || [];
+      return await gate(adminData || []);
     }
 
     // Se retornou vazio mas não deu erro, pode ser RLS restringindo tudo ou tabela realmente vazia
@@ -40,9 +45,9 @@ export const getTutorials = createServerFn({ method: "GET" })
           .from("tutorials")
           .select("*")
           .order("display_order", { ascending: true });
-        return finalAdminData || [];
+        return await gate(finalAdminData || []);
       }
     }
 
-    return data || [];
+    return await gate(data || []);
   });

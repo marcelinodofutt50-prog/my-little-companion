@@ -127,6 +127,8 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
       category: z.string().min(2),
       is_active: z.boolean().default(true),
       display_order: z.number().int().optional(),
+      // Restrição por plano: vazio/ausente = público; senão só esses plan_slug.
+      allowed_plans: z.array(z.string().trim().min(1).max(80)).max(60).optional().nullable(),
     }).parse(input);
   })
   .handler(async ({ data, context }) => {
@@ -134,6 +136,10 @@ export const adminSaveTutorial = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const payload: Record<string, any> = { ...data, created_by: context.userId };
     if (!payload.id) delete payload.id;
+    // Normaliza: array vazio vira NULL (público) e remove duplicados.
+    payload.allowed_plans = Array.isArray(data.allowed_plans) && data.allowed_plans.length
+      ? Array.from(new Set(data.allowed_plans.map((s) => s.trim()).filter(Boolean)))
+      : null;
     const { error } = await supabaseAdmin
         .from("tutorials")
         .upsert(payload, { onConflict: 'id' });
