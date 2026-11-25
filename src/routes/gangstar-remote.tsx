@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Radio, ShieldCheck, Cpu, Fingerprint, SatelliteDish,
   Terminal, Zap, ArrowRight, CheckCircle2, Lock, Headset,
+  Crown, BadgeCheck, Clock,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,9 @@ export const Route = createFileRoute("/gangstar-remote")({
 
 // Acento quente da unidade (único ponto de cor fora do azul do site)
 const EMBER = "oklch(0.72 0.17 55)";
+const BLUE = "oklch(0.65 0.16 260)";
+const ember = (a: number) => `oklch(0.72 0.17 55 / ${a})`;
+const blue = (a: number) => `oklch(0.65 0.16 260 / ${a})`;
 
 const FEATURES = [
   { icon: Zap, t: "All Banks", d: "Destrava todos os bancos do mapa e libera dinheiro infinito na sua conta dentro do jogo." },
@@ -47,23 +51,27 @@ const STEPS = [
 
 type RemotePlan = {
   name: string;
-  period: string;
+  tagline: string;
   price: string;
-  cents: string;
+  per: string;
   duration: string;
+  save: string | null;
   note: string;
   perks: string[];
+  cta: string;
   href: string;
   featured: boolean;
+  icon: typeof Clock;
 };
 
 const PLANS: RemotePlan[] = [
   {
     name: "Semanal",
-    period: "7 dias",
+    tagline: "Janela curta",
     price: "1.800",
-    cents: "",
+    per: "/semana",
     duration: "Acesso por 7 dias",
+    save: null,
     note: "Pra testar a unidade completa ou operar numa janela curta.",
     perks: [
       "All Banks — dinheiro infinito no jogo",
@@ -72,16 +80,19 @@ const PLANS: RemotePlan[] = [
       "Credenciais pelo painel",
       "Suporte da equipe",
     ],
+    cta: "Assinar o Semanal",
     href: "https://pay.cakto.com.br/cxwfetz_1350896",
     featured: false,
+    icon: Clock,
   },
   {
     name: "Mensal",
-    period: "30 dias",
+    tagline: "Operação contínua",
     price: "4.000",
-    cents: "",
+    per: "/mês",
     duration: "Acesso por 30 dias",
-    note: "Melhor valor — a unidade inteira pra quem roda sério todo dia.",
+    save: "≈ R$ 933/semana · ~48% mais barato que o semanal",
+    note: "A unidade inteira pra quem roda sério todo dia.",
     perks: [
       "Tudo do plano Semanal",
       "Funções exclusivas da Remote 4.5",
@@ -90,8 +101,10 @@ const PLANS: RemotePlan[] = [
       "Prioridade no suporte",
       "Status ao vivo no painel",
     ],
+    cta: "Assinar o Mensal",
     href: "https://pay.cakto.com.br/9mdeqxs_1349153",
     featured: true,
+    icon: Crown,
   },
 ];
 
@@ -122,7 +135,7 @@ function GangstarRemotePage() {
               <div className="flex items-center gap-3 text-xs font-semibold tracking-wide">
                 <span
                   className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
-                  style={{ borderColor: `${EMBER}55`, color: EMBER, background: `${EMBER}12` }}
+                  style={{ borderColor: ember(0.33), color: EMBER, background: ember(0.07) }}
                 >
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: EMBER }} />
@@ -243,62 +256,111 @@ function GangstarRemotePage() {
             <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">Escolhe e ativa</h2>
             <p className="mt-2 max-w-md text-muted-foreground">Pagamento pela Cakto, ativação rápida pela equipe. Sem fidelidade — você escolhe a janela.</p>
 
-            <div className="mt-8 grid gap-5 sm:grid-cols-2">
-              {PLANS.map((p) => (
-                <div
-                  key={p.name}
-                  className={`relative flex flex-col rounded-3xl border p-7 ${
-                    p.featured ? "bg-card/60" : "border-border/60 bg-card/40"
-                  }`}
-                  style={p.featured ? { borderColor: `${EMBER}66`, boxShadow: `0 0 0 1px ${EMBER}22, 0 24px 60px -30px ${EMBER}55` } : undefined}
-                >
-                  {p.featured && (
-                    <span
-                      className="absolute right-6 top-6 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide"
-                      style={{ color: EMBER, background: `${EMBER}1a`, border: `1px solid ${EMBER}55` }}
-                    >
-                      Melhor valor
-                    </span>
-                  )}
-                  <div className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{p.name}</div>
-                  <div className="mt-3 flex items-end gap-1.5">
-                    <span className="font-display text-2xl font-bold text-muted-foreground">R$</span>
-                    <span className="font-display text-6xl font-black leading-none" style={p.featured ? { color: EMBER } : { color: "oklch(0.65 0.16 260)" }}>{p.price}</span>
-                  </div>
-                  <div className="mt-1 text-sm text-muted-foreground">{p.duration}</div>
-                  <p className="mt-3 text-sm text-muted-foreground">{p.note}</p>
-
-                  <ul className="mt-5 space-y-2.5">
-                    {p.perks.map((perk) => (
-                      <li key={perk} className="flex items-start gap-2 text-sm">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" style={p.featured ? { color: EMBER } : { color: "oklch(0.65 0.16 260)" }} />
-                        <span>{perk}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <a href={p.href} target="_blank" rel="noopener noreferrer" className="mt-7">
-                    {p.featured ? (
-                      <Button
-                        size="lg"
-                        className="h-12 w-full rounded-xl text-sm font-semibold text-white"
-                        style={{ background: EMBER, boxShadow: `0 12px 30px -10px ${EMBER}aa` }}
-                      >
-                        Assinar o Mensal <ArrowRight className="ml-1.5 h-4 w-4" />
-                      </Button>
-                    ) : (
-                      <Button size="lg" variant="outline" className="h-12 w-full rounded-xl border-border/60 text-sm font-semibold">
-                        Assinar o Semanal
-                      </Button>
+            <div className="mt-8 grid items-start gap-5 sm:grid-cols-2">
+              {PLANS.map((p) => {
+                const accent = p.featured ? EMBER : BLUE;
+                const accentA = p.featured ? ember : blue;
+                return (
+                  <div
+                    key={p.name}
+                    className={`group relative flex flex-col overflow-hidden rounded-3xl border p-7 ${
+                      p.featured ? "bg-gradient-to-b from-card/70 to-card/40" : "border-border/60 bg-card/40"
+                    }`}
+                    style={p.featured ? { borderColor: ember(0.4), boxShadow: `0 0 0 1px ${ember(0.13)}, 0 30px 70px -32px ${ember(0.4)}` } : undefined}
+                  >
+                    {p.featured && (
+                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg,transparent,${EMBER},transparent)` }} />
                     )}
-                  </a>
-                </div>
-              ))}
+                    {p.featured && (
+                      <span className="absolute right-6 top-6 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide" style={{ color: EMBER, background: ember(0.1), border: `1px solid ${ember(0.33)}` }}>
+                        Melhor valor
+                      </span>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl border" style={{ borderColor: accentA(0.33), background: accentA(0.08), color: accent }}>
+                        <p.icon className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="font-display text-lg font-bold">{p.name}</div>
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">{p.tagline}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex items-end gap-1.5">
+                      <span className="font-display text-xl font-bold text-muted-foreground">R$</span>
+                      <span className="font-display text-6xl font-black leading-none" style={{ color: accent }}>{p.price}</span>
+                      <span className="mb-1 text-sm text-muted-foreground">{p.per}</span>
+                    </div>
+                    <div className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" /> {p.duration}
+                    </div>
+                    {p.save && (
+                      <div className="mt-2.5 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ color: EMBER, background: ember(0.08), border: `1px solid ${ember(0.25)}` }}>
+                        <Zap className="h-3 w-3" /> {p.save}
+                      </div>
+                    )}
+                    <p className="mt-4 text-sm text-muted-foreground">{p.note}</p>
+
+                    <div className="my-6 h-px bg-border/60" />
+
+                    <ul className="space-y-3">
+                      {p.perks.map((perk) => (
+                        <li key={perk} className="flex items-start gap-2.5 text-sm">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" style={{ color: accent }} />
+                          <span>{perk}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <a href={p.href} target="_blank" rel="noopener noreferrer" className="mt-8">
+                      {p.featured ? (
+                        <Button size="lg" className="h-12 w-full rounded-xl text-sm font-semibold text-white transition-transform group-hover:scale-[1.02]" style={{ background: EMBER, boxShadow: `0 14px 34px -12px ${ember(0.66)}` }}>
+                          {p.cta} <ArrowRight className="ml-1.5 h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button size="lg" variant="outline" className="h-12 w-full rounded-xl border-border/60 text-sm font-semibold">
+                          {p.cta}
+                        </Button>
+                      )}
+                    </a>
+                  </div>
+                );
+              })}
             </div>
 
-            <p className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Lock className="h-3.5 w-3.5 text-primary/70" /> Pagamento processado pela Cakto em ambiente externo seguro.
-            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs">
+              {[
+                { icon: Zap, t: "Ativação rápida" },
+                { icon: Lock, t: "Pagamento seguro pela Cakto" },
+                { icon: Clock, t: "Sem fidelidade" },
+              ].map((c) => (
+                <span key={c.t} className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1.5 text-muted-foreground">
+                  <c.icon className="h-3.5 w-3.5 text-primary/70" /> {c.t}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PARCERIA OFICIAL */}
+        <section className="px-4 pt-16">
+          <div className="mx-auto max-w-5xl">
+            <div className="relative overflow-hidden rounded-3xl border p-7 md:p-8" style={{ borderColor: ember(0.28), background: `linear-gradient(90deg,${ember(0.06)},transparent 70%)` }}>
+              <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border" style={{ borderColor: ember(0.33), background: ember(0.09), color: EMBER }}>
+                  <Crown className="h-7 w-7" />
+                </span>
+                <div>
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide sm:justify-start" style={{ color: EMBER }}>
+                    <BadgeCheck className="h-4 w-4" /> Parceria oficial
+                  </div>
+                  <p className="mt-2 text-base leading-relaxed text-foreground md:text-lg">
+                    A <span className="font-semibold">ShadowDashStore</span> é parceira oficial da <span className="font-semibold" style={{ color: EMBER }}>UniãoDos7</span> — grupo de alta elite e de Rauls destemidos.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
