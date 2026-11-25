@@ -142,6 +142,27 @@ function GangstarRemotePage() {
       <SiteHeader />
 
       <main>
+        {/* PARCERIA OFICIAL (topo) */}
+        <section className="px-4 pt-6">
+          <div className="mx-auto max-w-5xl">
+            <div className="relative overflow-hidden rounded-2xl border p-4 md:p-5" style={{ borderColor: ember(0.28), background: `linear-gradient(90deg,${ember(0.06)},transparent 70%)` }}>
+              <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:gap-4 sm:text-left">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border" style={{ borderColor: ember(0.33), background: ember(0.09), color: EMBER }}>
+                  <Crown className="h-6 w-6" />
+                </span>
+                <div>
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wide sm:justify-start" style={{ color: EMBER }}>
+                    <BadgeCheck className="h-3.5 w-3.5" /> Parceria oficial
+                  </div>
+                  <p className="mt-1 text-sm leading-relaxed text-foreground md:text-base">
+                    A <span className="font-semibold">ShadowDashStore</span> é parceira oficial da <span className="font-semibold" style={{ color: EMBER }}>UniãoDos7</span> — grupo de alta elite, de Rauls destemidos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_90%_at_50%_-10%,oklch(0.65_0.16_260/0.18),transparent_70%)]" />
@@ -451,27 +472,6 @@ function GangstarRemotePage() {
                   <Button size="lg" className="h-12 w-full rounded-xl text-sm font-semibold">Quero o avulso</Button>
                 </Link>
                 <span className="text-center text-[11px] text-muted-foreground">Valor e ativação direto com a equipe.</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* PARCERIA OFICIAL */}
-        <section className="px-4 pt-16">
-          <div className="mx-auto max-w-5xl">
-            <div className="relative overflow-hidden rounded-3xl border p-7 md:p-8" style={{ borderColor: ember(0.28), background: `linear-gradient(90deg,${ember(0.06)},transparent 70%)` }}>
-              <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border" style={{ borderColor: ember(0.33), background: ember(0.09), color: EMBER }}>
-                  <Crown className="h-7 w-7" />
-                </span>
-                <div>
-                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide sm:justify-start" style={{ color: EMBER }}>
-                    <BadgeCheck className="h-4 w-4" /> Parceria oficial
-                  </div>
-                  <p className="mt-2 text-base leading-relaxed text-foreground md:text-lg">
-                    A <span className="font-semibold">ShadowDashStore</span> é parceira oficial da <span className="font-semibold" style={{ color: EMBER }}>UniãoDos7</span> — grupo de alta elite, de Rauls destemidos.
-                  </p>
-                </div>
               </div>
             </div>
           </div>
