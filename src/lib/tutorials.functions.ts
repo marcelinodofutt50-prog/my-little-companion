@@ -156,8 +156,31 @@ export const adminDeleteTutorial = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Pega a mídia antes de apagar a linha, pra limpar o bucket depois.
+    const { data: row } = await supabaseAdmin
+      .from("tutorials")
+      .select("video_url, image_url")
+      .eq("id", data.id)
+      .maybeSingle();
     const { error } = await supabaseAdmin.from("tutorials").delete().eq("id", data.id);
     if (error) throw error;
+
+    // Limpeza best-effort da mídia órfã no bucket privado — nunca derruba a exclusão.
+    try {
+      const toPath = (u: any): string | null => {
+        if (typeof u !== "string" || !u.trim()) return null;
+        let p = u.trim().replace(/^\/+/, "").split("?")[0];
+        const m = p.match(/\/tutorials\/(.+)$/);
+        if (m) p = m[1];
+        return p || null;
+      };
+      const paths = [toPath((row as any)?.video_url), toPath((row as any)?.image_url)].filter(
+        (p): p is string => !!p,
+      );
+      if (paths.length) await supabaseAdmin.storage.from("tutorials").remove(paths);
+    } catch (e) {
+      console.warn("[tutorials] limpeza de mídia órfã falhou (ignorado):", e);
+    }
     return { ok: true };
   });
 
@@ -166,12 +189,18 @@ export const updateTutorialOrder = createServerFn({ method: "POST" })
   .validator((input: unknown) => z.array(z.object({
     id: z.string().uuid(),
     display_order: z.number().int()
-  })).parse(input))
+  })).max(1000).parse(input))
   .handler(async ({ data, context }) => {
     await assertStaff(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Agora falha em voz alta: qualquer update que erra lança, e o cliente reverte
+    // a ordem (antes ignorava o erro e devolvia "ok" com ordem parcialmente salva).
     for (const item of data) {
-      await supabaseAdmin.from("tutorials").update({ display_order: item.display_order }).eq("id", item.id);
+      const { error } = await supabaseAdmin
+        .from("tutorials")
+        .update({ display_order: item.display_order })
+        .eq("id", item.id);
+      if (error) throw new Error(`Falha ao salvar a ordem: ${error.message}`);
     }
     return { ok: true };
   });
