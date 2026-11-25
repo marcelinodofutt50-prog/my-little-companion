@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Clock, Copy, LifeBuoy, Sparkles, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, ChevronDown, Trash2 } from 'lucide-react'
+import { Clock, Copy, LifeBuoy, Sparkles, Activity, Server, Ticket, ShieldCheck, Download, KeyRound, PackageOpen, Inbox, ExternalLink, Eye, EyeOff, Video, RefreshCw, Users, Store, Gift, ArrowRight, ChevronDown, Trash2, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferralsWidget } from "@/components/ReferralsWidget";
 import { HelpCenterWidget } from "@/components/HelpCenterWidget";
@@ -669,6 +669,20 @@ function DashboardPage() {
                           <div className="mt-2 max-w-[16rem] text-center text-[10px] normal-case leading-relaxed text-muted-foreground">
                             Não expira. Só a mensalidade do servidor precisa estar em dia.
                           </div>
+                        </div>
+                      )}
+                      {expiry?.active && !expiry.paused && expiry.kind !== 'trial' && daysLeft !== null && daysLeft <= 5 && (
+                        <div className="w-full max-w-[16rem] rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-center">
+                          <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-amber-500">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            {daysLeft <= 0 ? 'Vencendo agora' : daysLeft === 1 ? 'Vence amanhã' : `Vence em ${daysLeft} dias`}
+                          </div>
+                          <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+                            Renove antes de zerar para não perder o acesso.
+                          </p>
+                          <Button size="sm" asChild className="mt-2 h-8 w-full text-xs font-semibold">
+                            <Link to="/planos">Renovar agora</Link>
+                          </Button>
                         </div>
                       )}
                       {expiry?.serverDueAt && (
