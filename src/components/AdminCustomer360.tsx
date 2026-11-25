@@ -205,7 +205,10 @@ function LicenseActions({ license, onDone }: { license: any; onDone: () => void 
     try {
       const res: any = await fn();
       if (res?.warning) toast.warning("Salvo com ressalva", { description: String(res.warning) });
-      else toast.success(okMsg);
+      // Surfaça a mensagem rica do servidor (ex.: heal avisa "senha mudou — use a
+      // nova" ou "use o IP X no BTmob"). Sem ela, o staff repassava credencial
+      // desatualizada e gerava ticket de "licença não existe".
+      else toast.success(okMsg, res?.message ? { description: String(res.message), duration: 12000 } : undefined);
       await onDone();
     } catch (e: any) {
       toast.error("Não deu certo", { description: e?.message ?? String(e) });
