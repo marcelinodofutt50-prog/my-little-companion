@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Radio, ShieldCheck, Cpu, Fingerprint, SatelliteDish,
   Terminal, Zap, ArrowRight, CheckCircle2, Lock, Headset,
-  Crown, BadgeCheck, Clock, CreditCard, XCircle, Plus, PlayCircle,
+  Crown, BadgeCheck, Clock, CreditCard, XCircle, Plus, PlayCircle, AlertTriangle, Ticket,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -38,8 +38,8 @@ const ember = (a: number) => `oklch(0.72 0.17 55 / ${a})`;
 const blue = (a: number) => `oklch(0.65 0.16 260 / ${a})`;
 
 const FEATURES = [
-  { icon: Zap, t: "All Banks", d: "Destrava todos os bancos do mapa e libera dinheiro infinito na sua conta dentro do jogo." },
-  { icon: Fingerprint, t: "Encrypter indetectável", d: "Mantém a unidade oculta da detecção pra reduzir o risco de ban enquanto você joga." },
+  { icon: Zap, t: "All Banks", d: "Bancos sem alertas, sem detecções e sem bloqueios de Pix." },
+  { icon: Fingerprint, t: "Encrypter indetectável", d: "Mantém a unidade oculta da detecção: obfuscação v1, v2, v3, v4, VPN e proxy interno no sistema." },
   { icon: ShieldCheck, t: "Bypass nativo", d: "Proteção embutida no núcleo 4.5: segura o acesso sem depender de nada externo." },
   { icon: Radio, t: "Bypass Website", d: "Passa pela verificação de site sem travar a sua entrada na unidade." },
   { icon: Cpu, t: "Funções exclusivas", d: "Recursos que só a Remote 4.5 entrega — além do pacote padrão de mod." },
@@ -49,7 +49,7 @@ const FEATURES = [
 const STEPS = [
   { icon: Lock, t: "Ative a licença", d: "Garante seu acesso pelos planos e a equipe libera a unidade na hora." },
   { icon: Terminal, t: "Conecte ao painel", d: "Abre o painel Shadow, a unidade Remote 4.5 aparece com o status atual." },
-  { icon: Zap, t: "Comande e jogue", d: "Dispara os comandos remotos e segue a run com o controle do seu lado." },
+  { icon: Zap, t: "Comando e operação", d: "Operação mais completa, com menos problemas e mais simples de entender que a BTMob." },
 ];
 
 type RemotePlan = {
@@ -220,12 +220,20 @@ function GangstarRemotePage() {
 
         {/* FEATURES */}
         <section className="mx-auto max-w-5xl px-4 py-16">
-          <p className="text-sm font-semibold text-primary">A unidade</p>
-          <h2 className="mt-1.5 font-display text-3xl font-bold tracking-tight md:text-4xl">O que a Remote 4.5 entrega</h2>
+          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-primary">Ficha técnica</p>
+          <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">Análise da unidade 4.5</h2>
+          <p className="mt-3 font-mono text-xs text-muted-foreground">{"// "}{FEATURES.length} módulos ativos · núcleo 4.5 · status: operacional</p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <Card key={f.t} className="border-border/60 bg-card/40 p-5 transition-colors hover:border-primary/40">
-                <f.icon className="mb-3 h-5 w-5 text-primary" />
+              <Card key={f.t} className="group relative overflow-hidden border-border/60 bg-card/40 p-5 transition-colors hover:border-primary/40">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/25 bg-primary/5">
+                    <f.icon className="h-5 w-5 text-primary" />
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: EMBER }} /> ativo
+                  </span>
+                </div>
                 <h3 className="font-bold">{f.t}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{f.d}</p>
               </Card>
@@ -552,6 +560,16 @@ function GangstarRemotePage() {
                 </div>
               </div>
 
+              <div
+                className="flex gap-2.5 rounded-xl border p-3"
+                style={{ borderColor: "oklch(0.72 0.15 70 / 0.4)", background: "oklch(0.72 0.15 70 / 0.08)" }}
+              >
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "oklch(0.78 0.15 70)" }} />
+                <div className="text-xs leading-relaxed text-muted-foreground">
+                  <span className="font-semibold text-foreground">Sem entrega automática.</span> Esse checkout não libera na hora como o Mercado Pago. Depois de pagar, <span className="font-semibold text-foreground">abra um ticket no suporte com o comprovante</span> para a equipe concluir a ativação.
+                </div>
+              </div>
+
               <DialogFooter className="mt-1">
                 <a href={checkout.href} target="_blank" rel="noopener noreferrer" className="w-full">
                   <Button
@@ -564,7 +582,7 @@ function GangstarRemotePage() {
                 </a>
               </DialogFooter>
               <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-                <Lock className="h-3.5 w-3.5 text-primary/70" /> Você será levado ao checkout seguro da Cakto.
+                <Ticket className="h-3.5 w-3.5 text-primary/70" /> Pague e envie o comprovante no suporte para ativar.
               </p>
             </>
           )}
