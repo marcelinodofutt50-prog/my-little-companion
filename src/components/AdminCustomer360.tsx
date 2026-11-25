@@ -34,7 +34,9 @@ import {
   Wrench,
   KeyRound,
   Loader2,
+  History,
 } from "lucide-react";
+import { staffListLicenseAudit } from "@/lib/license-audit.functions";
 import { toast } from "sonner";
 import { CustomerImportantMedia } from "@/components/admin/CustomerImportantMedia";
 import { CustomerPurchaseRecords } from "@/components/admin/CustomerPurchaseRecords";
@@ -104,6 +106,87 @@ function CopyLine({ value, label }: { value?: string | null; label: string }) {
 }
 
 /** Ações rápidas de uma licença direto na ficha do cliente. */
+const AUDIT_LABEL: Record<string, string> = {
+  password_change: "Senha alterada",
+  coupon_server_renewal: "Renovação de servidor (cupom)",
+  coupon_license_days: "Dias de licença (cupom)",
+  extend: "Licença estendida",
+  license_extend: "Licença estendida",
+  revoke: "Licença revogada",
+  license_revoke: "Licença revogada",
+  heal: "Login recriado no painel",
+  login_heal: "Login recriado no painel",
+  pause: "Licença pausada",
+  resume: "Licença retomada",
+};
+const auditLabel = (t: string) => AUDIT_LABEL[t] ?? String(t || "evento").replace(/_/g, " ");
+
+/** Histórico de auditoria de uma licença (lazy, read-only). */
+function LicenseHistory({ licenseId }: { licenseId: string }) {
+  const listFn = useServerFn(staffListLicenseAudit);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState<any[] | null>(null);
+
+  const toggle = async () => {
+    const next = !open;
+    setOpen(next);
+    if (next && events === null) {
+      setLoading(true);
+      try {
+        const r: any = await listFn({ data: { licenseId, limit: 30 } });
+        setEvents(r?.ok ? r.events : []);
+      } catch {
+        setEvents([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  return (
+    <div className="mt-2 border-t border-border/40 pt-2">
+      <button
+        onClick={toggle}
+        className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <History className="h-3 w-3" /> Histórico {open ? "▲" : "▼"}
+      </button>
+      {open && (
+        <div className="mt-2 space-y-1.5">
+          {loading ? (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" /> Carregando…
+            </div>
+          ) : !events || events.length === 0 ? (
+            <div className="text-[11px] text-muted-foreground/70">Sem eventos registrados.</div>
+          ) : (
+            events.map((e: any) => (
+              <div key={e.id} className="rounded border border-border/40 bg-background/40 px-2 py-1.5 text-[11px]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{auditLabel(e.event_type)}</span>
+                  <span className="shrink-0 text-muted-foreground">{d(e.created_at)}</span>
+                </div>
+                <div className="mt-0.5 text-[10px] text-muted-foreground">
+                  {e.actor_kind || "sistema"}
+                  {e.actor?.display_name || e.actor?.email ? ` · ${e.actor.display_name || e.actor.email}` : ""}
+                  {e.panel ? ` · ${e.panel}` : ""}
+                </div>
+                {e.reason ? <div className="mt-0.5 text-[10px] text-muted-foreground">{e.reason}</div> : null}
+                {e.expires_before || e.expires_after ? (
+                  <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                    venc: {e.expires_before ? d(e.expires_before) : "—"} → {e.expires_after ? d(e.expires_after) : "—"}
+                  </div>
+                ) : null}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LicenseActions({ license, onDone }: { license: any; onDone: () => void | Promise<void> }) {
   const extendFn = useServerFn(adminExtendLicense);
   const revokeFn = useServerFn(adminRevokeLicense);
@@ -545,6 +628,7 @@ export function AdminCustomer360({
                                 <LicensePauseControls staff license={l} onDone={() => { if (userId) void fetchData(userId); }} />
                               </div>
                             )}
+                            <LicenseHistory licenseId={l.id} />
                           </div>
 
                         );
