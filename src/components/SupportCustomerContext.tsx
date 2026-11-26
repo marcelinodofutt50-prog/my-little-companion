@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { adminCustomer360 } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -68,6 +69,13 @@ export function SupportCustomerContext({
   const [loading, setLoading] = useState(!ctxCache.has(userId));
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(true);
+
+  // No celular a conversa tem que ser a estrela: a ficha de contexto começa
+  // recolhida pra não espremer as mensagens. O atendente abre quando quiser.
+  const isMobile = useIsMobile();
+  useEffect(() => {
+    if (isMobile) setOpen(false);
+  }, [isMobile]);
 
   const fetchData = async (force = false) => {
     if (!force && ctxCache.has(userId)) {

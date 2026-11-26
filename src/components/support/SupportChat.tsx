@@ -66,6 +66,7 @@ const QUICK_REPLIES: { label: string; build: () => string }[] = [
   { label: "Encerrar", build: () => "Posso ajudar em mais alguma coisa? Se estiver tudo certo, encerro o atendimento por aqui — qualquer coisa é só chamar. 🙏" },
 ];
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { playNotifyDing } from "@/lib/notify-sound";
@@ -478,6 +479,10 @@ export function SupportChat({
   const pendingRef = useRef<PendingMsg[]>([]);
   const msgIdsRef = useRef<Set<string>>(new Set());
   const [dragActive, setDragActive] = useState(false);
+  // No celular as ferramentas do compositor (respostas rápidas + reformular IA)
+  // começam recolhidas pra sobrar altura pras mensagens.
+  const isMobile = useIsMobile();
+  const [composerToolsOpen, setComposerToolsOpen] = useState(false);
   const [connection, setConnection] = useState<"live" | "reconnecting" | "offline">("reconnecting");
   const [loadError, setLoadError] = useState(false);
   const [senders, setSenders] = useState<Record<string, SenderInfo>>({});
@@ -1356,7 +1361,18 @@ export function SupportChat({
           handleSend();
         }}
       >
-        {(composerExtras || isAdmin) && (
+        {(composerExtras || isAdmin) && isMobile && (
+          <button
+            type="button"
+            onClick={() => setComposerToolsOpen((v) => !v)}
+            className="mb-2 inline-flex items-center gap-1 rounded px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+            aria-expanded={composerToolsOpen}
+          >
+            <ChevronDown className={cn("h-3 w-3 transition-transform", composerToolsOpen && "rotate-180")} />
+            {composerToolsOpen ? "Ocultar ferramentas" : "Respostas rápidas e IA"}
+          </button>
+        )}
+        {(composerExtras || isAdmin) && (!isMobile || composerToolsOpen) && (
           <div className="mb-2 flex flex-wrap items-center gap-2">
             {composerExtras}
             {isAdmin && (
