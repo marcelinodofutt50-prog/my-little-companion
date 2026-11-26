@@ -22,6 +22,7 @@ import { WinbackOffer, markCheckoutIntent } from "@/components/WinbackOffer";
 
 import { Testimonials } from "@/components/Testimonials";
 import { ConversionBoosters, MobileStickyCTA } from "@/components/ConversionBoosters";
+import { TrustSection } from "@/components/TrustSection";
 import { useI18n } from "@/lib/i18n";
 
 
@@ -1168,6 +1169,9 @@ function PlansPage() {
         {/* Prova social + selos de confiança =========================== */}
         <Testimonials />
         <TrustBadges className="mt-10 mb-4" />
+
+        {/* Prova social honesta — reduz o "medo de golpe" antes do FAQ ===== */}
+        <TrustSection />
 
         {/* Dúvidas rápidas antes do FAQ completo ======================= */}
         <PreCheckoutFaq />
