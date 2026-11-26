@@ -15,10 +15,10 @@ const ok = (a: number) => `oklch(0.72 0.17 155 / ${a})`;
 export const Route = createFileRoute("/obrigado")({
   head: () => ({
     meta: [
-      { title: "Pagamento recebido — Shadow" },
-      { name: "description", content: "Recebemos seu pagamento. Envie o comprovante no suporte para a equipe liberar seu acesso." },
+      { title: "Confirme seu pagamento — Shadow" },
+      { name: "description", content: "Se você concluiu o pagamento, envie a confirmação no suporte para a equipe liberar seu acesso." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Pagamento recebido — Shadow" },
+      { property: "og:title", content: "Confirme seu pagamento — Shadow" },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -27,22 +27,19 @@ export const Route = createFileRoute("/obrigado")({
 
 const STEPS = [
   {
-    icon: CheckCircle2,
-    t: "Pagamento feito",
-    d: "Você concluiu o pagamento no checkout. Essa parte já está ok.",
-    done: true,
+    icon: Receipt,
+    t: "Pagamento no checkout",
+    d: "Você concluiu o pagamento pelo link de checkout.",
   },
   {
     icon: UploadCloud,
     t: "Envie o comprovante",
     d: "Abra um chamado no suporte e anexe o comprovante (print ou PDF). É o que confirma a sua compra.",
-    done: false,
   },
   {
     icon: Sparkles,
     t: "Acesso liberado",
-    d: "Com o comprovante confirmado, a equipe ativa sua licença e te entrega o acesso pelo próprio suporte.",
-    done: false,
+    d: "Validado o comprovante, a equipe ativa a sua licença e entrega o acesso pelo próprio suporte.",
   },
 ];
 
@@ -70,21 +67,21 @@ function ObrigadoPage() {
               className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border"
               style={{ borderColor: ok(0.4), background: ok(0.1), boxShadow: `0 0 40px -8px ${ok(0.5)}` }}
             >
-              <CheckCircle2 className="h-10 w-10" style={{ color: OK }} />
+              <Receipt className="h-10 w-10" style={{ color: OK }} />
             </motion.div>
 
             <span
               className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold"
               style={{ borderColor: ok(0.35), color: OK, background: ok(0.08) }}
             >
-              <Receipt className="h-3.5 w-3.5" /> Pagamento recebido
+              <CheckCircle2 className="h-3.5 w-3.5" /> Último passo
             </span>
 
             <h1 className="mt-5 font-display text-4xl font-black tracking-tight md:text-5xl">
-              Pagou! Agora falta <span style={{ color: OK }}>1 passo</span>.
+              Pagou? Falta só <span style={{ color: OK }}>confirmar</span>.
             </h1>
             <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
-              Recebemos seu pagamento. <span className="text-foreground">Este checkout não libera o acesso automaticamente</span> — pra confirmar a sua compra e ativar sua licença, a gente só precisa que você envie o <span className="text-foreground">comprovante</span> para a nossa equipe. Leva 1 minuto.
+              Se você concluiu o pagamento, <span className="text-foreground">envie a confirmação para a nossa equipe</span>. Este checkout não libera o acesso de forma automática — assim que recebermos e validarmos o seu <span className="text-foreground">comprovante</span>, a sua licença é ativada. Leva 1 minuto.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -115,34 +112,15 @@ function ObrigadoPage() {
             </p>
             <div className="space-y-3">
               {STEPS.map((s, i) => (
-                <div
-                  key={s.t}
-                  className="flex items-start gap-4 rounded-2xl border p-5"
-                  style={
-                    s.done
-                      ? { borderColor: ok(0.3), background: ok(0.05) }
-                      : undefined
-                  }
-                >
+                <div key={s.t} className="flex items-start gap-4 rounded-2xl border border-border/60 bg-card/30 p-5">
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border font-display text-sm font-black"
-                    style={
-                      s.done
-                        ? { borderColor: ok(0.4), background: ok(0.1), color: OK }
-                        : { borderColor: "oklch(0.65 0.16 260 / 0.3)", background: "oklch(0.65 0.16 260 / 0.08)", color: "oklch(0.65 0.16 260)" }
-                    }
+                    style={{ borderColor: "oklch(0.65 0.16 260 / 0.3)", background: "oklch(0.65 0.16 260 / 0.08)", color: "oklch(0.65 0.16 260)" }}
                   >
-                    {s.done ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
+                    {i + 1}
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{s.t}</h3>
-                      {s.done && (
-                        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" style={{ color: OK, background: ok(0.12) }}>
-                          feito
-                        </span>
-                      )}
-                    </div>
+                    <h3 className="font-semibold">{s.t}</h3>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.d}</p>
                   </div>
                 </div>
