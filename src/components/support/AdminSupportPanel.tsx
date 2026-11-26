@@ -358,7 +358,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
   return (
     <div className="flex flex-col md:flex-row h-[calc(100dvh-12rem)] min-h-[520px] md:h-[calc(100vh-9rem)] md:min-h-[620px] bg-card/30 border border-border/40 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
       {/* Sidebar de Tickets */}
-      <div className={`${selectedId ? "hidden md:flex" : "flex"} w-full md:w-72 shrink-0 min-h-0 flex-col border-b md:border-b-0 md:border-r border-border/40 bg-background/40`}>
+      <div className={`${selectedId ? "hidden md:flex" : "flex"} w-full md:w-72 flex-1 md:flex-none md:shrink-0 min-h-0 flex-col border-b md:border-b-0 md:border-r border-border/40 bg-background/40`}>
 
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -491,7 +491,7 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto border-t border-border/40">
+        <div className="flex-1 min-h-0 overflow-y-auto border-t border-border/40">
           {listError && !historyMode && <div role="alert" className="flex flex-wrap items-center gap-2 p-3 text-xs text-destructive">Não foi possível atualizar os tickets.<Button size="sm" variant="outline" onClick={() => void loadThreads()}>Tentar novamente</Button></div>}
           {historyMode ? (
             historyLoading ? (
