@@ -34,6 +34,42 @@ export const submitPurchaseReceipt = createServerFn({ method:'POST' })
     return { ok:true };
   });
 
+/**
+ * Envio de comprovante SEM pedido interno (ex.: pagamento externo via Cakto na
+ * página /obrigado, ou resgate). Reaproveita a mesma tabela/bucket/segurança do
+ * fluxo com pedido; order_id fica NULL e aparece na aba admin "Comprovantes".
+ */
+export const submitStandaloneReceipt = createServerFn({ method:'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v:unknown) => z.object({ payerName:z.string().trim().min(3).max(120), filename:z.string().min(1).max(160), base64:z.string().max(Math.ceil(MAX_RECEIPT_BYTES/3)*4) }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { data:mfa,error:mfaError } = await context.supabase.rpc('mfa_satisfied');
+    if (mfaError || !mfa) throw new Error('Confirme a segurança da sua conta antes de enviar.');
+    const bytes = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0));
+    const mime = receiptMime(bytes);
+    if (!mime) throw new Error('Envie PNG, JPG ou PDF de até 5 MB.');
+    const sha256 = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))).map(v => v.toString(16).padStart(2,'0')).join('');
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const db = supabaseAdmin as any;
+    // Dedup entre comprovantes sem pedido do mesmo usuário.
+    const { data:duplicate, error:lookupError } = await db.from('purchase_evidence').select('id').eq('user_id',context.userId).is('order_id',null).eq('sha256',sha256).maybeSingle();
+    if (lookupError) throw new Error('Comprovantes indisponíveis agora. Tente novamente.');
+    if (duplicate) return { ok:true };
+    // Anti-spam: no máximo 10 comprovantes sem pedido por usuário.
+    const { count } = await db.from('purchase_evidence').select('id',{count:'exact',head:true}).eq('user_id',context.userId).is('order_id',null).eq('source','customer');
+    if ((count ?? 0) >= 10) throw new Error('Você já enviou muitos comprovantes. Fale com o suporte.');
+    const { uploadBytes, removeObjects } = await import('./storage-gateway.server');
+    const extension = mime === 'image/png' ? 'png' : mime === 'image/jpeg' ? 'jpg' : 'pdf';
+    const { path } = await uploadBytes('payment-receipts',`${context.userId}/standalone/${crypto.randomUUID()}.${extension}`,bytes,{contentType:mime});
+    const { error:insertError } = await db.from('purchase_evidence').insert({ user_id:context.userId,order_id:null,source:'customer',payer_name:data.payerName,filename:data.filename,storage_path:path,storage_bucket:'payment-receipts',mime_type:mime,sha256 });
+    if (insertError) {
+      await removeObjects('payment-receipts',[path]);
+      if (insertError.code === '23505') return { ok:true };
+      throw new Error('Não foi possível salvar o comprovante. Tente novamente.');
+    }
+    return { ok:true };
+  });
+
 export const searchPurchaseEvidence = createServerFn({ method:'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((v:unknown) => z.object({

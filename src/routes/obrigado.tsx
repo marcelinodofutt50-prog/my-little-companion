@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
-  CheckCircle2, Receipt, UploadCloud, ShieldCheck, Clock, ArrowRight,
-  Headset, Sparkles, LayoutDashboard,
+  CheckCircle2, Receipt, UploadCloud, ShieldCheck, Clock,
+  Headset, Sparkles, LayoutDashboard, GraduationCap,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
+import { StandaloneReceiptForm } from "@/components/StandaloneReceiptForm";
 
 // Verde de "pago" (sinal universal de pagamento confirmado), usado com parcimônia
 // sobre o azul da marca.
@@ -84,21 +85,23 @@ function ObrigadoPage() {
               Se você concluiu o pagamento, <span className="text-foreground">envie a confirmação para a nossa equipe</span>. Este checkout não libera o acesso de forma automática — assim que recebermos e validarmos o seu <span className="text-foreground">comprovante</span>, a sua licença é ativada. Leva 1 minuto.
             </p>
 
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link to="/suporte">
-                <Button
-                  size="lg"
-                  className="h-12 rounded-xl px-7 text-sm font-semibold text-white"
-                  style={{ background: OK, boxShadow: `0 14px 34px -12px ${ok(0.7)}` }}
-                >
-                  <Headset className="mr-2 h-4 w-4" /> Enviar comprovante no suporte
-                </Button>
-              </Link>
-              <Link to="/dashboard">
-                <Button size="lg" variant="outline" className="h-12 rounded-xl border-border/60 px-6 text-sm font-semibold">
-                  <LayoutDashboard className="mr-2 h-4 w-4" /> Ir para o painel
-                </Button>
-              </Link>
+            <div
+              className="mx-auto mt-8 max-w-md rounded-2xl border p-5 text-left sm:p-6"
+              style={{ borderColor: ok(0.3), background: ok(0.04) }}
+            >
+              <div className="mb-4 flex items-center gap-2">
+                <UploadCloud className="h-5 w-5" style={{ color: OK }} />
+                <h2 className="font-display text-lg font-bold">Envie seu comprovante</h2>
+              </div>
+              <StandaloneReceiptForm />
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs">
+                <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground">
+                  <LayoutDashboard className="h-3.5 w-3.5" /> Ir para o painel
+                </Link>
+                <Link to="/suporte" className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Headset className="h-3.5 w-3.5" /> Prefiro falar com o suporte
+                </Link>
+              </div>
             </div>
           </motion.div>
 
@@ -144,10 +147,21 @@ function ObrigadoPage() {
             </div>
           </div>
 
-          {/* CTA final discreto */}
-          <div className="mt-10 text-center">
-            <Link to="/suporte" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-              Abrir o suporte agora <ArrowRight className="h-4 w-4" />
+          {/* NUDGE — Central de Treinamento */}
+          <div className="mt-8 flex flex-col items-center gap-4 rounded-2xl border border-primary/25 bg-primary/[0.04] p-5 text-center sm:flex-row sm:text-left">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
+              <GraduationCap className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold">Novo por aqui? Aproveita a espera.</h3>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Enquanto a equipe valida seu comprovante, dá uma olhada na nossa Central de Treinamento e já aprende a usar seu acesso.
+              </p>
+            </div>
+            <Link to="/tutoriais" className="w-full shrink-0 sm:w-auto">
+              <Button variant="outline" className="w-full rounded-xl border-primary/30 text-sm font-semibold sm:w-auto">
+                Ver treinamentos
+              </Button>
             </Link>
           </div>
         </div>
