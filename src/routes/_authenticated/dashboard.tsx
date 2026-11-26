@@ -46,6 +46,7 @@ import { ExpiryAlertBanner } from '@/components/ExpiryAlertBanner'
 import { LicensePauseControls } from '@/components/LicensePauseControls'
 import { LicenseAccessTools } from '@/components/LicenseAccessTools'
 import { RedeemCodeCard } from '@/components/RedeemCodeCard'
+import { TrainingNudge } from '@/components/TrainingNudge'
 
 import { planLabel } from '@/lib/license-display'
 import {
@@ -622,6 +623,8 @@ function DashboardPage() {
               )}
 
               <RedeemCodeCard licenses={licenses ?? []} onDone={() => void refetchLicenses()} />
+
+              <TrainingNudge licenses={licenses ?? []} serverNow={serverNow} />
 
               {activeLicense && (
 
