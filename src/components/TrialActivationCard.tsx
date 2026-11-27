@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Gift, Loader2, Copy } from "lucide-react";
+import { Gift, Loader2, Copy, GraduationCap, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { generateTrial } from "@/lib/license.functions";
@@ -113,6 +114,25 @@ export function TrialActivationCard({ onDone, onRefresh }: { onDone?: () => void
               Salve estes dados. Seu teste dura 3 horas e 30 minutos a partir de agora.
             </p>
           </div>
+        )}
+        {creds && (
+          <Link
+            to="/tutoriais"
+            className="group flex items-center gap-3 rounded-lg border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 transition-colors hover:border-primary/50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary">
+              <GraduationCap className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold text-foreground">
+                Primeiro acesso? Comece pela Central de Treinamento
+              </span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Como instalar, logar e configurar tudo certo nas suas 3h30 — passo a passo.
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
+          </Link>
         )}
       </div>
     </section>

@@ -10,8 +10,10 @@ import {
   ArrowLeft,
   BadgeCheck,
   CheckCircle2,
+  Copy,
   ExternalLink,
   Loader2,
+  Receipt,
   ShieldCheck,
   Sparkles,
   Zap,
@@ -546,8 +548,41 @@ function CheckoutPage() {
                 {promotionalCheckout && (
                   <p className="mt-1 text-xs text-muted-foreground">Valor promocional no checkout da Cakto.</p>
                 )}
-                <p className="mt-3 font-mono text-[10px] text-muted-foreground">Pedido #{order.slice(0, 8)}</p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(order);
+                      toast.success("Número do pedido copiado!");
+                    } catch {
+                      toast.error("Não foi possível copiar. Selecione e copie manualmente.");
+                    }
+                  }}
+                  className="group mt-3 flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground transition-colors hover:text-foreground"
+                  title="Copiar número do pedido (para enviar junto com o comprovante)"
+                >
+                  Pedido #{order.slice(0, 8)}
+                  <Copy className="h-3 w-3 opacity-60 group-hover:opacity-100" />
+                </button>
               </div>
+
+              {/* Já pagou pela Cakto? Caminho direto pra enviar o comprovante (ativação manual) */}
+              {availableCaktoOffer && (
+                <Link
+                  to="/obrigado"
+                  className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 transition-colors hover:border-emerald-500/50"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                    <Receipt className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-foreground">Já pagou? Enviar comprovante</span>
+                    <span className="mt-0.5 block font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      Anexe o comprovante e ative mais rápido — sem abrir ticket.
+                    </span>
+                  </span>
+                </Link>
+              )}
 
               <ul className="space-y-2.5 rounded-xl border border-border bg-card/40 p-4">
                 <Perk icon={Zap}>{isServerRenewal ? "Renovação manual após confirmação do pagamento" : "Ativação em poucos minutos pela equipe após o pagamento"}</Perk>
