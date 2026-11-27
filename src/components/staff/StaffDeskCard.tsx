@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 const AdminSupportPanel = lazy(() => import("@/components/support/AdminSupportPanel").then((m) => ({ default: m.AdminSupportPanel })));
 const AdminApkPanel = lazy(() => import("@/components/AdminApkPanel").then((m) => ({ default: m.AdminApkPanel })));
 const SupportStatsPanel = lazy(() => import("@/components/support/SupportStatsPanel").then((m) => ({ default: m.SupportStatsPanel })));
+const AdminPurchaseEvidence = lazy(() => import("@/components/admin/AdminPurchaseEvidence").then((m) => ({ default: m.AdminPurchaseEvidence })));
 
-type Tab = "chat" | "stats" | "apk";
+type Tab = "chat" | "stats" | "apk" | "receipts";
 
 /** Central da equipe dentro do painel do cliente: só aparece para admin/suporte/moderação. */
 export function StaffDeskCard() {
@@ -21,7 +22,7 @@ export function StaffDeskCard() {
     });
   }, []);
   if (!isStaff) return null;
-  const tabs: [Tab, string][] = [["chat", "Chat"], ["stats", "Métricas"], ["apk", "APKs"]];
+  const tabs: [Tab, string][] = [["chat", "Chat"], ["stats", "Métricas"], ["apk", "APKs"], ["receipts", "Comprovantes"]];
   return (
     <section className="mb-6 rounded-2xl border border-primary/30 bg-card/50 p-4">
       <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between">
@@ -42,6 +43,7 @@ export function StaffDeskCard() {
             {tab === "chat" && <AdminSupportPanel />}
             {tab === "stats" && <SupportStatsPanel />}
             {tab === "apk" && <AdminApkPanel />}
+            {tab === "receipts" && <AdminPurchaseEvidence />}
           </Suspense>
         </div>
       )}
