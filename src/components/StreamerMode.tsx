@@ -84,7 +84,7 @@ export function StreamerMode() {
       data-streamer-safe
       variant="outline"
       aria-pressed={on}
-      className={`fixed bottom-4 left-4 z-[95] inline-flex items-center gap-2 rounded-full border px-3 py-2 font-mono text-[10px] uppercase tracking-widest shadow-lg backdrop-blur transition ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-card/80 text-muted-foreground hover:text-foreground"}`}
+      className={`fixed bottom-20 left-4 z-[95] md:bottom-4 inline-flex items-center gap-2 rounded-full border px-3 py-2 font-mono text-[10px] uppercase tracking-widest shadow-lg backdrop-blur transition ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-card/80 text-muted-foreground hover:text-foreground"}`}
     >
       {on ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
       {on ? "Streamer ON" : "Streamer"}

@@ -54,7 +54,7 @@ export function SupportFloatingWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-3 md:bottom-4">
       {open && (
         <div className="flex h-[min(700px,calc(100dvh-80px))] w-[min(460px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-300">
           <div className="flex items-center justify-between border-b border-border/60 bg-primary px-4 py-3 text-primary-foreground">
