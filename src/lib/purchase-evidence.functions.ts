@@ -107,6 +107,113 @@ export const adminAttachReceiptForUser = createServerFn({ method:'POST' })
     return { ok:true };
   });
 
+/**
+ * "Bot" de comprovante: usa IA de visão (Gemini) pra dizer se a IMAGEM é mesmo
+ * um comprovante de PIX (e não uma foto qualquer / print de tela), extraindo
+ * valor, data e ID da transação. Se for recibo de verdade E o anexo veio de uma
+ * mensagem de suporte, marca automaticamente como MÍDIA IMPORTANTE no perfil.
+ *
+ * IMPORTANTE: o veredito é ADVISÓRIO. Nunca aprova pagamento sozinho — só
+ * sinaliza pro atendente e eleva o anexo. Admin/staff-gated.
+ */
+export const analyzeReceiptImage = createServerFn({ method:'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v:unknown) => z.object({ id:z.string().uuid() }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import('@/lib/admin-helpers.server');
+    await assertStaff(context);
+
+    const { data:row, error } = await context.supabase.from('purchase_evidence').select('*').eq('id',data.id).maybeSingle();
+    if (error || !row) throw new Error('Comprovante não encontrado ou acesso negado.');
+
+    // Resolve caminho/bucket (espelha a lógica do download, inclusive anexos de suporte).
+    let path = row.storage_path;
+    let bucket = row.storage_bucket;
+    if (row.source === 'support' && row.source_message_id) {
+      const { data:message } = await context.supabase.from('support_messages').select('attachment_url,thread_id,sender_id').eq('id',row.source_message_id).maybeSingle();
+      const { extractSupportMediaPath } = await import('./support-media');
+      path = extractSupportMediaPath(message?.attachment_url);
+      bucket = 'support-media';
+      const raw = path?.replace(/^s2\//,'');
+      if (!message || message.sender_id !== row.user_id || !raw?.startsWith(`${row.user_id}/${message.thread_id}/`) || raw.includes('..')) throw new Error('Anexo não pode ser vinculado com segurança.');
+    }
+    if (!path || !['support-media','payment-receipts'].includes(bucket ?? '')) throw new Error('Este registro não possui arquivo para analisar.');
+
+    const ext = (path ?? '').toLowerCase().split('.').pop() ?? '';
+    const mime = (row as any).mime_type
+      ?? (ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'pdf' ? 'application/pdf' : 'image/jpeg');
+    if (mime === 'application/pdf') {
+      return { verdict: { isPixReceipt: null as boolean | null, confidence: 0, amountBrl: null, dateText: null, txId: null, payer: null, payee: null, reason: 'Arquivo PDF — a análise automática por IA cobre imagens (PNG/JPG). Confira manualmente.' }, markedImportant: false };
+    }
+
+    // Lê os bytes da imagem do storage (service role via gateway).
+    const { storageClientFor } = await import('./storage-gateway.server');
+    const client = await storageClientFor(path);
+    const { data:blob, error:dlErr } = await client.storage.from(bucket as string).download(path);
+    if (dlErr || !blob) throw new Error('Não foi possível ler a imagem do comprovante.');
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+
+    const { generateText } = await import('ai');
+    const { withGeminiFallback } = await import('./gemini-provider.server');
+    const instrucao = [
+      'Você é um verificador de comprovantes de pagamento PIX do Brasil.',
+      'Analise a IMAGEM e decida se é um comprovante/recibo de transferência PIX legítimo',
+      '(de app de banco, PicPay, Mercado Pago, Nubank, etc.) — e NÃO uma foto qualquer,',
+      'print de conversa, print de painel/sistema, meme, selfie ou documento sem valor de pagamento.',
+      'Sinais de comprovante PIX: valor em R$, data/hora, nome do pagador e recebedor,',
+      'ID/E2E da transação, chave PIX ou instituição.',
+      'Responda SOMENTE um JSON válido, sem texto extra, com as chaves:',
+      '{"isPixReceipt": boolean, "confidence": number (0 a 1), "amountBrl": number|null,',
+      '"dateText": string|null, "txId": string|null, "payer": string|null, "payee": string|null,',
+      '"reason": string (curto, em pt-BR, explicando a decisão)}',
+    ].join(' ');
+
+    let text = '';
+    try {
+      const res = await withGeminiFallback((model) => generateText({
+        model,
+        maxOutputTokens: 500,
+        messages: [{ role: 'user', content: [
+          { type: 'text', text: instrucao },
+          { type: 'image', image: bytes },
+        ] as any }],
+      }));
+      text = res.text ?? '';
+    } catch (e:any) {
+      throw new Error(`A IA não conseguiu analisar agora: ${e?.message ?? 'erro'}`);
+    }
+
+    // Extrai o primeiro bloco JSON da resposta.
+    const match = text.match(/\{[\s\S]*\}/);
+    let parsed: any = {};
+    try { parsed = match ? JSON.parse(match[0]) : {}; } catch { parsed = {}; }
+
+    const num = (v:any) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+    const str = (v:any) => (typeof v === 'string' && v.trim() ? v.trim().slice(0,160) : null);
+    const verdict = {
+      isPixReceipt: typeof parsed.isPixReceipt === 'boolean' ? parsed.isPixReceipt : false,
+      confidence: Math.max(0, Math.min(1, num(parsed.confidence) ?? 0)),
+      amountBrl: num(parsed.amountBrl),
+      dateText: str(parsed.dateText),
+      txId: str(parsed.txId),
+      payer: str(parsed.payer),
+      payee: str(parsed.payee),
+      reason: str(parsed.reason) ?? 'Sem detalhes.',
+    };
+
+    // Se for recibo de verdade e o anexo veio de uma mensagem de suporte, marca
+    // como mídia importante (mesma tabela do botão manual). Só eleva — nunca aprova.
+    let markedImportant = false;
+    if (verdict.isPixReceipt && verdict.confidence >= 0.6 && row.source === 'support' && row.source_message_id) {
+      const { error:upErr } = await context.supabase
+        .from('customer_important_media')
+        .upsert({ message_id: row.source_message_id, marked_by: context.userId }, { onConflict: 'message_id', ignoreDuplicates: true });
+      if (!upErr) markedImportant = true;
+    }
+
+    return { verdict, markedImportant };
+  });
+
 export const searchPurchaseEvidence = createServerFn({ method:'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((v:unknown) => z.object({

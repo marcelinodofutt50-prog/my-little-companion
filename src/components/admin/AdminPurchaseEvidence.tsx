@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { Download, Loader2, Search, HandCoins, History, Eye } from 'lucide-react';
+import { Download, Loader2, Search, HandCoins, History, Eye, Sparkles, CheckCircle2, AlertTriangle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getPurchaseEvidenceDownload, searchPurchaseEvidence, organizeSupportEvidence } from '@/lib/purchase-evidence.functions';
+import { getPurchaseEvidenceDownload, searchPurchaseEvidence, organizeSupportEvidence, analyzeReceiptImage } from '@/lib/purchase-evidence.functions';
 import { listPlansForManualPayment, listCustomerLicensesForManualPayment, listManualPayments, registerManualPayment } from '@/lib/manual-payment.functions';
 
 type Evidence = { id:string; order_id:string | null; user_id:string; payer_name:string | null; source:string; provider_payment_id:string | null; payment_status:string | null; amount:number | null; filename:string | null; storage_path:string | null; source_message_id:string | null; created_at:string; customer_email:string | null; order_plan:string | null; order_amount:number | null; order_status:string | null };
@@ -129,6 +129,9 @@ export function AdminPurchaseEvidence() {
   const [downloading,setDownloading] = useState<string | null>(null);
   const [previewing,setPreviewing] = useState<string | null>(null);
   const [preview,setPreview] = useState<{ url:string; mime:string | null; name:string | null } | null>(null);
+  const [verifying,setVerifying] = useState<string | null>(null);
+  const [verdicts,setVerdicts] = useState<Record<string,{ isPixReceipt:boolean|null; confidence:number; amountBrl:number|null; dateText:string|null; reason:string; markedImportant:boolean }>>({});
+  const analyze = useServerFn(analyzeReceiptImage);
   const [showManual,setShowManual] = useState(false);
   const [manualPrefill,setManualPrefill] = useState<{email?:string;evidenceId?:string}>({});
   const [refreshKey,setRefreshKey] = useState(0);
@@ -162,10 +165,25 @@ export function AdminPurchaseEvidence() {
         {!row.order_id && <p className="text-xs text-amber-500">Sem vínculo com pedido — consultar cliente</p>}
         <p className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString('pt-BR')}{row.provider_payment_id ? ` · Pagamento ${row.provider_payment_id} · ${row.payment_status}` : ''}</p>
         {row.filename && <p className="break-all text-xs">{row.filename}</p>}
+        {verdicts[row.id] && (() => { const v = verdicts[row.id]; return (
+          v.isPixReceipt === true
+            ? <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="font-semibold">Comprovante PIX</span>
+                {v.amountBrl != null && <span>· R$ {v.amountBrl.toFixed(2)}</span>}
+                {v.dateText && <span>· {v.dateText}</span>}
+                <span className="text-emerald-400/70">· IA {Math.round(v.confidence*100)}%</span>
+                {v.markedImportant && <span className="inline-flex items-center gap-1 text-amber-400"><Star className="h-3 w-3 fill-amber-400" />marcado como importante</span>}
+              </div>
+            : v.isPixReceipt === false
+              ? <div className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-xs text-amber-500"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span><span className="font-semibold">Não parece comprovante PIX.</span> {v.reason}</span></div>
+              : <div className="flex items-start gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span>{v.reason}</span></div>
+        ); })()}
       </div>
       <div className="flex flex-wrap gap-2">
         {(row.storage_path || row.source_message_id) && <Button size="sm" disabled={!!previewing} onClick={async () => {setPreviewing(row.id);setError('');try {const {url,mime} = await download({data:{id:row.id,inline:true}}) as any;setPreview({url,mime:mime ?? null,name:row.filename ?? null});}catch{setError('Não foi possível abrir este anexo.');}finally{setPreviewing(null);}}}>{previewing === row.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Eye className="mr-2 h-4 w-4"/>}Ver</Button>}
         {(row.storage_path || row.source_message_id) && <Button size="sm" variant="outline" disabled={!!downloading} onClick={async () => {setDownloading(row.id);setError('');try {const {url} = await download({data:{id:row.id}});window.open(url,'_blank','noopener,noreferrer');}catch{setError('Não foi possível baixar este anexo.');}finally{setDownloading(null);}}}>{downloading === row.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4"/>}Baixar</Button>}
+        {(row.storage_path || row.source_message_id) && <Button size="sm" variant="ghost" disabled={verifying === row.id} title="Usar IA para conferir se é mesmo um comprovante PIX" onClick={async () => {setVerifying(row.id);setError('');try {const r:any = await analyze({data:{id:row.id}});setVerdicts(v => ({...v,[row.id]:{...r.verdict,markedImportant:r.markedImportant}}));}catch(e:any){setError(e?.message ?? 'A IA não conseguiu analisar este comprovante.');}finally{setVerifying(null);}}}>{verifying === row.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4"/>}Verificar IA</Button>}
         {row.source === 'support' && <Button size="sm" variant="ghost" onClick={() => {setEditing(row.id);setPayer(row.payer_name ?? '');setOrder(row.order_id ?? '');}}>Organizar anexo</Button>}
         {!row.order_id && row.customer_email && <Button size="sm" variant="ghost" onClick={() => { setManualPrefill({ email:row.customer_email!, evidenceId:row.id }); setShowManual(true); }}>Registrar pagamento</Button>}
       </div>
