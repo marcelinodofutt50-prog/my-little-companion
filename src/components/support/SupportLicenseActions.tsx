@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   KeyRound,
@@ -48,6 +48,8 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { adminReplaceUserTrial, adminCreateLicenseForClient, adminHealUserLogins } from "@/lib/admin.functions";
 import { adminAttachReceiptForUser } from "@/lib/purchase-evidence.functions";
+import { adminSetGangstarAccess, adminGetGangstarAccess } from "@/lib/gangstar.functions";
+import { Gamepad2 } from "lucide-react";
 
 /**
  * "Funções de mod" na conversa de suporte selecionada: um botão só, que abre um
@@ -93,6 +95,11 @@ export function SupportLicenseActions({
   const createLicense = useServerFn(adminCreateLicenseForClient);
   const healLogins = useServerFn(adminHealUserLogins);
   const attachReceipt = useServerFn(adminAttachReceiptForUser);
+  const setGangstar = useServerFn(adminSetGangstarAccess);
+  const getGangstar = useServerFn(adminGetGangstarAccess);
+
+  const [gangstar, setGangstarState] = useState<boolean | null>(null);
+  const [gangstarBusy, setGangstarBusy] = useState(false);
 
   const [trialOpen, setTrialOpen] = useState(false);
   const [trialBusy, setTrialBusy] = useState(false);
@@ -122,6 +129,30 @@ export function SupportLicenseActions({
       toast.error(e?.message ?? "Não foi possível recriar a trial.");
     } finally {
       setTrialBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    setGangstarState(null);
+    getGangstar({ data: { userId } })
+      .then((r: any) => { if (active) setGangstarState(!!r?.hasAccess); })
+      .catch(() => { if (active) setGangstarState(false); });
+    return () => { active = false; };
+  }, [getGangstar, userId]);
+
+  const doToggleGangstar = async () => {
+    const next = !gangstar;
+    setGangstarBusy(true);
+    try {
+      await setGangstar({ data: { userId, enabled: next } });
+      setGangstarState(next);
+      toast.success(next ? "Acesso ao painel Gangstar liberado." : "Acesso ao painel Gangstar removido.");
+      onDone?.();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível alterar o acesso Gangstar.");
+    } finally {
+      setGangstarBusy(false);
     }
   };
 
@@ -213,6 +244,10 @@ export function SupportLicenseActions({
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => void doHeal()}>
               <Stethoscope className="mr-2 h-4 w-4" /> Reparar acesso
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={gangstar === null || gangstarBusy} onSelect={() => void doToggleGangstar()}>
+              <Gamepad2 className="mr-2 h-4 w-4" />
+              {gangstar === null ? "Acesso Gangstar…" : gangstar ? "Remover acesso Gangstar" : "Liberar acesso Gangstar"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
