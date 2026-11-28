@@ -182,7 +182,8 @@ export const analyzeReceiptImage = createServerFn({ method:'POST' })
       'print de conversa, print de painel/sistema, meme, selfie ou documento sem valor de pagamento.',
       'Sinais de comprovante PIX: valor em R$, data/hora, nome do pagador e recebedor,',
       'ID/E2E da transação, chave PIX ou instituição.',
-      'Responda SOMENTE um JSON válido, sem texto extra, com as chaves:',
+      'NÃO explique seu raciocínio. Responda IMEDIATAMENTE e SOMENTE um JSON válido,',
+      'sem texto antes ou depois, com as chaves:',
       '{"isPixReceipt": boolean, "confidence": number (0 a 1), "amountBrl": number|null,',
       '"dateText": string|null, "txId": string|null, "payer": string|null, "payee": string|null,',
       '"reason": string (curto, em pt-BR, explicando a decisão)}',
@@ -192,7 +193,10 @@ export const analyzeReceiptImage = createServerFn({ method:'POST' })
     try {
       const res = await withGeminiFallback((model) => generateText({
         model,
-        maxOutputTokens: 800,
+        // Folga de tokens: o flash gasta tokens "pensando" antes de escrever;
+        // com pouco orçamento ele estoura o limite e devolve vazio/erro.
+        maxOutputTokens: 2048,
+        temperature: 0,
         messages: [{ role: 'user', content: [
           { type: 'text', text: instrucao },
           { type: 'image', image: dataUrl },
