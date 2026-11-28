@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { KeyRound, RefreshCw, Loader2, AlertTriangle, Plus } from "lucide-react";
+import { KeyRound, RefreshCw, Loader2, AlertTriangle, Plus, Wrench, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ToolbarGroup, toolbarItem } from "@/components/support/chat-toolbar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +21,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
@@ -22,7 +29,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,11 +37,11 @@ import { cn } from "@/lib/utils";
 import { adminReplaceUserTrial, adminCreateLicenseForClient } from "@/lib/admin.functions";
 
 /**
- * Ações de licença direto na conversa de suporte selecionada.
- * NÃO provisiona nada por conta própria: apenas chama as funções de admin que já
- * existem e são testadas (adminReplaceUserTrial / adminCreateLicenseForClient).
- * A emissão posta as credenciais na própria conversa (postToThreadId), então o
- * cliente recebe o acesso ali mesmo.
+ * "Funções de mod" na conversa de suporte selecionada: um botão só, que abre um
+ * menu com as ações de licença, pra não lotar o header.
+ * NÃO provisiona nada por conta própria — só chama funções de admin já existentes
+ * e testadas (adminReplaceUserTrial / adminCreateLicenseForClient). A emissão
+ * posta as credenciais na própria conversa (postToThreadId).
  */
 
 const PLANS = [
@@ -58,6 +64,7 @@ export function SupportLicenseActions({
   const replaceTrial = useServerFn(adminReplaceUserTrial);
   const createLicense = useServerFn(adminCreateLicenseForClient);
 
+  const [trialOpen, setTrialOpen] = useState(false);
   const [trialBusy, setTrialBusy] = useState(false);
   const [licOpen, setLicOpen] = useState(false);
   const [plan, setPlan] = useState<string>("login-30d");
@@ -69,6 +76,7 @@ export function SupportLicenseActions({
     try {
       await replaceTrial({ data: { userId } });
       toast.success("Trial recriada — o cliente vê as novas credenciais no painel dele.");
+      setTrialOpen(false);
       onDone?.();
     } catch (e: any) {
       toast.error(e?.message ?? "Não foi possível recriar a trial.");
@@ -100,21 +108,41 @@ export function SupportLicenseActions({
   };
 
   return (
-    <ToolbarGroup label="Licença e acesso">
+    <>
+      <ToolbarGroup label="Funções de mod">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="ghost" className={toolbarItem} title="Ações de licença e acesso">
+              <Wrench className="h-3 w-3" />
+              Funções de mod
+              <ChevronDown className="h-3 w-3 opacity-70" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Licença e acesso</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                setLicOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Adicionar licença
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                setTrialOpen(true);
+              }}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Recriar trial
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </ToolbarGroup>
+
       {/* Recriar trial — confirmação, porque apaga a conta de teste antiga no painel */}
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            size="sm"
-            variant="ghost"
-            className={toolbarItem}
-            title="Apaga a trial atual no painel e provisiona uma nova"
-            disabled={trialBusy}
-          >
-            {trialBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-            Recriar trial
-          </Button>
-        </AlertDialogTrigger>
+      <AlertDialog open={trialOpen} onOpenChange={setTrialOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Recriar a trial deste cliente?</AlertDialogTitle>
@@ -124,13 +152,15 @@ export function SupportLicenseActions({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={trialBusy}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
+              disabled={trialBusy}
               onClick={(e) => {
                 e.preventDefault();
                 void doRecreateTrial();
               }}
             >
+              {trialBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Recriar trial
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -145,16 +175,6 @@ export function SupportLicenseActions({
           if (!o) setReceiptConfirmed(false);
         }}
       >
-        <DialogTrigger asChild>
-          <Button
-            size="sm"
-            variant="ghost"
-            className={toolbarItem}
-            title="Emitir uma licença paga para este cliente"
-          >
-            <Plus className="h-3 w-3" /> Adicionar licença
-          </Button>
-        </DialogTrigger>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Adicionar licença</DialogTitle>
@@ -213,6 +233,6 @@ export function SupportLicenseActions({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </ToolbarGroup>
+    </>
   );
 }

@@ -114,7 +114,7 @@ export const searchPurchaseEvidence = createServerFn({ method:'POST' })
 
 export const getPurchaseEvidenceDownload = createServerFn({ method:'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((v:unknown) => z.object({ id:z.string().uuid() }).parse(v))
+  .inputValidator((v:unknown) => z.object({ id:z.string().uuid(), inline:z.boolean().optional() }).parse(v))
   .handler(async ({ data,context }) => {
     const { data:row,error } = await context.supabase.from('purchase_evidence').select('*').eq('id',data.id).maybeSingle();
     if (error || !row) throw new Error('Comprovante não encontrado ou acesso negado.');
@@ -130,14 +130,20 @@ export const getPurchaseEvidenceDownload = createServerFn({ method:'POST' })
     }
     if (!path || !['support-media','payment-receipts'].includes(bucket ?? '')) throw new Error('Este registro não possui arquivo bancário.');
     const { createDownload } = await import('./storage-gateway.server');
-    const url = await createDownload(bucket ?? 'payment-receipts',path,60,{download:true});
+    // inline: link servido sem forçar download, pra visualizar direto no modal
+    // (imagem no <img>, PDF no <iframe>). Sem inline, mantém o download de antes.
+    const url = await createDownload(bucket ?? 'payment-receipts',path,60,{download:!data.inline});
+    // mime pro cliente decidir como renderizar (imagem vs PDF).
+    const ext = (path ?? '').toLowerCase().split('.').pop() ?? '';
+    const mime = (row as any).mime_type
+      ?? (ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'pdf' ? 'application/pdf' : null);
     // Download authorized through RLS before the privileged storage signer is touched.
     if (row.user_id !== context.userId) {
       const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-      const { error:auditError } = await supabaseAdmin.from('audit_logs').insert({ user_id:context.userId, system:'purchase_evidence',event:'download',metadata:{ evidence_id:row.id } });
+      const { error:auditError } = await supabaseAdmin.from('audit_logs').insert({ user_id:context.userId, system:'purchase_evidence',event:data.inline ? 'preview' : 'download',metadata:{ evidence_id:row.id } });
       if (auditError) throw new Error('Não foi possível registrar a consulta.');
     }
-    return { url };
+    return { url, mime };
   });
 
 export const organizeSupportEvidence = createServerFn({ method:'POST' })

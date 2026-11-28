@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { Download, Loader2, Search, HandCoins, History } from 'lucide-react';
+import { Download, Loader2, Search, HandCoins, History, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getPurchaseEvidenceDownload, searchPurchaseEvidence, organizeSupportEvidence } from '@/lib/purchase-evidence.functions';
 import { listPlansForManualPayment, listCustomerLicensesForManualPayment, listManualPayments, registerManualPayment } from '@/lib/manual-payment.functions';
 
@@ -126,6 +127,8 @@ export function AdminPurchaseEvidence() {
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState('');
   const [downloading,setDownloading] = useState<string | null>(null);
+  const [previewing,setPreviewing] = useState<string | null>(null);
+  const [preview,setPreview] = useState<{ url:string; mime:string | null; name:string | null } | null>(null);
   const [showManual,setShowManual] = useState(false);
   const [manualPrefill,setManualPrefill] = useState<{email?:string;evidenceId?:string}>({});
   const [refreshKey,setRefreshKey] = useState(0);
@@ -161,6 +164,7 @@ export function AdminPurchaseEvidence() {
         {row.filename && <p className="break-all text-xs">{row.filename}</p>}
       </div>
       <div className="flex flex-wrap gap-2">
+        {(row.storage_path || row.source_message_id) && <Button size="sm" disabled={!!previewing} onClick={async () => {setPreviewing(row.id);setError('');try {const {url,mime} = await download({data:{id:row.id,inline:true}}) as any;setPreview({url,mime:mime ?? null,name:row.filename ?? null});}catch{setError('Não foi possível abrir este anexo.');}finally{setPreviewing(null);}}}>{previewing === row.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Eye className="mr-2 h-4 w-4"/>}Ver</Button>}
         {(row.storage_path || row.source_message_id) && <Button size="sm" variant="outline" disabled={!!downloading} onClick={async () => {setDownloading(row.id);setError('');try {const {url} = await download({data:{id:row.id}});window.open(url,'_blank','noopener,noreferrer');}catch{setError('Não foi possível baixar este anexo.');}finally{setDownloading(null);}}}>{downloading === row.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4"/>}Baixar</Button>}
         {row.source === 'support' && <Button size="sm" variant="ghost" onClick={() => {setEditing(row.id);setPayer(row.payer_name ?? '');setOrder(row.order_id ?? '');}}>Organizar anexo</Button>}
         {!row.order_id && row.customer_email && <Button size="sm" variant="ghost" onClick={() => { setManualPrefill({ email:row.customer_email!, evidenceId:row.id }); setShowManual(true); }}>Registrar pagamento</Button>}
@@ -169,5 +173,19 @@ export function AdminPurchaseEvidence() {
     </article>)}</div>}
     <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><Button size="sm" variant="outline" disabled={page===0 || loading} onClick={() => setPage(v => v-1)}>Anterior</Button><span>{result.total} registros · página {page+1}</span><Button size="sm" variant="outline" disabled={(page+1)*30 >= result.total || loading} onClick={() => setPage(v => v+1)}>Próxima</Button></div>
     <ManualPaymentsHistory refreshKey={refreshKey} />
+
+    <Dialog open={!!preview} onOpenChange={(o) => { if (!o) setPreview(null); }}>
+      <DialogContent className="max-w-3xl" data-sensitive>
+        <DialogHeader><DialogTitle className="truncate">{preview?.name ?? 'Comprovante'}</DialogTitle></DialogHeader>
+        {preview && (
+          preview.mime?.startsWith('image/')
+            ? <img src={preview.url} alt="Comprovante" className="max-h-[70vh] w-full rounded-md bg-black/40 object-contain" />
+            : preview.mime === 'application/pdf'
+              ? <iframe src={preview.url} title="Comprovante" className="h-[70vh] w-full rounded-md border border-border bg-white" />
+              : <p className="text-sm text-muted-foreground">Pré-visualização indisponível para este tipo de arquivo.</p>
+        )}
+        {preview && <a href={preview.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground underline underline-offset-2">Abrir em nova aba</a>}
+      </DialogContent>
+    </Dialog>
   </section>;
 }
