@@ -146,11 +146,17 @@ export const analyzeReceiptImage = createServerFn({ method:'POST' })
       return { verdict: { isPixReceipt: null as boolean | null, confidence: 0, amountBrl: null, dateText: null, txId: null, payer: null, payee: null, reason: 'Arquivo PDF — a análise automática por IA cobre imagens (PNG/JPG). Confira manualmente.' }, markedImportant: false };
     }
 
-    // Lê os bytes da imagem do storage (service role via gateway).
-    const { storageClientFor } = await import('./storage-gateway.server');
-    const client = await storageClientFor(path);
-    const { data:blob, error:dlErr } = await client.storage.from(bucket as string).download(path);
-    if (dlErr || !blob) throw new Error('Não foi possível ler a imagem do comprovante.');
+    // Lê os bytes da imagem do storage (service role via gateway). Tenta o
+    // projeto certo e, se não responder, cai pro projeto de arquivos (igual ao
+    // createDownload), pra arquivo migrado não quebrar a análise.
+    const { storageClientFor, filesStorageEnabled, filesAdmin } = await import('./storage-gateway.server');
+    const bktName = bucket as string;
+    const primary = await storageClientFor(path);
+    let blob = (await primary.storage.from(bktName).download(path)).data;
+    if (!blob && filesStorageEnabled()) {
+      blob = (await filesAdmin().storage.from(bktName).download(path)).data;
+    }
+    if (!blob) throw new Error('Não foi possível ler a imagem do comprovante.');
     const bytes = new Uint8Array(await blob.arrayBuffer());
 
     const { generateText } = await import('ai');
@@ -168,14 +174,19 @@ export const analyzeReceiptImage = createServerFn({ method:'POST' })
       '"reason": string (curto, em pt-BR, explicando a decisão)}',
     ].join(' ');
 
+    // Base64 data URL: formato aceito por qualquer provedor/SDK (mais robusto
+    // que passar o Uint8Array cru pro wrapper do gateway).
+    const b64 = Buffer.from(bytes).toString('base64');
+    const dataUrl = `data:${mime};base64,${b64}`;
+
     let text = '';
     try {
       const res = await withGeminiFallback((model) => generateText({
         model,
-        maxOutputTokens: 500,
+        maxOutputTokens: 800,
         messages: [{ role: 'user', content: [
           { type: 'text', text: instrucao },
-          { type: 'image', image: bytes },
+          { type: 'image', image: dataUrl },
         ] as any }],
       }));
       text = res.text ?? '';
@@ -185,8 +196,14 @@ export const analyzeReceiptImage = createServerFn({ method:'POST' })
 
     // Extrai o primeiro bloco JSON da resposta.
     const match = text.match(/\{[\s\S]*\}/);
-    let parsed: any = {};
-    try { parsed = match ? JSON.parse(match[0]) : {}; } catch { parsed = {}; }
+    let parsed: any = null;
+    try { parsed = match ? JSON.parse(match[0]) : null; } catch { parsed = null; }
+
+    // Sem JSON válido = a IA não respondeu direito. Veredito NEUTRO (não é
+    // "não é comprovante"), pra não dar falso negativo num recibo de verdade.
+    if (!parsed || typeof parsed !== 'object') {
+      return { verdict: { isPixReceipt: null as boolean | null, confidence: 0, amountBrl: null, dateText: null, txId: null, payer: null, payee: null, reason: 'A IA não retornou um resultado legível. Tente de novo ou confira manualmente.' }, markedImportant: false };
+    }
 
     const num = (v:any) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
     const str = (v:any) => (typeof v === 'string' && v.trim() ? v.trim().slice(0,160) : null);
