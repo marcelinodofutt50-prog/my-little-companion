@@ -118,7 +118,13 @@ export const adminAttachReceiptForUser = createServerFn({ method:'POST' })
  */
 export const analyzeReceiptImage = createServerFn({ method:'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((v:unknown) => z.object({ id:z.string().uuid() }).parse(v))
+  .inputValidator((v:unknown) => z.object({
+    id:z.string().uuid(),
+    // imagem já reduzida no navegador (base64 sem o prefixo data:), pra não
+    // mandar o arquivo original gigante pra IA e estourar o limite do gateway.
+    imageB64: z.string().max(3_500_000).optional(),
+    imageMime: z.enum(['image/jpeg','image/png']).optional(),
+  }).parse(v))
   .handler(async ({ data, context }) => {
     const { assertStaff } = await import('@/lib/admin-helpers.server');
     await assertStaff(context);
@@ -126,38 +132,46 @@ export const analyzeReceiptImage = createServerFn({ method:'POST' })
     const { data:row, error } = await context.supabase.from('purchase_evidence').select('*').eq('id',data.id).maybeSingle();
     if (error || !row) throw new Error('Comprovante não encontrado ou acesso negado.');
 
-    // Resolve caminho/bucket (espelha a lógica do download, inclusive anexos de suporte).
-    let path = row.storage_path;
-    let bucket = row.storage_bucket;
-    if (row.source === 'support' && row.source_message_id) {
-      const { data:message } = await context.supabase.from('support_messages').select('attachment_url,thread_id,sender_id').eq('id',row.source_message_id).maybeSingle();
-      const { extractSupportMediaPath } = await import('./support-media');
-      path = extractSupportMediaPath(message?.attachment_url);
-      bucket = 'support-media';
-      const raw = path?.replace(/^s2\//,'');
-      if (!message || message.sender_id !== row.user_id || !raw?.startsWith(`${row.user_id}/${message.thread_id}/`) || raw.includes('..')) throw new Error('Anexo não pode ser vinculado com segurança.');
-    }
-    if (!path || !['support-media','payment-receipts'].includes(bucket ?? '')) throw new Error('Este registro não possui arquivo para analisar.');
+    // A imagem que vai pra IA: ou a versão reduzida enviada pelo navegador (via
+    // canvas, pra não estourar o limite do gateway), ou, se não veio, lê o
+    // arquivo original do storage.
+    let dataUrl: string;
+    if (data.imageB64) {
+      dataUrl = `data:${data.imageMime ?? 'image/jpeg'};base64,${data.imageB64}`;
+    } else {
+      // Resolve caminho/bucket (espelha a lógica do download, inclusive anexos de suporte).
+      let path = row.storage_path;
+      let bucket = row.storage_bucket;
+      if (row.source === 'support' && row.source_message_id) {
+        const { data:message } = await context.supabase.from('support_messages').select('attachment_url,thread_id,sender_id').eq('id',row.source_message_id).maybeSingle();
+        const { extractSupportMediaPath } = await import('./support-media');
+        path = extractSupportMediaPath(message?.attachment_url);
+        bucket = 'support-media';
+        const raw = path?.replace(/^s2\//,'');
+        if (!message || message.sender_id !== row.user_id || !raw?.startsWith(`${row.user_id}/${message.thread_id}/`) || raw.includes('..')) throw new Error('Anexo não pode ser vinculado com segurança.');
+      }
+      if (!path || !['support-media','payment-receipts'].includes(bucket ?? '')) throw new Error('Este registro não possui arquivo para analisar.');
 
-    const ext = (path ?? '').toLowerCase().split('.').pop() ?? '';
-    const mime = (row as any).mime_type
-      ?? (ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'pdf' ? 'application/pdf' : 'image/jpeg');
-    if (mime === 'application/pdf') {
-      return { verdict: { isPixReceipt: null as boolean | null, confidence: 0, amountBrl: null, dateText: null, txId: null, payer: null, payee: null, reason: 'Arquivo PDF — a análise automática por IA cobre imagens (PNG/JPG). Confira manualmente.' }, markedImportant: false };
-    }
+      const ext = (path ?? '').toLowerCase().split('.').pop() ?? '';
+      const storedMime = (row as any).mime_type
+        ?? (ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'pdf' ? 'application/pdf' : 'image/jpeg');
+      if (storedMime === 'application/pdf') {
+        return { verdict: { isPixReceipt: null as boolean | null, confidence: 0, amountBrl: null, dateText: null, txId: null, payer: null, payee: null, reason: 'Arquivo PDF — a análise automática por IA cobre imagens (PNG/JPG). Confira manualmente.' }, markedImportant: false };
+      }
 
-    // Lê os bytes da imagem do storage (service role via gateway). Tenta o
-    // projeto certo e, se não responder, cai pro projeto de arquivos (igual ao
-    // createDownload), pra arquivo migrado não quebrar a análise.
-    const { storageClientFor, filesStorageEnabled, filesAdmin } = await import('./storage-gateway.server');
-    const bktName = bucket as string;
-    const primary = await storageClientFor(path);
-    let blob = (await primary.storage.from(bktName).download(path)).data;
-    if (!blob && filesStorageEnabled()) {
-      blob = (await filesAdmin().storage.from(bktName).download(path)).data;
+      // Lê os bytes do storage (service role via gateway). Tenta o projeto certo
+      // e, se não responder, cai pro projeto de arquivos (igual ao createDownload).
+      const { storageClientFor, filesStorageEnabled, filesAdmin } = await import('./storage-gateway.server');
+      const bktName = bucket as string;
+      const primary = await storageClientFor(path);
+      let blob = (await primary.storage.from(bktName).download(path)).data;
+      if (!blob && filesStorageEnabled()) {
+        blob = (await filesAdmin().storage.from(bktName).download(path)).data;
+      }
+      if (!blob) throw new Error('Não foi possível ler a imagem do comprovante.');
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      dataUrl = `data:${storedMime};base64,${Buffer.from(bytes).toString('base64')}`;
     }
-    if (!blob) throw new Error('Não foi possível ler a imagem do comprovante.');
-    const bytes = new Uint8Array(await blob.arrayBuffer());
 
     const { generateText } = await import('ai');
     const { withGeminiFallback } = await import('./gemini-provider.server');
@@ -173,11 +187,6 @@ export const analyzeReceiptImage = createServerFn({ method:'POST' })
       '"dateText": string|null, "txId": string|null, "payer": string|null, "payee": string|null,',
       '"reason": string (curto, em pt-BR, explicando a decisão)}',
     ].join(' ');
-
-    // Base64 data URL: formato aceito por qualquer provedor/SDK (mais robusto
-    // que passar o Uint8Array cru pro wrapper do gateway).
-    const b64 = Buffer.from(bytes).toString('base64');
-    const dataUrl = `data:${mime};base64,${b64}`;
 
     let text = '';
     try {
