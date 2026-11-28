@@ -12,7 +12,9 @@ type Tab = "chat" | "stats" | "apk" | "receipts";
 /** Central da equipe dentro do painel do cliente: só aparece para admin/suporte/moderação. */
 export function StaffDeskCard() {
   const [isStaff, setIsStaff] = useState(false);
-  const [open, setOpen] = useState(false);
+  // Já aberta por padrão: o admin/suporte vê a central assim que entra no painel,
+  // sem precisar clicar pra expandir.
+  const [open, setOpen] = useState(true);
   const [tab, setTab] = useState<Tab>("chat");
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {

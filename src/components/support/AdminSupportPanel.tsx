@@ -6,6 +6,7 @@ import { Loader2, History } from "lucide-react";
 import { adminSetThreadPriority, adminUpdateThreadCategory, adminMergeDuplicateThreads, adminSearchSupportHistory } from "@/lib/support-admin.functions";
 import { SupportChat } from "./SupportChat";
 import { SupportCustomerContext } from "@/components/SupportCustomerContext";
+import { SupportLicenseActions } from "@/components/support/SupportLicenseActions";
 import { AdminCustomer360 } from "@/components/admin/lazy-panels";
 import { QuickRepliesDropdown } from "@/components/QuickRepliesDropdown";
 import { categoryMeta, SUPPORT_CATEGORY_META, SupportCategory } from "@/lib/support-categories";
@@ -684,6 +685,13 @@ export function AdminSupportPanel({ openThreadId }: { openThreadId?: string | nu
                       Encerrar
                     </Button>
                   </ToolbarGroup>
+
+                  <SupportLicenseActions
+                    userId={selectedThread.user_id}
+                    email={selectedThread.profile?.email}
+                    threadId={selectedThread.id}
+                    onDone={() => loadThreads()}
+                  />
                 </div>
               </div>
             </div>
