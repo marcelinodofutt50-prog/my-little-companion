@@ -104,7 +104,7 @@ export function PartnerResellerDesk() {
 
   // ---- licenças ----
   const [q, setQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todas" | "active" | "pending_sync" | "cancelled">("todas");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "active" | "pending_sync" | "cancelled" | "unpaid" | "expiring">("todas");
   const [payFor, setPayFor] = useState<string | null>(null);
   const [payAmount, setPayAmount] = useState("50,00");
   const [payMethod, setPayMethod] = useState<"pix" | "dinheiro" | "cartao" | "outro">("pix");
@@ -127,7 +127,14 @@ export function PartnerResellerDesk() {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return licenses.filter((l: any) => {
-      if (statusFilter !== "todas" && l.status !== statusFilter) return false;
+      if (statusFilter === "unpaid") {
+        if (l.paid || l.status === "cancelled") return false;
+      } else if (statusFilter === "expiring") {
+        const left = daysLeft(l.expires_at ?? null);
+        if (l.status !== "active" || left === null || left < 0 || left > 5) return false;
+      } else if (statusFilter !== "todas" && l.status !== statusFilter) {
+        return false;
+      }
       if (!term) return true;
       const name = (customerById.get(l.customer_id)?.name ?? "").toLowerCase();
       return (
@@ -137,6 +144,17 @@ export function PartnerResellerDesk() {
       );
     });
   }, [licenses, q, statusFilter, customerById]);
+
+  // A receber = licenças não canceladas e ainda não pagas pelo cliente.
+  const receivableCents = useMemo(
+    () => licenses.filter((l: any) => l.status !== "cancelled" && !l.paid).reduce((s: number, l: any) => s + (l.price_cents ?? 0), 0),
+    [licenses],
+  );
+
+  const goToLicenses = (filter: typeof statusFilter) => {
+    setStatusFilter(filter);
+    setTab("licencas");
+  };
 
   const previewDays = resolveLicenseDays(lPlan, customDays ? Number(customDays) : null);
 
@@ -267,19 +285,33 @@ export function PartnerResellerDesk() {
         </Button>
       </div>
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         {[
           { label: "Clientes", value: String(summary?.customers ?? 0) },
           { label: "Licenças ativas", value: String(summary?.activeLicenses ?? 0) },
-          { label: "Vencem em 5 dias", value: String((summary as any)?.expiringSoon ?? 0) },
-          { label: "Aguardando painel", value: String(summary?.pendingSync ?? 0) },
+          { label: "Vencem em 5 dias", value: String((summary as any)?.expiringSoon ?? 0), onClick: () => goToLicenses("expiring"), warn: ((summary as any)?.expiringSoon ?? 0) > 0 },
+          { label: "A receber", value: brl(receivableCents), onClick: () => goToLicenses("unpaid"), warn: receivableCents > 0 },
           { label: "Recebido", value: brl(summary?.revenueCents ?? 0) },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-border/50 bg-card/40 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{s.label}</div>
-            <div className="mt-1 font-display text-xl">{s.value}</div>
-          </div>
-        ))}
+          { label: "Aguardando painel", value: String(summary?.pendingSync ?? 0) },
+        ].map((s) => {
+          const clickable = typeof (s as any).onClick === "function";
+          const Cmp: any = clickable ? "button" : "div";
+          return (
+            <Cmp
+              key={s.label}
+              {...(clickable ? { type: "button", onClick: (s as any).onClick } : {})}
+              className={cn(
+                "rounded-xl border bg-card/40 p-4 text-left transition-colors",
+                (s as any).warn ? "border-amber-500/40 bg-amber-500/5" : "border-border/50",
+                clickable && "hover:border-primary/50 cursor-pointer",
+              )}
+            >
+              <div className={cn("font-mono text-[10px] uppercase tracking-widest", (s as any).warn ? "text-amber-500" : "text-muted-foreground")}>{s.label}</div>
+              <div className="mt-1 font-display text-xl">{s.value}</div>
+              {clickable && <div className="mt-0.5 text-[10px] text-muted-foreground">ver lista →</div>}
+            </Cmp>
+          );
+        })}
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -466,6 +498,8 @@ export function PartnerResellerDesk() {
             >
               <option value="todas">Todas</option>
               <option value="active">Ativas</option>
+              <option value="unpaid">Não pagas (a receber)</option>
+              <option value="expiring">A vencer (5 dias)</option>
               <option value="pending_sync">Aguardando painel</option>
               <option value="cancelled">Canceladas</option>
             </select>
