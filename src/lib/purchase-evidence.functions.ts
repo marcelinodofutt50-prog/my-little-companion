@@ -70,6 +70,43 @@ export const submitStandaloneReceipt = createServerFn({ method:'POST' })
     return { ok:true };
   });
 
+/**
+ * Anexo de comprovante feito pelo ADMIN em nome de um cliente (ex.: no momento
+ * de emitir a licença na conversa de suporte). Admin-gated. Grava na mesma
+ * tabela/bucket; aparece na aba "Comprovantes" como anexo do suporte, vinculado
+ * ao cliente (order_id NULL). Não movimenta dinheiro nem provisiona acesso.
+ */
+export const adminAttachReceiptForUser = createServerFn({ method:'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v:unknown) => z.object({
+    userId: z.string().uuid(),
+    filename: z.string().trim().min(1).max(160),
+    base64: z.string().max(Math.ceil(MAX_RECEIPT_BYTES/3)*4),
+    payerName: z.string().trim().max(120).optional(),
+  }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { assertStaff } = await import('@/lib/admin-helpers.server');
+    await assertStaff(context);
+    const bytes = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0));
+    const mime = receiptMime(bytes);
+    if (!mime) throw new Error('Envie PNG, JPG ou PDF de até 5 MB.');
+    const sha256 = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))).map(v => v.toString(16).padStart(2,'0')).join('');
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const db = supabaseAdmin as any;
+    const { data:duplicate } = await db.from('purchase_evidence').select('id').eq('user_id',data.userId).eq('sha256',sha256).maybeSingle();
+    if (duplicate) return { ok:true, duplicate:true };
+    const { uploadBytes, removeObjects } = await import('./storage-gateway.server');
+    const extension = mime === 'image/png' ? 'png' : mime === 'image/jpeg' ? 'jpg' : 'pdf';
+    const { path } = await uploadBytes('payment-receipts',`${data.userId}/admin/${crypto.randomUUID()}.${extension}`,bytes,{contentType:mime});
+    const { error:insertError } = await db.from('purchase_evidence').insert({ user_id:data.userId, order_id:null, source:'support', payer_name:data.payerName || null, filename:data.filename, storage_path:path, storage_bucket:'payment-receipts', mime_type:mime, sha256 });
+    if (insertError) {
+      await removeObjects('payment-receipts',[path]);
+      if (insertError.code === '23505') return { ok:true, duplicate:true };
+      throw new Error('Não foi possível salvar o comprovante. Tente novamente.');
+    }
+    return { ok:true };
+  });
+
 export const searchPurchaseEvidence = createServerFn({ method:'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((v:unknown) => z.object({
